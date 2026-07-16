@@ -64,16 +64,30 @@ textarea {
 
 .opening-screen {
   align-items: center;
-  animation: opening-shell 5.6s ease forwards;
-  background:
-    radial-gradient(circle at 50% 45%, rgba(63, 117, 104, 0.22), transparent 38%),
-    linear-gradient(180deg, #06120f 0%, #10241f 52%, #06120f 100%);
+  animation: opening-shell 7.2s ease forwards;
+  background: #06120f;
+  cursor: pointer;
   display: flex;
   inset: 0;
   justify-content: center;
   pointer-events: none;
   position: fixed;
   z-index: 2000;
+}
+
+.opening-image {
+  animation: opening-image 7.2s ease forwards;
+  filter: saturate(0.85) contrast(1.08) brightness(0.7);
+  transform: scale(1.06);
+}
+
+.opening-vignette {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(251, 250, 246, 0.08), transparent 33%),
+    linear-gradient(180deg, rgba(6, 18, 15, 0.55), rgba(6, 18, 15, 0.2) 42%, rgba(6, 18, 15, 0.78)),
+    linear-gradient(90deg, rgba(6, 18, 15, 0.74), rgba(6, 18, 15, 0.18) 50%, rgba(6, 18, 15, 0.7));
+  inset: 0;
+  position: absolute;
 }
 
 .opening-sequence {
@@ -85,13 +99,13 @@ textarea {
 }
 
 .opening-sequence span {
-  animation: trailer-word 5.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: trailer-word 5.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   color: #fbfaf6;
   font-family: var(--font-heading);
-  font-size: clamp(3rem, 11vw, 9rem);
+  font-size: clamp(3.5rem, 13vw, 11rem);
   font-weight: 800;
   grid-area: 1 / 1;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   line-height: 0.92;
   opacity: 0;
   text-align: center;
@@ -101,15 +115,52 @@ textarea {
 }
 
 .opening-sequence span:nth-child(2) {
-  animation-delay: 1.05s;
+  animation-delay: 1.12s;
 }
 
 .opening-sequence span:nth-child(3) {
-  animation-delay: 2.1s;
+  animation-delay: 2.24s;
 }
 
 .opening-sequence span:nth-child(4) {
-  animation-delay: 3.15s;
+  animation-delay: 3.36s;
+}
+
+.opening-lockup {
+  align-items: center;
+  animation: lockup-rise 7.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  bottom: clamp(4rem, 10vh, 7rem);
+  color: #fbfaf6;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  opacity: 0;
+  position: absolute;
+  text-align: center;
+  width: min(90vw, 900px);
+}
+
+.opening-lockup p {
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 10vw, 8rem);
+  font-weight: 800;
+  line-height: 0.9;
+  margin: 0;
+  text-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+}
+
+.opening-lockup div {
+  background: linear-gradient(90deg, transparent, #e7b96a, #a8cec1, transparent);
+  height: 1px;
+  width: min(72vw, 620px);
+}
+
+.opening-lockup span {
+  color: #f2dfb2;
+  font-size: clamp(0.78rem, 1.6vw, 1rem);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 .word-sequence span {
@@ -287,12 +338,27 @@ textarea {
 
 @keyframes opening-shell {
   0%,
-  82% {
+  86% {
     opacity: 1;
   }
   100% {
     opacity: 0;
     visibility: hidden;
+  }
+}
+
+@keyframes opening-image {
+  0% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+  12%,
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.45;
+    transform: scale(1.02);
   }
 }
 
@@ -302,17 +368,34 @@ textarea {
     opacity: 0;
     transform: translateY(18px) scale(0.96);
   }
-  12%,
-  34% {
+  10%,
+  31% {
     filter: blur(0);
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-  48%,
+  43%,
   100% {
     filter: blur(7px);
     opacity: 0;
     transform: translateY(-18px) scale(1.035);
+  }
+}
+
+@keyframes lockup-rise {
+  0%,
+  62% {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  72%,
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px);
   }
 }
 
@@ -352,6 +435,12 @@ textarea {
     animation-duration: 900ms !important;
   }
 
+  .opening-image {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
   .opening-sequence span {
     animation: none !important;
     opacity: 1;
@@ -359,6 +448,10 @@ textarea {
   }
 
   .opening-sequence span:not(:first-child) {
+    display: none;
+  }
+
+  .opening-lockup {
     display: none;
   }
 }

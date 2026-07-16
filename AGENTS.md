@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Ninh Binh Journey UI/UX
 
-Before changing public UI, read `docs/UI_UX_RULES.md` and apply it as the standing design checklist.
+Before changing public UI, read `docs/UI_UX_RULES.md` and `docs/REFERENCE_SITE_ANALYSIS.md`, then apply them as the standing design checklist.
 
 - This is premium editorial tourism, not generic SaaS.
 - Dialogs must always layer above Leaflet and close via button, backdrop and Escape.

@@ -1127,7 +1127,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timeout = window.setTimeout(() => {
       setIntroVisible(false);
-    }, prefersReducedMotion ? 900 : 5600);
+    }, prefersReducedMotion ? 900 : 7200);
 
     return () => window.clearTimeout(timeout);
   }, []);
@@ -1220,11 +1220,25 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
   return (
     <main className="min-h-screen bg-[#FBFAF6] text-[#1D2925]">
       {introVisible ? (
-        <div className="opening-screen" aria-hidden="true">
+        <div className="opening-screen" aria-hidden="true" onClick={() => setIntroVisible(false)}>
+          <Image
+            src="/images/destinations/trang-an.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="opening-image object-cover"
+          />
+          <div className="opening-vignette" />
           <div className="opening-sequence">
             {trailerWords.map((word, index) => (
               <span key={`${word}-${index}`}>{word}</span>
             ))}
+          </div>
+          <div className="opening-lockup">
+            <p>Ninh Bình</p>
+            <div />
+            <span>{trailerWords.slice(1).join(" · ")}</span>
           </div>
         </div>
       ) : null}

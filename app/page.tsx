@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import NinhBinhLanding, { type Language } from "./ninh-binh-landing";
 
 type PageProps = {
@@ -10,8 +11,11 @@ function firstParam(value: string | string[] | undefined) {
 
 export default async function Home({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
+  const cookieStore = await cookies();
   const requestedLang = firstParam(params.lang);
-  const lang: Language = requestedLang === "vi" ? "vi" : "en";
+  const savedLang = cookieStore.get("ninh-binh-lang")?.value;
+  const lang: Language =
+    requestedLang === "vi" || (!requestedLang && savedLang === "vi") ? "vi" : "en";
   const source = firstParam(params.source) ?? "";
   const presentationMode =
     firstParam(params.presentation) === "1" ||

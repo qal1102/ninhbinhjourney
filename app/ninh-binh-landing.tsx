@@ -1049,6 +1049,17 @@ function buildHref(lang: Language, source: string, presentationMode: boolean) {
   return `/?${params.toString()}`;
 }
 
+function languageUrl(lang: Language, source: string, presentationMode: boolean) {
+  if (typeof window === "undefined") return buildHref(lang, source, presentationMode);
+
+  const params = new URLSearchParams(window.location.search);
+  params.set("lang", lang);
+  if (source) params.set("source", source);
+  if (presentationMode) params.set("presentation", "1");
+
+  return `/?${params.toString()}${window.location.hash}`;
+}
+
 function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -1087,8 +1098,9 @@ function createRoute(duration: string, selected: string[]) {
 }
 
 export default function NinhBinhLanding({ initialLang, source, presentationMode }: Props) {
-  const lang = initialLang;
+  const [lang, setLang] = useState<Language>(initialLang);
   const t = copy[lang];
+  const trailerWords = useMemo(() => [t.introTop as string, ...(t.introWords as string[]).map((word) => word.replace(/\.$/, ""))], [t.introTop, t.introWords]);
   const [selectedChips, setSelectedChips] = useState<string[]>(["culture", "relaxed", "family"]);
   const [selectedDuration, setSelectedDuration] = useState("1d");
   const [selectedIds, setSelectedIds] = useState<DestinationId[]>([]);
@@ -1096,6 +1108,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
   const [loading, setLoading] = useState(false);
   const [detailId, setDetailId] = useState<DestinationId | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [introVisible, setIntroVisible] = useState(true);
   const modalOpen = Boolean(detailId || checkoutOpen);
 
   const sourceDestinationId = useMemo<DestinationId | "welcome">(() => {
@@ -1106,7 +1119,18 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
 
   useEffect(() => {
     window.localStorage.setItem("ninh-binh-lang", lang);
+    document.cookie = `ninh-binh-lang=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+    document.documentElement.lang = lang;
   }, [lang]);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timeout = window.setTimeout(() => {
+      setIntroVisible(false);
+    }, prefersReducedMotion ? 900 : 5600);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -1185,8 +1209,25 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
     setItinerary((current) => current.filter((_, stopIndex) => stopIndex !== index));
   }
 
+  function switchLanguage(nextLang: Language) {
+    if (nextLang === lang) return;
+
+    setLang(nextLang);
+    const nextUrl = languageUrl(nextLang, source, presentationMode);
+    window.history.replaceState(null, "", nextUrl);
+  }
+
   return (
     <main className="min-h-screen bg-[#FBFAF6] text-[#1D2925]">
+      {introVisible ? (
+        <div className="opening-screen" aria-hidden="true">
+          <div className="opening-sequence">
+            {trailerWords.map((word, index) => (
+              <span key={`${word}-${index}`}>{word}</span>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <section className="relative min-h-screen overflow-hidden bg-[#183F34] text-[#FBFAF6]">
         <Image
           src="/images/destinations/trang-an.jpg"
@@ -1209,17 +1250,12 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
             ))}
           </nav>
           <div className="flex rounded-full border border-white/25 bg-white/10 p-1 text-sm backdrop-blur">
-            <a className={`rounded-full px-3 py-1.5 ${lang === "en" ? "bg-[#FBFAF6] text-[#183F34]" : ""}`} href={buildHref("en", source, presentationMode)}>EN</a>
-            <a className={`rounded-full px-3 py-1.5 ${lang === "vi" ? "bg-[#FBFAF6] text-[#183F34]" : ""}`} href={buildHref("vi", source, presentationMode)}>VI</a>
+            <button type="button" className={`rounded-full px-3 py-1.5 ${lang === "en" ? "bg-[#FBFAF6] text-[#183F34]" : ""}`} onClick={() => switchLanguage("en")}>EN</button>
+            <button type="button" className={`rounded-full px-3 py-1.5 ${lang === "vi" ? "bg-[#FBFAF6] text-[#183F34]" : ""}`} onClick={() => switchLanguage("vi")}>VI</button>
           </div>
         </div>
         <div id="top" className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-5 pb-16 pt-28 sm:px-8 lg:pb-24">
-          <div className="word-sequence mb-6 flex flex-wrap gap-3 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">
-            <span>{t.introTop}</span>
-            {(t.introWords as string[]).map((word) => (
-              <span key={word}>{word}</span>
-            ))}
-          </div>
+          <p className="fade-up mb-6 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{(t.introWords as string[]).join(" ")}</p>
           <h1 className="fade-up font-display text-6xl leading-[0.9] text-[#FBFAF6] sm:text-8xl lg:text-[9rem]">{t.title}</h1>
           <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
           <div className="fade-up mt-9 flex flex-col gap-3 sm:flex-row">

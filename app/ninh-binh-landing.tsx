@@ -102,6 +102,13 @@ const copy = {
     subtitle: "A journey between mountains, water and timeless heritage",
     begin: "Begin your journey",
     exploreMap: "Explore map",
+    journeysLabel: "Curated Ninh Binh",
+    journeysTitle: "Stories, not stops",
+    journeysBody:
+      "Drag through composed routes inspired by luxury travel collections: water first, temples next, forest and lantern light when the day slows down.",
+    dragHint: "Drag the route cards",
+    viewRoute: "View route",
+    addRoute: "Add route",
     youAreHere: "You are here",
     qrSource: "QR source",
     welcomePoint: "Ninh Binh welcome point",
@@ -176,6 +183,13 @@ const copy = {
     subtitle: "Hành trình giữa núi, nước và di sản vượt thời gian",
     begin: "Bắt đầu hành trình",
     exploreMap: "Khám phá bản đồ",
+    journeysLabel: "Ninh Bình tuyển chọn",
+    journeysTitle: "Câu chuyện, không chỉ điểm dừng",
+    journeysBody:
+      "Kéo qua các tuyến được biên tập như một collection du lịch cao cấp: nước trước, chùa sau, rừng và ánh đèn khi ngày chậm lại.",
+    dragHint: "Kéo ngang để xem tuyến",
+    viewRoute: "Xem tuyến",
+    addRoute: "Thêm tuyến",
     youAreHere: "Bạn đang ở đây",
     qrSource: "Nguồn QR",
     welcomePoint: "Điểm chào đón Ninh Bình",
@@ -983,6 +997,53 @@ const paymentMethodsVi = ["Visa", "Mastercard", "JCB", "VietQR", "MoMo", "ZaloPa
 const signatureDestinations = destinations.filter((destination) => destination.tier === "signature");
 const hiddenDestinations = destinations.filter((destination) => destination.tier === "hidden");
 
+const routeCollections = [
+  {
+    id: "water-first",
+    image: "/images/destinations/intro-trang-an-rain.png",
+    kicker: { en: "Water first", vi: "Nước trước" },
+    title: { en: "Mist, boats and slow heritage", vi: "Sương, thuyền và di sản chậm" },
+    body: {
+      en: "Start with Trang An while the river is quiet, then soften into Tam Coc and Thung Nham before dusk.",
+      vi: "Bắt đầu ở Tràng An khi mặt nước còn yên, rồi dịu dần qua Tam Cốc và Thung Nham trước hoàng hôn.",
+    },
+    stops: ["trang_an", "tam_coc", "thung_nham"] as DestinationId[],
+  },
+  {
+    id: "temple-scale",
+    image: "/images/destinations/bai-dinh.jpg",
+    kicker: { en: "Sacred scale", vi: "Quy mô tâm linh" },
+    title: { en: "Pagodas, ancient capital, lake temple", vi: "Chùa lớn, cố đô, hồ chùa" },
+    body: {
+      en: "A composed northern route for visitors who want the spiritual side of the expanded region.",
+      vi: "Một tuyến phía bắc được biên tập cho du khách muốn thấy lớp tâm linh của vùng mở rộng.",
+    },
+    stops: ["bai_dinh", "hoa_lu_ancient_capital", "tam_chuc"] as DestinationId[],
+  },
+  {
+    id: "quiet-west",
+    image: "/images/destinations/cuc-phuong.png",
+    kicker: { en: "Quiet west", vi: "Phía tây yên hơn" },
+    title: { en: "Forest shade and responsible travel", vi: "Bóng rừng và du lịch tử tế" },
+    body: {
+      en: "A calmer branch through Cuc Phuong, Van Long and the Bear Sanctuary for travelers who want depth.",
+      vi: "Một nhánh yên hơn qua Cúc Phương, Vân Long và cơ sở bảo tồn gấu cho người muốn đi sâu hơn.",
+    },
+    stops: ["cuc_phuong", "van_long", "bear_sanctuary"] as DestinationId[],
+  },
+  {
+    id: "lantern-night",
+    image: "/images/destinations/hoa-lu-old-town.jpg",
+    kicker: { en: "After dark", vi: "Sau hoàng hôn" },
+    title: { en: "Lanterns after limestone", vi: "Đèn lồng sau núi đá" },
+    body: {
+      en: "A softer end to the day: Hang Mua for altitude, Hoa Lu Old Town for lanterns and food.",
+      vi: "Một kết ngày nhẹ hơn: Hang Múa lấy độ cao, Phố cổ Hoa Lư cho đèn lồng và bữa tối.",
+    },
+    stops: ["hang_mua", "hoa_lu_old_town", "am_tien"] as DestinationId[],
+  },
+];
+
 const chips = [
   { id: "nature", en: "Nature", vi: "Thiên nhiên" },
   { id: "culture", en: "Culture", vi: "Văn hóa" },
@@ -1173,6 +1234,21 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
     scrollToId("itinerary");
   }
 
+  function addRoute(stops: DestinationId[]) {
+    const routeStops = stops
+      .map((id, index) => {
+        const destination = destinations.find((item) => item.id === id);
+        if (!destination) return null;
+        return stopFromDestination(destination, ["08:00", "11:15", "16:30"][index] ?? "18:00");
+      })
+      .filter((stop): stop is ItineraryStop => Boolean(stop));
+
+    setFocusedDestinationId(stops[0] ?? "welcome");
+    setSelectedIds((current) => Array.from(new Set([...current, ...stops])));
+    setItinerary(routeStops);
+    scrollToId("itinerary");
+  }
+
   function openDetail(id: DestinationId) {
     setFocusedDestinationId(id);
     setDetailId(id);
@@ -1222,7 +1298,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
       {introVisible ? (
         <div className="opening-screen" aria-hidden="true" onClick={() => setIntroVisible(false)}>
           <Image
-            src="/images/destinations/trang-an.jpg"
+            src="/images/destinations/intro-trang-an-rain.png"
             alt=""
             fill
             priority
@@ -1272,10 +1348,65 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
           <p className="fade-up mb-6 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{(t.introWords as string[]).join(" ")}</p>
           <h1 className="fade-up font-display text-6xl leading-[0.9] text-[#FBFAF6] sm:text-8xl lg:text-[9rem]">{t.title}</h1>
           <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
+          <div className="fade-up mt-8 grid max-w-3xl grid-cols-3 border-y border-white/25 py-4 text-xs font-bold uppercase tracking-[0.16em] text-white/78 sm:text-sm">
+            {(t.introWords as string[]).map((word) => (
+              <span key={word}>{word.replace(/\.$/, "")}</span>
+            ))}
+          </div>
           <div className="fade-up mt-9 flex flex-col gap-3 sm:flex-row">
             <button type="button" onClick={() => scrollToId("ai")} className="rounded-full bg-[#E7B96A] px-6 py-3 font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</button>
             <button type="button" onClick={() => scrollToId("map")} className="rounded-full border border-white/35 px-6 py-3 font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</button>
           </div>
+        </div>
+      </section>
+
+      <section className="bg-[#FBFAF6] py-16 text-[#1D2925] sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+          <div className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
+            <div>
+              <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#3F7568]">{t.journeysLabel}</p>
+              <h2 className="font-display mt-4 max-w-3xl text-5xl leading-none text-[#183F34] sm:text-7xl">{t.journeysTitle}</h2>
+            </div>
+            <div className="max-w-2xl lg:justify-self-end">
+              <p className="text-lg leading-8 text-[#4d5b55]">{t.journeysBody}</p>
+              <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.24em] text-[#A0702A]">{t.dragHint}</p>
+            </div>
+          </div>
+        </div>
+        <div className="route-rail mt-10 flex snap-x gap-4 overflow-x-auto px-5 pb-4 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]">
+          {routeCollections.map((route, index) => {
+            const firstStop = route.stops[0];
+            return (
+              <article key={route.id} className="route-card group relative h-[520px] w-[82vw] shrink-0 snap-center overflow-hidden rounded-[8px] bg-[#183F34] text-white shadow-2xl shadow-[#183F34]/18 sm:w-[560px] lg:w-[620px]">
+                <Image
+                  src={route.image}
+                  alt={route.title[lang]}
+                  fill
+                  sizes="(min-width: 1024px) 620px, 82vw"
+                  className="object-cover transition duration-700 group-hover:scale-[1.035]"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.12),rgba(6,18,15,.35)_42%,rgba(6,18,15,.88))]" />
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 text-xs font-extrabold uppercase tracking-[0.2em] text-white/82">
+                  <span>{route.kicker[lang]}</span>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+                  <h3 className="font-display max-w-lg text-4xl leading-tight sm:text-5xl">{route.title[lang]}</h3>
+                  <p className="mt-4 max-w-lg leading-7 text-white/78">{route.body[lang]}</p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {route.stops.map((id) => {
+                      const stop = destinations.find((destination) => destination.id === id);
+                      return stop ? <span key={id} className="rounded-full border border-white/24 bg-white/12 px-3 py-1 text-xs font-bold backdrop-blur">{stop.name[lang]}</span> : null;
+                    })}
+                  </div>
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <button type="button" onClick={() => openDetail(firstStop)} className="rounded-full bg-[#FBFAF6] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#E7B96A]">{t.viewRoute}</button>
+                    <button type="button" onClick={() => addRoute(route.stops)} className="rounded-full border border-white/35 px-5 py-3 font-semibold text-white transition hover:bg-white/12">{t.addRoute}</button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 

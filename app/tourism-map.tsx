@@ -71,6 +71,13 @@ function LocationControl({
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
+  function showStatus(message: string) {
+    setStatus(message);
+    window.setTimeout(() => {
+      setStatus((current) => (current === message ? "" : current));
+    }, 4500);
+  }
+
   function isInsideRegion(position: [number, number]) {
     const [[south, west], [north, east]] = expandedNinhBinhBounds;
     return position[0] >= south && position[0] <= north && position[1] >= west && position[1] <= east;
@@ -78,30 +85,30 @@ function LocationControl({
 
   function locate() {
     if (!navigator.geolocation) {
-      setStatus(copy.locationDenied);
+      showStatus(copy.locationDenied);
       return;
     }
 
     setBusy(true);
-    setStatus(copy.locating);
+    showStatus(copy.locating);
     navigator.geolocation.getCurrentPosition(
       (result) => {
         const position: [number, number] = [result.coords.latitude, result.coords.longitude];
         if (isInsideRegion(position)) {
           onPosition(position);
           map.setView(position, nearZoom, { animate: true });
-          setStatus(copy.locationFound);
+          showStatus(copy.locationFound);
         } else {
           onPosition(null);
           map.setView(welcomePosition, defaultZoom, { animate: true });
-          setStatus(copy.locationOutside);
+          showStatus(copy.locationOutside);
         }
         setBusy(false);
       },
       () => {
         onPosition(null);
         map.setView(welcomePosition, defaultZoom, { animate: true });
-        setStatus(copy.locationDenied);
+        showStatus(copy.locationDenied);
         setBusy(false);
       },
       { enableHighAccuracy: true, maximumAge: 120000, timeout: 8000 },
@@ -109,9 +116,22 @@ function LocationControl({
   }
 
   useEffect(() => {
-    const timeout = window.setTimeout(locate, 700);
-    return () => window.clearTimeout(timeout);
-    // Auto-locate once on mount; the visible button below lets visitors retry.
+    let cancelled = false;
+    if (!("permissions" in navigator)) return;
+
+    navigator.permissions
+      .query({ name: "geolocation" as PermissionName })
+      .then((permission) => {
+        if (!cancelled && permission.state === "granted") {
+          locate();
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+    // Auto-locate only when permission is already granted; the visible button lets visitors opt in.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -94,6 +94,7 @@ textarea {
 .leaflet-container {
   background: #d7e6dd;
   font-family: var(--font-body);
+  isolation: isolate;
 }
 
 .leaflet-control-attribution {
@@ -163,10 +164,10 @@ textarea {
   border: 1px solid rgba(168, 206, 193, 0.8);
   border-radius: 8px;
   box-shadow: 0 16px 36px rgba(24, 63, 52, 0.18);
-  left: 12px;
   max-width: 220px;
   padding: 10px;
   position: absolute;
+  right: 12px;
   top: 12px;
   z-index: 500;
 }
@@ -192,6 +193,15 @@ textarea {
   font-weight: 700;
   line-height: 1.4;
   margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .nb-location-control {
+    left: 12px;
+    max-width: none;
+    right: 12px;
+    top: 56px;
+  }
 }
 
 @keyframes fade-up {

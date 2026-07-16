@@ -1096,6 +1096,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
   const [loading, setLoading] = useState(false);
   const [detailId, setDetailId] = useState<DestinationId | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const modalOpen = Boolean(detailId || checkoutOpen);
 
   const sourceDestinationId = useMemo<DestinationId | "welcome">(() => {
     const normalized = normalizeSource(source);
@@ -1106,6 +1107,26 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
   useEffect(() => {
     window.localStorage.setItem("ninh-binh-lang", lang);
   }, [lang]);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setDetailId(null);
+        setCheckoutOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [modalOpen]);
 
   const activeLabel = useMemo(() => {
     if (focusedDestinationId === "welcome") return t.welcomePoint as string;
@@ -1221,7 +1242,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
             <p className="mt-3 max-w-xl text-sm font-semibold text-[#3F7568]">{t.mapHint}</p>
             <button type="button" onClick={() => scrollToId("stories")} className="mt-7 rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white">{t.nearby}</button>
           </div>
-          <div className="overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#F6F1E7] p-3 shadow-xl shadow-[#183F34]/10">
+          <div className="relative z-0 isolate overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#F6F1E7] p-3 shadow-xl shadow-[#183F34]/10">
             <TourismMap
               activeDestinationId={focusedDestinationId}
               copy={{
@@ -1254,23 +1275,40 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
           <p className="mt-8 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{t.signatureStories}</p>
           <div className="mt-10 grid gap-6">
             {signatureDestinations.map((place, index) => (
-              <article id={`destination-${place.id}`} key={place.id} className="story-card group relative min-h-[78vh] overflow-hidden rounded-[8px] bg-[#1D2925] shadow-2xl shadow-black/25">
-                <Image src={place.image} alt={place.name[lang]} fill sizes="100vw" className="story-image object-cover opacity-75 transition duration-700 group-hover:scale-[1.035]" style={{ objectPosition: place.imagePosition }} />
-                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(29,41,37,.9),rgba(29,41,37,.45)_48%,rgba(29,41,37,.12)),linear-gradient(180deg,transparent,rgba(29,41,37,.82))]" />
-                <div className="relative flex min-h-[78vh] flex-col justify-end p-6 sm:p-10 lg:p-14">
-                  <p className="text-xs uppercase tracking-[0.24em] text-[#FBFAF6]/70">{place.coords}</p>
-                  <h3 className="font-display mt-4 max-w-4xl text-5xl leading-none sm:text-7xl lg:text-8xl">{place.name[lang]}</h3>
-                  <p className="mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{place.tagline[lang]}</p>
-                  <p className="mt-4 max-w-2xl leading-7 text-[#FBFAF6]/76">{place.description[lang]}</p>
-                  <div className="mt-7 flex flex-wrap gap-2">
-                    {place.tags[lang].map((tag) => <span key={tag} className="rounded-full border border-white/24 bg-white/10 px-3 py-1 text-sm backdrop-blur">{tag}</span>)}
+              <article
+                id={`destination-${place.id}`}
+                key={place.id}
+                className="story-card group grid overflow-hidden rounded-[8px] border border-white/12 bg-[#FBFAF6] text-[#1D2925] shadow-2xl shadow-black/20 lg:grid-cols-[1.05fr_.95fr]"
+              >
+                <div className={`relative min-h-80 overflow-hidden sm:min-h-[420px] lg:min-h-[560px] ${index % 2 ? "lg:order-2" : ""}`}>
+                  <Image
+                    src={place.image}
+                    alt={place.name[lang]}
+                    fill
+                    sizes="(min-width: 1024px) 52vw, 100vw"
+                    className="story-image object-cover transition duration-700 group-hover:scale-[1.025]"
+                    style={{ objectPosition: place.imagePosition }}
+                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_45%,rgba(24,63,52,.42))]" />
+                  <span className="absolute bottom-5 left-5 rounded-full bg-[#FBFAF6]/90 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.18em] text-[#183F34]">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <div className="flex flex-col justify-between p-6 sm:p-10 lg:p-12">
+                  <div>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#3F7568]">{place.category[lang]} · {place.duration[lang]}</p>
+                    <h3 className="font-display mt-4 max-w-2xl text-4xl leading-tight text-[#183F34] sm:text-6xl">{place.name[lang]}</h3>
+                    <p className="mt-6 max-w-2xl text-xl leading-8 text-[#1D2925]">{place.tagline[lang]}</p>
+                    <p className="mt-4 max-w-2xl leading-7 text-[#4d5b55]">{place.description[lang]}</p>
+                    <div className="mt-7 flex flex-wrap gap-2">
+                      {place.tags[lang].map((tag) => <span key={tag} className="rounded-full border border-[#A8CEC1] bg-[#F6F1E7] px-3 py-1 text-sm font-semibold text-[#3F7568]">{tag}</span>)}
+                    </div>
                   </div>
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" onClick={() => openDetail(place.id)} className="rounded-full bg-[#FBFAF6] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#E7B96A]">{t.discover}</button>
-                    <button type="button" onClick={() => addDestination(place.id)} className="rounded-full border border-white/35 px-5 py-3 font-semibold transition hover:bg-white/12">{selectedIds.includes(place.id) ? t.added : t.add}</button>
+                    <button type="button" onClick={() => openDetail(place.id)} className="rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white transition hover:bg-[#24594a]">{t.discover}</button>
+                    <button type="button" onClick={() => addDestination(place.id)} className="rounded-full border border-[#A8CEC1] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#F6F1E7]">{selectedIds.includes(place.id) ? t.added : t.add}</button>
                   </div>
                 </div>
-                <span className="absolute right-6 top-6 font-display text-6xl text-white/12 sm:text-8xl">0{index + 1}</span>
               </article>
             ))}
           </div>
@@ -1387,75 +1425,128 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
       </section>
 
       {detailDestination && detailFacts ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[#1D2925]/70 px-5 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <article className="grid max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[8px] bg-[#FBFAF6] shadow-2xl md:grid-cols-[1.05fr_.95fr]">
-            <div className="relative min-h-80">
-              <Image src={detailDestination.image} alt={detailDestination.name[lang]} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+        <div
+          className="fixed inset-0 z-[1200] overflow-y-auto bg-[#1D2925]/82 px-4 py-6 backdrop-blur-md sm:py-10"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="destination-detail-title"
+          onMouseDown={() => setDetailId(null)}
+        >
+          <article
+            className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[8px] bg-[#FBFAF6] shadow-2xl"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setDetailId(null)}
+              className="absolute right-4 top-4 z-10 rounded-full border border-white/40 bg-[#1D2925]/70 px-4 py-2 text-sm font-bold text-white backdrop-blur transition hover:bg-[#183F34]"
+              aria-label={t.detailClose as string}
+            >
+              {t.close}
+            </button>
+            <div className="relative min-h-[320px] overflow-hidden sm:min-h-[440px]">
+              <Image
+                src={detailDestination.image}
+                alt={detailDestination.name[lang]}
+                fill
+                sizes="(min-width: 1280px) 1120px, 100vw"
+                quality={95}
+                className="object-cover"
+                style={{ objectPosition: detailDestination.imagePosition }}
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(29,41,37,.1),rgba(29,41,37,.78))]" />
+              <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8 lg:p-10">
+                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#E7B96A]">{detailDestination.category[lang]} · {detailDestination.duration[lang]}</p>
+                <h2 id="destination-detail-title" className="font-display mt-3 max-w-4xl text-5xl leading-tight sm:text-7xl">{detailDestination.name[lang]}</h2>
+                <p className="mt-4 max-w-3xl text-lg leading-8 text-white/88">{detailDestination.description[lang]}</p>
+              </div>
             </div>
-            <div className="overflow-y-auto p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3F7568]">{detailDestination.category[lang]} · {detailDestination.duration[lang]}</p>
-              <h2 className="font-display mt-3 text-4xl text-[#183F34]">{detailDestination.name[lang]}</h2>
-              <p className="mt-4 leading-7 text-[#4d5b55]">{detailDestination.description[lang]}</p>
-              <div className="mt-6 rounded-[8px] bg-[#F6F1E7] p-4">
-                <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.historyTitle}</h3>
-                <p className="mt-2 leading-7 text-[#1D2925]">{detailDestination.history[lang]}</p>
-              </div>
-              <div className="mt-4 rounded-[8px] bg-white p-4 shadow-sm">
-                <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.significanceTitle}</h3>
-                <p className="mt-2 leading-7 text-[#1D2925]">{detailFacts.significance[lang]}</p>
-              </div>
-              <div className="mt-5">
-                <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.highlightsTitle}</h3>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {detailDestination.highlights[lang].map((highlight) => (
-                    <span key={highlight} className="rounded-[8px] border border-[#A8CEC1]/70 bg-white px-3 py-2 text-sm text-[#183F34]">
-                      {highlight}
-                    </span>
+            <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:p-10">
+              <aside className="h-fit rounded-[8px] border border-[#A8CEC1]/70 bg-[#F6F1E7] p-5 lg:sticky lg:top-6">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.bestTimeTitle}</p>
+                <p className="mt-2 leading-7 text-[#1D2925]">{detailFacts.bestTime[lang]}</p>
+                <div className="mt-5 grid gap-3">
+                  {[
+                    [t.crowdTitle, detailFacts.crowdTip[lang]],
+                    [t.transferTitle, detailFacts.gettingThere[lang]],
+                    [t.feeTitle, detailFacts.entranceFee[lang]],
+                  ].map(([label, value]) => (
+                    <div key={label as string} className="rounded-[8px] bg-white/80 p-3">
+                      <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#3F7568]">{label}</p>
+                      <p className="mt-2 text-sm leading-6 text-[#1D2925]">{value}</p>
+                    </div>
                   ))}
                 </div>
-              </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {[
-                  [t.bestTimeTitle, detailFacts.bestTime[lang]],
-                  [t.crowdTitle, detailFacts.crowdTip[lang]],
-                  [t.transferTitle, detailFacts.gettingThere[lang]],
-                  [t.feeTitle, detailFacts.entranceFee[lang]],
-                ].map(([label, value]) => (
-                  <div key={label as string} className="rounded-[8px] border border-[#A8CEC1]/70 bg-white p-3">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#3F7568]">{label}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#1D2925]">{value}</p>
+                {detailFacts.operatorNote ? (
+                  <p className="mt-5 rounded-[8px] border border-[#E7B96A]/70 bg-[#FFF8E8] p-4 text-sm font-semibold leading-6 text-[#183F34]">{detailFacts.operatorNote[lang]}</p>
+                ) : null}
+                <div className="mt-5 flex flex-wrap gap-2">{detailDestination.tags[lang].map((tag) => <span key={tag} className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-[#3F7568]">{tag}</span>)}</div>
+                <div className="mt-6 grid gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDetailId(null);
+                      window.setTimeout(() => addDestination(detailDestination.id), 0);
+                    }}
+                    className="rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white"
+                  >
+                    {selectedIds.includes(detailDestination.id) ? t.selected : t.add}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDetailId(null);
+                      window.setTimeout(() => focusDestination(detailDestination.id), 0);
+                    }}
+                    className="rounded-full border border-[#A8CEC1] bg-white px-5 py-3 font-semibold text-[#183F34]"
+                  >
+                    {t.directions}
+                  </button>
+                </div>
+              </aside>
+              <div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <section className="rounded-[8px] bg-[#F6F1E7] p-5">
+                    <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.historyTitle}</h3>
+                    <p className="mt-3 leading-8 text-[#1D2925]">{detailDestination.history[lang]}</p>
+                  </section>
+                  <section className="rounded-[8px] border border-[#A8CEC1]/70 bg-white p-5">
+                    <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.significanceTitle}</h3>
+                    <p className="mt-3 leading-8 text-[#1D2925]">{detailFacts.significance[lang]}</p>
+                  </section>
+                </div>
+                <section className="mt-6">
+                  <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.highlightsTitle}</h3>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {detailDestination.highlights[lang].map((highlight) => (
+                      <span key={highlight} className="rounded-[8px] border border-[#A8CEC1]/70 bg-white px-4 py-3 text-sm font-semibold text-[#183F34]">
+                        {highlight}
+                      </span>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="mt-5 rounded-[8px] bg-[#F6F1E7] p-4">
-                <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.practicalTitle}</h3>
-                <ul className="mt-3 grid gap-2">
-                  {detailFacts.practical[lang].map((item) => (
-                    <li key={item} className="text-sm leading-6 text-[#1D2925]">• {item}</li>
-                  ))}
-                </ul>
-              </div>
-              {detailFacts.operatorNote ? (
-                <p className="mt-5 rounded-[8px] border border-[#E7B96A]/70 bg-[#FFF8E8] p-4 text-sm font-semibold leading-6 text-[#183F34]">{detailFacts.operatorNote[lang]}</p>
-              ) : null}
-              <div className="mt-5">
-                <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.pairWithTitle}</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {detailFacts.pairWith.map((id) => {
-                    const pair = destinations.find((destination) => destination.id === id);
-                    if (!pair) return null;
-                    return (
-                      <button key={id} type="button" onClick={() => openDetail(id)} className="rounded-full border border-[#A8CEC1] bg-white px-3 py-1.5 text-sm font-semibold text-[#183F34]">
-                        {pair.name[lang]}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="mt-5 flex flex-wrap gap-2">{detailDestination.tags[lang].map((tag) => <span key={tag} className="rounded-full bg-[#F6F1E7] px-3 py-1 text-sm text-[#3F7568]">{tag}</span>)}</div>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <button type="button" onClick={() => addDestination(detailDestination.id)} className="rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white">{selectedIds.includes(detailDestination.id) ? t.selected : t.add}</button>
-                <button type="button" onClick={() => setDetailId(null)} className="rounded-full border border-[#A8CEC1] px-5 py-3 font-semibold text-[#183F34]">{t.detailClose}</button>
+                </section>
+                <section className="mt-6 rounded-[8px] bg-[#F6F1E7] p-5">
+                  <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.practicalTitle}</h3>
+                  <ul className="mt-3 grid list-disc gap-2 pl-5">
+                    {detailFacts.practical[lang].map((item) => (
+                      <li key={item} className="text-sm leading-6 text-[#1D2925]">{item}</li>
+                    ))}
+                  </ul>
+                </section>
+                <section className="mt-6">
+                  <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.pairWithTitle}</h3>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {detailFacts.pairWith.map((id) => {
+                      const pair = destinations.find((destination) => destination.id === id);
+                      if (!pair) return null;
+                      return (
+                        <button key={id} type="button" onClick={() => openDetail(id)} className="rounded-full border border-[#A8CEC1] bg-white px-4 py-2 text-sm font-semibold text-[#183F34] transition hover:bg-[#F6F1E7]">
+                          {pair.name[lang]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
               </div>
             </div>
           </article>
@@ -1463,8 +1554,14 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
       ) : null}
 
       {checkoutOpen ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[#1D2925]/70 px-5 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
-          <div className="w-full max-w-lg rounded-[8px] bg-[#FBFAF6] p-6 shadow-2xl">
+        <div
+          className="fixed inset-0 z-[1200] grid place-items-center bg-[#1D2925]/82 px-5 backdrop-blur-md"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="checkout-title"
+          onMouseDown={() => setCheckoutOpen(false)}
+        >
+          <div className="w-full max-w-lg rounded-[8px] bg-[#FBFAF6] p-6 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm uppercase tracking-[0.22em] text-[#3F7568]">{t.paymentOptions}</p>

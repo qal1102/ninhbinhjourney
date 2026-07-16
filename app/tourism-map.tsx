@@ -16,7 +16,11 @@ type TourismMapProps = {
   selectedIds: DestinationId[];
 };
 
-const welcomePosition: [number, number] = [20.253, 105.974];
+const welcomePosition: [number, number] = [20.28, 105.92];
+const expandedNinhBinhBounds: [[number, number], [number, number]] = [
+  [19.82, 105.42],
+  [20.72, 106.28],
+];
 
 function markerIcon(active: boolean, neutral = false) {
   return L.divIcon({
@@ -34,7 +38,12 @@ function MapFocus({ activeDestinationId, destinations }: Pick<TourismMapProps, "
   const target = active ? active.position : welcomePosition;
 
   useEffect(() => {
-    map.setView(target, active ? 11 : 10, { animate: true });
+    if (active) {
+      map.setView(target, 11, { animate: true });
+      return;
+    }
+
+    map.fitBounds(expandedNinhBinhBounds, { animate: true, padding: [24, 24] });
   }, [active, map, target]);
 
   return null;
@@ -53,10 +62,12 @@ export default function TourismMap({
     <MapContainer
       center={welcomePosition}
       className="h-[560px] min-h-[70vh] w-full rounded-[8px]"
+      maxBounds={expandedNinhBinhBounds}
+      maxBoundsViscosity={0.65}
       maxZoom={16}
       minZoom={8}
       scrollWheelZoom={false}
-      zoom={10}
+      zoom={9}
     >
       <MapFocus activeDestinationId={activeDestinationId} destinations={destinations} />
       <TileLayer

@@ -21,6 +21,7 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <NinhBinhLanding
       initialLang={lang}
+      key={`${lang}-${source}-${presentationMode ? "presentation" : "standard"}`}
       source={source}
       presentationMode={presentationMode}
     />

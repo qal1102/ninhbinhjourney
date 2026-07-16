@@ -30,6 +30,8 @@ export type Destination = {
   tagline: Localized;
   shortDescription: Localized;
   description: Localized;
+  history: Localized;
+  highlights: Record<Language, string[]>;
   tags: Record<Language, string[]>;
   imagePosition: string;
 };
@@ -91,9 +93,9 @@ const copy = {
     storiesIntro:
       "Editorial chapters for the places that shape a full Ninh Binh journey.",
     companionLabel: "Journey Companion",
-    companionTitle: "Shape the day around you",
+    companionTitle: "Choose the rhythm of your route",
     companionBody:
-      "Select the pace, time and mood you want. This preview composes a local itinerary without connecting to an AI provider.",
+      "Select your time and mood. The page drafts a local route from approved sample data without calling an AI provider.",
     prompt: "Tell me what kind of journey you want...",
     create: "Create journey",
     creating: "Composing your route...",
@@ -120,6 +122,8 @@ const copy = {
     close: "Close",
     confirm: "Confirm simulated reservation",
     detailClose: "Close detail",
+    historyTitle: "History",
+    highlightsTitle: "What to see",
     selected: "Selected",
     welcome: "Welcome location",
     welcomeDescription:
@@ -147,9 +151,9 @@ const copy = {
     storiesIntro:
       "Những chương ảnh lớn dành cho các điểm đến làm nên một hành trình Ninh Bình trọn vẹn.",
     companionLabel: "Bạn đồng hành hành trình",
-    companionTitle: "Định hình một ngày theo cách của bạn",
+    companionTitle: "Chọn nhịp đi của hành trình",
     companionBody:
-      "Chọn nhịp đi, thời lượng và cảm hứng mong muốn. Bản xem trước này tạo lịch trình cục bộ, chưa kết nối nhà cung cấp AI.",
+      "Chọn thời lượng và cảm hứng mong muốn. Trang sẽ tạo tuyến cục bộ từ dữ liệu mẫu đã chuẩn bị, chưa gọi nhà cung cấp AI.",
     prompt: "Bạn muốn một hành trình như thế nào...",
     create: "Tạo lịch trình",
     creating: "Đang sắp xếp tuyến...",
@@ -176,6 +180,8 @@ const copy = {
     close: "Đóng",
     confirm: "Xác nhận giữ chỗ mô phỏng",
     detailClose: "Đóng chi tiết",
+    historyTitle: "Lịch sử",
+    highlightsTitle: "Đáng xem",
     selected: "Đã chọn",
     welcome: "Điểm chào đón",
     welcomeDescription:
@@ -205,6 +211,14 @@ const destinations: Destination[] = [
       en: "Trang An is the emotional opening of Ninh Binh: water, limestone, rowing boats and a sense that the landscape is unfolding one bend at a time.",
       vi: "Tràng An là phần mở đầu giàu cảm xúc của Ninh Bình: nước, núi đá vôi, thuyền chèo và cảm giác cảnh quan mở ra qua từng khúc quanh.",
     },
+    history: {
+      en: "Trang An is part of the UNESCO-recognized landscape complex, where traces of settlement, temples and limestone caves sit inside a rare water-and-karst setting.",
+      vi: "Tràng An thuộc quần thể danh thắng được UNESCO ghi danh, nơi dấu tích cư trú, đền cổ và hang động đá vôi nằm trong một cảnh quan nước - núi hiếm có.",
+    },
+    highlights: {
+      en: ["Boat routes through caves", "Limestone valleys", "Water temples", "Quiet morning reflections"],
+      vi: ["Tuyến thuyền xuyên hang", "Thung lũng đá vôi", "Đền bên mặt nước", "Mặt nước buổi sớm"],
+    },
     tags: { en: ["Nature", "Heritage", "Boat"], vi: ["Thiên nhiên", "Di sản", "Thuyền"] },
     imagePosition: "50% 50%",
   },
@@ -228,6 +242,14 @@ const destinations: Destination[] = [
     description: {
       en: "Bai Dinh gives the day a spacious spiritual rhythm, balancing grand architecture with slow movement and open views.",
       vi: "Bái Đính đem lại nhịp tâm linh rộng mở, cân bằng giữa kiến trúc quy mô, bước đi chậm và các tầm nhìn thoáng.",
+    },
+    history: {
+      en: "The area combines older sacred sites with a large contemporary pagoda complex, making it one of the most recognizable spiritual landmarks in northern Vietnam.",
+      vi: "Khu vực này kết hợp các dấu tích tâm linh cổ với quần thể chùa quy mô lớn hiện nay, trở thành một điểm nhận diện nổi bật của du lịch tâm linh miền Bắc.",
+    },
+    highlights: {
+      en: ["Bell tower", "Long arhat corridors", "Temple courtyards", "Hillside viewpoints"],
+      vi: ["Tháp chuông", "Hành lang La Hán", "Sân chùa rộng", "Điểm nhìn trên sườn núi"],
     },
     tags: { en: ["Spiritual", "Culture", "Family"], vi: ["Tâm linh", "Văn hóa", "Gia đình"] },
     imagePosition: "50% 50%",
@@ -253,6 +275,14 @@ const destinations: Destination[] = [
       en: "Tam Chuc stretches the route north with water, scale and a calm pace for visitors who enjoy contemplative landscapes.",
       vi: "Tam Chúc mở rộng hành trình về phía bắc bằng mặt nước, quy mô và nhịp tĩnh dành cho du khách thích cảnh quan trầm lắng.",
     },
+    history: {
+      en: "Tam Chuc sits in a broad lake basin connected to a revived Buddhist landscape, now an important spiritual and scenic stop in the expanded regional route.",
+      vi: "Tam Chúc nằm trong lòng hồ rộng gắn với không gian Phật giáo được phục dựng, hiện là điểm dừng tâm linh và cảnh quan quan trọng trong tuyến vùng mở rộng.",
+    },
+    highlights: {
+      en: ["Lake approach", "Temple roofs", "Mountain backdrop", "Wide ceremonial spaces"],
+      vi: ["Tuyến hồ", "Mái chùa", "Nền núi phía sau", "Không gian nghi lễ rộng"],
+    },
     tags: { en: ["Lake", "Spiritual", "Calm"], vi: ["Mặt hồ", "Tâm linh", "Tĩnh lặng"] },
     imagePosition: "50% 50%",
   },
@@ -276,6 +306,14 @@ const destinations: Destination[] = [
     description: {
       en: "Hoa Lu Old Town closes the day softly: lanterns, small boats, food and reflections that make the route feel complete.",
       vi: "Phố cổ Hoa Lư khép lại ngày thật nhẹ: đèn lồng, thuyền nhỏ, ẩm thực và những phản chiếu làm hành trình trọn vẹn hơn.",
+    },
+    history: {
+      en: "The old-town experience is a contemporary cultural evening space inspired by regional architecture, lantern streets and waterside life.",
+      vi: "Không gian phố cổ là điểm trải nghiệm văn hóa buổi tối hiện đại, lấy cảm hứng từ kiến trúc vùng, phố đèn lồng và đời sống ven nước.",
+    },
+    highlights: {
+      en: ["Lantern boats", "Evening food stops", "Walking streets", "Water reflections"],
+      vi: ["Thuyền đèn lồng", "Điểm ăn tối", "Phố đi bộ", "Ánh phản chiếu trên nước"],
     },
     tags: { en: ["Evening", "Food", "Family"], vi: ["Buổi tối", "Ẩm thực", "Gia đình"] },
     imagePosition: "50% 55%",
@@ -301,6 +339,14 @@ const destinations: Destination[] = [
       en: "Tam Coc is softer and more rural, pairing water routes with rice fields and the everyday texture of Ninh Binh.",
       vi: "Tam Cốc dịu và thôn quê hơn, kết hợp tuyến nước với đồng lúa và chất đời thường của Ninh Bình.",
     },
+    history: {
+      en: "Tam Coc has long been known for boat routes through three caves and seasonal rice-field views framed by limestone mountains.",
+      vi: "Tam Cốc được biết đến lâu đời với tuyến thuyền qua ba hang và cảnh đồng lúa theo mùa nằm giữa khung núi đá vôi.",
+    },
+    highlights: {
+      en: ["Three cave route", "Rice-field views", "Village edges", "Boat photography"],
+      vi: ["Tuyến ba hang", "Cảnh đồng lúa", "Rìa làng quê", "Góc chụp thuyền"],
+    },
     tags: { en: ["Countryside", "Boat", "Nature"], vi: ["Làng quê", "Thuyền", "Thiên nhiên"] },
     imagePosition: "50% 50%",
   },
@@ -308,7 +354,7 @@ const destinations: Destination[] = [
     id: "hang_mua",
     sourceKeys: ["hang_mua"],
     name: { en: "Hang Mua", vi: "Hang Múa" },
-    image: "/images/destinations/hang-mua.jpg",
+    image: "/images/destinations/hang-mua.png",
     position: [20.229, 105.936],
     coords: "20.2290 N, 105.9360 E",
     category: { en: "Viewpoint", vi: "Điểm ngắm cảnh" },
@@ -325,6 +371,14 @@ const destinations: Destination[] = [
       en: "Hang Mua gives the journey altitude, with limestone ridges, river lines and a view that makes the region legible at once.",
       vi: "Hang Múa đem lại độ cao cho hành trình, với sống núi đá vôi, đường sông và góc nhìn giúp đọc được toàn vùng trong một khoảnh khắc.",
     },
+    history: {
+      en: "The viewpoint is known for its stone stair climb and dragon ridge, offering one of the clearest panoramas over Tam Coc and nearby limestone valleys.",
+      vi: "Điểm ngắm cảnh nổi tiếng với lối bậc đá và sống núi rồng, mở ra một trong những góc nhìn rõ nhất xuống Tam Cốc và các thung lũng đá vôi gần kề.",
+    },
+    highlights: {
+      en: ["Dragon stair ridge", "River panorama", "Sunset viewpoint", "Active climb"],
+      vi: ["Sống núi rồng", "Toàn cảnh dòng sông", "Điểm ngắm hoàng hôn", "Cung leo vận động"],
+    },
     tags: { en: ["Viewpoint", "Adventure", "Sunset"], vi: ["Ngắm cảnh", "Khám phá", "Hoàng hôn"] },
     imagePosition: "50% 50%",
   },
@@ -332,7 +386,7 @@ const destinations: Destination[] = [
     id: "hoa_lu_ancient_capital",
     sourceKeys: ["hoa_lu_ancient_capital", "co_do_hoa_lu"],
     name: { en: "Hoa Lu Ancient Capital", vi: "Cố đô Hoa Lư" },
-    image: "/images/destinations/hoa-lu-ancient-capital.jpg",
+    image: "/images/destinations/hoa-lu-ancient-capital.png",
     position: [20.2833, 105.9066],
     coords: "20.2833 N, 105.9066 E",
     category: { en: "Ancient capital", vi: "Cố đô" },
@@ -349,6 +403,14 @@ const destinations: Destination[] = [
       en: "Hoa Lu Ancient Capital adds historical depth, grounding the natural drama of Ninh Binh in stories of kings, gates and stone.",
       vi: "Cố đô Hoa Lư thêm chiều sâu lịch sử, đặt vẻ hùng vĩ của Ninh Bình vào câu chuyện vua chúa, cổng thành và đá núi.",
     },
+    history: {
+      en: "Hoa Lu was Vietnam's capital in the 10th and 11th centuries under the Dinh and early Le dynasties, protected by limestone terrain and river routes.",
+      vi: "Hoa Lư từng là kinh đô của Việt Nam vào thế kỷ X-XI dưới thời Đinh và Tiền Lê, được bảo vệ bởi địa thế núi đá vôi và các tuyến sông.",
+    },
+    highlights: {
+      en: ["Dinh King Temple", "Le King Temple", "Ancient gates", "Limestone defensive landscape"],
+      vi: ["Đền vua Đinh", "Đền vua Lê", "Cổng cổ", "Địa thế phòng thủ núi đá"],
+    },
     tags: { en: ["History", "Culture", "Heritage"], vi: ["Lịch sử", "Văn hóa", "Di sản"] },
     imagePosition: "50% 50%",
   },
@@ -356,7 +418,7 @@ const destinations: Destination[] = [
     id: "cuc_phuong",
     sourceKeys: ["cuc_phuong"],
     name: { en: "Cuc Phuong", vi: "Cúc Phương" },
-    image: "/images/destinations/cuc-phuong.jpg",
+    image: "/images/destinations/cuc-phuong.png",
     position: [20.35, 105.6],
     coords: "20.3500 N, 105.6000 E",
     category: { en: "National park", vi: "Vườn quốc gia" },
@@ -373,6 +435,14 @@ const destinations: Destination[] = [
       en: "Cuc Phuong brings forest, biodiversity and a cooler rhythm into the Ninh Binh journey.",
       vi: "Cúc Phương đưa rừng, đa dạng sinh học và một nhịp mát lành hơn vào hành trình Ninh Bình.",
     },
+    history: {
+      en: "Cuc Phuong is Vietnam's first national park, valued for ancient forest, conservation work and a very different ecological layer of the region.",
+      vi: "Cúc Phương là vườn quốc gia đầu tiên của Việt Nam, nổi bật bởi rừng già, công tác bảo tồn và một lớp sinh thái rất khác của vùng.",
+    },
+    highlights: {
+      en: ["Ancient trees", "Forest trails", "Primate conservation", "Seasonal butterflies"],
+      vi: ["Cây cổ thụ", "Đường mòn trong rừng", "Bảo tồn linh trưởng", "Mùa bướm"],
+    },
     tags: { en: ["Forest", "Nature", "Family"], vi: ["Rừng", "Thiên nhiên", "Gia đình"] },
     imagePosition: "50% 50%",
   },
@@ -380,7 +450,7 @@ const destinations: Destination[] = [
     id: "phat_diem",
     sourceKeys: ["phat_diem", "nha_tho_phat_diem"],
     name: { en: "Phat Diem Cathedral", vi: "Nhà thờ Phát Diệm" },
-    image: "/images/destinations/phat-diem.jpg",
+    image: "/images/destinations/phat-diem.png",
     position: [20.091, 106.083],
     coords: "20.0910 N, 106.0830 E",
     category: { en: "Architectural heritage", vi: "Di sản kiến trúc" },
@@ -396,6 +466,14 @@ const destinations: Destination[] = [
     description: {
       en: "Phat Diem expands the story beyond karsts, adding coastal-delta craft and a memorable architectural voice.",
       vi: "Phát Diệm mở rộng câu chuyện vượt khỏi núi đá, thêm dấu ấn thủ công vùng đồng bằng ven biển và một giọng kiến trúc khó quên.",
+    },
+    history: {
+      en: "Phat Diem Cathedral complex was built with a distinctive blend of Vietnamese timber-roof forms and Catholic stone architecture, creating a rare regional landmark.",
+      vi: "Quần thể Nhà thờ Phát Diệm được xây dựng với sự hòa trộn đặc sắc giữa mái gỗ Việt Nam và kiến trúc đá Công giáo, tạo nên một dấu mốc hiếm có của vùng.",
+    },
+    highlights: {
+      en: ["Stone cathedral", "Timber roof forms", "Pond courtyard", "Bell house"],
+      vi: ["Nhà thờ đá", "Mái gỗ truyền thống", "Sân hồ", "Phương đình"],
     },
     tags: { en: ["Architecture", "Culture", "Heritage"], vi: ["Kiến trúc", "Văn hóa", "Di sản"] },
     imagePosition: "50% 50%",
@@ -577,27 +655,15 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
           className="float-slow object-cover opacity-80"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(24,63,52,.16),rgba(24,63,52,.58)_48%,rgba(29,41,37,.9))]" />
-        <div className="word-reveal pointer-events-none absolute inset-0 z-20 grid place-items-center bg-[#FBFAF6] text-[#183F34]">
-          <div className="px-6 text-center">
-            <p className="text-sm uppercase tracking-[0.32em] text-[#3F7568]">{t.introTop}</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 font-display text-4xl sm:text-7xl">
-              {(t.introWords as string[]).map((word, index) => (
-                <span key={word} className="reveal-word" style={{ animationDelay: `${index * 180}ms` }}>
-                  {word}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
         <div className="absolute inset-x-0 top-0 z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-          <button type="button" onClick={() => scrollToId("top")} className="font-display text-xl tracking-[0.16em]">
+          <a href="#top" className="font-display text-xl tracking-[0.16em]">
             NB
-          </button>
+          </a>
           <nav aria-label="Primary" className="hidden gap-6 text-sm text-[#FBFAF6]/82 md:flex">
             {(t.nav as string[]).map((item, index) => (
-              <button key={item} type="button" onClick={() => scrollToId(["map", "stories", "ai", "itinerary"][index])} className="transition hover:text-[#E7B96A]">
+              <a key={item} href={`#${["map", "stories", "ai", "itinerary"][index]}`} className="transition hover:text-[#E7B96A]">
                 {item}
-              </button>
+              </a>
             ))}
           </nav>
           <div className="flex rounded-full border border-white/25 bg-white/10 p-1 text-sm backdrop-blur">
@@ -703,8 +769,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
               })}
             </div>
             <textarea className="mt-5 min-h-32 w-full resize-none rounded-[8px] border border-[#A8CEC1] bg-[#FBFAF6] p-4 text-[#1D2925] outline-none transition focus:border-[#3F7568]" placeholder={t.prompt as string} defaultValue={lang === "en" ? "I have one day, travel with my parents, and prefer a relaxed cultural route." : "Tôi có một ngày, đi cùng bố mẹ và muốn một lịch trình văn hóa nhẹ nhàng."} />
-            <div className="mt-4 flex justify-end gap-3">
-              <button type="button" className="rounded-full border border-[#A8CEC1] px-4 py-2 text-[#183F34]">{t.voice}</button>
+            <div className="mt-4 flex justify-end">
               <button type="button" onClick={createJourney} disabled={loading} className="min-w-44 rounded-full bg-[#183F34] px-5 py-2 font-semibold text-white transition hover:bg-[#24594a] disabled:cursor-wait disabled:opacity-75">
                 {loading ? t.creating : t.create}
               </button>
@@ -751,7 +816,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
             <p className="mt-4 leading-7 text-[#FBFAF6]/78">{t.experienceBody}</p>
             <p className="mt-6 rounded-[8px] bg-white/10 p-4 text-[#FBFAF6]/86">{t.experienceFit}</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button type="button" onClick={() => scrollToId("experience")} className="rounded-full border border-white/30 px-5 py-3 font-semibold transition hover:bg-white/10">{t.viewExperience}</button>
+              <button type="button" onClick={() => openDetail("hoa_lu_old_town")} className="rounded-full border border-white/30 px-5 py-3 font-semibold transition hover:bg-white/10">{t.viewExperience}</button>
               <button type="button" onClick={() => setCheckoutOpen(true)} className="rounded-full bg-[#E7B96A] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#f0c87c]">{t.reserve}</button>
             </div>
           </aside>
@@ -768,6 +833,20 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3F7568]">{detailDestination.category[lang]} · {detailDestination.duration[lang]}</p>
               <h2 className="font-display mt-3 text-4xl text-[#183F34]">{detailDestination.name[lang]}</h2>
               <p className="mt-4 leading-7 text-[#4d5b55]">{detailDestination.description[lang]}</p>
+              <div className="mt-6 rounded-[8px] bg-[#F6F1E7] p-4">
+                <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.historyTitle}</h3>
+                <p className="mt-2 leading-7 text-[#1D2925]">{detailDestination.history[lang]}</p>
+              </div>
+              <div className="mt-5">
+                <h3 className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">{t.highlightsTitle}</h3>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {detailDestination.highlights[lang].map((highlight) => (
+                    <span key={highlight} className="rounded-[8px] border border-[#A8CEC1]/70 bg-white px-3 py-2 text-sm text-[#183F34]">
+                      {highlight}
+                    </span>
+                  ))}
+                </div>
+              </div>
               <div className="mt-5 flex flex-wrap gap-2">{detailDestination.tags[lang].map((tag) => <span key={tag} className="rounded-full bg-[#F6F1E7] px-3 py-1 text-sm text-[#3F7568]">{tag}</span>)}</div>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={() => addDestination(detailDestination.id)} className="rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white">{selectedIds.includes(detailDestination.id) ? t.selected : t.add}</button>

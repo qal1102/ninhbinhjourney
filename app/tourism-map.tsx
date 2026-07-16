@@ -2,7 +2,7 @@
 
 import L from "leaflet";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import type { Destination, DestinationId, Language, MapCopy } from "./ninh-binh-landing";
 
@@ -16,11 +16,13 @@ type TourismMapProps = {
   selectedIds: DestinationId[];
 };
 
-const welcomePosition: [number, number] = [20.28, 105.92];
+const welcomePosition: [number, number] = [20.2503, 105.897];
 const expandedNinhBinhBounds: [[number, number], [number, number]] = [
   [19.82, 105.42],
   [20.72, 106.28],
 ];
+const defaultZoom = 10;
+const nearZoom = 13;
 
 function markerIcon(active: boolean, neutral = false) {
   return L.divIcon({
@@ -32,6 +34,15 @@ function markerIcon(active: boolean, neutral = false) {
   });
 }
 
+function userIcon() {
+  return L.divIcon({
+    className: "",
+    html: '<div class="nb-user-marker"></div>',
+    iconAnchor: [9, 9],
+    iconSize: [18, 18],
+  });
+}
+
 function MapFocus({ activeDestinationId, destinations }: Pick<TourismMapProps, "activeDestinationId" | "destinations">) {
   const map = useMap();
   const active = destinations.find((destination) => destination.id === activeDestinationId);
@@ -39,14 +50,79 @@ function MapFocus({ activeDestinationId, destinations }: Pick<TourismMapProps, "
 
   useEffect(() => {
     if (active) {
-      map.setView(target, 11, { animate: true });
+      map.setView(target, 12, { animate: true });
       return;
     }
 
-    map.fitBounds(expandedNinhBinhBounds, { animate: true, padding: [24, 24] });
+    map.setView(welcomePosition, defaultZoom, { animate: true });
   }, [active, map, target]);
 
   return null;
+}
+
+function LocationControl({
+  copy,
+  onPosition,
+}: {
+  copy: MapCopy;
+  onPosition: (position: [number, number] | null) => void;
+}) {
+  const map = useMap();
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  function isInsideRegion(position: [number, number]) {
+    const [[south, west], [north, east]] = expandedNinhBinhBounds;
+    return position[0] >= south && position[0] <= north && position[1] >= west && position[1] <= east;
+  }
+
+  function locate() {
+    if (!navigator.geolocation) {
+      setStatus(copy.locationDenied);
+      return;
+    }
+
+    setBusy(true);
+    setStatus(copy.locating);
+    navigator.geolocation.getCurrentPosition(
+      (result) => {
+        const position: [number, number] = [result.coords.latitude, result.coords.longitude];
+        if (isInsideRegion(position)) {
+          onPosition(position);
+          map.setView(position, nearZoom, { animate: true });
+          setStatus(copy.locationFound);
+        } else {
+          onPosition(null);
+          map.setView(welcomePosition, defaultZoom, { animate: true });
+          setStatus(copy.locationOutside);
+        }
+        setBusy(false);
+      },
+      () => {
+        onPosition(null);
+        map.setView(welcomePosition, defaultZoom, { animate: true });
+        setStatus(copy.locationDenied);
+        setBusy(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 120000, timeout: 8000 },
+    );
+  }
+
+  useEffect(() => {
+    const timeout = window.setTimeout(locate, 700);
+    return () => window.clearTimeout(timeout);
+    // Auto-locate once on mount; the visible button below lets visitors retry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="nb-location-control">
+      <button type="button" onClick={locate} disabled={busy}>
+        {busy ? copy.locating : copy.nearMe}
+      </button>
+      {status ? <p>{status}</p> : null}
+    </div>
+  );
 }
 
 export default function TourismMap({
@@ -58,6 +134,8 @@ export default function TourismMap({
   onDiscover,
   selectedIds,
 }: TourismMapProps) {
+  const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
+
   return (
     <MapContainer
       center={welcomePosition}
@@ -67,13 +145,15 @@ export default function TourismMap({
       maxZoom={16}
       minZoom={8}
       scrollWheelZoom={false}
-      zoom={9}
+      zoom={defaultZoom}
     >
       <MapFocus activeDestinationId={activeDestinationId} destinations={destinations} />
+      <LocationControl copy={copy} onPosition={setUserPosition} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      {userPosition ? <Marker icon={userIcon()} position={userPosition} /> : null}
       <Marker icon={markerIcon(activeDestinationId === "welcome", true)} position={welcomePosition}>
         <Tooltip direction="right" offset={[18, 0]} permanent>
           <span className="nb-here-badge">{copy.youAreHere}</span>
@@ -90,6 +170,7 @@ export default function TourismMap({
       {destinations.map((destination) => {
         const active = destination.id === activeDestinationId;
         const selected = selectedIds.includes(destination.id);
+
         return (
           <Marker key={destination.id} icon={markerIcon(active)} position={destination.position}>
             {active ? (
@@ -100,13 +181,7 @@ export default function TourismMap({
             <Popup>
               <article className="bg-[#FBFAF6] text-[#1D2925]">
                 <div className="relative h-36 w-full">
-                  <Image
-                    src={destination.image}
-                    alt={destination.name[lang]}
-                    fill
-                    sizes="280px"
-                    className="object-cover"
-                  />
+                  <Image src={destination.image} alt={destination.name[lang]} fill sizes="280px" className="object-cover" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(24,63,52,.45))]" />
                 </div>
                 <div className="p-4">

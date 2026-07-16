@@ -62,6 +62,23 @@ textarea {
   animation: pulse-soft 2.8s ease-in-out infinite;
 }
 
+.word-sequence span {
+  animation: word-pop 4.8s ease both infinite;
+  opacity: 0;
+}
+
+.word-sequence span:nth-child(2) {
+  animation-delay: 0.45s;
+}
+
+.word-sequence span:nth-child(3) {
+  animation-delay: 0.9s;
+}
+
+.word-sequence span:nth-child(4) {
+  animation-delay: 1.35s;
+}
+
 .reveal-panel {
   animation: fade-up 900ms ease both;
 }
@@ -121,6 +138,15 @@ textarea {
   color: #fbfaf6;
 }
 
+.nb-user-marker {
+  background: #2f80ed;
+  border: 3px solid #fbfaf6;
+  border-radius: 999px;
+  box-shadow: 0 0 0 8px rgba(47, 128, 237, 0.18), 0 10px 24px rgba(29, 41, 37, 0.22);
+  height: 18px;
+  width: 18px;
+}
+
 .nb-here-badge {
   background: #183f34;
   border: 1px solid rgba(251, 250, 246, 0.6);
@@ -130,6 +156,42 @@ textarea {
   font-weight: 800;
   padding: 4px 8px;
   white-space: nowrap;
+}
+
+.nb-location-control {
+  background: rgba(251, 250, 246, 0.94);
+  border: 1px solid rgba(168, 206, 193, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(24, 63, 52, 0.18);
+  left: 12px;
+  max-width: 220px;
+  padding: 10px;
+  position: absolute;
+  top: 12px;
+  z-index: 500;
+}
+
+.nb-location-control button {
+  background: #183f34;
+  border-radius: 999px;
+  color: #fbfaf6;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.nb-location-control button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.nb-location-control p {
+  color: #3f7568;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 8px;
 }
 
 @keyframes fade-up {
@@ -163,6 +225,24 @@ textarea {
   }
 }
 
+@keyframes word-pop {
+  0%,
+  8% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  14%,
+  44% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  54%,
+  100% {
+    opacity: 0.38;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -171,5 +251,9 @@ textarea {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
+  }
+
+  .word-sequence span {
+    opacity: 1;
   }
 }

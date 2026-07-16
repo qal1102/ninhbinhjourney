@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Ninh Binh AI Journey",
   description:
-    "A premium mobile-first demo journey through Ninh Binh's mountains, water, and heritage.",
+    "A premium mobile-first journey through Ninh Binh's mountains, water, and heritage.",
 };
 
 export default function RootLayout({

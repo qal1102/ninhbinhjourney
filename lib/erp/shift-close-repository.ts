@@ -275,6 +275,7 @@ function asRole(value: unknown): ErpRole {
     value === "employee" ||
     value === "manager" ||
     value === "accountant" ||
+    value === "chief-accountant" ||
     value === "director"
   ) {
     return value;
@@ -282,6 +283,11 @@ function asRole(value: unknown): ErpRole {
   throw new ShiftCloseRepositoryError(
     "Invalid persisted shift-close actor role.",
   );
+}
+
+function asAuditRole(value: unknown): ShiftCloseAuditEvent["actor"]["role"] {
+  if (value === "system") return value;
+  return asRole(value);
 }
 
 function auditEventFromRow(row: DatabaseAuditRow): ShiftCloseAuditEvent {
@@ -304,7 +310,7 @@ function auditEventFromRow(row: DatabaseAuditRow): ShiftCloseAuditEvent {
         asNullableString(row.actor_display_name) ??
         asNullableString(metadata.actorName) ??
         asString(row.actor_account_id, "audit.actor_account_id"),
-      role: asRole(row.actor_role),
+      role: asAuditRole(row.actor_role),
     },
     fromStatus: asNullableString(row.from_status) as ShiftCloseStatus | null,
     toStatus: asString(row.to_status, "audit.to_status") as ShiftCloseStatus,
@@ -875,6 +881,17 @@ function sanitizedActor(
   };
 }
 
+function sanitizedAuditActor(
+  actor: ShiftCloseAuditEvent["actor"],
+  field: string,
+): ShiftCloseAuditEvent["actor"] {
+  return {
+    id: boundedText(actor.id, `${field}.id`, 100),
+    name: boundedText(actor.name, `${field}.name`, 120),
+    role: asAuditRole(actor.role),
+  };
+}
+
 function sanitizedReview(
   review: ShiftCloseReview | undefined,
   field: string,
@@ -897,6 +914,8 @@ function sanitizedAuditEvent(
     "manager.review",
     "accountant.reconcile",
     "director.decide",
+    "system.accounting-posted",
+    "system.accounting-reversed",
   ];
   if (!allowedActions.includes(event.action)) {
     throw new ShiftCloseRepositoryError(
@@ -919,7 +938,7 @@ function sanitizedAuditEvent(
   return {
     id: boundedText(event.id, `auditTrail[${index}].id`, 100),
     action: event.action,
-    actor: sanitizedActor(event.actor, `auditTrail[${index}].actor`),
+    actor: sanitizedAuditActor(event.actor, `auditTrail[${index}].actor`),
     fromStatus: event.fromStatus,
     toStatus: event.toStatus,
     note:

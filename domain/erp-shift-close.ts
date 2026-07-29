@@ -25,10 +25,19 @@ export type ShiftCloseActor = {
   role: ErpRole;
 };
 
+export type ShiftCloseAuditActor = Omit<ShiftCloseActor, "role"> & {
+  role: ErpRole | "system";
+};
+
+export type ShiftCloseAuditAction =
+  | ShiftCloseAction["type"]
+  | "system.accounting-posted"
+  | "system.accounting-reversed";
+
 export type ShiftCloseAuditEvent = {
   id: string;
-  action: ShiftCloseAction["type"];
-  actor: ShiftCloseActor;
+  action: ShiftCloseAuditAction;
+  actor: ShiftCloseAuditActor;
   fromStatus: ShiftCloseStatus | null;
   toStatus: ShiftCloseStatus;
   note: string;

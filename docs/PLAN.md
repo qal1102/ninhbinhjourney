@@ -923,8 +923,8 @@ Với mỗi persona phải trả lời:
 - [x] Đã quét secret và commit toàn bộ 203 file app thành checkpoint `ef2e5d1`. Snapshot Sites `68945ab2f54d72c74650cc2c37541ce3f954dc61` chỉ còn là bằng chứng lịch sử; release Vercel mới phải dùng subtree hiện hành không chứa Sites mapping.
 - [x] GitHub release target là `qal1102/ninhbinhjourney`, với `package.json` ở repository root.
 - [x] Xác nhận `/erp` là route của cùng app, không deploy nhầm ERP đè lên homepage.
-- [x] App subtree `ea1b1517b32876a9e40bbfcf655b6137d064df9e` đã push fast-forward lên GitHub; production deployment `dpl_73igvZzmW9KxGcKCC6UTYVJTbMLG` đã `Ready`.
-- [x] Alias chính và TLS hoạt động; `/`, `/erp`, `/api/health` đều `200` và production browser smoke qua **6/6** mobile/desktop.
+- [x] App subtree runtime và tài liệu bàn giao đã push fast-forward lên `qal1102/ninhbinhjourney/main`; Vercel production alias theo dõi branch này và đã `Ready`.
+- [x] Alias chính và TLS hoạt động; `/`, `/erp`, `/api/health` đều `200`; functional smoke qua **6/6** và final alias smoke qua **4/4** mobile/desktop.
 - [ ] Staging/approval gate tách biệt và canonical/redirect matrix đầy đủ vẫn còn trong release hardening cuối.
 
 ### G17.2. Release

@@ -356,14 +356,12 @@ export async function reconcileShiftCloseAction(
 ): Promise<ShiftCloseActionState> {
   try {
     const base = RecordActionSchema.extend({
-      decision: z.enum(["review", "post", "escalate", "return"]),
-      journalReference: z.string().trim().max(80).optional(),
+      decision: z.enum(["review", "escalate", "return"]),
     }).parse({
       recordId: formData.get("recordId"),
       expectedVersion: formData.get("expectedVersion"),
       decision: formData.get("decision"),
       note: formData.get("note"),
-      journalReference: formData.get("journalReference") || undefined,
     });
     const user = requireCurrentUser(await getCurrentErpUser());
     if (user.role !== "accountant" || !canReconcileTicketShift(user.role)) {
@@ -376,7 +374,6 @@ export async function reconcileShiftCloseAction(
       decision: base.decision,
       actor: actorFromUser(user),
       note: base.note,
-      journalReference: base.journalReference,
       now: new Date().toISOString(),
       auditEventId: crypto.randomUUID(),
     };
@@ -396,7 +393,6 @@ export async function reconcileShiftCloseAction(
     );
     const message = {
       review: `${persisted.shiftCode} đã được nhận kiểm tra.`,
-      post: `${persisted.shiftCode} đã đối soát và liên kết bút toán.`,
       escalate: `${persisted.shiftCode} đã chuyển giám đốc vì vượt ngưỡng.`,
       return: `${persisted.shiftCode} đã trả quản lý bổ sung hồ sơ.`,
     }[base.decision];

@@ -8,6 +8,7 @@ import {
   isBalancedJournalProposal,
   journalProposalTotals,
   transitionShiftClose,
+  type ShiftCloseAction,
   type ShiftCloseActor,
 } from "@/domain/erp-shift-close";
 
@@ -69,7 +70,7 @@ describe("ERP shift-close golden path", () => {
     ).toBe(0);
   });
 
-  it("moves a matched shift through employee, manager and accountant without the director", () => {
+  it("moves a matched shift to the accounting maker queue without the director", () => {
     const created = submission();
     const approved = transitionShiftClose(created, {
       type: "manager.review",
@@ -87,28 +88,24 @@ describe("ERP shift-close golden path", () => {
       now: "2026-07-28T12:40:00+07:00",
       auditEventId: "audit-accounting-review",
     });
-    const posted = transitionShiftClose(reviewed, {
-      type: "accountant.reconcile",
-      decision: "post",
-      actor: accountant,
-      note: "Số liệu khớp, ghi nhận sổ doanh thu ca.",
-      journalReference: "JV-20260728-001",
-      now: "2026-07-28T12:45:00+07:00",
-      auditEventId: "audit-accounting-post",
-    });
-
-    expect(posted.status).toBe("posted");
-    expect(posted.version).toBe(4);
-    expect(posted.auditTrail).toHaveLength(4);
+    expect(reviewed.status).toBe("accounting-review");
+    expect(reviewed.version).toBe(3);
+    expect(reviewed.auditTrail).toHaveLength(3);
     expect(
-      filterShiftCloseQueue([posted], {
+      filterShiftCloseQueue([reviewed], {
         role: "director",
         siteIds: ["trang-an"],
       }),
     ).toHaveLength(0);
+    expect(
+      filterShiftCloseQueue([reviewed], {
+        role: "chief-accountant",
+        siteIds: ["trang-an"],
+      }),
+    ).toHaveLength(1);
   });
 
-  it("requires a director decision before posting a material exception", () => {
+  it("requires a director decision before a material exception reaches the journal workflow", () => {
     const created = submission(-18_000_000);
     const approved = transitionShiftClose(created, {
       type: "manager.review",
@@ -119,16 +116,18 @@ describe("ERP shift-close golden path", () => {
       auditEventId: "audit-manager",
     });
     expect(() =>
-      transitionShiftClose(approved, {
-        type: "accountant.reconcile",
-        decision: "post",
-        actor: accountant,
-        note: "Thử ghi sổ khi chưa duyệt ngoại lệ.",
-        journalReference: "JV-INVALID",
-        now: "2026-07-28T12:40:00+07:00",
-        auditEventId: "audit-invalid",
-      }),
-    ).toThrow(/giám đốc/);
+      transitionShiftClose(
+        approved,
+        {
+          type: "accountant.reconcile",
+          decision: "post",
+          actor: accountant,
+          note: "Thử tự ghi sổ khi chưa có người kiểm tra độc lập.",
+          now: "2026-07-28T12:40:00+07:00",
+          auditEventId: "audit-invalid",
+        } as unknown as ShiftCloseAction,
+      ),
+    ).toThrow(/kế toán trưởng/i);
 
     const escalated = transitionShiftClose(approved, {
       type: "accountant.reconcile",
@@ -154,16 +153,13 @@ describe("ERP shift-close golden path", () => {
       now: "2026-07-28T12:50:00+07:00",
       auditEventId: "audit-director",
     });
-    const posted = transitionShiftClose(decided, {
-      type: "accountant.reconcile",
-      decision: "post",
-      actor: accountant,
-      note: "Ghi sổ theo phương án ngoại lệ đã được duyệt.",
-      journalReference: "JV-20260728-002",
-      now: "2026-07-28T13:00:00+07:00",
-      auditEventId: "audit-post",
-    });
-    expect(posted.status).toBe("posted");
+    expect(decided.status).toBe("director-approved");
+    expect(
+      filterShiftCloseQueue([decided], {
+        role: "chief-accountant",
+        siteIds: ["trang-an"],
+      }),
+    ).toHaveLength(1);
   });
 
   it("returns a shift to its employee and preserves one audit trail when resubmitted", () => {

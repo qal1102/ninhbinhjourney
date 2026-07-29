@@ -120,10 +120,15 @@ export default async function ErpLoginPage({ searchParams }: Props) {
             <summary className="cursor-pointer font-bold text-white/78">Tài khoản đăng nhập được cấp</summary>
             <div className="mt-4 grid gap-3 text-white/62 sm:grid-cols-2">
               <p><strong className="block text-white">Giám đốc</strong>giamdoc<br />Giamdoc@2026</p>
-              <p><strong className="block text-white">Quản lý</strong>ql.trangan<br />Quanly@2026</p>
-              <p><strong className="block text-white">Kế toán</strong>ketoan<br />Ketoan@2026</p>
-              <p><strong className="block text-white">Nhân viên</strong>nv.trangan<br />Nhanvien@2026</p>
-              <p><strong className="block text-white">Nhân viên thời vụ</strong>tv.trangan<br />Thoivu@2026</p>
+              <p><strong className="block text-white">Quản lý vận hành · 4 cơ sở</strong>ql.vanhanh<br />Quanly@2026</p>
+              <p><strong className="block text-white">Kế toán trưởng</strong>ketoantruong<br />Ketoantruong@2026</p>
+              <p><strong className="block text-white">Kế toán tổng hợp</strong>ketoan<br />Ketoan@2026</p>
+              <p><strong className="block text-white">Nhân viên Tràng An</strong>nv.trangan<br />Nhanvien@2026</p>
+              <p><strong className="block text-white">Nhân viên Tam Chúc</strong>nv.tamchuc<br />Nhanvien@2026</p>
+              <p><strong className="block text-white">Nhân viên Tam Cốc</strong>nv.tamcoc<br />Nhanvien@2026</p>
+              <p><strong className="block text-white">Nhân viên Bái Đính</strong>nv.baidinh<br />Nhanvien@2026</p>
+              <p><strong className="block text-white">Nhân viên thời vụ Tràng An</strong>tv.trangan<br />Thoivu@2026</p>
+              <p className="sm:col-span-2"><strong className="block text-white">Tương thích kịch bản cũ</strong>ql.trangan vẫn đăng nhập vào tài khoản quản lý vận hành.</p>
             </div>
           </details>
 

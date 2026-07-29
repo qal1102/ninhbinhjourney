@@ -6,22 +6,22 @@
 
 ## Cập nhật gần nhất
 
-- Thời gian: 29/07/2026 — 15:20, múi giờ Asia/Saigon
+- Thời gian: 29/07/2026 — 16:37, múi giờ Asia/Saigon
 - Production chính: https://ninhbinhjourney.vercel.app
 - ERP: https://ninhbinhjourney.vercel.app/erp
 - Production alias đang phục vụ: https://ninhbinhjourney.vercel.app
 - Trạng thái build local mới nhất: thành công với Next.js 16.2.11
-- Trạng thái kiểm tra local mới nhất: `npm run typecheck`, `npm run lint`, `npm run build` và **128/128** unit/security/integration test đều qua. Pre-deploy browser matrix chạy trong output cô lập: **60 passed, 14 skipped đúng điều kiện project/viewport**, không có test fail.
-- Thay đổi mới nhất: đã harden phiếu công việc từ giao việc → GPS check-in → tiến độ → bằng chứng → bàn giao → quản lý xem ảnh/kết quả/audit rồi duyệt hoặc trả. Ảnh bàn giao/gửi lại phải là bằng chứng mới; GPS accuracy phải trong `1–250 m`; storage object không ghi đè. GPS chỉ cập nhật khi ca mở và web/PWA hoạt động, không phải theo dõi nền.
+- Trạng thái kiểm tra local mới nhất: typecheck, full lint, **145/145** unit/security/integration test, clean production build và targeted maker–checker Playwright **2/2 desktop/mobile** đều qua. Full Playwright chỉ chạy lại ở release candidate sau khi cập nhật assertion stock cũ.
+- Thay đổi mới nhất: thay toàn bộ chín hồ sơ kế toán hard-code bằng journal thật trên Supabase; bổ sung kế toán trưởng/checker, sổ Nợ/Có, trả hồ sơ, ghi sổ, hoàn bút, bút toán điều chỉnh, khóa/mở kỳ và audit xuyên tài khoản.
 - Lỗi P0 `invalid-use-server-value` đã đóng: type/initial state được chuyển sang `domain/erp-shift-close-action-state.ts`; `app/erp/workflow-actions.ts` hiện chỉ export async server actions.
 - Trạng thái deploy: **đã live**. App subtree runtime và tài liệu bàn giao đã push fast-forward lên `qal1102/ninhbinhjourney/main`; Vercel production alias theo dõi branch này.
 - Production smoke gần nhất: `/`, `/erp`, `/api/health` đều `200`; functional smoke trước đó qua **6/6**, final alias smoke qua **4/4** trên mobile/desktop cho intro bốn chữ và màn đăng nhập ERP không overflow/lỗi accessibility nghiêm trọng.
 
 ## Công việc đang dở — phải đọc trước khi sửa
 
-1. Kế hoạch tổng thể nằm ở [`PLAN.md`](./PLAN.md). Nền Supabase của `G2` đã hoạt động; `G2` còn staging/health/rotate PAT. `G8` đã xong normal path, ngoại lệ giám đốc, trả lại/gửi lại, stale-version và integration test remote outage/retry; bước tiếp theo là checker/journal/period lock. `G10.4` đã có một vòng đời nhân viên/quản lý bền; còn phải tách task khỏi attendance/shift, hỗ trợ nhiều task, missed punch/OT/leave, bảng công khóa/payroll và chính sách retention GPS.
-2. Migration `202607280003_erp_shift_close_workflow.sql`, `202607290004_erp_workday_lifecycle.sql` và `202607290005_erp_workday_resubmission_integrity.sql` đã có trên remote; không chạy lại bằng thao tác thủ công.
-3. Normal path và material exception đã qua Supabase. Bài ngoại lệ dùng năm browser context độc lập cho bốn vai trò cùng một quản lý giữ version cũ. Remote outage/retry đã có integration test fail-closed và idempotency; bài tiếp theo là checker/journal/period lock.
+1. Kế hoạch tổng thể nằm ở [`PLAN.md`](./PLAN.md). Nền Supabase của `G2` đã hoạt động; `G2` còn staging/health/rotate PAT. `G8` đã có cả checker/journal/reversal/period lock cho nguồn chốt ca. Bước kế tiếp của `G9` là nguồn thu chi/ngân hàng, AP–NCC, lương, tài sản, hóa đơn và báo cáo quản trị; không dựng lại bằng số stock.
+2. Migration `202607280003_erp_shift_close_workflow.sql`, `202607290004_erp_workday_lifecycle.sql`, `202607290005_erp_workday_resubmission_integrity.sql` và `202607290006_erp_accounting_maker_checker.sql` đã có trên remote; không chạy lại bằng thao tác thủ công.
+3. Normal path, material exception, maker–checker, hoàn bút và lập bút toán điều chỉnh đã qua Supabase. Remote hiện cố ý giữ một bút toán điều chỉnh ở trạng thái chờ kế toán trưởng để có dữ liệu thật khi demo inbox.
 4. Management PAT hiện nằm ngoài app tại `D:\Ninh Binh\ninhbinh\.secrets\supabase-management.pat`, bị root `.gitignore` chặn và ACL chỉ cho tài khoản máy hiện tại. PAT đã từng xuất hiện trong chat nên chủ dự án vẫn phải thu hồi/rotate; không sao chép nó sang source/docs/env.
 5. Vercel Production đã có URL, publishable key, server secret, `ERP_PERSISTENCE_MODE=supabase`, production flags và site URL. Bucket riêng tư `erp-workday-evidence` đã có cho ảnh công việc; chưa có môi trường staging, trung tâm tài liệu chung hoặc health check connector.
 
@@ -81,36 +81,30 @@ Ranh giới hiện tại phải nói rõ khi demo:
 | Vai trò | Tài khoản | Mật khẩu |
 |---|---|---|
 | Giám đốc | `giamdoc` | `Giamdoc@2026` |
-| Quản lý Tràng An | `ql.trangan` | `Quanly@2026` |
+| Quản lý vận hành bốn cơ sở | `ql.vanhanh` | `Quanly@2026` |
 | Nhân viên Tràng An | `nv.trangan` | `Nhanvien@2026` |
 | Kế toán tổng hợp | `ketoan` | `Ketoan@2026` |
+| Kế toán trưởng | `ketoantruong` | `Ketoantruong@2026` |
 | Nhân viên thời vụ Tràng An | `tv.trangan` | `Thoivu@2026` |
+
+Alias cũ `ql.trangan` vẫn đăng nhập được để không làm gãy kịch bản đã gửi trước đây, nhưng cùng ánh xạ tới một quản lý vận hành duy nhất phụ trách cả bốn cơ sở.
 
 ## Những phần ERP đã có
 
 ### Tổng quan giám đốc
 
-- Phần đầu màn hình cho biết phạm vi toàn vùng/bốn cơ sở, kỳ dữ liệu, khách dự kiến, doanh thu và thời điểm cập nhật; tách rõ khách dự kiến với khách đã check-in.
-- Hàng chỉ số vận hành có độ phủ nhân sự, số lao động thời vụ và sự cố đang mở; ma trận bốn cơ sở cho phép so sánh khách, check-in, doanh thu, tải, nhân sự và sự cố trong một lượt nhìn.
-- Hàng đợi quyết định đứng trước phần phân tích tài chính, có mã hồ sơ, mức độ, người phụ trách, hạn xử lý, tác động và khuyến nghị; hành động hiện mới mở đúng hồ sơ/module, chưa phải approve/reject có lưu bền.
-- Tài chính hợp nhất ngay tại `/erp`, không bắt buộc mở màn tài chính riêng.
-- Một bộ lọc dùng chung: Ngày, Tháng, Quý, Năm.
-- Năm chỉ số: Doanh thu, Chi phí ghi nhận, Lợi nhuận vận hành, Tiền đã thu, Phải trả đến hạn.
-- Mặc định chỉ hiện số chính. Bấm chỉ số nào mới bung chi tiết của chỉ số đó.
-- Chi tiết gồm so kỳ trước, cùng kỳ lịch sử, kế hoạch, cơ cấu nguồn/cơ sở và mô tả nguồn dữ liệu.
-- Đổi kỳ sẽ tự đóng chi tiết cũ để tránh trộn dữ liệu giữa hai kỳ.
-- Có thêm khách hôm nay, lượt check-in, nhân sự trong ca, việc gấp, quyết định chuyển cấp, tình trạng từng cơ sở và dự án/sự kiện.
-- Luồng hoạt động cuối màn hình dùng mốc giờ xác định sẵn của dữ liệu demo, không còn gắn nhãn realtime hoặc tạo tín hiệu ngẫu nhiên.
-- Toàn bộ số tài chính Ngày/Tháng/Quý/Năm dùng chung `ERP_FINANCE_REPORT`; tổng quan, màn tài chính sâu và tài chính từng cơ sở không còn giữ ba bộ số riêng.
-- Có kiểm thử bất biến bắt buộc doanh thu = chi phí + lợi nhuận, cơ cấu cộng đúng tổng và bốn cơ sở cộng đúng toàn vùng.
+- Tổng quan mới chỉ cộng dữ liệu chốt ca, phiếu công việc và journal thật trong phạm vi bốn cơ sở; không còn dùng `ERP_FINANCE_REPORT`, workforce summary hay quyết định hard-code trên đường màn hình chính.
+- Giám đốc thấy ngày nghiệp vụ mới nhất, số vé, doanh thu đã khai báo, chênh lệch ca, nhân sự/việc quá hạn, ngoại lệ cần giám đốc và hồ sơ chờ kế toán trưởng.
+- Ma trận bốn cơ sở giúp đối chiếu doanh thu, vé, số hồ sơ ca và trạng thái công việc trong một lượt nhìn; bấm chi tiết đi thẳng tới đúng module/hồ sơ nguồn.
+- Chi phí và lợi nhuận chỉ xuất hiện khi đã có journal ghi sổ vào đúng tài khoản. Nếu nguồn chưa đủ, hệ thống nói rõ chưa đủ dữ liệu thay vì dựng số dự báo hoặc lợi nhuận giả.
 
 ### Màn hình theo vai trò, workforce và kế toán
 
 - Quản lý có dashboard riêng theo cơ sở: KPI ca hiện tại, hàng việc cần xử lý và độ phủ nhân sự gồm kế hoạch, đang trong ca, thời vụ và vắng mặt.
 - Nhân viên thấy việc của mình, trạng thái vào/ra ca lấy từ dữ liệu chấm công của phiên, trạm làm việc, khung ca và thao tác nhanh phù hợp quyền.
 - Nhân viên thời vụ có `employmentType`, ngày bắt đầu/kết thúc quyền, quản lý trực tiếp, trạm, ca và `trainedModuleIds`; quản lý chỉ được gán các module vừa thuộc nhóm cho phép gán vừa nằm trong danh sách đã đào tạo.
-- Kế toán có `/erp/finance` riêng với chín hồ sơ mẫu bao phủ doanh thu/chốt ca, chênh lệch QR, công nợ NCC, thiếu nghiệm thu, hoàn ứng sự kiện, lương, tài sản cố định, lỗi hóa đơn điện tử và đóng kỳ.
-- Mỗi hồ sơ kế toán có chứng từ đã nhận/còn thiếu, chiều hạch toán, bút toán cân đối, maker–checker và timeline; các bộ lọc, mở chi tiết và thao tác gửi kiểm tra hiện chỉ chạy bằng client state, chưa có checker inbox hoặc sổ cái dùng chung.
+- Kế toán có `/erp/finance` riêng để nhận hồ sơ chốt ca đã được quản lý xác nhận, kiểm nguồn, lập journal cân Nợ/Có và gửi kế toán trưởng; không thể tự ghi sổ bút toán mình lập.
+- Kế toán trưởng dùng cùng trung tâm kiểm soát để duyệt/trả, ghi sổ, hoàn bút, mở bút toán điều chỉnh và khóa/mở kỳ. Inbox, trial balance, sổ tài khoản và lịch sử đều đọc từ Supabase.
 - Kế toán chỉ đọc các hồ sơ nguồn tại module nghiệp vụ. `module-workspace` hiện còn dùng adapter vai trò để ẩn một số form cũ; cần thay bằng capability check trực tiếp khi chuẩn hóa workflow.
 
 ### Golden path chốt ca đang triển khai
@@ -167,7 +161,7 @@ Ranh giới hiện tại phải nói rõ khi demo:
 
 ## Trạng thái dữ liệu và Supabase
 
-Quan trọng: production runtime đã bật Supabase cho golden path chốt ca và remote đã có vòng đời công việc/ảnh/GPS. QR, báo giá và phần lớn module khác vẫn là dữ liệu demo/local/read-only; không được suy rộng rằng toàn ERP đã lưu bền hoặc realtime.
+Quan trọng: production runtime đã bật Supabase cho chốt ca, vòng đời công việc/ảnh/GPS và journal kế toán. QR, báo giá, dự án, sự cố và phần lớn module khác vẫn là dữ liệu local/read-only; không được suy rộng rằng toàn ERP đã lưu bền hoặc realtime.
 
 Supabase project đã được xác định trong lượt trước:
 
@@ -183,6 +177,7 @@ Migration:
 - `202607280003_erp_shift_close_workflow.sql`: đã apply remote ngày 28/07/2026.
 - `202607290004_erp_workday_lifecycle.sql`: đã apply remote ngày 29/07/2026.
 - `202607290005_erp_workday_resubmission_integrity.sql`: đã apply remote ngày 29/07/2026 sau preflight; xác minh trigger/function hoạt động, `service_role` được gọi location RPC còn `anon`/`authenticated` bị chặn và trigger function không gọi trực tiếp được.
+- `202607290006_erp_accounting_maker_checker.sql`: đã apply remote ngày 29/07/2026; tạo registry tài khoản/vai trò, kỳ kế toán, journal header/lines, audit, command receipt và bốn RPC service-only.
 - Remote hiện có `erp_shift_close_workflows`, `erp_shift_close_audit_events`, seed ba workflow và hai RPC `erp_demo_create_shift_close`/`erp_demo_transition_shift_close`.
 - Remote có thêm `erp_workday_workflows`, `erp_workday_audit_events`, `erp_workday_location_events`, bốn geofence, bucket riêng tư `erp-workday-evidence` và ba RPC workday.
 - Migration 003 tạo `erp_shift_close_workflows`, `erp_shift_close_audit_events`, hai RPC atomic service-role, RLS/grant/revoke, optimistic version, idempotency và seed ba cơ sở.
@@ -203,7 +198,7 @@ Chưa hoàn tất:
 - Tạo staging tách biệt, health check và chính sách backup/restore.
 - Supabase Auth/MFA/provisioning; hiện vẫn dùng signed demo session.
 - Workday đã có bucket private, UUID và SHA-256; trung tâm tài liệu chung vẫn thiếu versioning, retention, scan/OCR và malware/content validation.
-- Kế toán trưởng/checker thật, journal header/lines, period lock và maker–checker xuyên tài khoản.
+- Kế toán hiện đã có maker–checker/journal/period lock cho nguồn chốt ca; còn phải nối các nguồn ngân hàng, AP/NCC, lương, tài sản, hóa đơn và báo cáo quản trị.
 - Tách `Shift/Attendance` khỏi `TaskAssignment`, hỗ trợ nhiều task/người/ca, bàn giao quản lý, consent/retention/access log GPS và geofence theo trạm.
 - Các workflow khác vẫn local/read-only; Supabase core schema không tự động làm module hoạt động.
 
@@ -252,7 +247,7 @@ Kết luận hiện tại:
 - Tám nhóm menu đang hợp lý về mặt nghiệp vụ; không nên tiếp tục tăng số nhóm chỉ để làm demo trông lớn. Khoảng trống chính là chiều sâu và sự nối liền của workflow.
 - Vai trò giám đốc, quản lý, kế toán, nhân viên chính thức và nhân viên thời vụ đã có màn hình/phạm vi khác nhau, nhưng action-level permission vẫn còn thô ở một số workspace; quản lý cơ sở hiện được thấy phần lớn module của cơ sở.
 - Golden path vé/chốt ca normal path và ngoại lệ giám đốc đều đã qua Supabase; return/resubmit, double-click và stale-version đã có E2E. Chấm công chưa nối bảng lương; NCC/nghiệm thu chưa nối AP; dự án/tài sản chưa tự sinh chứng từ; sự cố vẫn dùng dữ liệu/state cục bộ.
-- Luồng kế toán còn cần tài khoản checker/inbox và journal thật. Hàng ngoại lệ chốt ca đã có approve/reject/lý do/audit trong thiết kế mới; các quyết định vận hành khác vẫn chủ yếu deep-link/local.
+- Luồng kế toán chốt ca đã có tài khoản checker, inbox và journal thật. AP/NCC, bảng lương, tài sản, hóa đơn và các quyết định vận hành khác vẫn chưa có workflow bền tương đương.
 - Cấu trúc module phù hợp các mẫu doanh nghiệp lớn về RBAC, incident/SOP, time management, procurement–AP, asset lifecycle và management-by-exception ở mức thiết kế. Hệ thống chưa đạt mức production enterprise cho đến khi có dữ liệu dùng chung, tích hợp nguồn, phân quyền hành động, audit và vận hành ngoại tuyến/lỗi đầy đủ.
 
 ## File quan trọng
@@ -261,7 +256,7 @@ Kết luận hiện tại:
 - `components/erp/executive-dashboard.tsx`: tổng quan giám đốc.
 - `components/erp/role-home-dashboard.tsx`: dashboard quản lý, nhân viên và kế toán theo vai trò.
 - `components/erp/erp-desktop-navigation.tsx`: menu desktop một hàng, dropdown theo nhóm và xử lý keyboard/click ngoài.
-- `components/erp/accounting-workbench.tsx`: hàng đợi và hồ sơ kế toán.
+- `components/erp/accounting-control-center.tsx`: hàng đợi maker/checker, journal, hoàn bút, kỳ kế toán, trial balance và sổ tài khoản.
 - `components/erp/incident-workflow-workspace.tsx`: vòng đời sự cố theo vai trò.
 - `components/erp/executive-finance-overview.tsx`: tài chính hợp nhất và drill-down theo kỳ.
 - `components/erp/finance-dashboard.tsx`: màn tài chính chi tiết.
@@ -273,13 +268,16 @@ Kết luận hiện tại:
 - `components/erp/voice-command-center.tsx`: trợ lý văn bản/giọng nói.
 - `domain/erp.ts`: danh mục cơ sở, module và quyền mặc định.
 - `domain/erp-role-policy.ts`: capability và phạm vi module theo vai trò.
-- `domain/erp-accounting.ts`: chín hồ sơ kế toán demo, chứng từ, bút toán và timeline.
+- `domain/erp-accounting.ts`: domain journal/kỳ kế toán, kiểm cân Nợ/Có, quyền maker–checker và hoàn bút.
 - `domain/erp-shift-close.ts`: domain golden path chốt ca, transition, queue và journal đề nghị.
 - `domain/erp-navigation.ts`: tám nhóm menu và bộ lọc module theo quyền.
 - `app/erp/workflow-actions.ts`: năm async server actions golden path, gồm action gửi lại hồ sơ bị trả; không còn export state/object.
 - `domain/erp-shift-close-action-state.ts`: type và initial state dùng chung cho form/action, tách khỏi module `"use server"`.
 - `components/erp/shift-close-workflow.tsx`: form/hàng đợi theo nhân viên, quản lý, kế toán, giám đốc.
 - `lib/erp/shift-close-repository.ts`: persistence `demo-cookie`/`supabase`, version/idempotency/audit.
+- `lib/erp/accounting-repository.ts`: đọc journal/kỳ/audit và gọi bốn RPC kế toán theo chế độ `demo-cookie`/`supabase`.
+- `app/erp/accounting-actions.ts`: action máy chủ kiểm actor, role, site/module, version và idempotency trước mọi lệnh kế toán.
+- `supabase/migrations/202607290006_erp_accounting_maker_checker.sql`: schema/RPC maker–checker đã apply và verify remote.
 - `supabase/migrations/202607280003_erp_shift_close_workflow.sql`: schema/RPC golden path đã apply và verify remote.
 - `tests/security/erp-shift-close-migration-contract.test.ts`: contract test migration 003.
 - `domain/erp-operating-data.ts`: nguồn dữ liệu tài chính hợp nhất, workforce và dữ liệu vận hành demo.
@@ -295,8 +293,8 @@ Kết luận hiện tại:
 
 Danh sách đầy đủ và tiêu chí nghiệm thu nằm ở `docs/PLAN.md`. Thứ tự ngay trước mắt:
 
-1. `G8.3–G9`: thêm checker/journal/period lock thật và chứng từ nguồn để kế toán không nhập lại; không làm lại outage/normal/exception/return/conflict đã có test.
-2. `G10.4`: tách task khỏi ca/chấm công trước khi cho phép nhiều việc trong một ca; chốt privacy/retention GPS.
+1. `G9.2–G9.7`: nối nguồn thu/chi/ngân hàng, AP–NCC, hoàn ứng, bảng lương, tài sản và hóa đơn vào cùng journal; ưu tiên AP và đóng kỳ để gỡ nút thắt kế toán.
+2. `G10.4/G10.6`: tách task khỏi ca/chấm công, hỗ trợ nhiều việc/người/ca và thay dữ liệu dự án/event stock bằng workflow Supabase thật.
 3. Song song đóng phần còn lại của `G2`: rotate PAT, staging, health/backup; sau đó thực hiện `G3` audit nội dung và dữ liệu nguồn trước khi mở rộng module.
 
 ## Đánh giá tài liệu chuyên môn ngày 28/07/2026
@@ -349,6 +347,14 @@ Sau mỗi thay đổi quan trọng:
 6. Thêm một dòng vào **Nhật ký thay đổi** bên dưới, mới nhất ở trên.
 
 ## Nhật ký thay đổi
+
+### 29/07/2026 — Thay hồ sơ kế toán stock bằng maker–checker và sổ thật
+
+- Bổ sung vai trò `chief-accountant`; roster hiện có một quản lý vận hành phụ trách cả bốn cơ sở, một kế toán viên, một kế toán trưởng, giám đốc và nhân viên đúng cơ sở/công việc.
+- Thay chín case hard-code bằng trung tâm kế toán đọc Supabase: lập journal từ chốt ca, gửi kiểm tra, trả lại, ghi sổ, hoàn bút, lập bút toán điều chỉnh, khóa/mở kỳ, trial balance, sổ tài khoản và audit.
+- Apply migration 006 và xác minh remote có bảy bảng, mười tài khoản, mười ba phân công vai trò, bốn RPC service-only, direct-post guard và một kỳ mở. Kịch bản thật đã đi qua lập → duyệt/ghi sổ → hoàn bút → bút toán điều chỉnh chờ checker.
+- Dashboard giám đốc, quản lý, kế toán và chuông/trợ lý chỉ dùng dữ liệu chốt ca, công việc và journal thực có; khi thiếu nguồn chi phí/lợi nhuận, UI báo thiếu dữ liệu thay vì dựng số.
+- Quality gate của batch: typecheck, full lint, **145/145** unit/security/integration, clean production build và targeted maker–checker Playwright **2/2 desktop/mobile** qua. E2E cũ có assertion stock nên phải cập nhật theo workflow mới trước khi gọi full browser matrix xanh.
 
 ### 29/07/2026 — Chốt GitHub/Vercel làm production canonical
 

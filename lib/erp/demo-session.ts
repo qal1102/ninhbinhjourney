@@ -277,7 +277,10 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
     };
   }
 
-  if (account.role === "accountant") {
+  if (
+    account.role === "accountant" ||
+    account.role === "chief-accountant"
+  ) {
     return {
       ...safeAccount,
       siteIds: [...account.initialSiteIds],

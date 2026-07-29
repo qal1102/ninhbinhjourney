@@ -105,10 +105,9 @@ export type ShiftCloseAction =
     }
   | {
       type: "accountant.reconcile";
-      decision: "review" | "post" | "escalate" | "return";
+      decision: "review" | "escalate" | "return";
       actor: ShiftCloseActor;
       note: string;
-      journalReference?: string;
       now: string;
       auditEventId: string;
     }
@@ -286,14 +285,9 @@ function nextStatus(record: ShiftCloseRecord, action: ShiftCloseAction) {
       }
       return "exception-pending-director" as const;
     }
-    requireText(action.journalReference ?? "", "Số bút toán");
-    if (
-      Math.abs(record.differenceVnd) > SHIFT_CLOSE_MATERIALITY_VND &&
-      record.status !== "director-approved"
-    ) {
-      throw new Error("Chênh lệch vượt ngưỡng phải được giám đốc quyết định trước khi ghi sổ.");
-    }
-    return "posted" as const;
+    throw new Error(
+      "Kế toán chỉ lập và gửi bút toán; kế toán trưởng mới được duyệt và ghi sổ.",
+    );
   }
 
   requireActor(action.actor, "director");
@@ -343,7 +337,6 @@ export function transitionShiftClose(
       decision: action.decision,
       note: action.note.trim(),
       at: action.now,
-      journalReference: action.journalReference?.trim() || undefined,
     };
   } else if (action.type === "director.decide") {
     next.directorDecision = {
@@ -377,6 +370,18 @@ export function filterShiftCloseQueue(
           "manager-approved",
           "accounting-review",
           "posted",
+          "exception-pending-director",
+          "director-approved",
+          "director-rejected",
+        ].includes(record.status);
+      }
+      if (scope.role === "chief-accountant") {
+        return ["accounting-review", "director-approved", "posted"].includes(
+          record.status,
+        );
+      }
+      if (scope.role === "director") {
+        return [
           "exception-pending-director",
           "director-approved",
           "director-rejected",

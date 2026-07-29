@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useActionState,
   useCallback,
@@ -38,6 +39,7 @@ type SiteWorkflowProps = {
 type QueueProps = {
   records: readonly ShiftCloseRecord[];
   user: CurrentErpUser;
+  materialOnly?: boolean;
 };
 
 const STATUS_LABELS: Record<ShiftCloseStatus, string> = {
@@ -45,7 +47,7 @@ const STATUS_LABELS: Record<ShiftCloseStatus, string> = {
   "manager-returned": "Quản lý trả lại",
   "manager-approved": "Chờ kế toán",
   "accounting-review": "Kế toán đang kiểm tra",
-  posted: "Đã đối soát",
+  posted: "Đã ghi sổ",
   "exception-pending-director": "Chuyển giám đốc",
   "director-approved": "Ngoại lệ đã duyệt",
   "director-rejected": "Giám đốc trả lại",
@@ -437,9 +439,6 @@ function AccountantReview({
   useApplySuccessfulRecord(state, onRecordChanged);
   const proposal = buildShiftCloseJournalProposal(record);
   const totals = journalProposalTotals(proposal);
-  const canPost =
-    Math.abs(record.differenceVnd) <= SHIFT_CLOSE_MATERIALITY_VND ||
-    record.status === "director-approved";
   const canAct = [
     "manager-approved",
     "accounting-review",
@@ -468,11 +467,7 @@ function AccountantReview({
         <form action={formAction} className="rounded-xl border border-[#d9e1dc] bg-white p-4">
           <input type="hidden" name="recordId" value={record.id} />
           <input type="hidden" name="expectedVersion" value={record.version} />
-          <label className="text-xs font-bold text-[#617169]">
-            Số bút toán
-            <input name="journalReference" defaultValue={`JV-${record.businessDate.replaceAll("-", "")}-`} className="mt-1 min-h-11 w-full rounded-xl border border-[#ced8d1] px-3 text-sm font-bold" />
-          </label>
-          <label className="mt-3 block text-xs font-bold text-[#617169]">
+          <label className="block text-xs font-bold text-[#617169]">
             Kết quả đối soát
             <textarea name="note" rows={3} placeholder="Nguồn chênh lệch, chứng từ đã kiểm tra và hướng xử lý" className="mt-1 w-full rounded-xl border border-[#ced8d1] p-3 text-sm" />
           </label>
@@ -480,8 +475,10 @@ function AccountantReview({
             {record.status === "manager-approved" ? (
               <button disabled={pending} name="decision" value="review" className="min-h-11 rounded-xl bg-[#315f79] px-4 text-sm font-black text-white disabled:opacity-60">Nhận kiểm tra hồ sơ</button>
             ) : null}
-            {record.status !== "manager-approved" && canPost ? (
-              <button disabled={pending} name="decision" value="post" className="min-h-11 rounded-xl bg-[#183f34] px-4 text-sm font-black text-white disabled:opacity-60">Đối soát xong & liên kết bút toán</button>
+            {record.status === "accounting-review" || record.status === "director-approved" ? (
+              <Link href={`/erp/finance?source=${record.id}`} className="grid min-h-11 place-items-center rounded-xl bg-[#183f34] px-4 text-center text-sm font-black text-white">
+                Lập bút toán và gửi kế toán trưởng
+              </Link>
             ) : null}
             {record.status !== "director-approved" && Math.abs(record.differenceVnd) > SHIFT_CLOSE_MATERIALITY_VND ? (
               <button disabled={pending} name="decision" value="escalate" className="min-h-11 rounded-xl bg-[#a94e3f] px-4 text-sm font-black text-white disabled:opacity-60">Chuyển giám đốc quyết định</button>
@@ -494,7 +491,7 @@ function AccountantReview({
         <p className="rounded-xl bg-[#eef3f0] p-4 text-sm font-bold text-[#5d6e66]">
           {record.status === "exception-pending-director"
             ? "Đang chờ quyết định ngoại lệ của giám đốc."
-            : "Hồ sơ đã đối soát; lịch sử và liên kết bút toán được giữ nguyên."}
+            : "Hồ sơ đã được kế toán trưởng duyệt và ghi sổ; lịch sử được giữ nguyên."}
         </p>
       )}
     </div>
@@ -594,13 +591,23 @@ export function ShiftCloseSiteWorkflow({ site, user, records }: SiteWorkflowProp
   );
 }
 
-export function ShiftCloseAccountingQueue({ records, user }: QueueProps) {
+export function ShiftCloseAccountingQueue({
+  records,
+  user,
+  materialOnly = false,
+}: QueueProps) {
   const [currentRecords, upsertRecord] = useLiveShiftCloseRecords(records);
   const visible = filterShiftCloseQueue(currentRecords, {
     role: user.role,
     siteIds: user.siteIds,
     actorId: user.id,
-  });
+  }).filter(
+    (record) =>
+      !materialOnly ||
+      (Math.abs(record.differenceVnd) > SHIFT_CLOSE_MATERIALITY_VND &&
+        record.status !== "director-approved" &&
+        record.status !== "director-rejected"),
+  );
   const actionable = visible.filter((record) =>
     ["manager-approved", "accounting-review", "director-approved", "director-rejected"].includes(record.status),
   ).length;
@@ -608,8 +615,8 @@ export function ShiftCloseAccountingQueue({ records, user }: QueueProps) {
     <section className="space-y-3" aria-label="Đối soát chốt ca dùng chung">
       <div className="rounded-2xl border border-[#cbdad3] bg-[#f5faf7] p-5 sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Từ vận hành sang kế toán</p>
-        <h2 className="mt-2 text-2xl font-black text-[#20342c]">{actionable} ca cần xử lý</h2>
-        <p className="mt-2 text-sm leading-6 text-[#68776f]">Cùng một mã hồ sơ, số nguồn và lịch sử được giữ xuyên nhân viên, quản lý, kế toán và giám đốc.</p>
+        <h2 className="mt-2 text-2xl font-black text-[#20342c]">{actionable} {materialOnly ? "ca chênh lệch cần chuyển cấp" : "ca cần xử lý"}</h2>
+        <p className="mt-2 text-sm leading-6 text-[#68776f]">{materialOnly ? "Chỉ ca vượt ngưỡng mới cần kế toán chuyển giám đốc quyết định trước khi lập bút toán." : "Cùng một mã hồ sơ, số nguồn và lịch sử được giữ xuyên nhân viên, quản lý, kế toán và giám đốc."}</p>
       </div>
       {visible.map((record) => (
         <ShiftCloseDetails
@@ -623,7 +630,7 @@ export function ShiftCloseAccountingQueue({ records, user }: QueueProps) {
           )}
         />
       ))}
-      {visible.length === 0 ? (
+      {visible.length === 0 && !materialOnly ? (
         <p className="rounded-2xl border border-dashed border-[#b8c6bf] bg-white px-5 py-10 text-center text-sm text-[#75817b]">Chưa có ca đã được quản lý duyệt.</p>
       ) : null}
     </section>

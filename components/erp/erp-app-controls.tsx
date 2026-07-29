@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ErpRole } from "@/domain/erp";
 
@@ -8,35 +9,19 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const alertsByRole: Record<ErpRole, Array<{ title: string; detail: string; tone: string }>> = {
-  director: [
-    { title: "Quản lý Tam Chúc đề nghị tăng cường", detail: "Bổ sung 4 xe trước 09:30 · Chờ phê duyệt", tone: "bg-[#c85b45]" },
-    { title: "Yêu cầu chấp nhận rủi ro mở cửa", detail: "Một điểm mù liên lạc chưa đạt Go/No-Go", tone: "bg-[#d09b3f]" },
-    { title: "Phương án xử lý chênh lệch tài chính", detail: "46 triệu · 8 giao dịch đã được phân loại", tone: "bg-[#477e6c]" },
-  ],
-  manager: [
-    { title: "Khu vực bến gần ngưỡng sức chứa", detail: "83% · Cần điều phối trước 09:30", tone: "bg-[#c85b45]" },
-    { title: "Một điều kiện đầu ca chưa đạt", detail: "Phân công người kiểm tra điểm mù liên lạc", tone: "bg-[#d09b3f]" },
-    { title: "8 giao dịch cần đối chiếu", detail: "Giao kế toán ca xử lý trước 11:00", tone: "bg-[#477e6c]" },
-  ],
-  accountant: [
-    { title: "12 hóa đơn điện tử truyền lỗi", detail: "38,6 triệu · Cần gửi lại trước 11:00", tone: "bg-[#c85b45]" },
-    { title: "Hai bộ hồ sơ chưa đủ điều kiện", detail: "Thiếu biên bản nghiệm thu và giải trình chênh lệch", tone: "bg-[#d09b3f]" },
-    { title: "Đối soát cổng vé Tràng An đã khớp", detail: "79,4 triệu · Sẵn sàng lập bút toán", tone: "bg-[#477e6c]" },
-  ],
-  employee: [
-    { title: "Bạn có một việc mới", detail: "Kiểm tra làn đón khách A trước 09:20", tone: "bg-[#39749a]" },
-    { title: "Sắp đến giờ bàn giao", detail: "Cập nhật bằng chứng cho việc đang mở", tone: "bg-[#d09b3f]" },
-    { title: "Ca làm đã được xác nhận", detail: "07:30–12:15 · Đúng cơ sở được phân công", tone: "bg-[#477e6c]" },
-  ],
-};
-
 export function ErpAppControls({ role }: { role: ErpRole }) {
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [notificationState, setNotificationState] = useState<NotificationPermission | "unsupported">("default");
-  const alerts = alertsByRole[role];
+  const [workflowNotice, setWorkflowNotice] = useState<{
+    count: number;
+    answer: string;
+    detail: string;
+    href?: string;
+    hrefLabel?: string;
+  } | null>(null);
+  const [noticeLoaded, setNoticeLoaded] = useState(false);
 
   useEffect(() => {
     const environmentTimer = window.setTimeout(() => {
@@ -63,6 +48,47 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
       window.clearTimeout(environmentTimer);
       window.removeEventListener("beforeinstallprompt", rememberPrompt);
       window.removeEventListener("appinstalled", installed);
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+    void fetch("/api/erp/assistant", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ intent: "urgent" }),
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as {
+          count?: number;
+          answer?: string;
+          detail?: string;
+          href?: string;
+          hrefLabel?: string;
+        };
+      })
+      .then((payload) => {
+        if (!payload || !active) return;
+        setWorkflowNotice({
+          count: payload.count ?? 0,
+          answer: payload.answer ?? "Không có việc mới",
+          detail: payload.detail ?? "",
+          href: payload.href,
+          hrefLabel: payload.hrefLabel,
+        });
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      })
+      .finally(() => {
+        if (active) setNoticeLoaded(true);
+      });
+    return () => {
+      active = false;
+      controller.abort();
     };
   }, []);
 
@@ -102,21 +128,42 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
             <path d="M10 21h4" />
           </svg>
-          <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#c8523c]" />
+          {workflowNotice && workflowNotice.count > 0 ? (
+            <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full border-2 border-white bg-[#c8523c] px-0.5 text-[9px] font-black leading-none text-white">
+              {workflowNotice.count > 9 ? "9+" : workflowNotice.count}
+            </span>
+          ) : null}
         </summary>
         <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-[#d7dfda] bg-white p-4 shadow-2xl shadow-[#173f34]/15">
           <div className="flex items-center justify-between gap-3">
-            <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#477565]">Thông báo</p><h2 className="mt-1 text-lg font-black text-[#21372e]">{role === "director" ? "Chờ quyết định" : role === "manager" ? "Cần điều phối" : role === "accountant" ? "Cần kiểm tra" : "Việc của tôi"}</h2></div>
-            <span className="rounded-full bg-[#ffe8e2] px-2.5 py-1 text-xs font-black text-[#934638]">3 mới</span>
+            <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#477565]">Thông báo</p><h2 className="mt-1 text-lg font-black text-[#21372e]">{role === "director" ? "Việc cần quyết định" : role === "manager" ? "Việc cần điều phối" : role === "chief-accountant" ? "Việc cần duyệt" : role === "accountant" ? "Việc cần kiểm tra" : "Việc của tôi"}</h2></div>
           </div>
-          <ol className="mt-3 divide-y divide-[#e7ece9]">
-            {alerts.map((alert) => (
-              <li key={alert.title} className="flex gap-3 py-3">
-                <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${alert.tone}`} />
-                <div><p className="text-sm font-black text-[#2d4038]">{alert.title}</p><p className="mt-1 text-xs leading-5 text-[#75817b]">{alert.detail}</p></div>
-              </li>
-            ))}
-          </ol>
+          {!noticeLoaded ? (
+            <p className="mt-4 rounded-xl bg-[#f1f5f2] px-4 py-5 text-center text-sm leading-6 text-[#65746d]">
+              Đang đọc hàng việc…
+            </p>
+          ) : workflowNotice ? (
+            <div className="mt-4 rounded-xl bg-[#f1f5f2] p-4">
+              <p className="text-sm font-black text-[#2d4038]">
+                {workflowNotice.answer}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-[#6d7a73]">
+                {workflowNotice.detail}
+              </p>
+              {workflowNotice.href ? (
+                <Link
+                  href={workflowNotice.href}
+                  className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-xs font-black text-[#285e4b]"
+                >
+                  {workflowNotice.hrefLabel ?? "Mở hàng việc"}
+                </Link>
+              ) : null}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-xl bg-[#f1f5f2] px-4 py-5 text-center text-sm leading-6 text-[#65746d]">
+              Chưa đọc được hàng việc lúc này.
+            </p>
+          )}
           {notificationState === "default" ? (
             <button type="button" onClick={enableNotifications} className="mt-3 min-h-10 w-full rounded-xl bg-[#183f34] px-4 text-sm font-black text-white">Bật thông báo trên thiết bị</button>
           ) : null}

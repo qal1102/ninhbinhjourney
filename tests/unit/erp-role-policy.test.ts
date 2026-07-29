@@ -35,8 +35,22 @@ describe("ERP role policy", () => {
 
   it("separates maker, checker and operating actions", () => {
     expect(canViewRegionalFinance("accountant")).toBe(true);
+    expect(canViewRegionalFinance("chief-accountant")).toBe(true);
     expect(hasErpCapability("accountant", "accounting.document.verify")).toBe(true);
     expect(hasErpCapability("accountant", "accounting.journal.prepare")).toBe(true);
+    expect(hasErpCapability("accountant", "accounting.journal.check")).toBe(false);
+    expect(hasErpCapability("accountant", "accounting.journal.post")).toBe(false);
+    expect(hasErpCapability("accountant", "accounting.journal.reverse")).toBe(false);
+    expect(hasErpCapability("accountant", "accounting.period.lock")).toBe(false);
+    expect(hasErpCapability("accountant", "accounting.period.reopen")).toBe(false);
+    expect(hasErpCapability("chief-accountant", "accounting.journal.prepare")).toBe(false);
+    expect(hasErpCapability("chief-accountant", "accounting.journal.check")).toBe(true);
+    expect(hasErpCapability("chief-accountant", "accounting.journal.post")).toBe(true);
+    expect(hasErpCapability("chief-accountant", "accounting.journal.reverse")).toBe(true);
+    expect(hasErpCapability("chief-accountant", "accounting.period.lock")).toBe(true);
+    expect(hasErpCapability("chief-accountant", "accounting.period.reopen")).toBe(true);
+    expect(hasErpCapability("director", "accounting.journal.post")).toBe(false);
+    expect(hasErpCapability("director", "accounting.period.lock")).toBe(false);
     expect(hasErpCapability("accountant", "accounting.exception.approve")).toBe(false);
     expect(hasErpCapability("director", "accounting.exception.approve")).toBe(true);
 
@@ -49,8 +63,11 @@ describe("ERP role policy", () => {
     expect(canDecideTicketShiftException("director")).toBe(true);
     expect(canDecideTicketShiftException("accountant")).toBe(false);
     expect(canCreateCommercialQuote("accountant")).toBe(false);
+    expect(canCreateCommercialQuote("chief-accountant")).toBe(false);
     expect(canSubmitFieldOperation("accountant")).toBe(false);
+    expect(canSubmitFieldOperation("chief-accountant")).toBe(false);
     expect(canManageStaffAccess("accountant")).toBe(false);
+    expect(canManageStaffAccess("chief-accountant")).toBe(false);
     expect(canManageStaffAccess("manager")).toBe(true);
   });
 });

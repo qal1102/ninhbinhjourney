@@ -30,6 +30,12 @@ const roleGuidance: Record<
     nextStep:
       "Hồ sơ thiếu phải trả về người sở hữu kèm lý do cụ thể; hồ sơ đủ mới được đưa sang bước đối soát hoặc hạch toán.",
   },
+  "chief-accountant": {
+    responsibility:
+      "Kiểm tra độc lập bút toán, hồ sơ nguồn và kỳ hạch toán; không tự lập rồi tự duyệt cùng một hồ sơ.",
+    nextStep:
+      "Duyệt hoặc trả lại bút toán kèm lý do; chỉ ghi sổ, đảo bút toán hoặc khóa kỳ khi đủ điều kiện kiểm soát.",
+  },
   director: {
     responsibility:
       "Tập trung vào ngoại lệ, chênh lệch và quyết định đã được cấp dưới xác minh; không cần xử lý toàn bộ hàng việc thường ngày.",

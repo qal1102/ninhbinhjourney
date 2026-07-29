@@ -1,4 +1,9 @@
-export type ErpRole = "employee" | "manager" | "accountant" | "director";
+export type ErpRole =
+  | "employee"
+  | "manager"
+  | "accountant"
+  | "chief-accountant"
+  | "director";
 
 export type ErpSiteId = "trang-an" | "tam-chuc" | "tam-coc" | "bai-dinh";
 
@@ -51,6 +56,7 @@ export const ERP_ROLE_LABELS: Record<ErpRole, string> = {
   employee: "Nhân viên",
   manager: "Quản lý cơ sở",
   accountant: "Kế toán",
+  "chief-accountant": "Kế toán trưởng",
   director: "Giám đốc",
 };
 

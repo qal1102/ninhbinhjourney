@@ -14,8 +14,12 @@ export type ErpCapability =
   | "finance.regional.read"
   | "accounting.document.verify"
   | "accounting.journal.prepare"
+  | "accounting.journal.check"
+  | "accounting.journal.post"
+  | "accounting.journal.reverse"
   | "accounting.payment.prepare"
-  | "accounting.period.close"
+  | "accounting.period.lock"
+  | "accounting.period.reopen"
   | "accounting.exception.approve"
   | "field.report.submit"
   | "ticket.shift.submit"
@@ -47,8 +51,15 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "accounting.document.verify",
     "accounting.journal.prepare",
     "accounting.payment.prepare",
-    "accounting.period.close",
     "ticket.shift.reconcile",
+  ],
+  "chief-accountant": [
+    "finance.regional.read",
+    "accounting.journal.check",
+    "accounting.journal.post",
+    "accounting.journal.reverse",
+    "accounting.period.lock",
+    "accounting.period.reopen",
   ],
   director: [
     "finance.regional.read",

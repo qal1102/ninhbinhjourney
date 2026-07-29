@@ -107,6 +107,13 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở báo cáo hiện trường Tràng An",
     "Mở dự án sự kiện Bái Đính",
   ],
+  "chief-accountant": [
+    "Mở bút toán chờ kiểm tra",
+    "Mở đối soát toàn vùng",
+    "Mở công nợ nhà cung cấp",
+    "Mở đóng kỳ tháng 7",
+    "Mở báo cáo tài chính",
+  ],
   employee: [
     "Nộp ảnh hiện trường",
     "Mở chấm công",
@@ -167,8 +174,8 @@ export function resolveErpNavigationCommand(rawCommand: string, role: ErpRole, s
 
   if (asksToOpen && /(trang chu|tong quan|dashboard|man hinh chinh)/.test(command)) return "/erp";
   if (matchedModule && targetSite && (asksToOpen || isShortModuleCommand)) {
-    if (role === "accountant" && !ERP_ACCOUNTANT_MODULE_IDS.includes(matchedModule.id)) return null;
-    if ((role === "director" || role === "accountant") && !namedSite && !currentSiteId && matchedModule.id === "tai-chinh-doi-soat") return "/erp/finance";
+    if ((role === "accountant" || role === "chief-accountant") && !ERP_ACCOUNTANT_MODULE_IDS.includes(matchedModule.id)) return null;
+    if ((role === "director" || role === "accountant" || role === "chief-accountant") && !namedSite && !currentSiteId && matchedModule.id === "tai-chinh-doi-soat") return "/erp/finance";
     if (role === "director" && !namedSite && !currentSiteId && matchedModule.id === "bao-cao") return "/erp/finance#forecast";
     const cameraId = matchedModule.id === "camera-ai" ? findCameraId(command) : undefined;
     return `/erp/${targetSite}/${matchedModule.id}${cameraId ? `?camera=${cameraId}` : ""}`;
@@ -211,7 +218,37 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     router.push(href);
   }
 
-  function execute(rawCommand: string) {
+  async function queryLiveSnapshot(
+    intent: "revenue" | "cost" | "profit" | "guests" | "urgent",
+  ) {
+    setVoiceMessage("Đang đọc số liệu mới nhất…");
+    try {
+      const response = await fetch("/api/erp/assistant", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ intent }),
+      });
+      const payload = (await response.json()) as CommandResult & {
+        message?: string;
+      };
+      if (!response.ok) {
+        throw new Error(payload.message ?? "Không đọc được số liệu.");
+      }
+      setResult(payload);
+      setVoiceMessage("Đã đọc xong số liệu trong phạm vi tài khoản.");
+    } catch (error) {
+      setResult({
+        answer: "Chưa đọc được số liệu lúc này",
+        detail:
+          error instanceof Error
+            ? error.message
+            : "Kho dữ liệu chưa phản hồi.",
+      });
+      setVoiceMessage("Truy vấn chưa hoàn tất.");
+    }
+  }
+
+  async function execute(rawCommand: string) {
     const command = normalize(rawCommand);
     const namedSite = findSite(command, siteIds);
     const targetSite = namedSite ?? currentSiteId ?? siteIds[0];
@@ -225,10 +262,10 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
       return;
     }
 
-    if (role === "accountant" && matchedModule && !ERP_ACCOUNTANT_MODULE_IDS.includes(matchedModule.id)) {
+    if ((role === "accountant" || role === "chief-accountant") && matchedModule && !ERP_ACCOUNTANT_MODULE_IDS.includes(matchedModule.id)) {
       setResult({
         answer: "Nghiệp vụ này không thuộc quyền kế toán",
-        detail: "Kế toán chỉ xem hồ sơ nguồn và xử lý chứng từ, đối soát, công nợ, tài sản, dự án và báo cáo. Điều phối hiện trường thuộc quản lý cơ sở.",
+        detail: "Tài khoản kế toán chỉ được mở hồ sơ nguồn và các nghiệp vụ tài chính đã phân quyền.",
         href: "/erp/finance",
         hrefLabel: "Mở hàng việc kế toán",
       });
@@ -236,49 +273,44 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     }
 
     if (/(doanh thu|ban duoc|thu duoc)/.test(command) && /(hom nay|hien tai|bay gio|bao nhieu)/.test(command)) {
-      setResult({
-        answer: "1,84 tỷ đồng",
-        detail: "Ghi nhận đến 10:20, cao hơn kế hoạch 7,0%. Tam Chúc đóng góp nhiều nhất với 618 triệu đồng.",
-        href: role === "director" || role === "accountant" ? "/erp/finance" : targetSite ? `/erp/${targetSite}/tai-chinh-doi-soat` : undefined,
-        hrefLabel: "Mở báo cáo tài chính",
-      });
+      await queryLiveSnapshot("revenue");
       return;
     }
 
     if (/(chi phi|phai tra|cong no|chi tra)/.test(command)) {
-      setResult({ answer: "1,17 tỷ chi phí đã ghi nhận", detail: "428 triệu đến hạn chi hôm nay: 286 triệu đã đủ hồ sơ, 142 triệu đang chờ chứng từ.", href: role === "director" || role === "accountant" ? "/erp/finance" : targetSite ? `/erp/${targetSite}/tai-chinh-doi-soat` : undefined, hrefLabel: "Mở chi tiết chi phí" });
+      await queryLiveSnapshot("cost");
       return;
     }
 
     if (/(loi nhuan|lai bao nhieu|bien loi nhuan)/.test(command)) {
-      setResult({ answer: "670 triệu lợi nhuận vận hành", detail: "Biên lợi nhuận 36,4% trên doanh thu 1,84 tỷ đồng, sau 1,17 tỷ chi phí ghi nhận.", href: role === "director" || role === "accountant" ? "/erp/finance" : targetSite ? `/erp/${targetSite}/tai-chinh-doi-soat` : undefined, hrefLabel: "Mở báo cáo lợi nhuận" });
+      await queryLiveSnapshot("profit");
       return;
     }
 
     if (/(bao nhieu khach|khach hom nay|khach da check in|khach da vao)/.test(command)) {
-      setResult({ answer: "11.450 khách dự kiến hôm nay", detail: "7.896 khách đã check-in, tương đương 69%. Tam Chúc đang cao nhất với 3.610 khách và tải 83%.", href: siteIds.includes("tam-chuc") ? "/erp/tam-chuc/suc-chua" : undefined, hrefLabel: "Mở luồng khách Tam Chúc" });
+      await queryLiveSnapshot("guests");
       return;
     }
 
     if (/(can xu ly gap|viec gap|co gi gap|uu tien ngay|khan cap)/.test(command)) {
-      setResult({ answer: "2 việc cần xử lý trước 10:30", detail: "Duyệt tăng cường 4 xe tại Tam Chúc và chấp nhận rủi ro Go/No-Go tại điểm mù liên lạc.", href: siteIds.includes("tam-chuc") ? "/erp/tam-chuc/su-co" : undefined, hrefLabel: "Mở việc ưu tiên" });
+      await queryLiveSnapshot("urgent");
       return;
     }
 
     if (/(qua tai|dong nhat|can chu y|suc chua)/.test(command)) {
       setResult({
-        answer: "Tam Chúc đang cần chú ý",
-        detail: "Tải hiện tại 83%. Đợt khách 09:30 có thể đẩy khu Khách Điện lên mức cam nếu chưa mở điểm chờ phụ.",
-        href: siteIds.includes("tam-chuc") ? "/erp/tam-chuc/suc-chua" : undefined,
-        hrefLabel: "Mở điều phối sức chứa",
+        answer: "Mở màn hình sức chứa để xem theo cơ sở",
+        detail: "Trợ lý chưa nhận được luồng đếm người thời gian thực nên không tự đưa ra một tỷ lệ tải.",
+        href: targetSite ? `/erp/${targetSite}/suc-chua` : undefined,
+        hrefLabel: "Mở sức chứa",
       });
       return;
     }
 
     if (/(su co|canh bao)/.test(command)) {
       setResult({
-        answer: "11 sự cố đang mở",
-        detail: "Hai việc ưu tiên cao tại Tam Chúc; không có sự cố mất an toàn nghiêm trọng. SLA xử lý toàn vùng đang đạt 96%.",
+        answer: "Mở danh sách sự cố của cơ sở",
+        detail: "Trợ lý chỉ báo số khi sự cố đã được ghi vào nguồn dữ liệu vận hành.",
         href: targetSite ? `/erp/${targetSite}/su-co` : undefined,
         hrefLabel: "Mở danh sách sự cố",
       });
@@ -287,8 +319,8 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
     if (/(du bao|30 ngay|thang toi|sap toi)/.test(command)) {
       setResult({
-        answer: "Nhu cầu 30 ngày có thể tăng 9–12%",
-        detail: "Nhịp đặt đoàn cao hơn cùng kỳ 14% và cuối tuần đã lấp 78% sức chứa. Cần bổ sung ca xe điện tại Tam Chúc và Bái Đính.",
+        answer: "Chưa đủ chuỗi dữ liệu để dự báo 30 ngày",
+        detail: "Cần dữ liệu đặt chỗ, công suất và lịch sự kiện đã được ghi nhận trước khi đưa ra dự báo.",
         href: role === "director" ? "/erp/finance#forecast" : undefined,
         hrefLabel: "Mở dự báo",
       });

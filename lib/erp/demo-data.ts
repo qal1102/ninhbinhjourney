@@ -16,6 +16,7 @@ export type DemoWorkforceProfile = {
 export type DemoErpAccount = {
   id: string;
   username: string;
+  usernameAliases?: string[];
   name: string;
   role: ErpRole;
   jobTitle: string;
@@ -34,6 +35,8 @@ const employeePassword =
   process.env.ERP_DEMO_EMPLOYEE_PASSWORD ?? "Nhanvien@2026";
 const accountantPassword =
   process.env.ERP_DEMO_ACCOUNTANT_PASSWORD ?? "Ketoan@2026";
+const chiefAccountantPassword =
+  process.env.ERP_DEMO_CHIEF_ACCOUNTANT_PASSWORD ?? "Ketoantruong@2026";
 const seasonalPassword =
   process.env.ERP_DEMO_SEASONAL_PASSWORD ?? "Thoivu@2026";
 
@@ -50,6 +53,17 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     initialModuleIds: [],
   },
   {
+    id: "chief-accountant-001",
+    username: "ketoantruong",
+    name: "Nguyễn Hải Yến",
+    role: "chief-accountant",
+    jobTitle: "Kế toán trưởng",
+    password: chiefAccountantPassword,
+    initialSiteIds: ["trang-an", "tam-chuc", "tam-coc", "bai-dinh"],
+    managedSiteIds: [],
+    initialModuleIds: [...ERP_ACCOUNTANT_MODULE_IDS],
+  },
+  {
     id: "accountant-001",
     username: "ketoan",
     name: "Phạm Thu Trang",
@@ -62,46 +76,14 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
   },
   {
     id: "manager-trang-an",
-    username: "ql.trangan",
+    username: "ql.vanhanh",
+    usernameAliases: ["ql.trangan"],
     name: "Lê Hoàng Nam",
     role: "manager",
-    jobTitle: "Quản lý Tràng An",
+    jobTitle: "Quản lý vận hành toàn vùng",
     password: managerPassword,
-    initialSiteIds: ["trang-an"],
-    managedSiteIds: ["trang-an"],
-    initialModuleIds: [],
-  },
-  {
-    id: "manager-tam-chuc",
-    username: "ql.tamchuc",
-    name: "Trần Thu Hà",
-    role: "manager",
-    jobTitle: "Quản lý Tam Chúc",
-    password: managerPassword,
-    initialSiteIds: ["tam-chuc"],
-    managedSiteIds: ["tam-chuc"],
-    initialModuleIds: [],
-  },
-  {
-    id: "manager-tam-coc",
-    username: "ql.tamcoc",
-    name: "Phạm Đức Long",
-    role: "manager",
-    jobTitle: "Quản lý Tam Cốc",
-    password: managerPassword,
-    initialSiteIds: ["tam-coc"],
-    managedSiteIds: ["tam-coc"],
-    initialModuleIds: [],
-  },
-  {
-    id: "manager-bai-dinh",
-    username: "ql.baidinh",
-    name: "Hoàng Gia Bảo",
-    role: "manager",
-    jobTitle: "Quản lý Bái Đính",
-    password: managerPassword,
-    initialSiteIds: ["bai-dinh"],
-    managedSiteIds: ["bai-dinh"],
+    initialSiteIds: ["trang-an", "tam-chuc", "tam-coc", "bai-dinh"],
+    managedSiteIds: ["trang-an", "tam-chuc", "tam-coc", "bai-dinh"],
     initialModuleIds: [],
   },
   {
@@ -178,7 +160,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       employmentType: "permanent",
       accessStartsAt: "2024-02-01T00:00:00+07:00",
       accessEndsAt: null,
-      supervisorId: "manager-tam-chuc",
+      supervisorId: "manager-trang-an",
       primaryStation: "Bến xe điện",
       shiftLabel: "07:15–12:15",
       trainedModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "su-co", "cham-cong"],
@@ -198,7 +180,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       employmentType: "permanent",
       accessStartsAt: "2023-09-01T00:00:00+07:00",
       accessEndsAt: null,
-      supervisorId: "manager-tam-coc",
+      supervisorId: "manager-trang-an",
       primaryStation: "Bến đò trung tâm",
       shiftLabel: "07:30–12:30",
       trainedModuleIds: ["check-in-khach", "bao-cao-hien-truong", "suc-chua", "cham-cong"],
@@ -218,7 +200,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       employmentType: "permanent",
       accessStartsAt: "2024-03-01T00:00:00+07:00",
       accessEndsAt: null,
-      supervisorId: "manager-bai-dinh",
+      supervisorId: "manager-trang-an",
       primaryStation: "Điểm đón xe điện",
       shiftLabel: "07:00–12:00",
       trainedModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "suc-chua", "cham-cong"],
@@ -249,7 +231,11 @@ export function findDemoErpAccountById(id: string) {
 export function findDemoErpAccountByUsername(username: string) {
   const normalized = username.trim().toLowerCase();
   return DEMO_ERP_ACCOUNTS.find(
-    (account) => account.username.toLowerCase() === normalized,
+    (account) =>
+      account.username.toLowerCase() === normalized ||
+      account.usernameAliases?.some(
+        (alias) => alias.toLowerCase() === normalized,
+      ),
   );
 }
 

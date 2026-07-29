@@ -501,8 +501,8 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 - [ ] Số vé theo loại, hoàn, hủy, check-in và tồn ấn chỉ.
 - [ ] Cash count/biên bản bàn giao/tiền nộp quỹ.
 - [ ] Ngưỡng chênh lệch cấu hình theo site/kênh/kỳ, không đóng cứng.
-- [ ] Kế toán trưởng/checker cho bút toán; posting/reversal/period lock.
-- [ ] Link từ báo cáo giám đốc xuống workflow, audit và tài liệu nguồn.
+- [x] Kế toán trưởng/checker cho bút toán; posting/reversal/period lock. Migration 006 đã chạy trên remote, có action/RPC theo vai trò và lịch sử bất biến.
+- [x] Link từ báo cáo giám đốc xuống hồ sơ chốt ca, bút toán và hàng đợi cần xử lý. Trung tâm tài liệu nguồn dùng chung vẫn thuộc G7/G9.
 
 ### Tiêu chí nghiệm thu G8
 
@@ -517,9 +517,9 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 
 - [ ] Xác nhận pháp nhân, chế độ tài khoản, chính sách thuế và kỳ theo tư vấn của khách hàng.
 - [ ] Chart of accounts/cost center/project/site/channel/product có effective date.
-- [ ] Accounting case, journal header/lines, approval, posting, reversal, reconciliation, period lock.
-- [ ] Maker–checker và delegation/ủy quyền có thời hạn.
-- [ ] Audit bất biến, không sửa giao dịch nguồn đã xác nhận.
+- [x] Journal header/lines, approval, posting, reversal và period lock cho nguồn chốt ca; reconciliation đa nguồn vẫn còn ở G9.2–G9.7.
+- [x] Maker–checker xuyên hai tài khoản kế toán viên/kế toán trưởng; người lập không thể tự kiểm tra hoặc tự ghi sổ.
+- [x] Audit journal/period bất biến và trigger chặn sửa/xóa bút toán đã ghi sổ; giao dịch nguồn đã xác nhận chỉ sửa bằng hoàn bút và bút toán thay thế.
 
 ### G9.2. Doanh thu, tiền và ngân hàng
 
@@ -558,8 +558,8 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 
 - [ ] Trạng thái phát hành/truyền/lỗi/điều chỉnh/thay thế lấy từ connector thật.
 - [ ] Checklist close: quỹ/ngân hàng, doanh thu–vé–QR, AP/AR, lương, tài sản, accrual, hóa đơn lỗi.
-- [ ] Lock/reopen có quyền, lý do và audit.
-- [ ] Báo cáo trial balance, P&L, cash, AP aging, budget vs actual và management dimensions.
+- [x] Lock/reopen kỳ có quyền kế toán trưởng, lý do và audit.
+- [ ] Trial balance và sổ tài khoản đã có từ journal thật; còn P&L, cash, AP aging, budget vs actual và các chiều quản trị sau khi có đủ nguồn nghiệp vụ.
 
 ### G9.8. Giảm làm tay
 

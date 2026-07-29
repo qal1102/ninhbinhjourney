@@ -1,25 +1,43 @@
 import { redirect } from "next/navigation";
 import { ErpShell } from "@/components/erp/erp-shell";
-import { FinanceDashboard } from "@/components/erp/finance-dashboard";
-import { AccountingWorkbench } from "@/components/erp/accounting-workbench";
-import { ERP_SITES } from "@/domain/erp";
+import { AccountingControlCenter } from "@/components/erp/accounting-control-center";
 import { canViewRegionalFinance } from "@/domain/erp-role-policy";
+import {
+  listAccountingJournals,
+  listAccountingPeriods,
+} from "@/lib/erp/accounting-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 
-export default async function ErpFinancePage() {
+type Props = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function ErpFinancePage({ searchParams }: Props) {
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
   if (!canViewRegionalFinance(user.role)) redirect("/erp");
-  const shiftClosures = await listShiftClosures({ siteIds: user.siteIds });
+  const [shiftClosures, journals, periods, params] = await Promise.all([
+    listShiftClosures({ siteIds: user.siteIds }),
+    listAccountingJournals({ siteIds: user.siteIds }),
+    listAccountingPeriods(),
+    searchParams ??
+      Promise.resolve<Record<string, string | string[] | undefined>>({}),
+  ]);
+  const sourceValue = params.source;
+  const initialSourceId = Array.isArray(sourceValue)
+    ? sourceValue[0]
+    : sourceValue;
 
   return (
     <ErpShell user={user}>
-      {user.role === "accountant" ? (
-        <AccountingWorkbench user={user} shiftClosures={shiftClosures} />
-      ) : (
-        <FinanceDashboard sites={ERP_SITES} />
-      )}
+      <AccountingControlCenter
+        user={user}
+        shiftClosures={shiftClosures}
+        journals={journals}
+        periods={periods}
+        initialSourceId={initialSourceId}
+      />
     </ErpShell>
   );
 }

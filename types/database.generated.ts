@@ -1,5 +1,5 @@
 /**
- * Schema snapshot for migrations `202607240001` through `202607280003`.
+ * Schema snapshot for migrations `202607240001` through `202607290006`.
  *
  * This file follows Supabase CLI's generated Database shape. It is kept beside
  * the versioned migration so a linked-project `supabase gen types typescript`
@@ -610,6 +610,122 @@ export type ErpShiftCloseAuditEventRow = {
   created_at: string;
 };
 
+export type ErpAccountRegistryRow = {
+  account_id: string;
+  tenant_id: string;
+  auth_user_id: string | null;
+  display_name: string;
+  job_title: string;
+  employment_type: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ErpAccountRoleAssignmentRow = {
+  id: string;
+  tenant_id: string;
+  account_id: string;
+  role: string;
+  site_id: string | null;
+  effective_from: string;
+  effective_until: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ErpAccountingPeriodRow = {
+  id: string;
+  tenant_id: string;
+  period_key: string;
+  starts_on: string;
+  ends_on: string;
+  status: string;
+  version: number;
+  locked_by_account_id: string | null;
+  locked_at: string | null;
+  lock_reason: string | null;
+  reopened_by_account_id: string | null;
+  reopened_at: string | null;
+  reopen_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ErpAccountingJournalRow = {
+  id: string;
+  tenant_id: string;
+  site_id: string;
+  journal_code: string;
+  source_type: string;
+  source_workflow_id: string;
+  source_version: number;
+  business_date: string;
+  period_key: string;
+  status: string;
+  version: number;
+  maker_account_id: string;
+  maker_note: string;
+  checker_account_id: string | null;
+  checker_note: string | null;
+  submitted_at: string | null;
+  approved_at: string | null;
+  posted_at: string | null;
+  reversal_of_journal_id: string | null;
+  supersedes_journal_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ErpAccountingJournalLineRow = {
+  id: string;
+  journal_id: string;
+  tenant_id: string;
+  site_id: string;
+  line_number: number;
+  account_code: string;
+  account_name: string;
+  debit_vnd: number;
+  credit_vnd: number;
+  dimensions: Json;
+  created_at: string;
+};
+
+export type ErpAccountingAuditEventRow = {
+  id: string;
+  tenant_id: string;
+  site_id: string | null;
+  entity_type: string;
+  entity_id: string;
+  sequence_number: number;
+  event_type: string;
+  actor_account_id: string;
+  actor_role: string;
+  from_status: string | null;
+  to_status: string;
+  note: string;
+  metadata: Json;
+  idempotency_key: string;
+  request_hash: string;
+  occurred_at: string;
+  created_at: string;
+};
+
+export type ErpAccountingCommandReceiptRow = {
+  id: string;
+  tenant_id: string;
+  command_scope: string;
+  idempotency_key: string;
+  actor_account_id: string;
+  request_hash: string;
+  entity_type: string;
+  entity_id: string;
+  resulting_version: number;
+  response: Json;
+  created_at: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -756,6 +872,13 @@ export interface Database {
       erp_partner_feedback: Table<ErpPartnerFeedbackRow>;
       erp_shift_close_workflows: Table<ErpShiftCloseWorkflowRow>;
       erp_shift_close_audit_events: Table<ErpShiftCloseAuditEventRow>;
+      erp_account_registry: Table<ErpAccountRegistryRow>;
+      erp_account_role_assignments: Table<ErpAccountRoleAssignmentRow>;
+      erp_accounting_periods: Table<ErpAccountingPeriodRow>;
+      erp_accounting_journals: Table<ErpAccountingJournalRow>;
+      erp_accounting_journal_lines: Table<ErpAccountingJournalLineRow>;
+      erp_accounting_audit_events: Table<ErpAccountingAuditEventRow>;
+      erp_accounting_command_receipts: Table<ErpAccountingCommandReceiptRow>;
       erp_push_subscriptions: Table<{
         id: string;
         user_id: string;
@@ -928,6 +1051,52 @@ export interface Database {
           p_idempotency_key: string;
         };
         Returns: ErpShiftCloseWorkflowRow;
+      };
+      erp_accounting_prepare_shift_close: {
+        Args: {
+          p_workflow_id: string;
+          p_expected_source_version: number;
+          p_actor_account_id: string;
+          p_note: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpAccountingJournalRow;
+      };
+      erp_accounting_review_journal: {
+        Args: {
+          p_journal_id: string;
+          p_expected_version: number;
+          p_actor_account_id: string;
+          p_decision: string;
+          p_note: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpAccountingJournalRow;
+      };
+      erp_accounting_reverse_journal: {
+        Args: {
+          p_journal_id: string;
+          p_expected_version: number;
+          p_actor_account_id: string;
+          p_reason: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpAccountingJournalRow;
+      };
+      erp_accounting_change_period: {
+        Args: {
+          p_period_key: string;
+          p_expected_version: number;
+          p_actor_account_id: string;
+          p_action: string;
+          p_reason: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpAccountingPeriodRow;
       };
       current_user_is_anonymous: { Args: never; Returns: boolean };
       has_tenant_role: {

@@ -1,14 +1,8 @@
 import Link from "next/link";
-import {
-  ERP_MODULES,
-  type ErpModuleId,
-  type ErpSite,
-  type ErpSiteId,
-} from "@/domain/erp";
+import { ERP_MODULES, type ErpSite, type ErpSiteId } from "@/domain/erp";
+import type { AccountingJournal } from "@/domain/erp-accounting";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
-import type { AttendanceEvent } from "@/lib/erp/demo-session";
-import { ERP_WORKFORCE_SUMMARY } from "@/domain/erp-operating-data";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import {
   WorkdayLifecycle,
@@ -18,17 +12,18 @@ import {
 type Props = {
   user: CurrentErpUser;
   sites: readonly ErpSite[];
-  attendance: readonly AttendanceEvent[];
   records: readonly ShiftCloseRecord[];
   workdays: readonly WorkdayRecord[];
+  journals: readonly AccountingJournal[];
   workdayEmployees: readonly WorkdayEmployeeOption[];
 };
 
 type WorkItem = {
+  id: string;
   title: string;
   detail: string;
   time: string;
-  moduleId: ErpModuleId;
+  href: string;
   tone: "red" | "amber" | "green" | "blue";
 };
 
@@ -54,75 +49,54 @@ function formatVnd(value: number) {
   }).format(value);
 }
 
-const employeeWorkByModule: Partial<Record<ErpModuleId, WorkItem>> = {
-  "check-in-khach": {
-    title: "Xác thực đoàn TA-018 tại Cổng A",
-    detail: "42 khách · kiểm tra quyền lợi trước khi cho đoàn qua cổng",
-    time: "Trước 11:30",
-    moduleId: "check-in-khach",
-    tone: "red",
-  },
-  "bao-cao-hien-truong": {
-    title: "Nộp ảnh bàn giao khu vực phụ trách",
-    detail: "Cần đủ ảnh toàn cảnh, kết quả công việc và mã hạch toán",
-    time: "Trước 11:45",
-    moduleId: "bao-cao-hien-truong",
-    tone: "amber",
-  },
-  "su-co": {
-    title: "Kiểm tra cảnh báo tại lối đón khách",
-    detail: "Ghi nhận hiện trạng và chuyển quản lý nếu chưa thể xử lý tại chỗ",
-    time: "Trước 10:50",
-    moduleId: "su-co",
-    tone: "amber",
-  },
-  "suc-chua": {
-    title: "Cập nhật hàng chờ tại khu vực được giao",
-    detail: "Đếm lượt chờ và báo quản lý khi tải vượt ngưỡng",
-    time: "Trước 10:40",
-    moduleId: "suc-chua",
-    tone: "blue",
-  },
-  "xe-trung-chuyen": {
-    title: "Bàn giao tình trạng vòng xe",
-    detail: "Xác nhận số chuyến, thời gian chờ và xe cần kiểm tra",
-    time: "Trước 11:20",
-    moduleId: "xe-trung-chuyen",
-    tone: "blue",
-  },
-  "tai-san-bao-tri": {
-    title: "Hoàn tất checklist thiết bị đầu ca",
-    detail: "Bổ sung ảnh và tình trạng cho các hạng mục đã kiểm tra",
-    time: "Trước 11:15",
-    moduleId: "tai-san-bao-tri",
-    tone: "amber",
-  },
-  "sop-dien-tap": {
-    title: "Xác nhận đã đọc SOP áp dụng trong ca",
-    detail: "Kiểm tra đúng vai trò và điểm tập kết được phân công",
-    time: "Trong ca",
-    moduleId: "sop-dien-tap",
-    tone: "green",
-  },
-  "du-an-su-kien": {
-    title: "Cập nhật gói việc sự kiện được giao",
-    detail: "Ghi tiến độ, vướng mắc và bằng chứng hoàn thành",
-    time: "Trước 16:00",
-    moduleId: "du-an-su-kien",
-    tone: "blue",
-  },
-  "ve-dat-cho": {
-    title: "Kiểm tra giao dịch vé cần bàn giao",
-    detail: "Đối chiếu số vé, tiền thu và ngoại lệ trước khi kết ca",
-    time: "Cuối ca",
-    moduleId: "ve-dat-cho",
-    tone: "green",
-  },
-};
+function formatDue(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return value;
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(date);
+}
+
+function journalValue(journal: AccountingJournal) {
+  return journal.lines.reduce((total, line) => total + line.debitVnd, 0);
+}
+
+function latestRecordTime(values: readonly string[]) {
+  return values.reduce((latest, value) => {
+    const timestamp = Date.parse(value);
+    return Number.isFinite(timestamp) && timestamp > latest
+      ? timestamp
+      : latest;
+  }, 0);
+}
+
+export function summarizeWorkdays(
+  records: readonly WorkdayRecord[],
+  now: number,
+) {
+  const open = records.filter((record) => record.status !== "approved");
+  return {
+    total: records.length,
+    assigned: records.filter((record) => record.status === "assigned").length,
+    active: records.filter((record) =>
+      ["checked-in", "in-progress", "manager-returned"].includes(record.status),
+    ).length,
+    submitted: records.filter((record) => record.status === "submitted").length,
+    approved: records.filter((record) => record.status === "approved").length,
+    overdue: open.filter((record) => {
+      const dueAt = Date.parse(record.dueAt);
+      return Number.isFinite(dueAt) && dueAt < now;
+    }).length,
+  };
+}
 
 function firstSiteForModule(
   user: CurrentErpUser,
-  moduleId: ErpModuleId,
+  moduleId: (typeof ERP_MODULES)[number]["id"],
   preferredSiteId?: ErpSiteId,
 ) {
   if (
@@ -138,7 +112,7 @@ function firstSiteForModule(
 
 function moduleHref(
   user: CurrentErpUser,
-  moduleId: ErpModuleId,
+  moduleId: (typeof ERP_MODULES)[number]["id"],
   preferredSiteId?: ErpSiteId,
 ) {
   const siteId = firstSiteForModule(user, moduleId, preferredSiteId);
@@ -149,87 +123,79 @@ function ManagerDashboard({
   user,
   sites,
   records,
+  workdays,
 }: {
   user: CurrentErpUser;
   sites: readonly ErpSite[];
   records: readonly ShiftCloseRecord[];
+  workdays: readonly WorkdayRecord[];
 }) {
-  const site = sites[0];
-  if (!site) {
+  if (sites.length === 0) {
     return <EmptyAssignment name={user.name} />;
   }
 
-  const checkedInRate = Math.round(
-    (site.snapshot.checkedIn / Math.max(site.snapshot.visitors, 1)) * 100,
-  );
-  const workforce = ERP_WORKFORCE_SUMMARY.find((item) => item.siteId === site.id);
+  const referenceNow = latestRecordTime([
+    ...workdays.map((record) => record.updatedAt),
+    ...records.map((record) => record.updatedAt),
+  ]);
+  const summary = summarizeWorkdays(workdays, referenceNow);
   const pendingShiftClosures = records.filter(
-    (record) => record.siteId === site.id && record.status === "submitted",
+    (record) => record.status === "submitted",
   );
-  const pendingTickets = pendingShiftClosures.reduce(
-    (sum, record) => sum + record.ticketsSold,
-    0,
-  );
-  const pendingRevenueVnd = pendingShiftClosures.reduce(
-    (sum, record) =>
-      sum + record.amounts.grossVnd - record.amounts.refundVnd,
-    0,
-  );
-  const pendingDifferenceVnd = pendingShiftClosures.reduce(
-    (sum, record) => sum + Math.abs(record.differenceVnd),
-    0,
-  );
-  const work: WorkItem[] = [
-    {
-      title: "Phân người xử lý cảnh báo tại luồng vào",
-      detail: "Cảnh báo đã được xác minh, cần cập nhật người phụ trách và mốc kiểm tra",
-      time: "Trước 09:40",
-      moduleId: "su-co",
-      tone: "red",
-    },
-    {
-      title: "Bổ sung nhân sự cho khung giờ cao điểm",
-      detail: "Điều chuyển 3 người từ ca dự phòng sang khu vực đón khách",
-      time: "Trước 10:00",
-      moduleId: "nhan-su",
-      tone: "amber",
-    },
-    {
+  const pendingWork: WorkItem[] = workdays
+    .filter(
+      (record) =>
+        record.status === "submitted" ||
+        record.status === "manager-returned" ||
+        (record.status !== "approved" &&
+          Date.parse(record.dueAt) < referenceNow),
+    )
+    .sort((a, b) => Date.parse(a.dueAt) - Date.parse(b.dueAt))
+    .slice(0, 8)
+    .map((record) => ({
+      id: record.id,
       title:
-        pendingShiftClosures.length > 0
-          ? `Xác nhận ${pendingShiftClosures.length} ca vé và tiền thu`
-          : "Chưa có chốt ca vé mới cần xác nhận",
-      detail:
-        pendingShiftClosures.length > 0
-          ? `${pendingTickets.toLocaleString("vi-VN")} vé · ${formatVnd(pendingRevenueVnd)} doanh thu khai báo · ${
-              pendingDifferenceVnd > 0
-                ? `chênh ${formatVnd(pendingDifferenceVnd)}`
-                : "tiền thu đã khớp"
-            }`
-          : "Hồ sơ mới sẽ xuất hiện ngay khi nhân viên trong ca gửi bàn giao.",
-      time: pendingShiftClosures.length > 0 ? "Cần xác nhận" : "Chưa có hồ sơ",
-      moduleId: "ve-dat-cho",
+        record.status === "submitted"
+          ? `Duyệt: ${record.taskTitle}`
+          : record.taskTitle,
+      detail: `${record.employee.name} · ${record.station} · ${record.code}`,
+      time:
+        record.status === "manager-returned"
+          ? "Đã trả lại"
+          : Date.parse(record.dueAt) < referenceNow
+            ? `Quá hạn ${formatDue(record.dueAt)}`
+            : `Hạn ${formatDue(record.dueAt)}`,
+      href: "#workday-lifecycle",
       tone:
-        pendingShiftClosures.length > 0
-          ? pendingDifferenceVnd > 0
-            ? "red"
-            : "blue"
-          : "green",
-    },
-    {
-      title: "Duyệt báo cáo bàn giao hiện trường",
-      detail: "4 báo cáo mới đã có ảnh và mã hạch toán",
-      time: "Trong hôm nay",
-      moduleId: "bao-cao-hien-truong",
-      tone: "green",
-    },
-  ];
+        record.status === "manager-returned" ||
+        Date.parse(record.dueAt) < referenceNow
+          ? "red"
+          : record.status === "submitted"
+            ? "blue"
+            : "amber",
+    }));
+  const pendingShiftWork: WorkItem[] = pendingShiftClosures
+    .slice(0, 4)
+    .map((record) => ({
+      id: record.id,
+      title: `Xác nhận chốt ca ${record.shiftCode}`,
+      detail: `${record.station} · ${record.ticketsSold.toLocaleString("vi-VN")} vé · ${formatVnd(
+        record.amounts.grossVnd - record.amounts.refundVnd,
+      )}`,
+      time:
+        record.differenceVnd === 0
+          ? "Tiền thu đã khớp"
+          : `Chênh ${formatVnd(Math.abs(record.differenceVnd))}`,
+      href: moduleHref(user, "ve-dat-cho", record.siteId),
+      tone: record.differenceVnd === 0 ? "green" : "red",
+    }));
+  const work = [...pendingWork, ...pendingShiftWork].slice(0, 10);
 
   return (
     <div className="min-w-0 space-y-5">
       <section className="overflow-hidden rounded-3xl bg-[#173f34] p-5 text-white sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b6d5ca]">
-          Ca điều hành · {site.shortName}
+          Điều hành toàn vùng · {sites.length} cơ sở
         </p>
         <div className="mt-2 flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
           <div>
@@ -237,24 +203,40 @@ function ManagerDashboard({
               Chào {user.name}
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/65 sm:text-base">
-              {pendingShiftClosures.length} ca chờ xác nhận ·{" "}
-              {site.snapshot.openIncidents} sự cố đang mở
+              {summary.submitted} công việc chờ duyệt ·{" "}
+              {pendingShiftClosures.length} ca chờ xác nhận
             </p>
           </div>
           <Link
-            href={`/erp/${site.id}`}
+            href={`/erp/${sites[0].id}`}
             className="w-fit rounded-xl bg-white px-4 py-3 text-sm font-black text-[#183f34]"
           >
-            Mở toàn bộ {site.shortName} →
+            Mở danh sách nghiệp vụ →
           </Link>
         </div>
 
         <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
-            ["Khách hôm nay", site.snapshot.visitors.toLocaleString("vi-VN")],
-            ["Đã check-in", `${checkedInRate}%`],
-            ["Phủ ca", `${site.snapshot.employeesOnShift}/${workforce?.planned ?? site.snapshot.employeesOnShift}`, `${workforce?.seasonalOnShift ?? 0} thời vụ · ${workforce?.absent ?? 0} vắng`],
-            ["Sự cố đang mở", site.snapshot.openIncidents.toLocaleString("vi-VN"), `${pendingShiftClosures.length} ca chờ xác nhận`],
+            [
+              "Việc trong ngày",
+              summary.total.toLocaleString("vi-VN"),
+              `${summary.active} đang làm`,
+            ],
+            [
+              "Chờ quản lý duyệt",
+              summary.submitted.toLocaleString("vi-VN"),
+              `${summary.approved} đã duyệt`,
+            ],
+            [
+              "Việc quá hạn",
+              summary.overdue.toLocaleString("vi-VN"),
+              `${summary.assigned} chưa bắt đầu`,
+            ],
+            [
+              "Ca chờ xác nhận",
+              pendingShiftClosures.length.toLocaleString("vi-VN"),
+              `${sites.length} cơ sở phụ trách`,
+            ],
           ].map(([label, value, note]) => (
             <article
               key={label}
@@ -262,7 +244,11 @@ function ManagerDashboard({
             >
               <p className="text-[11px] leading-4 text-white/50">{label}</p>
               <p className="mt-2 break-words text-2xl font-black">{value}</p>
-              {note ? <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">{note}</p> : null}
+              {note ? (
+                <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">
+                  {note}
+                </p>
+              ) : null}
             </article>
           ))}
         </div>
@@ -280,13 +266,15 @@ function ManagerDashboard({
         <div className="divide-y divide-[#e7ece9]">
           {work.map((item) => (
             <Link
-              key={item.title}
-              href={`/erp/${site.id}/${item.moduleId}`}
+              key={item.id}
+              href={item.href}
               className="grid min-w-0 gap-2 p-4 transition hover:bg-[#f7faf8] sm:grid-cols-[1fr_auto] sm:items-center sm:px-6"
             >
               <div className="min-w-0">
                 <p className="font-black text-[#293d34]">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-[#748079]">{item.detail}</p>
+                <p className="mt-1 text-sm leading-6 text-[#748079]">
+                  {item.detail}
+                </p>
               </div>
               <span
                 className={`w-fit rounded-full px-3 py-1 text-xs font-black ${toneClasses[item.tone]}`}
@@ -295,6 +283,53 @@ function ManagerDashboard({
               </span>
             </Link>
           ))}
+          {work.length === 0 ? (
+            <p className="p-6 text-sm leading-6 text-[#748079]">
+              Không có công việc hoặc ca bán vé nào đang chờ quản lý xử lý.
+            </p>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm">
+        <div className="border-b border-[#e4e9e6] p-5 sm:p-6">
+          <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
+            Theo cơ sở
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-[#20342c]">
+            Khối lượng công việc thực tế
+          </h2>
+        </div>
+        <div className="grid gap-px bg-[#e7ece9] sm:grid-cols-2 xl:grid-cols-4">
+          {sites.map((site) => {
+            const siteWorkdays = workdays.filter(
+              (record) => record.siteId === site.id,
+            );
+            const siteSummary = summarizeWorkdays(
+              siteWorkdays,
+              referenceNow,
+            );
+            const siteShifts = pendingShiftClosures.filter(
+              (record) => record.siteId === site.id,
+            );
+            return (
+              <Link
+                key={site.id}
+                href={`/erp/${site.id}`}
+                className="min-w-0 bg-white p-5 transition hover:bg-[#f7faf8]"
+              >
+                <p className="font-black text-[#263b32]">{site.shortName}</p>
+                <p className="mt-3 text-sm text-[#66756e]">
+                  {siteSummary.active} đang làm · {siteSummary.submitted} chờ
+                  duyệt
+                </p>
+                <p className="mt-1 text-sm text-[#66756e]">
+                  {siteSummary.overdue} quá hạn · {siteShifts.length} ca chờ xác
+                  nhận
+                </p>
+              </Link>
+            );
+          })}
         </div>
       </section>
     </div>
@@ -304,11 +339,11 @@ function ManagerDashboard({
 function EmployeeDashboard({
   user,
   sites,
-  attendance,
+  workdays,
 }: {
   user: CurrentErpUser;
   sites: readonly ErpSite[];
-  attendance: readonly AttendanceEvent[];
+  workdays: readonly WorkdayRecord[];
 }) {
   const site = sites[0];
   if (!site) {
@@ -317,28 +352,34 @@ function EmployeeDashboard({
 
   const moduleIds = user.moduleIdsBySite[site.id] ?? [];
   const modules = ERP_MODULES.filter((module) => moduleIds.includes(module.id));
-  const work = moduleIds
-    .map((moduleId) => employeeWorkByModule[moduleId])
-    .filter((item): item is WorkItem => Boolean(item))
-    .slice(0, 3);
-  const today = new Intl.DateTimeFormat("en-CA", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: "Asia/Ho_Chi_Minh",
-  }).format(new Date());
-  const latestAttendance = attendance
-    .filter((event) => event.userId === user.id && event.siteId === site.id)
-    .filter((event) => new Intl.DateTimeFormat("en-CA", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      timeZone: "Asia/Ho_Chi_Minh",
-    }).format(new Date(event.createdAt)) === today)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-  const inShift = latestAttendance?.type === "check-in";
+  const referenceNow = latestRecordTime(
+    workdays.map((record) => record.updatedAt),
+  );
+  const summary = summarizeWorkdays(workdays, referenceNow);
+  const work = [...workdays].sort(
+    (a, b) => Date.parse(a.dueAt) - Date.parse(b.dueAt),
+  );
+  const activeStatuses = new Set<WorkdayRecord["status"]>([
+    "checked-in",
+    "in-progress",
+    "manager-returned",
+  ]);
+  const inShift = workdays.some((record) => activeStatuses.has(record.status));
+  const averageProgress =
+    workdays.length > 0
+      ? Math.round(
+          workdays.reduce(
+            (total, record) => total + record.progressPercent,
+            0,
+          ) / workdays.length,
+        )
+      : 0;
+  const nearestDeadline = work.find((record) => record.status !== "approved");
   const workforce = user.workforceProfile;
-  const employmentLabel = workforce?.employmentType === "seasonal" ? "Nhân viên thời vụ" : "Nhân viên chính thức";
+  const employmentLabel =
+    workforce?.employmentType === "seasonal"
+      ? "Nhân viên thời vụ"
+      : "Nhân viên chính thức";
 
   return (
     <div className="min-w-0 space-y-5">
@@ -351,8 +392,21 @@ function EmployeeDashboard({
             <h1 className="text-3xl font-black tracking-[-0.035em] sm:text-5xl">
               {user.name}
             </h1>
-            <p className="mt-3 text-sm text-white/65">{user.jobTitle}{workforce ? ` · ${workforce.primaryStation}` : ""}</p>
-            {workforce?.accessEndsAt ? <p className="mt-1 text-xs text-[#b6d5ca]">Quyền làm việc có hiệu lực đến {new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(workforce.accessEndsAt))}</p> : null}
+            <p className="mt-3 text-sm text-white/65">
+              {user.jobTitle}
+              {workforce ? ` · ${workforce.primaryStation}` : ""}
+            </p>
+            {workforce?.accessEndsAt ? (
+              <p className="mt-1 text-xs text-[#b6d5ca]">
+                Quyền làm việc có hiệu lực đến{" "}
+                {new Intl.DateTimeFormat("vi-VN", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  timeZone: "Asia/Ho_Chi_Minh",
+                }).format(new Date(workforce.accessEndsAt))}
+              </p>
+            ) : null}
           </div>
           <span className="w-fit rounded-full bg-[#dff1e8] px-3 py-1.5 text-xs font-black text-[#246249]">
             {inShift ? "Đang trong ca" : "Ngoài ca"}
@@ -362,16 +416,23 @@ function EmployeeDashboard({
         <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             ["Ca làm", workforce?.shiftLabel ?? "Theo phân công"],
-            ["Đã hoàn thành", "7 / 8 việc"],
-            ["Tiến độ", "88%"],
-            ["Deadline gần nhất", work[0]?.time ?? "Trong ca"],
+            ["Đã hoàn thành", `${summary.approved} / ${summary.total} việc`],
+            ["Tiến độ bình quân", `${averageProgress}%`],
+            [
+              "Hạn gần nhất",
+              nearestDeadline
+                ? formatDue(nearestDeadline.dueAt)
+                : "Chưa có việc",
+            ],
           ].map(([label, value]) => (
             <article
               key={label}
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
               <p className="text-[11px] leading-4 text-white/50">{label}</p>
-              <p className="mt-2 break-words text-lg font-black sm:text-xl">{value}</p>
+              <p className="mt-2 break-words text-lg font-black sm:text-xl">
+                {value}
+              </p>
             </article>
           ))}
         </div>
@@ -388,26 +449,54 @@ function EmployeeDashboard({
             </h2>
           </div>
           <div className="divide-y divide-[#e7ece9]">
-            {work.map((item, index) => (
-              <Link
-                key={item.title}
-                href={`/erp/${site.id}/${item.moduleId}`}
-                className="grid min-w-0 gap-3 p-4 transition hover:bg-[#f7faf8] sm:grid-cols-[auto_1fr_auto] sm:items-center sm:px-6"
-              >
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-[#e8f1ec] text-xs font-black text-[#2b6651]">
-                  {index + 1}
-                </span>
-                <div className="min-w-0">
-                  <p className="font-black text-[#293d34]">{item.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-[#748079]">{item.detail}</p>
-                </div>
-                <span
-                  className={`w-fit rounded-full px-3 py-1 text-xs font-black ${toneClasses[item.tone]}`}
+            {work.map((item, index) => {
+              const itemSite =
+                sites.find((candidate) => candidate.id === item.siteId) ?? site;
+              const isOverdue =
+                item.status !== "approved" &&
+                Date.parse(item.dueAt) < referenceNow;
+              return (
+                <Link
+                  key={item.id}
+                  href={moduleHref(user, item.moduleId, item.siteId)}
+                  className="grid min-w-0 gap-3 p-4 transition hover:bg-[#f7faf8] sm:grid-cols-[auto_1fr_auto] sm:items-center sm:px-6"
                 >
-                  {item.time}
-                </span>
-              </Link>
-            ))}
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-[#e8f1ec] text-xs font-black text-[#2b6651]">
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-black text-[#293d34]">
+                      {item.taskTitle}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-[#748079]">
+                      {item.code} · {itemSite.shortName} · {item.station}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-[#87918c]">
+                      {item.instructions}
+                    </p>
+                  </div>
+                  <span
+                    className={`w-fit rounded-full px-3 py-1 text-xs font-black ${
+                      isOverdue
+                        ? toneClasses.red
+                        : item.status === "approved"
+                          ? toneClasses.green
+                          : item.status === "submitted"
+                            ? toneClasses.blue
+                            : toneClasses.amber
+                    }`}
+                  >
+                    {item.status === "approved"
+                      ? "Đã duyệt"
+                      : item.status === "submitted"
+                        ? "Chờ quản lý duyệt"
+                        : isOverdue
+                          ? "Quá hạn"
+                          : formatDue(item.dueAt)}
+                  </span>
+                </Link>
+              );
+            })}
             {work.length === 0 ? (
               <p className="p-6 text-sm leading-6 text-[#748079]">
                 Quản lý chưa giao việc cụ thể cho ca này.
@@ -450,11 +539,33 @@ function AccountantDashboard({
   user,
   sites,
   records,
+  journals,
 }: {
   user: CurrentErpUser;
   sites: readonly ErpSite[];
   records: readonly ShiftCloseRecord[];
+  journals: readonly AccountingJournal[];
 }) {
+  const isChief = user.role === "chief-accountant";
+  const visibleJournals = isChief
+    ? journals
+    : journals.filter((journal) => journal.makerAccountId === user.id);
+  const pendingChecker = visibleJournals.filter(
+    (journal) => journal.status === "pending-checker",
+  );
+  const returnedJournals = visibleJournals.filter(
+    (journal) => journal.status === "checker-returned",
+  );
+  const draftJournals = visibleJournals.filter(
+    (journal) => journal.status === "draft",
+  );
+  const postedJournals = visibleJournals.filter(
+    (journal) => journal.status === "posted",
+  );
+  const postedValueVnd = postedJournals.reduce(
+    (total, journal) => total + journalValue(journal),
+    0,
+  );
   const actionableShiftClosures = records.filter((record) =>
     accountingActionableStatuses.has(record.status),
   );
@@ -468,54 +579,44 @@ function AccountantDashboard({
   const pendingDirector = records.filter(
     (record) => record.status === "exception-pending-director",
   );
-  const queueSiteCount = new Set(
-    actionableShiftClosures.map((record) => record.siteId),
-  ).size;
-  const queue = [
-    {
-      title: "Đối soát ca vé và tiền thu",
-      detail:
-        actionableShiftClosures.length > 0
-          ? `${actionableShiftClosures.length} ca cần xử lý từ ${queueSiteCount} cơ sở · ${
-              differenceShiftClosures.length > 0
-                ? `${differenceShiftClosures.length} ca chênh ${formatVnd(differenceVnd)}`
-                : "toàn bộ tiền thu đã khớp"
-            }`
-          : "Không có ca nào đang chờ kế toán đối soát.",
-      status:
-        actionableShiftClosures.length > 0
-          ? "Cần xử lý"
-          : "Không có hồ sơ mới",
+  const journalQueue: WorkItem[] = (
+    isChief ? pendingChecker : [...returnedJournals, ...draftJournals]
+  )
+    .slice(0, 8)
+    .map((journal) => ({
+      id: journal.id,
+      title: `${journal.journalCode} · ${formatVnd(journalValue(journal))}`,
+      detail: `${journal.businessDate} · ${journal.lines.length} dòng · nguồn ${journal.sourceWorkflowId}`,
+      time:
+        journal.status === "pending-checker"
+          ? "Chờ kiểm tra"
+          : journal.status === "checker-returned"
+            ? "Bị trả lại"
+            : "Bản nháp",
+      href: "/erp/finance",
       tone:
-        differenceShiftClosures.length > 0
-          ? ("red" as const)
-          : actionableShiftClosures.length > 0
-            ? ("blue" as const)
-            : ("green" as const),
-      moduleId: "tai-chinh-doi-soat" as const,
-    },
-    {
-      title: "Hoàn thiện hồ sơ nhà cung cấp",
-      detail: "4 hóa đơn còn thiếu biên bản nghiệm thu hoặc chứng từ gốc",
-      status: "Đến hạn 15:00",
-      tone: "amber" as const,
-      moduleId: "doi-tac-nha-cung-ung" as const,
-    },
-    {
-      title: "Kiểm tra chi phí theo mã hạch toán",
-      detail: "12 báo cáo hiện trường đã có ảnh, 3 hồ sơ cần bổ sung mã chi phí",
-      status: "Chờ kiểm tra",
-      tone: "blue" as const,
-      moduleId: "bao-cao-hien-truong" as const,
-    },
-    {
-      title: "Rà soát nghiệm thu tài sản",
-      detail: "2 biên bản bảo trì cần đối chiếu hợp đồng trước khi ghi nhận chi phí",
-      status: "Trong hôm nay",
-      tone: "green" as const,
-      moduleId: "tai-san-bao-tri" as const,
-    },
-  ];
+        journal.status === "checker-returned"
+          ? "red"
+          : journal.status === "pending-checker"
+            ? "blue"
+            : "amber",
+    }));
+  const shiftQueue: WorkItem[] = actionableShiftClosures
+    .slice(0, 8)
+    .map((record) => ({
+      id: record.id,
+      title: `Đối soát ca ${record.shiftCode}`,
+      detail: `${record.station} · ${record.ticketsSold.toLocaleString("vi-VN")} vé · ${formatVnd(
+        record.amounts.grossVnd - record.amounts.refundVnd,
+      )}`,
+      time:
+        record.differenceVnd === 0
+          ? "Tiền thu đã khớp"
+          : `Chênh ${formatVnd(Math.abs(record.differenceVnd))}`,
+      href: "/erp/finance",
+      tone: record.differenceVnd === 0 ? "blue" : "red",
+    }));
+  const queue = [...journalQueue, ...shiftQueue].slice(0, 12);
 
   return (
     <div className="min-w-0 space-y-5">
@@ -523,14 +624,16 @@ function AccountantDashboard({
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b6d5ca]">
-              Bàn làm việc kế toán
+              {isChief ? "Bàn kiểm soát kế toán" : "Bàn làm việc kế toán"}
             </p>
             <h1 className="mt-2 text-3xl font-black tracking-[-0.035em] sm:text-5xl">
               {user.name}
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/65 sm:text-base">
-              {actionableShiftClosures.length} ca cần đối soát ·{" "}
-              {pendingDirector.length} ngoại lệ đang chờ giám đốc
+              {isChief
+                ? `${pendingChecker.length} bút toán chờ kiểm tra`
+                : `${actionableShiftClosures.length} ca cần đối soát`}{" "}
+              · {returnedJournals.length} bút toán bị trả lại
             </p>
           </div>
           <Link
@@ -543,18 +646,46 @@ function AccountantDashboard({
 
         <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
-            ["Ca cần xử lý", actionableShiftClosures.length.toLocaleString("vi-VN"), `Từ ${queueSiteCount} cơ sở`],
-            ["Chênh lệch cần xử lý", formatVnd(differenceVnd), `${differenceShiftClosures.length} ca`],
-            ["Phải trả đến hạn", "428 triệu", "286 triệu đủ hồ sơ"],
-            ["Thiếu chứng từ", "142 triệu", "4 bộ hồ sơ"],
+            [
+              isChief ? "Chờ kiểm tra" : "Ca cần đối soát",
+              (isChief
+                ? pendingChecker.length
+                : actionableShiftClosures.length
+              ).toLocaleString("vi-VN"),
+              isChief
+                ? `${returnedJournals.length} bút toán bị trả`
+                : `${differenceShiftClosures.length} ca có chênh lệch`,
+            ],
+            [
+              "Chênh lệch ca",
+              formatVnd(differenceVnd),
+              `${differenceShiftClosures.length} ca`,
+            ],
+            [
+              isChief ? "Đã ghi sổ" : "Bút toán của tôi",
+              (isChief
+                ? journals.length
+                : visibleJournals.length
+              ).toLocaleString("vi-VN"),
+              `${postedJournals.length} đã ghi sổ`,
+            ],
+            [
+              "Giá trị đã ghi sổ",
+              formatVnd(postedValueVnd),
+              `${pendingDirector.length} ngoại lệ chờ giám đốc`,
+            ],
           ].map(([label, value, note]) => (
             <article
               key={label}
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
               <p className="text-[11px] leading-4 text-white/50">{label}</p>
-              <p className="mt-2 break-words text-xl font-black sm:text-2xl">{value}</p>
-              <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">{note}</p>
+              <p className="mt-2 break-words text-xl font-black sm:text-2xl">
+                {value}
+              </p>
+              <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">
+                {note}
+              </p>
             </article>
           ))}
         </div>
@@ -573,21 +704,28 @@ function AccountantDashboard({
           <div className="divide-y divide-[#e7ece9]">
             {queue.map((item) => (
               <Link
-                key={item.title}
-                href="/erp/finance"
+                key={item.id}
+                href={item.href}
                 className="grid min-w-0 gap-2 p-4 transition hover:bg-[#f7faf8] sm:grid-cols-[1fr_auto] sm:items-center sm:px-6"
               >
                 <div className="min-w-0">
                   <p className="font-black text-[#293d34]">{item.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-[#748079]">{item.detail}</p>
+                  <p className="mt-1 text-sm leading-6 text-[#748079]">
+                    {item.detail}
+                  </p>
                 </div>
                 <span
                   className={`w-fit rounded-full px-3 py-1 text-xs font-black ${toneClasses[item.tone]}`}
                 >
-                  {item.status}
+                  {item.time}
                 </span>
               </Link>
             ))}
+            {queue.length === 0 ? (
+              <p className="p-6 text-sm leading-6 text-[#748079]">
+                Không có ca hoặc bút toán nào đang chờ tài khoản này xử lý.
+              </p>
+            ) : null}
           </div>
         </article>
 
@@ -603,6 +741,15 @@ function AccountantDashboard({
               const siteActionable = actionableShiftClosures.filter(
                 (record) => record.siteId === site.id,
               );
+              const siteJournals = visibleJournals.filter(
+                (journal) => journal.siteId === site.id,
+              );
+              const sitePendingChecker = siteJournals.filter(
+                (journal) => journal.siteId === site.id,
+              ).filter((journal) => journal.status === "pending-checker");
+              const sitePosted = siteJournals.filter(
+                (journal) => journal.status === "posted",
+              );
               const sitePendingDirector = pendingDirector.filter(
                 (record) => record.siteId === site.id,
               );
@@ -610,27 +757,30 @@ function AccountantDashboard({
                 (sum, record) => sum + Math.abs(record.differenceVnd),
                 0,
               );
-              const detail =
-                siteActionable.length > 0
-                  ? `${siteActionable.length} ca cần xử lý${
-                      siteDifferenceVnd > 0
-                        ? ` · chênh ${formatVnd(siteDifferenceVnd)}`
-                        : " · tiền thu đã khớp"
-                    }`
+              const detail = `${siteActionable.length} ca cần đối soát · ${
+                sitePendingChecker.length
+              } bút toán chờ kiểm tra · ${sitePosted.length} đã ghi sổ${
+                siteDifferenceVnd > 0
+                  ? ` · chênh ${formatVnd(siteDifferenceVnd)}`
                   : sitePendingDirector.length > 0
-                    ? `${sitePendingDirector.length} ngoại lệ chờ giám đốc`
-                    : "Không có ca chờ đối soát";
+                    ? ` · ${sitePendingDirector.length} ngoại lệ chờ giám đốc`
+                    : ""
+              }`;
               return (
                 <Link
                   key={site.id}
-                  href={moduleHref(user, "tai-chinh-doi-soat", site.id)}
+                  href="/erp/finance"
                   className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-[#e0e6e2] p-4 transition hover:border-[#9db5aa] hover:bg-[#f7faf8]"
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-black text-[#34473f]">{site.shortName}</p>
+                    <p className="truncate font-black text-[#34473f]">
+                      {site.shortName}
+                    </p>
                     <p className="mt-1 text-xs text-[#7b8881]">{detail}</p>
                   </div>
-                  <span className="shrink-0 text-sm font-black text-[#286655]">Mở →</span>
+                  <span className="shrink-0 text-sm font-black text-[#286655]">
+                    Mở →
+                  </span>
                 </Link>
               );
             })}
@@ -649,7 +799,8 @@ function EmptyAssignment({ name }: { name: string }) {
       </p>
       <h1 className="mt-3 text-3xl font-black text-[#183f34]">{name}</h1>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#66756e]">
-        Tài khoản chưa được gán cơ sở. Hãy liên hệ quản lý trực tiếp để nhận ca và nghiệp vụ phụ trách.
+        Tài khoản chưa được gán cơ sở. Hãy liên hệ quản lý trực tiếp để nhận ca
+        và nghiệp vụ phụ trách.
       </p>
     </section>
   );
@@ -658,42 +809,54 @@ function EmptyAssignment({ name }: { name: string }) {
 export function RoleHomeDashboard({
   user,
   sites,
-  attendance,
   records,
   workdays,
+  journals,
   workdayEmployees,
 }: Props) {
   if (user.role === "manager") {
     return (
       <div className="space-y-5">
-        <ManagerDashboard user={user} sites={sites} records={records} />
-        <WorkdayLifecycle
+        <ManagerDashboard
           user={user}
           sites={sites}
-          initialRecords={workdays}
-          employees={workdayEmployees}
+          records={records}
+          workdays={workdays}
         />
+        <div id="workday-lifecycle">
+          <WorkdayLifecycle
+            user={user}
+            sites={sites}
+            initialRecords={workdays}
+            employees={workdayEmployees}
+          />
+        </div>
       </div>
     );
   }
   if (user.role === "employee") {
     return (
       <div className="space-y-5">
-        <EmployeeDashboard
-          user={user}
-          sites={sites}
-          attendance={attendance}
-        />
-        <WorkdayLifecycle
-          user={user}
-          sites={sites}
-          initialRecords={workdays}
-        />
+        <EmployeeDashboard user={user} sites={sites} workdays={workdays} />
+        <div id="workday-lifecycle">
+          <WorkdayLifecycle
+            user={user}
+            sites={sites}
+            initialRecords={workdays}
+          />
+        </div>
       </div>
     );
   }
-  if (user.role === "accountant") {
-    return <AccountantDashboard user={user} sites={sites} records={records} />;
+  if (user.role === "accountant" || user.role === "chief-accountant") {
+    return (
+      <AccountantDashboard
+        user={user}
+        sites={sites}
+        records={records}
+        journals={journals}
+      />
+    );
   }
   return null;
 }

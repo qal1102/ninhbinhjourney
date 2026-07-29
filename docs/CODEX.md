@@ -14,7 +14,7 @@
 - Trạng thái kiểm tra local mới nhất: `npm run typecheck`, `npm run lint`, `npm run build` và **128/128** unit/security/integration test đều qua. Targeted Supabase E2E trước đợt hardening đã qua vòng đời nhân viên/quản lý và Pixel 7; browser test nút `?` hoàn tất assertion **2/2** nhưng runner Windows không tự thoát sau khi web server dừng, nên chưa ghi nhận như một gate Playwright sạch.
 - Thay đổi mới nhất: đã harden phiếu công việc từ giao việc → GPS check-in → tiến độ → bằng chứng → bàn giao → quản lý xem ảnh/kết quả/audit rồi duyệt hoặc trả. Ảnh bàn giao/gửi lại phải là bằng chứng mới; GPS accuracy phải trong `1–250 m`; storage object không ghi đè. GPS chỉ cập nhật khi ca mở và web/PWA hoạt động, không phải theo dõi nền.
 - Lỗi P0 `invalid-use-server-value` đã đóng: type/initial state được chuyển sang `domain/erp-shift-close-action-state.ts`; `app/erp/workflow-actions.ts` hiện chỉ export async server actions.
-- Trạng thái deploy: code workday/GPS mới **chưa deploy**. Supabase migration 004 và 005 đã live; source app đã được quét secret, commit tại `ef2e5d1` và đóng băng thành subtree `68945ab2f54d72c74650cc2c37541ce3f954dc61`. Sites project trong `.openai/hosting.json` vẫn trả `404 project_not_found` khi thử lại lúc 14:55, nên chưa thể lấy source credential, push, save version hoặc deploy đúng target.
+- Trạng thái deploy: chủ dự án đã chốt target là Vercel project hiện hữu `goldencard/ninhbinhjourney`. Hai mapping Sites chưa từng live đang được retire; source app đã được quét secret và đang được commit/push theo app subtree trước khi phát hành production.
 - Production smoke gần nhất vẫn là **12/12** bài qua trên `https://ninhbinhjourney.vercel.app` ở mobile và desktop sau deployment `ninhbinhjourney-qaiikjas8-goldencard.vercel.app`; kết quả này chưa bao gồm UI workday mới.
 
 ## Công việc đang dở — phải đọc trước khi sửa
@@ -349,6 +349,12 @@ Sau mỗi thay đổi quan trọng:
 6. Thêm một dòng vào **Nhật ký thay đổi** bên dưới, mới nhất ở trên.
 
 ## Nhật ký thay đổi
+
+### 29/07/2026 — Chốt GitHub/Vercel làm production canonical
+
+- Chủ dự án xác nhận cần cập nhật trực tiếp `https://ninhbinhjourney.vercel.app`; ChatGPT Sites không phải production target.
+- Retire cả root và nested `.openai/hosting.json` khỏi Git, thêm ignore để mapping stale không quay lại; giữ lịch sử Sites bên dưới làm bằng chứng, không coi đó là trạng thái hiện hành.
+- Release dùng app subtree tới `qal1102/ninhbinhjourney`, sau đó deploy project `goldencard/ninhbinhjourney` và smoke cả `/` lẫn `/erp`.
 
 ### 29/07/2026 — Deploy UI bị chặn bởi Sites project không còn truy cập được
 

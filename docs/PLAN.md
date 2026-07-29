@@ -211,7 +211,7 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 - Migration `202607240001_secure_shared_core.sql` và `202607270002_erp_realtime_core.sql` đã được chạy từ lượt trước.
 - Migration `202607280003_erp_shift_close_workflow.sql` đã apply và verify remote.
 - Management PAT nằm ngoài app trong root `.secrets`, bị Git bỏ qua và ACL giới hạn. PAT không nằm trong source/docs/env nhưng đã từng xuất hiện trong chat, vì vậy vẫn phải thu hồi/rotate.
-- `.openai/hosting.json` trỏ tới Sites project thật đã tạo ngày 16/07/2026 cho đúng ứng dụng. Version 1 từng thất bại vì source root thiếu `package.json`; source sau đó đã được sửa sang subtree `ninhbinhjourney/`, nhưng token hết hạn và project hiện trả `404 project_not_found`. Vercel vẫn link đúng `goldencard/ninhbinhjourney`, nhưng không được dùng để bỏ qua Sites mapping hiện hành.
+- Sites project thử nghiệm ngày 16/07/2026 chưa từng có production URL thành công. Chủ dự án đã chốt production canonical là Vercel project hiện hữu `goldencard/ninhbinhjourney`; hai mapping Sites stale được retire khỏi Git và chặn quay lại bằng `.gitignore`.
 - Vercel Production đã có Supabase URL, publishable key, server secret dạng sensitive, `ERP_PERSISTENCE_MODE=supabase`, production flags và site URL.
 
 ### G2.1. Secret an toàn
@@ -235,7 +235,7 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 
 ### G2.3. Môi trường
 
-- [?] Xác nhận Vercel project hiện tại vẫn truy cập được trực tiếp, nhưng Sites project đã tạo trước đây không còn thuộc authority hiện tại. Không tạo site trùng, không thay ID tùy tiện và không phát hành qua target khác trước khi khôi phục hoặc chuyển hosting theo quy trình có kiểm soát.
+- [x] Chủ dự án xác nhận dùng project Vercel hiện hữu `goldencard/ninhbinhjourney`; migration khỏi Sites mapping chưa từng live đã được phê duyệt và thực hiện có kiểm soát.
 - [~] Cấu hình production/staging env; Production đã xong, staging còn thiếu:
   - `NEXT_PUBLIC_SUPABASE_URL`;
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
@@ -919,9 +919,9 @@ Với mỗi persona phải trả lời:
 
 ### G17.1. Hosting
 
-- [?] `.openai/hosting.json` đang ghim Sites project `appgprj_6a5862edba1c8191a48c876f3c705793`, nhưng project trả `404 project_not_found`. Connector registration vẫn đúng; ChatGPT identity hiện tại không có trong rollout tạo site cũ, nên cần khôi phục authority cũ hoặc xác nhận migration hosting trước khi deploy.
-- [x] Đã quét secret, commit toàn bộ 203 file app thành checkpoint `ef2e5d1` và tạo source subtree đóng băng `68945ab2f54d72c74650cc2c37541ce3f954dc61`; root của subtree có đủ `.openai/hosting.json`, `package.json` và `app/`.
-- [x] Vercel project lịch sử là `goldencard/ninhbinhjourney`; không dùng nó để bỏ qua Sites mapping hiện hành.
+- [x] Production canonical là `goldencard/ninhbinhjourney`; hai mapping ChatGPT Sites stale đã được retire khỏi source theo quyết định của chủ dự án.
+- [x] Đã quét secret và commit toàn bộ 203 file app thành checkpoint `ef2e5d1`. Snapshot Sites `68945ab2f54d72c74650cc2c37541ce3f954dc61` chỉ còn là bằng chứng lịch sử; release Vercel mới phải dùng subtree hiện hành không chứa Sites mapping.
+- [x] GitHub release target là `qal1102/ninhbinhjourney`, với `package.json` ở repository root.
 - [x] Xác nhận `/erp` là route của cùng app, không deploy nhầm ERP đè lên homepage.
 - [~] Production version đã deploy và smoke; staging/approval gate tách biệt chưa có.
 - [~] Alias chính và TLS hoạt động; canonical/redirect matrix chưa audit đủ.

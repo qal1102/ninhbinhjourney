@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# retired ChatGPT Sites mapping; production is the existing Vercel project
+/.openai/hosting.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

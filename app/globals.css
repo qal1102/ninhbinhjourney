@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap");
 @import "leaflet/dist/leaflet.css";
 @import "tailwindcss";
 
@@ -30,13 +29,20 @@ body {
   color: var(--foreground);
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
 
 button,
 a,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid #e7b96a;
+  outline-offset: 3px;
 }
 
 ::selection {
@@ -64,19 +70,19 @@ textarea {
 
 .opening-screen {
   align-items: center;
-  animation: opening-shell 7.2s ease forwards;
+  animation: opening-shell 6.5s ease forwards;
   background: #06120f;
-  cursor: pointer;
+  cursor: default;
   display: flex;
   inset: 0;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: auto;
   position: fixed;
   z-index: 2000;
 }
 
 .opening-image {
-  animation: opening-image 7.2s ease forwards;
+  animation: opening-image 6.5s ease forwards;
   filter: saturate(0.85) contrast(1.08) brightness(0.7);
   transform: scale(1.06);
 }
@@ -99,36 +105,41 @@ textarea {
 }
 
 .opening-sequence span {
-  animation: trailer-word 5.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: trailer-word 0.92s cubic-bezier(0.22, 1, 0.36, 1) both;
   color: #fbfaf6;
-  font-family: var(--font-heading);
-  font-size: clamp(3.5rem, 13vw, 11rem);
-  font-weight: 800;
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-size: clamp(3.2rem, 12vw, 10rem);
+  font-variation-settings: "opsz" 96, "wght" 540, "SOFT" 92, "WONK" 1;
+  font-weight: 540;
   grid-area: 1 / 1;
-  letter-spacing: 0;
-  line-height: 0.92;
+  letter-spacing: -0.035em;
+  line-height: 0.96;
   opacity: 0;
   text-align: center;
   text-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
-  transform: translateY(18px) scale(0.96);
+  transform: translateY(14px) scale(0.98);
   white-space: nowrap;
 }
 
+.opening-sequence span:nth-child(1) {
+  animation-delay: 0.35s;
+}
+
 .opening-sequence span:nth-child(2) {
-  animation-delay: 1.12s;
+  animation-delay: 1.55s;
 }
 
 .opening-sequence span:nth-child(3) {
-  animation-delay: 2.24s;
+  animation-delay: 2.75s;
 }
 
 .opening-sequence span:nth-child(4) {
-  animation-delay: 3.36s;
+  animation-delay: 3.95s;
 }
 
 .opening-lockup {
   align-items: center;
-  animation: lockup-rise 7.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: lockup-rise 6.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   bottom: clamp(4rem, 10vh, 7rem);
   color: #fbfaf6;
   display: flex;
@@ -140,11 +151,36 @@ textarea {
   width: min(90vw, 900px);
 }
 
-.opening-lockup p {
-  font-family: var(--font-heading);
-  font-size: clamp(3rem, 10vw, 8rem);
+.opening-skip {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.75rem;
   font-weight: 800;
-  line-height: 0.9;
+  letter-spacing: 0.08em;
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  position: absolute;
+  right: clamp(1.25rem, 3vw, 2.5rem);
+  text-transform: uppercase;
+  top: clamp(1.25rem, 3vw, 2.5rem);
+  z-index: 2;
+}
+
+.opening-skip:hover,
+.opening-skip:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  outline: 2px solid #e7b96a;
+  outline-offset: 3px;
+}
+
+.opening-lockup p {
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-size: clamp(3rem, 10vw, 8rem);
+  font-variation-settings: "opsz" 96, "wght" 560, "SOFT" 88, "WONK" 1;
+  font-weight: 560;
+  letter-spacing: -0.04em;
+  line-height: 0.94;
   margin: 0;
   text-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
 }
@@ -366,7 +402,7 @@ textarea {
 
 @keyframes opening-shell {
   0%,
-  86% {
+  91% {
     opacity: 1;
   }
   100% {
@@ -380,8 +416,8 @@ textarea {
     opacity: 0;
     transform: scale(1.1);
   }
-  12%,
-  86% {
+  9%,
+  91% {
     opacity: 1;
   }
   100% {
@@ -392,32 +428,31 @@ textarea {
 
 @keyframes trailer-word {
   0% {
-    filter: blur(8px);
+    filter: blur(7px);
     opacity: 0;
-    transform: translateY(18px) scale(0.96);
+    transform: translateY(14px) scale(0.98);
   }
-  10%,
-  31% {
+  18%,
+  58% {
     filter: blur(0);
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-  43%,
   100% {
-    filter: blur(7px);
+    filter: blur(5px);
     opacity: 0;
-    transform: translateY(-18px) scale(1.035);
+    transform: translateY(-12px) scale(1.02);
   }
 }
 
 @keyframes lockup-rise {
   0%,
-  62% {
+  80% {
     opacity: 0;
     transform: translateY(28px);
   }
-  72%,
-  90% {
+  84%,
+  94% {
     opacity: 1;
     transform: translateY(0);
   }
@@ -460,7 +495,7 @@ textarea {
   }
 
   .opening-screen {
-    animation-duration: 900ms !important;
+    animation-duration: 1400ms !important;
   }
 
   .opening-image {
@@ -471,12 +506,17 @@ textarea {
 
   .opening-sequence span {
     animation: none !important;
+    font-size: clamp(1.6rem, 6vw, 3.5rem);
     opacity: 1;
     transform: none;
+    white-space: normal;
   }
 
-  .opening-sequence span:not(:first-child) {
-    display: none;
+  .opening-sequence {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    justify-content: center;
   }
 
   .opening-lockup {

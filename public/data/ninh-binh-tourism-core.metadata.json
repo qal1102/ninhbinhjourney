@@ -1,0 +1,23 @@
+{
+  "datasetName": "DestinationOS Ninh Binh tourism-core product extent",
+  "scopeType": "tourism-core",
+  "officialAdministrativeBoundary": false,
+  "description": "A project-authored contextual outline enclosing the eight configured demonstration POIs. It is not a provincial or national administrative boundary.",
+  "sourceUrl": "https://vietnamtourism.gov.vn/en/post/20581",
+  "sourceUse": "Destination presence and tourism context only; the outline itself is project-authored.",
+  "license": "Project-authored demonstration metadata; no third-party boundary geometry redistributed.",
+  "retrievalDate": "2026-07-24",
+  "coordinateSystem": "WGS 84 (EPSG:4326)",
+  "regionKey": "region-ninh-binh-demo",
+  "maxBounds": {
+    "south": 20.15,
+    "west": 105.82,
+    "north": 20.42,
+    "east": 106.02
+  },
+  "excludedLayers": [
+    "Vietnam national boundary",
+    "legacy administrative boundary",
+    "current administrative boundary"
+  ]
+}

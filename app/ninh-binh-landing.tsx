@@ -82,6 +82,7 @@ type Props = {
   initialLang: Language;
   source: string;
   presentationMode: boolean;
+  clientDemo: boolean;
 };
 
 const TourismMap = dynamic(() => import("./tourism-map"), {
@@ -100,7 +101,7 @@ const copy = {
     introWords: ["Nature.", "Heritage.", "Wonder."],
     title: "Ninh Binh",
     subtitle: "A journey between mountains, water and timeless heritage",
-    begin: "Begin your journey",
+    begin: "Plan my journey",
     exploreMap: "Explore map",
     journeysLabel: "Curated Ninh Binh",
     journeysTitle: "Stories, not stops",
@@ -181,7 +182,7 @@ const copy = {
     introWords: ["Thiên nhiên.", "Di sản.", "Kỳ quan."],
     title: "Ninh Bình",
     subtitle: "Hành trình giữa núi, nước và di sản vượt thời gian",
-    begin: "Bắt đầu hành trình",
+    begin: "Lập hành trình",
     exploreMap: "Khám phá bản đồ",
     journeysLabel: "Ninh Bình tuyển chọn",
     journeysTitle: "Câu chuyện, không chỉ điểm dừng",
@@ -297,7 +298,7 @@ const destinations: Destination[] = [
     tier: "signature",
     sourceKeys: ["bai_dinh", "bai_dinh_main_gate"],
     name: { en: "Bai Dinh", vi: "Bái Đính" },
-    image: "/images/destinations/bai-dinh.jpg",
+    image: "/images/destinations/editorial/bai-dinh-editorial.png",
     position: [20.2768, 105.8656],
     coords: "20.2768 N, 105.8656 E",
     category: { en: "Spiritual landmark", vi: "Điểm tâm linh" },
@@ -396,7 +397,7 @@ const destinations: Destination[] = [
     tier: "signature",
     sourceKeys: ["tam_coc"],
     name: { en: "Tam Coc", vi: "Tam Cốc" },
-    image: "/images/destinations/tam-coc.jpg",
+    image: "/images/destinations/editorial/tam-coc-editorial.png",
     position: [20.2169, 105.9368],
     coords: "20.2169 N, 105.9368 E",
     category: { en: "Countryside river route", vi: "Tuyến sông làng quê" },
@@ -1011,7 +1012,7 @@ const routeCollections = [
   },
   {
     id: "temple-scale",
-    image: "/images/destinations/bai-dinh.jpg",
+    image: "/images/destinations/editorial/bai-dinh-editorial.png",
     kicker: { en: "Sacred scale", vi: "Quy mô tâm linh" },
     title: { en: "Pagodas, ancient capital, lake temple", vi: "Chùa lớn, cố đô, hồ chùa" },
     body: {
@@ -1158,7 +1159,12 @@ function createRoute(duration: string, selected: string[]) {
   return baseStops;
 }
 
-export default function NinhBinhLanding({ initialLang, source, presentationMode }: Props) {
+export default function NinhBinhLanding({
+  initialLang,
+  source,
+  presentationMode,
+  clientDemo,
+}: Props) {
   const [lang, setLang] = useState<Language>(initialLang);
   const t = copy[lang];
   const trailerWords = useMemo(() => [t.introTop as string, ...(t.introWords as string[]).map((word) => word.replace(/\.$/, ""))], [t.introTop, t.introWords]);
@@ -1296,7 +1302,11 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
   return (
     <main className="min-h-screen bg-[#FBFAF6] text-[#1D2925]">
       {introVisible ? (
-        <div className="opening-screen" aria-hidden="true" onClick={() => setIntroVisible(false)}>
+        <div
+          className="opening-screen"
+          data-testid="opening-intro"
+          onClick={() => setIntroVisible(false)}
+        >
           <Image
             src="/images/destinations/intro-trang-an-rain.png"
             alt=""
@@ -1306,6 +1316,16 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
             className="opening-image object-cover"
           />
           <div className="opening-vignette" />
+          <button
+            type="button"
+            className="opening-skip"
+            onClick={(event) => {
+              event.stopPropagation();
+              setIntroVisible(false);
+            }}
+          >
+            {lang === "vi" ? "Bỏ qua intro" : "Skip intro"}
+          </button>
           <div className="opening-sequence">
             {trailerWords.map((word, index) => (
               <span key={`${word}-${index}`}>{word}</span>
@@ -1328,9 +1348,18 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
           className="float-slow object-cover opacity-80"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(24,63,52,.16),rgba(24,63,52,.58)_48%,rgba(29,41,37,.9))]" />
-        <div className="absolute inset-x-0 top-0 z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-          <a href="#top" className="font-display text-xl tracking-[0.16em]">
-            NB
+        <div className="absolute inset-x-0 top-0 z-20 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
+          <a href="#top" className="flex items-center gap-2" aria-label="Ninh Bình Journey">
+            <Image
+              src="/brand/ninh-binh-mark.png"
+              alt=""
+              width={42}
+              height={42}
+              className="h-10 w-10 rounded-full object-cover shadow-lg shadow-black/20"
+            />
+            <span className="font-display hidden text-lg tracking-[0.08em] sm:inline">
+              Ninh Bình
+            </span>
           </a>
           <nav aria-label="Primary" className="hidden gap-6 text-sm text-[#FBFAF6]/82 md:flex">
             {(t.nav as string[]).map((item, index) => (
@@ -1345,6 +1374,11 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
           </div>
         </div>
         <div id="top" className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-5 pb-16 pt-28 sm:px-8 lg:pb-24">
+          {clientDemo ? (
+            <span className="fade-up mb-5 w-fit rounded-full border border-white/25 bg-black/15 px-3 py-1 text-xs font-bold text-white/82 backdrop-blur">
+              Client demonstration · Supabase shared core
+            </span>
+          ) : null}
           <p className="fade-up mb-6 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{(t.introWords as string[]).join(" ")}</p>
           <h1 className="fade-up font-display text-6xl leading-[0.9] text-[#FBFAF6] sm:text-8xl lg:text-[9rem]">{t.title}</h1>
           <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
@@ -1354,8 +1388,8 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
             ))}
           </div>
           <div className="fade-up mt-9 flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => scrollToId("ai")} className="rounded-full bg-[#E7B96A] px-6 py-3 font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</button>
-            <button type="button" onClick={() => scrollToId("map")} className="rounded-full border border-white/35 px-6 py-3 font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</button>
+            <a href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
+            <a href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
           </div>
         </div>
       </section>
@@ -1369,7 +1403,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
             </div>
             <div className="max-w-2xl lg:justify-self-end">
               <p className="text-lg leading-8 text-[#4d5b55]">{t.journeysBody}</p>
-              <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.24em] text-[#A0702A]">{t.dragHint}</p>
+              <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.24em] text-[#855B1C]">{t.dragHint}</p>
             </div>
           </div>
         </div>
@@ -1559,7 +1593,7 @@ export default function NinhBinhLanding({ initialLang, source, presentationMode 
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.itinerary}</p>
             <h2 className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl">{t.itinerary}</h2>
-            <p className="mt-3 text-[#6D756F]">{t.itineraryNote}</p>
+            <p className="mt-3 text-[#58665F]">{t.itineraryNote}</p>
             <div className="mt-6 overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#FBFAF6]">
               {itinerary.map((stop, index) => (
                 <article key={`${stop.time}-${stop.id}-${index}`} className="grid gap-4 border-b border-[#A8CEC1]/40 p-4 last:border-b-0 sm:grid-cols-[88px_1fr_auto]">

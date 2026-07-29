@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "name": "Ninh Binh tourism core",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "region-ninh-binh-demo",
+        "name": "Ninh Binh tourism core",
+        "scopeType": "tourism-core",
+        "officialAdministrativeBoundary": false
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [105.84, 20.18],
+            [105.84, 20.31],
+            [105.86, 20.4],
+            [105.93, 20.4],
+            [106.0, 20.31],
+            [106.0, 20.19],
+            [105.93, 20.17],
+            [105.84, 20.18]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -173,8 +173,14 @@ export default function TourismMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {userPosition ? <Marker icon={userIcon()} position={userPosition} /> : null}
-      <Marker icon={markerIcon(activeDestinationId === "welcome", true)} position={welcomePosition}>
+      {userPosition ? (
+        <Marker icon={userIcon()} position={userPosition} title={copy.youAreHere} />
+      ) : null}
+      <Marker
+        icon={markerIcon(activeDestinationId === "welcome", true)}
+        position={welcomePosition}
+        title={copy.welcome}
+      >
         <Tooltip direction="right" offset={[18, 0]} permanent>
           <span className="nb-here-badge">{copy.youAreHere}</span>
         </Tooltip>
@@ -192,7 +198,12 @@ export default function TourismMap({
         const selected = selectedIds.includes(destination.id);
 
         return (
-          <Marker key={destination.id} icon={markerIcon(active)} position={destination.position}>
+          <Marker
+            key={destination.id}
+            icon={markerIcon(active)}
+            position={destination.position}
+            title={destination.name[lang]}
+          >
             {active ? (
               <Tooltip direction="right" offset={[18, 0]} permanent>
                 <span className="nb-here-badge">{copy.youAreHere}</span>

@@ -14,7 +14,7 @@
 - Trạng thái kiểm tra local mới nhất: `npm run typecheck`, `npm run lint`, `npm run build` và **128/128** unit/security/integration test đều qua. Targeted Supabase E2E trước đợt hardening đã qua vòng đời nhân viên/quản lý và Pixel 7; browser test nút `?` hoàn tất assertion **2/2** nhưng runner Windows không tự thoát sau khi web server dừng, nên chưa ghi nhận như một gate Playwright sạch.
 - Thay đổi mới nhất: đã harden phiếu công việc từ giao việc → GPS check-in → tiến độ → bằng chứng → bàn giao → quản lý xem ảnh/kết quả/audit rồi duyệt hoặc trả. Ảnh bàn giao/gửi lại phải là bằng chứng mới; GPS accuracy phải trong `1–250 m`; storage object không ghi đè. GPS chỉ cập nhật khi ca mở và web/PWA hoạt động, không phải theo dõi nền.
 - Lỗi P0 `invalid-use-server-value` đã đóng: type/initial state được chuyển sang `domain/erp-shift-close-action-state.ts`; `app/erp/workflow-actions.ts` hiện chỉ export async server actions.
-- Trạng thái deploy: code workday/GPS mới **chưa deploy**. Supabase migration 004 và 005 đã live, nhưng Sites project `appgprj_6a5862edba1c8191a48c876f3c705793` trong `.openai/hosting.json` vẫn trả `404 project_not_found` khi thử lại lúc 14:30; chưa thể lấy source credential, save version hoặc deploy đúng target.
+- Trạng thái deploy: code workday/GPS mới **chưa deploy**. Supabase migration 004 và 005 đã live; source app đã được quét secret, commit tại `ef2e5d1` và đóng băng thành subtree `68945ab2f54d72c74650cc2c37541ce3f954dc61`. Sites project trong `.openai/hosting.json` vẫn trả `404 project_not_found` khi thử lại lúc 14:55, nên chưa thể lấy source credential, push, save version hoặc deploy đúng target.
 - Production smoke gần nhất vẫn là **12/12** bài qua trên `https://ninhbinhjourney.vercel.app` ở mobile và desktop sau deployment `ninhbinhjourney-qaiikjas8-goldencard.vercel.app`; kết quả này chưa bao gồm UI workday mới.
 
 ## Công việc đang dở — phải đọc trước khi sửa
@@ -355,7 +355,8 @@ Sau mỗi thay đổi quan trọng:
 - Đối chiếu rollout gốc xác nhận Codex đã tạo đúng Sites project `Ninh Binh AI Journey` ngày 16/07/2026. Version 1 save thành công nhưng deploy thất bại vì push parent root thiếu `package.json`; source sau đó đã được sửa sang subtree `ninhbinhjourney/`, còn lần save tiếp theo thất bại vì token hết hạn. Project chưa từng có production URL Sites thành công.
 - Đọc lại cả hai `.openai/hosting.json` và gọi đúng project ID đã lưu; connector authority hiện tại tiếp tục trả `404 project_not_found`.
 - Kiểm tra trực tiếp browser và Vercel metadata: project `goldencard/ninhbinhjourney` cùng alias chính vẫn `Ready / Latest`, nhưng đó là dirty snapshot lúc 10:58 dựa trên commit `464aa8b`; các thay đổi ERP sau thời điểm đó chưa live.
-- Source hiện có 11 file tracked sửa đổi và 192 file app chưa được theo dõi. Trước khi save Sites version phải tạo source snapshot/commit đúng app subtree; không dùng SHA cũ để đại diện cho UI/ERP mới.
+- Trước checkpoint, source có 11 file tracked sửa đổi và 192 file app chưa được theo dõi; SHA `464aa8b` vì vậy không đại diện cho UI/ERP mới.
+- Đã quét staged source không thấy PAT/server secret, commit toàn bộ 203 file app thành checkpoint `ef2e5d1`, rồi tạo branch subtree đóng băng `codex/sites-release-20260729` tại `68945ab2f54d72c74650cc2c37541ce3f954dc61`. Root của snapshot có đủ `.openai/hosting.json`, `package.json` và `app/`.
 - Không tự thay project ID, tạo site trùng hoặc fallback sang target khác. Source local vẫn build/test xanh; migration 004/005 đã live nhưng UI mới chưa lên production.
 - Cần khôi phục authority của Sites project cũ hoặc thực hiện chuyển hosting có kiểm soát trước khi push source, save version và deploy.
 

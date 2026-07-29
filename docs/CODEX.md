@@ -6,7 +6,7 @@
 
 ## Cập nhật gần nhất
 
-- Thời gian: 29/07/2026 — 14:55, múi giờ Asia/Saigon
+- Thời gian: 29/07/2026 — 14:59, múi giờ Asia/Saigon
 - Production chính: https://ninhbinhjourney.vercel.app
 - ERP: https://ninhbinhjourney.vercel.app/erp
 - Bản deploy gần nhất: https://ninhbinhjourney-qaiikjas8-goldencard.vercel.app
@@ -354,6 +354,7 @@ Sau mỗi thay đổi quan trọng:
 
 - Đối chiếu rollout gốc xác nhận Codex đã tạo đúng Sites project `Ninh Binh AI Journey` ngày 16/07/2026. Version 1 save thành công nhưng deploy thất bại vì push parent root thiếu `package.json`; source sau đó đã được sửa sang subtree `ninhbinhjourney/`, còn lần save tiếp theo thất bại vì token hết hạn. Project chưa từng có production URL Sites thành công.
 - Đọc lại cả hai `.openai/hosting.json` và gọi đúng project ID đã lưu; connector authority hiện tại tiếp tục trả `404 project_not_found`.
+- Kiểm tra metadata xác nhận connector registration vẫn là connector cũ, nhưng ChatGPT identity hiện tại không xuất hiện trong rollout tạo site ngày 16/07; khả năng phù hợp nhất là project thuộc identity/workspace cũ hoặc đã bị xóa. Không ghi email, account ID hay token vào repo.
 - Kiểm tra trực tiếp browser và Vercel metadata: project `goldencard/ninhbinhjourney` cùng alias chính vẫn `Ready / Latest`, nhưng đó là dirty snapshot lúc 10:58 dựa trên commit `464aa8b`; các thay đổi ERP sau thời điểm đó chưa live.
 - Trước checkpoint, source có 11 file tracked sửa đổi và 192 file app chưa được theo dõi; SHA `464aa8b` vì vậy không đại diện cho UI/ERP mới.
 - Đã quét staged source không thấy PAT/server secret, commit toàn bộ 203 file app thành checkpoint `ef2e5d1`, rồi tạo branch subtree đóng băng `codex/sites-release-20260729` tại `68945ab2f54d72c74650cc2c37541ce3f954dc61`. Root của snapshot có đủ `.openai/hosting.json`, `package.json` và `app/`.

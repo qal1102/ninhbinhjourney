@@ -919,7 +919,7 @@ Với mỗi persona phải trả lời:
 
 ### G17.1. Hosting
 
-- [?] `.openai/hosting.json` đang ghim Sites project `appgprj_6a5862edba1c8191a48c876f3c705793`, nhưng project trả `404 project_not_found`; cần khôi phục quyền truy cập hoặc project ID hợp lệ trước khi deploy.
+- [?] `.openai/hosting.json` đang ghim Sites project `appgprj_6a5862edba1c8191a48c876f3c705793`, nhưng project trả `404 project_not_found`. Connector registration vẫn đúng; ChatGPT identity hiện tại không có trong rollout tạo site cũ, nên cần khôi phục authority cũ hoặc xác nhận migration hosting trước khi deploy.
 - [x] Đã quét secret, commit toàn bộ 203 file app thành checkpoint `ef2e5d1` và tạo source subtree đóng băng `68945ab2f54d72c74650cc2c37541ce3f954dc61`; root của subtree có đủ `.openai/hosting.json`, `package.json` và `app/`.
 - [x] Vercel project lịch sử là `goldencard/ninhbinhjourney`; không dùng nó để bỏ qua Sites mapping hiện hành.
 - [x] Xác nhận `/erp` là route của cùng app, không deploy nhầm ERP đè lên homepage.

@@ -6,16 +6,16 @@
 
 ## Cập nhật gần nhất
 
-- Thời gian: 29/07/2026 — 14:59, múi giờ Asia/Saigon
+- Thời gian: 29/07/2026 — 15:17, múi giờ Asia/Saigon
 - Production chính: https://ninhbinhjourney.vercel.app
 - ERP: https://ninhbinhjourney.vercel.app/erp
-- Bản deploy gần nhất: https://ninhbinhjourney-qaiikjas8-goldencard.vercel.app
+- Bản deploy gần nhất: https://ninhbinhjourney-9z6oe8yp9-goldencard.vercel.app
 - Trạng thái build local mới nhất: thành công với Next.js 16.2.11
-- Trạng thái kiểm tra local mới nhất: `npm run typecheck`, `npm run lint`, `npm run build` và **128/128** unit/security/integration test đều qua. Targeted Supabase E2E trước đợt hardening đã qua vòng đời nhân viên/quản lý và Pixel 7; browser test nút `?` hoàn tất assertion **2/2** nhưng runner Windows không tự thoát sau khi web server dừng, nên chưa ghi nhận như một gate Playwright sạch.
+- Trạng thái kiểm tra local mới nhất: `npm run typecheck`, `npm run lint`, `npm run build` và **128/128** unit/security/integration test đều qua. Pre-deploy browser matrix chạy trong output cô lập: **60 passed, 14 skipped đúng điều kiện project/viewport**, không có test fail.
 - Thay đổi mới nhất: đã harden phiếu công việc từ giao việc → GPS check-in → tiến độ → bằng chứng → bàn giao → quản lý xem ảnh/kết quả/audit rồi duyệt hoặc trả. Ảnh bàn giao/gửi lại phải là bằng chứng mới; GPS accuracy phải trong `1–250 m`; storage object không ghi đè. GPS chỉ cập nhật khi ca mở và web/PWA hoạt động, không phải theo dõi nền.
 - Lỗi P0 `invalid-use-server-value` đã đóng: type/initial state được chuyển sang `domain/erp-shift-close-action-state.ts`; `app/erp/workflow-actions.ts` hiện chỉ export async server actions.
-- Trạng thái deploy: chủ dự án đã chốt target là Vercel project hiện hữu `goldencard/ninhbinhjourney`. Hai mapping Sites chưa từng live đang được retire; source app đã được quét secret và đang được commit/push theo app subtree trước khi phát hành production.
-- Production smoke gần nhất vẫn là **12/12** bài qua trên `https://ninhbinhjourney.vercel.app` ở mobile và desktop sau deployment `ninhbinhjourney-qaiikjas8-goldencard.vercel.app`; kết quả này chưa bao gồm UI workday mới.
+- Trạng thái deploy: **đã live**. App subtree `ea1b1517b32876a9e40bbfcf655b6137d064df9e` đã push fast-forward lên `qal1102/ninhbinhjourney/main`; Vercel deployment `dpl_73igvZzmW9KxGcKCC6UTYVJTbMLG` đang giữ alias chính.
+- Production smoke gần nhất: `/`, `/erp`, `/api/health` đều `200`; **6/6** browser assertions qua trên mobile/desktop cho intro bốn chữ, đổi ngôn ngữ và màn đăng nhập ERP không overflow/lỗi accessibility nghiêm trọng.
 
 ## Công việc đang dở — phải đọc trước khi sửa
 
@@ -354,7 +354,10 @@ Sau mỗi thay đổi quan trọng:
 
 - Chủ dự án xác nhận cần cập nhật trực tiếp `https://ninhbinhjourney.vercel.app`; ChatGPT Sites không phải production target.
 - Retire cả root và nested `.openai/hosting.json` khỏi Git, thêm ignore để mapping stale không quay lại; giữ lịch sử Sites bên dưới làm bằng chứng, không coi đó là trạng thái hiện hành.
-- Release dùng app subtree tới `qal1102/ninhbinhjourney`, sau đó deploy project `goldencard/ninhbinhjourney` và smoke cả `/` lẫn `/erp`.
+- Quét staged source không thấy PAT/server secret; pre-deploy Playwright matrix qua **60**, skip **14** theo điều kiện project/viewport, không có failure.
+- Push fast-forward app subtree `ea1b1517b32876a9e40bbfcf655b6137d064df9e` lên `qal1102/ninhbinhjourney/main`; Git integration tạo production deployment đầu tiên `dpl_3916tN52YkTKV5ibLyrjxCgBM2Ez`.
+- Smoke đầu phát hiện `/api/health` trả `503` do hai public flag Vercel lưu sai định dạng. Ghi lại chính xác `NEXT_PUBLIC_EXPERIENCE_MODE=production` và `NEXT_PUBLIC_BRAND_CONCEPTS_ENABLED=false`, không chạm Supabase secret, rồi redeploy cùng source.
+- Deployment cuối `dpl_73igvZzmW9KxGcKCC6UTYVJTbMLG` (`ninhbinhjourney-9z6oe8yp9-goldencard.vercel.app`) ở trạng thái `Ready` và giữ alias chính. `/`, `/erp`, `/api/health` đều `200`; production Playwright smoke qua **6/6** trên mobile/desktop.
 
 ### 29/07/2026 — Deploy UI bị chặn bởi Sites project không còn truy cập được
 

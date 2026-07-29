@@ -6,16 +6,16 @@
 
 ## Cập nhật gần nhất
 
-- Thời gian: 29/07/2026 — 16:37, múi giờ Asia/Saigon
+- Thời gian: 29/07/2026 — 17:12, múi giờ Asia/Saigon
 - Production chính: https://ninhbinhjourney.vercel.app
 - ERP: https://ninhbinhjourney.vercel.app/erp
 - Production alias đang phục vụ: https://ninhbinhjourney.vercel.app
 - Trạng thái build local mới nhất: thành công với Next.js 16.2.11
-- Trạng thái kiểm tra local mới nhất: typecheck, full lint, **145/145** unit/security/integration test, clean production build và targeted maker–checker Playwright **2/2 desktop/mobile** đều qua. Full Playwright chỉ chạy lại ở release candidate sau khi cập nhật assertion stock cũ.
+- Trạng thái kiểm tra local mới nhất: typecheck, full lint, **145/145** unit/security/integration test, clean production build và targeted maker–checker Playwright **2/2 desktop/mobile** đều qua. Remote-read integration chạy riêng với production environment **1/1 qua**; bản full test thường skip đúng một bài này vì không nạp server secret.
 - Thay đổi mới nhất: thay toàn bộ chín hồ sơ kế toán hard-code bằng journal thật trên Supabase; bổ sung kế toán trưởng/checker, sổ Nợ/Có, trả hồ sơ, ghi sổ, hoàn bút, bút toán điều chỉnh, khóa/mở kỳ và audit xuyên tài khoản.
 - Lỗi P0 `invalid-use-server-value` đã đóng: type/initial state được chuyển sang `domain/erp-shift-close-action-state.ts`; `app/erp/workflow-actions.ts` hiện chỉ export async server actions.
-- Trạng thái deploy: **đã live**. App subtree runtime và tài liệu bàn giao đã push fast-forward lên `qal1102/ninhbinhjourney/main`; Vercel production alias theo dõi branch này.
-- Production smoke gần nhất: `/`, `/erp`, `/api/health` đều `200`; functional smoke trước đó qua **6/6**, final alias smoke qua **4/4** trên mobile/desktop cho intro bốn chữ và màn đăng nhập ERP không overflow/lỗi accessibility nghiêm trọng.
+- Trạng thái deploy: **đã live**. App subtree runtime `6bccdec7cde016736fde85da2e305cac49075609` đã push fast-forward lên `qal1102/ninhbinhjourney/main`; deployment `dpl_91iNoqgRDXeKwk2wjYFhYxyMxc8B` đang `Ready` trên production alias.
+- Production smoke gần nhất: `/`, `/erp`, `/api/health` đều `200`; kế toán trưởng mở được `Kiểm soát & sổ cái`, thấy đúng journal chờ kiểm tra và nút `Duyệt và ghi sổ`; giám đốc mở được dashboard từ dữ liệu shared; Pixel 7 có hamburger và overflow ngang `0 px`.
 
 ## Công việc đang dở — phải đọc trước khi sửa
 
@@ -347,6 +347,13 @@ Sau mỗi thay đổi quan trọng:
 6. Thêm một dòng vào **Nhật ký thay đổi** bên dưới, mới nhất ở trên.
 
 ## Nhật ký thay đổi
+
+### 29/07/2026 — Đóng lỗi đồng bộ production sau migration kế toán
+
+- Production smoke sau deploy đầu phát hiện cả giám đốc và kế toán trưởng rơi vào fail-closed `Dữ liệu chưa thể đồng bộ`; không coi HTTP `200` là đủ và không để bản lỗi làm mốc hoàn tất.
+- Xác định bốn biến Vercel cũ bị dính chuỗi `\r\n` do cách nhập trước đây: persistence mode, Supabase URL, publishable key và site URL; server key sensitive cũng không dùng được. Ghi đè từ Supabase Management API bằng stdin không newline, không in hoặc lưu giá trị vào source/docs; xóa snapshot env tạm ngay sau chẩn đoán.
+- Remote-read test sau khi dùng key trong bộ nhớ tìm ra lỗi thứ hai: migration 006 thêm `system.accounting-posted`/`system.accounting-reversed`, còn reader chốt ca cũ từ chối actor `system`. Tách audit actor/action hệ thống khỏi vai trò đăng nhập và thêm integration test remote có điều kiện.
+- Push subtree `6bccdec7cde016736fde85da2e305cac49075609`, deploy production mới rồi smoke đọc-only qua trên kế toán trưởng, giám đốc và Pixel 7; journal remote không bị thay đổi trong smoke.
 
 ### 29/07/2026 — Thay hồ sơ kế toán stock bằng maker–checker và sổ thật
 

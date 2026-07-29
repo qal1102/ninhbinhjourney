@@ -14,7 +14,7 @@
 - Trạng thái kiểm tra local mới nhất: typecheck, full lint, **145/145** unit/security/integration test, clean production build và targeted maker–checker Playwright **2/2 desktop/mobile** đều qua. Remote-read integration chạy riêng với production environment **1/1 qua**; bản full test thường skip đúng một bài này vì không nạp server secret.
 - Thay đổi mới nhất: thay toàn bộ chín hồ sơ kế toán hard-code bằng journal thật trên Supabase; bổ sung kế toán trưởng/checker, sổ Nợ/Có, trả hồ sơ, ghi sổ, hoàn bút, bút toán điều chỉnh, khóa/mở kỳ và audit xuyên tài khoản.
 - Lỗi P0 `invalid-use-server-value` đã đóng: type/initial state được chuyển sang `domain/erp-shift-close-action-state.ts`; `app/erp/workflow-actions.ts` hiện chỉ export async server actions.
-- Trạng thái deploy: **đã live**. App subtree runtime `6bccdec7cde016736fde85da2e305cac49075609` đã push fast-forward lên `qal1102/ninhbinhjourney/main`; deployment `dpl_91iNoqgRDXeKwk2wjYFhYxyMxc8B` đang `Ready` trên production alias.
+- Trạng thái deploy: **đã live**. App subtree runtime `6bccdec7cde016736fde85da2e305cac49075609` và các commit tài liệu sau đó đã push fast-forward lên `qal1102/ninhbinhjourney/main`; Git-integrated production deployment đang `Ready` trên alias chính.
 - Production smoke gần nhất: `/`, `/erp`, `/api/health` đều `200`; kế toán trưởng mở được `Kiểm soát & sổ cái`, thấy đúng journal chờ kiểm tra và nút `Duyệt và ghi sổ`; giám đốc mở được dashboard từ dữ liệu shared; Pixel 7 có hamburger và overflow ngang `0 px`.
 
 ## Công việc đang dở — phải đọc trước khi sửa

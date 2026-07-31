@@ -39,6 +39,17 @@ import {
   transitionIncidentByManager,
   type IncidentCase,
 } from "@/lib/erp/incident-repository";
+import {
+  FieldReportRepositoryError,
+  submitFieldReport,
+  type FieldReport,
+} from "@/lib/erp/field-report-repository";
+import {
+  GateScanRepositoryError,
+  recordGateScan,
+  type GateScanEvent,
+} from "@/lib/erp/gate-scan-repository";
+import { canSubmitFieldOperation } from "@/domain/erp-role-policy";
 
 function safePasswordEqual(actual: string, expected: string) {
   const left = createHash("sha256").update(actual).digest();
@@ -327,5 +338,123 @@ export async function progressIncidentAction(
       return { success: false, message: error.message };
     }
     return { success: false, message: "Chưa thể cập nhật sự cố. Hãy thử lại." };
+  }
+}
+
+export type FieldReportActionResult =
+  | { success: true; message: string; report: FieldReport }
+  | { success: false; message: string };
+
+export async function submitFieldReportAction(
+  formData: FormData,
+): Promise<FieldReportActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { success: false, message: "Phiên đăng nhập đã hết hạn." };
+
+  const siteValue = String(formData.get("siteId") ?? "");
+  if (!isErpSiteId(siteValue)) {
+    return { success: false, message: "Cơ sở không hợp lệ." };
+  }
+  const siteId: ErpSiteId = siteValue;
+  if (
+    !canSubmitFieldOperation(user.role) ||
+    !accountCanAccessSite(user, siteId) ||
+    !accountCanAccessModule(user, siteId, "bao-cao-hien-truong")
+  ) {
+    return { success: false, message: "Bạn không có quyền gửi báo cáo tại cơ sở này." };
+  }
+
+  const area = String(formData.get("area") ?? "").trim();
+  const category = String(formData.get("category") ?? "").trim();
+  const task = String(formData.get("task") ?? "").trim();
+  const note = String(formData.get("note") ?? "").trim();
+  const financeCode = String(formData.get("financeCode") ?? "").trim();
+  const progressRaw = Number(formData.get("progress"));
+  const file = formData.get("evidence");
+
+  if (!area || !category || !task || !note || !financeCode) {
+    return { success: false, message: "Vui lòng điền đủ thông tin bắt buộc." };
+  }
+  if (![25, 50, 75, 100].includes(progressRaw)) {
+    return { success: false, message: "Tiến độ không hợp lệ." };
+  }
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, message: "Vui lòng chọn ảnh hiện trường." };
+  }
+
+  try {
+    const report = await submitFieldReport({
+      siteId,
+      area,
+      category,
+      task,
+      employeeAccountId: user.id,
+      employeeName: user.name,
+      progress: progressRaw as 25 | 50 | 75 | 100,
+      note,
+      financeCode,
+      file,
+    });
+    revalidatePath(`/erp/${siteId}/bao-cao-hien-truong`);
+    return {
+      success: true,
+      message: `Đã ghi nhận ${report.id} và chuyển quản lý ${getErpSite(siteId)!.shortName}.`,
+      report,
+    };
+  } catch (error) {
+    if (error instanceof FieldReportRepositoryError) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: "Chưa thể lưu báo cáo. Hãy thử lại." };
+  }
+}
+
+export type GateScanActionResult =
+  | { success: true; message: string; event: GateScanEvent }
+  | { success: false; message: string };
+
+export async function recordGateScanAction(input: {
+  siteId: string;
+  code: string;
+}): Promise<GateScanActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { success: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) {
+    return { success: false, message: "Cơ sở không hợp lệ." };
+  }
+  const siteId: ErpSiteId = input.siteId;
+  if (
+    !accountCanAccessSite(user, siteId) ||
+    !accountCanAccessModule(user, siteId, "check-in-khach")
+  ) {
+    return { success: false, message: "Bạn không được phân công check-in tại cơ sở này." };
+  }
+  const normalized = input.code.trim().toUpperCase();
+  if (normalized.length < 6) {
+    return { success: false, message: "Mã QR không hợp lệ." };
+  }
+
+  try {
+    const event = await recordGateScan({
+      siteId,
+      code: normalized,
+      actorId: user.id,
+      actorName: user.name,
+    });
+    revalidatePath(`/erp/${siteId}/check-in-khach`);
+    return {
+      success: true,
+      message: `Đã ghi nhận ${event.code} qua Cổng A lúc ${new Intl.DateTimeFormat("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Ho_Chi_Minh",
+      }).format(new Date(event.scannedAt))}.`,
+      event,
+    };
+  } catch (error) {
+    if (error instanceof GateScanRepositoryError) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: "Chưa thể ghi nhận lượt quét. Hãy thử lại." };
   }
 }

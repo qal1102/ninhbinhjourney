@@ -56,6 +56,24 @@ vi.mock("@/lib/erp/incident-repository", () => ({
   transitionIncidentByManager: vi.fn(),
 }));
 
+const { MockFieldReportRepositoryError } = vi.hoisted(() => ({
+  MockFieldReportRepositoryError: class extends Error {},
+}));
+
+vi.mock("@/lib/erp/field-report-repository", () => ({
+  FieldReportRepositoryError: MockFieldReportRepositoryError,
+  submitFieldReport: vi.fn(),
+}));
+
+const { MockGateScanRepositoryError } = vi.hoisted(() => ({
+  MockGateScanRepositoryError: class extends Error {},
+}));
+
+vi.mock("@/lib/erp/gate-scan-repository", () => ({
+  GateScanRepositoryError: MockGateScanRepositoryError,
+  recordGateScan: vi.fn(),
+}));
+
 import {
   recordAttendanceAction,
   updateEmployeeAccessAction,

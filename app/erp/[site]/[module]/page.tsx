@@ -8,6 +8,8 @@ import { accountCanAccessModule, getCurrentErpUser } from "@/lib/erp/demo-sessio
 import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { getAttendanceState } from "@/lib/erp/attendance-repository";
 import { getIncidentCases } from "@/lib/erp/incident-repository";
+import { getFieldReports } from "@/lib/erp/field-report-repository";
+import { getRecentGateScans } from "@/lib/erp/gate-scan-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import {
@@ -30,7 +32,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   if (!accountCanAccessModule(user, site.id, moduleDefinition.id)) {
     redirect(`/erp/${site.id}?denied=module`);
   }
-  const [access, attendance, shiftClosures, workdays, supplierAp, incidents] =
+  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans] =
     await Promise.all([
     getAccessState(),
     getAttendanceState(),
@@ -41,6 +43,12 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         : Promise.resolve({ suppliers: [], invoices: [] }),
       moduleDefinition.id === "su-co"
         ? getIncidentCases(site.id)
+        : Promise.resolve([]),
+      moduleDefinition.id === "bao-cao-hien-truong"
+        ? getFieldReports(site.id)
+        : Promise.resolve([]),
+      moduleDefinition.id === "check-in-khach"
+        ? getRecentGateScans(site.id)
         : Promise.resolve([]),
     ]);
   const query = (await searchParams) ?? {};
@@ -80,6 +88,8 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         supplierApInvoices={supplierAp.invoices}
         supplierApSuppliers={supplierAp.suppliers}
         incidents={incidents}
+        fieldReports={fieldReports}
+        gateScans={gateScans}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

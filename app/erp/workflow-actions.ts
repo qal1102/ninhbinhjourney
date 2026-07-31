@@ -19,10 +19,10 @@ import {
 import {
   accountCanAccessModule,
   accountCanAccessSite,
-  getAttendanceState,
   getCurrentErpUser,
   type CurrentErpUser,
 } from "@/lib/erp/demo-session";
+import { getAttendanceState } from "@/lib/erp/attendance-repository";
 import {
   ShiftCloseRepositoryError,
   ShiftCloseRepositoryConflictError,

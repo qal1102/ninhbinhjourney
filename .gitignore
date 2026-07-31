@@ -41,6 +41,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase CLI local link cache (contains pooler connection string)
+/supabase/.temp/
+
 # retired ChatGPT Sites mapping; production is the existing Vercel project
 /.openai/hosting.json
 

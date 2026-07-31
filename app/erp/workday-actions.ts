@@ -24,9 +24,9 @@ import {
 import {
   accountCanAccessModule,
   accountCanAccessSite,
-  getAccessState,
   getCurrentErpUser,
 } from "@/lib/erp/demo-session";
+import { getAccessState } from "@/lib/erp/staff-access-repository";
 import {
   createWorkday,
   getWorkday,

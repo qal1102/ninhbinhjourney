@@ -7,18 +7,21 @@ import {
   type ErpSiteId,
 } from "@/domain/erp";
 import {
-  DEMO_ERP_ACCOUNTS,
   findDemoErpAccountById,
-  getEmployeeAssignableModuleIds,
   isDemoErpAccountActive,
   type DemoErpAccount,
 } from "./demo-data";
+import { getAccessState } from "./staff-access-repository";
+
+export type {
+  EmployeeAccess,
+  ErpAccessState,
+  ErpAuditEvent,
+} from "./staff-access-repository";
+export type { AttendanceEvent, AttendanceState } from "./attendance-repository";
 
 const SESSION_COOKIE = "nbj-erp-demo-session";
-const ACCESS_COOKIE = "nbj-erp-demo-access";
-const ATTENDANCE_COOKIE = "nbj-erp-demo-attendance";
 const SESSION_SECONDS = 60 * 60 * 12;
-const STATE_SECONDS = 60 * 60 * 24 * 30;
 
 const signingSecret =
   process.env.ERP_DEMO_SESSION_SECRET ??
@@ -28,43 +31,6 @@ type SessionPayload = {
   userId: string;
   issuedAt: number;
   expiresAt: number;
-};
-
-export type EmployeeAccess = {
-  siteIds: ErpSiteId[];
-  moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>>;
-};
-
-export type ErpAuditEvent = {
-  id: string;
-  actorId: string;
-  action: string;
-  targetId: string;
-  siteId: ErpSiteId;
-  createdAt: string;
-};
-
-export type ErpAccessState = {
-  version: 1;
-  employees: Record<string, EmployeeAccess>;
-  audit: ErpAuditEvent[];
-};
-
-export type AttendanceEvent = {
-  id: string;
-  userId: string;
-  siteId: ErpSiteId;
-  type: "check-in" | "check-out";
-  createdAt: string;
-  latitude: number | null;
-  longitude: number | null;
-  accuracy: number | null;
-  source: "gps" | "demo-location";
-};
-
-export type AttendanceState = {
-  version: 1;
-  events: AttendanceEvent[];
 };
 
 export type CurrentErpUser = Omit<DemoErpAccount, "password"> & {
@@ -111,56 +77,6 @@ function cookieOptions(maxAge: number) {
   };
 }
 
-function isSiteId(value: string): value is ErpSiteId {
-  return ERP_SITES.some((site) => site.id === value);
-}
-
-function isModuleId(value: string): value is ErpModuleId {
-  return ERP_MODULES.some((module) => module.id === value);
-}
-
-function sanitizeAccessState(value: ErpAccessState | null): ErpAccessState {
-  const fallback = createDefaultAccessState();
-  if (!value || value.version !== 1 || typeof value.employees !== "object") {
-    return fallback;
-  }
-
-  for (const account of DEMO_ERP_ACCOUNTS) {
-    if (account.role !== "employee") continue;
-    const candidate = value.employees[account.id];
-    if (!candidate) continue;
-    const trainedModules = new Set(getEmployeeAssignableModuleIds(account));
-    const siteIds = candidate.siteIds.filter(isSiteId).slice(0, 1);
-    const moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>> = {};
-    for (const siteId of siteIds) {
-      moduleIdsBySite[siteId] = (candidate.moduleIdsBySite[siteId] ?? [])
-        .filter(isModuleId)
-        .filter((moduleId) => trainedModules.has(moduleId))
-        .filter((moduleId) => moduleId !== "nhan-su" && moduleId !== "bao-cao");
-    }
-    fallback.employees[account.id] = { siteIds, moduleIdsBySite };
-  }
-
-  fallback.audit = Array.isArray(value.audit) ? value.audit.slice(-30) : [];
-  return fallback;
-}
-
-export function createDefaultAccessState(): ErpAccessState {
-  const employees: Record<string, EmployeeAccess> = {};
-  for (const account of DEMO_ERP_ACCOUNTS) {
-    if (account.role !== "employee") continue;
-    const moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>> = {};
-    for (const siteId of account.initialSiteIds) {
-      moduleIdsBySite[siteId] = [...account.initialModuleIds];
-    }
-    employees[account.id] = {
-      siteIds: [...account.initialSiteIds],
-      moduleIdsBySite,
-    };
-  }
-  return { version: 1, employees, audit: [] };
-}
-
 export async function setErpSession(userId: string) {
   const now = Date.now();
   const payload: SessionPayload = {
@@ -175,66 +91,6 @@ export async function setErpSession(userId: string) {
 export async function clearErpSession() {
   const store = await cookies();
   store.set(SESSION_COOKIE, "", cookieOptions(0));
-}
-
-export async function getAccessState() {
-  const store = await cookies();
-  return sanitizeAccessState(
-    decodeSigned<ErpAccessState>(store.get(ACCESS_COOKIE)?.value),
-  );
-}
-
-export async function setAccessState(state: ErpAccessState) {
-  const store = await cookies();
-  store.set(ACCESS_COOKIE, encodeSigned(state), cookieOptions(STATE_SECONDS));
-}
-
-export async function getAttendanceState(): Promise<AttendanceState> {
-  const store = await cookies();
-  const state = decodeSigned<AttendanceState>(store.get(ATTENDANCE_COOKIE)?.value);
-  if (!state || state.version !== 1 || !Array.isArray(state.events)) {
-    return createDefaultAttendanceState();
-  }
-  return { version: 1, events: state.events.slice(-80) };
-}
-
-function createDefaultAttendanceState(): AttendanceState {
-  const schedule = [
-    ["employee-trang-an-01", "trang-an", 7, 28],
-    ["employee-trang-an-02", "trang-an", 7, 36],
-    ["employee-trang-an-seasonal-01", "trang-an", 8, 2],
-    ["employee-tam-chuc-01", "tam-chuc", 7, 19],
-    ["employee-tam-coc-01", "tam-coc", 7, 42],
-    ["employee-bai-dinh-01", "bai-dinh", 7, 31],
-  ] as const;
-  const events: AttendanceEvent[] = schedule.map(
-    ([userId, siteId, hour, minute], index) => {
-      const site = ERP_SITES.find((candidate) => candidate.id === siteId)!;
-      const createdAt = new Date();
-      createdAt.setHours(hour, minute, 0, 0);
-      return {
-        id: `seed-attendance-${index + 1}`,
-        userId,
-        siteId,
-        type: "check-in",
-        createdAt: createdAt.toISOString(),
-        latitude: site.coordinates.latitude,
-        longitude: site.coordinates.longitude,
-        accuracy: 14 + index,
-        source: "demo-location",
-      };
-    },
-  );
-  return { version: 1, events };
-}
-
-export async function setAttendanceState(state: AttendanceState) {
-  const store = await cookies();
-  store.set(
-    ATTENDANCE_COOKIE,
-    encodeSigned({ ...state, events: state.events.slice(-80) }),
-    cookieOptions(STATE_SECONDS),
-  );
 }
 
 export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {

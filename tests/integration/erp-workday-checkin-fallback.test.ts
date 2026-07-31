@@ -19,8 +19,11 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/erp/demo-session", () => ({
   accountCanAccessModule: doubles.accountCanAccessModule,
   accountCanAccessSite: doubles.accountCanAccessSite,
-  getAccessState: vi.fn(),
   getCurrentErpUser: doubles.getCurrentErpUser,
+}));
+
+vi.mock("@/lib/erp/staff-access-repository", () => ({
+  getAccessState: vi.fn(),
 }));
 
 vi.mock("@/lib/erp/workday-repository", () => ({

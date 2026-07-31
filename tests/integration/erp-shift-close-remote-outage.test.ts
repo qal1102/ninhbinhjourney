@@ -44,8 +44,11 @@ vi.mock("next/headers", () => ({
 vi.mock("@/lib/erp/demo-session", () => ({
   accountCanAccessModule: doubles.accountCanAccessModule,
   accountCanAccessSite: doubles.accountCanAccessSite,
-  getAttendanceState: doubles.getAttendanceState,
   getCurrentErpUser: doubles.getCurrentErpUser,
+}));
+
+vi.mock("@/lib/erp/attendance-repository", () => ({
+  getAttendanceState: doubles.getAttendanceState,
 }));
 
 import { submitShiftCloseAction } from "@/app/erp/workflow-actions";

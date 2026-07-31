@@ -21,14 +21,18 @@ import {
   accountCanAccessModule,
   accountCanAccessSite,
   clearErpSession,
-  getAccessState,
-  getAttendanceState,
   getCurrentErpUser,
-  setAccessState,
-  setAttendanceState,
   setErpSession,
-  type AttendanceEvent,
 } from "@/lib/erp/demo-session";
+import {
+  getAccessState,
+  updateEmployeeAccessGrant,
+} from "@/lib/erp/staff-access-repository";
+import {
+  AttendanceRepositoryConflictError,
+  recordAttendanceEvent,
+  type AttendanceEvent,
+} from "@/lib/erp/attendance-repository";
 
 function safePasswordEqual(actual: string, expected: string) {
   const left = createHash("sha256").update(actual).digest();
@@ -99,20 +103,14 @@ export async function updateEmployeeAccessAction(formData: FormData) {
     .filter(isErpModuleId)
     .filter((moduleId) => allowedModules.has(moduleId) && trainedModules.has(moduleId)) as ErpModuleId[];
 
-  access.employees[employeeId] = {
-    siteIds: siteActive ? [siteValue] : [],
-    moduleIdsBySite: siteActive ? { [siteValue]: moduleIds } : {},
-  };
-  access.audit.push({
-    id: crypto.randomUUID(),
+  await updateEmployeeAccessGrant({
+    employeeId,
+    siteContextId: siteValue,
+    siteActive,
+    moduleIds,
     actorId: actor.id,
-    action: siteActive ? "employee.access.updated" : "employee.site.revoked",
-    targetId: employeeId,
-    siteId: siteValue,
-    createdAt: new Date().toISOString(),
+    actorRole: actor.role as "manager" | "director",
   });
-  access.audit = access.audit.slice(-30);
-  await setAccessState(access);
   revalidatePath(`/erp/${siteValue}/nhan-su`);
 }
 
@@ -206,37 +204,29 @@ export async function recordAttendanceAction(
     };
   }
 
-  const attendance = await getAttendanceState();
   const today = vietnamDateKey(new Date());
-  const userEvents = attendance.events
-    .filter(
-      (event) =>
-        event.userId === user.id &&
-        event.siteId === siteId &&
-        vietnamDateKey(event.createdAt) === today,
-    )
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  const lastEvent = userEvents.at(-1);
-  if (input.type === "check-in" && lastEvent?.type === "check-in") {
-    return { success: false, message: "Bạn đã vào ca; hãy chấm ra trước." };
+  let event: AttendanceEvent;
+  try {
+    event = await recordAttendanceEvent({
+      userId: user.id,
+      siteId,
+      type: input.type,
+      latitude,
+      longitude,
+      accuracy: Number.isFinite(accuracy) ? Math.max(0, accuracy) : null,
+      source,
+      businessDate: today,
+      idempotencyKey: crypto.randomUUID(),
+    });
+  } catch (error) {
+    if (error instanceof AttendanceRepositoryConflictError) {
+      return { success: false, message: error.message };
+    }
+    return {
+      success: false,
+      message: "Chưa thể ghi nhận chấm công. Hãy kiểm tra kết nối rồi thử lại.",
+    };
   }
-  if (input.type === "check-out" && lastEvent?.type !== "check-in") {
-    return { success: false, message: "Chưa có lượt vào ca đang mở." };
-  }
-
-  const event: AttendanceEvent = {
-    id: crypto.randomUUID(),
-    userId: user.id,
-    siteId,
-    type: input.type,
-    createdAt: new Date().toISOString(),
-    latitude,
-    longitude,
-    accuracy: Number.isFinite(accuracy) ? Math.max(0, accuracy) : null,
-    source,
-  };
-  attendance.events.push(event);
-  await setAttendanceState(attendance);
   revalidatePath(`/erp/${siteId}/cham-cong`);
   return {
     success: true,

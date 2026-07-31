@@ -45,8 +45,11 @@ vi.mock("@/lib/erp/demo-data", () => ({
 vi.mock("@/lib/erp/demo-session", () => ({
   accountCanAccessModule: doubles.accountCanAccessModule,
   accountCanAccessSite: doubles.accountCanAccessSite,
-  getAccessState: doubles.getAccessState,
   getCurrentErpUser: doubles.getCurrentErpUser,
+}));
+
+vi.mock("@/lib/erp/staff-access-repository", () => ({
+  getAccessState: doubles.getAccessState,
 }));
 
 vi.mock("@/lib/erp/workday-repository", () => ({

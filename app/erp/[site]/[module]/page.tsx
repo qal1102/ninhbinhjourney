@@ -4,12 +4,9 @@ import { ErpShell } from "@/components/erp/erp-shell";
 import { ModuleContextHelp } from "@/components/erp/module-context-help";
 import { ModuleWorkspace } from "@/components/erp/module-workspace";
 import { getErpModule, getErpSite } from "@/domain/erp";
-import {
-  accountCanAccessModule,
-  getAccessState,
-  getAttendanceState,
-  getCurrentErpUser,
-} from "@/lib/erp/demo-session";
+import { accountCanAccessModule, getCurrentErpUser } from "@/lib/erp/demo-session";
+import { getAccessState } from "@/lib/erp/staff-access-repository";
+import { getAttendanceState } from "@/lib/erp/attendance-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import {

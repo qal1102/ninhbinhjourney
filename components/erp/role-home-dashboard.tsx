@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ERP_MODULES, type ErpSite, type ErpSiteId } from "@/domain/erp";
 import type { AccountingJournal } from "@/domain/erp-accounting";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
+import type { SupplierApInvoice } from "@/domain/erp-supplier-ap";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import {
@@ -15,6 +16,7 @@ type Props = {
   records: readonly ShiftCloseRecord[];
   workdays: readonly WorkdayRecord[];
   journals: readonly AccountingJournal[];
+  supplierApInvoices: readonly SupplierApInvoice[];
   workdayEmployees: readonly WorkdayEmployeeOption[];
 };
 
@@ -119,16 +121,25 @@ function moduleHref(
   return siteId ? `/erp/${siteId}/${moduleId}` : "/erp";
 }
 
+function supplierApHref(user: CurrentErpUser, invoice: SupplierApInvoice) {
+  if (user.role === "manager") {
+    return moduleHref(user, "doi-tac-nha-cung-ung", invoice.siteId);
+  }
+  return `/erp/finance#ap-${invoice.id}`;
+}
+
 function ManagerDashboard({
   user,
   sites,
   records,
   workdays,
+  supplierApInvoices,
 }: {
   user: CurrentErpUser;
   sites: readonly ErpSite[];
   records: readonly ShiftCloseRecord[];
   workdays: readonly WorkdayRecord[];
+  supplierApInvoices: readonly SupplierApInvoice[];
 }) {
   if (sites.length === 0) {
     return <EmptyAssignment name={user.name} />;
@@ -137,10 +148,15 @@ function ManagerDashboard({
   const referenceNow = latestRecordTime([
     ...workdays.map((record) => record.updatedAt),
     ...records.map((record) => record.updatedAt),
+    ...supplierApInvoices.map((invoice) => invoice.updatedAt),
   ]);
   const summary = summarizeWorkdays(workdays, referenceNow);
   const pendingShiftClosures = records.filter(
     (record) => record.status === "submitted",
+  );
+  const supplierApToFix = supplierApInvoices.filter(
+    (invoice) =>
+      invoice.ownerRole === "manager" && invoice.status === "match-exception",
   );
   const pendingWork: WorkItem[] = workdays
     .filter(
@@ -189,7 +205,19 @@ function ManagerDashboard({
       href: moduleHref(user, "ve-dat-cho", record.siteId),
       tone: record.differenceVnd === 0 ? "green" : "red",
     }));
-  const work = [...pendingWork, ...pendingShiftWork].slice(0, 10);
+  const supplierApWork: WorkItem[] = supplierApToFix.map((invoice) => ({
+    id: invoice.id,
+    title: `Bổ sung hồ sơ ${invoice.caseCode}`,
+    detail: `${invoice.supplier.name} · HĐ ${invoice.invoiceSeries}/${invoice.invoiceNumber} · ${formatVnd(invoice.totalVnd)}`,
+    time: `${invoice.exceptionCodes.length} điểm chưa khớp`,
+    href: supplierApHref(user, invoice),
+    tone: "red",
+  }));
+  const work = [
+    ...supplierApWork,
+    ...pendingWork,
+    ...pendingShiftWork,
+  ].slice(0, 10);
 
   return (
     <div className="min-w-0 space-y-5">
@@ -204,7 +232,8 @@ function ManagerDashboard({
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/65 sm:text-base">
               {summary.submitted} công việc chờ duyệt ·{" "}
-              {pendingShiftClosures.length} ca chờ xác nhận
+              {pendingShiftClosures.length} ca chờ xác nhận ·{" "}
+              {supplierApToFix.length} hóa đơn cần bổ sung
             </p>
           </div>
           <Link
@@ -312,6 +341,9 @@ function ManagerDashboard({
             const siteShifts = pendingShiftClosures.filter(
               (record) => record.siteId === site.id,
             );
+            const siteSupplierAp = supplierApToFix.filter(
+              (invoice) => invoice.siteId === site.id,
+            );
             return (
               <Link
                 key={site.id}
@@ -325,7 +357,7 @@ function ManagerDashboard({
                 </p>
                 <p className="mt-1 text-sm text-[#66756e]">
                   {siteSummary.overdue} quá hạn · {siteShifts.length} ca chờ xác
-                  nhận
+                  nhận · {siteSupplierAp.length} hóa đơn cần bổ sung
                 </p>
               </Link>
             );
@@ -540,23 +572,28 @@ function AccountantDashboard({
   sites,
   records,
   journals,
+  supplierApInvoices,
 }: {
   user: CurrentErpUser;
   sites: readonly ErpSite[];
   records: readonly ShiftCloseRecord[];
   journals: readonly AccountingJournal[];
+  supplierApInvoices: readonly SupplierApInvoice[];
 }) {
   const isChief = user.role === "chief-accountant";
   const visibleJournals = isChief
     ? journals
     : journals.filter((journal) => journal.makerAccountId === user.id);
-  const pendingChecker = visibleJournals.filter(
+  const visibleShiftJournals = visibleJournals.filter(
+    (journal) => journal.sourceType === "shift-close",
+  );
+  const pendingChecker = visibleShiftJournals.filter(
     (journal) => journal.status === "pending-checker",
   );
-  const returnedJournals = visibleJournals.filter(
+  const returnedJournals = visibleShiftJournals.filter(
     (journal) => journal.status === "checker-returned",
   );
-  const draftJournals = visibleJournals.filter(
+  const draftJournals = visibleShiftJournals.filter(
     (journal) => journal.status === "draft",
   );
   const postedJournals = visibleJournals.filter(
@@ -572,13 +609,48 @@ function AccountantDashboard({
   const differenceShiftClosures = actionableShiftClosures.filter(
     (record) => record.differenceVnd !== 0,
   );
-  const differenceVnd = differenceShiftClosures.reduce(
-    (sum, record) => sum + Math.abs(record.differenceVnd),
-    0,
-  );
   const pendingDirector = records.filter(
     (record) => record.status === "exception-pending-director",
   );
+  const supplierApToAct = supplierApInvoices.filter((invoice) =>
+    isChief
+      ? invoice.ownerRole === "chief-accountant" &&
+        invoice.status === "accounting-review"
+      : invoice.ownerRole === "accountant" &&
+        [
+          "match-exception",
+          "ready-for-accounting",
+          "accounting-returned",
+        ].includes(invoice.status),
+  );
+  const supplierApReturned = supplierApToAct.filter(
+    (invoice) => invoice.status === "accounting-returned",
+  );
+  const supplierApActionValue = supplierApToAct.reduce(
+    (total, invoice) => total + invoice.totalVnd,
+    0,
+  );
+  const supplierApQueue: WorkItem[] = supplierApToAct
+    .slice(0, 8)
+    .map((invoice) => ({
+      id: invoice.id,
+      title: `${invoice.caseCode} · ${formatVnd(invoice.totalVnd)}`,
+      detail: `${invoice.supplier.name} · HĐ ${invoice.invoiceSeries}/${invoice.invoiceNumber}`,
+      time: isChief
+        ? "Chờ kiểm tra công nợ"
+        : invoice.status === "match-exception"
+          ? "Chênh lệch cần chuyển giám đốc"
+        : invoice.status === "accounting-returned"
+          ? "Bút toán bị trả"
+          : "Đủ hồ sơ hạch toán",
+      href: supplierApHref(user, invoice),
+      tone:
+        invoice.status === "accounting-returned"
+          ? "red"
+          : isChief
+            ? "blue"
+            : "green",
+    }));
   const journalQueue: WorkItem[] = (
     isChief ? pendingChecker : [...returnedJournals, ...draftJournals]
   )
@@ -616,7 +688,10 @@ function AccountantDashboard({
       href: "/erp/finance",
       tone: record.differenceVnd === 0 ? "blue" : "red",
     }));
-  const queue = [...journalQueue, ...shiftQueue].slice(0, 12);
+  const queue = [...supplierApQueue, ...journalQueue, ...shiftQueue].slice(
+    0,
+    12,
+  );
 
   return (
     <div className="min-w-0 space-y-5">
@@ -631,9 +706,10 @@ function AccountantDashboard({
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/65 sm:text-base">
               {isChief
-                ? `${pendingChecker.length} bút toán chờ kiểm tra`
-                : `${actionableShiftClosures.length} ca cần đối soát`}{" "}
-              · {returnedJournals.length} bút toán bị trả lại
+                ? `${pendingChecker.length + supplierApToAct.length} hồ sơ chờ kiểm tra`
+                : `${actionableShiftClosures.length} ca cần đối soát · ${supplierApToAct.length} hồ sơ công nợ cần xử lý`}{" "}
+              · {returnedJournals.length + supplierApReturned.length} hồ sơ bị
+              trả lại
             </p>
           </div>
           <Link
@@ -647,19 +723,19 @@ function AccountantDashboard({
         <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
             [
-              isChief ? "Chờ kiểm tra" : "Ca cần đối soát",
+              isChief ? "Chờ kiểm tra" : "Hồ sơ cần xử lý",
               (isChief
-                ? pendingChecker.length
-                : actionableShiftClosures.length
+                ? pendingChecker.length + supplierApToAct.length
+                : actionableShiftClosures.length + supplierApToAct.length
               ).toLocaleString("vi-VN"),
               isChief
-                ? `${returnedJournals.length} bút toán bị trả`
-                : `${differenceShiftClosures.length} ca có chênh lệch`,
+                ? `${pendingChecker.length} bút toán ca · ${supplierApToAct.length} hóa đơn`
+                : `${actionableShiftClosures.length} ca · ${supplierApToAct.length} hóa đơn`,
             ],
             [
-              "Chênh lệch ca",
-              formatVnd(differenceVnd),
-              `${differenceShiftClosures.length} ca`,
+              isChief ? "Công nợ chờ kiểm tra" : "Công nợ cần xử lý",
+              formatVnd(supplierApActionValue),
+              `${supplierApToAct.length} hồ sơ nhà cung cấp`,
             ],
             [
               isChief ? "Đã ghi sổ" : "Bút toán của tôi",
@@ -672,7 +748,7 @@ function AccountantDashboard({
             [
               "Giá trị đã ghi sổ",
               formatVnd(postedValueVnd),
-              `${pendingDirector.length} ngoại lệ chờ giám đốc`,
+              `${differenceShiftClosures.length} ca lệch · ${pendingDirector.length} ngoại lệ đã chuyển cấp`,
             ],
           ].map(([label, value, note]) => (
             <article
@@ -723,7 +799,7 @@ function AccountantDashboard({
             ))}
             {queue.length === 0 ? (
               <p className="p-6 text-sm leading-6 text-[#748079]">
-                Không có ca hoặc bút toán nào đang chờ tài khoản này xử lý.
+                Không có hồ sơ nào đang chờ tài khoản này xử lý.
               </p>
             ) : null}
           </div>
@@ -745,13 +821,18 @@ function AccountantDashboard({
                 (journal) => journal.siteId === site.id,
               );
               const sitePendingChecker = siteJournals.filter(
-                (journal) => journal.siteId === site.id,
-              ).filter((journal) => journal.status === "pending-checker");
+                (journal) =>
+                  journal.sourceType === "shift-close" &&
+                  journal.status === "pending-checker",
+              );
               const sitePosted = siteJournals.filter(
                 (journal) => journal.status === "posted",
               );
               const sitePendingDirector = pendingDirector.filter(
                 (record) => record.siteId === site.id,
+              );
+              const siteSupplierAp = supplierApToAct.filter(
+                (invoice) => invoice.siteId === site.id,
               );
               const siteDifferenceVnd = siteActionable.reduce(
                 (sum, record) => sum + Math.abs(record.differenceVnd),
@@ -759,7 +840,7 @@ function AccountantDashboard({
               );
               const detail = `${siteActionable.length} ca cần đối soát · ${
                 sitePendingChecker.length
-              } bút toán chờ kiểm tra · ${sitePosted.length} đã ghi sổ${
+              } bút toán chờ kiểm tra · ${siteSupplierAp.length} hóa đơn nhà cung cấp · ${sitePosted.length} đã ghi sổ${
                 siteDifferenceVnd > 0
                   ? ` · chênh ${formatVnd(siteDifferenceVnd)}`
                   : sitePendingDirector.length > 0
@@ -812,6 +893,7 @@ export function RoleHomeDashboard({
   records,
   workdays,
   journals,
+  supplierApInvoices,
   workdayEmployees,
 }: Props) {
   if (user.role === "manager") {
@@ -822,6 +904,7 @@ export function RoleHomeDashboard({
           sites={sites}
           records={records}
           workdays={workdays}
+          supplierApInvoices={supplierApInvoices}
         />
         <div id="workday-lifecycle">
           <WorkdayLifecycle
@@ -855,6 +938,7 @@ export function RoleHomeDashboard({
         sites={sites}
         records={records}
         journals={journals}
+        supplierApInvoices={supplierApInvoices}
       />
     );
   }

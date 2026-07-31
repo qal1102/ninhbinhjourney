@@ -4,6 +4,10 @@ import { canViewRegionalFinance } from "@/domain/erp-role-policy";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import type {
+  SupplierApInvoice,
+  SupplierApSupplier,
+} from "@/domain/erp-supplier-ap";
+import type {
   AttendanceEvent,
   CurrentErpUser,
   ErpAccessState,
@@ -14,7 +18,7 @@ import { CameraAiWorkspace } from "./camera-ai-workspace";
 import { ProjectEventWorkspace } from "./project-event-workspace";
 import { FieldReportWorkspace } from "./field-report-workspace";
 import { TicketGuestWorkspace } from "./ticket-guest-workspace";
-import { PartnerCommercialWorkspace } from "./partner-commercial-workspace";
+import { SupplierApControlCenter } from "./supplier-ap-control-center";
 import { StaffPerformanceWorkspace } from "./staff-performance-workspace";
 import { IncidentWorkflowWorkspace } from "./incident-workflow-workspace";
 import {
@@ -31,6 +35,8 @@ type Props = {
   shiftClosures: readonly ShiftCloseRecord[];
   workdays: readonly WorkdayRecord[];
   workdayEmployees: readonly WorkdayEmployeeOption[];
+  supplierApInvoices: readonly SupplierApInvoice[];
+  supplierApSuppliers: readonly SupplierApSupplier[];
   initialCameraId?: string;
 };
 
@@ -360,12 +366,10 @@ export function ModuleWorkspace({
   shiftClosures,
   workdays,
   workdayEmployees,
+  supplierApInvoices,
+  supplierApSuppliers,
   initialCameraId,
 }: Props) {
-  const readOnlySourceUser = user.role === "accountant"
-    ? { ...user, role: "director" as const }
-    : user;
-
   if (module.id === "su-co") {
     return <IncidentWorkflowWorkspace site={site} user={user} />;
   }
@@ -434,7 +438,14 @@ export function ModuleWorkspace({
     return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} />;
   }
   if (module.id === "doi-tac-nha-cung-ung") {
-    return <PartnerCommercialWorkspace site={site} user={readOnlySourceUser} />;
+    return (
+      <SupplierApControlCenter
+        site={site}
+        user={user}
+        invoices={supplierApInvoices}
+        suppliers={supplierApSuppliers}
+      />
+    );
   }
 
   const data = workspaceData(site, module);

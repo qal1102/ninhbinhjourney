@@ -137,33 +137,47 @@ test("accountant works from a real source-to-ledger queue without field-control 
 
   await expect(page.getByText("Bàn làm việc kế toán", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: "Phạm Thu Trang" })).toBeVisible();
-  await expect(page.locator('a[href="/erp/trang-an/tai-chinh-doi-soat"]').first()).toBeVisible();
-  await expect(page.locator('a[href="/erp/tam-chuc/tai-chinh-doi-soat"]').first()).toBeVisible();
+  await expect(page.locator('a[href="/erp/finance"]').first()).toBeVisible();
   await expect(page.getByText("Ca của tôi", { exact: true })).toHaveCount(0);
 
   if (testInfo.project.name.startsWith("mobile")) {
     await page.getByRole("button", { name: "Mở menu" }).click();
-    await expect(page.getByRole("link", { name: /Sổ kế toán & đối soát/ })).toBeVisible();
-    await page.getByRole("link", { name: /Sổ kế toán & đối soát/ }).click();
+    await expect(page.getByRole("link", { name: /Đối soát & lập bút toán/ })).toBeVisible();
+    await page.getByRole("link", { name: /Đối soát & lập bút toán/ }).click();
   } else {
     await page.goto("/erp/finance");
   }
 
-  await expect(page.getByRole("heading", { level: 1, name: "Chứng từ & đối soát" })).toBeVisible();
-  const payableCase = page.locator("details").filter({ hasText: "AP-TC-011" });
+  await expect(page.getByRole("heading", { level: 1, name: "Đối soát & lập bút toán" })).toBeVisible();
+  const payableCase = page
+    .locator("details")
+    .filter({ hasText: "AP-TC-202607-018" });
   await payableCase.locator("summary").click();
-  await expect(payableCase).toContainText("Định khoản đề xuất");
-  await expect(payableCase).toContainText("Nợ = Có");
-  await expect(payableCase).toContainText("Biên bản nghiệm thu");
-  await payableCase.getByRole("button", { name: "Gửi người kiểm tra" }).click();
-  await expect(page.getByRole("status")).toContainText("AP-TC-011 · Gửi người kiểm tra");
+  await expect(payableCase).toContainText("PO-TC-2026-018");
+  await expect(payableCase).toContainText("NT-TC-2026-018");
+  await expect(payableCase).toContainText("Nợ 6277");
+  await payableCase
+    .getByRole("button", { name: "Lập công nợ và gửi kiểm tra" })
+    .click();
+  await expect(payableCase).toContainText("Chờ kế toán trưởng");
+  await expect(payableCase).toContainText("Nợ 220.000.000");
+  await expect(payableCase).toContainText("Có 220.000.000");
 
   await page.goto("/erp/trang-an/ve-dat-cho");
   await expect(page.getByRole("heading", { level: 1, name: "Vé & đặt chỗ" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Gửi quản lý xác nhận" })).toHaveCount(0);
 
   await page.goto("/erp/trang-an/doi-tac-nha-cung-ung");
-  await expect(page.getByRole("button", { name: "Tạo báo giá nháp" })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Gửi hồ sơ và chạy đối chiếu" }),
+  ).toHaveCount(0);
+  const sourceException = page
+    .locator("details")
+    .filter({ hasText: "AP-TA-202607-024" });
+  await sourceException.locator("summary").click();
+  await expect(
+    sourceException.getByRole("button", { name: "Gửi lại cho kế toán" }),
+  ).toHaveCount(0);
 
   await page.goto("/erp/trang-an/bao-cao-hien-truong");
   await expect(page.getByRole("button", { name: "Gửi báo cáo" })).toHaveCount(0);
@@ -823,21 +837,38 @@ test("Supabase enforces return, stale-version and director exception across four
   }
 });
 
-test("manager can inspect partner records and create a quotation draft", async ({ page }) => {
+test("manager completes source evidence before an invoice reaches accounting", async ({
+  page,
+}) => {
   await login(page, "ql.trangan", "Quanly@2026");
   await page.goto("/erp/trang-an/doi-tac-nha-cung-ung");
 
-  const partner = page.locator("details").filter({ hasText: "Công ty Du lịch Hoa Lư" });
-  await partner.locator("summary").click();
-  await expect(partner).toContainText("ĐKKD.pdf");
-  await expect(partner).toContainText("Nhân viên kinh doanh phản hồi trước 11:00");
-  await page.locator('select[name="partner"]').selectOption({ label: "Công ty Du lịch Hoa Lư" });
-  await page.locator('select[name="product"]').selectOption({ label: "Vé đoàn tiêu chuẩn" });
-  await page.getByPlaceholder("Số khách *").fill("42");
-  await page.locator('input[name="validUntil"]').fill("2026-12-31");
-  await page.getByPlaceholder("Điều khoản thanh toán, hoàn đổi và công nợ *").fill("Công nợ 15 ngày, đổi số lượng trước D-1.");
-  await page.getByRole("button", { name: "Tạo báo giá nháp" }).click();
-  await expect(page.getByRole("status")).toContainText("Công ty Du lịch Hoa Lư");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Đối tác & nhà cung ứng" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "PO, nghiệm thu, hóa đơn và công nợ",
+    }),
+  ).toBeVisible();
+
+  const invoice = page
+    .locator("details")
+    .filter({ hasText: "AP-TA-202607-024" });
+  await invoice.locator("summary").click();
+  await expect(invoice).toContainText("Cần bổ sung nguồn");
+  await expect(invoice).toContainText("Thiếu biên bản nhận hàng/nghiệm thu");
+  await invoice
+    .getByLabel("Mã biên bản nghiệm thu")
+    .fill("NT-TA-2026-024");
+  await invoice.getByLabel("Giá trị nghiệm thu (đ)").fill("118800000");
+  await invoice.getByRole("button", { name: "Gửi lại cho kế toán" }).click();
+
+  await expect(invoice).toContainText("Sẵn sàng hạch toán");
+  await expect(invoice).toContainText("NT-TA-2026-024");
+  await expect(
+    invoice.getByRole("button", { name: "Gửi lại cho kế toán" }),
+  ).toHaveCount(0);
 });
 
 test("director drills into staff progress, results and revenue evidence", async ({ page }) => {

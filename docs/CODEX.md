@@ -6,21 +6,24 @@
 
 ## Cập nhật gần nhất
 
-- Thời gian: 29/07/2026 — 17:12, múi giờ Asia/Saigon
+- Thời gian: 31/07/2026 — múi giờ Asia/Saigon
 - Production chính: https://ninhbinhjourney.vercel.app
 - ERP: https://ninhbinhjourney.vercel.app/erp
-- Production alias đang phục vụ: https://ninhbinhjourney.vercel.app
-- Trạng thái build local mới nhất: thành công với Next.js 16.2.11
-- Trạng thái kiểm tra local mới nhất: typecheck, full lint, **145/145** unit/security/integration test, clean production build và targeted maker–checker Playwright **2/2 desktop/mobile** đều qua. Remote-read integration chạy riêng với production environment **1/1 qua**; bản full test thường skip đúng một bài này vì không nạp server secret.
-- Thay đổi mới nhất: thay toàn bộ chín hồ sơ kế toán hard-code bằng journal thật trên Supabase; bổ sung kế toán trưởng/checker, sổ Nợ/Có, trả hồ sơ, ghi sổ, hoàn bút, bút toán điều chỉnh, khóa/mở kỳ và audit xuyên tài khoản.
-- Lỗi P0 `invalid-use-server-value` đã đóng: type/initial state được chuyển sang `domain/erp-shift-close-action-state.ts`; `app/erp/workflow-actions.ts` hiện chỉ export async server actions.
-- Trạng thái deploy: **đã live**. App subtree runtime `6bccdec7cde016736fde85da2e305cac49075609` và các commit tài liệu sau đó đã push fast-forward lên `qal1102/ninhbinhjourney/main`; Git-integrated production deployment đang `Ready` trên alias chính.
-- Production smoke gần nhất: `/`, `/erp`, `/api/health` đều `200`; kế toán trưởng mở được `Kiểm soát & sổ cái`, thấy đúng journal chờ kiểm tra và nút `Duyệt và ghi sổ`; giám đốc mở được dashboard từ dữ liệu shared; Pixel 7 có hamburger và overflow ngang `0 px`.
+- Production alias đang phục vụ: https://ninhbinhjourney.vercel.app (vẫn đang chạy source đã deploy ngày 29/07; **source AP/NCC dưới đây vừa được commit trong phiên này, chưa push, chưa deploy**).
+- **[Claude Sonnet A — phiên ERP 31/07/2026]** Tiếp nhận working tree đã có sẵn G9.3 AP–NCC (domain/repository/server action/UI/2 migration) chưa commit từ trước; xác minh source thật, xác minh trực tiếp trên Supabase remote, viết bổ sung E2E multi-role còn thiếu, rồi commit. Phiên song song khác (cũng Claude Sonnet, do chủ dự án vận hành riêng) làm việc trên phần website công khai; hai phạm vi không giao nhau nhưng cùng chỉnh `docs/CODEX.md` nên các mục dưới đây chỉ nói về phạm vi ERP đã kiểm chứng trong phiên này.
+- Trạng thái kiểm tra local đã xác minh trong phiên này: `npm run typecheck` qua, `npm run lint` qua toàn bộ, `npm run test:run` qua **169/170** (1 skip có điều kiện, 27/28 file). Test riêng AP (`erp-supplier-ap.test.ts`, `erp-supplier-ap-action-guards.test.ts`, `erp-supplier-ap-migration-contract.test.ts`, `erp-ap-exception-routing-migration-contract.test.ts`) qua **21/21**.
+- `npm run build` cục bộ trước đây fail với `EPERM: operation not permitted, unlink .next/...` (khóa file trên `.next`, nguyên nhân gốc chưa xác định — không phải do một cửa sổ Cursor cụ thể, đã loại trừ). Phiên này thêm lối vòng không phá hành vi mặc định: `next.config.ts` đọc `distDir` từ biến môi trường `NEXT_BUILD_DIST_DIR` (mặc định vẫn `.next` nếu không set). Build ra thư mục thay thế (`NEXT_BUILD_DIST_DIR=.next-build2 npm run build`) chạy sạch, xác nhận source không có lỗi build thật; đã thêm `.next-build*/**` vào ignore của ESLint (dòng ignore trong `.gitignore` đã có sẵn từ trước) vì lần đầu quên thêm khiến lint quét nhầm type helper sinh ra trong thư mục build thay thế, ra hơn 700 lỗi giả — đã sửa và lint lại sạch.
+- **Đã xác minh trực tiếp trên Supabase remote (đọc RLS/grant/schema/row count, không sửa dữ liệu):** cả hai migration mới `202607290007_erp_supplier_ap_workflow.sql` và `202607300008_erp_ap_exception_routing.sql` đã được apply — 6 bảng `erp_ap_*`, các RPC (`erp_ap_submit_supplier_invoice`, `erp_ap_resubmit_supplier_invoice`, `erp_ap_escalate_supplier_invoice`, `erp_ap_decide_supplier_exception`, `erp_accounting_prepare_supplier_invoice`, `erp_accounting_review_supplier_invoice_journal`) chỉ cấp EXECUTE cho `service_role`/`postgres`, RLS bật trên cả 6 bảng, không có grant bảng cho `anon`/`authenticated`, trigger `erp_ap_route_exception_owner` tồn tại.
+- **Đã chạy Playwright E2E multi-role thật trên Supabase remote (`tests/e2e/erp-supplier-ap-workflow.spec.ts`, dùng khóa runtime lấy tạm qua Management API, không ghi ra file):** quản lý bổ sung PO/nghiệm thu thiếu → kế toán nhận đúng hồ sơ; kế toán chuyển ngoại lệ tiền tệ trọng yếu (62 triệu) lên giám đốc → giám đốc chấp thuận → hồ sơ tự quay về kế toán → kế toán lập công nợ → kế toán trưởng ghi sổ độc lập. Do chạy thật, 2 hồ sơ seed đã bị đổi trạng thái vĩnh viễn trên remote: `AP-TA-202607-024` dừng ở "Chờ kế toán trưởng" (cố ý giữ để demo inbox, giống pattern journal điều chỉnh cũ), `AP-TC-202607-027` đã tới "Đã ghi nhận công nợ". Phát hiện trong lúc chạy: timeout mặc định 8s của assertion quá ngắn cho round-trip Server Action → Supabase RPC thật (đã tăng lên 20s cho các bước ghi thật trong spec); không phải lỗi sản phẩm.
+- Chưa xác minh: chưa deploy production với source này (đã commit, chưa push/deploy); mobile-chromium project của bài E2E mới chưa chạy (mới chạy desktop-chromium, vì bài test này không lặp lại được trên cùng seed đã dùng một lần).
+- Thay đổi trước đó (29/07, đã deploy): thay toàn bộ chín hồ sơ kế toán hard-code bằng journal thật trên Supabase; bổ sung kế toán trưởng/checker, sổ Nợ/Có, trả hồ sơ, ghi sổ, hoàn bút, bút toán điều chỉnh, khóa/mở kỳ và audit xuyên tài khoản.
+- Trạng thái deploy đã xác nhận trước đó: **đã live** tới hết batch 29/07 (kế toán maker-checker). App subtree runtime `6bccdec7cde016736fde85da2e305cac49075609` và các commit tài liệu sau đó đã push fast-forward lên `qal1102/ninhbinhjourney/main`; Git-integrated production deployment đang `Ready` trên alias chính. Batch AP–NCC (mục này) **chưa nằm trong lần deploy đó**.
+- Production smoke gần nhất (trước batch AP, vẫn đúng cho source đang live): `/`, `/erp`, `/api/health` đều `200`; kế toán trưởng mở được `Kiểm soát & sổ cái`, thấy đúng journal chờ kiểm tra và nút `Duyệt và ghi sổ`; giám đốc mở được dashboard từ dữ liệu shared; Pixel 7 có hamburger và overflow ngang `0 px`.
 
 ## Công việc đang dở — phải đọc trước khi sửa
 
-1. Kế hoạch tổng thể nằm ở [`PLAN.md`](./PLAN.md). Nền Supabase của `G2` đã hoạt động; `G2` còn staging/health/rotate PAT. `G8` đã có cả checker/journal/reversal/period lock cho nguồn chốt ca. Bước kế tiếp của `G9` là nguồn thu chi/ngân hàng, AP–NCC, lương, tài sản, hóa đơn và báo cáo quản trị; không dựng lại bằng số stock.
-2. Migration `202607280003_erp_shift_close_workflow.sql`, `202607290004_erp_workday_lifecycle.sql`, `202607290005_erp_workday_resubmission_integrity.sql` và `202607290006_erp_accounting_maker_checker.sql` đã có trên remote; không chạy lại bằng thao tác thủ công.
+1. Kế hoạch tổng thể nằm ở [`PLAN.md`](./PLAN.md). Nền Supabase của `G2` đã hoạt động; `G2` còn staging/health/rotate PAT. `G8` đã có cả checker/journal/reversal/period lock cho nguồn chốt ca. `G9.3` AP–NCC (nộp hóa đơn nhà cung cấp → đối chiếu PO/nghiệm thu → kế toán lập bút toán → kế toán trưởng ghi sổ → giám đốc quyết ngoại lệ tiền tệ) đã có domain/repository/server action/UI/2 migration trên remote, test cục bộ xanh và **E2E Supabase multi-role đã chạy thật, đã commit**; còn **chưa deploy**. Việc kế tiếp thật sự vẫn là các nguồn còn lại của `G9`: thu chi/ngân hàng, hoàn ứng, lương, tài sản, hóa đơn và báo cáo quản trị; không dựng lại bằng số stock.
+2. Migration `202607280003_erp_shift_close_workflow.sql`, `202607290004_erp_workday_lifecycle.sql`, `202607290005_erp_workday_resubmission_integrity.sql`, `202607290006_erp_accounting_maker_checker.sql`, `202607290007_erp_supplier_ap_workflow.sql` và `202607300008_erp_ap_exception_routing.sql` đã có trên remote (007/008 vừa được xác minh trực tiếp trong phiên 31/07); không chạy lại bằng thao tác thủ công.
 3. Normal path, material exception, maker–checker, hoàn bút và lập bút toán điều chỉnh đã qua Supabase. Remote hiện cố ý giữ một bút toán điều chỉnh ở trạng thái chờ kế toán trưởng để có dữ liệu thật khi demo inbox.
 4. Management PAT hiện nằm ngoài app tại `D:\Ninh Binh\ninhbinh\.secrets\supabase-management.pat`, bị root `.gitignore` chặn và ACL chỉ cho tài khoản máy hiện tại. PAT đã từng xuất hiện trong chat nên chủ dự án vẫn phải thu hồi/rotate; không sao chép nó sang source/docs/env.
 5. Vercel Production đã có URL, publishable key, server secret, `ERP_PERSISTENCE_MODE=supabase`, production flags và site URL. Bucket riêng tư `erp-workday-evidence` đã có cho ảnh công việc; chưa có môi trường staging, trung tâm tài liệu chung hoặc health check connector.
@@ -139,6 +142,17 @@ Alias cũ `ql.trangan` vẫn đăng nhập được để không làm gãy kịc
 - Migration 004 có bốn geofence, ba bảng workflow/audit/location, ba RPC service-role, optimistic version, idempotency và RLS. Migration 005 harden ảnh final/resubmit, accuracy và trạng thái trả lại; publication đã có nhưng UI hiện vẫn polling 20 giây, chưa được gọi là realtime subscription.
 - Giới hạn phải nói đúng: web/PWA không bảo đảm theo dõi nền khi tab/app bị hệ điều hành tạm dừng. Chưa có consent version, retention/purge, audit ai mở vị trí, geofence theo từng trạm hoặc device attestation.
 
+### Công nợ phải trả nhà cung cấp (AP) — chưa commit/deploy
+
+- `domain/erp-supplier-ap.ts` định nghĩa hồ sơ hóa đơn NCC, đối chiếu 3 chiều (PO, nghiệm thu, hóa đơn) qua `evaluateSupplierApMatch`, đề nghị bút toán Nợ chi phí + thuế GTGT đầu vào (`1331`) / Có `331 — Phải trả người bán` qua `supplierApLiabilityProposal`, và `canActOnSupplierAp` khớp đúng owner theo từng trạng thái.
+- Vòng đời: quản lý lập hồ sơ nguồn (PO/nghiệm thu/hóa đơn do quản lý khai báo, **chưa đối chiếu với một module PR/PO/nghiệm thu thật có persistence riêng** — hệ thống đó chưa tồn tại) → khớp tự động hoặc `match-exception` quay lại quản lý bổ sung → kế toán nhận, kiểm tra, lập bút toán (`ready-for-accounting`/`accounting-returned` → `accounting-review`) → kế toán trưởng ghi sổ hoặc trả → nếu ngoại lệ tiền tệ đạt ngưỡng vật chất, bắt buộc kế toán xác minh trước khi chuyển giám đốc quyết (`director-exception`), giám đốc trả về đúng owner nguồn.
+- `lib/erp/supplier-ap-repository.ts` theo đúng pattern `demo-cookie`/`supabase` như các module trước, fail-closed khi thiếu cấu hình, không fallback ngầm.
+- `app/erp/supplier-ap-actions.ts` kiểm actor/role/site/module/version/idempotency ở server trước mọi lệnh; test `tests/integration/erp-supplier-ap-action-guards.test.ts` xác nhận chặn: session hết hạn, role thiếu capability, quản lý ngoài site, supplier khác site, và chỉ đúng hành động được uỷ quyền cho từng vai trò.
+- UI `components/erp/supplier-ap-control-center.tsx` đã thay hẳn `PartnerCommercialWorkspace` cũ tại module `doi-tac-nha-cung-ung` (menu "Đối tác & nhà cung ứng"). **`PartnerCommercialWorkspace` cũ là dữ liệu demo hard-code hoàn toàn** (mảng đối tác tĩnh, báo giá/hợp đồng/phản hồi khách/SLA không có backend) — bị xoá theo đúng nguyên tắc "không giữ chức năng trang trí" ở PLAN §2.2, không phải xoá nhầm. Hệ quả: module này hiện **chỉ còn phủ phía nhà cung cấp (AP)**; phần báo giá/hợp đồng/phản hồi khách hàng thương mại không còn UI nào, kể cả bản demo — nếu vẫn cần, phải làm lại thành workflow thật theo `PLAN.md` G10.7 dòng "Customer/partner follow-up, SLA phản hồi và sales pipeline".
+- Đã nối vào tổng quan giám đốc (`executive-dashboard-live.tsx`: số hóa đơn NCC đã ghi nhận, giá trị chờ giám đốc quyết), trợ lý điều hành (`assistant/route.ts`: intent `supplier-payables`, đếm việc cần làm theo vai trò) và nút trợ giúp `?` theo vai trò (`module-context-help.tsx`).
+- Test cục bộ đã qua: unit khớp/bút toán/owner (`tests/unit/erp-supplier-ap.test.ts`), integration action guard (`tests/integration/erp-supplier-ap-action-guards.test.ts`), contract tĩnh cho migration 007/008 (`tests/security/erp-supplier-ap-migration-contract.test.ts`, `tests/security/erp-ap-exception-routing-migration-contract.test.ts`) — tổng 21/21. **Chưa có** test E2E multi-role trên Supabase thật (kiểu 3–5 browser context như G8.2) cho luồng AP.
+- Còn thiếu theo đúng `PLAN.md` G9.3: tách nguồn tiền mặt/POS/thẻ/chuyển khoản, giai đoạn thanh toán thật (payment proposal, dual approval, bằng chứng ngân hàng), và một module PR/PO/nghiệm thu có persistence để 3-way match đối chiếu với dữ liệu hệ thống thay vì số quản lý tự khai.
+
 ### Nghiệp vụ theo cơ sở
 
 - Vé & đặt chỗ: doanh thu, số vé, cơ cấu sản phẩm, chính sách, giao dịch và chốt ca.
@@ -178,6 +192,8 @@ Migration:
 - `202607290004_erp_workday_lifecycle.sql`: đã apply remote ngày 29/07/2026.
 - `202607290005_erp_workday_resubmission_integrity.sql`: đã apply remote ngày 29/07/2026 sau preflight; xác minh trigger/function hoạt động, `service_role` được gọi location RPC còn `anon`/`authenticated` bị chặn và trigger function không gọi trực tiếp được.
 - `202607290006_erp_accounting_maker_checker.sql`: đã apply remote ngày 29/07/2026; tạo registry tài khoản/vai trò, kỳ kế toán, journal header/lines, audit, command receipt và bốn RPC service-only.
+- `202607290007_erp_supplier_ap_workflow.sql`: đã apply remote (xác minh trực tiếp bằng schema/RLS/grant query ngày 31/07/2026, chưa rõ ngày apply thật vì chưa có nhật ký gốc). Tạo 6 bảng `erp_ap_suppliers`, `erp_ap_posting_rules`, `erp_ap_supplier_invoices`, `erp_ap_supplier_invoice_lines`, `erp_ap_audit_events`, `erp_ap_command_receipts`; RLS bật cả 6 bảng, không grant cho `anon`/`authenticated`; các RPC nghiệp vụ (`erp_ap_submit_supplier_invoice`, `erp_ap_resubmit_supplier_invoice`, `erp_ap_escalate_supplier_invoice`, `erp_ap_decide_supplier_exception`, `erp_accounting_prepare_supplier_invoice`, `erp_accounting_review_supplier_invoice_journal`) chỉ cấp EXECUTE cho `service_role`; ràng buộc unique chặn hóa đơn trùng theo `(tenant, mã số thuế đã chuẩn hóa, series, số hóa đơn)`. Seed remote hiện có 4 supplier, 5 invoice, 5 dòng chi phí, 5 audit event.
+- `202607300008_erp_ap_exception_routing.sql`: đã apply remote (xác minh cùng đợt 31/07/2026). Thêm trigger `erp_ap_route_exception_owner` trên `erp_ap_supplier_invoices`: ngoại lệ tiền tệ đạt ngưỡng vật chất bắt buộc kế toán xác minh trước khi lên giám đốc; giám đốc trả về sẽ quay lại đúng owner nguồn.
 - Remote hiện có `erp_shift_close_workflows`, `erp_shift_close_audit_events`, seed ba workflow và hai RPC `erp_demo_create_shift_close`/`erp_demo_transition_shift_close`.
 - Remote có thêm `erp_workday_workflows`, `erp_workday_audit_events`, `erp_workday_location_events`, bốn geofence, bucket riêng tư `erp-workday-evidence` và ba RPC workday.
 - Migration 003 tạo `erp_shift_close_workflows`, `erp_shift_close_audit_events`, hai RPC atomic service-role, RLS/grant/revoke, optimistic version, idempotency và seed ba cơ sở.
@@ -288,14 +304,22 @@ Kết luận hiện tại:
 - `tests/e2e/erp-access.spec.ts`: kiểm thử ERP và mobile.
 - `docs/ERP_ROLE_MODULE_AUDIT_VI.md`: audit vai trò, workflow và module.
 - `docs/ERP_ACCOUNTING_REQUIREMENTS_VI.md`: yêu cầu và case kế toán.
+- `domain/erp-supplier-ap.ts`: domain đối chiếu 3 chiều, đề nghị bút toán phải trả và owner theo trạng thái AP — **chưa commit**.
+- `lib/erp/supplier-ap-repository.ts`: persistence `demo-cookie`/`supabase` cho hồ sơ AP — **chưa commit**.
+- `app/erp/supplier-ap-actions.ts`: server action kiểm actor/role/site/module/version/idempotency cho lệnh AP — **chưa commit**.
+- `components/erp/supplier-ap-control-center.tsx`: UI hàng đợi/hồ sơ AP theo vai trò, thay thế `partner-commercial-workspace.tsx` đã xoá — **chưa commit**.
+- `supabase/migrations/202607290007_erp_supplier_ap_workflow.sql`: schema/RPC AP — đã xác minh có trên remote, chưa commit vào git.
+- `supabase/migrations/202607300008_erp_ap_exception_routing.sql`: trigger định tuyến ngoại lệ AP — đã xác minh có trên remote, chưa commit vào git.
+- `tests/unit/erp-supplier-ap.test.ts`, `tests/integration/erp-supplier-ap-action-guards.test.ts`, `tests/security/erp-supplier-ap-migration-contract.test.ts`, `tests/security/erp-ap-exception-routing-migration-contract.test.ts`: test AP — **chưa commit**.
 
 ## Việc nên làm tiếp theo
 
 Danh sách đầy đủ và tiêu chí nghiệm thu nằm ở `docs/PLAN.md`. Thứ tự ngay trước mắt:
 
-1. `G9.2–G9.7`: nối nguồn thu/chi/ngân hàng, AP–NCC, hoàn ứng, bảng lương, tài sản và hóa đơn vào cùng journal; ưu tiên AP và đóng kỳ để gỡ nút thắt kế toán.
-2. `G10.4/G10.6`: tách task khỏi ca/chấm công, hỗ trợ nhiều việc/người/ca và thay dữ liệu dự án/event stock bằng workflow Supabase thật.
-3. Song song đóng phần còn lại của `G2`: rotate PAT, staging, health/backup; sau đó thực hiện `G3` audit nội dung và dữ liệu nguồn trước khi mở rộng module.
+1. Đóng vòng cho batch AP–NCC đang dở trước khi mở việc mới: chạy E2E Supabase multi-role cho luồng AP (giống pattern G8.2), xử lý khóa file `.next` hoặc xác nhận build qua Vercel remote, rồi commit + cập nhật changelog theo đúng batch đã làm.
+2. `G9.2, G9.4–G9.7`: nối nguồn thu/chi/ngân hàng, hoàn ứng, bảng lương, tài sản và hóa đơn vào cùng journal; AP đã có nền, còn thiếu giai đoạn thanh toán thật (payment proposal, dual approval, bằng chứng ngân hàng) và một module PR/PO/nghiệm thu có persistence riêng.
+3. `G10.4/G10.6`: tách task khỏi ca/chấm công, hỗ trợ nhiều việc/người/ca và thay dữ liệu dự án/event stock bằng workflow Supabase thật.
+4. Song song đóng phần còn lại của `G2`: rotate PAT, staging, health/backup; sau đó thực hiện `G3` audit nội dung và dữ liệu nguồn trước khi mở rộng module.
 
 ## Đánh giá tài liệu chuyên môn ngày 28/07/2026
 
@@ -347,6 +371,29 @@ Sau mỗi thay đổi quan trọng:
 6. Thêm một dòng vào **Nhật ký thay đổi** bên dưới, mới nhất ở trên.
 
 ## Nhật ký thay đổi
+
+### 31/07/2026 — [Claude Sonnet A] E2E Supabase multi-role cho AP–NCC và commit batch G9.3
+
+- Tiếp nối mục nhật ký ngay dưới đây (batch AP–NCC phát hiện chưa commit); phiên này viết bổ sung phần còn thiếu là E2E Supabase multi-role, rồi commit toàn bộ batch.
+- Né lỗi khóa file `.next` (đã ghi nhận từ trước, nguyên nhân gốc chưa rõ) bằng cách cho `next.config.ts` đọc `distDir` qua biến môi trường `NEXT_BUILD_DIST_DIR` khi có, mặc định vẫn `.next`. `npm run build` ra thư mục thay thế chạy sạch, xác nhận source không có lỗi build thật. Thêm `.next-build*/**` vào ignore của ESLint (dòng ignore trong `.gitignore` đã có sẵn từ trước) sau khi phát hiện lint quét nhầm ~700 lỗi giả từ type helper sinh trong thư mục build thay thế.
+- Viết `tests/e2e/erp-supplier-ap-workflow.spec.ts`: một bài xác nhận bàn giao quản lý → kế toán bền qua session, một bài đi xuyên giám đốc quyết ngoại lệ → kế toán lập công nợ → kế toán trưởng ghi sổ độc lập.
+- Lấy khóa runtime Supabase tạm thời qua Supabase Management API bằng PAT sẵn có trong `.secrets` (chỉ trong bộ nhớ tiến trình, không ghi ra file, không in giá trị), chạy Playwright thật nhắm vào project remote sau khi được chủ dự án xác nhận chấp nhận thay đổi vĩnh viễn dữ liệu seed.
+- Lượt chạy đầu phát hiện timeout mặc định 8s của Playwright quá ngắn cho round-trip Server Action → Supabase RPC thật (hành động vẫn thành công, chỉ UI cập nhật chậm hơn 8s); đã tăng lên 20s cho các bước ghi thật. Một assertion khác (đợi thông báo thoáng qua "Đã chấp thuận ngoại lệ") bị race vì `revalidatePath` lọc luôn thẻ hồ sơ khỏi danh sách giám đốc trước khi kịp đọc — sửa bằng cách assert kết quả cuối (thẻ biến mất khỏi hàng giám đốc) thay vì thông báo tạm thời.
+- Kết quả thật trên Supabase remote sau khi hoàn tất: `AP-TA-202607-024` dừng ở "Chờ kế toán trưởng" (cố ý, giống pattern giữ một bút toán demo inbox); `AP-TC-202607-027` đã tới "Đã ghi nhận công nợ" qua đủ 4 vai trò (kế toán → giám đốc → kế toán → kế toán trưởng). Vì chạy trên seed dùng một lần, bài test này không lặp lại được nguyên trạng trên cùng project; cần reseed hoặc project khác để chạy lại từ đầu.
+- Chạy lại `npm run typecheck`, `npm run lint`, `npm run test:run` sau toàn bộ thay đổi: đều qua sạch (**169/170**, 1 skip có điều kiện).
+- Trong lúc làm việc phát hiện `docs/CODEX.md`, `.gitignore` và `app/layout.tsx` bị một phiên Claude Sonnet khác (do chủ dự án vận hành song song, phạm vi website công khai) chỉnh sửa cùng lúc; chủ dự án xác nhận đây là chủ đích, hai phạm vi không giao nhau, chỉ cần ký tên agent khi ghi log để phân biệt.
+- Commit toàn bộ batch G9.3 (source AP–NCC có sẵn từ trước + bài E2E mới + hai sửa cấu hình build/lint). Chưa push, chưa deploy.
+
+### 31/07/2026 — Đồng bộ tài liệu với source thật, xác minh remote cho batch AP–NCC chưa commit
+
+- Phiên này bắt đầu bằng việc đọc lại `AGENTS.md` → `CODEX.md` → `PLAN.md` theo đúng quy tắc bàn giao, rồi đối chiếu với `git status` thật của working tree.
+- Phát hiện một khối thay đổi lớn chưa commit (`domain/erp-supplier-ap.ts`, `lib/erp/supplier-ap-repository.ts`, `app/erp/supplier-ap-actions.ts`, `components/erp/supplier-ap-control-center.tsx`, 2 migration mới và 4 file test) triển khai đúng `G9.3` AP–NCC mà CODEX từng ghi là việc kế tiếp, nhưng CODEX/PLAN trước đó không hề nhắc tới — vi phạm quy tắc "cập nhật CODEX+PLAN sau mỗi thay đổi quan trọng" của chính tài liệu này.
+- Trước khi sửa gì, xác nhận với chủ dự án rằng các cửa sổ Cursor/Codex đang mở trên máy hiện đang rảnh (không có agent nào đang chạy đồng thời) để tránh xung đột ghi đè.
+- Chạy `npm run typecheck`, `npm run lint`, `npm run test:run`: qua sạch (**169/170**, 1 skip có điều kiện); 4 file test AP riêng qua **21/21**.
+- `npm run build` cục bộ fail với `EPERM` trên `.next` do khóa file (không phải lỗi code); đã thử xóa `.next` và retry có chờ nhưng toàn bộ ~998 file vẫn bị khóa dù không có tiến trình `node`/dev-server nào chạy. Chưa gỡ được cục bộ; coi là giới hạn môi trường đã biết, cần đóng cửa sổ Cursor đang mở hoặc dùng Vercel remote build để xác nhận.
+- Dùng Supabase Management API (đọc-only, không sửa dữ liệu, không in secret) xác minh trực tiếp trên remote: 6 bảng `erp_ap_*` tồn tại với RLS bật và không có grant `anon`/`authenticated`; các RPC nghiệp vụ AP chỉ cấp EXECUTE cho `service_role`; trigger định tuyến ngoại lệ migration 008 tồn tại; seed đã có 4 supplier, 5 invoice, 5 dòng chi phí, 5 audit event. Kết luận: migration 007/008 đã apply an toàn trên remote, đúng pattern bảo mật của các migration trước.
+- Xác nhận `partner-commercial-workspace.tsx` bị xoá là dữ liệu demo hard-code hoàn toàn (không có backend), việc thay bằng `SupplierApControlCenter` là chủ đích theo nguyên tắc "không giữ chức năng trang trí"; ghi rõ hệ quả là phần báo giá/hợp đồng/phản hồi khách thương mại hiện không còn UI nào, kể cả bản demo.
+- Cập nhật `CODEX.md` (mục cập nhật gần nhất, công việc đang dở, trạng thái Supabase, mô tả module AP mới, file quan trọng, việc nên làm tiếp theo) và `PLAN.md` (`G9` → `[~]`, chi tiết `G9.3`, dòng module AP trong bảng G10) cho khớp đúng trạng thái đã kiểm chứng. Chưa commit, chưa deploy batch AP–NCC; chưa chạy E2E Supabase multi-role cho luồng này.
 
 ### 29/07/2026 — Đóng lỗi đồng bộ production sau migration kế toán
 

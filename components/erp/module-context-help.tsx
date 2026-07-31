@@ -44,6 +44,52 @@ const roleGuidance: Record<
   },
 };
 
+const supplierApGuidance: Record<
+  ErpRole,
+  { purpose: string; responsibility: string; nextStep: string }
+> = {
+  employee: {
+    purpose:
+      "Theo dõi một hồ sơ từ yêu cầu mua, đơn đặt hàng, nghiệm thu đến hóa đơn và công nợ phải trả.",
+    responsibility:
+      "Bạn không xử lý công nợ tại đây. Nếu được giao nhận hàng hoặc nghiệm thu, hãy hoàn thành phiếu việc và nộp đúng ảnh, biên bản tại nhiệm vụ của mình.",
+    nextStep:
+      "Quản lý cơ sở tiếp nhận bằng chứng từ phiếu việc trước khi lập hồ sơ nhà cung cấp.",
+  },
+  manager: {
+    purpose:
+      "Lập hồ sơ nguồn của cơ sở và đối chiếu yêu cầu mua, đơn đặt hàng, nghiệm thu với hóa đơn nhà cung cấp.",
+    responsibility:
+      "Nhập đúng số PO, biên bản nghiệm thu, số hóa đơn và giá trị thực tế. Hồ sơ thiếu hoặc lệch sẽ quay lại tài khoản quản lý để bổ sung.",
+    nextStep:
+      "Hồ sơ khớp được chuyển kế toán. Nếu sai nguồn, bổ sung PO hoặc nghiệm thu rồi gửi lại; không chuyển chênh lệch chưa giải trình.",
+  },
+  accountant: {
+    purpose:
+      "Kiểm tra ba bên PO – nghiệm thu – hóa đơn và lập bút toán chi phí, thuế đầu vào, phải trả nhà cung cấp.",
+    responsibility:
+      "Đối chiếu chứng từ, ngày hóa đơn, mã số thuế, số tiền và tài khoản hạch toán. Không nhập lại số tiền từ màn hình khi dữ liệu nguồn chưa khớp.",
+    nextStep:
+      "Hồ sơ đủ được lập bút toán để kế toán trưởng kiểm tra. Sai chứng từ trả quản lý; chênh lệch tiền có giải trình mới được chuyển giám đốc.",
+  },
+  "chief-accountant": {
+    purpose:
+      "Kiểm tra độc lập hồ sơ nguồn và bút toán công nợ trước khi ghi sổ.",
+    responsibility:
+      "Soát PO, nghiệm thu, hóa đơn, kỳ hạch toán và các dòng Nợ/Có. Người kiểm tra không đồng thời là người lập bút toán.",
+    nextStep:
+      "Đủ điều kiện thì ghi sổ; nếu chưa đủ, trả kế toán kèm lý do cụ thể để sửa đúng hồ sơ.",
+  },
+  director: {
+    purpose:
+      "Xem công nợ đã ghi nhận và quyết định các chênh lệch tiền đã được quản lý, kế toán xác minh rồi chuyển cấp.",
+    responsibility:
+      "Chỉ xử lý hồ sơ có trạng thái cần giám đốc quyết định; bút toán chờ kiểm tra nội bộ không xuất hiện trong hàng việc của bạn.",
+    nextStep:
+      "Mở PO, nghiệm thu, hóa đơn và phần chênh lệch trước khi chấp thuận hoặc từ chối. Quyết định được lưu vào nhật ký hồ sơ.",
+  },
+};
+
 type Props = {
   module: ErpModule;
   role: ErpRole;
@@ -53,7 +99,12 @@ type Props = {
 export function ModuleContextHelp({ module, role, site }: Props) {
   const [open, setOpen] = useState(false);
   const titleId = useId();
-  const guidance = roleGuidance[role];
+  const defaultGuidance = roleGuidance[role];
+  const supplierGuidance =
+    module.id === "doi-tac-nha-cung-ung"
+      ? supplierApGuidance[role]
+      : null;
+  const guidance = supplierGuidance ?? defaultGuidance;
 
   useEffect(() => {
     if (!open) return;
@@ -120,7 +171,9 @@ export function ModuleContextHelp({ module, role, site }: Props) {
                 <h3 className="font-black text-[#29483b]">
                   Màn hình này dùng để làm gì?
                 </h3>
-                <p className="mt-1">{module.description}</p>
+                <p className="mt-1">
+                  {supplierGuidance?.purpose ?? module.description}
+                </p>
               </article>
               <article className="rounded-2xl border border-[#dce5e0] p-4">
                 <h3 className="font-black text-[#29483b]">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ErpSite } from "@/domain/erp";
 import type { AccountingJournal } from "@/domain/erp-accounting";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
+import type { SupplierApInvoice } from "@/domain/erp-supplier-ap";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import { ShiftCloseDirectorQueue } from "./shift-close-workflow";
@@ -12,6 +13,7 @@ type Props = {
   records: readonly ShiftCloseRecord[];
   workdays: readonly WorkdayRecord[];
   journals: readonly AccountingJournal[];
+  supplierApInvoices: readonly SupplierApInvoice[];
 };
 
 function formatVnd(value: number) {
@@ -30,11 +32,13 @@ function latestUpdatedAt(
   records: readonly ShiftCloseRecord[],
   workdays: readonly WorkdayRecord[],
   journals: readonly AccountingJournal[],
+  supplierApInvoices: readonly SupplierApInvoice[],
 ) {
   const values = [
     ...records.map((record) => record.updatedAt),
     ...workdays.map((record) => record.updatedAt),
     ...journals.map((journal) => journal.updatedAt),
+    ...supplierApInvoices.map((invoice) => invoice.updatedAt),
   ]
     .map((value) => Date.parse(value))
     .filter(Number.isFinite);
@@ -54,11 +58,13 @@ export function ExecutiveDashboard({
   records,
   workdays,
   journals,
+  supplierApInvoices,
 }: Props) {
   const referenceNow = [
     ...records.map((record) => record.updatedAt),
     ...workdays.map((record) => record.updatedAt),
     ...journals.map((journal) => journal.updatedAt),
+    ...supplierApInvoices.map((invoice) => invoice.updatedAt),
   ].reduce((latest, value) => {
     const timestamp = Date.parse(value);
     return Number.isFinite(timestamp) && timestamp > latest
@@ -97,9 +103,6 @@ export function ExecutiveDashboard({
       Number.isFinite(Date.parse(record.dueAt)) &&
       Date.parse(record.dueAt) < referenceNow,
   );
-  const pendingChecker = journals.filter(
-    (journal) => journal.status === "pending-checker",
-  );
   const postedJournals = journals.filter(
     (journal) => journal.status === "posted",
   );
@@ -110,7 +113,34 @@ export function ExecutiveDashboard({
   const pendingShiftCloseDecisions = records.filter(
     (record) => record.status === "exception-pending-director",
   );
-  const asOf = latestUpdatedAt(records, workdays, journals);
+  const directorSupplierAp = supplierApInvoices.filter(
+    (invoice) =>
+      invoice.status === "director-exception" || invoice.status === "posted",
+  );
+  const pendingSupplierDecisions = directorSupplierAp.filter(
+    (invoice) =>
+      invoice.status === "director-exception" &&
+      invoice.ownerRole === "director",
+  );
+  const pendingSupplierDecisionValue = pendingSupplierDecisions.reduce(
+    (total, invoice) => total + invoice.totalVnd,
+    0,
+  );
+  const postedSupplierAp = directorSupplierAp.filter(
+    (invoice) => invoice.status === "posted",
+  );
+  const postedSupplierPayable = postedSupplierAp.reduce(
+    (total, invoice) => total + invoice.totalVnd,
+    0,
+  );
+  const directorDecisionCount =
+    pendingShiftCloseDecisions.length + pendingSupplierDecisions.length;
+  const asOf = latestUpdatedAt(
+    records,
+    workdays,
+    journals,
+    supplierApInvoices,
+  );
 
   return (
     <div className="min-w-0 space-y-5">
@@ -126,8 +156,8 @@ export function ExecutiveDashboard({
               {workdays.length.toLocaleString("vi-VN")} phiếu công việc
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/65">
-              {pendingShiftCloseDecisions.length} ngoại lệ chờ quyết định ·{" "}
-              {pendingChecker.length} bút toán chờ kế toán trưởng
+              {directorDecisionCount} hồ sơ cần quyết định ·{" "}
+              {postedSupplierAp.length} hóa đơn nhà cung cấp đã ghi nhận
             </p>
           </div>
           <p className="shrink-0 text-xs font-bold text-[#c3ded4]">
@@ -155,7 +185,7 @@ export function ExecutiveDashboard({
             [
               "Bút toán đã ghi sổ",
               postedJournals.length.toLocaleString("vi-VN"),
-              `${formatVnd(postedValueVnd)} · ${pendingChecker.length} chờ kiểm tra`,
+              `${formatVnd(postedValueVnd)} · NCC đã ghi nhận ${formatVnd(postedSupplierPayable)}`,
             ],
           ].map(([label, value, note]) => (
             <article
@@ -181,7 +211,8 @@ export function ExecutiveDashboard({
               Cần giám đốc quyết định
             </p>
             <h2 className="mt-2 text-2xl font-black text-[#3f3524]">
-              {pendingShiftCloseDecisions.length} ngoại lệ chốt ca
+              {pendingShiftCloseDecisions.length} ngoại lệ chốt ca ·{" "}
+              {pendingSupplierDecisions.length} hồ sơ nhà cung cấp
             </h2>
           </div>
           <Link
@@ -191,13 +222,47 @@ export function ExecutiveDashboard({
             Mở sổ đối soát →
           </Link>
         </div>
-        {pendingShiftCloseDecisions.length > 0 ? (
-          <div className="mt-5">
-            <ShiftCloseDirectorQueue records={records} user={user} />
+        {directorDecisionCount > 0 ? (
+          <div className="mt-5 space-y-4">
+            {pendingShiftCloseDecisions.length > 0 ? (
+              <ShiftCloseDirectorQueue records={records} user={user} />
+            ) : null}
+            {pendingSupplierDecisions.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-black text-[#4c3c23]">
+                    Ngoại lệ hóa đơn đã được chuyển cấp
+                  </p>
+                  <p className="text-sm font-black text-[#7a5923]">
+                    {formatVnd(pendingSupplierDecisionValue)}
+                  </p>
+                </div>
+                {pendingSupplierDecisions.slice(0, 4).map((invoice) => (
+                  <Link
+                    key={invoice.id}
+                    href={`/erp/finance#ap-${invoice.id}`}
+                    className="grid gap-2 rounded-xl border border-[#e5d7bb] bg-white p-4 transition hover:border-[#c9a768] sm:grid-cols-[1fr_auto] sm:items-center"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-black text-[#403727]">
+                        {invoice.caseCode} · {invoice.supplier.name}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[#7b6d55]">
+                        HĐ {invoice.invoiceSeries}/{invoice.invoiceNumber} ·{" "}
+                        {invoice.exceptionCodes.length} điểm vượt hồ sơ nguồn
+                      </p>
+                    </div>
+                    <span className="font-black text-[#76551f]">
+                      {formatVnd(invoice.totalVnd)}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : (
           <p className="mt-5 text-sm leading-6 text-[#756852]">
-            Không có hồ sơ tài chính nào đang chờ giám đốc phê duyệt.
+            Không có ngoại lệ đã xác minh nào đang chờ giám đốc quyết định.
           </p>
         )}
       </section>
@@ -257,9 +322,6 @@ export function ExecutiveDashboard({
             const siteJournals = journals.filter(
               (journal) => journal.siteId === site.id,
             );
-            const sitePendingChecker = siteJournals.filter(
-              (journal) => journal.status === "pending-checker",
-            ).length;
             const sitePosted = siteJournals.filter(
               (journal) => journal.status === "posted",
             );
@@ -267,6 +329,15 @@ export function ExecutiveDashboard({
               (total, journal) => total + journalValue(journal),
               0,
             );
+            const siteSupplierAp = directorSupplierAp.filter(
+              (invoice) => invoice.siteId === site.id,
+            );
+            const siteSupplierExceptions = siteSupplierAp.filter(
+              (invoice) => invoice.status === "director-exception",
+            ).length;
+            const siteSupplierPayable = siteSupplierAp
+              .filter((invoice) => invoice.status === "posted")
+              .reduce((total, invoice) => total + invoice.totalVnd, 0);
 
             return (
               <Link
@@ -280,12 +351,16 @@ export function ExecutiveDashboard({
                   </h3>
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
-                      siteOverdue > 0 || siteDifference > 0
+                      siteOverdue > 0 ||
+                      siteDifference > 0 ||
+                      siteSupplierExceptions > 0
                         ? "bg-[#ffe4de] text-[#934336]"
                         : "bg-[#dff1e8] text-[#246249]"
                     }`}
                   >
-                    {siteOverdue > 0 || siteDifference > 0
+                    {siteOverdue > 0 ||
+                    siteDifference > 0 ||
+                    siteSupplierExceptions > 0
                       ? "Cần kiểm tra"
                       : "Không có ngoại lệ"}
                   </span>
@@ -325,9 +400,19 @@ export function ExecutiveDashboard({
                       {sitePosted.length} bút toán ·{" "}
                       {formatVnd(sitePostedValue)}
                     </dd>
-                    <p className="mt-1 text-[#849089]">
-                      {sitePendingChecker} chờ kiểm tra
-                    </p>
+                  </div>
+                  <div>
+                    <dt className="text-[#849089]">
+                      Công nợ NCC đã ghi nhận
+                    </dt>
+                    <dd className="mt-1 break-words font-black">
+                      {formatVnd(siteSupplierPayable)}
+                    </dd>
+                    {siteSupplierExceptions > 0 ? (
+                      <p className="mt-1 text-[#934336]">
+                        {siteSupplierExceptions} ngoại lệ cần quyết định
+                      </p>
+                    ) : null}
                   </div>
                 </dl>
               </Link>

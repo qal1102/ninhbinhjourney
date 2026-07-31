@@ -107,6 +107,7 @@ const journal: AccountingJournal = {
   journalCode: "JV-20260729-001",
   sourceType: "shift-close",
   sourceWorkflowId: WORKFLOW_ID,
+  sourceSupplierInvoiceId: null,
   sourceVersion: 3,
   businessDate: "2026-07-29",
   periodKey: "2026-07",

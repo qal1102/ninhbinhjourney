@@ -18,8 +18,13 @@ import {
   SHIFT_CLOSE_MATERIALITY_VND,
   type ShiftCloseRecord,
 } from "@/domain/erp-shift-close";
+import type {
+  SupplierApInvoice,
+  SupplierApSupplier,
+} from "@/domain/erp-supplier-ap";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import { ShiftCloseAccountingQueue } from "./shift-close-workflow";
+import { SupplierApControlCenter } from "./supplier-ap-control-center";
 
 const INITIAL_ACTION_STATE = {
   status: "idle",
@@ -449,6 +454,15 @@ function JournalCard({
 }) {
   const status = journalStatus(journal.status);
   const totals = journalTotal(journal.lines);
+  const sourceLabel = journal.reversalOfJournalId
+    ? "Đảo bút toán"
+    : journal.sourceType === "supplier-invoice"
+      ? "Hóa đơn nhà cung cấp"
+      : "Doanh thu ca";
+  const sourceReference =
+    journal.sourceType === "supplier-invoice"
+      ? journal.sourceSupplierInvoiceId
+      : journal.sourceWorkflowId;
   return (
     <details
       open={defaultOpen}
@@ -465,11 +479,10 @@ function JournalCard({
         </div>
         <div>
           <p className="font-black text-[#293f35]">
-            {journal.reversalOfJournalId ? "Đảo bút toán" : "Doanh thu ca"} ·{" "}
-            {formatDate(journal.businessDate)}
+            {sourceLabel} · {formatDate(journal.businessDate)}
           </p>
           <p className="mt-1 break-all text-xs text-[#74827b]">
-            Nguồn {journal.sourceWorkflowId}
+            Nguồn {sourceReference ?? "—"}
           </p>
         </div>
         <div>
@@ -555,10 +568,12 @@ function JournalCard({
               </div>
             </dl>
             {user.role === "chief-accountant" &&
+            journal.sourceType === "shift-close" &&
             journal.status === "pending-checker" ? (
               <ReviewJournalForm journal={journal} />
             ) : null}
             {user.role === "chief-accountant" &&
+            journal.sourceType === "shift-close" &&
             journal.status === "posted" &&
             !journal.reversalOfJournalId &&
             !hasReversal ? (
@@ -576,19 +591,30 @@ export function AccountingControlCenter({
   shiftClosures,
   journals,
   periods,
+  supplierApInvoices,
+  supplierApSuppliers,
   initialSourceId,
 }: {
   user: CurrentErpUser;
   shiftClosures: readonly ShiftCloseRecord[];
   journals: readonly AccountingJournal[];
   periods: readonly AccountingPeriod[];
+  supplierApInvoices: readonly SupplierApInvoice[];
+  supplierApSuppliers: readonly SupplierApSupplier[];
   initialSourceId?: string;
 }) {
   const journalBySource = new Map<string, AccountingJournal>();
   for (const journal of [...journals]
-    .filter((item) => !item.reversalOfJournalId)
+    .filter(
+      (item) =>
+        item.sourceType === "shift-close" &&
+        Boolean(item.sourceWorkflowId) &&
+        !item.reversalOfJournalId,
+    )
     .sort((left, right) => left.updatedAt.localeCompare(right.updatedAt))) {
-    journalBySource.set(journal.sourceWorkflowId, journal);
+    if (journal.sourceWorkflowId) {
+      journalBySource.set(journal.sourceWorkflowId, journal);
+    }
   }
   const eligibleSources = shiftClosures.filter((record) => {
     if (
@@ -615,10 +641,14 @@ export function AccountingControlCenter({
       ["manager-approved", "accounting-review"].includes(record.status),
   );
   const pendingCount = journals.filter(
-    (journal) => journal.status === "pending-checker",
+    (journal) =>
+      journal.sourceType === "shift-close" &&
+      journal.status === "pending-checker",
   ).length;
   const returnedCount = journals.filter(
-    (journal) => journal.status === "checker-returned",
+    (journal) =>
+      journal.sourceType === "shift-close" &&
+      journal.status === "checker-returned",
   ).length;
   const posted = journals.filter((journal) => journal.status === "posted");
   const postedTotal = posted.reduce(
@@ -630,6 +660,32 @@ export function AccountingControlCenter({
       .map((journal) => journal.reversalOfJournalId)
       .filter((value): value is string => Boolean(value)),
   );
+  const postedSiteCount = new Set(posted.map((journal) => journal.siteId)).size;
+  const reversalCount = posted.filter((journal) =>
+    Boolean(journal.reversalOfJournalId),
+  ).length;
+  const overviewMetrics: readonly (readonly [string, string, string])[] =
+    user.role === "director"
+      ? [
+          ["Đã ghi sổ", String(posted.length), "bút toán có nguồn"],
+          ["Tổng phát sinh Nợ", formatVnd(postedTotal), "trên số đã ghi nhận"],
+          ["Địa điểm có phát sinh", String(postedSiteCount), "địa điểm"],
+          ["Bút toán đảo", String(reversalCount), "điều chỉnh đã ghi nhận"],
+        ]
+      : [
+          [
+            user.role === "accountant"
+              ? "Nguồn đủ điều kiện"
+              : "Chờ kiểm tra",
+            String(
+              user.role === "accountant" ? eligibleSources.length : pendingCount,
+            ),
+            "hồ sơ ca",
+          ],
+          ["Bị trả bổ sung", String(returnedCount), "bút toán ca"],
+          ["Đã ghi sổ", String(posted.length), "bút toán có nguồn"],
+          ["Tổng phát sinh Nợ", formatVnd(postedTotal), "trên số đã ghi nhận"],
+        ];
   const roleTitle =
     user.role === "chief-accountant"
       ? "Kiểm soát & sổ cái"
@@ -661,20 +717,7 @@ export function AccountingControlCenter({
       </header>
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {[
-          [
-            user.role === "accountant"
-              ? "Nguồn đủ điều kiện"
-              : "Chờ kế toán trưởng",
-            String(
-              user.role === "accountant" ? eligibleSources.length : pendingCount,
-            ),
-            "hồ sơ",
-          ],
-          ["Bị trả bổ sung", String(returnedCount), "bút toán"],
-          ["Đã ghi sổ", String(posted.length), "bút toán"],
-          ["Tổng phát sinh Nợ", formatVnd(postedTotal), "đã ghi sổ"],
-        ].map(([label, value, note]) => (
+        {overviewMetrics.map(([label, value, note]) => (
           <article
             key={label}
             className="min-w-0 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-5"
@@ -687,6 +730,15 @@ export function AccountingControlCenter({
           </article>
         ))}
       </section>
+
+      <div id="supplier-payables" className="scroll-mt-24">
+        <SupplierApControlCenter
+          user={user}
+          invoices={supplierApInvoices}
+          suppliers={supplierApSuppliers}
+          embedded
+        />
+      </div>
 
       {user.role === "accountant" && materialExceptions.length > 0 ? (
         <ShiftCloseAccountingQueue
@@ -794,7 +846,8 @@ export function AccountingControlCenter({
             hasReversal={reversalTargets.has(journal.id)}
             defaultOpen={
               journal.status === "pending-checker" ||
-              journal.sourceWorkflowId === initialSourceId
+              (journal.sourceType === "shift-close" &&
+                journal.sourceWorkflowId === initialSourceId)
             }
           />
         ))}

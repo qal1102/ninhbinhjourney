@@ -11,6 +11,7 @@ import {
   getCurrentErpUser,
 } from "@/lib/erp/demo-session";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
+import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import {
   listWorkdayEmployeeOptions,
   listWorkdaysForUser,
@@ -31,12 +32,16 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   if (!accountCanAccessModule(user, site.id, moduleDefinition.id)) {
     redirect(`/erp/${site.id}?denied=module`);
   }
-  const [access, attendance, shiftClosures, workdays] = await Promise.all([
+  const [access, attendance, shiftClosures, workdays, supplierAp] =
+    await Promise.all([
     getAccessState(),
     getAttendanceState(),
     listShiftClosures({ siteIds: [site.id] }),
     listWorkdaysForUser(user, [site.id]),
-  ]);
+      moduleDefinition.id === "doi-tac-nha-cung-ung"
+        ? listSupplierAp({ siteIds: [site.id] })
+        : Promise.resolve({ suppliers: [], invoices: [] }),
+    ]);
   const query = (await searchParams) ?? {};
   const requestedCamera = Array.isArray(query.camera) ? query.camera[0] : query.camera;
 
@@ -71,6 +76,8 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
             ? listWorkdayEmployeeOptions(access, [site.id])
             : []
         }
+        supplierApInvoices={supplierAp.invoices}
+        supplierApSuppliers={supplierAp.suppliers}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

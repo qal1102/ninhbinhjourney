@@ -236,6 +236,7 @@ export async function prepareShiftCloseAccountingJournalAction(
     )
       .filter(
         (journal) =>
+          journal.sourceType === "shift-close" &&
           journal.sourceWorkflowId === source.id &&
           !journal.reversalOfJournalId,
       )
@@ -306,6 +307,11 @@ export async function reviewAccountingJournalAction(
       requireChecker(user, "accounting.journal.post");
     }
     const journal = await loadJournalForUser(user, input.journalId);
+    if (journal.sourceType !== "shift-close") {
+      throw new Error(
+        "Bút toán hóa đơn nhà cung cấp phải được kiểm tra tại hàng công nợ cùng hồ sơ nguồn.",
+      );
+    }
     if (journal.version !== input.expectedVersion) {
       throw new AccountingRepositoryConflictError(
         "Journal version changed.",
@@ -363,6 +369,11 @@ export async function reverseAccountingJournalAction(
     const user = requireCurrentUser(await getCurrentErpUser());
     requireChecker(user, "accounting.journal.reverse");
     const original = await loadJournalForUser(user, input.journalId);
+    if (original.sourceType !== "shift-close") {
+      throw new Error(
+        "Hoàn bút hóa đơn nhà cung cấp chưa mở ở luồng này; không được dùng thao tác của chốt ca.",
+      );
+    }
     if (original.version !== input.expectedVersion) {
       throw new AccountingRepositoryConflictError(
         "Journal version changed.",

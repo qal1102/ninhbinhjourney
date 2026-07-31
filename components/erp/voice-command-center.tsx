@@ -71,6 +71,7 @@ const moduleCommands: ModuleCommand[] = [
 const suggestionsByRole: Record<ErpRole, string[]> = {
   director: [
     "Hôm nay doanh thu bao nhiêu?",
+    "Công nợ nhà cung cấp đã ghi nhận bao nhiêu?",
     "Mở báo cáo hiện trường Tràng An",
     "Mở tài chính tổng hợp",
     "Mở camera Tam Chúc",
@@ -85,6 +86,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Cơ sở nào đang quá tải?",
   ],
   manager: [
+    "Mở hóa đơn nhà cung cấp",
     "Mở báo cáo hiện trường",
     "Mở camera hiện trường",
     "Mở sức chứa",
@@ -100,6 +102,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
   accountant: [
     "Mở đối soát toàn vùng",
     "Mở công nợ nhà cung cấp",
+    "Hóa đơn nào cần tôi xử lý?",
     "Mở hóa đơn điện tử",
     "Mở chứng từ kế toán",
     "Mở đóng kỳ tháng 7",
@@ -111,6 +114,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở bút toán chờ kiểm tra",
     "Mở đối soát toàn vùng",
     "Mở công nợ nhà cung cấp",
+    "Hóa đơn nhà cung cấp nào chờ kiểm tra?",
     "Mở đóng kỳ tháng 7",
     "Mở báo cáo tài chính",
   ],
@@ -151,6 +155,12 @@ function findModule(command: string) {
   return moduleCommands.find((module) => module.terms.some((term) => containsTerm(command, term)));
 }
 
+function isSupplierApCommand(command: string) {
+  return /(cong no nha cung cap|phai tra nha cung cap|bao cao cong no|hoa don nha cung cap|hoa don dau vao)/.test(
+    command,
+  );
+}
+
 function findCameraId(command: string) {
   const numbered = command.match(/\b(?:camera|cam)\s*(?:so)?\s*([1-4])\b/)?.[1];
   if (numbered) return numbered.padStart(2, "0");
@@ -173,6 +183,17 @@ export function resolveErpNavigationCommand(rawCommand: string, role: ErpRole, s
   const isShortModuleCommand = Boolean(matchedModule) && command.split(" ").length <= 5 && !isQuestion;
 
   if (asksToOpen && /(trang chu|tong quan|dashboard|man hinh chinh)/.test(command)) return "/erp";
+  if (asksToOpen && isSupplierApCommand(command)) {
+    if (role === "employee") return null;
+    if (role === "manager") {
+      return targetSite
+        ? `/erp/${targetSite}/doi-tac-nha-cung-ung`
+        : "/erp";
+    }
+    return namedSite
+      ? `/erp/${namedSite}/doi-tac-nha-cung-ung`
+      : "/erp/finance#supplier-payables";
+  }
   if (matchedModule && targetSite && (asksToOpen || isShortModuleCommand)) {
     if ((role === "accountant" || role === "chief-accountant") && !ERP_ACCOUNTANT_MODULE_IDS.includes(matchedModule.id)) return null;
     if ((role === "director" || role === "accountant" || role === "chief-accountant") && !namedSite && !currentSiteId && matchedModule.id === "tai-chinh-doi-soat") return "/erp/finance";
@@ -219,7 +240,13 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
   }
 
   async function queryLiveSnapshot(
-    intent: "revenue" | "cost" | "profit" | "guests" | "urgent",
+    intent:
+      | "revenue"
+      | "cost"
+      | "profit"
+      | "guests"
+      | "supplier-payables"
+      | "urgent",
   ) {
     setVoiceMessage("Đang đọc số liệu mới nhất…");
     try {
@@ -274,6 +301,14 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
     if (/(doanh thu|ban duoc|thu duoc)/.test(command) && /(hom nay|hien tai|bay gio|bao nhieu)/.test(command)) {
       await queryLiveSnapshot("revenue");
+      return;
+    }
+
+    if (
+      isSupplierApCommand(command) ||
+      /(hoa don nao|hoa don can|hoa don cho)/.test(command)
+    ) {
+      await queryLiveSnapshot("supplier-payables");
       return;
     }
 

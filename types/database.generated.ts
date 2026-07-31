@@ -1,5 +1,5 @@
 /**
- * Schema snapshot for migrations `202607240001` through `202607290006`.
+ * Schema snapshot for migrations `202607240001` through `202607300008`.
  *
  * This file follows Supabase CLI's generated Database shape. It is kept beside
  * the versioned migration so a linked-project `supabase gen types typescript`
@@ -653,13 +653,141 @@ export type ErpAccountingPeriodRow = {
   updated_at: string;
 };
 
+export type ErpApSupplierRow = {
+  id: string;
+  tenant_id: string;
+  site_id: string;
+  supplier_code: string;
+  legal_name: string;
+  tax_code: string;
+  tax_code_normalized: string;
+  payment_terms_days: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ErpApPostingRuleRow = {
+  id: string;
+  tenant_id: string;
+  expense_category: string;
+  debit_account_code: string;
+  debit_account_name: string;
+  input_vat_account_code: string;
+  input_vat_account_name: string;
+  payable_account_code: string;
+  payable_account_name: string;
+  match_tolerance_vnd: number;
+  director_exception_threshold_vnd: number;
+  effective_from: string;
+  effective_until: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ErpApSupplierInvoiceRow = {
+  id: string;
+  tenant_id: string;
+  site_id: string;
+  supplier_id: string;
+  posting_rule_id: string;
+  case_code: string;
+  request_reference: string;
+  purchase_order_reference: string;
+  contract_reference: string | null;
+  purchase_order_total_vnd: number;
+  acceptance_reference: string;
+  accepted_total_vnd: number;
+  supplier_tax_code_snapshot: string;
+  supplier_tax_code_normalized: string;
+  invoice_series: string;
+  invoice_number: string;
+  invoice_series_normalized: string;
+  invoice_number_normalized: string;
+  invoice_date: string;
+  due_date: string;
+  net_vnd: number;
+  vat_vnd: number;
+  total_vnd: number;
+  currency: string;
+  cost_center: string;
+  project_code: string | null;
+  match_status: string;
+  exception_codes: string[];
+  exception_note: string | null;
+  exception_approved_by_account_id: string | null;
+  exception_approved_at: string | null;
+  status: string;
+  owner_role: string;
+  version: number;
+  manager_account_id: string;
+  accountant_account_id: string | null;
+  accountant_note: string | null;
+  checker_account_id: string | null;
+  checker_note: string | null;
+  journal_id: string | null;
+  submitted_at: string;
+  posted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ErpApSupplierInvoiceLineRow = {
+  id: string;
+  invoice_id: string;
+  tenant_id: string;
+  site_id: string;
+  line_number: number;
+  description: string;
+  quantity: number;
+  unit_price_vnd: number;
+  net_vnd: number;
+  vat_vnd: number;
+  created_at: string;
+};
+
+export type ErpApAuditEventRow = {
+  id: string;
+  invoice_id: string;
+  tenant_id: string;
+  site_id: string;
+  sequence_number: number;
+  event_type: string;
+  from_status: string | null;
+  to_status: string;
+  actor_account_id: string;
+  actor_role: string;
+  note: string;
+  metadata: Json;
+  command_scope: string;
+  idempotency_key: string;
+  request_hash: string;
+  occurred_at: string;
+  created_at: string;
+};
+
+export type ErpApCommandReceiptRow = {
+  id: string;
+  tenant_id: string;
+  command_scope: string;
+  idempotency_key: string;
+  actor_account_id: string;
+  request_hash: string;
+  invoice_id: string;
+  resulting_version: number;
+  response: Json;
+  created_at: string;
+};
+
 export type ErpAccountingJournalRow = {
   id: string;
   tenant_id: string;
   site_id: string;
   journal_code: string;
   source_type: string;
-  source_workflow_id: string;
+  source_workflow_id: string | null;
+  source_supplier_invoice_id: string | null;
   source_version: number;
   business_date: string;
   period_key: string;
@@ -875,6 +1003,12 @@ export interface Database {
       erp_account_registry: Table<ErpAccountRegistryRow>;
       erp_account_role_assignments: Table<ErpAccountRoleAssignmentRow>;
       erp_accounting_periods: Table<ErpAccountingPeriodRow>;
+      erp_ap_suppliers: Table<ErpApSupplierRow>;
+      erp_ap_posting_rules: Table<ErpApPostingRuleRow>;
+      erp_ap_supplier_invoices: Table<ErpApSupplierInvoiceRow>;
+      erp_ap_supplier_invoice_lines: Table<ErpApSupplierInvoiceLineRow>;
+      erp_ap_audit_events: Table<ErpApAuditEventRow>;
+      erp_ap_command_receipts: Table<ErpApCommandReceiptRow>;
       erp_accounting_journals: Table<ErpAccountingJournalRow>;
       erp_accounting_journal_lines: Table<ErpAccountingJournalLineRow>;
       erp_accounting_audit_events: Table<ErpAccountingAuditEventRow>;
@@ -1051,6 +1185,96 @@ export interface Database {
           p_idempotency_key: string;
         };
         Returns: ErpShiftCloseWorkflowRow;
+      };
+      erp_ap_submit_supplier_invoice: {
+        Args: {
+          p_site_id: string;
+          p_supplier_id: string;
+          p_request_reference: string;
+          p_purchase_order_reference: string;
+          p_contract_reference: string | null;
+          p_purchase_order_total_vnd: number;
+          p_acceptance_reference: string;
+          p_accepted_total_vnd: number;
+          p_invoice_series: string;
+          p_invoice_number: string;
+          p_invoice_date: string;
+          p_due_date: string;
+          p_net_vnd: number;
+          p_vat_vnd: number;
+          p_total_vnd: number;
+          p_expense_category: string;
+          p_description: string;
+          p_cost_center: string;
+          p_project_code: string | null;
+          p_actor_account_id: string;
+          p_note: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpApSupplierInvoiceRow;
+      };
+      erp_ap_resubmit_supplier_invoice: {
+        Args: {
+          p_invoice_id: string;
+          p_expected_version: number;
+          p_purchase_order_reference: string;
+          p_purchase_order_total_vnd: number;
+          p_acceptance_reference: string;
+          p_accepted_total_vnd: number;
+          p_actor_account_id: string;
+          p_note: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpApSupplierInvoiceRow;
+      };
+      erp_ap_escalate_supplier_invoice: {
+        Args: {
+          p_invoice_id: string;
+          p_expected_version: number;
+          p_actor_account_id: string;
+          p_note: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpApSupplierInvoiceRow;
+      };
+      erp_ap_decide_supplier_exception: {
+        Args: {
+          p_invoice_id: string;
+          p_expected_version: number;
+          p_actor_account_id: string;
+          p_decision: string;
+          p_note: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpApSupplierInvoiceRow;
+      };
+      erp_accounting_prepare_supplier_invoice: {
+        Args: {
+          p_invoice_id: string;
+          p_expected_source_version: number;
+          p_actor_account_id: string;
+          p_note: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpApSupplierInvoiceRow;
+      };
+      erp_accounting_review_supplier_invoice_journal: {
+        Args: {
+          p_invoice_id: string;
+          p_expected_source_version: number;
+          p_expected_journal_version: number;
+          p_actor_account_id: string;
+          p_decision: string;
+          p_note: string;
+          p_idempotency_key: string;
+          p_request_hash: string;
+        };
+        Returns: ErpApSupplierInvoiceRow;
       };
       erp_accounting_prepare_shift_close: {
         Args: {

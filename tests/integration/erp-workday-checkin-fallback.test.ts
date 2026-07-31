@@ -37,12 +37,28 @@ vi.mock("@/lib/erp/workday-repository", () => ({
 
 import { checkInWorkdayAction } from "@/app/erp/workday-actions";
 
+function currentVietnamDate() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const value = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
 function assignedRecord() {
+  const businessDate = currentVietnamDate();
   return createWorkdayAssignment({
     id: "workday-checkin-fallback",
-    code: "WD-TA-20260729-FALLBACK",
+    code: `WD-TA-${businessDate.replaceAll("-", "")}-FALLBACK`,
     siteId: "trang-an",
-    businessDate: "2026-07-29",
+    businessDate,
     employee: {
       id: "employee-trang-an-01",
       name: "Đỗ Thị Lan",
@@ -59,10 +75,10 @@ function assignedRecord() {
     taskTitle: "Xác thực đoàn TA-018",
     instructions: "Kiểm tra quyền lợi trước khi cho đoàn qua cổng.",
     priority: "high",
-    dueAt: "2026-07-29T10:30:00.000Z",
+    dueAt: new Date(`${businessDate}T10:30:00+07:00`).toISOString(),
     evidenceRequired: true,
     idempotencyKey: "assign-workday-fallback",
-    createdAt: "2026-07-29T00:15:00.000Z",
+    createdAt: new Date(`${businessDate}T07:15:00+07:00`).toISOString(),
     auditEventId: "audit-assign-fallback",
   });
 }

@@ -2,14 +2,23 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { canViewRegionalFinance } from "@/domain/erp-role-policy";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
+import type { SupplierApInvoice } from "@/domain/erp-supplier-ap";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import { listAccountingJournals } from "@/lib/erp/accounting-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
+import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import { listWorkdaysForUser } from "@/lib/erp/workday-view";
 
 const RequestSchema = z.object({
-  intent: z.enum(["revenue", "cost", "profit", "guests", "urgent"]),
+  intent: z.enum([
+    "revenue",
+    "cost",
+    "profit",
+    "guests",
+    "supplier-payables",
+    "urgent",
+  ]),
 });
 
 function formatVnd(value: number) {
@@ -73,6 +82,7 @@ function urgentWorkCount(
   shifts: readonly ShiftCloseRecord[],
   workdays: readonly WorkdayRecord[],
   pendingJournals: number,
+  supplierApActions: number,
 ) {
   if (role === "employee") {
     return (
@@ -97,7 +107,8 @@ function urgentWorkCount(
         (record) =>
           record.status === "submitted" ||
           (record.priority === "critical" && record.status !== "approved"),
-      ).length
+      ).length +
+      supplierApActions
     );
   }
   if (role === "accountant") {
@@ -106,13 +117,56 @@ function urgentWorkCount(
         ["manager-approved", "accounting-review", "director-approved"].includes(
           record.status,
         ),
-      ).length + pendingJournals
+      ).length +
+      pendingJournals +
+      supplierApActions
     );
   }
-  if (role === "chief-accountant") return pendingJournals;
-  return shifts.filter(
-    (record) => record.status === "exception-pending-director",
-  ).length;
+  if (role === "chief-accountant") {
+    return pendingJournals + supplierApActions;
+  }
+  return (
+    shifts.filter(
+      (record) => record.status === "exception-pending-director",
+    ).length + supplierApActions
+  );
+}
+
+function supplierApActionsForRole(
+  role: string,
+  invoices: readonly SupplierApInvoice[],
+) {
+  return invoices.filter((invoice) => {
+    if (role === "manager") {
+      return (
+        invoice.ownerRole === "manager" &&
+        invoice.status === "match-exception"
+      );
+    }
+    if (role === "accountant") {
+      return (
+        invoice.ownerRole === "accountant" &&
+        [
+          "match-exception",
+          "ready-for-accounting",
+          "accounting-returned",
+        ].includes(invoice.status)
+      );
+    }
+    if (role === "chief-accountant") {
+      return (
+        invoice.ownerRole === "chief-accountant" &&
+        invoice.status === "accounting-review"
+      );
+    }
+    if (role === "director") {
+      return (
+        invoice.ownerRole === "director" &&
+        invoice.status === "director-exception"
+      );
+    }
+    return false;
+  });
 }
 
 export async function POST(request: Request) {
@@ -126,13 +180,20 @@ export async function POST(request: Request) {
 
   try {
     const { intent } = RequestSchema.parse(await request.json());
-    const [allShifts, workdays, journals] = await Promise.all([
+    const [allShifts, workdays, journals, supplierAp] = await Promise.all([
       listShiftClosures({ siteIds: user.siteIds }),
       listWorkdaysForUser(user),
       canViewRegionalFinance(user.role)
         ? listAccountingJournals({ siteIds: user.siteIds })
         : Promise.resolve([]),
+      user.role === "employee"
+        ? Promise.resolve({ suppliers: [], invoices: [] })
+        : listSupplierAp({ siteIds: user.siteIds }),
     ]);
+    const supplierApActions = supplierApActionsForRole(
+      user.role,
+      supplierAp.invoices,
+    );
     const scoped = operationalRecords(
       allShifts,
       user.id,
@@ -184,6 +245,60 @@ export async function POST(request: Request) {
           : "Chưa có hồ sơ ca trong phạm vi tài khoản này.",
         href: "/erp",
         hrefLabel: "Mở tổng quan vận hành",
+      });
+    }
+
+    if (intent === "supplier-payables") {
+      if (user.role === "employee") {
+        return NextResponse.json({
+          answer: "Tài khoản này không có quyền xem công nợ",
+          detail:
+            "Việc nhận hàng hoặc nộp ảnh nghiệm thu nằm trong phiếu việc được giao.",
+          href: "/erp",
+          hrefLabel: "Mở việc của tôi",
+        });
+      }
+      const postedSupplierAp = supplierAp.invoices.filter(
+        (invoice) => invoice.status === "posted",
+      );
+      const postedSupplierPayable = postedSupplierAp.reduce(
+        (total, invoice) => total + invoice.totalVnd,
+        0,
+      );
+      const actionValue = supplierApActions.reduce(
+        (total, invoice) => total + invoice.totalVnd,
+        0,
+      );
+      const actionLabel =
+        user.role === "director"
+          ? "ngoại lệ cần quyết định"
+          : user.role === "chief-accountant"
+            ? "hóa đơn chờ kiểm tra"
+            : user.role === "accountant"
+              ? "hồ sơ công nợ cần xử lý"
+              : "hóa đơn cần bổ sung hồ sơ";
+      const managerSiteId =
+        supplierApActions[0]?.siteId ?? user.siteIds[0];
+      const href =
+        user.role === "manager"
+          ? managerSiteId
+            ? `/erp/${managerSiteId}/doi-tac-nha-cung-ung`
+            : "/erp"
+          : "/erp/finance#supplier-payables";
+
+      return NextResponse.json({
+        count: supplierApActions.length,
+        answer: supplierApActions.length
+          ? `${supplierApActions.length} ${actionLabel}`
+          : `${formatVnd(postedSupplierPayable)} công nợ đã ghi nhận`,
+        detail: supplierApActions.length
+          ? `Giá trị cần xử lý ${formatVnd(actionValue)}. Đã ghi sổ ${postedSupplierAp.length} hóa đơn, tổng ${formatVnd(postedSupplierPayable)}.`
+          : `${postedSupplierAp.length} hóa đơn nhà cung cấp đã được ghi sổ trong phạm vi tài khoản.`,
+        href,
+        hrefLabel:
+          user.role === "manager"
+            ? "Mở hồ sơ nhà cung cấp"
+            : "Mở báo cáo công nợ",
       });
     }
 
@@ -246,32 +361,60 @@ export async function POST(request: Request) {
 
     const pendingJournals =
       user.role === "chief-accountant"
-        ? journals.filter((journal) => journal.status === "pending-checker")
-            .length
+        ? journals.filter(
+            (journal) =>
+              journal.sourceType === "shift-close" &&
+              journal.status === "pending-checker",
+          ).length
         : user.role === "accountant"
           ? journals.filter(
-              (journal) => journal.status === "checker-returned",
+              (journal) =>
+                journal.sourceType === "shift-close" &&
+                journal.status === "checker-returned",
             ).length
           : 0;
+    const shiftDirectorExceptions = allShifts.filter(
+      (record) => record.status === "exception-pending-director",
+    ).length;
+    const accountingShiftActions = allShifts.filter((record) =>
+      ["manager-approved", "accounting-review", "director-approved"].includes(
+        record.status,
+      ),
+    ).length;
+    const managerShiftActions = allShifts.filter(
+      (record) => record.status === "submitted",
+    ).length;
     const urgent = urgentWorkCount(
       user.role,
       user.id,
       allShifts,
       workdays,
       pendingJournals,
+      supplierApActions.length,
     );
+    const urgentDetail =
+      user.role === "director"
+        ? `${shiftDirectorExceptions} ngoại lệ chốt ca · ${supplierApActions.length} hồ sơ nhà cung cấp cần quyết định.`
+        : user.role === "chief-accountant"
+          ? `${pendingJournals} bút toán ca · ${supplierApActions.length} hóa đơn nhà cung cấp chờ kiểm tra.`
+          : user.role === "accountant"
+            ? `${accountingShiftActions} ca cần đối soát · ${supplierApActions.length} hồ sơ công nợ cần xử lý · ${pendingJournals} bút toán bị trả.`
+            : user.role === "manager"
+              ? `${managerShiftActions} ca chờ xác nhận · ${supplierApActions.length} hóa đơn cần bổ sung; công việc hiện trường được liệt kê trên trang chủ.`
+              : "Chỉ gồm việc bị trả lại hoặc việc khẩn đang được giao cho tài khoản.";
     return NextResponse.json({
       count: urgent,
       answer: urgent
         ? `${urgent} việc cần tài khoản này xử lý`
         : "Không có việc gấp đang chờ tài khoản này",
-      detail:
-        user.role === "director"
-          ? "Chỉ tính ngoại lệ đã được cấp dưới xác minh và chuyển giám đốc."
-          : "Chỉ tính việc đúng vai trò, đúng cơ sở và đang ở bước của tài khoản này.",
+      detail: urgentDetail,
       href:
         user.role === "accountant" || user.role === "chief-accountant"
           ? "/erp/finance"
+          : user.role === "director" &&
+              supplierApActions.length > 0 &&
+              shiftDirectorExceptions === 0
+            ? "/erp/finance#supplier-payables"
           : "/erp",
       hrefLabel: "Mở hàng việc của tôi",
     });

@@ -21,6 +21,12 @@ export type ErpCapability =
   | "accounting.period.lock"
   | "accounting.period.reopen"
   | "accounting.exception.approve"
+  | "ap.source.submit"
+  | "ap.invoice.review"
+  | "ap.liability.prepare"
+  | "ap.liability.check"
+  | "ap.liability.post"
+  | "ap.exception.decide"
   | "field.report.submit"
   | "ticket.shift.submit"
   | "ticket.shift.review"
@@ -42,6 +48,7 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "field.report.submit",
     "ticket.shift.review",
     "commercial.quote.create",
+    "ap.source.submit",
     "staff.access.manage",
     "workday.assign",
     "workday.review",
@@ -51,6 +58,8 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "accounting.document.verify",
     "accounting.journal.prepare",
     "accounting.payment.prepare",
+    "ap.invoice.review",
+    "ap.liability.prepare",
     "ticket.shift.reconcile",
   ],
   "chief-accountant": [
@@ -60,10 +69,13 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "accounting.journal.reverse",
     "accounting.period.lock",
     "accounting.period.reopen",
+    "ap.liability.check",
+    "ap.liability.post",
   ],
   director: [
     "finance.regional.read",
     "accounting.exception.approve",
+    "ap.exception.decide",
     "ticket.shift.exception.decide",
     "staff.access.manage",
   ],

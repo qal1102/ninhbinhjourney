@@ -39,7 +39,7 @@ Kế hoạch còn **18 gói công việc cấp cao**:
 | G6 | Nền tảng ERP: tài khoản, quyền, cơ sở, ca và master data | `[~]` |
 | G7 | Trung tâm tài liệu: PDF, Excel, CSV, scan, OCR và AI | `[ ]` |
 | G8 | Golden path vé–chốt ca–kế toán–ngoại lệ | `[~]` |
-| G9 | Kế toán và kiểm soát tài chính trọn vòng đời | `[ ]` |
+| G9 | Kế toán và kiểm soát tài chính trọn vòng đời | `[~]` |
 | G10 | Các workflow vận hành còn lại theo tám nhóm module | `[~]` |
 | G11 | Màn giám đốc, báo cáo quản trị và dự báo | `[ ]` |
 | G12 | Trợ lý điều hành văn bản/giọng nói và tự động hóa có kiểm soát | `[ ]` |
@@ -49,12 +49,12 @@ Kế hoạch còn **18 gói công việc cấp cao**:
 | G16 | Kiểm thử toàn bộ vòng đời, UAT và audit cuối | `[ ]` |
 | G17 | Phát hành production, quan sát, backup và bàn giao | `[~]` |
 
-Tổng hợp cập nhật ngày 28/07/2026:
+Tổng hợp cập nhật ngày 31/07/2026:
 
 - Hoàn tất: **2/18**.
-- Đang làm/đã có một phần: **6/18**.
+- Đang làm/đã có một phần: **7/18** (`G9` chuyển từ `[ ]` sang `[~]` sau khi xác minh batch AP–NCC chưa commit đã có nền trên Supabase remote).
 - Bị chặn: **0/18**.
-- Chưa hoàn tất còn lại: **10/18**.
+- Chưa hoàn tất còn lại: **9/18**.
 
 Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận những giao diện và tính năng demo đã có.
 
@@ -530,10 +530,12 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 
 ### G9.3. Nhà cung cấp và phải trả
 
-- [ ] PR → duyệt → PO/hợp đồng → nhận/nghiệm thu → invoice → 3-way match → payment → posting.
-- [ ] Hồ sơ thiếu trả đúng owner, có SLA và notification.
-- [ ] Phát hiện invoice trùng, sai MST/số/ngày/tổng/thuế, vượt PO hoặc thiếu nghiệm thu.
+- [~] PR → duyệt → PO/hợp đồng → nhận/nghiệm thu → invoice → 3-way match → payment → posting. Đoạn invoice → 3-way match → journal phải trả → posting đã chạy trên Supabase (migration 007/008, đã commit git) và đã có E2E multi-role thật xác nhận xuyên bốn vai trò; PO/nghiệm thu vẫn là số quản lý tự khai trong form, chưa có module PR/PO/nghiệm thu riêng để đối chiếu với dữ liệu hệ thống; giai đoạn thanh toán thật (payment) chưa có.
+- [~] Hồ sơ thiếu trả đúng owner, có SLA và notification. Owner routing theo trạng thái đã có (`canActOnSupplierAp`, trigger định tuyến ngoại lệ migration 008) và đã nối vào bộ đếm việc cần làm của trợ lý điều hành; chưa có trường SLA/deadline hay notification riêng cho hồ sơ AP.
+- [x] Phát hiện invoice trùng, sai MST/số/ngày/tổng/thuế, vượt PO hoặc thiếu nghiệm thu. `evaluateSupplierApMatch` kiểm MST, ngày, tổng khớp, vượt PO, thiếu nghiệm thu; ràng buộc unique DB theo `(tenant, MST chuẩn hóa, series, số hóa đơn)` chặn hóa đơn trùng ở tầng database. Unit + contract test qua.
 - [ ] Payment proposal, dual approval và bằng chứng ngân hàng.
+
+**Bằng chứng 31/07/2026 (đã commit vào git, chưa deploy):** `domain/erp-supplier-ap.ts`, `lib/erp/supplier-ap-repository.ts`, `app/erp/supplier-ap-actions.ts`, `components/erp/supplier-ap-control-center.tsx` cùng migration `202607290007_erp_supplier_ap_workflow.sql`/`202607300008_erp_ap_exception_routing.sql` đã xác minh trực tiếp trên Supabase remote: 6 bảng `erp_ap_*` với RLS bật, không grant `anon`/`authenticated`, RPC chỉ `service_role`, seed 4 supplier/5 invoice/5 dòng/5 audit event. Test cục bộ 21/21 (unit, integration action-guard, 2 contract test migration). `tests/e2e/erp-supplier-ap-workflow.spec.ts` đã chạy thật trên Supabase remote xuyên 4 vai trò (quản lý, kế toán, giám đốc, kế toán trưởng), đưa 2 hồ sơ seed tới trạng thái "Chờ kế toán trưởng" và "Đã ghi nhận công nợ"; bài test dùng dữ liệu seed một lần nên không lặp lại được nguyên trạng trên cùng project. `npm run build` cục bộ xác nhận qua bằng cách build ra `distDir` thay thế (né lỗi khóa file `.next` chưa rõ nguyên nhân gốc — xem `CODEX.md`).
 
 ### G9.4. Chi phí, tạm ứng và hoàn ứng
 
@@ -595,7 +597,7 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 | Xe trung chuyển | `[ ]` Chủ yếu card/read-only | Fleet/trip/dispatch/pre-check/meter/delay/incident |
 | Tài sản & bảo trì | `[ ]` Chủ yếu card/read-only | Asset master, work order, part, downtime, acceptance và accounting |
 | Dự án & sự kiện | `[ ]` Gần như read-only | WBS/dependency/change/readiness/acceptance/settlement |
-| Đối tác & nhà cung cấp | `[~]` Hồ sơ/báo giá local | Onboarding, RFQ/PO/receipt/invoice/payment và portal |
+| Đối tác & nhà cung cấp | `[~]` AP invoice→match→journal→post trên Supabase (chưa commit); phía báo giá/hợp đồng/phản hồi khách thương mại đã bị gỡ bỏ demo cũ, hiện không còn UI | Onboarding, RFQ/PO/receipt/payment, portal; module PR/PO/nghiệm thu thật; workflow báo giá/hợp đồng/phản hồi khách nếu vẫn cần |
 | Tài chính & đối soát | `[~]` Báo cáo demo + golden path local | Subledger, bank, maker–checker, journal/post/reversal/lock |
 | Báo cáo & dự báo | `[~]` Số demo xác định sẵn | Semantic metrics, lineage, report scheduling và forecast có backtest |
 

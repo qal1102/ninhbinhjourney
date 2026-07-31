@@ -8,6 +8,7 @@ export type AccountingJournalStatus =
 export type AccountingReviewDecision = "approve" | "return";
 export type AccountingPeriodStatus = "open" | "locked";
 export type AccountingPeriodAction = "lock" | "reopen";
+export type AccountingSourceType = "shift-close" | "supplier-invoice";
 
 export type AccountingJournalLine = {
   id: string;
@@ -40,8 +41,9 @@ export type AccountingJournal = {
   tenantId: string;
   siteId: ErpSiteId;
   journalCode: string;
-  sourceType: "shift-close";
-  sourceWorkflowId: string;
+  sourceType: AccountingSourceType;
+  sourceWorkflowId: string | null;
+  sourceSupplierInvoiceId: string | null;
   sourceVersion: number;
   businessDate: string;
   periodKey: string;

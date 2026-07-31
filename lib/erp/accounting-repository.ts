@@ -334,9 +334,26 @@ function journalFromRows(
       "Trạng thái bút toán trong kho dữ liệu không hợp lệ.",
     );
   }
-  if (row.source_type !== "shift-close") {
+  if (
+    row.source_type !== "shift-close" &&
+    row.source_type !== "supplier-invoice"
+  ) {
     throw new AccountingRepositoryError(
       "Nguồn bút toán chưa được hệ thống hỗ trợ.",
+    );
+  }
+  const sourceWorkflowId = asNullableString(row.source_workflow_id);
+  const sourceSupplierInvoiceId = asNullableString(
+    row.source_supplier_invoice_id,
+  );
+  if (
+    (row.source_type === "shift-close" &&
+      (!sourceWorkflowId || sourceSupplierInvoiceId)) ||
+    (row.source_type === "supplier-invoice" &&
+      (sourceWorkflowId || !sourceSupplierInvoiceId))
+  ) {
+    throw new AccountingRepositoryError(
+      "Liên kết nguồn bút toán trong kho dữ liệu không hợp lệ.",
     );
   }
   const lines = lineRows
@@ -348,11 +365,9 @@ function journalFromRows(
     tenantId: asString(row.tenant_id, "journal.tenant_id"),
     siteId: asSiteId(row.site_id),
     journalCode: asString(row.journal_code, "journal.journal_code"),
-    sourceType: "shift-close",
-    sourceWorkflowId: asString(
-      row.source_workflow_id,
-      "journal.source_workflow_id",
-    ),
+    sourceType: row.source_type,
+    sourceWorkflowId,
+    sourceSupplierInvoiceId,
     sourceVersion: asInteger(row.source_version, "journal.source_version"),
     businessDate: asString(row.business_date, "journal.business_date"),
     periodKey: asString(row.period_key, "journal.period_key"),
@@ -754,6 +769,7 @@ function sanitizeDemoJournal(value: unknown): AccountingJournal | null {
     typeof journal.journalCode !== "string" ||
     journal.sourceType !== "shift-close" ||
     typeof journal.sourceWorkflowId !== "string" ||
+    journal.sourceSupplierInvoiceId != null ||
     !Number.isSafeInteger(journal.sourceVersion) ||
     typeof journal.businessDate !== "string" ||
     typeof journal.periodKey !== "string" ||
@@ -770,7 +786,7 @@ function sanitizeDemoJournal(value: unknown): AccountingJournal | null {
   } catch {
     return null;
   }
-  return journal as AccountingJournal;
+  return { ...journal, sourceSupplierInvoiceId: null } as AccountingJournal;
 }
 
 function sanitizeState(value: unknown): DemoState {
@@ -1079,6 +1095,7 @@ async function prepareInDemo(
         source.shiftCode.replace(/[^A-Za-z0-9]/g, "").slice(-12),
       sourceType: "shift-close",
       sourceWorkflowId: source.id,
+      sourceSupplierInvoiceId: null,
       sourceVersion: source.version,
       businessDate: source.businessDate,
       periodKey,

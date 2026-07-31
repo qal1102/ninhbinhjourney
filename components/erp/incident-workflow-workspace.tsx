@@ -1,97 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ErpSite, ErpSiteId } from "@/domain/erp";
+import { useRouter } from "next/navigation";
+import {
+  progressIncidentAction,
+  transitionIncidentAction,
+} from "@/app/erp/actions";
+import type { ErpSite } from "@/domain/erp";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import type {
+  IncidentCase,
+  IncidentSeverity,
+  IncidentStatus,
+} from "@/lib/erp/incident-repository";
 
 type Props = {
   site: ErpSite;
   user: CurrentErpUser;
-};
-
-type IncidentSeverity = "P1" | "P2" | "P3" | "P4";
-type IncidentStatus =
-  | "reported"
-  | "acknowledged"
-  | "in-progress"
-  | "verification"
-  | "closed";
-
-type IncidentEvidence = {
-  id: string;
-  kind: "Ảnh hiện trường" | "Checklist" | "Biên bản";
-  label: string;
-  addedBy: string;
-  addedAt: string;
-};
-
-type IncidentTimelineItem = {
-  id: string;
-  at: string;
-  actor: string;
-  action: string;
-  note: string;
-};
-
-type IncidentCase = {
-  id: string;
-  siteId: ErpSiteId;
-  title: string;
-  area: string;
-  summary: string;
-  severity: IncidentSeverity;
-  status: IncidentStatus;
-  escalated: boolean;
-  escalationReason?: string;
-  reportedAt: string;
-  slaMinutes: number;
-  elapsedMinutes: number;
-  reporter: string;
-  assigneeId: string | null;
-  assigneeName: string;
-  assigneeTeam: string;
-  sop: {
-    code: string;
-    title: string;
-    completedSteps: number;
-    totalSteps: number;
-  };
-  nextAction: string;
-  evidence: IncidentEvidence[];
-  timeline: IncidentTimelineItem[];
-};
-
-const siteCode: Record<ErpSiteId, string> = {
-  "trang-an": "TA",
-  "tam-chuc": "TC",
-  "tam-coc": "TCO",
-  "bai-dinh": "BD",
-};
-
-const assignedEmployee: Record<
-  ErpSiteId,
-  { id: string; name: string; team: string }
-> = {
-  "trang-an": {
-    id: "employee-trang-an-01",
-    name: "Đỗ Thị Lan",
-    team: "Đón khách & cổng vé",
-  },
-  "tam-chuc": {
-    id: "employee-tam-chuc-01",
-    name: "Vũ Ngọc Mai",
-    team: "Điều phối xe trung chuyển",
-  },
-  "tam-coc": {
-    id: "employee-tam-coc-01",
-    name: "Nguyễn Văn Sơn",
-    team: "Điều phối bến đò",
-  },
-  "bai-dinh": {
-    id: "employee-bai-dinh-01",
-    name: "Lương Thanh Tùng",
-    team: "Điều phối xe điện",
-  },
+  cases: IncidentCase[];
 };
 
 const statusLabel: Record<IncidentStatus, string> = {
@@ -117,234 +43,12 @@ const severityTone: Record<IncidentSeverity, string> = {
   P4: "bg-[#dce5e0] text-[#52635b]",
 };
 
-function createCases(site: ErpSite): IncidentCase[] {
-  const code = siteCode[site.id];
-  const employee = assignedEmployee[site.id];
-
-  return [
-    {
-      id: `INC-${code}-071`,
-      siteId: site.id,
-      title: "Khách cần hỗ trợ y tế tại cổng chính",
-      area: "Cổng chính · Làn khách đoàn",
-      summary:
-        "Một khách có dấu hiệu choáng khi chờ vào cổng. Nhân viên đã đưa khách sang vùng thoáng và gọi tổ y tế.",
-      severity: "P2",
-      status: "reported",
-      escalated: true,
-      escalationReason:
-        "Cần quyết định mở làn dự phòng trong 30 phút để giữ lối tiếp cận cho tổ y tế.",
-      reportedAt: "09:16",
-      slaMinutes: 5,
-      elapsedMinutes: 4,
-      reporter: employee.name,
-      assigneeId: null,
-      assigneeName: "Chưa giao",
-      assigneeTeam: "Tổ y tế & an toàn",
-      sop: {
-        code: "SOP-YT-02",
-        title: "Sơ cứu và bảo đảm lối tiếp cận",
-        completedSteps: 2,
-        totalSteps: 6,
-      },
-      nextAction: "Quản lý tiếp nhận và giao tổ y tế",
-      evidence: [
-        {
-          id: "EV-071-01",
-          kind: "Ảnh hiện trường",
-          label: "Vị trí khách đang được hỗ trợ",
-          addedBy: employee.name,
-          addedAt: "09:17",
-        },
-        {
-          id: "EV-071-02",
-          kind: "Checklist",
-          label: "Đã mở lối tiếp cận tạm thời",
-          addedBy: employee.name,
-          addedAt: "09:18",
-        },
-      ],
-      timeline: [
-        {
-          id: "TL-071-02",
-          at: "09:18",
-          actor: "Hệ thống",
-          action: "Chuyển cấp P2",
-          note: "Đã gửi quản lý cơ sở và giám đốc vì cần điều chỉnh luồng khách.",
-        },
-        {
-          id: "TL-071-01",
-          at: "09:16",
-          actor: employee.name,
-          action: "Báo sự cố",
-          note: "Ghi nhận vị trí, tình trạng ban đầu và gọi tổ y tế.",
-        },
-      ],
-    },
-    {
-      id: `INC-${code}-069`,
-      siteId: site.id,
-      title: "Dòng khách dồn tại điểm đón",
-      area: "Điểm đón trung tâm · Làn số 2",
-      summary:
-        "Thời gian chờ tăng lên 14 phút sau khi một làn tạm dừng. Nhân viên đang mở hàng chờ phụ và hướng dẫn khách.",
-      severity: "P3",
-      status: "in-progress",
-      escalated: false,
-      reportedAt: "09:02",
-      slaMinutes: 10,
-      elapsedMinutes: 7,
-      reporter: "Camera AI · CAM 02",
-      assigneeId: employee.id,
-      assigneeName: employee.name,
-      assigneeTeam: employee.team,
-      sop: {
-        code: "SOP-LUONG-03",
-        title: "Phân luồng khi thời gian chờ vượt 10 phút",
-        completedSteps: 4,
-        totalSteps: 5,
-      },
-      nextAction: "Hoàn tất ảnh sau xử lý và chuyển quản lý xác minh",
-      evidence: [
-        {
-          id: "EV-069-01",
-          kind: "Ảnh hiện trường",
-          label: "Hàng chờ trước khi mở làn phụ",
-          addedBy: "Camera AI · CAM 02",
-          addedAt: "09:02",
-        },
-        {
-          id: "EV-069-02",
-          kind: "Checklist",
-          label: "Đã đặt biển hướng dẫn và mở hàng chờ phụ",
-          addedBy: employee.name,
-          addedAt: "09:06",
-        },
-      ],
-      timeline: [
-        {
-          id: "TL-069-03",
-          at: "09:06",
-          actor: employee.name,
-          action: "Cập nhật xử lý",
-          note: "Đã mở hàng chờ phụ; thời gian chờ giảm còn 9 phút.",
-        },
-        {
-          id: "TL-069-02",
-          at: "09:04",
-          actor: `Quản lý ${site.shortName}`,
-          action: "Giao xử lý",
-          note: `Giao ${employee.name} phụ trách tại hiện trường.`,
-        },
-        {
-          id: "TL-069-01",
-          at: "09:02",
-          actor: "Camera AI · CAM 02",
-          action: "Tạo cảnh báo",
-          note: "Mật độ hàng chờ vượt ngưỡng vận hành.",
-        },
-      ],
-    },
-    {
-      id: `INC-${code}-064`,
-      siteId: site.id,
-      title: "Đồ thất lạc đã bàn giao cho khách",
-      area: "Quầy hỗ trợ khách",
-      summary:
-        "Ví của khách được tìm thấy tại khu chờ, đối chiếu đúng thông tin và đã bàn giao có ký nhận.",
-      severity: "P4",
-      status: "closed",
-      escalated: false,
-      reportedAt: "08:21",
-      slaMinutes: 15,
-      elapsedMinutes: 6,
-      reporter: "Quầy hỗ trợ 01",
-      assigneeId: employee.id,
-      assigneeName: employee.name,
-      assigneeTeam: "Chăm sóc khách hàng",
-      sop: {
-        code: "SOP-TS-01",
-        title: "Tiếp nhận và bàn giao tài sản thất lạc",
-        completedSteps: 5,
-        totalSteps: 5,
-      },
-      nextAction: "Không còn việc cần xử lý",
-      evidence: [
-        {
-          id: "EV-064-01",
-          kind: "Biên bản",
-          label: "Biên bản bàn giao có xác nhận của khách",
-          addedBy: employee.name,
-          addedAt: "08:27",
-        },
-      ],
-      timeline: [
-        {
-          id: "TL-064-02",
-          at: "08:27",
-          actor: `Quản lý ${site.shortName}`,
-          action: "Xác minh và đóng",
-          note: "Đủ thông tin người nhận và biên bản bàn giao.",
-        },
-        {
-          id: "TL-064-01",
-          at: "08:21",
-          actor: "Quầy hỗ trợ 01",
-          action: "Báo tài sản thất lạc",
-          note: "Niêm phong và chuyển quầy hỗ trợ đối chiếu.",
-        },
-      ],
-    },
-  ];
-}
-
-function nextManagerState(status: IncidentStatus): {
-  label: string;
-  status: IncidentStatus;
-  action: string;
-  note: string;
-} | null {
-  if (status === "reported") {
-    return {
-      label: "Tiếp nhận & giữ SLA",
-      status: "acknowledged",
-      action: "Tiếp nhận sự cố",
-      note: "Quản lý đã kiểm tra thông tin ban đầu và nhận điều phối.",
-    };
-  }
-  if (status === "acknowledged") {
-    return {
-      label: "Giao tổ phụ trách",
-      status: "in-progress",
-      action: "Giao xử lý",
-      note: "Đã giao đúng tổ phụ trách và thông báo mốc cập nhật tiếp theo.",
-    };
-  }
-  if (status === "in-progress") {
-    return {
-      label: "Chuyển sang xác minh",
-      status: "verification",
-      action: "Yêu cầu xác minh",
-      note: "Hiện trường báo đã xử lý; chờ quản lý kiểm tra kết quả và bằng chứng.",
-    };
-  }
-  if (status === "verification") {
-    return {
-      label: "Xác nhận & đóng",
-      status: "closed",
-      action: "Xác minh và đóng",
-      note: "Kết quả đạt yêu cầu, đủ bằng chứng và không còn rủi ro tồn đọng.",
-    };
-  }
+function managerActionLabel(status: IncidentStatus): string | null {
+  if (status === "reported") return "Tiếp nhận & giữ SLA";
+  if (status === "acknowledged") return "Giao tổ phụ trách";
+  if (status === "in-progress") return "Chuyển sang xác minh";
+  if (status === "verification") return "Xác nhận & đóng";
   return null;
-}
-
-function displayTime() {
-  return new Intl.DateTimeFormat("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Ho_Chi_Minh",
-  }).format(new Date());
 }
 
 function slaCopy(item: IncidentCase) {
@@ -367,9 +71,10 @@ function slaCopy(item: IncidentCase) {
   };
 }
 
-export function IncidentWorkflowWorkspace({ site, user }: Props) {
-  const [cases, setCases] = useState<IncidentCase[]>(() => createCases(site));
+export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
+  const router = useRouter();
   const [message, setMessage] = useState("");
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   const visibleCases = useMemo(() => {
     if (user.role === "director") {
@@ -408,82 +113,32 @@ export function IncidentWorkflowWorkspace({ site, user }: Props) {
         ? "Tiếp nhận, giao đúng người, kiểm tra bằng chứng và đóng hồ sơ tại một nơi."
         : "Cập nhật đúng việc được giao; quản lý sẽ xác minh trước khi đóng hồ sơ.";
 
-  function updateCase(
-    incident: IncidentCase,
-    transition: ReturnType<typeof nextManagerState>,
-  ) {
-    if (!transition) return;
-    const employee = assignedEmployee[site.id];
-    const shouldAssign =
-      transition.status === "in-progress" && incident.assigneeId === null;
-    const nextAction =
-      transition.status === "acknowledged"
-        ? "Giao tổ phụ trách và chốt mốc cập nhật"
-        : transition.status === "in-progress"
-          ? "Cập nhật hiện trường và bằng chứng sau xử lý"
-          : transition.status === "verification"
-            ? "Quản lý kiểm tra hiện trường và đủ bằng chứng"
-            : "Không còn việc cần xử lý";
-
-    setCases((current) =>
-      current.map((item) =>
-        item.id === incident.id
-          ? {
-              ...item,
-              status: transition.status,
-              assigneeId: shouldAssign ? employee.id : item.assigneeId,
-              assigneeName: shouldAssign ? employee.name : item.assigneeName,
-              assigneeTeam: shouldAssign
-                ? item.assigneeTeam
-                : item.assigneeTeam,
-              nextAction,
-              timeline: [
-                {
-                  id: crypto.randomUUID(),
-                  at: displayTime(),
-                  actor: user.name,
-                  action: transition.action,
-                  note: transition.note,
-                },
-                ...item.timeline,
-              ],
-            }
-          : item,
-      ),
-    );
-    setMessage(`${incident.id}: ${transition.action.toLocaleLowerCase("vi-VN")}.`);
+  async function handleManagerAction(incident: IncidentCase) {
+    setPendingId(incident.id);
+    try {
+      const result = await transitionIncidentAction({
+        incidentId: incident.id,
+        siteId: site.id,
+      });
+      setMessage(result.message);
+      if (result.success) router.refresh();
+    } finally {
+      setPendingId(null);
+    }
   }
 
-  function employeeUpdate(incident: IncidentCase) {
-    if (incident.status === "closed" || incident.status === "verification") {
-      return;
+  async function handleEmployeeAction(incident: IncidentCase) {
+    setPendingId(incident.id);
+    try {
+      const result = await progressIncidentAction({
+        incidentId: incident.id,
+        siteId: site.id,
+      });
+      setMessage(result.message);
+      if (result.success) router.refresh();
+    } finally {
+      setPendingId(null);
     }
-    setCases((current) =>
-      current.map((item) =>
-        item.id === incident.id
-          ? {
-              ...item,
-              status: "verification",
-              nextAction: "Chờ quản lý kiểm tra hiện trường và bằng chứng",
-              sop: {
-                ...item.sop,
-                completedSteps: item.sop.totalSteps,
-              },
-              timeline: [
-                {
-                  id: crypto.randomUUID(),
-                  at: displayTime(),
-                  actor: user.name,
-                  action: "Báo đã xử lý",
-                  note: "Đã hoàn thành checklist và chuyển quản lý xác minh kết quả.",
-                },
-                ...item.timeline,
-              ],
-            }
-          : item,
-      ),
-    );
-    setMessage(`${incident.id}: đã chuyển quản lý xác minh.`);
   }
 
   return (
@@ -555,14 +210,13 @@ export function IncidentWorkflowWorkspace({ site, user }: Props) {
         <div className="divide-y divide-[#e6ebe8]">
           {visibleCases.map((incident) => {
             const sla = slaCopy(incident);
-            const managerTransition =
-              user.role === "manager"
-                ? nextManagerState(incident.status)
-                : null;
+            const managerLabel =
+              user.role === "manager" ? managerActionLabel(incident.status) : null;
             const employeeCanUpdate =
               user.role === "employee" &&
               incident.status !== "closed" &&
               incident.status !== "verification";
+            const isPending = pendingId === incident.id;
 
             return (
               <details key={incident.id} className="group">
@@ -668,22 +322,24 @@ export function IncidentWorkflowWorkspace({ site, user }: Props) {
                         </div>
                       </article>
 
-                      {(managerTransition || employeeCanUpdate) && (
+                      {(managerLabel || employeeCanUpdate) && (
                         <div className="rounded-xl border border-[#cddbd4] bg-[#eaf3ee] p-4">
                           <p className="text-xs font-black uppercase tracking-[0.14em] text-[#477565]">
                             Hành động của bạn
                           </p>
                           <button
                             type="button"
+                            disabled={isPending}
                             onClick={() =>
-                              managerTransition
-                                ? updateCase(incident, managerTransition)
-                                : employeeUpdate(incident)
+                              managerLabel
+                                ? handleManagerAction(incident)
+                                : handleEmployeeAction(incident)
                             }
-                            className="mt-3 min-h-11 w-full rounded-xl bg-[#183f34] px-5 text-sm font-black text-white transition hover:bg-[#245747] sm:w-auto"
+                            className="mt-3 min-h-11 w-full rounded-xl bg-[#183f34] px-5 text-sm font-black text-white transition hover:bg-[#245747] disabled:cursor-wait disabled:opacity-60 sm:w-auto"
                           >
-                            {managerTransition?.label ??
-                              "Báo đã xử lý · chờ xác minh"}
+                            {isPending
+                              ? "Đang cập nhật..."
+                              : (managerLabel ?? "Báo đã xử lý · chờ xác minh")}
                           </button>
                         </div>
                       )}

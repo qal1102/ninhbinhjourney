@@ -46,6 +46,16 @@ vi.mock("@/lib/erp/attendance-repository", () => ({
   recordAttendanceEvent: doubles.recordAttendanceEvent,
 }));
 
+const { MockIncidentRepositoryConflictError } = vi.hoisted(() => ({
+  MockIncidentRepositoryConflictError: class extends Error {},
+}));
+
+vi.mock("@/lib/erp/incident-repository", () => ({
+  IncidentRepositoryConflictError: MockIncidentRepositoryConflictError,
+  progressIncidentByEmployee: vi.fn(),
+  transitionIncidentByManager: vi.fn(),
+}));
+
 import {
   recordAttendanceAction,
   updateEmployeeAccessAction,

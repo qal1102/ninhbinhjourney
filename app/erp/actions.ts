@@ -33,6 +33,12 @@ import {
   recordAttendanceEvent,
   type AttendanceEvent,
 } from "@/lib/erp/attendance-repository";
+import {
+  IncidentRepositoryConflictError,
+  progressIncidentByEmployee,
+  transitionIncidentByManager,
+  type IncidentCase,
+} from "@/lib/erp/incident-repository";
 
 function safePasswordEqual(actual: string, expected: string) {
   const left = createHash("sha256").update(actual).digest();
@@ -233,4 +239,93 @@ export async function recordAttendanceAction(
     message: input.type === "check-in" ? "Đã ghi nhận vào ca." : "Đã ghi nhận ra ca.",
     event,
   };
+}
+
+export type IncidentActionInput = { incidentId: string; siteId: string };
+export type IncidentActionResult =
+  | { success: true; message: string; incident: IncidentCase }
+  | { success: false; message: string };
+
+const incidentTransitionMessage: Record<IncidentCase["status"], string> = {
+  reported: "đã báo sự cố",
+  acknowledged: "tiếp nhận sự cố",
+  "in-progress": "giao xử lý",
+  verification: "yêu cầu xác minh",
+  closed: "xác minh và đóng",
+};
+
+export async function transitionIncidentAction(
+  input: IncidentActionInput,
+): Promise<IncidentActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { success: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) {
+    return { success: false, message: "Cơ sở không hợp lệ." };
+  }
+  const siteId: ErpSiteId = input.siteId;
+  if (
+    user.role !== "manager" ||
+    !accountCanAccessSite(user, siteId) ||
+    !accountCanAccessModule(user, siteId, "su-co")
+  ) {
+    return { success: false, message: "Bạn không có quyền xử lý sự cố tại cơ sở này." };
+  }
+
+  try {
+    const incident = await transitionIncidentByManager({
+      incidentId: input.incidentId,
+      siteId,
+      actorId: user.id,
+      actorName: user.name,
+    });
+    revalidatePath(`/erp/${siteId}/su-co`);
+    return {
+      success: true,
+      message: `${incident.id}: ${incidentTransitionMessage[incident.status]}.`,
+      incident,
+    };
+  } catch (error) {
+    if (error instanceof IncidentRepositoryConflictError) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: "Chưa thể cập nhật sự cố. Hãy thử lại." };
+  }
+}
+
+export async function progressIncidentAction(
+  input: IncidentActionInput,
+): Promise<IncidentActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { success: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) {
+    return { success: false, message: "Cơ sở không hợp lệ." };
+  }
+  const siteId: ErpSiteId = input.siteId;
+  if (
+    user.role !== "employee" ||
+    !accountCanAccessSite(user, siteId) ||
+    !accountCanAccessModule(user, siteId, "su-co")
+  ) {
+    return { success: false, message: "Bạn không có quyền cập nhật sự cố này." };
+  }
+
+  try {
+    const incident = await progressIncidentByEmployee({
+      incidentId: input.incidentId,
+      siteId,
+      actorId: user.id,
+      actorName: user.name,
+    });
+    revalidatePath(`/erp/${siteId}/su-co`);
+    return {
+      success: true,
+      message: `${incident.id}: đã chuyển quản lý xác minh.`,
+      incident,
+    };
+  } catch (error) {
+    if (error instanceof IncidentRepositoryConflictError) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: "Chưa thể cập nhật sự cố. Hãy thử lại." };
+  }
 }

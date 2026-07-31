@@ -12,6 +12,7 @@ import type {
   CurrentErpUser,
   ErpAccessState,
 } from "@/lib/erp/demo-session";
+import type { IncidentCase } from "@/lib/erp/incident-repository";
 import { AttendancePanel } from "./attendance-panel";
 import { StaffAccessManager } from "./staff-access-manager";
 import { CameraAiWorkspace } from "./camera-ai-workspace";
@@ -37,6 +38,7 @@ type Props = {
   workdayEmployees: readonly WorkdayEmployeeOption[];
   supplierApInvoices: readonly SupplierApInvoice[];
   supplierApSuppliers: readonly SupplierApSupplier[];
+  incidents: readonly IncidentCase[];
   initialCameraId?: string;
 };
 
@@ -368,10 +370,13 @@ export function ModuleWorkspace({
   workdayEmployees,
   supplierApInvoices,
   supplierApSuppliers,
+  incidents,
   initialCameraId,
 }: Props) {
   if (module.id === "su-co") {
-    return <IncidentWorkflowWorkspace site={site} user={user} />;
+    return (
+      <IncidentWorkflowWorkspace site={site} user={user} cases={[...incidents]} />
+    );
   }
   if (module.id === "nhan-su") {
     return (

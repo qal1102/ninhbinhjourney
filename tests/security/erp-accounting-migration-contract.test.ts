@@ -8,7 +8,7 @@ const migrationPath = fileURLToPath(
     import.meta.url,
   ),
 );
-const sql = readFileSync(migrationPath, "utf8");
+const sql = readFileSync(migrationPath, "utf8").replace(/\r\n/g, "\n");
 const compact = sql.replace(/\s+/g, " ").trim();
 
 function blockBetween(startMarker: string, endMarker: string) {

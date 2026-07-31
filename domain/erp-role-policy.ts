@@ -36,13 +36,19 @@ export type ErpCapability =
   | "staff.access.manage"
   | "workday.execute"
   | "workday.assign"
-  | "workday.review";
+  | "workday.review"
+  | "project.work.update"
+  | "project.work.accept"
+  | "project.change.request"
+  | "project.change.decide"
+  | "project.settlement.record";
 
 const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
   employee: [
     "field.report.submit",
     "ticket.shift.submit",
     "workday.execute",
+    "project.work.update",
   ],
   manager: [
     "field.report.submit",
@@ -52,6 +58,9 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "staff.access.manage",
     "workday.assign",
     "workday.review",
+    "project.work.update",
+    "project.work.accept",
+    "project.change.request",
   ],
   accountant: [
     "finance.regional.read",
@@ -61,6 +70,7 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "ap.invoice.review",
     "ap.liability.prepare",
     "ticket.shift.reconcile",
+    "project.settlement.record",
   ],
   "chief-accountant": [
     "finance.regional.read",
@@ -78,6 +88,8 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "ap.exception.decide",
     "ticket.shift.exception.decide",
     "staff.access.manage",
+    "project.work.accept",
+    "project.change.decide",
   ],
 };
 
@@ -130,4 +142,24 @@ export function canAssignWorkday(role: ErpRole) {
 
 export function canReviewWorkday(role: ErpRole) {
   return hasErpCapability(role, "workday.review");
+}
+
+export function canUpdateProjectWork(role: ErpRole) {
+  return hasErpCapability(role, "project.work.update");
+}
+
+export function canAcceptProjectWork(role: ErpRole) {
+  return hasErpCapability(role, "project.work.accept");
+}
+
+export function canRequestProjectChange(role: ErpRole) {
+  return hasErpCapability(role, "project.change.request");
+}
+
+export function canDecideProjectChange(role: ErpRole) {
+  return hasErpCapability(role, "project.change.decide");
+}
+
+export function canRecordProjectSettlement(role: ErpRole) {
+  return hasErpCapability(role, "project.settlement.record");
 }

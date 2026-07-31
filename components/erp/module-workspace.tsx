@@ -15,6 +15,7 @@ import type {
 import type { IncidentCase } from "@/lib/erp/incident-repository";
 import type { FieldReport } from "@/lib/erp/field-report-repository";
 import type { GateScanEvent } from "@/lib/erp/gate-scan-repository";
+import type { ProjectWorkspace } from "@/lib/erp/project-repository";
 import { AttendancePanel } from "./attendance-panel";
 import { StaffAccessManager } from "./staff-access-manager";
 import { CameraAiWorkspace } from "./camera-ai-workspace";
@@ -43,6 +44,7 @@ type Props = {
   incidents: readonly IncidentCase[];
   fieldReports: readonly FieldReport[];
   gateScans: readonly GateScanEvent[];
+  projectWorkspace: ProjectWorkspace | null;
   initialCameraId?: string;
 };
 
@@ -377,6 +379,7 @@ export function ModuleWorkspace({
   incidents,
   fieldReports,
   gateScans,
+  projectWorkspace,
   initialCameraId,
 }: Props) {
   if (module.id === "su-co") {
@@ -426,8 +429,8 @@ export function ModuleWorkspace({
   if (module.id === "camera-ai") {
     return <CameraAiWorkspace site={site} user={user} initialCameraId={initialCameraId} />;
   }
-  if (module.id === "du-an-su-kien") {
-    return <ProjectEventWorkspace site={site} user={user} />;
+  if (module.id === "du-an-su-kien" && projectWorkspace) {
+    return <ProjectEventWorkspace site={site} user={user} workspace={projectWorkspace} />;
   }
   if (module.id === "bao-cao-hien-truong") {
     return (

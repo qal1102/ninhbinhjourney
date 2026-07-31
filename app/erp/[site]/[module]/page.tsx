@@ -10,6 +10,7 @@ import { getAttendanceState } from "@/lib/erp/attendance-repository";
 import { getIncidentCases } from "@/lib/erp/incident-repository";
 import { getFieldReports } from "@/lib/erp/field-report-repository";
 import { getRecentGateScans } from "@/lib/erp/gate-scan-repository";
+import { getProjectWorkspace } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import {
@@ -32,7 +33,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   if (!accountCanAccessModule(user, site.id, moduleDefinition.id)) {
     redirect(`/erp/${site.id}?denied=module`);
   }
-  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans] =
+  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, projectWorkspace] =
     await Promise.all([
     getAccessState(),
     getAttendanceState(),
@@ -50,6 +51,9 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
       moduleDefinition.id === "check-in-khach"
         ? getRecentGateScans(site.id)
         : Promise.resolve([]),
+      moduleDefinition.id === "du-an-su-kien"
+        ? getProjectWorkspace(site.id)
+        : Promise.resolve(null),
     ]);
   const query = (await searchParams) ?? {};
   const requestedCamera = Array.isArray(query.camera) ? query.camera[0] : query.camera;
@@ -90,6 +94,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         incidents={incidents}
         fieldReports={fieldReports}
         gateScans={gateScans}
+        projectWorkspace={projectWorkspace}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

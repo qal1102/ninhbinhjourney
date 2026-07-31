@@ -585,18 +585,18 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 
 | Module hiện tại | Mức hiện tại | Khoảng trống chính |
 |---|---|---|
-| Vé & đặt chỗ | `[~]` Golden path local đang làm | Nguồn vé/POS/QR thật, evidence, checker, post thật, Supabase E2E |
+| Vé & đặt chỗ | `[~]` Golden path chốt ca local/Supabase (`ShiftCloseSiteWorkflow`) đang làm; riêng nút "Quét và ghi nhận QR" của `ticket-guest-workspace.tsx` là **giả** (chỉ toast, không lưu — xác minh 31/07) | Nguồn vé/POS/QR thật, evidence, checker, post thật, Supabase E2E |
 | Check-in khách | `[~]` Nhập mã và phản hồi local | Pass thật, chống replay, partial group, offline/reconcile, persistence |
 | Sức chứa | `[ ]` Chủ yếu số/card | Event nguồn, threshold, dispatch, owner/SLA và hậu kiểm |
-| Camera AI | `[ ]` Feed mô phỏng | Gateway thật, quyền, health, event, privacy, xác minh và retention |
-| Báo cáo hiện trường | `[~]` Ảnh workday đã lưu Storage/geofence | Offline queue, báo cáo ngoài workday, retention và downstream accounting link |
-| Sự cố | `[~]` Lifecycle sâu trong component | Shared persistence, capability tách bước, evidence bắt buộc, RCA/CAPA |
+| Camera AI | `[ ]` Feed mô phỏng; nút "Giao quản lý kiểm tra" của giám đốc là **giả** — chỉ đổi toast cục bộ, quản lý không bao giờ thấy (xác nhận 31/07) | Gateway thật, quyền, health, event, privacy, xác minh và retention |
+| Báo cáo hiện trường | `[~]` Ảnh **workday** (task trong ca) đã lưu Storage/geofence thật; nhưng `field-report-workspace.tsx` (báo cáo ảnh ngoài kế hoạch) là **giả 100%** — ảnh chỉ đọc base64 giữ trong state, không upload, toast nói "đã chuyển quản lý" nhưng không ai thấy (xác nhận 31/07) | Offline queue, nối `field-report-workspace.tsx` vào Supabase Storage thật, retention và downstream accounting link |
+| Sự cố | `[ ]` **Giả 100%** — toàn bộ `incident-workflow-workspace.tsx` chỉ đổi `useState` trên mảng 3 phần tử hard-code, không có server action/repository nào; đáng chú ý repo có sẵn backend sự cố thật khác (`app/api/incidents/*`, RPC Supabase) nhưng thuộc hệ thống "operator run" riêng, chưa nối vào module này (xác nhận 31/07) | Nối vào backend `app/api/incidents` có sẵn hoặc xây `incident-repository.ts` riêng cho ERP; shared persistence, capability tách bước, evidence bắt buộc, RCA/CAPA |
 | SOP & diễn tập | `[ ]` Chủ yếu card/read-only | Version/approval/effective date, acknowledgment, drill và CAPA |
-| Nhân sự | `[~]` Profile + phiếu giao việc Supabase | Auth thật, roster nhiều việc/ca, contract/training lifecycle, HR/payroll link |
-| Chấm công | `[~]` Workday GPS bền + time event cookie | Missed punch, OT/leave, duyệt ngoại lệ, lock và payroll |
+| Nhân sự | `[~]` Profile + phiếu giao việc Supabase (workday) thật; nhưng `staff-access-manager.tsx` ("Lưu phân công" site/module cho nhân viên) là **giả dạng thật** — gọi Server Action có kiểm tra role/scope đàng hoàng nhưng chỉ ghi signed cookie theo trình duyệt của quản lý, quyền của nhân viên ở máy khác **không hề đổi** (xác nhận 31/07, mức độ rủi ro cao vì trông như đã xong) | Auth thật, nối `staff-access-manager.tsx` vào Supabase thay vì cookie, roster nhiều việc/ca, contract/training lifecycle, HR/payroll link |
+| Chấm công | `[~]` Workday GPS bền (task trong ca) qua Supabase thật; riêng `attendance-panel.tsx` (nút "Xác nhận vào/ra ca bằng GPS" dùng cho check-in tổng quát, khác record workday) là **giả dạng thật** — Server Action có geofence/dedup thật nhưng chỉ ghi signed cookie, quản lý ở thiết bị khác không thấy (xác nhận 31/07) | Nối `attendance-panel.tsx` vào Supabase, missed punch, OT/leave, duyệt ngoại lệ, lock và payroll |
 | Xe trung chuyển | `[ ]` Chủ yếu card/read-only | Fleet/trip/dispatch/pre-check/meter/delay/incident |
 | Tài sản & bảo trì | `[ ]` Chủ yếu card/read-only | Asset master, work order, part, downtime, acceptance và accounting |
-| Dự án & sự kiện | `[ ]` Gần như read-only | WBS/dependency/change/readiness/acceptance/settlement |
+| Dự án & sự kiện | `[ ]` **Không có nút hành động nào cả** (kể cả giả) — `project-event-workspace.tsx` toàn bộ là dữ liệu tĩnh hard-code, không có repository/action file nào tồn tại cho project/event (xác nhận 31/07) | WBS/dependency/change/readiness/acceptance/settlement |
 | Đối tác & nhà cung cấp | `[~]` AP invoice→match→journal→post trên Supabase (chưa commit); phía báo giá/hợp đồng/phản hồi khách thương mại đã bị gỡ bỏ demo cũ, hiện không còn UI | Onboarding, RFQ/PO/receipt/payment, portal; module PR/PO/nghiệm thu thật; workflow báo giá/hợp đồng/phản hồi khách nếu vẫn cần |
 | Tài chính & đối soát | `[~]` Báo cáo demo + golden path local | Subledger, bank, maker–checker, journal/post/reversal/lock |
 | Báo cáo & dự báo | `[~]` Số demo xác định sẵn | Semantic metrics, lineage, report scheduling và forecast có backtest |

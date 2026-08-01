@@ -186,7 +186,7 @@ Làm đúng 5 điều trên thì tính năng này **vừa tiện cho demo vừa 
 ### Đợt 1 — Trước buổi demo tiếp theo (rẻ, tác động lớn nhất)
 
 - [ ] **V1. Bỏ số tĩnh ở trang tổng quan cơ sở** — thay 5 thẻ KPI bằng số đếm thật từ Supabase (sự cố mở, nhân sự trong ca theo chấm công, lượt qua cổng theo `erp_gate_scan_events`). Chỗ nào chưa có nguồn thật thì **nói thẳng "chưa có nguồn dữ liệu"** thay vì bịa số. Xử lý L1 + L2. *(Ước tính: nhỏ — chủ yếu là truy vấn đếm.)*
-- [ ] **V2. Gom việc chờ giám đốc duyệt vào một chỗ** — thêm sự cố chuyển cấp và yêu cầu đổi phạm vi dự án vào `directorDecisionCount`, kèm link đi thẳng tới hồ sơ. Xử lý L3. *(Nhỏ.)*
+- [x] **V2. Gom việc chờ giám đốc duyệt vào một chỗ** — **ĐÃ SỬA 01/08/2026.** Thêm sự cố chuyển cấp và yêu cầu đổi phạm vi dự án vào `directorDecisionCount`, kèm link đi thẳng tới hồ sơ. Xử lý L3. Xem chi tiết ở mục 21.
 - [ ] **V3. Làm chuyển đổi vai trò cho demo** theo đúng 5 điều kiện ở mục 5. *(Vừa.)*
 
 ### Đợt 2 — Đóng nốt nợ cũ
@@ -851,6 +851,24 @@ Ghi rõ để phiên sau không tưởng nhầm là đã xong:
 - [ ] **W17. Bộ lọc `/explore` phải nói ra khi đang ẩn bớt** — hiện "7/8 điểm · đang lọc theo mức đi bộ" kèm nút bỏ lọc (P7).
 - [x] **W18. Chốt số phận bản đồ `/explore`** — **ĐÃ SỬA 01/08/2026**, xem P8: thay bằng Leaflet thật, khớp `UI_UX_RULES.md`.
 - [ ] **W13 (nâng ưu tiên). Gỡ ràng buộc demo room khỏi `/api/quotes`** — đã xác nhận chết bằng runtime.
-- [ ] **V2 (nâng lên ưu tiên số 1).** Sự cố quá SLA đang vô hình với giám đốc — bằng chứng ở 20.4.
+- [x] **V2 (nâng lên ưu tiên số 1).** Sự cố quá SLA đang vô hình với giám đốc — bằng chứng ở 20.4. **ĐÃ SỬA 01/08/2026, xem mục 21.**
 
 - [ ] **W11. Rà soát toàn bộ nội dung theo địa giới mới** — sau sáp nhập, Ninh Bình còn có các điểm của Nam Định và Hà Nam cũ (Phủ Dầy, đền Trần, chùa Tam Chúc...). Nếu định vị là *toàn diện du lịch Ninh Bình* thì phạm vi nội dung nay **rộng hơn 8 điểm hiện có đáng kể**. Đây vừa là việc phải làm, vừa là **cơ hội**: rất ít trang du lịch đã cập nhật theo địa giới mới. *(Vừa — chủ yếu là công biên tập.)*
+
+---
+
+## 21. V2 đã sửa — 01/08/2026
+
+**Bằng chứng trước khi sửa (mục 20.4):** trang giám đốc `/erp` ghi "0 hồ sơ cần quyết định" trong khi `/erp/tam-chuc/su-co` có một sự cố đã chuyển cấp, đã được quản lý xác minh, đang quá SLA.
+
+**Đã sửa:**
+- Thêm `listEscalatedIncidents(siteIds)` (`lib/erp/incident-repository.ts`) và `listPendingProjectChangeRequests(siteIds)` (`lib/erp/project-repository.ts`) — mỗi hàm gọi song song qua toàn bộ cơ sở giám đốc quản lý, gộp kết quả; cơ sở nào chưa có sự kiện dự án thì chỉ đóng góp mảng rỗng thay vì làm lỗi cả trang.
+- `directorDecisionCount` ở `app/erp/page.tsx`/`executive-dashboard-live.tsx` giờ cộng đủ 4 loại: ngoại lệ chốt ca, hồ sơ NCC, sự cố chuyển cấp, yêu cầu đổi phạm vi dự án — hiển thị dạng 4 số riêng (trước đó gộp 2 số vào một câu, giờ thêm 2 loại sẽ không đọc nổi).
+- Mỗi sự cố chuyển cấp và mỗi yêu cầu đổi phạm vi hiện thành thẻ có link đi thẳng tới `/erp/{site}/su-co` hoặc `/erp/{site}/du-an-su-kien` — cùng khuôn với thẻ ngoại lệ NCC đã có.
+- Chỉ sửa `ExecutiveDashboard` (màn giám đốc) — `RoleHomeDashboard` không có khái niệm "quyết định" tương tự nên không cần đổi.
+
+**Kiểm chứng:** `typecheck`/`lint`/`test:run` (255 pass)/`build` sạch cục bộ → push → `vercel inspect` xác nhận **Ready** → Playwright thật trên production, bài mới `tests/e2e/prod-smoke-director-decision-inbox.spec.ts`:
+1. Xác nhận số liệu + khối "Sự cố đã chuyển cấp" hiện trên `/erp` khớp với sự cố đã chuyển cấp thật đang có trên production.
+2. **Xuyên 2 phiên riêng biệt:** quản lý gửi một yêu cầu đổi phạm vi mới tại Bái Đính (không duyệt) → giám đốc ở phiên khác thấy ngay thẻ đó trong hộp thư, link đúng `/erp/bai-dinh/du-an-su-kien`.
+
+**2/2 pass trên production.** Chạy thêm hồi quy `prod-smoke-project-workflow.spec.ts` (2/2 pass, không ảnh hưởng). `prod-smoke-incidents.spec.ts` fail nhưng **không phải do thay đổi này** — bài đó tự ghi là one-shot (chuyển `INC-TA-071` từ "reported" sang "acknowledged" vĩnh viễn ở lần chạy trước đó), chạy lại luôn fail vì trạng thái đầu vào không còn đúng giả định. Đây là nợ kỹ thuật có sẵn của bộ test, không phải lỗi sản phẩm.

@@ -35,14 +35,17 @@ test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với
       .locator("div")
       .filter({ hasText: "Sự cố mở" })
       .last();
+    await expect(overviewCard).toBeVisible();
     const overviewText = await overviewCard.innerText();
     const overviewCount = Number(overviewText.match(/\d+/)?.[0]);
     expect(Number.isFinite(overviewCount)).toBe(true);
 
     await page.goto(`/erp/${siteId}/su-co`);
-    const moduleText = await page.locator("body").innerText();
+    const moduleBadge = page.getByText(/hồ sơ đang mở/);
+    await expect(moduleBadge).toBeVisible({ timeout: 15_000 });
     const moduleCount = Number(
-      moduleText.match(/(\d+)\s*hồ sơ đang mở/)?.[1] ?? NaN,
+      (await moduleBadge.innerText()).match(/(\d+)\s*hồ sơ đang mở/)?.[1] ??
+        NaN,
     );
     expect(Number.isFinite(moduleCount)).toBe(true);
 
@@ -71,6 +74,7 @@ test("nhân sự trong ca và lượt check-in hôm nay là số đếm thật, 
   const readOnShift = async (siteId: string) => {
     await page.goto(`/erp/${siteId}`);
     const card = page.locator("div").filter({ hasText: "Nhân sự trong ca" }).last();
+    await expect(card).toBeVisible();
     return Number((await card.innerText()).match(/\d+/)?.[0] ?? NaN);
   };
 

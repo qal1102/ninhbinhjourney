@@ -185,7 +185,7 @@ Làm đúng 5 điều trên thì tính năng này **vừa tiện cho demo vừa 
 
 ### Đợt 1 — Trước buổi demo tiếp theo (rẻ, tác động lớn nhất)
 
-- [ ] **V1. Bỏ số tĩnh ở trang tổng quan cơ sở** — thay 5 thẻ KPI bằng số đếm thật từ Supabase (sự cố mở, nhân sự trong ca theo chấm công, lượt qua cổng theo `erp_gate_scan_events`). Chỗ nào chưa có nguồn thật thì **nói thẳng "chưa có nguồn dữ liệu"** thay vì bịa số. Xử lý L1 + L2. *(Ước tính: nhỏ — chủ yếu là truy vấn đếm.)*
+- [x] **V1. Bỏ số tĩnh ở trang tổng quan cơ sở** — **ĐÃ SỬA 01/08/2026.** Xem mục 22.
 - [x] **V2. Gom việc chờ giám đốc duyệt vào một chỗ** — **ĐÃ SỬA 01/08/2026.** Thêm sự cố chuyển cấp và yêu cầu đổi phạm vi dự án vào `directorDecisionCount`, kèm link đi thẳng tới hồ sơ. Xử lý L3. Xem chi tiết ở mục 21.
 - [ ] **V3. Làm chuyển đổi vai trò cho demo** theo đúng 5 điều kiện ở mục 5. *(Vừa.)*
 
@@ -872,3 +872,27 @@ Ghi rõ để phiên sau không tưởng nhầm là đã xong:
 2. **Xuyên 2 phiên riêng biệt:** quản lý gửi một yêu cầu đổi phạm vi mới tại Bái Đính (không duyệt) → giám đốc ở phiên khác thấy ngay thẻ đó trong hộp thư, link đúng `/erp/bai-dinh/du-an-su-kien`.
 
 **2/2 pass trên production.** Chạy thêm hồi quy `prod-smoke-project-workflow.spec.ts` (2/2 pass, không ảnh hưởng). `prod-smoke-incidents.spec.ts` fail nhưng **không phải do thay đổi này** — bài đó tự ghi là one-shot (chuyển `INC-TA-071` từ "reported" sang "acknowledged" vĩnh viễn ở lần chạy trước đó), chạy lại luôn fail vì trạng thái đầu vào không còn đúng giả định. Đây là nợ kỹ thuật có sẵn của bộ test, không phải lỗi sản phẩm.
+
+---
+
+## 22. V1 đã sửa — 01/08/2026
+
+**Bằng chứng trước khi sửa (mục 3, L1/L2):** 5 thẻ KPI ở trang tổng quan mọi cơ sở (`site.snapshot.*`) là hằng số viết cứng trong `domain/erp.ts`. Truy vấn Supabase production cho thấy 3/4 cơ sở tự mâu thuẫn giữa số "Sự cố mở" ở trang tổng quan và số thật ở module Sự cố.
+
+**Đã sửa 3/5 số bằng dữ liệu thật:**
+- **Sự cố mở** — `getIncidentCases(site.id)` lọc `status !== "closed"`, **đúng y hệt truy vấn module Sự cố dùng** → hai màn không thể lệch nhau nữa.
+- **Nhân sự trong ca** — hàm mới `countEmployeesOnShift(siteId)` (`lib/erp/attendance-repository.ts`): gộp sự kiện `erp_staff_attendance_events` theo người, lấy sự kiện gần nhất mỗi người, đếm ai đang ở trạng thái "check-in".
+- **Đã check-in hôm nay** — hàm mới `countGateScansToday(siteId)` (`lib/erp/gate-scan-repository.ts`): đếm `erp_gate_scan_events` trong ngày theo giờ Việt Nam. Có bản cho cả 2 chế độ lưu trữ (`demo-cookie` đếm mảng trong bộ nhớ; `supabase` dùng `count: "exact", head: true`).
+
+**2 số còn lại chưa có nguồn dữ liệu thật** (Khách dự kiến — cần dữ liệu booking thật, thuộc L4/V6; Tải hiện tại — cần hạ tầng ngưỡng sức chứa, thuộc V8): theo đúng nguyên tắc đã ghi ở mục 8.4, hiển thị **"—"** kèm chú thích nhỏ **"Chưa có nguồn dữ liệu"** thay vì bịa số.
+
+**Phạm vi có chủ đích:** chỉ sửa trang tổng quan cơ sở (`app/erp/[site]/page.tsx`). `domain/erp.ts`'s `snapshot` vẫn giữ nguyên và vẫn đang nuôi `camera-ai-workspace.tsx`, `finance-dashboard.tsx`, module Sức chứa trong `module-workspace.tsx`, và mô phỏng doanh thu trong `ticket-guest-workspace.tsx` — đây là các việc lớn hơn, thuộc V8 (sức chứa) và một nguồn vé thật (V7), không nằm trong phạm vi V1.
+
+**Một phát hiện phụ trong lúc sửa:** module Sự cố hiện narrow theo vai trò — với **giám đốc**, `visibleCases` chỉ gồm sự cố đã chuyển cấp còn mở (đúng chủ đích, xem V2 ở mục 21), nên số "hồ sơ đang mở" director thấy trong module là **tập con** chứ không phải tổng số mở toàn cơ sở. Trang tổng quan (mọi vai trò đều thấy) cố tình hiển thị **tổng số mở thật** — với quản lý (không bị narrow) hai số này khớp tuyệt đối; với giám đốc, hai số có thể khác nhau *một cách hợp lý* (tổng thể vs. phần cần giám đốc). Đây không phải mâu thuẫn kiểu L2 (số giả không khớp gì cả) mà là hai định nghĩa thật, khác nhau có chủ đích.
+
+**Kiểm chứng:** `typecheck`/`lint`/`test:run` (255 pass)/`build` sạch cục bộ → push → `vercel inspect` xác nhận **Ready** → Playwright thật trên production, bài mới `tests/e2e/prod-smoke-site-overview-kpis.spec.ts` (3 bài, dùng tài khoản **quản lý** cho phép so sánh trực tiếp — xem phát hiện phụ ở trên):
+1. Số "Sự cố mở" khớp đúng module Sự cố ở cả 4 cơ sở.
+2. Hai KPI chưa có nguồn dữ liệu hiển thị đúng "Chưa có nguồn dữ liệu", không bịa số.
+3. Nhân sự trong ca là số đếm thật (kiểm tra không rơi trùng ngẫu nhiên vào hằng số cũ 84/112).
+
+**3/3 pass trên production.** Lần chạy đầu có 1 bài fail do race condition trong chính bài test (đọc `innerText()` ngay sau `goto()`, đôi khi bắt trúng màn "Đang chuẩn bị trải nghiệm / Loading…" — cùng loại flake đã ghi nhận ở đợt kiểm chứng trước) — đã sửa bằng cách đợi phần tử hiển thị trước khi đọc, không sửa sản phẩm.

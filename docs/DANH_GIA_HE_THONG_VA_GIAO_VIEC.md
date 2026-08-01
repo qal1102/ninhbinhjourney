@@ -192,7 +192,7 @@ Làm đúng 5 điều trên thì tính năng này **vừa tiện cho demo vừa 
 ### Đợt 2 — Đóng nốt nợ cũ
 
 - [x] **V4. Sửa nút giả cuối cùng ở Camera AI** — **ĐÃ SỬA 01/08/2026.** Xem mục 26.
-- [ ] **V5. Hộp thư "việc của tôi" theo vai trò** + số đếm trên chuông thông báo. Xử lý L7 + UX#2. *(Vừa.)*
+- [x] **V5. Hộp thư "việc của tôi" theo vai trò** + số đếm trên chuông thông báo. **ĐÃ SỬA 01/08/2026.** Xem mục 27.
 
 ### Đợt 3 — Nối nguồn dữ liệu đầu vào (đắt nhưng là gốc rễ)
 
@@ -1021,3 +1021,38 @@ V12, L18 (phòng ngừa) đã xong và đã chứng minh đúng cách trên prod
 **Lưu ý cho phiên sau:** Tràng An có `capacityPercent=68%` nên **không có camera nào ở trạng thái "Cần chú ý"** (ngưỡng kích hoạt là `>= 80%`, xem `createFeeds()`) — bài test và mọi kiểm chứng thủ công cho luồng "Cần chú ý" phải dùng Tam Chúc (83%).
 
 - [x] **V4.** Đã sửa và xác nhận đúng cách trên production. Đợt 2 giờ chỉ còn V5 (hộp thư "việc của tôi").
+
+---
+
+## 27. V5 đã làm — 01/08/2026: hộp thư "việc của tôi" theo vai trò, và một lỗi có thật phát hiện được trong lúc kiểm chứng
+
+**Bằng chứng trước khi sửa (mục 6 UX#2, mục 11.7 L7):** chuông thông báo (`erp-app-controls.tsx`) chỉ gọi `/api/erp/assistant` với `intent: "urgent"` và hiện đúng **một câu tổng hợp** ("N việc cần tài khoản này xử lý") — không phải hộp thư có số đếm theo từng loại việc. Mỗi vai trò vẫn phải tự nhớ việc của mình nằm ở module nào.
+
+**Đã sửa:** thêm `intent: "inbox"` mới vào `/api/erp/assistant` (giữ nguyên `intent: "urgent"` cũ — `voice-command-center.tsx` vẫn dùng để trả lời bằng giọng nói một câu, không đụng vào), trả về danh sách hạng mục thật theo vai trò thay vì một câu:
+- **Nhân viên:** Ca bị trả lại · Phiếu việc bị trả lại hoặc khẩn · Sự cố đang xử lý.
+- **Quản lý:** Ca chờ xác nhận · Phiếu việc chờ duyệt hoặc khẩn · Hoá đơn NCC cần bổ sung · Sự cố mới hoặc chờ xác minh.
+- **Kế toán:** Ca cần đối soát · Hồ sơ công nợ cần xử lý · Bút toán bị trả.
+- **Kế toán trưởng:** Bút toán chờ duyệt · Hoá đơn NCC chờ kiểm tra.
+- **Giám đốc:** Ngoại lệ chốt ca · Hồ sơ NCC cần quyết định · Sự cố đã chuyển cấp · Yêu cầu đổi phạm vi dự án.
+
+Không cần migration — chỉ gộp lại dữ liệu đã có sẵn (tái dùng `listShiftClosures`/`listWorkdaysForUser`/`listAccountingJournals`/`listSupplierAp` vốn đã được gọi cho `intent: "urgent"`, cộng thêm `getIncidentCases` và `listPendingProjectChangeRequests` đã xây từ V2). `erp-app-controls.tsx` giờ hiện danh sách thật, mỗi dòng có link đi thẳng tới đúng module; số trên chuông là tổng tất cả hạng mục.
+
+### 🟢 Lỗi có thật phát hiện trong lúc kiểm chứng — cookie phiên đăng nhập không tới được `/api/erp/assistant`
+
+Khi chạy Playwright thật trên production để xác nhận V5, băng chuông báo mãi "Chưa đọc được hàng việc lúc này." dù đã đăng nhập đúng. Truy ra tận gốc bằng cách bắt request thật: **cookie phiên (`nbj-erp-demo-session`) hoàn toàn không có trong header `Cookie` của request `/api/erp/assistant`.**
+
+**Nguyên nhân:** `cookieOptions()` trong `demo-session.ts` đặt `path: "/erp"`. Theo RFC 6265, một cookie có `path=/erp` **không** được gửi cho request `/api/erp/assistant` — dù chuỗi "erp" xuất hiện ở giữa, request path bắt đầu bằng `/api`, không khớp tiền tố `/erp`. Đây là lỗi **có thật, đã tồn tại từ trước**, không phải do V5 gây ra — nhưng **chưa từng bị phát hiện** vì chưa có bài Playwright nào từng đọc nội dung thật của chuông thông báo trên production trước phiên này.
+
+**Hệ quả:** không chỉ chuông thông báo — `voice-command-center.tsx` (trợ lý điều hành bằng giọng nói/văn bản, dùng chung endpoint này cho mọi câu hỏi doanh thu/chi phí/lợi nhuận/khách/công nợ/việc gấp) **cũng luôn nhận 401** trên production. Tính năng trợ lý điều hành coi như chưa từng hoạt động thật trên production, dù đã lên production từ trước.
+
+**Đã sửa:** đổi `path: "/erp"` thành `path: "/"` cho đúng một cookie phiên đăng nhập này (các cookie dữ liệu chế độ demo-cookie khác — chấm công, sự cố, dự án... — vẫn giữ `path: "/erp"` vì chỉ được đọc từ bên trong `/erp/**`, không ảnh hưởng production vì production chạy `ERP_PERSISTENCE_MODE=supabase`).
+
+**Kiểm chứng:** `typecheck`/`lint`/`test:run` (288 pass, không thêm test vitest cho route API — dự án chưa có tiền lệ test trực tiếp route handler, xác minh qua Playwright production đúng theo cách đã làm mọi lần trước)/`build` sạch cục bộ → push → deploy Vercel production → Playwright thật trên production (`PLAYWRIGHT_BASE_URL` set tường minh), bài mới `tests/e2e/prod-smoke-erp-inbox.spec.ts`:
+- Đối chiếu chéo: số "Sự cố đã chuyển cấp" trên chuông của giám đốc phải khớp đúng số đã có sẵn trên dashboard giám đốc (xây cho V2) — hai đường tính khác nhau (một bên lọc `getIncidentCases` theo từng site trong route API, một bên gọi `listEscalatedIncidents`) nhưng phải ra cùng một số, đúng tinh thần phòng lại lỗi kiểu L2 (hai màn nói hai số khác nhau).
+- Nhân viên: chuông mở được, hiện đúng việc thật hoặc trạng thái rỗng trung thực.
+
+**2/2 pass** (desktop + mobile, ~7–10s). Sau khi sửa cookie, chạy quét lại rộng hơn (7 file, 28 bài `prod-smoke-*` liên quan tới các việc đã làm trong phiên) để chắc chắn việc mở rộng `path` cookie không phá vỡ gì khác — **28/28 pass**.
+
+**Phát hiện phụ, không phải do sửa cookie gây ra:** trong lúc quét rộng, `prod-smoke-role-switch.spec.ts` lộ ra một lỗ hổng test có sẵn — `RoleSwitchControl` render hai lần trong DOM (một bản trong nav desktop bị ẩn bằng CSS dưới breakpoint `lg`, một bản trong menu hamburger di động), nhưng bài test cũ chỉ from thao tác đúng bản desktop, không mở hamburger trước trên viewport di động. Đã sửa bài test để chọn đúng vùng theo `page.viewportSize()` (so với breakpoint 1024px của Tailwind) thay vì đoán qua `isVisible()` (từng bị đua thời gian dưới tải song song, chọn nhầm bản desktop trên mobile-chromium). Không đụng vào mã sản phẩm — chỉ sửa bài test.
+
+- [x] **V5.** Đã sửa và xác nhận đúng cách trên production. Đợt 2 đã xong hoàn toàn (V4 + V5). Đợt 3 (V6-V9, nối nguồn dữ liệu đầu vào) là việc lớn tiếp theo, chưa bắt đầu.

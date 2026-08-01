@@ -410,6 +410,8 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 - [ ] Nút `?` trợ giúp theo module/role.
 - [ ] Breadcrumb, recent items, favorites và quick action giảm số lần bấm.
 
+**Bằng chứng 01/08/2026 (V5):** dòng "Notification center" ở trên nay có nền thật — `erp-app-controls.tsx` đổi từ 1 câu tổng hợp sang danh sách hạng mục thật theo vai trò (`intent: "inbox"` mới ở `/api/erp/assistant`), mỗi vai trò thấy đúng loại việc của mình, không dùng chung một câu cho mọi người. Trong lúc kiểm chứng phát hiện thêm một lỗi có thật không liên quan tới UI: cookie phiên đăng nhập (`path: "/erp"`) chưa từng tới được `/api/erp/assistant` (không khớp path theo RFC 6265) — chuông thông báo và trợ lý điều hành giọng nói/văn bản đều luôn nhận 401 trên production từ trước. Đã sửa `path` thành `/`. Vẫn chưa làm: search/command palette, nút `?`, breadcrumb/recent items/favorites — checkbox này giữ nguyên `[ ]` vì đó vẫn là phần lớn nội dung mục G6.4.
+
 ### Tiêu chí nghiệm thu G6
 
 - Ma trận role/capability được khách hàng duyệt.

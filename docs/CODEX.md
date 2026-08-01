@@ -46,6 +46,7 @@
 - **[Claude Sonnet — V3 01/08/2026]** Xây xong chuyển vai trò demo cho giám đốc (đổi phiên đăng nhập thật, không phải cờ UI), đúng 5 điều kiện đã duyệt. Migration đã áp dụng lên Supabase production, cờ `ERP_DEMO_ROLE_SWITCH=true` đã bật, đã kiểm chứng 2/2 pass trên production thật. Chi tiết ở mục 24 file đánh giá.
 - **[Claude Sonnet — V13 01/08/2026]** Sửa đồng hồ SLA sự cố (`elapsed_minutes` từng là số cứng ghi một lần lúc seed, không bao giờ tính lại — L8). Giờ tính tại thời điểm đọc từ cột `reported_at_ts` thật (đang mở thì chạy theo `now()`, đã đóng thì đông cứng theo `updated_at`). Áp 2 migration lên Supabase production (migration thứ hai tự sửa một lỗi neo mốc thời gian sai do chính migration thứ nhất gây ra, phát hiện bằng cách tự truy vấn lại production ngay sau khi apply — xem mục 25 file đánh giá). Đã xác nhận 2/2 pass trên production thật (desktop + mobile).
 - **[Claude Sonnet — V4 01/08/2026]** Nối nút giả cuối cùng ở Camera AI (module cuối trong đợt audit "hành động trang trí" 31/07, L5) vào module Sự cố có sẵn thay vì xây bảng mới — cảnh báo mật độ do camera phát hiện tạo thành một hồ sơ `erp_incidents` thật (P3/P4, không chuyển cấp, chưa giao ai, đi đúng quy trình tiếp nhận có sẵn). Migration mới chỉ thêm 1 RPC, không đổi schema bảng. Đã xác nhận 2/2 pass trên production thật (desktop + mobile, ~21s). Chi tiết ở mục 26 file đánh giá.
+- **[Claude Sonnet — V5 01/08/2026]** Chuông thông báo giờ là hộp thư thật theo từng loại việc (không còn 1 câu tổng hợp — L7/UX#2), không cần migration. **Phát hiện phụ quan trọng trong lúc kiểm chứng:** cookie phiên đăng nhập (`path: "/erp"`) chưa từng tới được `/api/erp/assistant` (path không khớp theo RFC 6265) — chuông thông báo **và** trợ lý điều hành bằng giọng nói/văn bản đều luôn nhận 401 trên production từ trước tới giờ, lỗi có thật, không phải do V5 gây ra, chỉ là chưa ai kiểm chứng runtime trước đây. Đã sửa `path` thành `/` cho đúng cookie phiên này. Quét lại 28 bài `prod-smoke-*` liên quan — 28/28 pass. Chi tiết ở mục 27 file đánh giá.
 
 ## Công việc đang dở — phải đọc trước khi sửa
 
@@ -401,6 +402,16 @@ Sau mỗi thay đổi quan trọng:
 6. Thêm một dòng vào **Nhật ký thay đổi** bên dưới, mới nhất ở trên.
 
 ## Nhật ký thay đổi
+
+### 01/08/2026 — [Claude Sonnet] V5: hộp thư "việc của tôi" theo vai trò, và một lỗi cookie có thật phát hiện được trong lúc kiểm chứng
+
+- **Vấn đề (mục 6 UX#2, mục 11.7 L7):** chuông thông báo (`erp-app-controls.tsx`) chỉ gọi `intent: "urgent"` và hiện đúng 1 câu tổng hợp, không phải hộp thư có số đếm theo từng loại việc.
+- **Đã sửa:** thêm `intent: "inbox"` mới vào `/api/erp/assistant` (giữ nguyên `intent: "urgent"` — `voice-command-center.tsx` vẫn dùng cho câu trả lời giọng nói, không đụng vào), trả về danh sách hạng mục thật theo vai trò (nhân viên/quản lý/kế toán/kế toán trưởng/giám đốc, mỗi vai trò 2-4 hạng mục cụ thể — chi tiết ở mục 27 file đánh giá). Không cần migration, chỉ gộp lại dữ liệu đã có sẵn cộng thêm `getIncidentCases`/`listPendingProjectChangeRequests` (đã xây từ V2).
+- **Lỗi có thật phát hiện trong lúc kiểm chứng trên production:** chuông mãi báo "Chưa đọc được hàng việc lúc này." — truy ra bằng cách bắt request thật thấy cookie phiên đăng nhập hoàn toàn không có trong header `Cookie` của `/api/erp/assistant`. Nguyên nhân: `cookieOptions()` trong `demo-session.ts` đặt `path: "/erp"`; theo RFC 6265, cookie đó **không** khớp request `/api/erp/assistant` (path bắt đầu bằng `/api`, không phải `/erp`, dù chuỗi "erp" xuất hiện ở giữa). Lỗi này có từ trước, không phải do V5 gây ra — chỉ là chưa từng có bài Playwright nào đọc nội dung thật của chuông trên production. Hệ quả rộng hơn cả V5: `voice-command-center.tsx` (trợ lý điều hành, dùng chung endpoint) cũng luôn nhận 401 trên production.
+- **Đã sửa:** đổi `path: "/erp"` thành `path: "/"` cho đúng cookie phiên này (các cookie dữ liệu demo-cookie khác giữ nguyên `/erp`, không ảnh hưởng production vì production chạy Supabase trực tiếp).
+- **Kiểm chứng:** `typecheck`/`lint`/`test:run` (288 pass)/`build` sạch cục bộ → push → deploy Vercel production → Playwright thật trên production, bài mới `tests/e2e/prod-smoke-erp-inbox.spec.ts` (đối chiếu chéo số "Sự cố đã chuyển cấp" giữa chuông và dashboard giám đốc — hai đường tính khác nhau phải ra cùng một số, đúng tinh thần phòng lỗi kiểu L2): **2/2 pass**. Quét lại rộng hơn 7 file/28 bài `prod-smoke-*` để chắc chắn việc mở rộng `path` cookie không phá gì khác: **28/28 pass**.
+- **Phát hiện phụ, không phải do sửa cookie:** `prod-smoke-role-switch.spec.ts` có lỗ hổng test có sẵn (chỉ thao tác đúng bản desktop của `RoleSwitchControl`, không mở hamburger trên mobile) — đã sửa bài test để chọn đúng vùng theo `page.viewportSize()` thay vì `isVisible()` (từng bị đua thời gian dưới tải song song). Không đụng mã sản phẩm.
+- Đã đánh dấu `[x]` V5 ở mục 7, thêm mục 27 file đánh giá. Đợt 2 (V4+V5) đã xong hoàn toàn.
 
 ### 01/08/2026 — [Claude Sonnet] V4: nút giả cuối cùng ở Camera AI
 

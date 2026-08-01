@@ -45,6 +45,7 @@
 - **[Claude Sonnet — V12 01/08/2026]** Sửa sơ đồ tổ chức tài khoản: mỗi cơ sở nay có đúng 1 quản lý (`ql.tamchuc`/`ql.tamcoc`/`ql.baidinh` thêm mới, `ql.vanhanh` thu về chỉ còn Tràng An), chứng minh được trên production rằng quản lý một cơ sở không vào được cơ sở khác. Chi tiết đầy đủ ở mục "Nhật ký thay đổi" bên dưới và mục 23 của file đánh giá. Trong lúc kiểm chứng ban đầu tưởng phát hiện thêm 2 lỗi (L17/L18) — **sau đó xác định L17 không có thật, do chính phiên làm việc quên set `PLAYWRIGHT_BASE_URL` nên Playwright âm thầm test nhầm vào server cục bộ thay vì production** (xem đính chính đầu tiên trong "Nhật ký thay đổi"); L18 là bug thật trong mã (đã sửa, đúng) nhưng chưa từng thực sự gây mất quyền trên production. V20 đã đóng, không cần làm.
 - **[Claude Sonnet — V3 01/08/2026]** Xây xong chuyển vai trò demo cho giám đốc (đổi phiên đăng nhập thật, không phải cờ UI), đúng 5 điều kiện đã duyệt. Migration đã áp dụng lên Supabase production, cờ `ERP_DEMO_ROLE_SWITCH=true` đã bật, đã kiểm chứng 2/2 pass trên production thật. Chi tiết ở mục 24 file đánh giá.
 - **[Claude Sonnet — V13 01/08/2026]** Sửa đồng hồ SLA sự cố (`elapsed_minutes` từng là số cứng ghi một lần lúc seed, không bao giờ tính lại — L8). Giờ tính tại thời điểm đọc từ cột `reported_at_ts` thật (đang mở thì chạy theo `now()`, đã đóng thì đông cứng theo `updated_at`). Áp 2 migration lên Supabase production (migration thứ hai tự sửa một lỗi neo mốc thời gian sai do chính migration thứ nhất gây ra, phát hiện bằng cách tự truy vấn lại production ngay sau khi apply — xem mục 25 file đánh giá). Đã xác nhận 2/2 pass trên production thật (desktop + mobile).
+- **[Claude Sonnet — V4 01/08/2026]** Nối nút giả cuối cùng ở Camera AI (module cuối trong đợt audit "hành động trang trí" 31/07, L5) vào module Sự cố có sẵn thay vì xây bảng mới — cảnh báo mật độ do camera phát hiện tạo thành một hồ sơ `erp_incidents` thật (P3/P4, không chuyển cấp, chưa giao ai, đi đúng quy trình tiếp nhận có sẵn). Migration mới chỉ thêm 1 RPC, không đổi schema bảng. Đã xác nhận 2/2 pass trên production thật (desktop + mobile, ~21s). Chi tiết ở mục 26 file đánh giá.
 
 ## Công việc đang dở — phải đọc trước khi sửa
 
@@ -400,6 +401,15 @@ Sau mỗi thay đổi quan trọng:
 6. Thêm một dòng vào **Nhật ký thay đổi** bên dưới, mới nhất ở trên.
 
 ## Nhật ký thay đổi
+
+### 01/08/2026 — [Claude Sonnet] V4: nút giả cuối cùng ở Camera AI
+
+- **Vấn đề (mục 3 file đánh giá, L5):** `camera-ai-workspace.tsx`'s `createAction()` chỉ gọi `setActionMessage()` — nút "Giao quản lý kiểm tra"/"Tạo phiếu hiện trường"/"Báo quản lý" không đi qua Server Action nào, không lưu bền, không ai khác thấy. Đây là nút đã khởi động cả đợt audit "hành động trang trí" 31/07; các module khác đã sửa trước, đây là module cuối cùng còn lại.
+- **Đã sửa theo đúng khuyến nghị mục giao việc V4:** nối vào module Sự cố có sẵn (`erp_incidents`) thay vì xây bảng mới. Migration `202608010017_erp_incident_camera_report.sql` thêm RPC `erp_incident_report_from_camera` (không đổi schema bảng nào). Mọi hồ sơ tạo từ camera luôn ở mức P3 (camera "Cần chú ý") hoặc P4, **không chuyển cấp**, **chưa giao ai** — quản lý tiếp nhận qua đúng luồng `reported → acknowledged → in-progress → verification → closed` có sẵn, không có đường tắt hay cấp độ riêng nào cho nguồn camera.
+- `lib/erp/incident-repository.ts` thêm `reportIncidentFromCamera` (đúng khuôn dual-mode demo-cookie/Supabase như mọi hàm khác trong file); `app/erp/actions.ts` thêm `reportIncidentFromCameraAction` (kiểm tra vai trò/cơ sở/module `su-co` giống 2 action sự cố đã có); `camera-ai-workspace.tsx` gọi action thật, có trạng thái chờ.
+- **Kiểm chứng:** `typecheck`/`lint`/`test:run` (288 pass, +13 test mới)/`build` sạch cục bộ → dry-run rồi áp migration lên Supabase production, xác nhận trực tiếp qua `supabase db query --linked` (RPC `SECURITY DEFINER`, chỉ `service_role`/`postgres` có `EXECUTE`) → push → deploy Vercel production → Playwright thật trên production (`PLAYWRIGHT_BASE_URL` set tường minh), bài mới `tests/e2e/prod-smoke-camera-ai-incident.spec.ts`: **2/2 pass** (desktop + mobile, ~21–22s) — quản lý Tam Chúc tạo phiếu từ camera "Cần chú ý" → phiên trình duyệt hoàn toàn mới thấy đúng hồ sơ trong module Sự cố. Xác nhận thêm qua `supabase db query`: hồ sơ thật, `severity=P3`, `escalated=false`, `assignee_id=null`.
+- **Lưu ý cho phiên sau:** Tràng An có `capacityPercent=68%` nên không camera nào ở trạng thái "Cần chú ý" (ngưỡng là `>= 80%`) — mọi kiểm chứng luồng này phải dùng Tam Chúc (83%).
+- Đã đánh dấu `[x]` V4 ở mục 7, thêm mục 26 file đánh giá. Đợt 2 giờ chỉ còn V5 (hộp thư "việc của tôi").
 
 ### 01/08/2026 — [Claude Sonnet] V13: đồng hồ SLA sự cố chạy thật
 

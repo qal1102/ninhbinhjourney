@@ -191,7 +191,7 @@ Làm đúng 5 điều trên thì tính năng này **vừa tiện cho demo vừa 
 
 ### Đợt 2 — Đóng nốt nợ cũ
 
-- [ ] **V4. Sửa nút giả cuối cùng ở Camera AI** — nối vào module Sự cố có sẵn (tạo hồ sơ sự cố từ cảnh báo camera) thay vì xây bảng mới. Xử lý L5. *(Nhỏ — hạ tầng sự cố đã có.)*
+- [x] **V4. Sửa nút giả cuối cùng ở Camera AI** — **ĐÃ SỬA 01/08/2026.** Xem mục 26.
 - [ ] **V5. Hộp thư "việc của tôi" theo vai trò** + số đếm trên chuông thông báo. Xử lý L7 + UX#2. *(Vừa.)*
 
 ### Đợt 3 — Nối nguồn dữ liệu đầu vào (đắt nhưng là gốc rễ)
@@ -1002,3 +1002,22 @@ V12, L18 (phòng ngừa) đã xong và đã chứng minh đúng cách trên prod
 **Việc còn lại của L8, chưa nằm trong V13:** tự động chuyển cấp khi quá hạn SLA (cần cơ chế chạy nền/cron) — đây là **V15** trong danh sách giao việc, chưa làm.
 
 - [x] **V13.** Đã sửa và xác nhận đúng cách trên production.
+
+---
+
+## 26. V4 đã sửa — 01/08/2026: nút giả cuối cùng ở Camera AI
+
+**Bằng chứng trước khi sửa (mục 3, L5):** `camera-ai-workspace.tsx`'s `createAction()` chỉ gọi `setActionMessage()` — nút "Giao quản lý kiểm tra" (giám đốc) / "Tạo phiếu hiện trường" (quản lý) / "Báo quản lý" (nhân viên) không đi qua Server Action nào, không ai khác thấy gì, kể cả chính tài khoản đó sau khi tải lại trang. Đây chính là nút đã khởi động toàn bộ đợt audit "hành động trang trí" ngày 31/07 — 6 module khác đã được sửa trước đó, đây là module cuối cùng.
+
+**Đã sửa theo đúng khuyến nghị của mục giao việc (V4):** nối vào module Sự cố có sẵn (`erp_incidents`, migration 011) thay vì xây bảng mới — một cảnh báo mật độ do camera phát hiện **chính là** một sự cố, chỉ khác ở chỗ nguồn báo là camera thay vì một người gõ form.
+
+- Migration `202608010017_erp_incident_camera_report.sql`: thêm RPC `erp_incident_report_from_camera` (không đổi schema bảng nào). Luôn tạo hồ sơ **không chuyển cấp**, mức **P3** (camera đang ở trạng thái "Cần chú ý") hoặc **P4** (còn lại), **chưa giao ai** — quản lý phải tự tiếp nhận/giao qua đúng quy trình `reported → acknowledged → in-progress → verification → closed` có sẵn, không có đường tắt hay bậc mức độ nghiêm trọng riêng nào cho nguồn camera.
+- `lib/erp/incident-repository.ts`: thêm `reportIncidentFromCamera` (cùng khuôn dual-mode demo-cookie/Supabase như mọi hàm khác trong file).
+- `app/erp/actions.ts`: thêm `reportIncidentFromCameraAction`, kiểm tra vai trò/cơ sở/module `su-co` giống hệt hai action sự cố đã có.
+- `camera-ai-workspace.tsx`: gọi action thật, hiện trạng thái "Đang tạo hồ sơ..." khi đang chờ, thông báo kết quả có kèm mã hồ sơ mới tạo.
+
+**Kiểm chứng:** `typecheck`/`lint`/`test:run` (288 pass, +7 test integration cho action mới + 6 test hợp đồng migration)/`build` sạch cục bộ → dry-run rồi áp migration lên Supabase production, xác nhận trực tiếp bằng `supabase db query --linked` (RPC `SECURITY DEFINER`, chỉ `service_role`/`postgres` có `EXECUTE`) → push → deploy Vercel production → Playwright thật trên production (`PLAYWRIGHT_BASE_URL` set tường minh), bài mới `tests/e2e/prod-smoke-camera-ai-incident.spec.ts`: **2/2 pass** (desktop + mobile, ~21–22s) — quản lý Tam Chúc bấm "Tạo phiếu hiện trường" trên camera đang "Cần chú ý" → phiên trình duyệt hoàn toàn mới (cookie sạch, cùng tài khoản) thấy đúng hồ sơ mới trong module Sự cố, đúng nguồn "Camera AI · CAM 02", đúng trạng thái "Mới báo". Xác nhận thêm trực tiếp qua `supabase db query`: hồ sơ thật trên bảng `erp_incidents`, `severity=P3`, `escalated=false`, `assignee_id=null`, `sla_minutes=10`.
+
+**Lưu ý cho phiên sau:** Tràng An có `capacityPercent=68%` nên **không có camera nào ở trạng thái "Cần chú ý"** (ngưỡng kích hoạt là `>= 80%`, xem `createFeeds()`) — bài test và mọi kiểm chứng thủ công cho luồng "Cần chú ý" phải dùng Tam Chúc (83%).
+
+- [x] **V4.** Đã sửa và xác nhận đúng cách trên production. Đợt 2 giờ chỉ còn V5 (hộp thư "việc của tôi").

@@ -39,6 +39,9 @@ const SITE_MANAGERS: Record<string, [string, string]> = {
 test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với module Sự cố, không còn mâu thuẫn", async ({
   page,
 }) => {
+  // Four sites, each needing a login plus up to six read-pairs.
+  test.slow();
+
   // Logged in as each site's own manager, not director: the incident module
   // narrows a director's view to escalated-only cases (by design --
   // directors only need what requires them), so a director's "hồ sơ đang
@@ -58,7 +61,10 @@ test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với
     // production holds still while we look at it.
     let overviewCount = NaN;
     let moduleCount = NaN;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    // Six attempts, not three: prod-smoke-camera-ai-incident opens and then
+    // closes an incident at Tam Chúc, and its write window is long enough
+    // that three consecutive read-pairs can all land inside it.
+    for (let attempt = 0; attempt < 6; attempt += 1) {
       await page.goto(`/erp/${siteId}`);
       const overviewCard = page
         .locator("div")

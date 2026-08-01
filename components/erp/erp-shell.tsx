@@ -6,10 +6,12 @@ import {
   ERP_ROLE_LABELS,
   type ErpSite,
 } from "@/domain/erp";
-import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { isRoleSwitchEnabled, type CurrentErpUser } from "@/lib/erp/demo-session";
 import { logoutErpAction } from "@/app/erp/actions";
 import { ErpAppControls } from "./erp-app-controls";
 import { ErpDesktopNavigation } from "./erp-desktop-navigation";
+import { RoleSwitchBanner } from "./role-switch-banner";
+import { RoleSwitchControl } from "./role-switch-control";
 import { VoiceCommandCenter } from "./voice-command-center";
 import { ErpMobileMenu } from "./erp-mobile-menu";
 
@@ -32,7 +34,15 @@ export function ErpShell({ user, site, activeModuleId, children }: Props) {
       <header className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
         <div className="mx-auto flex min-h-16 max-w-[1600px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
-            <ErpMobileMenu name={user.name} jobTitle={user.jobTitle} role={user.role} siteIds={user.siteIds} currentSiteId={site?.id} modules={visibleModules} />
+            <ErpMobileMenu
+              name={user.name}
+              jobTitle={user.jobTitle}
+              role={user.role}
+              siteIds={user.siteIds}
+              currentSiteId={site?.id}
+              modules={visibleModules}
+              roleSwitchEnabled={!user.actingAs && isRoleSwitchEnabled()}
+            />
             <Link href="/erp" className="flex shrink-0 items-center gap-2" aria-label="ERP Ninh Bình">
               <Image
                 src="/brand/ninh-binh-mark.png"
@@ -59,6 +69,11 @@ export function ErpShell({ user, site, activeModuleId, children }: Props) {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ErpAppControls role={user.role} />
+            {user.role === "director" && !user.actingAs && isRoleSwitchEnabled() ? (
+              <div className="hidden lg:block">
+                <RoleSwitchControl />
+              </div>
+            ) : null}
             <div className="hidden text-right md:block">
               <p className="text-sm font-bold text-[#25352f]">{user.name}</p>
               <p className="text-xs text-[#738078]">
@@ -76,6 +91,8 @@ export function ErpShell({ user, site, activeModuleId, children }: Props) {
           </div>
         </div>
       </header>
+
+      <RoleSwitchBanner user={user} />
 
       {site ? (
         <ErpDesktopNavigation

@@ -21,9 +21,12 @@ import {
   accountCanAccessModule,
   accountCanAccessSite,
   clearErpSession,
+  endRoleSwitch,
   getCurrentErpUser,
   setErpSession,
+  startRoleSwitch,
 } from "@/lib/erp/demo-session";
+import { recordRoleSwitch } from "@/lib/erp/role-switch-audit-repository";
 import {
   getAccessState,
   updateEmployeeAccessGrant,
@@ -78,6 +81,33 @@ export async function loginErpAction(formData: FormData) {
 export async function logoutErpAction() {
   await clearErpSession();
   redirect("/erp/login");
+}
+
+export async function switchDemoRoleAction(formData: FormData) {
+  const targetUserId = String(formData.get("targetUserId") ?? "");
+  const { director, target } = await startRoleSwitch(targetUserId);
+  await recordRoleSwitch({
+    directorId: director.id,
+    directorName: director.name,
+    targetId: target.id,
+    targetName: target.name,
+    targetRole: target.role,
+    action: "started",
+  });
+  redirect("/erp");
+}
+
+export async function endRoleSwitchAction() {
+  const { director, target } = await endRoleSwitch();
+  await recordRoleSwitch({
+    directorId: director.id,
+    directorName: director.name,
+    targetId: target.id,
+    targetName: target.name,
+    targetRole: target.role,
+    action: "ended",
+  });
+  redirect("/erp");
 }
 
 export async function updateEmployeeAccessAction(formData: FormData) {

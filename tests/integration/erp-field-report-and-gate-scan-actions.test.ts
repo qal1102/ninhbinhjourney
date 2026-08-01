@@ -24,8 +24,14 @@ vi.mock("@/lib/erp/demo-session", () => ({
   accountCanAccessModule: doubles.accountCanAccessModule,
   accountCanAccessSite: doubles.accountCanAccessSite,
   clearErpSession: vi.fn(),
+  endRoleSwitch: vi.fn(),
   getCurrentErpUser: doubles.getCurrentErpUser,
   setErpSession: vi.fn(),
+  startRoleSwitch: vi.fn(),
+}));
+
+vi.mock("@/lib/erp/role-switch-audit-repository", () => ({
+  recordRoleSwitch: vi.fn(),
 }));
 
 vi.mock("@/lib/erp/staff-access-repository", () => ({

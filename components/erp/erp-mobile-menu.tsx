@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { logoutErpAction } from "@/app/erp/actions";
 import { ERP_SITES, type ErpModule, type ErpRole, type ErpSiteId } from "@/domain/erp";
 import { groupVisibleErpModules } from "@/domain/erp-navigation";
+import { RoleSwitchControl } from "./role-switch-control";
 
 type Props = {
   name: string;
@@ -14,9 +15,18 @@ type Props = {
   siteIds: ErpSiteId[];
   currentSiteId?: ErpSiteId;
   modules: readonly ErpModule[];
+  roleSwitchEnabled?: boolean;
 };
 
-export function ErpMobileMenu({ name, jobTitle, role, siteIds, currentSiteId, modules }: Props) {
+export function ErpMobileMenu({
+  name,
+  jobTitle,
+  role,
+  siteIds,
+  currentSiteId,
+  modules,
+  roleSwitchEnabled,
+}: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -89,6 +99,12 @@ export function ErpMobileMenu({ name, jobTitle, role, siteIds, currentSiteId, mo
                 </>
               ) : null}
             </nav>
+
+            {role === "director" && roleSwitchEnabled ? (
+              <div className="border-t border-[#dce3de] p-4">
+                <RoleSwitchControl />
+              </div>
+            ) : null}
 
             <form action={logoutErpAction} className="border-t border-[#dce3de] p-4">
               <button type="submit" className="min-h-11 w-full rounded-xl border border-[#cfd9d3] bg-white text-sm font-black text-[#4d6057]">Đăng xuất</button>

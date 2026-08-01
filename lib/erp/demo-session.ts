@@ -31,11 +31,21 @@ type SessionPayload = {
   userId: string;
   issuedAt: number;
   expiresAt: number;
+  /**
+   * Present only while a director is viewing the system as another
+   * account (V3 demo role switch). Holds the director's own account id so
+   * the session can be handed back to them. The session's `userId` is the
+   * account whose permissions actually apply meanwhile -- this is a real
+   * session swap, not a UI-only role flag, so every existing permission
+   * check in the app applies unmodified to whoever `userId` currently is.
+   */
+  actingAsFor?: string;
 };
 
 export type CurrentErpUser = Omit<DemoErpAccount, "password"> & {
   siteIds: ErpSiteId[];
   moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>>;
+  actingAs?: { directorId: string; directorName: string };
 };
 
 function sign(payload: string) {
@@ -110,6 +120,12 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
     initialModuleIds: account.initialModuleIds,
     workforceProfile: account.workforceProfile,
   };
+  const actingAs = session.actingAsFor
+    ? (() => {
+        const director = findDemoErpAccountById(session.actingAsFor!);
+        return director ? { directorId: director.id, directorName: director.name } : undefined;
+      })()
+    : undefined;
 
   if (account.role === "director") {
     const allModules = ERP_MODULES.map((module) => module.id);
@@ -119,6 +135,7 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
       moduleIdsBySite: Object.fromEntries(
         ERP_SITES.map((site) => [site.id, allModules]),
       ) as Record<ErpSiteId, ErpModuleId[]>,
+      actingAs,
     };
   }
 
@@ -130,6 +147,7 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
       moduleIdsBySite: Object.fromEntries(
         account.managedSiteIds.map((siteId) => [siteId, allModules]),
       ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
+      actingAs,
     };
   }
 
@@ -146,11 +164,12 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
           [...account.initialModuleIds],
         ]),
       ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
+      actingAs,
     };
   }
 
   if (!isDemoErpAccountActive(account)) {
-    return { ...safeAccount, siteIds: [], moduleIdsBySite: {} };
+    return { ...safeAccount, siteIds: [], moduleIdsBySite: {}, actingAs };
   }
 
   const access = await getAccessState();
@@ -162,7 +181,81 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
     ...safeAccount,
     siteIds: employeeAccess.siteIds,
     moduleIdsBySite: employeeAccess.moduleIdsBySite,
+    actingAs,
   };
+}
+
+export function isRoleSwitchEnabled() {
+  return process.env.ERP_DEMO_ROLE_SWITCH === "true";
+}
+
+export type RoleSwitchResult = {
+  director: DemoErpAccount;
+  target: DemoErpAccount;
+};
+
+/**
+ * Swap the signed session's userId to `targetUserId`, keeping the real
+ * director's id in `actingAsFor` so the session can be handed back. This is
+ * a genuine session change, not a UI role flag: every existing
+ * `accountCanAccessSite`/`accountCanAccessModule` check downstream of
+ * `getCurrentErpUser()` applies to the target account exactly as if they
+ * had logged in themselves, including being blocked wherever they would
+ * normally be blocked. Only callable by an active director session, only
+ * when `ERP_DEMO_ROLE_SWITCH=true`, and only from a session not already
+ * mid-switch (must return to director first).
+ */
+export async function startRoleSwitch(targetUserId: string): Promise<RoleSwitchResult> {
+  if (!isRoleSwitchEnabled()) {
+    throw new Error("Tính năng xem theo vai trò đang tắt trên môi trường này.");
+  }
+  const store = await cookies();
+  const session = decodeSigned<SessionPayload>(store.get(SESSION_COOKIE)?.value);
+  if (!session || session.expiresAt <= Date.now()) {
+    throw new Error("Phiên đăng nhập đã hết hạn.");
+  }
+  if (session.actingAsFor) {
+    throw new Error("Đang xem theo vai trò khác — quay lại giám đốc trước khi đổi tiếp.");
+  }
+  const director = findDemoErpAccountById(session.userId);
+  if (!director || director.role !== "director") {
+    throw new Error("Chỉ tài khoản giám đốc mới dùng được tính năng này.");
+  }
+  const target = findDemoErpAccountById(targetUserId);
+  if (!target || target.role === "director") {
+    throw new Error("Không tìm thấy tài khoản để xem thử.");
+  }
+  const now = Date.now();
+  const payload: SessionPayload = {
+    userId: target.id,
+    issuedAt: now,
+    expiresAt: now + SESSION_SECONDS * 1000,
+    actingAsFor: director.id,
+  };
+  store.set(SESSION_COOKIE, encodeSigned(payload), cookieOptions(SESSION_SECONDS));
+  return { director, target };
+}
+
+/** Hand the session back to the real director, dropping `actingAsFor`. */
+export async function endRoleSwitch(): Promise<RoleSwitchResult> {
+  const store = await cookies();
+  const session = decodeSigned<SessionPayload>(store.get(SESSION_COOKIE)?.value);
+  if (!session || !session.actingAsFor) {
+    throw new Error("Không đang xem theo vai trò khác.");
+  }
+  const director = findDemoErpAccountById(session.actingAsFor);
+  const target = findDemoErpAccountById(session.userId);
+  if (!director || !target) {
+    throw new Error("Không tìm thấy tài khoản để quay lại.");
+  }
+  const now = Date.now();
+  const payload: SessionPayload = {
+    userId: director.id,
+    issuedAt: now,
+    expiresAt: now + SESSION_SECONDS * 1000,
+  };
+  store.set(SESSION_COOKIE, encodeSigned(payload), cookieOptions(SESSION_SECONDS));
+  return { director, target };
 }
 
 export function accountCanAccessSite(user: CurrentErpUser, siteId: ErpSiteId) {

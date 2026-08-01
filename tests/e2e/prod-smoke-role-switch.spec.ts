@@ -32,12 +32,15 @@ test("giám đốc chuyển sang xem như nhân viên: bị chặn đúng như n
   // RoleSwitchControl renders twice in the DOM: once in the desktop nav
   // (hidden below the lg breakpoint via CSS, not removed) and once inside
   // the mobile hamburger menu -- both exist regardless of viewport, so every
-  // locator in this block must stay scoped to whichever container is
-  // actually visible, not just the opening click.
-  const mobileMenuButton = page.getByRole("button", { name: "Mở menu" });
+  // locator in this block must stay scoped to whichever container actually
+  // applies. Decide by the configured viewport against Tailwind's `lg`
+  // breakpoint (1024px) rather than a DOM isVisible() snapshot: the latter
+  // raced against layout under parallel load and intermittently picked the
+  // desktop copy on the mobile-chromium project.
+  const isMobileViewport = (page.viewportSize()?.width ?? 1280) < 1024;
   let roleSwitchContainer = page.getByRole("banner");
-  if (await mobileMenuButton.isVisible()) {
-    await mobileMenuButton.click();
+  if (isMobileViewport) {
+    await page.getByRole("button", { name: "Mở menu" }).click();
     roleSwitchContainer = page.getByLabel("Menu điều hành");
   }
   await roleSwitchContainer.getByText("Xem theo vai trò").click();

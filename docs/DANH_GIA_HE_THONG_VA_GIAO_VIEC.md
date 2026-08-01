@@ -689,4 +689,160 @@ Bài mới `tests/e2e/public-journey-planner.spec.ts` (khách thường tạo đ
 - [ ] **W13. Gỡ ràng buộc demo room khỏi `/api/quotes`** — cùng bệnh với P1, chưa sửa. Luồng báo giá/đặt gói của khách thường nhiều khả năng vẫn đang chết. **Nên kiểm tra ngay.**
 - [ ] **W14. Rà các lối vào công khai khác còn phụ thuộc demo room** — `/api/journeys/[id]` (PATCH), `/checkout`, `/booking/[code]`. Cần một lượt quét có hệ thống, không sửa lắt nhắt.
 
+---
+
+## 20. KIỂM CHỨNG TOÀN HỆ THỐNG TRÊN PRODUCTION — 01/08/2026
+
+> Chủ dự án yêu cầu: kiểm chứng từ web tới ERP, **chỉ kiểm tra, không sửa**, ghi lại cho phiên sau.
+>
+> **Cách làm:** quét tĩnh toàn bộ route + chạy Playwright thật trên `https://ninhbinhjourney.vercel.app`, **chỉ đọc, không bấm nút ghi dữ liệu**. Script kiểm chứng đặt trong thư mục tạm và đã xoá sau khi chạy — mọi kết luận dưới đây là **kết quả quan sát thật**, kèm nguyên văn chuỗi đọc được.
+
+### 20.0 ⚠️ Cảnh báo cho phiên sau — cái bẫy đã làm tôi báo sai 3 lần
+
+Lần chạy đầu, bài kiểm chứng ERP dùng `page.waitForURL(/\/erp(\/|$)/)` sau khi bấm đăng nhập. **`/erp/login` cũng khớp mẫu đó**, nên hàm trả về ngay khi vẫn còn ở trang đăng nhập. Kết quả: 3 kết luận sai nghiêm trọng — "nhân viên vào được cả 15 module", "vào được cơ sở khác", "ẩn danh vào được /erp".
+
+Sau khi sửa thành `waitForURL(url => !url.pathname.startsWith("/erp/login"))` **cả ba đều biến mất — phân quyền thật ra hoạt động đúng.**
+
+**Bài học: khi một kết quả mâu thuẫn với điều đã kiểm chứng ở phiên trước, nghi ngờ bài test trước, đừng vội ghi vào tài liệu.**
+
+### 20.1 Web công khai — đang chạy đúng
+
+| Hạng mục | Kết quả quan sát |
+|---|---|
+| `/`, `/explore`, `/packages`, `/packages/[slug]` | HTTP 200, hiển thị đủ |
+| 8 trang chi tiết điểm đến | **8/8 HTTP 200** |
+| Chuyển ngôn ngữ `?lang=en&source=trang_an` | Đổi sang tiếng Anh đúng, giữ tham số |
+| `/api/health` | `{"ok":true,"dataMode":"supabase-shared","experienceMode":"production"}` |
+| **Trình lập hành trình (vừa sửa)** | `POST /api/journeys` không có demo room → **HTTP 200, `persisted:false`, 2 điểm dừng** ✅ |
+| **Bản đồ trang chủ (vừa sửa)** | 16 marker, 12 ô bản đồ, **đúng 1 nhãn duy nhất ghi "Điểm chào đón"** — lỗi "Bạn đang ở đây" gắn nhầm đã hết ✅ |
+
+### 20.2 Web công khai — lỗi đã kiểm chứng
+
+#### 🔴 P5. `/api/quotes` chết — đã xác nhận bằng gọi thật
+
+```
+POST /api/quotes → HTTP 409
+{"error":{"code":"DEMO_ROOM_NOT_JOINED","message":"Pair this visitor with an active demo room before requesting a quote."}}
+```
+
+Đúng như dự đoán ở W13, nay **đã chứng minh bằng runtime chứ không còn là suy luận từ mã nguồn**. Luồng báo giá của khách thường chết hoàn toàn.
+
+#### 🔴 P6. Không có đường mua hàng nào trên production
+
+`/checkout?package=heritage-day` → HTTP 200 nhưng nội dung là:
+
+> *"Online checkout is not configured. Sandbox payment controls are intentionally hidden outside the client-demonstration mode."*
+
+Đây là **thiết kế có chủ ý** (mục 14.2), không phải lỗi kỹ thuật. Nhưng hệ quả thực tế: **toàn bộ phễu bán hàng cụt ở bước cuối**. Ghi lại để không ai demo tới bước này rồi mới phát hiện.
+
+#### 🟠 P7. Hang Múa vô hình trên `/explore`
+
+`/explore` chỉ liệt kê **7 điểm**: Tràng An, Cố đô Hoa Lư, Chùa Bái Đính, Phố cổ Hoa Lư, Tam Cốc–Bích Động, Thung Nham, Đầm Vân Long. **Thiếu Hang Múa** — dù `/destination/hang-mua` trả 200 bình thường.
+
+**Nguyên nhân (đã truy ra):** bộ lọc mức đi bộ mặc định là `moderate`; Hang Múa có `mobilityLevel: "high"` nên **bị loại ngay từ đầu**. Trang hiển thị "7 điểm" mà **không hề báo có bộ lọc đang ẩn bớt**.
+
+Hang Múa là một trong những điểm được chụp ảnh nhiều nhất Ninh Bình. Khách vào lần đầu sẽ không bao giờ thấy nó. **Không phải lỗi mã — là mặc định che nội dung mà không nói.**
+
+#### 🟠 P8. `/explore` vẫn dùng bản đồ SVG giả
+
+Đo trên production ở chế độ "Bản đồ": `leaflet-container = 0`, `leaflet-tile = 0`, marker = 0. Kiểm tra mã: `explore-experience.tsx` vẽ `<svg viewBox="0 0 100 100">`, `aria-label` ghi *"Bản đồ ngữ cảnh… không phải địa giới hành chính"*.
+
+Cùng loại với bản đồ giả trong lịch trình vừa sửa ở mục 19.3. **Khác biệt:** bài test `public-surfaces.spec.ts` hiện **ghi nhận đây là hành vi mong muốn** (*"discovery remains usable without interacting with a network tile map"*). Vậy đây là **quyết định sản phẩm cần chốt lại**, không phải bug âm thầm — nhưng nó mâu thuẫn với `UI_UX_RULES.md` (*"use a real interactive map, not a fake text map"*). Trang chủ đã có Leaflet thật chạy tốt.
+
+#### 🟠 P9. Trang không tồn tại vẫn trả HTTP 200
+
+| Đường dẫn | Trạng thái HTTP | Nội dung |
+|---|---|---|
+| `/destination/khong-ton-tai` | **200** | "404 · NOT FOUND Không tìm thấy điểm dừng này" |
+| `/journey/<id lạ>` | **200** | như trên |
+
+Hiển thị đúng cho người đọc nhưng **sai với máy**: Google và mọi trình thu thập sẽ hiểu đây là trang hợp lệ và lập chỉ mục rác. Cần `notFound()` thật của Next.js.
+
+#### 🟡 P10. Trang vé/booking sai: chờ lâu rồi báo lỗi bằng tiếng Anh
+
+| Đường dẫn | Sau 12 giây |
+|---|---|
+| `/pass/<token sai>` | **"Something went wrong. Please retry."** |
+| `/booking/<mã sai>` | **"Booking was not found."** |
+
+Hai vấn đề: (a) treo ở "Đang đồng bộ QR Pass…" khá lâu trước khi báo lỗi; (b) **thông báo lỗi bằng tiếng Anh trên trang tiếng Việt**.
+
+### 20.3 ERP — phần bảo mật và phân quyền: **đạt**
+
+Đây là phần tôi kiểm kỹ nhất vì lần chạy đầu báo sai. Kết quả sau khi sửa bài test:
+
+| Kiểm tra | Kết quả |
+|---|---|
+| 6/6 tài khoản đăng nhập | **Đều được** |
+| Ẩn danh vào `/erp`, `/erp/trang-an`, `/erp/finance` | **Cả 3 đều dừng ở `/erp/login`** ✅ |
+| `nv.trangan` vào module chưa được cấp (`tai-chinh-doi-soat`, `nhan-su`) | **Chuyển về `/erp/trang-an`** ✅ |
+| `nv.trangan` vào cơ sở khác (`/erp/tam-chuc`) | **Chuyển về `/erp` kèm "Bạn chưa được phân công vào cơ sở hoặc nghiệp vụ này."** ✅ |
+| `nv.trangan` vào `/erp/finance` | **Chuyển về `/erp`** ✅ |
+| `POST /api/erp/assistant` khi chưa đăng nhập | **HTTP 401** ✅ |
+| 15/15 trang module với giám đốc | Đều HTTP 200, có nút và trường nhập thật |
+| Tài khoản thời vụ | Có màn riêng đúng: *"Quyền làm việc có hiệu lực đến 31/08/2026"* ✅ |
+
+**Kết luận: lớp phân quyền là phần đáng tin nhất của hệ thống.** Không tìm được lỗ nào.
+
+### 20.4 ERP — ba lỗi đã dự đoán, nay có bằng chứng chạy thật
+
+#### 🔴 L1 xác nhận — số liệu tổng quan đúng là hằng số
+
+Nguyên văn đọc được từ 4 trang tổng quan:
+
+| Cơ sở | Chuỗi đọc được |
+|---|---|
+| Tràng An | `Tải hiện tại 68% · Sự cố mở 2` |
+| Tam Chúc | `Tải hiện tại 83% · Sự cố mở 5` |
+| Tam Cốc | `Tải hiện tại 61% · Sự cố mở 1` |
+| Bái Đính | `Tải hiện tại 74% · Sự cố mở 3` |
+
+Khớp **chính xác** hằng số trong `domain/erp.ts`. Không có gì thay đổi theo dữ liệu thật.
+
+#### 🔴 L2 xác nhận — hai màn hình nói ngược nhau, cách nhau đúng một cú bấm
+
+| Màn hình | Nội dung |
+|---|---|
+| `/erp/tam-chuc` (tổng quan) | **"Sự cố mở 5"** |
+| `/erp/tam-chuc/su-co` (module sự cố) | **"1 hồ sơ đang mở"** |
+
+Khách bấm vào đúng con số vừa đọc là thấy ngay mâu thuẫn.
+
+#### 🔴 L3 xác nhận — và nghiêm trọng hơn tôi tưởng
+
+| Màn hình | Nội dung |
+|---|---|
+| Trang chủ giám đốc `/erp` | **"0 hồ sơ cần quyết định"** |
+| `/erp/tam-chuc/su-co` | **"Sự cố đã chuyển cấp… Cần quyết định 1 · Đã được quản lý xác minh"**, kèm **"Sát hoặc quá SLA 1 · Cần phản hồi ngay"** |
+
+**Có một sự cố đã chuyển cấp, đã được quản lý xác minh, đang sát hoặc quá SLA — và người duy nhất có quyền quyết định thì nhìn thấy con số 0.** Đây không còn là thiếu sót hiển thị; đây là quy trình an toàn bị đứt ở đúng mắt cuối.
+
+**Đề nghị nâng V2 lên ưu tiên cao nhất trong toàn bộ backlog.**
+
+### 20.5 Những thứ vẫn chạy tốt trong ERP
+
+- Module Dự án (Tràng An): dữ liệu thật — `Ngân sách 13 tỷ · 9,4 tỷ đã cam kết · Còn khả dụng 3,6 tỷ · Gói việc 0/3 · Tiến độ 35%`.
+- Module Sự cố: có phân mức P1/P2, đếm SLA, hàng việc theo ưu tiên.
+- Module Nhân sự: 50 trường nhập — bảng phân quyền thật.
+
+### 20.6 Chưa kiểm chứng trong đợt này
+
+Ghi rõ để phiên sau không tưởng nhầm là đã xong:
+
+- Toàn bộ `/ops` (13 trang) — chưa đăng nhập thử lần nào.
+- Luồng AP–NCC và kế toán với vai trò kế toán/kế toán trưởng — chỉ kiểm tra trang tải được, **chưa đi hết vòng nghiệp vụ**.
+- `/demo/qr/[sourceCode]`, `/demo/join` — chỉ kiểm HTTP 200.
+- Chế độ `client-demo` (checkout sandbox) — production chặn nên không chạm tới được.
+- Hiển thị trên điện thoại của phần ERP — đợt này chỉ chạy desktop.
+- Không bấm bất kỳ nút ghi dữ liệu nào (đúng yêu cầu "chỉ kiểm tra").
+
+### 20.7 Việc phát sinh từ đợt kiểm chứng
+
+- [ ] **W15. Trả HTTP 404 thật** cho `/destination/<slug lạ>` và `/journey/<id lạ>` (P9).
+- [ ] **W16. Sửa trạng thái lỗi của `/pass` và `/booking`** — báo lỗi tiếng Việt, rút ngắn thời gian chờ, có hành động tiếp theo (P10).
+- [ ] **W17. Bộ lọc `/explore` phải nói ra khi đang ẩn bớt** — hiện "7/8 điểm · đang lọc theo mức đi bộ" kèm nút bỏ lọc (P7).
+- [ ] **W18. Chốt số phận bản đồ `/explore`** — dùng Leaflet thật như trang chủ, hay giữ SVG và sửa `UI_UX_RULES.md` cho khớp. Không để mâu thuẫn giữa tài liệu và mã (P8).
+- [ ] **W13 (nâng ưu tiên). Gỡ ràng buộc demo room khỏi `/api/quotes`** — đã xác nhận chết bằng runtime.
+- [ ] **V2 (nâng lên ưu tiên số 1).** Sự cố quá SLA đang vô hình với giám đốc — bằng chứng ở 20.4.
+
 - [ ] **W11. Rà soát toàn bộ nội dung theo địa giới mới** — sau sáp nhập, Ninh Bình còn có các điểm của Nam Định và Hà Nam cũ (Phủ Dầy, đền Trần, chùa Tam Chúc...). Nếu định vị là *toàn diện du lịch Ninh Bình* thì phạm vi nội dung nay **rộng hơn 8 điểm hiện có đáng kể**. Đây vừa là việc phải làm, vừa là **cơ hội**: rất ít trang du lịch đã cập nhật theo địa giới mới. *(Vừa — chủ yếu là công biên tập.)*

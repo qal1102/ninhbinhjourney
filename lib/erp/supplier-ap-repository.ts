@@ -17,6 +17,7 @@ import {
   type SupplierApStatus,
   type SupplierApSupplier,
 } from "@/domain/erp-supplier-ap";
+import { findRpcBusinessMessage } from "@/lib/erp/rpc-error-messages";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
@@ -426,6 +427,14 @@ function repositoryError(operation: string, error: unknown) {
     return new SupplierApRepositoryConflictError(
       "Hóa đơn này đã tồn tại theo mã số thuế, ký hiệu và số hóa đơn.",
     );
+  }
+  // A rule the database refused is not an outage. Telling a manager "kho công
+  // nợ chưa phản hồi" when the real answer is "bạn chưa có vai trò ở cơ sở
+  // này" sends them to IT for something a director fixes in one click -- and
+  // it is how the registry defect in mục 3 of docs/HANDOFF.md stayed hidden.
+  const businessMessage = findRpcBusinessMessage(error);
+  if (businessMessage) {
+    return new SupplierApRepositoryConflictError(businessMessage);
   }
   return new SupplierApRepositoryError(
     `Không thể ${operation} trong kho công nợ.`,

@@ -29,6 +29,7 @@ import {
   type ErpSiteId,
 } from "@/domain/erp";
 import type { Database } from "@/types/database.generated";
+import { findRpcBusinessMessage } from "@/lib/erp/rpc-error-messages";
 import {
   ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG,
   listShiftClosures,
@@ -202,6 +203,14 @@ function repositoryError(
   operation: string,
   error: { message?: string; code?: string; details?: string } | null,
 ) {
+  // Business refusals arrive as machine codes (ACCOUNTING_PERIOD_IS_LOCKED and
+  // friends). Before this lookup they were either printed raw at the user or
+  // buried under "kho kế toán không hoàn tất được bước ..." -- both of which
+  // hide an answer the accountant could have acted on immediately.
+  const businessMessage = findRpcBusinessMessage(error);
+  if (businessMessage) {
+    return new AccountingRepositoryConflictError(businessMessage);
+  }
   if (
     error?.code === "40001" ||
     error?.code === "23505" ||

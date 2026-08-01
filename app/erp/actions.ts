@@ -109,16 +109,28 @@ export async function updateEmployeeAccessAction(formData: FormData) {
 
   const siteActive = formData.get("siteActive") === "on";
   const trainedModules = new Set(getEmployeeAssignableModuleIds(employee));
-  const allowedModules = new Set(
-    ERP_MODULES.filter((module) => module.employeeAssignable).map(
-      (module) => module.id,
-    ),
+  // Only modules that are both globally employee-assignable AND on this
+  // employee's trained list ever appear as a checkbox in the UI (see
+  // staff-access-manager.tsx's `assignableModules`). A module the employee
+  // already holds outside that set (e.g. granted directly via a migration
+  // seed, never added to their trainedModuleIds) is invisible to the form
+  // and must be preserved here -- otherwise saving ANY other change for
+  // this employee silently revokes it, since the form can only submit what
+  // it can show.
+  const visibleModules = new Set(
+    ERP_MODULES.filter(
+      (module) => module.employeeAssignable && trainedModules.has(module.id),
+    ).map((module) => module.id),
   );
-  const moduleIds = formData
+  const submittedVisible = formData
     .getAll("moduleIds")
     .map(String)
     .filter(isErpModuleId)
-    .filter((moduleId) => allowedModules.has(moduleId) && trainedModules.has(moduleId)) as ErpModuleId[];
+    .filter((moduleId) => visibleModules.has(moduleId)) as ErpModuleId[];
+  const hiddenPreserved = (current.moduleIdsBySite[siteValue] ?? []).filter(
+    (moduleId) => !visibleModules.has(moduleId),
+  );
+  const moduleIds = [...new Set([...submittedVisible, ...hiddenPreserved])] as ErpModuleId[];
 
   await updateEmployeeAccessGrant({
     employeeId,

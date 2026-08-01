@@ -128,7 +128,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: employeePassword,
     initialSiteIds: ["trang-an"],
     managedSiteIds: [],
-    initialModuleIds: ["ve-dat-cho", "check-in-khach", "bao-cao-hien-truong", "su-co", "cham-cong"],
+    initialModuleIds: ["ve-dat-cho", "check-in-khach", "bao-cao-hien-truong", "su-co", "cham-cong", "du-an-su-kien"],
     workforceProfile: {
       employmentType: "permanent",
       accessStartsAt: "2024-01-01T00:00:00+07:00",
@@ -136,7 +136,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       supervisorId: "manager-trang-an",
       primaryStation: "Cổng A",
       shiftLabel: "07:30–12:15",
-      trainedModuleIds: ["ve-dat-cho", "check-in-khach", "bao-cao-hien-truong", "su-co", "cham-cong"],
+      trainedModuleIds: ["ve-dat-cho", "check-in-khach", "bao-cao-hien-truong", "su-co", "cham-cong", "du-an-su-kien"],
     },
   },
   {
@@ -188,7 +188,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: employeePassword,
     initialSiteIds: ["tam-chuc"],
     managedSiteIds: [],
-    initialModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "su-co", "cham-cong"],
+    initialModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "su-co", "cham-cong", "du-an-su-kien"],
     workforceProfile: {
       employmentType: "permanent",
       accessStartsAt: "2024-02-01T00:00:00+07:00",
@@ -196,7 +196,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       supervisorId: "manager-tam-chuc",
       primaryStation: "Bến xe điện",
       shiftLabel: "07:15–12:15",
-      trainedModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "su-co", "cham-cong"],
+      trainedModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "su-co", "cham-cong", "du-an-su-kien"],
     },
   },
   {
@@ -208,7 +208,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: employeePassword,
     initialSiteIds: ["tam-coc"],
     managedSiteIds: [],
-    initialModuleIds: ["check-in-khach", "bao-cao-hien-truong", "suc-chua", "cham-cong"],
+    initialModuleIds: ["check-in-khach", "bao-cao-hien-truong", "suc-chua", "cham-cong", "du-an-su-kien"],
     workforceProfile: {
       employmentType: "permanent",
       accessStartsAt: "2023-09-01T00:00:00+07:00",
@@ -216,7 +216,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       supervisorId: "manager-tam-coc",
       primaryStation: "Bến đò trung tâm",
       shiftLabel: "07:30–12:30",
-      trainedModuleIds: ["check-in-khach", "bao-cao-hien-truong", "suc-chua", "cham-cong"],
+      trainedModuleIds: ["check-in-khach", "bao-cao-hien-truong", "suc-chua", "cham-cong", "du-an-su-kien"],
     },
   },
   {
@@ -228,7 +228,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: employeePassword,
     initialSiteIds: ["bai-dinh"],
     managedSiteIds: [],
-    initialModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "suc-chua", "cham-cong"],
+    initialModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "suc-chua", "cham-cong", "du-an-su-kien"],
     workforceProfile: {
       employmentType: "permanent",
       accessStartsAt: "2024-03-01T00:00:00+07:00",
@@ -236,7 +236,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       supervisorId: "manager-bai-dinh",
       primaryStation: "Điểm đón xe điện",
       shiftLabel: "07:00–12:00",
-      trainedModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "suc-chua", "cham-cong"],
+      trainedModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "suc-chua", "cham-cong", "du-an-su-kien"],
     },
   },
 ] as const;

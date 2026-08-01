@@ -5,6 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { ErpSiteId } from "@/domain/erp";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
+import { vietnamDateKey } from "@/lib/erp/workday-repository";
 
 const SCAN_COOKIE = "nbj-erp-demo-gate-scans";
 const STATE_SECONDS = 60 * 60 * 24 * 30;
@@ -186,6 +187,37 @@ function eventFromRow(row: Record<string, unknown>): GateScanEvent | null {
   };
 }
 
+function todayBoundsVietnam() {
+  const startOfDay = new Date(`${vietnamDateKey()}T00:00:00+07:00`);
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+  return { startOfDay, endOfDay };
+}
+
+async function countGateScansTodayInCookie(siteId: ErpSiteId): Promise<number> {
+  const state = await readCookieState();
+  const { startOfDay, endOfDay } = todayBoundsVietnam();
+  return (state.scansBySite[siteId] ?? []).filter((event) => {
+    const scannedAt = new Date(event.scannedAt).getTime();
+    return scannedAt >= startOfDay.getTime() && scannedAt < endOfDay.getTime();
+  }).length;
+}
+
+async function countGateScansTodayInSupabase(siteId: ErpSiteId): Promise<number> {
+  const client = createAdminClient();
+  const { startOfDay, endOfDay } = todayBoundsVietnam();
+  const result = await client
+    .from("erp_gate_scan_events")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", TENANT_ID)
+    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId])
+    .gte("scanned_at", startOfDay.toISOString())
+    .lt("scanned_at", endOfDay.toISOString());
+  if (result.error) {
+    throw repositoryError("đếm lượt quét QR", result.error);
+  }
+  return result.count ?? 0;
+}
+
 async function readSupabaseScans(siteId: ErpSiteId): Promise<GateScanEvent[]> {
   const client = createAdminClient();
   const result = await client
@@ -231,6 +263,11 @@ async function recordInSupabase(input: RecordGateScanInput): Promise<GateScanEve
 export async function getRecentGateScans(siteId: ErpSiteId): Promise<GateScanEvent[]> {
   if (readMode() === "supabase") return readSupabaseScans(siteId);
   return readCookieScans(siteId);
+}
+
+export async function countGateScansToday(siteId: ErpSiteId): Promise<number> {
+  if (readMode() === "supabase") return countGateScansTodayInSupabase(siteId);
+  return countGateScansTodayInCookie(siteId);
 }
 
 export async function recordGateScan(input: RecordGateScanInput): Promise<GateScanEvent> {

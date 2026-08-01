@@ -3,10 +3,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ERP_MODULES, getErpSite } from "@/domain/erp";
 import { ErpShell } from "@/components/erp/erp-shell";
+import { countEmployeesOnShift } from "@/lib/erp/attendance-repository";
 import {
   accountCanAccessSite,
   getCurrentErpUser,
 } from "@/lib/erp/demo-session";
+import { countGateScansToday } from "@/lib/erp/gate-scan-repository";
+import { getIncidentCases } from "@/lib/erp/incident-repository";
 
 type Props = {
   params: Promise<{ site: string }>;
@@ -20,6 +23,20 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
   if (!accountCanAccessSite(user, site.id)) redirect("/erp?denied=site");
+  const [employeesOnShift, gateScansToday, openIncidents] = await Promise.all([
+    countEmployeesOnShift(site.id),
+    countGateScansToday(site.id),
+    getIncidentCases(site.id).then(
+      (cases) => cases.filter((item) => item.status !== "closed").length,
+    ),
+  ]);
+  const kpis: { label: string; value: string; noSource?: boolean }[] = [
+    { label: "Khách dự kiến", value: "—", noSource: true },
+    { label: "Đã check-in hôm nay", value: gateScansToday.toLocaleString("vi-VN") },
+    { label: "Nhân sự trong ca", value: employeesOnShift.toLocaleString("vi-VN") },
+    { label: "Tải hiện tại", value: "—", noSource: true },
+    { label: "Sự cố mở", value: openIncidents.toLocaleString("vi-VN") },
+  ];
   const query = (await searchParams) ?? {};
   const denied = Array.isArray(query.denied) ? query.denied[0] : query.denied;
   const moduleIds = user.moduleIdsBySite[site.id] ?? [];
@@ -38,16 +55,13 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
           <h1 className="font-display mt-3 text-5xl sm:text-7xl">{site.shortName}</h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-white/70">{site.summary}</p>
           <div className="mt-7 grid max-w-4xl grid-cols-2 gap-3 sm:grid-cols-5">
-            {[
-              ["Khách dự kiến", site.snapshot.visitors],
-              ["Đã check-in", site.snapshot.checkedIn],
-              ["Nhân sự trong ca", site.snapshot.employeesOnShift],
-              ["Tải hiện tại", `${site.snapshot.capacityPercent}%`],
-              ["Sự cố mở", site.snapshot.openIncidents],
-            ].map(([label, value]) => (
-              <div key={String(label)} className="rounded-xl border border-white/12 bg-black/10 p-3 backdrop-blur-sm">
-                <p className="text-[11px] text-white/48">{label}</p>
-                <p className="mt-1 text-xl font-black">{typeof value === "number" ? value.toLocaleString("vi-VN") : value}</p>
+            {kpis.map((kpi) => (
+              <div key={kpi.label} className="rounded-xl border border-white/12 bg-black/10 p-3 backdrop-blur-sm">
+                <p className="text-[11px] text-white/48">{kpi.label}</p>
+                <p className="mt-1 text-xl font-black">{kpi.value}</p>
+                {kpi.noSource ? (
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white/40">Chưa có nguồn dữ liệu</p>
+                ) : null}
               </div>
             ))}
           </div>

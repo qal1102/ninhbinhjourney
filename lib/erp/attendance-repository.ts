@@ -317,6 +317,23 @@ export async function getAttendanceState(): Promise<AttendanceState> {
   return readCookieState();
 }
 
+export async function countEmployeesOnShift(siteId: ErpSiteId): Promise<number> {
+  const state = await getAttendanceState();
+  const latestPerUser = new Map<string, AttendanceEvent>();
+  for (const event of state.events) {
+    if (event.siteId !== siteId) continue;
+    const current = latestPerUser.get(event.userId);
+    if (!current || event.createdAt > current.createdAt) {
+      latestPerUser.set(event.userId, event);
+    }
+  }
+  let onShift = 0;
+  for (const event of latestPerUser.values()) {
+    if (event.type === "check-in") onShift += 1;
+  }
+  return onShift;
+}
+
 export async function recordAttendanceEvent(
   input: RecordAttendanceEventInput,
 ): Promise<AttendanceEvent> {

@@ -42,6 +42,7 @@
   - **Xác nhận thật trên production bằng Playwright hai tài khoản tách biệt hoàn toàn** (`tests/e2e/prod-smoke-project-workflow.spec.ts`, viết để chạy lại an toàn nhiều lần — đọc trạng thái hiện tại thay vì giả định điểm xuất phát cố định): (1) nhân viên (`nv.trangan`) bắt đầu xử lý gói việc `EV-TA-041` tại Tràng An → quản lý (`ql.vanhanh`) ở phiên khác thấy đúng "Đang xử lý"; (2) quản lý gửi yêu cầu tăng ngân sách sự kiện → giám đốc (`giamdoc`) ở phiên khác duyệt → ngân sách sự kiện đổi đúng, nhìn thấy ở phiên giám đốc. **2/2 pass**, xác minh thêm trực tiếp qua `supabase db query` (`budget_billion=12.90`, `version=2`). Bài test đầu tiên fail vì đọc DOM ngay sau khi bấm Duyệt trong khi `router.refresh()` chưa kịp áp dụng — sửa bằng `expect.poll` thay vì đọc một lần; xác nhận qua truy vấn DB rằng RPC đã chạy đúng ngay từ lần đầu, lỗi chỉ ở khâu chờ UI, không phải lỗi sản phẩm.
   - **Trong lúc chờ deploy, chủ dự án tự phát hiện và nêu một vấn đề khác** (ngoài phạm vi audit "nút giả"): màn "Check-in khách" (`ticket-guest-workspace.tsx`) yêu cầu nhân viên quét/nhập mã QR nhưng **không đối chiếu với booking/pass thật** — `erp_record_gate_scan` chỉ kiểm tra độ dài chuỗi ≥ 6 ký tự rồi ghi log, không JOIN gì tới bảng `bookings`/`passes` của luồng đặt chỗ công khai (khách nhận QR Pass là token dài ngẫu nhiên từ `/pass/[token]`, hoàn toàn khác định dạng mã nhân viên được yêu cầu nhập). Đã khảo sát và xác nhận: đây là khoảng trống đã tự ghi trong PLAN.md từ trước (mục "Check-in khách": *"Chưa đối chiếu mã quét với vé/pass thật"*; mục G10.1 "Booking & Check-in" `[ ]` chưa bắt đầu) — không phải phát hiện mới, nhưng đúng và quan trọng. Chủ dự án chọn ưu tiên hoàn tất việc đang làm trước, xử lý booking/check-in ở phiên sau.
   - **Còn treo:** khoảng trống của từng module đã sửa (không có luồng tạo mới sự kiện/gói việc, chưa RCA/CAPA, chưa đối chiếu vé thật, v.v. — xem cột "Khoảng trống chính" trong bảng G10 của PLAN.md); và việc nối check-in ERP với booking/pass thật (G10.1) chưa bắt đầu.
+- **[Claude Sonnet — V12 01/08/2026]** Sửa sơ đồ tổ chức tài khoản: mỗi cơ sở nay có đúng 1 quản lý (`ql.tamchuc`/`ql.tamcoc`/`ql.baidinh` thêm mới, `ql.vanhanh` thu về chỉ còn Tràng An), chứng minh được trên production rằng quản lý một cơ sở không vào được cơ sở khác. Chi tiết đầy đủ ở mục "Nhật ký thay đổi" bên dưới và mục 23 của file đánh giá. **Phát hiện tình cờ, không liên quan V12, đã điều tra loại trừ nguyên nhân V12:** yêu cầu đổi phạm vi dự án gửi từ một phiên chỉ hiện lại với đúng phiên đó, không bao giờ tới phiên khác (kể cả 45+ giây sau, kể cả không phải cache) — **L17**, ảnh hưởng trực tiếp độ tin cậy của V2; và `nv.trangan` mất quyền module Dự án mà giao diện cấp quyền không cấp lại được — **L18**. Cả hai đã đánh dấu `test.fixme()` kèm ghi chú, chưa sửa, cần phiên sau ưu tiên điều tra (**V20**/**V21**).
 
 ## Công việc đang dở — phải đọc trước khi sửa
 
@@ -107,13 +108,16 @@ Ranh giới hiện tại phải nói rõ khi demo:
 | Vai trò | Tài khoản | Mật khẩu |
 |---|---|---|
 | Giám đốc | `giamdoc` | `Giamdoc@2026` |
-| Quản lý vận hành bốn cơ sở | `ql.vanhanh` | `Quanly@2026` |
+| Quản lý Tràng An | `ql.vanhanh` | `Quanly@2026` |
+| Quản lý Tam Chúc | `ql.tamchuc` | `Quanly@2026` |
+| Quản lý Tam Cốc | `ql.tamcoc` | `Quanly@2026` |
+| Quản lý Bái Đính | `ql.baidinh` | `Quanly@2026` |
 | Nhân viên Tràng An | `nv.trangan` | `Nhanvien@2026` |
 | Kế toán tổng hợp | `ketoan` | `Ketoan@2026` |
 | Kế toán trưởng | `ketoantruong` | `Ketoantruong@2026` |
 | Nhân viên thời vụ Tràng An | `tv.trangan` | `Thoivu@2026` |
 
-Alias cũ `ql.trangan` vẫn đăng nhập được để không làm gãy kịch bản đã gửi trước đây, nhưng cùng ánh xạ tới một quản lý vận hành duy nhất phụ trách cả bốn cơ sở.
+Từ 01/08/2026 (V12), mỗi cơ sở có một quản lý riêng, `managedSiteIds` chỉ đúng 1 cơ sở mỗi người. Alias cũ `ql.trangan` vẫn đăng nhập được để không làm gãy kịch bản đã gửi trước đây, ánh xạ tới quản lý Tràng An (`ql.vanhanh`) — không còn phụ trách cả bốn cơ sở như trước.
 
 ## Những phần ERP đã có
 
@@ -394,6 +398,19 @@ Sau mỗi thay đổi quan trọng:
 6. Thêm một dòng vào **Nhật ký thay đổi** bên dưới, mới nhất ở trên.
 
 ## Nhật ký thay đổi
+
+### 01/08/2026 — [Claude Sonnet] Sửa V12: mỗi cơ sở một quản lý riêng; phát hiện 2 lỗi có sẵn không liên quan trong lúc kiểm chứng
+
+- Tiếp tục danh sách ưu tiên sau khi V1/V2 xong. Chọn **V12** (sơ đồ tổ chức tài khoản, L14) — `manager-trang-an` trước đây có `managedSiteIds` bằng cả 4 cơ sở và cả 6 nhân viên đều báo cáo về đúng một quản lý đó, nên "quản lý chỉ thấy cơ sở mình phụ trách" chưa từng chứng minh được trên production.
+- `lib/erp/demo-data.ts`: thu `manager-trang-an` (`ql.vanhanh`/`ql.trangan`) về đúng Tràng An; thêm `manager-tam-chuc` (`ql.tamchuc`), `manager-tam-coc` (`ql.tamcoc`), `manager-bai-dinh` (`ql.baidinh`), mỗi người đúng 1 cơ sở; sửa `supervisorId` của 3 nhân viên Tam Chúc/Tam Cốc/Bái Đính về đúng quản lý cơ sở mình; sửa `jobTitle` từ "Quản lý vận hành toàn vùng" thành "Quản lý vận hành {cơ sở}". Không cần migration Supabase — danh tính tài khoản là mảng TS tĩnh, quyền module nhân viên vẫn đọc Supabase như cũ qua `getAccessState()`.
+- Sửa ăn theo cho nhất quán: `role-home-dashboard.tsx` (dòng tiêu đề chỉ nói "toàn vùng · N cơ sở" khi thật sự > 1 cơ sở, trước đó luôn nói vậy kể cả với nhân viên/quản lý 1 cơ sở); `managerAccountId` trong seed AP demo-cookie cục bộ ở `supplier-ap-repository.ts` (trước hard-code `"manager-trang-an"` cho mọi cơ sở, chỉ ảnh hưởng chế độ demo-cookie, không phải production); khối gợi ý tài khoản trên `/erp/login`.
+- Viết lại `tests/unit/erp-workforce.test.ts` — bài cũ khẳng định chính sơ đồ sai (một quản lý vùng, không có `ql.tamchuc`/`ql.tamcoc`/`ql.baidinh`) là hành vi đúng; nay khẳng định mỗi cơ sở có đúng 1 quản lý và mọi nhân viên báo cáo đúng người quản lý cơ sở mình.
+- Rà tác động phụ trước khi đổi: `tests/e2e/erp-access.spec.ts` (bài lớn nhất dùng `ql.trangan`) toàn bộ chỉ thao tác trong Tràng An nên không cần sửa. Sửa 2 bài `prod-smoke-*` có thao tác quản lý ở Bái Đính/cả 4 cơ sở để dùng đúng quản lý cơ sở tương ứng; thêm bài mới trong `prod-smoke-site-overview-kpis.spec.ts` khẳng định trực tiếp cách ly (quản lý Tam Chúc bị chặn ở `/erp/trang-an` và ngược lại) — logout giữa các lượt đổi tài khoản trong cùng bài dùng `context.clearCookies()` thay vì bấm nút UI (đáng tin hơn khi đổi 4 tài khoản liên tiếp).
+- Kiểm chứng: `typecheck`/`lint`/`test:run` (255 pass)/`build` sạch cục bộ (CRLF xuất hiện lại ở 5 file khi Edit ghi trên máy Windows, đã chuẩn hoá `\r\n`→`\n` trước khi build lại) → push → `vercel inspect` xác nhận deployment `dpl_FM4z1ZGBSfgfSjv4iS95u2ZzPjoW` **Ready** → Playwright thật trên production: `prod-smoke-site-overview-kpis.spec.ts` **4/4 pass** (gồm bài cách ly mới).
+- **Phát hiện tình cờ, không do V12 gây ra — đã điều tra kỹ để loại trừ:** khi dựng lại `prod-smoke-director-decision-inbox.spec.ts` với tài khoản quản lý Bái Đính mới, bài "quản lý gửi yêu cầu đổi phạm vi → giám đốc thấy ở phiên khác" fail. Tái hiện y hệt với `ql.vanhanh`/Tràng An (tài khoản, cơ sở hoàn toàn không đổi) và độc lập trên `prod-smoke-project-workflow.spec.ts` (file không sửa dòng nào, trước đó CODEX từng ghi 2/2 pass) → **L17: yêu cầu đổi phạm vi dự án chỉ hiện lại với đúng phiên vừa gửi, phiên khác (kể cả cùng tài khoản, context mới) không bao giờ thấy dù chờ 45+ giây**, dù route xác nhận `Cache-Control: no-store`/`X-Vercel-Cache: MISS` (không phải cache) và RLS đọc cho `service_role` là `using (true)` (không phải quyền). Chưa tìm ra nguyên nhân gốc, cần truy cập log/connection Supabase trực tiếp. Mức độ nghiêm trọng cao vì đây đúng là cơ chế V2 (hộp thư quyết định giám đốc) và module Dự án dựa vào.
+- Cùng lúc phát hiện **L18: `nv.trangan` đã mất quyền module `du-an-su-kien`** trên production, và giao diện `staff-access-manager.tsx` không thể cấp lại — vì ô "Dự án" không nằm trong `trainedModuleIds` tĩnh của bất kỳ nhân viên nào, nên form chỉ gửi lại đúng các ô nó hiển thị và **âm thầm xoá quyền ẩn** ở bất kỳ lần lưu nào. Quyền đó được seed thẳng vào Supabase khi xây module Dự án (không qua UI), không đồng bộ vào `trainedModuleIds`.
+- Đã đánh dấu `test.fixme()` cho 3 assertion bị ảnh hưởng (2 trong `prod-smoke-project-workflow.spec.ts`, 1 trong `prod-smoke-director-decision-inbox.spec.ts`) kèm ghi chú nguyên nhân ngay trong file — không xoá, không ép qua bằng thủ thuật test.
+- Đã đánh dấu `[x]` V12 trong `docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md` (mục 12), thêm mục 23 ghi chi tiết V12 + L17/L18, thêm việc mới **V20** (tìm nguyên nhân gốc L17, ưu tiên cao ngang V3) và **V21** (L18).
 
 ### 01/08/2026 — [Claude Sonnet] Sửa V1: KPI trang tổng quan cơ sở dùng số đếm thật hoặc nói thẳng "chưa có nguồn dữ liệu"
 

@@ -362,7 +362,7 @@ Trong đó **L14 rẻ nhất và nên sửa trước**: chỉ cần thêm 3 tài
 
 ### Bổ sung vào Đợt 1 (trước demo)
 
-- [ ] **V12. Sửa sơ đồ tổ chức tài khoản** — thêm 3 quản lý cơ sở (Tam Chúc, Tam Cốc, Bái Đính), mỗi người `managedSiteIds` đúng 1 cơ sở; sửa `supervisorId` của 6 nhân viên về đúng quản lý cơ sở mình; thống nhất nhãn vai trò. Xử lý L14. *(Nhỏ — sửa dữ liệu, không sửa kiến trúc. Làm cùng V3 thì bộ chuyển vai trò demo được ngay giá trị lớn nhất: chứng minh cách ly theo cơ sở.)*
+- [x] **V12. Sửa sơ đồ tổ chức tài khoản** — **ĐÃ SỬA 01/08/2026.** Xem mục 23.
 - [ ] **V13. Đồng hồ SLA chạy thật** — tính `elapsedMinutes` từ `reported_at` khi đọc thay vì đọc cột lưu cứng; đánh dấu rõ hồ sơ đã quá hạn. Xử lý L8 phần hiển thị. *(Nhỏ.)*
 
 ### Bổ sung vào Đợt 2
@@ -896,3 +896,65 @@ Ghi rõ để phiên sau không tưởng nhầm là đã xong:
 3. Nhân sự trong ca là số đếm thật (kiểm tra không rơi trùng ngẫu nhiên vào hằng số cũ 84/112).
 
 **3/3 pass trên production.** Lần chạy đầu có 1 bài fail do race condition trong chính bài test (đọc `innerText()` ngay sau `goto()`, đôi khi bắt trúng màn "Đang chuẩn bị trải nghiệm / Loading…" — cùng loại flake đã ghi nhận ở đợt kiểm chứng trước) — đã sửa bằng cách đợi phần tử hiển thị trước khi đọc, không sửa sản phẩm.
+
+---
+
+## 23. V12 đã sửa — 01/08/2026, và hai lỗi mới phát hiện trong lúc kiểm chứng
+
+### 23.1 V12 — Sơ đồ tổ chức tài khoản
+
+**Bằng chứng trước khi sửa (mục 11.4, L14):** `manager-trang-an` có `managedSiteIds` bằng cả 4 cơ sở; cả 6 nhân viên đều có `supervisorId: "manager-trang-an"` bất kể họ làm ở cơ sở nào. "Quản lý chỉ thấy cơ sở mình phụ trách" chưa từng chứng minh được vì chỉ có một quản lý duy nhất, quản lý mọi thứ.
+
+**Đã sửa** (`lib/erp/demo-data.ts`):
+- Thu `manager-trang-an` (`ql.vanhanh`, alias `ql.trangan`) về đúng 1 cơ sở: Tràng An.
+- Thêm 3 tài khoản quản lý mới, mỗi người đúng 1 cơ sở: `manager-tam-chuc` (`ql.tamchuc`), `manager-tam-coc` (`ql.tamcoc`), `manager-bai-dinh` (`ql.baidinh`) — cùng mật khẩu quản lý dùng chung hiện tại (L15 vẫn còn treo, không thuộc phạm vi V12).
+- Sửa `supervisorId` của 3 nhân viên Tam Chúc/Tam Cốc/Bái Đính về đúng quản lý cơ sở mình (3 nhân viên Tràng An không đổi vì quản lý của họ không đổi).
+- Sửa nhãn `jobTitle` từ "Quản lý vận hành toàn vùng" thành "Quản lý vận hành {cơ sở}" cho từng người — khớp với thực tế mới.
+- Sửa luôn 2 chỗ phụ ăn theo dữ liệu cũ để không tự mâu thuẫn: `role-home-dashboard.tsx` (dòng tiêu đề trang chủ quản lý/nhân viên đổi từ "Điều hành toàn vùng · N cơ sở" cố định sang chỉ hiện "toàn vùng" khi thật sự nhiều hơn 1 cơ sở), và `managerAccountId` trong seed AP demo-cookie ở `supplier-ap-repository.ts` (trước đó hard-code `"manager-trang-an"` cho mọi cơ sở, kể cả Tam Chúc/Tam Cốc/Bái Đính — chỉ ảnh hưởng chế độ demo-cookie cục bộ, không phải production, nhưng sửa cho nhất quán vì tiện thể).
+- Cập nhật khối gợi ý tài khoản trên `/erp/login` và viết lại bài test `erp-workforce.test.ts` — bài cũ (`"uses one regional operations manager..."`) trước đây khẳng định đúng chính cái sơ đồ sai (L14) là hành vi mong muốn; đã thay bằng bài khẳng định mỗi cơ sở có đúng 1 quản lý và mọi nhân viên báo cáo đúng người quản lý cơ sở mình.
+
+**Không cần migration Supabase:** danh tính tài khoản (vai trò, `managedSiteIds`, `supervisorId`) hoàn toàn nằm trong mảng TypeScript tĩnh (`DEMO_ERP_ACCOUNTS`), không có bảng tài khoản nào trên Supabase — đúng như L12 đã ghi nhận. Việc đọc quyền module của nhân viên vẫn qua Supabase (`getAccessState()`) như cũ, không đổi.
+
+**Rà soát tác động phụ trước khi sửa:** đã kiểm `tests/e2e/erp-access.spec.ts` (bài lớn nhất dùng `ql.trangan`/`ql.vanhanh`) — toàn bộ chỉ thao tác trong phạm vi Tràng An, không cần sửa. Hai bài `prod-smoke-*` có thao tác quản lý ở Bái Đính (`prod-smoke-director-decision-inbox.spec.ts`) và ở cả 4 cơ sở (`prod-smoke-site-overview-kpis.spec.ts`) đã sửa để dùng đúng quản lý cơ sở tương ứng; bài sau còn được viết thêm 1 test mới khẳng định trực tiếp việc cách ly (quản lý Tam Chúc vào `/erp/trang-an` bị chặn và ngược lại).
+
+**Kiểm chứng:** `typecheck`/`lint`/`test:run` (255 pass)/`build` sạch cục bộ → CRLF xuất hiện lại ở 5 file khi Edit ghi trên máy Windows này (như nhiều lần trước), đã chuẩn hoá về LF trước khi build lại và commit → push → `vercel inspect` xác nhận deployment `dpl_FM4z1ZGBSfgfSjv4iS95u2ZzPjoW` **Ready** → Playwright thật trên production:
+- `prod-smoke-site-overview-kpis.spec.ts`: **4/4 pass**, gồm bài mới "quản lý Tam Chúc không vào được dữ liệu Tràng An và ngược lại" — chứng minh trực tiếp trên production điều mà L14 nói là chưa từng chứng minh được.
+- `tests/unit/erp-workforce.test.ts` (đã viết lại): pass, khẳng định 4 quản lý, mỗi người đúng 1 cơ sở, mọi nhân viên báo cáo đúng người.
+
+### 23.2 Hai lỗi cũ phát hiện tình cờ trong lúc kiểm chứng V12 — không liên quan tới V12
+
+Trong lúc dựng lại bài `prod-smoke-director-decision-inbox.spec.ts` (đổi tài khoản quản lý Bái Đính từ `ql.vanhanh` sang `ql.baidinh` theo đúng sơ đồ mới), bài test 2 fail. Đã điều tra kỹ để loại trừ khả năng V12 gây ra — **cả hai lỗi dưới đây tái hiện y hệt với tài khoản `ql.vanhanh`/Tràng An chưa hề bị đụng tới, và tái hiện độc lập trên bài test gốc `prod-smoke-project-workflow.spec.ts` (file tôi không sửa dòng nào)**. Kết luận: đây là lỗi có sẵn trên production, V12 chỉ tình cờ là bài test chạm phải nó trước.
+
+#### 🔴 L17. Yêu cầu đổi phạm vi dự án vừa gửi chỉ hiện lại với đúng phiên vừa gửi — phiên khác không bao giờ thấy
+
+**Bằng chứng:** gửi một yêu cầu đổi phạm vi (quản lý, phiên A) → phiên A load lại trang (F5 thật, không phải điều hướng client) vẫn thấy đúng yêu cầu, kể cả sau nhiều phút. Mở một phiên B hoàn toàn mới (context trình duyệt khác, không chia sẻ cookie, cùng tài khoản hoặc tài khoản giám đốc) và tải đúng URL đó — **không thấy yêu cầu vừa gửi**, kể cả sau khi chờ 45 giây và tải lại nhiều lần.
+
+Đã loại trừ các khả năng thường gặp:
+- **Không phải cache CDN/edge:** `curl -I` trả `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate` và `X-Vercel-Cache: MISS` cho đúng route này.
+- **Không phải RLS:** policy đọc cho `service_role` trên bảng `erp_project_change_requests` là `using (true)`, không điều kiện.
+- **Không phải do tài khoản mới (V12):** tái hiện y hệt với `ql.vanhanh` (tài khoản cũ, không đổi) gửi yêu cầu cho Tràng An (cơ sở không đổi).
+- **Không phải do bài test viết sai:** tái hiện trên chính `prod-smoke-project-workflow.spec.ts` — file có sẵn từ trước, không sửa gì trong đợt này, trước đó CODEX từng ghi nhận **2/2 pass**.
+
+**Chưa tìm ra nguyên nhân gốc.** Cần quyền truy cập log/connection Supabase trực tiếp để xem RPC có commit hay không và có bị pooling/replica nào đứng giữa hay không — việc này vượt quá khả năng chẩn đoán chỉ bằng Playwright + mã nguồn.
+
+**Mức độ nghiêm trọng:** cao — đây chính là cơ chế mà V2 (hộp thư quyết định của giám đốc) và toàn bộ module Dự án & sự kiện dựa vào để chứng minh giá trị "một người thao tác, người khác thấy ngay". Nếu lỗi này đúng như quan sát, **bất kỳ yêu cầu đổi phạm vi nào gửi từ một phiên đăng nhập cũng có thể không bao giờ tới được giám đốc ở phiên khác** — đúng loại lỗi mà V2 vừa được sửa để chặn (L3), nhưng ở một luồng dữ liệu khác.
+
+**Việc phát sinh:** 2 bài test đã đánh dấu `test.fixme()` kèm ghi chú nguyên nhân ngay trong file, không xoá cũng không ép qua:
+- `tests/e2e/prod-smoke-director-decision-inbox.spec.ts` — bài "quản lý gửi yêu cầu đổi phạm vi dự án, giám đốc thấy ngay..."
+- `tests/e2e/prod-smoke-project-workflow.spec.ts` — bài "quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở phiên khác..."
+
+- [ ] **V20. Tìm nguyên nhân gốc L17** — cần truy cập trực tiếp Supabase (log RPC, kiểm tra pooling/transaction) hoặc dựng lại bằng script Node gọi thẳng RPC (không qua Playwright/Next.js) để tách bạch lỗi nằm ở tầng Next.js/Vercel hay tầng Supabase. **Ưu tiên cao — ngang hoặc hơn V3**, vì ảnh hưởng trực tiếp uy tín của V2 vừa sửa.
+
+#### 🟠 L18. `nv.trangan` mất quyền module Dự án — giao diện cấp quyền không thể cấp lại
+
+**Bằng chứng:** `nv.trangan` vào `/erp/trang-an/du-an-su-kien` bị chuyển hướng `?denied=module` (không còn quyền). Vào `/erp/trang-an/nhan-su` với tài khoản quản lý, xem hồ sơ `nv.trangan`: danh sách "NGHIỆP VỤ ĐƯỢC GIAO" chỉ có Vé/Khách/Hiện trường/Sự cố/Chấm công — **không có ô "Dự án" nào để tick**, vì `du-an-su-kien` không nằm trong `employeeAssignable` + `trainedModuleIds` của bất kỳ nhân viên nào trong `lib/erp/demo-data.ts`.
+
+**Nguyên nhân:** khi module Dự án được xây (phiên 01/08 trước đó), quyền `du-an-su-kien` được cấp **thẳng vào bảng Supabase qua migration seed**, không qua giao diện `staff-access-manager.tsx` — và `trainedModuleIds` tĩnh trong `demo-data.ts` chưa từng được cập nhật để bao gồm nó. Hệ quả: `staff-access-manager.tsx` chỉ hiện các ô tick nằm trong `getEmployeeAssignableModuleIds()`, nên **bất kỳ lần lưu phân công nào cho nhân viên đó** (vì bất kỳ lý do gì khác, kể cả không liên quan tới module Dự án) **sẽ âm thầm xoá mất quyền `du-an-su-kien`** — vì form chỉ gửi lại đúng những ô đang hiển thị, không giữ nguyên các quyền ẩn. Rất có thể một trong nhiều lượt kiểm chứng Playwright trên production ở các phiên trước (bài "manager grants a module..." hoặc tương tự) đã vô tình kích hoạt việc này.
+
+**Vì sao đáng lo hơn vẻ ngoài:** đây không chỉ là một nhân viên bị mất một quyền — đây là **một lớp lỗi**: bất kỳ quyền nào được seed thẳng vào Supabase mà không đồng bộ vào `trainedModuleIds` tĩnh đều sẽ bị xoá không báo trước ở lần lưu tiếp theo. Càng thêm module mới theo kiểu "seed thẳng DB" (như module Dự án đã làm) thì rủi ro càng tích luỹ.
+
+- [ ] **V21. Đồng bộ `trainedModuleIds` với quyền đã seed, và sửa `staff-access-manager.tsx` để không xoá quyền ẩn** — trước mắt: thêm `du-an-su-kien` vào `trainedModuleIds` của ít nhất 1 nhân viên mỗi cơ sở cho khớp seed đã có; về lâu dài: form cấp quyền nên chỉ cập nhật đúng các module nó hiển thị, giữ nguyên mọi module khác nhân viên đang có thay vì ghi đè toàn bộ mảng. Xử lý L18. *(Nhỏ để vá tạm, vừa để sửa tận gốc.)*
+
+### 23.3 Việc tiếp theo
+
+V12 đã xong và đã chứng minh được trên production. Trước khi làm V3 (chuyển vai trò demo), nên cân nhắc ưu tiên **V20** vì nó ảnh hưởng tới độ tin cậy của chính V2 vừa sửa trong phiên trước — nếu chủ dự án đồng ý, sẽ điều tra V20 bằng một script Node gọi thẳng Supabase RPC (không qua trình duyệt) ở phiên tiếp theo để tách bạch nguyên nhân.

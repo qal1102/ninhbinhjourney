@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Production verification for V3 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md.
+// Production verification for V3 in docs/archive/DANH_GIA_2026_07_08.md.
 // This is a REAL session swap, not a UI role flag: it must be true that
 // (a) only a director can see/use the control, (b) switching actually
 // changes what the server lets the account do (blocked where the target

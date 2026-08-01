@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Production verification for V15 (docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md
+// Production verification for V15 (docs/archive/DANH_GIA_2026_07_08.md
 // muc 10.2 L8): an incident past its SLA must escalate on its own.
 //
 // Until migration 024 nothing in this system ever happened on a clock --

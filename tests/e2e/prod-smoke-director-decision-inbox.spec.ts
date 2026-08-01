@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 // Production verification for the director-home decision inbox fix (V2 in
-// docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md). Before this fix,
+// docs/archive/DANH_GIA_2026_07_08.md). Before this fix,
 // `directorDecisionCount` on `/erp` only summed shift-close exceptions and
 // supplier AP exceptions -- escalated incidents and pending project change
 // requests never appeared, so a real, manager-verified, SLA-breached

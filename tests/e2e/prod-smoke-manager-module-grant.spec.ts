@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Production verification for V14 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md
+// Production verification for V14 in docs/archive/DANH_GIA_2026_07_08.md
 // (L13). Before V14 `demo-session.ts` handed every manager all 15 modules
 // directly, so the permission story only ever applied to employees. These
 // tests prove three things that are only true if a manager's modules really

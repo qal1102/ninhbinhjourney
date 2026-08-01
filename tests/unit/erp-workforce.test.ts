@@ -40,7 +40,7 @@ describe("ERP workforce assignments", () => {
       (account) => account.role === "manager",
     );
 
-    // L14 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md: a single regional
+    // L14 in docs/archive/DANH_GIA_2026_07_08.md: a single regional
     // manager with all four sites meant "manager sees only their own site"
     // was never actually provable in a demo. Each site now has its own
     // manager account with managedSiteIds narrowed to exactly that site.

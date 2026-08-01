@@ -4,9 +4,18 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+## Read this first
+
+`docs/HANDOFF.md` is the single required document. Read it in full before making any change — it holds the current true state, the known defects, and the ranked work queue. Nothing else is required reading.
+
+- `docs/reference/` is consulted **only** when you start the specific task that needs it; `docs/HANDOFF.md` says which file maps to which task.
+- `docs/archive/` is historical evidence. Never conclude current state from it.
+- After finishing a task, update the state, defect and work-queue sections of `docs/HANDOFF.md`. **Do not create another status document** — a sprawl of 17 overlapping docs is exactly what this structure replaced.
+- Priority is fixed: the internal ERP comes first and must reach production quality; the visitor-facing web comes later. Do not trade ERP quality for web work.
+
 ## Ninh Binh Journey UI/UX
 
-Before changing public UI, read `docs/UI_UX_RULES.md` and `docs/REFERENCE_SITE_ANALYSIS.md`, then apply them as the standing design checklist.
+Before changing public UI, read `docs/reference/UI_UX_RULES.md` and `docs/reference/REFERENCE_SITE_ANALYSIS.md`, then apply them as the standing design checklist.
 
 - This is premium editorial tourism, not generic SaaS.
 - Dialogs must always layer above Leaflet and close via button, backdrop and Escape.
@@ -14,15 +23,12 @@ Before changing public UI, read `docs/UI_UX_RULES.md` and `docs/REFERENCE_SITE_A
 - Motion must support reduced motion.
 - Run `npm run lint` and `npm run build` before shipping visible UI changes.
 
-## Codex handoff and plan
+## Recording what you did
 
-At the start of every new task or conversation, read both `docs/CODEX.md` and `docs/PLAN.md` completely before making changes.
-
-- Treat `docs/CODEX.md` as the canonical handoff for current status, production URLs, verified behavior, pending decisions, data limitations and next work.
-- Treat `docs/PLAN.md` as the canonical numbered backlog and readiness gate. Select work by its plan ID, and do not mark a UI-only shell as a completed functional module.
-- After every material code, UI, configuration, schema, test or deployment change, update the current-state sections and append a dated entry to its change log before handing off.
-- After every material change, also update the affected PLAN item status and its verification evidence.
-- Record what was actually verified. Never describe demo/local state as persistent or realtime unless the production integration has been verified.
+- Select work by its `T`/`W` id from the work queue in `docs/HANDOFF.md`. Do not mark a UI-only shell as a completed functional module.
+- After every material code, UI, configuration, schema, test or deployment change, update `docs/HANDOFF.md` so the next session inherits the truth, not a stale claim.
+- Record what was actually verified, and say plainly what a verification does **not** prove. Never describe demo or local state as persistent or realtime unless the production integration has been verified.
+- `docs/reference/TIEU_CHI_NGHIEM_THU.md` holds the per-module definition of done; consult it when you need to judge whether something is finished.
 
 ## Test cadence
 

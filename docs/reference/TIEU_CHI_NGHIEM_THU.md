@@ -1,8 +1,6 @@
-# PLAN — Kế hoạch hoàn thiện Ninh Bình Journey và ERP
+# Tiêu chí nghiệm thu theo module
 
-> Đây là danh sách việc còn lại để đưa toàn bộ sản phẩm tới mức sẵn sàng nghiệm thu.
-> `docs/CODEX.md` trả lời **đã làm gì, đang ở trạng thái nào**. File này trả lời **còn phải làm gì, làm theo thứ tự nào và dựa vào đâu để gọi là xong**.
-> [`docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md`](./DANH_GIA_HE_THONG_VA_GIAO_VIEC.md) trả lời **chất lượng quy trình nghiệp vụ hiện đang ở đâu** — có danh sách lỗi logic đã kiểm chứng (L1–L7) và thứ tự việc ưu tiên (V1–V11). Đọc file đó trước khi chọn việc mới, vì một số mục trong PLAN này chưa phản ánh đúng mức ưu tiên thực tế.
+> **Không phải tài liệu bắt buộc đọc.** Hiện trạng và hàng việc nằm ở `docs/HANDOFF.md`. File này chỉ dùng khi cần tra định nghĩa "thế nào là xong" của một module cụ thể. Các tham chiếu tới CODEX.md/PLAN.md/DANH_GIA bên dưới là tên cũ — nay nằm ở `docs/archive/`.
 
 ## 0. Cách dùng file này trong mọi cuộc trò chuyện
 

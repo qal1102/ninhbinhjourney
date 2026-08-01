@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// V3 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md: exercises the REAL
+// V3 in docs/archive/DANH_GIA_2026_07_08.md: exercises the REAL
 // demo-session.ts logic (setErpSession/startRoleSwitch/endRoleSwitch/
 // getCurrentErpUser), only faking the browser cookie transport -- this is
 // the security-critical part of the feature (director-only, flag-gated,

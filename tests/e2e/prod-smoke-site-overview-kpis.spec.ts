@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Production verification for V1/L1/L2 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md.
+// Production verification for V1/L1/L2 in docs/archive/DANH_GIA_2026_07_08.md.
 // Before this fix, ERP_SITES[].snapshot on domain/erp.ts fanned out hard-coded
 // constants to the 5 KPI cards every role saw first when entering a site.
 // Confirmed live (audit mục 20.4): Tam Chúc showed "Sự cố mở 5" on this page
@@ -26,7 +26,7 @@ async function logout(page: Page) {
 }
 
 // Each site now has its own manager account (V12 in
-// docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md fixed the org chart so one manager
+// docs/archive/DANH_GIA_2026_07_08.md fixed the org chart so one manager
 // no longer owns all four sites); logging in per site also doubles as a
 // live check that a manager cannot reach a site they were not assigned.
 const SITE_MANAGERS: Record<string, [string, string]> = {
@@ -91,7 +91,7 @@ test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với
   }
 });
 
-// Production verification for V12 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md
+// Production verification for V12 in docs/archive/DANH_GIA_2026_07_08.md
 // (L14): before this fix, one manager account (managedSiteIds = all 4 sites)
 // managed every site at once, so "manager cannot see another site's data"
 // was never actually demonstrable. Each site now has its own manager.

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Production verification for V4 (docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md
+// Production verification for V4 (docs/archive/DANH_GIA_2026_07_08.md
 // muc 3 L5, muc 7 dot 2): the last decorative button found in the 31/07
 // audit. `camera-ai-workspace.tsx`'s "Giao quan ly kiem tra" / "Tao phieu
 // hien truong" / "Bao quan ly" used to only call setActionMessage() -- no
@@ -20,7 +20,7 @@ import { expect, test, type Page } from "@playwright/test";
 //
 // Uses Tam Chúc, not Tràng An: `createFeeds()` only ever marks a camera
 // "attention" when `site.snapshot.capacityPercent >= 80` (index 1). Tràng
-// An sits at 68% (confirmed in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md muc
+// An sits at 68% (confirmed in docs/archive/DANH_GIA_2026_07_08.md muc
 // 20.4), so every one of its cameras is "stable"/"offline" -- there would be
 // no "Cần chú ý" camera to click. Tam Chúc is at 83%.
 

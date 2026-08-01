@@ -1,5 +1,7 @@
 # CODEX — Nhật ký bàn giao Ninh Bình Journey
 
+> ⚠️ **LƯU TRỮ — không dùng để kết luận hiện trạng.** Hiện trạng, lỗi đang mở và hàng việc nằm ở `docs/HANDOFF.md`. File này giữ lại làm bằng chứng lịch sử của quá trình kiểm chứng.
+
 > File này là nguồn bàn giao chính thức giữa các cửa sổ trò chuyện Codex. Khi bắt đầu phiên mới, đọc toàn bộ file này trước khi sửa dự án. Sau mỗi thay đổi quan trọng phải cập nhật trạng thái và thêm một mục vào nhật ký cuối file.
 >
 > Thứ tự đọc bắt buộc: `AGENTS.md` → `docs/CODEX.md` → `docs/PLAN.md` → [`docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md`](./DANH_GIA_HE_THONG_VA_GIAO_VIEC.md). CODEX ghi điều đã làm/trạng thái thật; PLAN ghi toàn bộ việc còn lại và tiêu chí để gọi là hoàn tất; file đánh giá ghi **chất lượng quy trình nghiệp vụ đang ở đâu** và danh sách việc ưu tiên (V1–V11) theo góc nhìn giám đốc kỹ thuật.

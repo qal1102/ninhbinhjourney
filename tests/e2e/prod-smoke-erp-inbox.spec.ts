@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Production verification for V5 (docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md
+// Production verification for V5 (docs/archive/DANH_GIA_2026_07_08.md
 // muc 7 dot 2, L7 + UX#2): the notification bell used to show exactly one
 // aggregated sentence ("N việc cần tài khoản này xử lý") from a single
 // "urgent" query -- there was no categorized inbox, so every role had to

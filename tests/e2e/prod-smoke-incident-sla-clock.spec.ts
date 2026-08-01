@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// Production verification for V13 (docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md
+// Production verification for V13 (docs/archive/DANH_GIA_2026_07_08.md
 // muc 10.2 / muc 24): elapsed_minutes on erp_incidents used to be a frozen
 // integer written once at seed time and never recalculated, so an incident
 // reported days ago still showed "con N phut" forever, and closed cases

@@ -29,10 +29,22 @@ test("giám đốc chuyển sang xem như nhân viên: bị chặn đúng như n
   await page.goto("/erp/tam-chuc");
   await expect(page).toHaveURL(/\/erp\/tam-chuc$/);
 
-  await page.getByText("Xem theo vai trò").click();
-  const select = page.locator('select[name="targetUserId"]');
-  await select.selectOption("employee-trang-an-01");
-  await page.getByRole("button", { name: "Xem thử" }).click();
+  // RoleSwitchControl renders twice in the DOM: once in the desktop nav
+  // (hidden below the lg breakpoint via CSS, not removed) and once inside
+  // the mobile hamburger menu -- both exist regardless of viewport, so every
+  // locator in this block must stay scoped to whichever container is
+  // actually visible, not just the opening click.
+  const mobileMenuButton = page.getByRole("button", { name: "Mở menu" });
+  let roleSwitchContainer = page.getByRole("banner");
+  if (await mobileMenuButton.isVisible()) {
+    await mobileMenuButton.click();
+    roleSwitchContainer = page.getByLabel("Menu điều hành");
+  }
+  await roleSwitchContainer.getByText("Xem theo vai trò").click();
+  await roleSwitchContainer
+    .locator('select[name="targetUserId"]')
+    .selectOption("employee-trang-an-01");
+  await roleSwitchContainer.getByRole("button", { name: "Xem thử" }).click();
   await expect(page).toHaveURL(/\/erp$/);
 
   // Banner is present on every page while impersonating.

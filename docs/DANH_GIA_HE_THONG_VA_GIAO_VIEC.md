@@ -363,7 +363,7 @@ Trong đó **L14 rẻ nhất và nên sửa trước**: chỉ cần thêm 3 tài
 ### Bổ sung vào Đợt 1 (trước demo)
 
 - [x] **V12. Sửa sơ đồ tổ chức tài khoản** — **ĐÃ SỬA 01/08/2026.** Xem mục 23.
-- [ ] **V13. Đồng hồ SLA chạy thật** — tính `elapsedMinutes` từ `reported_at` khi đọc thay vì đọc cột lưu cứng; đánh dấu rõ hồ sơ đã quá hạn. Xử lý L8 phần hiển thị. *(Nhỏ.)*
+- [x] **V13. Đồng hồ SLA chạy thật** — **ĐÃ SỬA 01/08/2026.** Xem mục 25.
 
 ### Bổ sung vào Đợt 2
 
@@ -983,3 +983,22 @@ V12, L18 (phòng ngừa) đã xong và đã chứng minh đúng cách trên prod
 **Kiểm chứng:** `typecheck`/`lint`/`test:run` (267 pass, +12 test mới — 7 bài unit cho `startRoleSwitch`/`endRoleSwitch` chạy thật với `next/headers` giả lập, 5 bài hợp đồng migration)/`build` sạch cục bộ → migration áp dụng lên Supabase production (`npx supabase db push`, đã xác nhận trực tiếp RLS/grant bằng `supabase db query --linked`) → bật `ERP_DEMO_ROLE_SWITCH=true` trên Vercel production → deploy → Playwright thật trên production (`PLAYWRIGHT_BASE_URL` set đúng, rút kinh nghiệm từ mục 23.3): `prod-smoke-role-switch.spec.ts` **2/2 pass** — quản lý không thấy nút; giám đốc chuyển sang xem như `nv.trangan` bị chặn đúng y hệt nhân viên thật (cả cơ sở lẫn module chưa được cấp), có băng thông báo, quay lại giám đốc khôi phục đầy đủ quyền.
 
 **Chưa làm trong đợt này:** màn hình xem lại nhật ký chuyển vai trò (đã ghi vào bảng nhưng chưa có UI đọc lại) — đủ cho mục đích kiểm toán/demo trực tiếp qua Supabase, chưa cần thiết ngay.
+
+---
+
+## 25. V13 đã sửa — 01/08/2026: đồng hồ SLA sự cố chạy thật
+
+**Bằng chứng trước khi sửa (mục 10.2, L8):** `elapsed_minutes` trên `erp_incidents` là một số nguyên ghi cứng một lần lúc seed, không bao giờ tính lại. `reported_at` cũng chỉ là chuỗi hiển thị "HH:MM" không có ngày, không đủ để tính lại thời gian đã trôi qua. Hệ quả: một sự cố báo từ ba ngày trước vẫn hiển thị "còn 1 phút", và không có cách nào tự phát hiện quá hạn.
+
+**Đã sửa:**
+- Migration `202608010015_erp_incident_sla_clock.sql`: thêm cột `reported_at_ts timestamptz` (thời điểm báo cáo thật), backfill một lần từ `elapsed_minutes` cũ rồi **xoá hẳn cột `elapsed_minutes`** để không ai đọc nhầm giá trị đông cứng nữa.
+- `lib/erp/incident-repository.ts`: `elapsedMinutes` giờ tính **tại thời điểm đọc**, ở đúng một chỗ (hàm `withLiveElapsed`, áp cho cả `getIncidentCases`/`transitionIncidentByManager`/`progressIncidentByEmployee`) — đang mở thì tính `now() - reported_at_ts` (chạy thật, tăng liên tục); đã đóng thì tính `updated_at - reported_at_ts` (đông cứng đúng lúc đóng, không chạy tiếp) — hai RPC chuyển trạng thái đã sẵn có `updated_at = now()` ở mọi bước kể cả bước đóng, không cần thêm cột nào cho việc này.
+- Áp dụng cho cả 2 chế độ lưu trữ: `createSeedCases` (demo-cookie) sinh `reportedAtIso` thật lúc tạo seed thay vì số phút cứng; `caseFromRow` (Supabase) đọc `reported_at_ts`/`updated_at` thật từ bảng.
+
+**Một lỗi tự phát hiện và tự sửa ngay trong lúc làm:** migration 015 backfill `reported_at_ts = now() - elapsed_minutes`, dùng **thời điểm chạy migration** làm mốc — sai với bất kỳ hàng nào có `updated_at` thật đã nằm xa hơn trong quá khứ (ví dụ `INC-TA-064`, đã đóng từ lúc seed migration 011 chạy ngày 31/07). Kiểm tra trực tiếp bằng `supabase db query --linked` ngay sau khi áp 015 phát hiện `reported_at_ts` (hôm nay) đứng **sau** `updated_at` (hôm qua) — phép trừ ra âm, bị `Math.max(0, ...)` kẹp về 0, hiển thị sai "Hoàn tất trong 0 phút". Đã viết thêm migration `202608010016_erp_incident_sla_clock_backfill_fix.sql` sửa lại bằng cách neo vào `updated_at` của chính hàng đó (mốc thật duy nhất còn lại, vì `elapsed_minutes` đã bị xoá) thay vì `now()`, dùng đúng quy ước hậu tố id `-071/-069/-064` (offset gốc 4/7/6 phút) để khôi phục chính xác ý định seed ban đầu.
+
+**Kiểm chứng:** `typecheck`/`lint`/`test:run` (275 pass, +8 bài hợp đồng migration mới cho cả 015 và 016)/`build` sạch cục bộ → dry-run rồi áp cả 2 migration lên Supabase production, xác nhận trực tiếp bằng `supabase db query --linked` (cột `elapsed_minutes` đã biến mất; sự cố đã đóng cho đúng 6 phút cố định; sự cố đang mở giờ đúng là ~1170 phút đã trôi qua kể từ lúc seed hôm 31/07 — chính là bằng chứng đồng hồ chạy thật, một đồng hồ đứng yên không bao giờ cho ra số này) → push → deploy Vercel production → Playwright thật trên production (`PLAYWRIGHT_BASE_URL` set tường minh, đúng bài học mục 23.3), bài mới `tests/e2e/prod-smoke-incident-sla-clock.spec.ts`: **2/2 pass** (desktop + mobile, 4.7–5.3s) — sự cố đang mở hiện đúng "Quá SLA N phút", sự cố đã đóng hiện đúng một con số nhỏ, cố định (6 phút), không tăng theo thời gian thật.
+
+**Việc còn lại của L8, chưa nằm trong V13:** tự động chuyển cấp khi quá hạn SLA (cần cơ chế chạy nền/cron) — đây là **V15** trong danh sách giao việc, chưa làm.
+
+- [x] **V13.** Đã sửa và xác nhận đúng cách trên production.

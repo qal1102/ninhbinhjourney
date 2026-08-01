@@ -44,6 +44,7 @@
   - **Còn treo:** khoảng trống của từng module đã sửa (không có luồng tạo mới sự kiện/gói việc, chưa RCA/CAPA, chưa đối chiếu vé thật, v.v. — xem cột "Khoảng trống chính" trong bảng G10 của PLAN.md); và việc nối check-in ERP với booking/pass thật (G10.1) chưa bắt đầu.
 - **[Claude Sonnet — V12 01/08/2026]** Sửa sơ đồ tổ chức tài khoản: mỗi cơ sở nay có đúng 1 quản lý (`ql.tamchuc`/`ql.tamcoc`/`ql.baidinh` thêm mới, `ql.vanhanh` thu về chỉ còn Tràng An), chứng minh được trên production rằng quản lý một cơ sở không vào được cơ sở khác. Chi tiết đầy đủ ở mục "Nhật ký thay đổi" bên dưới và mục 23 của file đánh giá. Trong lúc kiểm chứng ban đầu tưởng phát hiện thêm 2 lỗi (L17/L18) — **sau đó xác định L17 không có thật, do chính phiên làm việc quên set `PLAYWRIGHT_BASE_URL` nên Playwright âm thầm test nhầm vào server cục bộ thay vì production** (xem đính chính đầu tiên trong "Nhật ký thay đổi"); L18 là bug thật trong mã (đã sửa, đúng) nhưng chưa từng thực sự gây mất quyền trên production. V20 đã đóng, không cần làm.
 - **[Claude Sonnet — V3 01/08/2026]** Xây xong chuyển vai trò demo cho giám đốc (đổi phiên đăng nhập thật, không phải cờ UI), đúng 5 điều kiện đã duyệt. Migration đã áp dụng lên Supabase production, cờ `ERP_DEMO_ROLE_SWITCH=true` đã bật, đã kiểm chứng 2/2 pass trên production thật. Chi tiết ở mục 24 file đánh giá.
+- **[Claude Sonnet — V13 01/08/2026]** Sửa đồng hồ SLA sự cố (`elapsed_minutes` từng là số cứng ghi một lần lúc seed, không bao giờ tính lại — L8). Giờ tính tại thời điểm đọc từ cột `reported_at_ts` thật (đang mở thì chạy theo `now()`, đã đóng thì đông cứng theo `updated_at`). Áp 2 migration lên Supabase production (migration thứ hai tự sửa một lỗi neo mốc thời gian sai do chính migration thứ nhất gây ra, phát hiện bằng cách tự truy vấn lại production ngay sau khi apply — xem mục 25 file đánh giá). Đã xác nhận 2/2 pass trên production thật (desktop + mobile).
 
 ## Công việc đang dở — phải đọc trước khi sửa
 
@@ -399,6 +400,15 @@ Sau mỗi thay đổi quan trọng:
 6. Thêm một dòng vào **Nhật ký thay đổi** bên dưới, mới nhất ở trên.
 
 ## Nhật ký thay đổi
+
+### 01/08/2026 — [Claude Sonnet] V13: đồng hồ SLA sự cố chạy thật
+
+- **Vấn đề (mục 10.2 file đánh giá, L8):** `elapsed_minutes` trên `erp_incidents` là số nguyên ghi cứng một lần lúc seed, không bao giờ tính lại; `reported_at` chỉ là chuỗi hiển thị "HH:MM" không có ngày, không đủ để tính lại thời gian trôi qua. Một sự cố báo từ nhiều ngày trước vẫn hiển thị "còn 1 phút" mãi mãi, và không có cách nào tự phát hiện quá hạn.
+- **Đã sửa:** migration `202608010015_erp_incident_sla_clock.sql` thêm cột `reported_at_ts timestamptz` (mốc thời gian báo cáo thật), backfill một lần từ `elapsed_minutes` cũ rồi xoá hẳn cột đó. `lib/erp/incident-repository.ts` giờ tính `elapsedMinutes` **tại thời điểm đọc**, ở đúng một chỗ (`withLiveElapsed`): đang mở thì `now() - reported_at_ts` (chạy thật), đã đóng thì `updated_at - reported_at_ts` (đông cứng đúng lúc đóng — hai RPC chuyển trạng thái đã sẵn `updated_at = now()` ở mọi bước). Áp dụng cho cả 2 chế độ lưu trữ (demo-cookie và Supabase).
+- **Tự phát hiện và tự sửa một lỗi ngay trong lúc làm:** migration 015 backfill `reported_at_ts = now() - elapsed_minutes`, dùng thời điểm chạy migration làm mốc — sai với hàng nào có `updated_at` thật đã nằm xa hơn trong quá khứ (ví dụ sự cố đã đóng từ lúc seed migration 011 ngày 31/07). Kiểm tra lại ngay bằng `supabase db query --linked` sau khi apply 015 phát hiện `reported_at_ts` đứng sau `updated_at`, phép trừ ra âm bị kẹp về 0, hiển thị sai "Hoàn tất trong 0 phút". Đã viết thêm migration `202608010016_erp_incident_sla_clock_backfill_fix.sql` neo lại đúng vào `updated_at` của từng hàng, dùng quy ước hậu tố id `-071/-069/-064` để khôi phục đúng offset gốc (4/7/6 phút).
+- **Kiểm chứng:** `typecheck`/`lint`/`test:run` (275 pass, +8 test hợp đồng migration mới)/`build` sạch cục bộ → dry-run rồi áp cả 2 migration lên Supabase production, xác nhận trực tiếp qua `supabase db query --linked` (cột `elapsed_minutes` đã biến mất; sự cố đã đóng đúng 6 phút cố định; sự cố đang mở đúng ~1170 phút đã trôi qua kể từ lúc seed hôm 31/07 — bằng chứng đồng hồ chạy thật) → push → deploy Vercel production → Playwright thật trên production (`PLAYWRIGHT_BASE_URL` set tường minh trong cùng lệnh), bài mới `tests/e2e/prod-smoke-incident-sla-clock.spec.ts`: **2/2 pass** (desktop + mobile, 4.7–5.3s).
+- Việc còn lại của L8 chưa nằm trong V13: tự động chuyển cấp khi quá hạn SLA (cần cơ chế chạy nền/cron) — đây là V15, chưa làm.
+- Đã đánh dấu `[x]` V13 ở mục 7 và mục 12, thêm mục 25 file đánh giá.
 
 ### 01/08/2026 — [Claude Sonnet] Đính chính: L17 không tồn tại — lỗi tự kiểm chứng của chính phiên trước; xây xong V3
 

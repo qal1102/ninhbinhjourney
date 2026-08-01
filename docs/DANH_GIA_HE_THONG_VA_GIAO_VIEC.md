@@ -1056,3 +1056,42 @@ Khi chạy Playwright thật trên production để xác nhận V5, băng chuôn
 **Phát hiện phụ, không phải do sửa cookie gây ra:** trong lúc quét rộng, `prod-smoke-role-switch.spec.ts` lộ ra một lỗ hổng test có sẵn — `RoleSwitchControl` render hai lần trong DOM (một bản trong nav desktop bị ẩn bằng CSS dưới breakpoint `lg`, một bản trong menu hamburger di động), nhưng bài test cũ chỉ from thao tác đúng bản desktop, không mở hamburger trước trên viewport di động. Đã sửa bài test để chọn đúng vùng theo `page.viewportSize()` (so với breakpoint 1024px của Tailwind) thay vì đoán qua `isVisible()` (từng bị đua thời gian dưới tải song song, chọn nhầm bản desktop trên mobile-chromium). Không đụng vào mã sản phẩm — chỉ sửa bài test.
 
 - [x] **V5.** Đã sửa và xác nhận đúng cách trên production. Đợt 2 đã xong hoàn toàn (V4 + V5). Đợt 3 (V6-V9, nối nguồn dữ liệu đầu vào) là việc lớn tiếp theo, chưa bắt đầu.
+
+---
+
+## 28. V14 đã sửa — 02/08/2026: quản lý cơ sở được phân quyền thật, không còn mặc định thấy toàn bộ 15 module
+
+**Bằng chứng trước khi sửa (mục 11.3, L13):** `demo-session.ts` gán thẳng `ERP_MODULES.map(m => m.id)` cho mọi tài khoản `role === "manager"` ở mọi cơ sở họ phụ trách. Trường `initialModuleIds` của cả 4 quản lý là `[]` và bị bỏ qua hoàn toàn. Hệ quả: **chỉ nhân viên mới thực sự bị phân quyền**; nếu khách hỏi "cấp quyền cho quản lý thế nào?" thì không có câu trả lời, và không thể có quản lý phụ trách an toàn khác quản lý phụ trách thương mại.
+
+**Đã sửa — dùng đúng cơ chế đang áp dụng cho nhân viên, không dựng cơ chế mới:**
+
+- **Phạm vi cơ sở giữ nguyên** lấy từ sơ đồ tổ chức (`managedSiteIds`) — đó là quyết định tổ chức, không phải quyền cấp phát. **Chỉ danh sách module** chuyển sang đọc từ `erp_employee_access`, đúng kho mà nhân viên đang dùng.
+- Kho phân quyền (`staff-access-repository.ts`) nay chứa cả quản lý: `createDefaultAccessState`/`sanitizeAccessState` xử lý cả hai vai trò. Sàn lọc "nhân viên không được `nhan-su`/`bao-cao`" được thu hẹp lại thành **chỉ áp cho nhân viên** — quản lý hoàn toàn có quyền xếp ca và phân công người.
+- Bộ quyền mặc định **khác nhau theo từng cơ sở**, đúng cái mà cơ sở đó thật sự vận hành:
+
+| Quản lý | Số module | Ngoài bộ nền |
+|---|---|---|
+| Tràng An (`ql.vanhanh`) | 13/15 | Tài sản & nghiệm thu, SOP & diễn tập |
+| Tam Chúc (`ql.tamchuc`) | 13/15 | SOP & diễn tập, Xe trung chuyển |
+| Tam Cốc (`ql.tamcoc`) | 12/15 | Xe trung chuyển |
+| Bái Đính (`ql.baidinh`) | 13/15 | Xe trung chuyển, Tài sản & nghiệm thu |
+
+- **Không quản lý nào có `bao-cao` (Báo cáo & dự báo)** — phân tích toàn vùng thuộc giám đốc và kế toán. Đây cũng là điểm chốt dễ kiểm chứng nhất: nếu ai đó lỡ khôi phục lại việc cấp cứng 15 module thì bài test production sẽ đỏ ngay.
+- **Giám đốc giữ nguyên toàn quyền xem** — V14 không đụng tới nhánh `director`.
+- **Màn hình cấp quyền:** thêm khối "Quản lý phụ trách {cơ sở}" trong `/erp/<cơ sở>/nhan-su`, **chỉ giám đốc thấy**, tick được cả 15 module cho quản lý cơ sở đó. Server Action chặn hai đường leo thang: quản lý không sửa được quyền của bất kỳ quản lý nào **kể cả của chính mình** (lỗi `Chỉ giám đốc mới đổi được quyền của quản lý cơ sở.`), và không cấp được quyền cho quản lý ở cơ sở họ không phụ trách.
+
+**Migration:** `202608020018_erp_manager_module_access_seed.sql` — chỉ dữ liệu, không đổi schema, `on conflict (employee_account_id) do nothing` nên không bao giờ ghi đè quyền giám đốc đã tự cấp.
+
+**Kiểm chứng:**
+
+- `typecheck`/`lint`/`test:run` (**299 pass**, thêm 6 bài contract cho migration 018, 4 bài integration cho các chốt chặn mới, 1 bài unit chống hồi quy chính L13)/`build` sạch cục bộ.
+- Migration dry-run rồi apply lên Supabase production; xác minh **trực tiếp bằng `supabase db query --linked`**: 4 dòng, đúng cơ sở, đúng số module (13/13/12/13), `bao-cao = false` cả bốn, và bộ quyền **thật sự khác nhau** giữa các quản lý (`sop-dien-tap` true ở Tràng An/Tam Chúc, false ở Tam Cốc/Bái Đính).
+- Deploy Vercel production Ready → Playwright thật trên production (`PLAYWRIGHT_BASE_URL` set tường minh), bài mới `tests/e2e/prod-smoke-manager-module-grant.spec.ts` — **8/8 pass** (desktop + mobile):
+  - Quản lý Tràng An vào được `su-co` và `sop-dien-tap`, **bị chặn `denied=module` ở `bao-cao`**.
+  - Quản lý Tam Cốc vào được `xe-trung-chuyen` nhưng **bị chặn ở `sop-dien-tap`** — cùng vai trò, khác quyền, đúng điều L13 nói là không làm được.
+  - Giám đốc vẫn vào được `bao-cao`, và thấy khối cấp quyền hiện đúng **"13/15 nghiệp vụ"** (số đọc thật từ Supabase, không phải 15/15).
+  - Quản lý **không** thấy khối cấp quyền cấp quản lý trên chính màn hình nhân sự của mình.
+
+**Ghi chú cho phiên sau:** một lần chạy đầu có 2/8 đỏ, nhưng **không phải lỗi tính năng** — locator `getByText("Lê Hoàng Nam")` bắt trúng `<option>` ẩn trong dropdown "Xem theo vai trò" của chính giám đốc (V3). Đã siết locator vào đúng `<section>` và nhân tiện khẳng định luôn con số "13/15 nghiệp vụ".
+
+- [x] **V14.** Đã sửa và xác nhận trên production. Xử lý xong L13.

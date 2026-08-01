@@ -33,3 +33,26 @@ Use risk-based test layers; do not rerun the full browser matrix after every sma
 - Run the full Playwright, visual, accessibility and cross-role matrix at release-candidate, pre-deploy or scheduled CI/nightly gates.
 - Run production smoke only after a deployment.
 - If a test failure may come from a stale local server or test environment, cleanly isolate the environment before rerunning; do not change product code or use forced clicks to hide an invalid test.
+- Always set `PLAYWRIGHT_BASE_URL` explicitly in the same command when testing production. Omitting it silently spins up a local server and tests that instead, which has already produced a false "critical bug" report.
+
+## A production test must clean up after itself
+
+Production smoke tests run against the real Supabase database, so anything they create is real business data that a client sees. **A spec that writes must leave the system exactly as it found it.** This is not optional tidiness — the 02/08/2026 audit found 13 fake change requests sitting in the director's decision inbox, 9 fake open incidents inflating a site KPI, and an event budget that had silently drifted from the seeded 12,8 tỷ to 13,8 tỷ, all from specs that created data and walked away. Migrations 019 and 020 exist only to undo that.
+
+Before adding or changing any spec that writes to production, satisfy all four:
+
+1. **Nothing may be left pending or open.** Anything that lands in someone's inbox, decision queue, notification bell or "đang mở" count must be decided, closed or reverted before the spec ends. Assert that it is gone — that assertion is usually stronger than the one you started with.
+2. **Numbers must come back.** If the spec moves a figure (budget, quota, balance), it must move it back in the same run, through the product's own workflow. A per-run delta compounds forever and quietly corrupts the demo.
+3. **Provision your own subject; never consume seeded data.** Workflows here are one-way state machines with no revert RPC, so a spec that walks a seeded record forward can only pass a fixed number of times and then destroys the demo fixture. Create the record the spec needs, then close it out.
+4. **Never assume a starting state you did not create.** Read current state and act from it, or provision it yourself.
+
+Where a row genuinely cannot be removed (no delete RPC, and do not add one just for tests), leave it in a terminal state and say so in a comment. If test residue still builds up, purge it with a data-only migration that deletes on a narrow, verifiable predicate — never by time range or by truncating a table.
+
+## Leave the workspace clean
+
+When a task is done, do not leave the machine loaded down:
+
+- Delete generated test residue — `artifacts/playwright/` traces, screenshots, videos and `test-results/`. They are large, they are regenerated on demand, and they are not committed.
+- Stop every background process and dev server you started, and free the ports you opened. Never leave a `next dev`, a Playwright server or a watch process running after handing off.
+- Do not leave scratch files in the repo; use the session scratchpad directory.
+- Check `git status` before handing off: only intended changes should be there.

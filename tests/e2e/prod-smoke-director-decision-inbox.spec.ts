@@ -85,6 +85,25 @@ test("quản lý gửi yêu cầu đổi phạm vi dự án, giám đốc thấy
     await expect(card).toBeVisible({ timeout: 15_000 });
     await expect(card).toHaveAttribute("href", "/erp/bai-dinh/du-an-su-kien");
     await expect(card.getByText("Bái Đính", { exact: false })).toBeVisible();
+
+    // Decide it before leaving. A pending request is counted by the
+    // director's decision inbox and by the notification bell (V2/V5), so a
+    // test that files one and walks away permanently inflates both numbers
+    // -- thirteen of these had piled up on production before the 02/08/2026
+    // audit. Rejecting it here is also a stronger assertion than the old
+    // version: it proves the item genuinely leaves the inbox again.
+    await directorPage.goto("/erp/bai-dinh/du-an-su-kien");
+    const item = directorPage.locator("li").filter({ hasText: uniqueSummary });
+    await expect(item).toBeVisible({ timeout: 15_000 });
+    await item.getByRole("button", { name: "Từ chối" }).click();
+    await expect(item.getByText("Từ chối", { exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await directorPage.goto("/erp");
+    await expect(
+      directorPage.locator("a").filter({ hasText: uniqueSummary }),
+    ).toHaveCount(0);
   } finally {
     await directorContext.close();
   }

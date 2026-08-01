@@ -58,11 +58,15 @@ test("giám đốc vẫn xem được toàn bộ, và là người duy nhất th
   await expect(page).toHaveURL(/\/erp\/trang-an\/bao-cao$/);
 
   await page.goto("/erp/trang-an/nhan-su");
-  const managerGrant = page.getByRole("heading", {
-    name: /Quản lý phụ trách/,
+  // Scope to the section: the director's own "Xem theo vai trò" picker also
+  // carries every account name in hidden <option>s.
+  const managerGrant = page.locator("section").filter({
+    has: page.getByRole("heading", { name: /Quản lý phụ trách/ }),
   });
   await expect(managerGrant).toBeVisible();
-  await expect(page.getByText("Lê Hoàng Nam").first()).toBeVisible();
+  await expect(managerGrant.getByText("Lê Hoàng Nam")).toBeVisible();
+  // The real grant read back out of Supabase, not a blanket 15/15.
+  await expect(managerGrant.getByText("13/15 nghiệp vụ")).toBeVisible();
 });
 
 test("quản lý không thấy ô cấp quyền cấp quản lý trên chính màn hình nhân sự của mình", async ({

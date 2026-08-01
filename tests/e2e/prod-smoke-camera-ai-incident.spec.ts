@@ -76,6 +76,25 @@ test("a camera-flagged report a manager creates is visible in Sự cố from a b
     await card.locator("summary").click();
     await expect(card.getByText(/^Camera AI · /)).toBeVisible();
     await expect(card.getByText("Mới báo", { exact: true })).toBeVisible();
+
+    // Close out what this test opened. There is no delete RPC (and there
+    // should not be one just for tests), but leaving the incident open would
+    // inflate Tam Chúc's "sự cố đang mở" KPI on every run -- ten of these had
+    // accumulated, nine still open, before the 02/08/2026 audit. Walking it
+    // to "Đã đóng" costs one extra pass and doubles as coverage of the full
+    // manager transition chain.
+    for (const step of [
+      "Tiếp nhận & giữ SLA",
+      "Giao tổ phụ trách",
+      "Chuyển sang xác minh",
+      "Xác nhận & đóng",
+    ]) {
+      await card.getByRole("button", { name: step }).click();
+      await expect(card.getByRole("button", { name: step })).toHaveCount(0, {
+        timeout: 15_000,
+      });
+    }
+    await expect(card.getByText("Đã đóng", { exact: true })).toBeVisible();
   } finally {
     await secondContext.close();
   }

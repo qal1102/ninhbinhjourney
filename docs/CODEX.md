@@ -403,6 +403,16 @@ Sau mỗi thay đổi quan trọng:
 
 ## Nhật ký thay đổi
 
+### 02/08/2026 — [Claude Opus] V15: sự cố quá hạn SLA tự chuyển cấp (việc đầu tiên trong hệ thống chạy theo thời gian)
+
+- **Vấn đề (mục 10.2, L8):** V13 đã làm đồng hồ SLA chạy thật, nhưng chuyển cấp vẫn chỉ xảy ra khi có người bấm nút — ngược hoàn toàn với lý do SLA tồn tại, và là lý do KPI "phản ứng dưới 4 phút" của khách không đo được. Rộng hơn: trước migration này **không một thứ gì trong hệ thống xảy ra theo thời gian**.
+- **Đã làm:** migration `202608020024_erp_incident_auto_escalation.sql` bật `pg_cron`, chạy `erp_incident_escalate_overdue()` mỗi phút. Đặt cờ `escalated`, ghi lý do có số liệu ("Quá hạn SLA 10 phút (trễ 78 phút)"), và ghi rõ **"Hệ thống"** là người thực hiện thay vì gán ngược lên một con người chưa từng chạm hồ sơ.
+- **Cố ý không làm:** không đổi `severity` (chuyển cấp ≠ mức nghiêm trọng, tự nâng P3 thành P2 là làm sai lệch dữ liệu); không đụng `next_action` (thuộc máy trạng thái chuyển bước của quản lý). Áp dụng cả khi đang `in-progress` — quá hạn là quá hạn, kể cả khi đã có người xử lý.
+- **Kiểm chứng, phần quan trọng nhất là nó tự chạy chứ không phải gọi tay:** sau khi áp migration **không gọi RPC bằng tay**; kiểm `cron.job_run_details` thấy job chạy đúng lịch, `status = succeeded`, và 4 sự cố `INC-*-069` quá hạn đã tự chuyển cấp (hộp thư giám đốc 4 → 8). **Tính bình đẳng khi chạy lại kiểm bằng thực tế:** sau nhiều lượt cron liên tiếp, 0 lượt lỗi, số dòng nhật ký của `INC-TC-069` giữ nguyên 4, số đã chuyển cấp giữ nguyên 8 — bộ lọc `escalated = false` hoạt động đúng (thiếu nó thì một ngày cron chôn lịch sử thật dưới 1440 dòng giống hệt nhau).
+- `tests/e2e/prod-smoke-incident-auto-escalation.spec.ts` **6/6 pass** trên production; `typecheck`/`lint`/`test:run` (307 pass, +8 bài contract)/`build` sạch.
+- **Giới hạn nói thẳng:** bài Playwright không chứng minh được việc job chạy đúng lịch (SLA ngắn nhất 5 phút, ngồi chờ trong test là vô lý) — bằng chứng phần đó nằm ở `cron.job_run_details`. Bài Playwright chứng minh phần trình duyệt thấy được: dữ liệu thật, đúng người thực hiện, có lý do dùng được, tới đúng vai trò.
+- Đã đánh dấu `[x]` V15 ở mục 12, thêm mục 30 file đánh giá. **Đợt 2 chỉ còn V16 (Bàn giao ca).**
+
 ### 02/08/2026 — [Claude Opus] Kiểm toán 22 migration, dọn rác dữ liệu production và bắt các bài test tự dọn
 
 - **Yêu cầu:** rà lại toàn bộ migration ("sai 1-2 cái là sai cả hệ thống"), kiểm tra spam và độ mượt. Kiểm trực tiếp trên Supabase production chứ không chỉ đọc file.

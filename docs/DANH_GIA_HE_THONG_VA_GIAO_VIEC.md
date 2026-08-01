@@ -368,7 +368,7 @@ Trong đó **L14 rẻ nhất và nên sửa trước**: chỉ cần thêm 3 tài
 ### Bổ sung vào Đợt 2
 
 - [x] **V14. Phân quyền module cho quản lý** — **ĐÃ SỬA 02/08/2026, xem mục 28.** — bỏ việc cấp cứng toàn bộ 15 module cho `manager`; dùng đúng cơ chế cấp quyền đang áp dụng cho nhân viên. Giữ giám đốc toàn quyền xem. Xử lý L13. *(Vừa — chạm vào `demo-session.ts`, cần rà lại toàn bộ test phân quyền.)*
-- [ ] **V15. Tự động chuyển cấp khi quá hạn SLA** — cần một cơ chế chạy nền (cron/edge function). Xử lý L8 phần logic. Đây là tiền đề cho mọi tự động hóa khác mà khách yêu cầu (cảnh báo ngưỡng, nhắc việc quá hạn). *(Vừa–lớn, nhưng mở khóa nhiều thứ.)*
+- [x] **V15. Tự động chuyển cấp khi quá hạn SLA** — **ĐÃ LÀM 02/08/2026, xem mục 30.** — cần một cơ chế chạy nền (cron/edge function). Xử lý L8 phần logic. Đây là tiền đề cho mọi tự động hóa khác mà khách yêu cầu (cảnh báo ngưỡng, nhắc việc quá hạn). *(Vừa–lớn, nhưng mở khóa nhiều thứ.)*
 - [ ] **V16. Đối tượng "Bàn giao ca"** — người giao/người nhận/checklist/bằng chứng/xác nhận, tự tổng hợp việc mở + sự cố cuối ca. Xử lý L11. Đây là **một trong tám tiêu chí nghiệm thu pilot** của khách. *(Vừa.)*
 
 ### Bổ sung vào Đợt 3–4
@@ -999,7 +999,7 @@ V12, L18 (phòng ngừa) đã xong và đã chứng minh đúng cách trên prod
 
 **Kiểm chứng:** `typecheck`/`lint`/`test:run` (275 pass, +8 bài hợp đồng migration mới cho cả 015 và 016)/`build` sạch cục bộ → dry-run rồi áp cả 2 migration lên Supabase production, xác nhận trực tiếp bằng `supabase db query --linked` (cột `elapsed_minutes` đã biến mất; sự cố đã đóng cho đúng 6 phút cố định; sự cố đang mở giờ đúng là ~1170 phút đã trôi qua kể từ lúc seed hôm 31/07 — chính là bằng chứng đồng hồ chạy thật, một đồng hồ đứng yên không bao giờ cho ra số này) → push → deploy Vercel production → Playwright thật trên production (`PLAYWRIGHT_BASE_URL` set tường minh, đúng bài học mục 23.3), bài mới `tests/e2e/prod-smoke-incident-sla-clock.spec.ts`: **2/2 pass** (desktop + mobile, 4.7–5.3s) — sự cố đang mở hiện đúng "Quá SLA N phút", sự cố đã đóng hiện đúng một con số nhỏ, cố định (6 phút), không tăng theo thời gian thật.
 
-**Việc còn lại của L8, chưa nằm trong V13:** tự động chuyển cấp khi quá hạn SLA (cần cơ chế chạy nền/cron) — đây là **V15** trong danh sách giao việc, chưa làm.
+**Việc còn lại của L8, chưa nằm trong V13:** tự động chuyển cấp khi quá hạn SLA (cần cơ chế chạy nền/cron) — **đã làm ngày 02/08/2026 ở V15, xem mục 30.**
 
 - [x] **V13.** Đã sửa và xác nhận đúng cách trên production.
 
@@ -1140,3 +1140,35 @@ Các bài `prod-smoke-*` ghi dữ liệu thật vào production nhưng **không 
 - **Ghi quy tắc thường trực vào `AGENTS.md`** (mục "A production test must clean up after itself" và "Leave the workspace clean") để phiên sau bắt buộc theo, kèm cả yêu cầu dọn artifact và tắt tiến trình nền sau khi xong.
 
 **Trạng thái nền sau khi dọn, kiểm chứng bằng `supabase db query`:** 12 sự cố (đúng 3 mỗi cơ sở), 0 dòng camera test, 0 yêu cầu rác, 1 yêu cầu chờ duyệt thật, ngân sách Tràng An 12,80 tỷ.
+
+---
+
+## 30. V15 đã làm — 02/08/2026: sự cố quá hạn tự chuyển cấp, không chờ ai nhớ
+
+**Bằng chứng trước khi sửa (mục 10.2, L8):** V13 đã làm đồng hồ SLA chạy thật, nhưng **chuyển cấp vẫn chỉ xảy ra khi có người bấm nút**. Trong một trung tâm điều hành thật, chuyển cấp là **do thời gian**, không do trí nhớ của người trực — đó chính là lý do SLA tồn tại. Tài liệu khách đặt KPI "phản ứng y tế khu vực núi dưới 4 phút"; không có cơ chế theo thời gian thì KPI đó không đo được. Rộng hơn: **cho tới hôm nay, không một thứ gì trong hệ thống xảy ra theo thời gian** — mọi thứ đều chờ người bấm.
+
+**Đã làm:** migration `202608020024_erp_incident_auto_escalation.sql` bật `pg_cron` và đặt lịch chạy `erp_incident_escalate_overdue()` **mỗi phút**.
+
+Bốn quyết định thiết kế, và lý do:
+
+| Quyết định | Vì sao |
+|---|---|
+| **Không đổi `severity`** | Chuyển cấp và mức nghiêm trọng là hai khái niệm khác nhau. Tự ý nâng P3 thành P2 là làm sai lệch dữ liệu mà không ai quyết định điều đó. |
+| **Không đụng `next_action`** | Trường này thuộc máy trạng thái chuyển bước của quản lý. Máy tự sửa sẽ giẫm chân người. |
+| **Áp dụng cả khi đang `in-progress`** | Quá hạn là quá hạn, kể cả khi đã có người đang xử lý — đó mới đúng tinh thần SLA. Chỉ bỏ qua sự cố đã đóng. |
+| **Ghi rõ "Hệ thống" là người thực hiện** | Không gán ngược hành động của máy lên tên một con người chưa từng chạm vào hồ sơ. Nhật ký kiểm toán mất giá trị ngay khi làm điều đó. |
+
+Lý do chuyển cấp nói thẳng con số: *"Quá hạn SLA 10 phút (trễ 78 phút). Hệ thống tự chuyển cấp, không chờ thao tác của người trực."*
+
+**Kiểm chứng — phần quan trọng nhất là nó tự chạy, không phải tôi gọi tay:**
+
+- Sau khi áp migration, **không gọi RPC bằng tay**. Chờ và kiểm `cron.job_run_details`: job chạy đúng lịch, `status = succeeded`, và 4 sự cố `INC-*-069` đang quá hạn **đã tự chuyển cấp** — hộp thư giám đốc từ 4 lên 8 sự cố.
+- **Tính bình đẳng khi chạy lại, kiểm bằng thực tế chứ không bằng suy luận:** sau nhiều lượt cron liên tiếp, `0 lượt lỗi`, số dòng nhật ký của `INC-TC-069` **giữ nguyên ở 4**, số sự cố đã chuyển cấp **giữ nguyên ở 8**. Nếu thiếu bộ lọc `escalated = false` thì một ngày cron sẽ chôn lịch sử thật dưới 1440 dòng giống hệt nhau.
+- `tests/e2e/prod-smoke-incident-auto-escalation.spec.ts` — **6/6 pass** trên production: lý do chuyển cấp hiển thị đúng cho quản lý, việc chuyển cấp đi thẳng vào hộp thư giám đốc (màn Sự cố của giám đốc vốn chỉ hiện hồ sơ đã chuyển cấp, nên đây là đường duy nhất nó tới được tay giám đốc mà không cần ai chuyển tiếp), và **chỉ có đúng một dòng "Chuyển cấp tự động"** trên mỗi hồ sơ.
+- `typecheck`/`lint`/`test:run` (**307 pass**, thêm 8 bài contract cho migration 024)/`build` sạch cục bộ.
+
+**Nói thẳng về giới hạn:** bài Playwright **không chứng minh được** việc job chạy đúng lịch — SLA ngắn nhất trong dữ liệu là 5 phút, ngồi chờ một lần quá hạn mới trong test là vô lý. Bằng chứng cho phần "tự chạy theo thời gian" nằm ở `cron.job_run_details` đã kiểm trực tiếp trên production. Bài Playwright chứng minh phần trình duyệt thấy được: kết quả máy làm ra là dữ liệu thật, ghi đúng người thực hiện, có lý do dùng được, và tới đúng vai trò cần biết.
+
+**Hệ quả cần biết cho buổi demo:** dữ liệu seed có mốc thời gian cố định nên các sự cố đang mở luôn quá hạn (đây là hệ quả có từ V13, không phải do V15). Từ nay chúng sẽ hiện rõ là *đã tự chuyển cấp*. Đó là sự thật, và đúng theo nguyên tắc mục 8.4 của chính tài liệu này: nói thật tốt hơn bịa một con số đẹp. Nếu muốn demo bắt đầu từ trạng thái sạch thì cần một cơ chế làm mới mốc thời gian dữ liệu demo — chưa làm, ghi nhận là việc còn lại.
+
+- [x] **V15.** Đã làm và xác nhận trên production. Xử lý xong phần logic của L8. **Đợt 2 chỉ còn V16 (Bàn giao ca).**

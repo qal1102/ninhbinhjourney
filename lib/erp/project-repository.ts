@@ -835,6 +835,30 @@ export async function getProjectWorkspace(siteId: ErpSiteId): Promise<ProjectWor
   return readCookieWorkspace(siteId);
 }
 
+export type ProjectChangeRequestWithSite = ProjectChangeRequest & {
+  siteId: ErpSiteId;
+};
+
+export async function listPendingProjectChangeRequests(
+  siteIds: readonly ErpSiteId[],
+): Promise<ProjectChangeRequestWithSite[]> {
+  const bySite = await Promise.all(
+    siteIds.map(async (siteId) => {
+      // A site without a project event yet is not an error condition here —
+      // it just contributes nothing to the director's decision queue.
+      try {
+        const workspace = await getProjectWorkspace(siteId);
+        return workspace.changeRequests
+          .filter((request) => request.status === "pending")
+          .map((request) => ({ ...request, siteId }));
+      } catch {
+        return [];
+      }
+    }),
+  );
+  return bySite.flat();
+}
+
 export async function updateProjectWorkItem(input: UpdateProjectWorkItemInput): Promise<ProjectWorkItem> {
   if (readMode() === "supabase") return updateInSupabase(input);
   return updateInCookie(input);

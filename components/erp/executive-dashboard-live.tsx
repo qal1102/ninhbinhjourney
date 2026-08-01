@@ -5,6 +5,8 @@ import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import type { SupplierApInvoice } from "@/domain/erp-supplier-ap";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import type { IncidentCase } from "@/lib/erp/incident-repository";
+import type { ProjectChangeRequestWithSite } from "@/lib/erp/project-repository";
 import { ShiftCloseDirectorQueue } from "./shift-close-workflow";
 
 type Props = {
@@ -14,6 +16,14 @@ type Props = {
   workdays: readonly WorkdayRecord[];
   journals: readonly AccountingJournal[];
   supplierApInvoices: readonly SupplierApInvoice[];
+  escalatedIncidents: readonly IncidentCase[];
+  pendingProjectChangeRequests: readonly ProjectChangeRequestWithSite[];
+};
+
+const changeKindLabels: Record<ProjectChangeRequestWithSite["kind"], string> = {
+  budget: "Đổi ngân sách",
+  deadline: "Đổi deadline",
+  scope: "Đổi phạm vi",
 };
 
 function formatVnd(value: number) {
@@ -59,7 +69,12 @@ export function ExecutiveDashboard({
   workdays,
   journals,
   supplierApInvoices,
+  escalatedIncidents,
+  pendingProjectChangeRequests,
 }: Props) {
+  const siteShortNameById = new Map(
+    sites.map((site) => [site.id, site.shortName]),
+  );
   const referenceNow = [
     ...records.map((record) => record.updatedAt),
     ...workdays.map((record) => record.updatedAt),
@@ -134,7 +149,10 @@ export function ExecutiveDashboard({
     0,
   );
   const directorDecisionCount =
-    pendingShiftCloseDecisions.length + pendingSupplierDecisions.length;
+    pendingShiftCloseDecisions.length +
+    pendingSupplierDecisions.length +
+    escalatedIncidents.length +
+    pendingProjectChangeRequests.length;
   const asOf = latestUpdatedAt(
     records,
     workdays,
@@ -211,9 +229,34 @@ export function ExecutiveDashboard({
               Cần giám đốc quyết định
             </p>
             <h2 className="mt-2 text-2xl font-black text-[#3f3524]">
-              {pendingShiftCloseDecisions.length} ngoại lệ chốt ca ·{" "}
-              {pendingSupplierDecisions.length} hồ sơ nhà cung cấp
+              {directorDecisionCount} hồ sơ đang chờ
             </h2>
+            <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-bold text-[#7a6c50]">
+              <div>
+                <dt className="inline text-[#3f3524]">
+                  {pendingShiftCloseDecisions.length}
+                </dt>{" "}
+                <dd className="inline">ngoại lệ chốt ca</dd>
+              </div>
+              <div>
+                <dt className="inline text-[#3f3524]">
+                  {pendingSupplierDecisions.length}
+                </dt>{" "}
+                <dd className="inline">hồ sơ nhà cung cấp</dd>
+              </div>
+              <div>
+                <dt className="inline text-[#3f3524]">
+                  {escalatedIncidents.length}
+                </dt>{" "}
+                <dd className="inline">sự cố đã chuyển cấp</dd>
+              </div>
+              <div>
+                <dt className="inline text-[#3f3524]">
+                  {pendingProjectChangeRequests.length}
+                </dt>{" "}
+                <dd className="inline">yêu cầu đổi phạm vi dự án</dd>
+              </div>
+            </dl>
           </div>
           <Link
             href="/erp/finance"
@@ -255,6 +298,73 @@ export function ExecutiveDashboard({
                     <span className="font-black text-[#76551f]">
                       {formatVnd(invoice.totalVnd)}
                     </span>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            {escalatedIncidents.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-black text-[#4c3c23]">
+                  Sự cố đã chuyển cấp
+                </p>
+                {escalatedIncidents.slice(0, 4).map((incident) => (
+                  <Link
+                    key={incident.id}
+                    href={`/erp/${incident.siteId}/su-co`}
+                    className="grid gap-2 rounded-xl border border-[#e5d7bb] bg-white p-4 transition hover:border-[#c9a768] sm:grid-cols-[1fr_auto] sm:items-center"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-black text-[#403727]">
+                        {incident.title} ·{" "}
+                        {siteShortNameById.get(incident.siteId) ?? incident.siteId}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[#7b6d55]">
+                        {incident.severity} · {incident.area}
+                        {incident.escalationReason
+                          ? ` · ${incident.escalationReason}`
+                          : ""}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        incident.elapsedMinutes >= incident.slaMinutes
+                          ? "bg-[#ffe4de] text-[#934336]"
+                          : "bg-[#f3e6c8] text-[#7a5923]"
+                      }`}
+                    >
+                      {incident.elapsedMinutes >= incident.slaMinutes
+                        ? "Quá SLA"
+                        : `Còn ${incident.slaMinutes - incident.elapsedMinutes} phút`}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            {pendingProjectChangeRequests.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-black text-[#4c3c23]">
+                  Yêu cầu đổi phạm vi dự án
+                </p>
+                {pendingProjectChangeRequests.slice(0, 4).map((request) => (
+                  <Link
+                    key={request.id}
+                    href={`/erp/${request.siteId}/du-an-su-kien`}
+                    className="grid gap-2 rounded-xl border border-[#e5d7bb] bg-white p-4 transition hover:border-[#c9a768] sm:grid-cols-[1fr_auto] sm:items-center"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-black text-[#403727]">
+                        {changeKindLabels[request.kind]} ·{" "}
+                        {siteShortNameById.get(request.siteId) ?? request.siteId}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[#7b6d55]">
+                        {request.summary} · {request.requestedByName}
+                      </p>
+                    </div>
+                    {request.proposedBudgetBillion !== null ? (
+                      <span className="shrink-0 font-black text-[#76551f]">
+                        {request.proposedBudgetBillion} tỷ
+                      </span>
+                    ) : null}
                   </Link>
                 ))}
               </div>

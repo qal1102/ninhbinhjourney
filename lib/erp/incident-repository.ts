@@ -528,6 +528,15 @@ export async function getIncidentCases(siteId: ErpSiteId): Promise<IncidentCase[
   return readCookieCases(siteId);
 }
 
+export async function listEscalatedIncidents(
+  siteIds: readonly ErpSiteId[],
+): Promise<IncidentCase[]> {
+  const bySite = await Promise.all(siteIds.map((siteId) => getIncidentCases(siteId)));
+  return bySite
+    .flat()
+    .filter((incident) => incident.escalated && incident.status !== "closed");
+}
+
 export async function transitionIncidentByManager(input: IncidentActionInput): Promise<IncidentCase> {
   if (readMode() === "supabase") return managerTransitionInSupabase(input);
   return managerTransitionInCookie(input);

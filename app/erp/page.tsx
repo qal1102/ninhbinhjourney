@@ -6,6 +6,8 @@ import { RoleHomeDashboard } from "@/components/erp/role-home-dashboard";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { listAccountingJournals } from "@/lib/erp/accounting-repository";
+import { listEscalatedIncidents } from "@/lib/erp/incident-repository";
+import { listPendingProjectChangeRequests } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import { listWorkdays, vietnamDateKey } from "@/lib/erp/workday-repository";
@@ -26,24 +28,36 @@ export default async function ErpHomePage({ searchParams }: Props) {
     user.role === "accountant" ||
     user.role === "chief-accountant";
   const shouldReadSupplierAp = user.role !== "employee";
-  const [access, shiftClosures, workdays, journals, supplierAp] =
-    await Promise.all([
-      getAccessState(),
-      listShiftClosures({ siteIds: user.siteIds }),
-      user.role === "director"
-        ? listWorkdays({
-            siteIds: user.siteIds,
-            businessDate: vietnamDateKey(),
-            limit: 100,
-          })
-        : listWorkdaysForUser(user),
-      shouldReadAccounting
-        ? listAccountingJournals({ siteIds: user.siteIds, limit: 100 })
-        : Promise.resolve([]),
-      shouldReadSupplierAp
-        ? listSupplierAp({ siteIds: user.siteIds })
-        : Promise.resolve({ suppliers: [], invoices: [] }),
-    ]);
+  const isDirector = user.role === "director";
+  const [
+    access,
+    shiftClosures,
+    workdays,
+    journals,
+    supplierAp,
+    escalatedIncidents,
+    pendingProjectChangeRequests,
+  ] = await Promise.all([
+    getAccessState(),
+    listShiftClosures({ siteIds: user.siteIds }),
+    user.role === "director"
+      ? listWorkdays({
+          siteIds: user.siteIds,
+          businessDate: vietnamDateKey(),
+          limit: 100,
+        })
+      : listWorkdaysForUser(user),
+    shouldReadAccounting
+      ? listAccountingJournals({ siteIds: user.siteIds, limit: 100 })
+      : Promise.resolve([]),
+    shouldReadSupplierAp
+      ? listSupplierAp({ siteIds: user.siteIds })
+      : Promise.resolve({ suppliers: [], invoices: [] }),
+    isDirector ? listEscalatedIncidents(user.siteIds) : Promise.resolve([]),
+    isDirector
+      ? listPendingProjectChangeRequests(user.siteIds)
+      : Promise.resolve([]),
+  ]);
   const params = (await searchParams) ?? {};
   const denied = Array.isArray(params.denied)
     ? params.denied[0]
@@ -71,6 +85,8 @@ export default async function ErpHomePage({ searchParams }: Props) {
           workdays={workdays}
           journals={journals}
           supplierApInvoices={supplierAp.invoices}
+          escalatedIncidents={escalatedIncidents}
+          pendingProjectChangeRequests={pendingProjectChangeRequests}
         />
       ) : (
         <RoleHomeDashboard

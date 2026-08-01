@@ -403,6 +403,26 @@ Sau mỗi thay đổi quan trọng:
 
 ## Nhật ký thay đổi
 
+### 02/08/2026 — [Claude Opus] Kiểm toán 22 migration, dọn rác dữ liệu production và bắt các bài test tự dọn
+
+- **Yêu cầu:** rà lại toàn bộ migration ("sai 1-2 cái là sai cả hệ thống"), kiểm tra spam và độ mượt. Kiểm trực tiếp trên Supabase production chứ không chỉ đọc file.
+- **Phần lược đồ — sạch:** 22/22 migration đã áp dụng đúng thứ tự và khớp file repo; 22/22 nguyên khối `begin;`/`commit;`; RLS bật trên 100% bảng `public`; 143 policy nhưng **0 policy cho `anon`**; **0 function thiếu `search_path`**; toàn bộ RPC nghiệp vụ ERP chỉ `service_role` gọi được; cột `elapsed_minutes` bị xoá ở migration 015 **không còn RPC nào tham chiếu**. Bảng đời đầu (migration 001/002) vẫn giữ grant DML mặc định của Supabase cho `anon`/`authenticated` nhưng không khai thác được vì RLS bật và không có policy `anon` nào — ghi nhận, không phải lỗi.
+- **Phần dữ liệu — có rác thật:** 13 yêu cầu đổi phạm vi `PROD-SMOKE...` đang chờ duyệt trong hộp thư giám đốc; 10 sự cố do bài test Camera AI tạo ở Tam Chúc (9 còn mở, thổi phồng KPI); ngân sách seed 12,8 tỷ của "Lễ hội Tràng An 2026" đã trôi lên 13,8 tỷ vì mỗi lần chạy cộng 0,1 và không trả lại; cả 3 sự cố seed của Tràng An bị một bài test đi một chiều đẩy hết sang `closed`.
+- **Hậu quả cụ thể:** bảng điều khiển giám đốc chỉ hiện 4 mục đầu (`slice(0, 4)`, đúng thiết kế), nên 8 yêu cầu rác tồn đọng đã đẩy yêu cầu thật ra khỏi tầm nhìn và làm chính bài kiểm chứng đỏ. Rác che mất việc thật, không chỉ xấu.
+- **Lỗi thật tìm được:** các bài test gọi `page.reload()` ngay sau Server Action — lần điều hướng cuối là POST nên reload gửi lại POST, sinh ra những cặp yêu cầu trùng cách nhau 15ms trong cơ sở dữ liệu. Đã đổi sang điều hướng tường minh.
+- **Đã xử lý:** migration `019`–`022` (chỉ dữ liệu, điều kiện hẹp kiểm chứng được, không xoá theo khoảng thời gian, không truncate) xoá rác, khôi phục 3 sự cố Tràng An, đặt lại ngân sách 12,8 tỷ, giữ 1 yêu cầu thật cho demo. Sửa 4 bài prod-smoke để tự dọn: bài hộp thư tự từ chối yêu cầu nó tạo (khẳng định luôn là nó rời khỏi hộp thư — mạnh hơn bài cũ), bài ngân sách tự gửi yêu cầu trả lại con số cũ và duyệt nốt nên một lượt chạy cân bằng, bài Camera AI và bài sự cố tự đóng sự cố chúng mở, bài sự cố **tự tạo sự cố của mình** thay vì ăn dần dữ liệu seed.
+- **Đã ghi quy tắc thường trực vào `AGENTS.md`** (hai mục mới: "A production test must clean up after itself" và "Leave the workspace clean") để phiên sau bắt buộc theo, kèm yêu cầu dọn artifact Playwright và tắt tiến trình nền/giải phóng cổng sau khi xong.
+- **Trạng thái nền sau khi dọn, kiểm chứng bằng `supabase db query`:** 12 sự cố (đúng 3 mỗi cơ sở), 0 dòng camera test, 0 yêu cầu rác, 1 yêu cầu chờ duyệt thật, ngân sách Tràng An 12,80 tỷ.
+
+### 02/08/2026 — [Claude Opus] V14: quản lý cơ sở được phân quyền thật
+
+- **Vấn đề (mục 11.3, L13):** `demo-session.ts` gán thẳng toàn bộ 15 module cho mọi tài khoản `role === "manager"` ở mọi cơ sở họ phụ trách; `initialModuleIds` của cả 4 quản lý là `[]` và bị bỏ qua. Chỉ nhân viên mới thực sự bị phân quyền, và không có câu trả lời cho "cấp quyền cho quản lý thế nào?".
+- **Đã sửa:** phạm vi cơ sở vẫn lấy từ sơ đồ tổ chức (`managedSiteIds`) vì đó là quyết định tổ chức, nhưng **danh sách module chuyển sang đọc từ `erp_employee_access`** — đúng kho mà nhân viên đang dùng. `staff-access-repository.ts` nay chứa cả quản lý; sàn lọc "không được `nhan-su`/`bao-cao`" thu hẹp lại thành chỉ áp cho nhân viên. Bộ quyền mặc định **khác nhau theo từng cơ sở** (13/13/12/13 module), **không quản lý nào có `bao-cao`** — phân tích toàn vùng thuộc giám đốc và kế toán. Giám đốc giữ nguyên toàn quyền.
+- Màn hình `/erp/<cơ sở>/nhan-su` thêm khối "Quản lý phụ trách", **chỉ giám đốc thấy**. Server Action chặn hai đường leo thang: quản lý không sửa được quyền của bất kỳ quản lý nào kể cả của chính mình, và không cấp được quyền ở cơ sở họ không phụ trách.
+- **Migration:** `202608020018_erp_manager_module_access_seed.sql` — chỉ dữ liệu, `on conflict do nothing`.
+- **Kiểm chứng:** `typecheck`/`lint`/`test:run` (299 pass, +11 test mới)/`build` sạch → dry-run rồi áp migration lên production, xác minh trực tiếp qua `supabase db query` (đúng cơ sở, đúng số module, `bao-cao=false` cả bốn, bộ quyền thật sự khác nhau giữa các quản lý) → deploy Vercel Ready → Playwright thật trên production, bài mới `tests/e2e/prod-smoke-manager-module-grant.spec.ts`: **8/8 pass**. Quản lý Tràng An bị chặn `denied=module` ở `bao-cao`; quản lý Tam Cốc vào được `xe-trung-chuyen` nhưng bị chặn ở `sop-dien-tap` (cùng vai trò, khác quyền — đúng điều L13 nói là không làm được); giám đốc vẫn xem được tất cả và thấy khối cấp quyền hiện đúng "13/15 nghiệp vụ" đọc thật từ Supabase.
+- Đã đánh dấu `[x]` V14 ở mục 12, thêm mục 28 file đánh giá.
+
 ### 01/08/2026 — [Claude Sonnet] V5: hộp thư "việc của tôi" theo vai trò, và một lỗi cookie có thật phát hiện được trong lúc kiểm chứng
 
 - **Vấn đề (mục 6 UX#2, mục 11.7 L7):** chuông thông báo (`erp-app-controls.tsx`) chỉ gọi `intent: "urgent"` và hiện đúng 1 câu tổng hợp, không phải hộp thư có số đếm theo từng loại việc.

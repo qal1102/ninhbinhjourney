@@ -32,7 +32,14 @@ async function login(page: Page, username: string, password: string) {
   await expect(page).toHaveURL(/\/erp$/);
 }
 
-test("a camera-flagged report a manager creates is visible in Sự cố from a brand-new session", async ({
+// This spec also absorbed what used to be prod-smoke-incidents.spec.ts
+// (transition survives the session boundary). Keeping them separate meant
+// two files creating and closing incidents at Tam Chúc at the same time --
+// the only site with a camera in "Cần chú ý" state -- which raced against
+// prod-smoke-site-overview-kpis reading the same site's open-incident count.
+// One file, one mutator.
+
+test("a camera-flagged report, and the transition made on it, are both real server state seen from a brand-new session", async ({
   browser,
 }) => {
   const firstContext = await browser.newContext();
@@ -61,6 +68,21 @@ test("a camera-flagged report a manager creates is visible in Sự cố from a b
     expect(statusText).toContain("Đã tạo phiếu hiện trường");
     createdIncidentId = statusText.match(/hồ sơ (INC-\S+) đã/)?.[1] ?? "";
     expect(createdIncidentId).not.toBe("");
+
+    // Move it one step, still in this session. Before the workspace was
+    // wired to Supabase, a transition only called setCases() on an array
+    // rebuilt on every mount, so it survived neither a refresh nor another
+    // session -- that is what the second context below actually checks.
+    await firstPage.goto("/erp/tam-chuc/su-co");
+    const ownCard = firstPage
+      .locator("details")
+      .filter({ hasText: createdIncidentId })
+      .first();
+    await ownCard.locator("summary").click();
+    await ownCard.getByRole("button", { name: "Tiếp nhận & giữ SLA" }).click();
+    await expect(
+      firstPage.getByText(`${createdIncidentId}: tiếp nhận sự cố.`, { exact: true }),
+    ).toBeVisible({ timeout: 15_000 });
   } finally {
     await firstContext.close();
   }
@@ -75,7 +97,10 @@ test("a camera-flagged report a manager creates is visible in Sự cố from a b
     await expect(card).toBeVisible({ timeout: 15_000 });
     await card.locator("summary").click();
     await expect(card.getByText(/^Camera AI · /).first()).toBeVisible();
-    await expect(card.getByText("Mới báo", { exact: true })).toBeVisible();
+    // The transition the other session made is here too, with its author.
+    await expect(card.getByText("Đã tiếp nhận", { exact: true })).toBeVisible();
+    await expect(card.getByText("Tiếp nhận sự cố").first()).toBeVisible();
+    await expect(card.getByText("Trần Đức Long").first()).toBeVisible();
 
     // Close out what this test opened. There is no delete RPC (and there
     // should not be one just for tests), but leaving the incident open would
@@ -83,12 +108,7 @@ test("a camera-flagged report a manager creates is visible in Sự cố from a b
     // accumulated, nine still open, before the 02/08/2026 audit. Walking it
     // to "Đã đóng" costs one extra pass and doubles as coverage of the full
     // manager transition chain.
-    for (const step of [
-      "Tiếp nhận & giữ SLA",
-      "Giao tổ phụ trách",
-      "Chuyển sang xác minh",
-      "Xác nhận & đóng",
-    ]) {
+    for (const step of ["Giao tổ phụ trách", "Chuyển sang xác minh", "Xác nhận & đóng"]) {
       await card.getByRole("button", { name: step }).click();
       await expect(card.getByRole("button", { name: step })).toHaveCount(0, {
         timeout: 15_000,

@@ -51,24 +51,33 @@ test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với
     await logout(page);
     await login(page, username, password);
 
-    await page.goto(`/erp/${siteId}`);
-    const overviewCard = page
-      .locator("div")
-      .filter({ hasText: "Sự cố mở" })
-      .last();
-    await expect(overviewCard).toBeVisible();
-    const overviewText = await overviewCard.innerText();
-    const overviewCount = Number(overviewText.match(/\d+/)?.[0]);
-    expect(Number.isFinite(overviewCount)).toBe(true);
+    // The two numbers come from two page loads, so another spec closing or
+    // opening an incident at this site in between makes them legitimately
+    // disagree once. Re-read the pair before calling it a mismatch: what is
+    // under test is that the two views agree about the same moment, not that
+    // production holds still while we look at it.
+    let overviewCount = NaN;
+    let moduleCount = NaN;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await page.goto(`/erp/${siteId}`);
+      const overviewCard = page
+        .locator("div")
+        .filter({ hasText: "Sự cố mở" })
+        .last();
+      await expect(overviewCard).toBeVisible();
+      overviewCount = Number((await overviewCard.innerText()).match(/\d+/)?.[0]);
+      expect(Number.isFinite(overviewCount)).toBe(true);
 
-    await page.goto(`/erp/${siteId}/su-co`);
-    const moduleBadge = page.getByText(/hồ sơ đang mở/);
-    await expect(moduleBadge).toBeVisible({ timeout: 15_000 });
-    const moduleCount = Number(
-      (await moduleBadge.innerText()).match(/(\d+)\s*hồ sơ đang mở/)?.[1] ??
-        NaN,
-    );
-    expect(Number.isFinite(moduleCount)).toBe(true);
+      await page.goto(`/erp/${siteId}/su-co`);
+      const moduleBadge = page.getByText(/hồ sơ đang mở/);
+      await expect(moduleBadge).toBeVisible({ timeout: 15_000 });
+      moduleCount = Number(
+        (await moduleBadge.innerText()).match(/(\d+)\s*hồ sơ đang mở/)?.[1] ?? NaN,
+      );
+      expect(Number.isFinite(moduleCount)).toBe(true);
+
+      if (overviewCount === moduleCount) break;
+    }
 
     expect(overviewCount, `site ${siteId}: overview vs module`).toBe(
       moduleCount,

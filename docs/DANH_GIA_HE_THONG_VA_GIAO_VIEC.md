@@ -367,7 +367,7 @@ Trong đó **L14 rẻ nhất và nên sửa trước**: chỉ cần thêm 3 tài
 
 ### Bổ sung vào Đợt 2
 
-- [ ] **V14. Phân quyền module cho quản lý** — bỏ việc cấp cứng toàn bộ 15 module cho `manager`; dùng đúng cơ chế cấp quyền đang áp dụng cho nhân viên. Giữ giám đốc toàn quyền xem. Xử lý L13. *(Vừa — chạm vào `demo-session.ts`, cần rà lại toàn bộ test phân quyền.)*
+- [x] **V14. Phân quyền module cho quản lý** — **ĐÃ SỬA 02/08/2026, xem mục 28.** — bỏ việc cấp cứng toàn bộ 15 module cho `manager`; dùng đúng cơ chế cấp quyền đang áp dụng cho nhân viên. Giữ giám đốc toàn quyền xem. Xử lý L13. *(Vừa — chạm vào `demo-session.ts`, cần rà lại toàn bộ test phân quyền.)*
 - [ ] **V15. Tự động chuyển cấp khi quá hạn SLA** — cần một cơ chế chạy nền (cron/edge function). Xử lý L8 phần logic. Đây là tiền đề cho mọi tự động hóa khác mà khách yêu cầu (cảnh báo ngưỡng, nhắc việc quá hạn). *(Vừa–lớn, nhưng mở khóa nhiều thứ.)*
 - [ ] **V16. Đối tượng "Bàn giao ca"** — người giao/người nhận/checklist/bằng chứng/xác nhận, tự tổng hợp việc mở + sự cố cuối ca. Xử lý L11. Đây là **một trong tám tiêu chí nghiệm thu pilot** của khách. *(Vừa.)*
 
@@ -1095,3 +1095,48 @@ Khi chạy Playwright thật trên production để xác nhận V5, băng chuôn
 **Ghi chú cho phiên sau:** một lần chạy đầu có 2/8 đỏ, nhưng **không phải lỗi tính năng** — locator `getByText("Lê Hoàng Nam")` bắt trúng `<option>` ẩn trong dropdown "Xem theo vai trò" của chính giám đốc (V3). Đã siết locator vào đúng `<section>` và nhân tiện khẳng định luôn con số "13/15 nghiệp vụ".
 
 - [x] **V14.** Đã sửa và xác nhận trên production. Xử lý xong L13.
+
+---
+
+## 29. Kiểm toán migration & dọn rác dữ liệu — 02/08/2026
+
+Chủ dự án yêu cầu rà lại toàn bộ migration ("sai 1-2 cái là sai cả hệ thống") và kiểm tra spam / độ mượt. Kiểm trực tiếp trên Supabase production, không chỉ đọc file.
+
+### 29.1 Phần lược đồ: sạch, không có lỗi
+
+| Hạng mục | Kết quả |
+|---|---|
+| Số migration đã áp dụng | **22/22**, đúng thứ tự, khớp tuyệt đối tên và version với file trong repo |
+| Tính nguyên khối | 22/22 đều có `begin;`/`commit;` |
+| RLS | **Bật trên 100%** bảng `public` (truy vấn trả về 0 bảng thiếu RLS) |
+| Policy | 143 policy, **0 policy cấp cho `anon`**, 0 cấp cho `public` |
+| `search_path` | **0 function thiếu** — kể cả trigger function |
+| RPC nghiệp vụ ERP | Chỉ `service_role` gọi được; không cái nào lọt ra `anon`/`authenticated` |
+| Cột `elapsed_minutes` bị xoá ở migration 015 | **Không RPC nào còn tham chiếu** — đúng loại lỗi có thể làm sập hệ thống, đã kiểm và sạch |
+
+**Một điểm cần biết (không phải lỗi):** các bảng đời đầu (`sites`, `bookings`, `passes`, `user_profiles`…, do migration 001/002 tạo) vẫn giữ grant DML mặc định cho `anon`/`authenticated` của Supabase. **Không khai thác được** vì RLS đang bật và không có policy nào cho `anon`; `authenticated` chỉ có policy tự-đọc-hồ-sơ-của-mình. Các bảng do migration 003–022 tạo thì đã revoke sạch theo đúng quy ước.
+
+**Hiệu năng:** bảng lớn nhất mới 38 dòng. Có một số khoá ngoại chưa đánh index, nhưng ở quy mô này là vô nghĩa — **không nên** thêm index sớm vì chỉ làm chậm ghi.
+
+### 29.2 Phần dữ liệu: rác thật, và nó đang che mất việc thật
+
+Các bài `prod-smoke-*` ghi dữ liệu thật vào production nhưng **không bao giờ dọn**:
+
+| Nguồn | Tồn đọng | Hậu quả |
+|---|---|---|
+| `erp_project_change_requests` | 13 yêu cầu `PROD-SMOKE...` đang chờ duyệt | Thổi phồng hộp thư quyết định giám đốc và chuông thông báo |
+| `erp_incidents` Tam Chúc | 10 sự cố do test Camera AI tạo, 9 còn mở | Thổi phồng KPI "sự cố đang mở" |
+| `erp_project_events` Tràng An | Ngân sách seed 12,8 tỷ trôi thành **13,8 tỷ** | Mỗi lần chạy cộng 0,1 vĩnh viễn — số liệu demo sai dần mà không ai biết |
+| `erp_incidents` Tràng An | Cả 3 sự cố seed bị đẩy hết sang `closed` | Bài test đi một chiều, chạy đủ lần là cạn dữ liệu demo |
+
+**Hậu quả cụ thể, không chỉ là xấu:** bảng điều khiển giám đốc chỉ hiện 4 mục đầu (`executive-dashboard-live.tsx` `slice(0, 4)` — đúng thiết kế, là ô xem nhanh). 8 yêu cầu rác tồn đọng đã **đẩy yêu cầu thật ra khỏi tầm nhìn** và làm chính bài kiểm chứng đỏ. Rác che mất việc thật.
+
+**Một lỗi thật tìm được trong lúc sửa:** các bài test gọi `page.reload()` ngay sau một Server Action — mà lần điều hướng cuối là POST, nên reload chính là **gửi lại POST**. Đó là lý do có những cặp yêu cầu trùng nhau cách nhau 15ms trong cơ sở dữ liệu. Đã đổi sang điều hướng tường minh.
+
+### 29.3 Đã xử lý
+
+- **Migration 019–022** (chỉ dữ liệu, điều kiện hẹp và kiểm chứng được, không xoá theo khoảng thời gian, không truncate): xoá rác, khôi phục 3 sự cố Tràng An về đúng trạng thái seed, đặt lại ngân sách 12,8 tỷ, giữ lại **một yêu cầu đổi ngân sách thật** để hộp thư giám đốc vẫn có nội dung demo.
+- **Sửa 4 bài prod-smoke để tự dọn:** bài hộp thư giám đốc tự từ chối yêu cầu nó tạo (và khẳng định luôn là nó rời khỏi hộp thư — mạnh hơn bài cũ); bài ngân sách tự gửi yêu cầu trả lại con số ban đầu và giám đốc duyệt nốt, nên một lượt chạy cân bằng ngân sách; bài Camera AI và bài sự cố tự đóng sự cố chúng mở ra; bài sự cố **tự tạo sự cố của mình** thay vì ăn dần dữ liệu seed.
+- **Ghi quy tắc thường trực vào `AGENTS.md`** (mục "A production test must clean up after itself" và "Leave the workspace clean") để phiên sau bắt buộc theo, kèm cả yêu cầu dọn artifact và tắt tiến trình nền sau khi xong.
+
+**Trạng thái nền sau khi dọn, kiểm chứng bằng `supabase db query`:** 12 sự cố (đúng 3 mỗi cơ sở), 0 dòng camera test, 0 yêu cầu rác, 1 yêu cầu chờ duyệt thật, ngân sách Tràng An 12,80 tỷ.

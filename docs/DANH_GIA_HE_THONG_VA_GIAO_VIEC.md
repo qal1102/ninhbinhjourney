@@ -384,3 +384,175 @@ Trong đó **L14 rẻ nhất và nên sửa trước**: chỉ cần thêm 3 tài
 **Quy trình đã dựng thì dựng đúng — đúng chuẩn kiểm soát nội bộ thật, không phải quy trình trang trí. Cái sai không nằm ở phần đã làm mà ở phần chưa làm: cả hai đầu dây chuyền (nguồn vào và dòng tiền ra) còn hở, và hệ thống chưa có bất kỳ cơ chế nào chạy theo thời gian.**
 
 **Về tài khoản: số lượng ổn, nhưng sơ đồ tổ chức sai (một quản lý ôm bốn khu, ai cũng báo cáo về Tràng An) và không tạo được người mới. Sửa sơ đồ tổ chức là việc rẻ nhất trong toàn bộ danh sách và cho hiệu quả demo cao nhất — nên gộp làm cùng V3.**
+
+---
+
+# PHẦN III — Web công khai: hiện trạng và định hướng thương mại
+
+> Bổ sung 01/08/2026 theo yêu cầu chủ dự án: đánh giá **lớp khách hàng** (web ngoài) và định hướng mới — thanh toán VNPay/quốc tế, nội dung chiều sâu (lịch sử, video, báo chí song ngữ), combo có hướng dẫn viên, thuyết minh giọng nói theo khu, và đặt dịch vụ tại các cơ sở Xuân Trường (Ninh Bình Legend, nhà hàng tiêu biểu) trong khi vẫn giới thiệu toàn diện Ninh Bình.
+
+## 14. Hiện trạng web công khai
+
+Đã khảo sát: `content/destinations.ts`, `content/packages.ts`, `domain/commerce.ts`, `config/experience.ts`, `app/{page,explore,destination,packages,plan,checkout,booking,pass}`, `components/{discovery,commerce,journey}`, `app/api/*`.
+
+### 14.1 Đang có gì
+
+| Hạng mục | Hiện trạng |
+|---|---|
+| Điểm đến | **8**: Tràng An, Cố đô Hoa Lư, Bái Đính, Phố cổ Hoa Lư, Tam Cốc–Bích Động, Hang Múa, Thung Nham, Vân Long |
+| Gói/combo | **4**, đều gắn nhãn `demoPriceVnd`, chỉ một loại `ledgerType: "service-commerce"` |
+| Song ngữ | Có ở **tầng dữ liệu** (`name`/`description`/`story` đều `{vi, en}`) và chuyển ngôn ngữ giữ được tham số URL |
+| Luồng thương mại | Chọn gói → báo giá → đặt chỗ → **QR Pass** (`/pass/{token}`) → check-in — luồng đã chạy end-to-end |
+| Bản đồ, lịch trình | Leaflet thật, trình soạn hành trình có thêm/bớt/đổi điểm |
+
+**Nền móng tốt hơn tôi dự đoán**: đã có mô hình song ngữ ngay từ tầng dữ liệu, có QR Pass thật, có idempotency key ở API đặt chỗ, và mỗi điểm đến có trường `source` ghi nguồn tham khảo + ngày rà soát — đó là kỷ luật biên tập, không phải web du lịch làm ẩu.
+
+### 14.2 🔴 W-A. Web hiện **không thể nhận tiền** — và điều đó được ép ở tầng cấu hình
+
+**Bằng chứng:** `config/experience.ts` — `superRefine` **chặn thẳng** `sandboxPaymentEnabled` khi `mode === "production"`, kèm thông điệp *"Production mode cannot silently enable sandbox checkout."* `app/checkout/page.tsx:27` ghi rõ *"No live payment adapter is claimed."*
+
+Nghĩa là: toàn bộ luồng thanh toán hiện tại là **mô phỏng có chủ đích**, và người viết đã cố tình dựng rào để nó không bao giờ vô tình chạy thật. Đây là quyết định **đúng** — nhưng cũng có nghĩa **chưa có một dòng tích hợp cổng thanh toán thật nào**. Muốn bán vé thật thì đây là việc phải làm từ đầu, không phải "bật cờ lên".
+
+### 14.3 🟠 W-B. Web và ERP đang nói về hai tập điểm khác nhau
+
+ERP quản **4 cơ sở**: Tràng An, **Tam Chúc**, Tam Cốc, Bái Đính.
+Web công khai có **8 điểm** nhưng **không có Tam Chúc**.
+
+Tam Chúc thuộc Hà Nam nên có thể là chủ ý — nhưng hiện chưa ở đâu ghi quyết định đó. Cần chốt: web là *"du lịch Ninh Bình"* hay *"hệ sinh thái Xuân Trường"*? Hai câu trả lời dẫn tới hai cấu trúc thông tin khác nhau. Với mục tiêu chủ dự án nêu (đẩy Xuân Trường), câu trả lời có lẽ là **cả hai lớp**: vùng Ninh Bình là bối cảnh, hệ sinh thái là lớp thương mại nằm trên.
+
+### 14.4 🟠 W-C. Chưa có video, chưa có audio, báo chí chưa có chỗ
+
+Tìm toàn bộ `app/` + `components/` + `content/`: **không có một thẻ video hay audio nào trên web công khai.** (`voiceDemoFallbackEnabled` là cờ dành cho trung tâm điều hành ERP, không phải thuyết minh du lịch.)
+
+Nội dung mỗi điểm đến hiện chỉ có: một câu editorial, một đoạn mô tả, một đoạn `story`, một ảnh. Đó là mức **thẻ giới thiệu**, chưa phải mức **hồ sơ điểm đến** mà chủ dự án đang mô tả (lịch sử + video + báo chí + thuyết minh).
+
+### 14.5 🟠 W-D. Nội dung nằm trong mã nguồn — sửa một dấu phẩy phải deploy
+
+`content/destinations.ts` là file TypeScript hằng. Với 8 điểm × 2 ngôn ngữ thì còn chịu được. Với tham vọng thêm nhiều bài viết lịch sử, video, trích dẫn báo chí, kịch bản thuyết minh × 2 ngôn ngữ thì mô hình này **sẽ vỡ**: mỗi lần biên tập viên sửa chữ đều phải nhờ lập trình viên và chờ build.
+
+Ngoài ra `Localized = {vi, en}` **cứng đúng 2 ngôn ngữ**. Thêm tiếng Hàn/Trung/Nhật (thị trường khách lớn của Ninh Bình) sẽ phải sửa kiểu dữ liệu ở mọi nơi.
+
+### 14.6 🟡 W-E. Chưa có khái niệm khách sạn / nhà hàng / hướng dẫn viên
+
+Catalog hiện chỉ có `PackageCatalogItem` với một `ledgerType`. Ninh Bình Legend, nhà hàng, HDV **chưa tồn tại dưới bất kỳ dạng dữ liệu nào**.
+
+Đây không phải "thêm vài bản ghi". Ba loại này có mô hình đặt chỗ **khác nhau về bản chất**:
+
+| Loại | Đơn vị bán | Ràng buộc |
+|---|---|---|
+| Vé tham quan | lượt/người/khung giờ | sức chứa theo khung giờ |
+| Khách sạn | phòng × đêm | tồn kho theo loại phòng, chính sách hủy, mùa giá |
+| Nhà hàng | bàn × khung giờ | số bàn, thời lượng ngồi |
+| Hướng dẫn viên | người × buổi | lịch cá nhân, ngôn ngữ, không nhân bản được |
+
+Nhét chung vào một kiểu sẽ phải viết lại toàn bộ về sau. **Cần thiết kế trước khi thêm cái đầu tiên.**
+
+### 14.7 🟡 W-F. Hai hệ điều hành song song
+
+Tồn tại đồng thời `app/ops/**` (13 trang: bookings, check-in, capacity, incidents, copilot, catalog...) và `app/erp/**` (15 module). **Trùng chức năng ở ít nhất 4 chỗ** (đặt chỗ, check-in, sức chứa, sự cố), hai màn đăng nhập riêng.
+
+Cần chốt một cái là chính. Nếu `/ops` là bản cũ thì gỡ hoặc đóng băng — để hai hệ song song thì mỗi tính năng mới phải làm hai lần, và không ai biết số nào là số thật.
+
+---
+
+## 15. Đánh giá định hướng mới
+
+### 15.1 Thanh toán — phải chỉnh lại một kỳ vọng
+
+**VNPay cho khách Việt: đúng lựa chọn.** Phổ biến nhất, hỗ trợ QR/ATM nội địa/ví, tài liệu tiếng Việt.
+
+**Nhưng "kiếm cái pay nào opensource cho nhanh" thì cần nói thẳng: không tồn tại cổng thanh toán mã nguồn mở.** Tiền luôn phải đi qua một tổ chức được cấp phép. Thứ mã nguồn mở chỉ là **lớp điều phối** (Hyperswitch, Medusa payments, Kill Bill) — chúng không giữ tiền, vẫn phải cắm vào một cổng thật phía sau. Cài chúng vào lúc này **làm chậm chứ không nhanh hơn**.
+
+**Đề xuất — một nhà cung cấp, hai luồng:**
+
+| Khách | Phương án | Lý do |
+|---|---|---|
+| Việt Nam | **VNPay** (QR, ATM nội địa, ví) | Chuẩn thị trường |
+| Quốc tế | **Cổng thẻ quốc tế của chính VNPay hoặc OnePay** (Visa/Master/JCB/Amex) | **Cùng một pháp nhân, một hợp đồng, một bảng đối soát** |
+
+Vì sao không Stripe: Stripe **không hỗ trợ doanh nghiệp đăng ký tại Việt Nam** (theo hiểu biết hiện tại của tôi — cần kế toán/pháp chế xác nhận lại). Đi đường vòng qua pháp nhân nước ngoài là chuyện thuế và pháp lý, không phải chuyện kỹ thuật. Nếu sau này thật sự cần nhiều cổng, khi đó mới đặt **Hyperswitch** (Apache-2.0, tự host) làm lớp trung gian — nhưng đó là tối ưu giai đoạn sau.
+
+**Ba điều quan trọng hơn cả việc chọn cổng:**
+
+1. **Thời gian thật sự nằm ở thủ tục, không ở code.** Tích hợp VNPay chỉ mất vài ngày. Ký hợp đồng, thẩm định pháp nhân, cấp mã merchant, qua sandbox rồi mới lên production — mất **vài tuần**. **Nên bắt đầu thủ tục ngay từ bây giờ, song song với việc phát triển**, đừng chờ code xong mới đi ký.
+2. **Có thu tiền là phát sinh nghĩa vụ hóa đơn điện tử** (Nghị định 123/2020 và bản sửa đổi 2025 — cần kế toán xác nhận chi tiết áp dụng). Phải tính vào thiết kế ngay từ đầu, không vá sau.
+3. **Tiền vào phải chảy thẳng vào dây chuyền ERP đã dựng.** Nếu web bán vé mà số liệu không tự vào chốt ca thì lại đẻ ra **nguồn số thứ hai** — đúng cái bệnh đã chỉ ra ở L1. Làm đúng thì việc này **giải luôn V7 (nguồn vé thật) và V6 (check-in đối chiếu vé thật)**: web bán → sinh vé thật → check-in quét vé thật → doanh thu tự vào chốt ca. **Đây là mắt xích khiến toàn bộ hệ thống trở nên có thật.**
+
+### 15.2 Nội dung chiều sâu (lịch sử, video, báo chí song ngữ)
+
+**Đồng ý về hướng.** Đây đúng là thứ phân biệt một trang bán vé với một điểm đến số.
+
+Ba lưu ý:
+
+1. **Phải chuyển nội dung ra khỏi mã nguồn trước khi viết nhiều** (W-D). Làm ngược lại thì càng viết càng khó gỡ.
+2. **Báo chí: trích dẫn có link, không đăng lại toàn văn.** Đăng nguyên bài của báo khác là vi phạm bản quyền. Cách đúng: thẻ trích dẫn (logo báo + tiêu đề + 1–2 câu + link về nguồn) — vừa hợp pháp, vừa tạo uy tín, vừa không tốn công dịch.
+3. **Video: đừng tự host.** Nhúng từ YouTube/Vimeo, giữ ảnh poster tự host để trang không phụ thuộc mạng ngoài lúc tải đầu. Cần phụ đề cả vi lẫn en — đây cũng là yêu cầu tiếp cận (accessibility), không chỉ là dịch thuật.
+
+### 15.3 Thuyết minh giọng nói — điểm mạnh nhất của cả tầm nhìn
+
+Đây là ý có sức thuyết phục cao nhất và cũng khả thi nhất về kỹ thuật. Cách làm đề xuất:
+
+**Hai tầng, đúng như chủ dự án mô tả:**
+
+- **Bản demo miễn phí (30–60 giây) cho *mọi* khu** — phát ngay trên trang điểm đến và khi quét QR tại chỗ. Đây là công cụ bán hàng, không phải sản phẩm.
+- **Bản đầy đủ (5–15 phút, nhiều chặng) nằm trong combo** — phải **gắn quyền truy cập vào pass/booking token**. Nếu chỉ để file mp3 ở đường dẫn công khai thì ai cũng tải được và combo mất giá trị ngay ngày đầu.
+
+**Kỹ thuật:**
+
+- **Sinh sẵn thành file tĩnh** bằng TTS (ElevenLabs / Google / Azure), **không gọi TTS thời gian thực**. Rẻ hơn nhiều lần, phát tức thì, và nghe được khi mất sóng.
+- **Cho tải trước khi vào khu.** Hang động Tràng An và khu núi Bái Đính sóng rất yếu — thuyết minh online sẽ đứt đúng lúc cần nhất. Hệ thống **đã có PWA**, tận dụng được ngay để lưu sẵn audio.
+- Song ngữ ngay từ đầu: cùng một kịch bản, hai bản thu.
+
+**Một ranh giới cần thống nhất trước:** thuyết minh trong khu tâm linh (Bái Đính, khu thờ tự) phải thống nhất với ban quản lý về nội dung và âm lượng. Tài liệu khách đã ghi nguyên tắc *"không tự động ra quyết định an toàn hoặc nghi lễ khi chưa có người có thẩm quyền duyệt"*. Nên có bước duyệt kịch bản, và khuyến nghị dùng tai nghe thay vì loa ngoài ở khu thờ tự.
+
+### 15.4 "Toàn diện nhưng đẩy Xuân Trường nhiều hơn" — làm được, nhưng phải minh bạch
+
+**Đây là chiến lược đúng và hoàn toàn làm được.** Nhưng có một ranh giới không nên bước qua:
+
+**Nên làm:** ưu tiên vị trí hiển thị, gói combo trọn gói chỉ hệ sinh thái mới làm được (vé + xe + khách sạn + HDV + thuyết minh trong một lần đặt), gắn **nhãn rõ ràng "Cơ sở thành viên"** trên các điểm/khách sạn/nhà hàng thuộc hệ thống.
+
+**Không nên làm:** giả vờ là bảng xếp hạng khách quan trong khi thực chất là danh mục của một chủ sở hữu. Khách phát hiện ra sẽ phản tác dụng mạnh hơn nhiều so với lợi ích thu được; ở thị trường EU/Anh/Mỹ đây còn là vấn đề pháp lý về quảng cáo.
+
+**Điều nghịch lý — và là lý do chiến lược này thật sự tốt:** giới thiệu đầy đủ cả những điểm không thuộc Xuân Trường chính là thứ khiến trang trở nên **đáng tin**, và niềm tin đó mới là cái bán được combo. Một trang chỉ nói về mình là brochure; một trang nói về cả vùng nhưng phục vụ tốt nhất ở phần của mình là **hạ tầng điểm đến** — đúng định vị mà đề án TrangAn.vn v3 của khách đã nêu.
+
+---
+
+## 16. GIAO VIỆC — web công khai (ký hiệu W, tách khỏi backlog ERP)
+
+> Thứ tự này khác backlog ERP: ở đây **thủ tục pháp lý là đường găng**, nên phải khởi động trước dù chưa viết dòng code nào.
+
+### Khởi động ngay (không cần code)
+
+- [ ] **W0. Bắt đầu thủ tục VNPay** — pháp nhân, hợp đồng, mã merchant, tài khoản sandbox. Song song với mọi việc khác. **Đây là việc chặn tiến độ lâu nhất.**
+- [ ] **W0b. Chốt 3 quyết định sản phẩm:** (a) web là "Ninh Bình" hay "hệ sinh thái Xuân Trường" hay cả hai lớp; (b) Tam Chúc có lên web công khai không; (c) `/ops` giữ hay gỡ.
+
+### Đợt W1 — Nền nội dung (làm trước khi viết nhiều nội dung)
+
+- [ ] **W1. Đưa nội dung ra khỏi mã nguồn** — bảng nội dung trong Supabase, có nháp/duyệt/xuất bản, mô hình đa ngôn ngữ mở rộng được (không cứng 2 ngôn ngữ). Xử lý W-D.
+- [ ] **W2. Nâng "thẻ điểm đến" thành "hồ sơ điểm đến"** — thêm phần lịch sử nhiều đoạn, thư viện ảnh, video nhúng, thẻ trích dẫn báo chí (có link, không toàn văn). Xử lý W-C.
+
+### Đợt W2 — Thuyết minh giọng nói (đòn bẩy lớn nhất)
+
+- [ ] **W3. Bản demo thuyết minh 30–60 giây cho toàn bộ điểm đến**, song ngữ, file tĩnh, phát trên trang điểm đến và khi quét QR tại chỗ.
+- [ ] **W4. Bản thuyết minh đầy đủ theo combo**, **kiểm soát truy cập bằng pass token**, tải trước được qua PWA. Kèm quy trình duyệt kịch bản cho khu tâm linh.
+
+### Đợt W3 — Thương mại thật (mắt xích quan trọng nhất của cả dự án)
+
+- [ ] **W5. Tích hợp VNPay nội địa + cổng thẻ quốc tế cùng nhà cung cấp** — kèm hoàn/hủy, và **hóa đơn điện tử**.
+- [ ] **W6. Nối doanh thu web thẳng vào ERP** — vé bán ra sinh vé thật, check-in quét vé thật, doanh thu tự vào chốt ca. **Việc này đóng luôn V6 + V7 và là thứ biến hệ thống từ "trình diễn" thành "có thật".**
+
+### Đợt W4 — Mở rộng danh mục hệ sinh thái
+
+- [ ] **W7. Thiết kế mô hình đặt chỗ đa loại** (vé / phòng-đêm / bàn-giờ / HDV-buổi) — **thiết kế trước, thêm dữ liệu sau**. Xử lý W-E.
+- [ ] **W8. Đưa Ninh Bình Legend + nhà hàng tiêu biểu + HDV lên catalog**, có nhãn "Cơ sở thành viên" minh bạch.
+- [ ] **W9. Combo trọn gói hệ sinh thái** — vé + xe + lưu trú + HDV + thuyết minh đầy đủ trong một lần đặt. Đây là sản phẩm mà chỉ hệ sinh thái mới làm được, và là lý do thương mại của toàn bộ Phần III.
+
+---
+
+## 17. Tóm tắt Phần III
+
+**Web công khai có nền tốt hơn mong đợi — song ngữ từ tầng dữ liệu, QR Pass thật, kỷ luật ghi nguồn — nhưng chưa có video, chưa có audio, chưa có khách sạn/nhà hàng/HDV, và cố ý chưa nhận được tiền thật.**
+
+**Đường găng là thủ tục VNPay, nên khởi động ngay hôm nay. Đòn bẩy lớn nhất là thuyết minh giọng nói. Và mắt xích quan trọng nhất là W6 — nối doanh thu web vào ERP: nó vừa là lý do thương mại của web, vừa là thứ vá đúng cái lỗ lớn nhất của ERP (nguồn vé gõ tay).**
+
+**Về chiến lược đẩy Xuân Trường: làm được, nên làm, nhưng phải gắn nhãn minh bạch — chính sự đầy đủ và trung thực về cả vùng mới tạo ra niềm tin để bán được combo của hệ sinh thái.**

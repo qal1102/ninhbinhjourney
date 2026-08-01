@@ -523,8 +523,8 @@ Ba lưu ý:
 
 ### Khởi động ngay (không cần code)
 
-- [ ] **W0. Bắt đầu thủ tục VNPay** — pháp nhân, hợp đồng, mã merchant, tài khoản sandbox. Song song với mọi việc khác. **Đây là việc chặn tiến độ lâu nhất.**
-- [ ] **W0b. Chốt 3 quyết định sản phẩm:** (a) web là "Ninh Bình" hay "hệ sinh thái Xuân Trường" hay cả hai lớp; (b) Tam Chúc có lên web công khai không; (c) `/ops` giữ hay gỡ.
+- [ ] ~~**W0. Bắt đầu thủ tục VNPay**~~ → **ĐÃ SỬA, xem mục 18.1.** Chủ dự án phản biện đúng: dự án còn ở giai đoạn demo, ký hợp đồng lúc này là ký sớm. Việc thay thế: **tích hợp VNPay ở môi trường sandbox tự đăng ký, không cần hợp đồng.**
+- [x] **W0b. Chốt định vị sản phẩm** — đã chốt ngày 01/08/2026, xem mục 18.2. Còn lại một quyết định kỹ thuật: `/ops` giữ hay gỡ.
 
 ### Đợt W1 — Nền nội dung (làm trước khi viết nhiều nội dung)
 
@@ -556,3 +556,61 @@ Ba lưu ý:
 **Đường găng là thủ tục VNPay, nên khởi động ngay hôm nay. Đòn bẩy lớn nhất là thuyết minh giọng nói. Và mắt xích quan trọng nhất là W6 — nối doanh thu web vào ERP: nó vừa là lý do thương mại của web, vừa là thứ vá đúng cái lỗ lớn nhất của ERP (nguồn vé gõ tay).**
 
 **Về chiến lược đẩy Xuân Trường: làm được, nên làm, nhưng phải gắn nhãn minh bạch — chính sự đầy đủ và trung thực về cả vùng mới tạo ra niềm tin để bán được combo của hệ sinh thái.**
+
+---
+
+## 18. Phản hồi của chủ dự án và quyết định chốt (01/08/2026)
+
+### 18.1 W0 được sửa: **không ký hợp đồng ở giai đoạn demo**
+
+**Phản biện của chủ dự án:** *"Ký xong rồi mà dự án demo thì ký làm gì, khi làm dự án thật thì sẽ phải build lại mà."* — **Đúng.** Khuyến nghị W0 ban đầu của tôi sai nhịp: nó áp lịch của một dự án đang chuẩn bị vận hành lên một dự án đang chuẩn bị trình diễn.
+
+**Sự thật đã bỏ sót:** **VNPay có môi trường sandbox tự đăng ký** (`sandbox.vnpayment.vn`) — cấp `TmnCode` + `HashSecret` thử nghiệm, có thẻ test, có URL thanh toán thật, có IPN thật. **Không cần hợp đồng, không cần thẩm định pháp nhân, không mất phí.** (Cần kiểm tra lại yêu cầu đăng ký hiện hành khi bắt tay làm.)
+
+**Và không phải "build lại".** Luồng kỹ thuật của VNPay sandbox **giống hệt** production — cùng thuật toán ký (HMAC-SHA512 trên chuỗi tham số đã sắp xếp), cùng cấu trúc redirect, cùng ReturnURL/IPN. Khác biệt khi lên thật chỉ là **3 biến môi trường**: `TmnCode`, `HashSecret`, endpoint.
+
+**Thuận lợi sẵn có:** dự án **đã có sẵn khuôn adapter thanh toán** (`services/adapters/sandbox-payment.ts` với `sign` / `verify` / `nextStatus`, đã dùng HMAC và `timingSafeEqual`). Thêm `VnpayAdapter` theo đúng giao diện đó là **cộng thêm, không phải viết lại**.
+
+**W0 mới:**
+
+- [ ] **W0. Tích hợp VNPay ở môi trường sandbox** qua một adapter mới, giữ nguyên khuôn adapter hiện có. Không ký gì cả.
+- [ ] **W0-qt. Thẻ quốc tế: PayPal sandbox** (đăng ký tự phục vụ tại developer.paypal.com, miễn phí, không cần pháp nhân) để demo được luồng khách nước ngoài. Quyết định cổng quốc tế **thật** để lại đến khi có lịch vận hành.
+- [ ] **W0-live. Chỉ khởi động thủ tục hợp đồng khi đã có ngày vận hành thật.** Lúc đó mới là lúc vài tuần thủ tục trở thành đường găng — không phải bây giờ.
+
+**Lợi ích phụ đáng kể:** demo bằng sandbox thật của VNPay **thuyết phục hơn** một modal giả — khách thấy đúng trang thanh toán VNPay, đúng luồng chuyển hướng, đúng thông báo kết quả. Và nó **trung thực**: hiển thị rõ "môi trường thử nghiệm", đúng nguyên tắc *"không tuyên bố quá sớm"* trong tài liệu khách.
+
+**Rút kinh nghiệm cho các phiên sau:** dự án này đang ở **giai đoạn demo/tiền bán hàng**, không phải giai đoạn triển khai. Đừng khuyến nghị các bước tốn thủ tục, tiền hoặc cam kết pháp lý (hợp đồng cổng thanh toán, đăng ký hóa đơn điện tử, thuê hạ tầng trả phí) cho tới khi có **ngày vận hành thật**. Ưu tiên mọi phương án **sandbox / tự phục vụ / miễn phí** có cùng hình dạng kỹ thuật với bản thật.
+
+### 18.2 W0b đã chốt: định vị sản phẩm
+
+**Quyết định của chủ dự án:**
+
+> Web là **du lịch Ninh Bình** (toàn diện). Xuân Trường là bên bỏ tiền đẩy du lịch cho cả tỉnh; **đẩy Xuân Trường lên là tri ân**, không gây thiệt cho ai, người dân cũng được lợi.
+
+**Đánh giá: định vị này vững, và vững hơn phương án "cả hai lớp" tôi nêu ở mục 14.3.** Lý do: nó có một câu chuyện thật đứng sau, không phải một thủ thuật xếp hạng. Trang giới thiệu toàn diện Ninh Bình, và các cơ sở do Xuân Trường đầu tư được nêu bật vì **họ là người tài trợ hạ tầng số này** — đó là điều có thể nói thẳng ra trên trang.
+
+**Một điều chỉnh nhỏ, không phải phản đối:** "tri ân" là *động cơ*, còn thứ hiện trên giao diện vẫn nên là *thông tin*. Cụ thể chỉ cần một dòng nơi phần chân trang hoặc trang giới thiệu: *"Nền tảng này được Doanh nghiệp Xuân Trường tài trợ nhằm quảng bá du lịch Ninh Bình"*, cộng nhãn "Cơ sở thành viên" trên các điểm/khách sạn/nhà hàng thuộc hệ thống.
+
+Nói ra thì **mạnh hơn** là để khách tự đoán: nó biến "vì sao chỗ này hiện lên trước" từ một câu hỏi khó chịu thành một câu trả lời đẹp.
+
+### 18.3 Tam Chúc — câu hỏi của tôi đã lỗi thời
+
+**Chủ dự án hỏi lại:** *"Tam Chúc có lên web không là sao? Nếu là giới thiệu thì ok chẳng vấn đề gì, chứ lên kiểu khác thì phải suy nghĩ."*
+
+Phân biệt của chủ dự án đúng: **giới thiệu** và **bán** là hai chuyện khác nhau. Nhưng câu hỏi gốc của tôi dựa trên một giả định **đã lỗi thời**:
+
+**Từ 01/07/2025, Hà Nam – Nam Định – Ninh Bình đã hợp nhất thành tỉnh Ninh Bình** (Nghị quyết 202/2025/QH15). **Tam Chúc nay thuộc tỉnh Ninh Bình.** *(Cần chủ dự án xác nhận lại, nhưng nếu đúng thì...)*
+
+→ **Không còn mâu thuẫn nào cả.** Tam Chúc thuộc Ninh Bình thì lên trang "du lịch Ninh Bình" là **đương nhiên**, cả phần giới thiệu lẫn phần bán — không cần cân nhắc gì thêm. Câu hỏi W0b(b) của tôi tự nó biến mất.
+
+**Ngược lại, phát hiện ra hai chỗ dữ liệu đang sai:**
+
+| Chỗ | Hiện tại | Đúng ra |
+|---|---|---|
+| `domain/erp.ts:86` | Tam Chúc `province: "Hà Nam"` | `"Ninh Bình"` |
+| `content/destinations.ts` — `NINH_BINH_TOURISM_CORE.bounds` | `north: 20.42` | Tam Chúc ở vĩ độ **20.5579** → **nằm ngoài khung bản đồ**, phải nới `north` |
+
+Việc thêm Tam Chúc lên web vì thế không chỉ là thêm một bản ghi: **phải nới ranh giới vùng du lịch trong `config`/`content`**, nếu không điểm này sẽ rơi ra ngoài bản đồ và ngoài bộ lọc theo vùng.
+
+- [ ] **W10. Cập nhật địa giới sau sáp nhập tỉnh** — sửa `province` của Tam Chúc, nới `NINH_BINH_TOURISM_CORE.bounds`, rà lại mọi chỗ ghi "Hà Nam". Sau đó thêm Tam Chúc vào danh mục điểm đến công khai. *(Nhỏ, nhưng phải làm trước W2.)*
+- [ ] **W11. Rà soát toàn bộ nội dung theo địa giới mới** — sau sáp nhập, Ninh Bình còn có các điểm của Nam Định và Hà Nam cũ (Phủ Dầy, đền Trần, chùa Tam Chúc...). Nếu định vị là *toàn diện du lịch Ninh Bình* thì phạm vi nội dung nay **rộng hơn 8 điểm hiện có đáng kể**. Đây vừa là việc phải làm, vừa là **cơ hội**: rất ít trang du lịch đã cập nhật theo địa giới mới. *(Vừa — chủ yếu là công biên tập.)*

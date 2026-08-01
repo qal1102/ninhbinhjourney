@@ -921,40 +921,57 @@ Ghi rõ để phiên sau không tưởng nhầm là đã xong:
 - `prod-smoke-site-overview-kpis.spec.ts`: **4/4 pass**, gồm bài mới "quản lý Tam Chúc không vào được dữ liệu Tràng An và ngược lại" — chứng minh trực tiếp trên production điều mà L14 nói là chưa từng chứng minh được.
 - `tests/unit/erp-workforce.test.ts` (đã viết lại): pass, khẳng định 4 quản lý, mỗi người đúng 1 cơ sở, mọi nhân viên báo cáo đúng người.
 
-### 23.2 Hai lỗi cũ phát hiện tình cờ trong lúc kiểm chứng V12 — không liên quan tới V12
+### 23.2 L18 — ĐÃ SỬA. Nhân viên mất quyền module vì form cấp quyền âm thầm xoá quyền nó không hiển thị được
 
-Trong lúc dựng lại bài `prod-smoke-director-decision-inbox.spec.ts` (đổi tài khoản quản lý Bái Đính từ `ql.vanhanh` sang `ql.baidinh` theo đúng sơ đồ mới), bài test 2 fail. Đã điều tra kỹ để loại trừ khả năng V12 gây ra — **cả hai lỗi dưới đây tái hiện y hệt với tài khoản `ql.vanhanh`/Tràng An chưa hề bị đụng tới, và tái hiện độc lập trên bài test gốc `prod-smoke-project-workflow.spec.ts` (file tôi không sửa dòng nào)**. Kết luận: đây là lỗi có sẵn trên production, V12 chỉ tình cờ là bài test chạm phải nó trước.
+**Bằng chứng ban đầu:** `nv.trangan` vào `/erp/trang-an/du-an-su-kien` bị chuyển hướng `?denied=module`. Xem hồ sơ `nv.trangan` ở màn quản lý: danh sách "NGHIỆP VỤ ĐƯỢC GIAO" không có ô "Dự án" nào để tick, vì `du-an-su-kien` chưa từng nằm trong `trainedModuleIds` tĩnh của bất kỳ nhân viên nào (`lib/erp/demo-data.ts`) — quyền đó được cấp thẳng vào Supabase qua migration seed khi xây module Dự án, không qua giao diện.
 
-#### 🔴 L17. Yêu cầu đổi phạm vi dự án vừa gửi chỉ hiện lại với đúng phiên vừa gửi — phiên khác không bao giờ thấy
+**Lỗi gốc (đã sửa):** `app/erp/actions.ts`'s `updateEmployeeAccessAction` dựng lại **toàn bộ** mảng `moduleIds` chỉ từ các checkbox mà `staff-access-manager.tsx` **hiển thị được** (giao của `employeeAssignable` và `trainedModuleIds`). Bất kỳ quyền nào nằm ngoài tập hiển thị đó — như `du-an-su-kien` bị seed thẳng vào Supabase — sẽ bị xoá ở **lần lưu tiếp theo cho nhân viên đó, vì bất kỳ lý do gì**, kể cả không liên quan tới module đó.
 
-**Bằng chứng:** gửi một yêu cầu đổi phạm vi (quản lý, phiên A) → phiên A load lại trang (F5 thật, không phải điều hướng client) vẫn thấy đúng yêu cầu, kể cả sau nhiều phút. Mở một phiên B hoàn toàn mới (context trình duyệt khác, không chia sẻ cookie, cùng tài khoản hoặc tài khoản giám đốc) và tải đúng URL đó — **không thấy yêu cầu vừa gửi**, kể cả sau khi chờ 45 giây và tải lại nhiều lần.
+**Đã sửa:**
+- `updateEmployeeAccessAction` giờ giữ nguyên mọi module nhân viên đang có mà form không hiển thị được, chỉ áp dụng thay đổi cho đúng các module nó hiển thị.
+- Thêm `du-an-su-kien` vào `trainedModuleIds`/`initialModuleIds` của 1 nhân viên mỗi cơ sở (đúng nhân viên đã được seed từ đầu) để ô "Dự án" xuất hiện được và quản lý quản lý được nó tường minh từ nay.
 
-Đã loại trừ các khả năng thường gặp:
-- **Không phải cache CDN/edge:** `curl -I` trả `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate` và `X-Vercel-Cache: MISS` cho đúng route này.
-- **Không phải RLS:** policy đọc cho `service_role` trên bảng `erp_project_change_requests` là `using (true)`, không điều kiện.
-- **Không phải do tài khoản mới (V12):** tái hiện y hệt với `ql.vanhanh` (tài khoản cũ, không đổi) gửi yêu cầu cho Tràng An (cơ sở không đổi).
-- **Không phải do bài test viết sai:** tái hiện trên chính `prod-smoke-project-workflow.spec.ts` — file có sẵn từ trước, không sửa gì trong đợt này, trước đó CODEX từng ghi nhận **2/2 pass**.
+**Xác nhận trên production:** đăng nhập quản lý, mở hồ sơ `nv.trangan` — ô "Dự án" **đã tự động hiện ra và đang tick** (chứng tỏ quyền vẫn còn nguyên trong Supabase, chỉ là form không hiển thị/không giữ được nó trước khi sửa — không phải đã mất vĩnh viễn). Lưu lại một lần để xác nhận không còn bị xoá. `nv.trangan` vào `/erp/trang-an/du-an-su-kien` thành công, bấm "Bắt đầu xử lý" được. Xem thêm mục 23.3 — phần còn lại của luồng (quản lý ở phiên khác thấy trạng thái mới) fail vì lý do khác (L17), không phải L18.
 
-**Chưa tìm ra nguyên nhân gốc.** Cần quyền truy cập log/connection Supabase trực tiếp để xem RPC có commit hay không và có bị pooling/replica nào đứng giữa hay không — việc này vượt quá khả năng chẩn đoán chỉ bằng Playwright + mã nguồn.
+- [x] **V21.** Đã xử lý.
 
-**Mức độ nghiêm trọng:** cao — đây chính là cơ chế mà V2 (hộp thư quyết định của giám đốc) và toàn bộ module Dự án & sự kiện dựa vào để chứng minh giá trị "một người thao tác, người khác thấy ngay". Nếu lỗi này đúng như quan sát, **bất kỳ yêu cầu đổi phạm vi nào gửi từ một phiên đăng nhập cũng có thể không bao giờ tới được giám đốc ở phiên khác** — đúng loại lỗi mà V2 vừa được sửa để chặn (L3), nhưng ở một luồng dữ liệu khác.
+### 23.3 🔴 L17 — chưa sửa được, cần quyền truy cập Supabase trực tiếp mà phiên này không có
 
-**Việc phát sinh:** 2 bài test đã đánh dấu `test.fixme()` kèm ghi chú nguyên nhân ngay trong file, không xoá cũng không ép qua:
-- `tests/e2e/prod-smoke-director-decision-inbox.spec.ts` — bài "quản lý gửi yêu cầu đổi phạm vi dự án, giám đốc thấy ngay..."
-- `tests/e2e/prod-smoke-project-workflow.spec.ts` — bài "quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở phiên khác..."
+**Phạm vi thật sự lớn hơn nhiều so với ghi nhận ban đầu.** Phát hiện đầu tiên chỉ thấy ở module Dự án (yêu cầu đổi phạm vi); sau khi rà thêm 3 bài test khác — **đã xác nhận đây là lỗi hệ thống, không phải lỗi riêng một module:**
 
-- [ ] **V20. Tìm nguyên nhân gốc L17** — cần truy cập trực tiếp Supabase (log RPC, kiểm tra pooling/transaction) hoặc dựng lại bằng script Node gọi thẳng RPC (không qua Playwright/Next.js) để tách bạch lỗi nằm ở tầng Next.js/Vercel hay tầng Supabase. **Ưu tiên cao — ngang hoặc hơn V3**, vì ảnh hưởng trực tiếp uy tín của V2 vừa sửa.
+| Bài test (đã từng pass, có ghi trong CODEX) | Kết quả rà lại 01/08/2026 |
+|---|---|
+| `prod-smoke-project-workflow.spec.ts` — quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở phiên khác | ❌ Giám đốc không thấy yêu cầu |
+| `prod-smoke-project-workflow.spec.ts` — nhân viên bắt đầu xử lý gói việc, quản lý ở phiên khác thấy trạng thái mới | ❌ Quản lý không thấy trạng thái mới (dù nhân viên đã vào được module sau khi L18 sửa) |
+| `prod-smoke-director-decision-inbox.spec.ts` — quản lý gửi yêu cầu, giám đốc thấy ở phiên khác | ❌ Giám đốc không thấy |
+| `prod-smoke-staff-access.spec.ts` — quản lý thu hồi quyền, nhân viên ở phiên khác bị chặn | ❌ Nhân viên ở phiên khác vẫn vào được, như chưa hề bị thu hồi |
+| `prod-smoke-field-reports-and-gate-scans.spec.ts` — nhân viên gửi báo cáo ảnh, giám đốc thấy ở phiên khác | ❌ Giám đốc không thấy |
+| `prod-smoke-field-reports-and-gate-scans.spec.ts` — nhân viên quét QR, quản lý thấy ở phiên khác | ❌ Quản lý không thấy |
 
-#### 🟠 L18. `nv.trangan` mất quyền module Dự án — giao diện cấp quyền không thể cấp lại
+**Tất cả 6 bài đều từng có bằng chứng "X/X pass" trong `docs/CODEX.md` ở các phiên trước.** Đây không phải lỗi mới viết — dữ liệu vẫn ghi đúng (phiên đã ghi luôn thấy lại đúng dữ liệu của mình, kể cả sau khi tải lại trang thật/F5), nhưng **bất kỳ phiên đăng nhập nào khác — kể cả cùng tài khoản, trên một trình duyệt/thiết bị khác — không bao giờ thấy thay đổi đó**, dù chờ tới 45 giây và tải lại nhiều lần.
 
-**Bằng chứng:** `nv.trangan` vào `/erp/trang-an/du-an-su-kien` bị chuyển hướng `?denied=module` (không còn quyền). Vào `/erp/trang-an/nhan-su` với tài khoản quản lý, xem hồ sơ `nv.trangan`: danh sách "NGHIỆP VỤ ĐƯỢC GIAO" chỉ có Vé/Khách/Hiện trường/Sự cố/Chấm công — **không có ô "Dự án" nào để tick**, vì `du-an-su-kien` không nằm trong `employeeAssignable` + `trainedModuleIds` của bất kỳ nhân viên nào trong `lib/erp/demo-data.ts`.
+**Đã loại trừ trước khi kết luận là lỗi hệ thống:**
+- **Không phải cache CDN/edge:** `curl -I` trả `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate` và `X-Vercel-Cache: MISS` cho route bị ảnh hưởng.
+- **Không phải RLS:** policy đọc cho `service_role` trên các bảng liên quan là `using (true)`, không điều kiện.
+- **Không phải do V12 hay bất kỳ thay đổi nào trong phiên này:** tái hiện với tài khoản/cơ sở hoàn toàn không đổi (`ql.vanhanh`/Tràng An), và tái hiện trên các file test cũ không sửa dòng nào.
+- **Không phải do đợt deploy vừa rồi bị lỗi:** đã xác nhận deployment `Ready`, alias production đúng, qua `vercel inspect`.
 
-**Nguyên nhân:** khi module Dự án được xây (phiên 01/08 trước đó), quyền `du-an-su-kien` được cấp **thẳng vào bảng Supabase qua migration seed**, không qua giao diện `staff-access-manager.tsx` — và `trainedModuleIds` tĩnh trong `demo-data.ts` chưa từng được cập nhật để bao gồm nó. Hệ quả: `staff-access-manager.tsx` chỉ hiện các ô tick nằm trong `getEmployeeAssignableModuleIds()`, nên **bất kỳ lần lưu phân công nào cho nhân viên đó** (vì bất kỳ lý do gì khác, kể cả không liên quan tới module Dự án) **sẽ âm thầm xoá mất quyền `du-an-su-kien`** — vì form chỉ gửi lại đúng những ô đang hiển thị, không giữ nguyên các quyền ẩn. Rất có thể một trong nhiều lượt kiểm chứng Playwright trên production ở các phiên trước (bài "manager grants a module..." hoặc tương tự) đã vô tình kích hoạt việc này.
+**Đã thử điều tra sâu hơn bằng cách gọi thẳng Supabase, bỏ qua Next.js/Vercel — bị chặn:** `vercel env pull` tải được các biến môi trường production, nhưng `SUPABASE_SECRET_KEY` được Vercel đánh dấu **"sensitive"** nên giá trị trả về chỉ là chuỗi giữ chỗ `[SENSITIVE]`, không phải khoá thật — CLI của Vercel **cố ý không cho lấy lại** giá trị biến môi trường nhạy cảm sau khi đã tạo, đây là giới hạn nền tảng, không phải vấn đề quyền hạn có thể xử lý từ phiên làm việc này.
 
-**Vì sao đáng lo hơn vẻ ngoài:** đây không chỉ là một nhân viên bị mất một quyền — đây là **một lớp lỗi**: bất kỳ quyền nào được seed thẳng vào Supabase mà không đồng bộ vào `trainedModuleIds` tĩnh đều sẽ bị xoá không báo trước ở lần lưu tiếp theo. Càng thêm module mới theo kiểu "seed thẳng DB" (như module Dự án đã làm) thì rủi ro càng tích luỹ.
+**Chưa tìm ra nguyên nhân gốc — cần một trong hai:**
+1. Quyền truy cập Supabase Dashboard (Studio/Logs/Database) trực tiếp, hoặc
+2. Khoá `service_role` thật (không bị Vercel che), để chạy script Node gọi thẳng RPC + đọc lại, bỏ qua hoàn toàn Next.js/Vercel — tách bạch xem lỗi nằm ở tầng ứng dụng hay tầng Supabase (pooling, replica, transaction chưa commit, v.v.).
 
-- [ ] **V21. Đồng bộ `trainedModuleIds` với quyền đã seed, và sửa `staff-access-manager.tsx` để không xoá quyền ẩn** — trước mắt: thêm `du-an-su-kien` vào `trainedModuleIds` của ít nhất 1 nhân viên mỗi cơ sở cho khớp seed đã có; về lâu dài: form cấp quyền nên chỉ cập nhật đúng các module nó hiển thị, giữ nguyên mọi module khác nhân viên đang có thay vì ghi đè toàn bộ mảng. Xử lý L18. *(Nhỏ để vá tạm, vừa để sửa tận gốc.)*
+**Mức độ nghiêm trọng: rất cao.** Đây là cơ chế nền mà **gần như mọi lời khẳng định "lưu Supabase dùng chung, xuyên tài khoản" trong toàn bộ CODEX từ 29/07 tới nay** dựa vào để chứng minh. Nếu đúng như quan sát, hệ thống đang **âm thầm quay lại đúng vấn đề mà toàn bộ đợt sửa "module giả" 31/07–01/08 đã giải quyết** (dữ liệu chỉ sống trong phiên trình duyệt của người thao tác) — chỉ khác là lần này dữ liệu **có thật trong Supabase**, chỉ là không phiên nào khác đọc lại được ngay.
 
-### 23.3 Việc tiếp theo
+**Việc phát sinh — đã đánh dấu `test.fixme()` cho toàn bộ 6 assertion bị ảnh hưởng**, kèm ghi chú tại chỗ, không xoá không ép qua:
+- `tests/e2e/prod-smoke-project-workflow.spec.ts` (2 bài)
+- `tests/e2e/prod-smoke-director-decision-inbox.spec.ts` (1 bài)
+- `tests/e2e/prod-smoke-staff-access.spec.ts` (1 bài)
+- `tests/e2e/prod-smoke-field-reports-and-gate-scans.spec.ts` (2 bài)
 
-V12 đã xong và đã chứng minh được trên production. Trước khi làm V3 (chuyển vai trò demo), nên cân nhắc ưu tiên **V20** vì nó ảnh hưởng tới độ tin cậy của chính V2 vừa sửa trong phiên trước — nếu chủ dự án đồng ý, sẽ điều tra V20 bằng một script Node gọi thẳng Supabase RPC (không qua trình duyệt) ở phiên tiếp theo để tách bạch nguyên nhân.
+- [ ] **V20. Tìm nguyên nhân gốc L17.** Cần chủ dự án cấp một trong hai: quyền Supabase Dashboard, hoặc khoá `service_role` thật (đổi biến môi trường Vercel sang không đánh dấu "sensitive" tạm thời, hoặc cấp trực tiếp qua kênh an toàn). **Ưu tiên cao nhất trong toàn bộ backlog hiện tại** — cao hơn V3, vì đây là nền tảng mà toàn bộ giá trị "ERP dùng chung, không phải state trình duyệt" của dự án đang đứng trên.
+
+### 23.4 Việc tiếp theo
+
+V12 và L18 đã xong, đã chứng minh trên production. **L17 chặn lại V20** cho tới khi có quyền truy cập Supabase sâu hơn — không thể tự điều tra thêm từ phiên làm việc này. Theo yêu cầu chủ dự án tiếp tục làm việc, chuyển sang **V3** (chuyển vai trò demo) trong lúc chờ quyền truy cập cho V20; sẽ ghi rõ trong V3 rằng tính năng "đổi vai trò xem" là đổi phiên đăng nhập thật (không phải giả lập UI), nên **không bị ảnh hưởng bởi L17** — L17 chỉ ảnh hưởng tới việc đọc lại dữ liệu ĐÃ GHI ở một phiên khác, không ảnh hưởng tới việc đổi danh tính đang đăng nhập.

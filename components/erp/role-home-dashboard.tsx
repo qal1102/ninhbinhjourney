@@ -223,7 +223,11 @@ function ManagerDashboard({
     <div className="min-w-0 space-y-5">
       <section className="overflow-hidden rounded-3xl bg-[#173f34] p-5 text-white sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b6d5ca]">
-          Điều hành toàn vùng · {sites.length} cơ sở
+          {sites.length > 1
+            ? `Điều hành toàn vùng · ${sites.length} cơ sở`
+            : sites[0]
+              ? `Điều hành ${sites[0].shortName}`
+              : "Chưa được phân công cơ sở"}
         </p>
         <div className="mt-2 flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
           <div>

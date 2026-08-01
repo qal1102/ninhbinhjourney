@@ -55,7 +55,9 @@ test("quản lý gửi yêu cầu đổi phạm vi dự án, giám đốc thấy
   const managerContext = await browser.newContext();
   const managerPage = await managerContext.newPage();
   try {
-    await login(managerPage, "ql.vanhanh", "Quanly@2026");
+    // Bái Đính now has its own manager (V12); the regional ql.vanhanh
+    // account no longer reaches other sites.
+    await login(managerPage, "ql.baidinh", "Quanly@2026");
     await managerPage.goto("/erp/bai-dinh/du-an-su-kien");
 
     const form = managerPage

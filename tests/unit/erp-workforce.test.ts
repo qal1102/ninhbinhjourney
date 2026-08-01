@@ -31,31 +31,43 @@ describe("ERP workforce assignments", () => {
     expect(allowed).not.toEqual(expect.arrayContaining(["ve-dat-cho", "camera-ai", "tai-san-bao-tri", "du-an-su-kien"]));
   });
 
-  it("uses one regional operations manager while preserving the old login alias", () => {
-    const manager = findDemoErpAccountByUsername("ql.vanhanh");
+  it("gives every site its own manager, isolated from the other three", () => {
     const legacyAlias = findDemoErpAccountByUsername("ql.trangan");
+    const managers = DEMO_ERP_ACCOUNTS.filter(
+      (account) => account.role === "manager",
+    );
 
-    expect(manager?.id).toBe("manager-trang-an");
-    expect(legacyAlias?.id).toBe(manager?.id);
-    expect(manager?.role).toBe("manager");
-    expect(
-      DEMO_ERP_ACCOUNTS.filter((account) => account.role === "manager"),
-    ).toHaveLength(1);
-    expect(manager?.managedSiteIds).toEqual(ERP_SITES.map((site) => site.id));
-    expect(findDemoErpAccountByUsername("ql.tamchuc")).toBeUndefined();
-    expect(findDemoErpAccountByUsername("ql.tamcoc")).toBeUndefined();
-    expect(findDemoErpAccountByUsername("ql.baidinh")).toBeUndefined();
+    // L14 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md: a single regional
+    // manager with all four sites meant "manager sees only their own site"
+    // was never actually provable in a demo. Each site now has its own
+    // manager account with managedSiteIds narrowed to exactly that site.
+    expect(managers).toHaveLength(4);
+    for (const site of ERP_SITES) {
+      const manager = managers.find((account) =>
+        account.managedSiteIds.includes(site.id),
+      );
+      expect(manager, `no manager owns ${site.id}`).toBeDefined();
+      expect(manager?.managedSiteIds).toEqual([site.id]);
+      expect(manager?.initialSiteIds).toEqual([site.id]);
+    }
+
+    // The old regional-manager username keeps logging in (now scoped to
+    // Tràng An only) so previously shared demo scripts do not break.
+    const trangAnManager = findDemoErpAccountByUsername("ql.vanhanh");
+    expect(trangAnManager?.id).toBe("manager-trang-an");
+    expect(legacyAlias?.id).toBe(trangAnManager?.id);
 
     const employees = DEMO_ERP_ACCOUNTS.filter(
       (account) => account.role === "employee",
     );
     expect(employees.length).toBeGreaterThan(0);
-    expect(
-      employees.every(
-        (account) =>
-          account.workforceProfile?.supervisorId === "manager-trang-an",
-      ),
-    ).toBe(true);
+    for (const employee of employees) {
+      const supervisorId = employee.workforceProfile?.supervisorId;
+      const supervisor = managers.find((account) => account.id === supervisorId);
+      expect(supervisor, `${employee.id} has no valid supervisor`).toBeDefined();
+      // Every employee reports to the manager who actually owns their site.
+      expect(supervisor?.managedSiteIds).toEqual(employee.initialSiteIds);
+    }
   });
 
   it("provides a separate regional chief accountant account", () => {

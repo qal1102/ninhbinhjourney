@@ -34,6 +34,13 @@ const SITE_SLUG_BY_UUID = new Map(
   ]),
 );
 
+const SITE_MANAGER_ACCOUNT_ID: Record<ErpSiteId, string> = {
+  "trang-an": "manager-trang-an",
+  "tam-chuc": "manager-tam-chuc",
+  "tam-coc": "manager-tam-coc",
+  "bai-dinh": "manager-bai-dinh",
+};
+
 type PersistenceMode = "supabase" | "demo-cookie";
 type DatabaseRow = Record<string, unknown>;
 type CommandContext = {
@@ -663,7 +670,7 @@ function demoRecord(input: {
     status: input.status,
     ownerRole: input.ownerRole,
     version: input.version ?? 1,
-    managerAccountId: "manager-trang-an",
+    managerAccountId: SITE_MANAGER_ACCOUNT_ID[input.siteId],
     accountantAccountId:
       ["accounting-review", "accounting-returned", "posted"].includes(input.status)
         ? "accountant-001"

@@ -18,18 +18,43 @@ async function login(page: Page, username: string, password: string) {
   await expect(page).toHaveURL(/\/erp$/);
 }
 
+async function logout(page: Page) {
+  await page.goto("/erp");
+  if (page.url().includes("/erp/login")) return;
+  const mobileMenu = page.getByRole("button", { name: "Mở menu" });
+  if (await mobileMenu.isVisible()) {
+    await mobileMenu.click();
+  }
+  await page.getByRole("button", { name: "Đăng xuất" }).click();
+  await expect(page).toHaveURL(/\/erp\/login/);
+}
+
+// Each site now has its own manager account (V12 in
+// docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md fixed the org chart so one manager
+// no longer owns all four sites); logging in per site also doubles as a
+// live check that a manager cannot reach a site they were not assigned.
+const SITE_MANAGERS: Record<string, [string, string]> = {
+  "trang-an": ["ql.vanhanh", "Quanly@2026"],
+  "tam-chuc": ["ql.tamchuc", "Quanly@2026"],
+  "tam-coc": ["ql.tamcoc", "Quanly@2026"],
+  "bai-dinh": ["ql.baidinh", "Quanly@2026"],
+};
+
 test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với module Sự cố, không còn mâu thuẫn", async ({
   page,
 }) => {
-  // Logged in as manager, not director: the incident module narrows a
-  // director's view to escalated-only cases (by design -- directors only
-  // need what requires them), so a director's "hồ sơ đang mở" count is a
-  // subset, not the site total. The overview KPI shows the true site-wide
-  // open-incident count for every role, so the apples-to-apples comparison
-  // needs the role whose module view is not narrowed.
-  await login(page, "ql.vanhanh", "Quanly@2026");
-
+  // Logged in as each site's own manager, not director: the incident module
+  // narrows a director's view to escalated-only cases (by design --
+  // directors only need what requires them), so a director's "hồ sơ đang
+  // mở" count is a subset, not the site total. The overview KPI shows the
+  // true site-wide open-incident count for every role, so the
+  // apples-to-apples comparison needs the role whose module view is not
+  // narrowed.
   for (const siteId of ["trang-an", "tam-chuc", "tam-coc", "bai-dinh"]) {
+    const [username, password] = SITE_MANAGERS[siteId];
+    await logout(page);
+    await login(page, username, password);
+
     await page.goto(`/erp/${siteId}`);
     const overviewCard = page
       .locator("div")
@@ -53,6 +78,28 @@ test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với
       moduleCount,
     );
   }
+});
+
+// Production verification for V12 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md
+// (L14): before this fix, one manager account (managedSiteIds = all 4 sites)
+// managed every site at once, so "manager cannot see another site's data"
+// was never actually demonstrable. Each site now has its own manager.
+test("quản lý Tam Chúc không vào được dữ liệu Tràng An và ngược lại", async ({
+  page,
+}) => {
+  await login(page, "ql.tamchuc", "Quanly@2026");
+  await expect(page.locator('a[href^="/erp/trang-an/"]')).toHaveCount(0);
+  await expect(page.locator('a[href^="/erp/tam-coc/"]')).toHaveCount(0);
+  await expect(page.locator('a[href^="/erp/bai-dinh/"]')).toHaveCount(0);
+
+  await page.goto("/erp/trang-an");
+  await expect(page).toHaveURL(/\/erp\?denied=site/);
+  await expect(page.locator('p[role="alert"]')).toContainText("chưa được phân công");
+
+  await logout(page);
+  await login(page, "ql.vanhanh", "Quanly@2026");
+  await page.goto("/erp/tam-chuc");
+  await expect(page).toHaveURL(/\/erp\?denied=site/);
 });
 
 test("hai KPI chưa có nguồn dữ liệu thật nói thẳng thay vì bịa số", async ({

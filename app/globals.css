@@ -304,6 +304,21 @@ select {
   color: #fbfaf6;
 }
 
+.nb-route-pin {
+  align-items: center;
+  background: #d58c35;
+  border: 2px solid #fbfaf6;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(24, 63, 52, 0.32);
+  color: #151a17;
+  display: flex;
+  font-size: 13px;
+  font-weight: 800;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
 .nb-user-marker {
   background: #2f80ed;
   border: 3px solid #fbfaf6;

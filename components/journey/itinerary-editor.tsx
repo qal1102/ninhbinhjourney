@@ -1,9 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { DESTINATIONS, NINH_BINH_TOURISM_CORE } from "@/content/destinations";
+import { DESTINATIONS } from "@/content/destinations";
+import { rebuildItineraryWithSites } from "@/domain/journey";
 import type { Itinerary, JourneyIntent } from "@/domain/models";
+
+const ItineraryRouteMap = dynamic(() => import("./itinerary-route-map"), {
+  loading: () => (
+    <div className="grid min-h-[24rem] place-items-center rounded-2xl bg-[#12211c]">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#a8cec1] border-t-[#e7c78d]" />
+    </div>
+  ),
+  ssr: false,
+});
 
 function timeLabel(value: string) {
   return new Intl.DateTimeFormat("vi-VN", {
@@ -13,23 +24,14 @@ function timeLabel(value: string) {
   }).format(new Date(value));
 }
 
-function pointPosition(siteId: string) {
-  const destination = DESTINATIONS.find((item) => item.id === siteId);
-  if (!destination) return { left: "50%", top: "50%" };
-  const [latitude, longitude] = destination.coordinates;
-  const { south, west, north, east } = NINH_BINH_TOURISM_CORE.bounds;
-  return {
-    left: `${((longitude - west) / (east - west)) * 100}%`,
-    top: `${((north - latitude) / (north - south)) * 100}%`,
-  };
-}
-
 export function ItineraryEditor({
   initialItinerary,
   intent,
+  persisted = false,
 }: {
   initialItinerary: Itinerary;
   intent: JourneyIntent;
+  persisted?: boolean;
 }) {
   const [itinerary, setItinerary] = useState(initialItinerary);
   const [message, setMessage] = useState("");
@@ -40,11 +42,39 @@ export function ItineraryEditor({
     [itinerary.items],
   );
 
+  const routeStops = useMemo(
+    () =>
+      itinerary.items.map((item) => ({
+        id: item.id,
+        siteId: item.siteId,
+        label: `${timeLabel(item.startAt)}–${timeLabel(item.endAt)}`,
+      })),
+    [itinerary.items],
+  );
+
   async function saveSites(nextSiteIds: string[]) {
     if (nextSiteIds.length === 0) {
       setMessage("Hành trình cần ít nhất một điểm đến.");
       return;
     }
+
+    // Journeys created outside a demo room live in the browser only, so the
+    // same domain rules are re-run locally instead of round-tripping.
+    if (!persisted) {
+      const rebuilt = rebuildItineraryWithSites({
+        itinerary,
+        intent,
+        siteIds: nextSiteIds,
+      });
+      setItinerary(rebuilt);
+      setMessage(
+        rebuilt.validation.valid
+          ? "Đã tính lại lịch trình theo chỉnh sửa của bạn."
+          : "Đã tính lại; hãy xử lý xung đột trước khi tiếp tục.",
+      );
+      return;
+    }
+
     setPending(true);
     setMessage("");
     try {
@@ -106,7 +136,9 @@ export function ItineraryEditor({
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-              Lịch trình đã xác nhận · Supabase
+              {persisted
+                ? "Lịch trình đã xác nhận · đã lưu"
+                : "Lịch trình đã xác nhận · lưu trên máy bạn"}
             </p>
             <h2 className="font-display mt-3 text-4xl text-[#183f34] sm:text-5xl">
               Một ngày theo nhịp nhẹ
@@ -191,51 +223,10 @@ export function ItineraryEditor({
 
       <div className="space-y-5">
         <section className="rounded-3xl bg-[#183f34] p-5 text-white sm:p-7">
-          <div className="relative min-h-[24rem] overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_35%_70%,rgba(255,255,255,.13),transparent_22%),linear-gradient(145deg,#315e4b,#111a17)]">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 100 100"
-              className="absolute inset-[8%] h-[84%] w-[84%]"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M 10 88 L 10 40 L 20 7 L 55 7 L 90 40 L 90 84 L 55 95 Z"
-                fill="rgba(255,255,255,.04)"
-                stroke="#a8cec1"
-                strokeWidth="1"
-                strokeDasharray="2 2"
-              />
-              {itinerary.items.slice(1).map((item, index) => {
-                const previous = itinerary.items[index];
-                const start = pointPosition(previous.siteId);
-                const end = pointPosition(item.siteId);
-                return (
-                  <line
-                    key={`${previous.id}-${item.id}`}
-                    x1={start.left}
-                    y1={start.top}
-                    x2={end.left}
-                    y2={end.top}
-                    stroke="#e7c78d"
-                    strokeWidth="1.6"
-                    strokeDasharray="3 2"
-                  />
-                );
-              })}
-            </svg>
-            {itinerary.items.map((item, index) => (
-              <span
-                key={item.id}
-                className="absolute z-10 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-[#d58c35] text-sm font-extrabold text-[#151a17]"
-                style={pointPosition(item.siteId)}
-              >
-                {index + 1}
-              </span>
-            ))}
-            <p className="absolute bottom-3 left-4 text-xs font-bold text-white/55">
-              Route reveal · local tourism-core canvas
-            </p>
-          </div>
+          <ItineraryRouteMap stops={routeStops} />
+          <p className="mt-3 text-xs font-bold text-white/55">
+            Thứ tự điểm dừng theo lịch trình đã xác nhận.
+          </p>
         </section>
 
         <section
@@ -274,7 +265,7 @@ export function ItineraryEditor({
 
         {itinerary.validation.valid ? (
           <Link
-            href={`/packages?journey=${itinerary.id}`}
+            href={persisted ? `/packages?journey=${itinerary.id}` : "/packages"}
             className="inline-flex min-h-13 w-full items-center justify-center rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17]"
           >
             Dùng hành trình này

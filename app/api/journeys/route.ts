@@ -13,30 +13,16 @@ function asJson(value: unknown): Json {
 export async function POST(request: Request) {
   try {
     const input = CreateJourneyRequestSchema.parse(await request.json());
-    const demoRunId = (await cookies()).get("nbj-active-run")?.value;
-    if (!demoRunId) {
-      throw new DomainError(
-        "DEMO_ROOM_NOT_JOINED",
-        "Pair this visitor with an active demo room before saving a journey.",
-      );
-    }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user || !user.is_anonymous) {
-      throw new DomainError(
-        "PERMISSION_DENIED",
-        "An authenticated anonymous visitor session is required.",
-      );
-    }
+    // A demo room is required only to PERSIST a journey. Ordinary visitors who
+    // never joined one still get a fully generated, validated itinerary back —
+    // it simply lives in the browser instead of Supabase.
+    const demoRunId = (await cookies()).get("nbj-active-run")?.value ?? null;
 
     const draft = parseJourneyIntent({ text: input.text, locale: input.locale });
     const intent = confirmJourneyIntent({
       draft,
-      demoRunId,
+      demoRunId: demoRunId ?? randomUUID(),
       id: randomUUID(),
       durationMinutes: input.durationMinutes,
       party: input.party,
@@ -47,20 +33,37 @@ export async function POST(request: Request) {
       visitDate: input.visitDate,
     });
 
-    const { data: slots, error: slotError } = await supabase
-      .from("capacity_slots")
-      .select("site_id, capacity, reserved, status")
-      .eq("demo_run_id", demoRunId)
-      .eq("slot_date", input.visitDate);
-    if (slotError) throw slotError;
-    const unavailable = new Set(
-      (slots ?? [])
-        .filter(
-          (slot) =>
-            slot.status !== "available" || slot.reserved >= slot.capacity,
-        )
-        .map((slot) => slot.site_id),
-    );
+    const supabase = demoRunId ? await createClient() : null;
+    let unavailable = new Set<string>();
+
+    if (supabase && demoRunId) {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user || !user.is_anonymous) {
+        throw new DomainError(
+          "PERMISSION_DENIED",
+          "An authenticated anonymous visitor session is required.",
+        );
+      }
+
+      const { data: slots, error: slotError } = await supabase
+        .from("capacity_slots")
+        .select("site_id, capacity, reserved, status")
+        .eq("demo_run_id", demoRunId)
+        .eq("slot_date", input.visitDate);
+      if (slotError) throw slotError;
+      unavailable = new Set(
+        (slots ?? [])
+          .filter(
+            (slot) =>
+              slot.status !== "available" || slot.reserved >= slot.capacity,
+          )
+          .map((slot) => slot.site_id),
+      );
+    }
+
     const itinerary = generateItinerary(intent, {
       unavailableSiteIds: unavailable,
       visitDate: input.visitDate,
@@ -70,6 +73,13 @@ export async function POST(request: Request) {
         "ITINERARY_INVALID",
         itinerary.validation.issues[0]?.message ??
           "No valid itinerary is available for the confirmed constraints.",
+      );
+    }
+
+    if (!supabase || !demoRunId) {
+      return Response.json(
+        { intent, itinerary, persisted: false },
+        { status: 200, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -93,6 +103,7 @@ export async function POST(request: Request) {
           id: saved.itinerary_id,
           intentId: saved.intent_id,
         },
+        persisted: true,
       },
       { status: 201, headers: { "Cache-Control": "no-store" } },
     );

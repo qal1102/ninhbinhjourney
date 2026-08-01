@@ -2,7 +2,7 @@
 
 import L from "leaflet";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import type { Destination, DestinationId, Language, MapCopy } from "./ninh-binh-landing";
 
@@ -22,6 +22,7 @@ const expandedNinhBinhBounds: [[number, number], [number, number]] = [
   [20.72, 106.28],
 ];
 const defaultZoom = 10;
+const focusZoom = 12;
 const nearZoom = 13;
 
 function markerIcon(active: boolean, neutral = false) {
@@ -50,7 +51,7 @@ function MapFocus({ activeDestinationId, destinations }: Pick<TourismMapProps, "
 
   useEffect(() => {
     if (active) {
-      map.setView(target, 12, { animate: true });
+      map.setView(target, focusZoom, { animate: true });
       return;
     }
 
@@ -156,6 +157,15 @@ export default function TourismMap({
 }: TourismMapProps) {
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
 
+  // Leaflet icons are stable objects; rebuilding them each render churns markers.
+  const idleMarkerIcon = useMemo(() => markerIcon(false), []);
+  const activeMarkerIcon = useMemo(() => markerIcon(true), []);
+  const welcomeMarkerIcon = useMemo(
+    () => markerIcon(activeDestinationId === "welcome", true),
+    [activeDestinationId],
+  );
+  const visitorIcon = useMemo(() => userIcon(), []);
+
   return (
     <MapContainer
       center={welcomePosition}
@@ -174,16 +184,22 @@ export default function TourismMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {userPosition ? (
-        <Marker icon={userIcon()} position={userPosition} title={copy.youAreHere} />
+        <Marker icon={visitorIcon} position={userPosition} title={copy.youAreHere}>
+          <Tooltip direction="right" offset={[12, 0]} permanent>
+            <span className="nb-here-badge">{copy.youAreHere}</span>
+          </Tooltip>
+        </Marker>
       ) : null}
       <Marker
-        icon={markerIcon(activeDestinationId === "welcome", true)}
+        icon={welcomeMarkerIcon}
         position={welcomePosition}
         title={copy.welcome}
       >
-        <Tooltip direction="right" offset={[18, 0]} permanent>
-          <span className="nb-here-badge">{copy.youAreHere}</span>
-        </Tooltip>
+        {activeDestinationId === "welcome" ? (
+          <Tooltip direction="right" offset={[18, 0]} permanent>
+            <span className="nb-here-badge">{copy.welcome}</span>
+          </Tooltip>
+        ) : null}
         <Popup>
           <div className="bg-[#FBFAF6] p-4 text-[#1D2925]">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3F7568]">{copy.welcome}</p>
@@ -200,13 +216,13 @@ export default function TourismMap({
         return (
           <Marker
             key={destination.id}
-            icon={markerIcon(active)}
+            icon={active ? activeMarkerIcon : idleMarkerIcon}
             position={destination.position}
             title={destination.name[lang]}
           >
             {active ? (
               <Tooltip direction="right" offset={[18, 0]} permanent>
-                <span className="nb-here-badge">{copy.youAreHere}</span>
+                <span className="nb-here-badge">{destination.name[lang]}</span>
               </Tooltip>
             ) : null}
             <Popup>

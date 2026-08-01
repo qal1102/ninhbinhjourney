@@ -48,14 +48,25 @@ const examples = [
   "Gia đình tôi có 2 người lớn và 2 trẻ em, muốn một ngày cân bằng ở Ninh Bình.",
 ] as const;
 
+/** Local (Asia/Ho_Chi_Minh) calendar date, offset by whole days. */
+function localDateInDays(offsetDays: number) {
+  const now = new Date();
+  const local = new Date(
+    now.getTime() + 7 * 60 * 60 * 1000 + offsetDays * 24 * 60 * 60 * 1000,
+  );
+  return local.toISOString().slice(0, 10);
+}
+
 export function PlanExperience({
   showDemoCommand,
 }: {
   showDemoCommand: boolean;
 }) {
-  const [text, setText] = useState(REQUIRED_VIETNAMESE_SAMPLE);
+  const [text, setText] = useState("");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [draft, setDraft] = useState<JourneyIntentDraft | null>(null);
+  const [visitDate, setVisitDate] = useState("");
+  const [minVisitDate, setMinVisitDate] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(600);
   const [adults, setAdults] = useState(3);
   const [children, setChildren] = useState(0);
@@ -69,11 +80,18 @@ export function PlanExperience({
   const [result, setResult] = useState<{
     intent: JourneyIntent;
     itinerary: Itinerary;
+    persisted: boolean;
   } | null>(null);
 
   function parseText() {
     const parsed = parseJourneyIntent({ text, locale: "vi" });
     setDraft(parsed);
+    // Resolved here rather than on mount: the date field only exists after this
+    // click, so today's date never has to match server-rendered markup.
+    setMinVisitDate(localDateInDays(0));
+    setVisitDate(
+      (current) => parsed.visitDate ?? (current || localDateInDays(7)),
+    );
     setDurationMinutes(parsed.durationMinutes ?? 600);
     setAdults(parsed.party?.adults ?? 1);
     setChildren(parsed.party?.children ?? 0);
@@ -150,27 +168,31 @@ export function PlanExperience({
           pace,
           walkingTolerance: walking,
           budgetVnd: { target: budget, tolerancePercent: 20 },
-          visitDate: "2026-08-15",
+          visitDate,
         }),
       });
       const payload = (await response.json()) as {
         intent?: JourneyIntent;
         itinerary?: Itinerary;
+        persisted?: boolean;
         error?: { message: string };
       };
       if (!response.ok || !payload.intent || !payload.itinerary) {
         throw new Error(
-          payload.error?.message ??
-            "Không thể tạo hành trình trong demo room hiện tại.",
+          payload.error?.message ?? "Chưa thể tạo hành trình. Hãy thử lại.",
         );
       }
-      setResult({ intent: payload.intent, itinerary: payload.itinerary });
-      setMessage("Ý định đã xác nhận và hành trình đã được lưu vào Supabase.");
+      setResult({
+        intent: payload.intent,
+        itinerary: payload.itinerary,
+        persisted: payload.persisted === true,
+      });
+      setMessage("");
     } catch (error) {
       setMessage(
         error instanceof Error
           ? error.message
-          : "Không thể tạo hành trình trong demo room hiện tại.",
+          : "Chưa thể tạo hành trình. Hãy thử lại.",
       );
     } finally {
       setPending(false);
@@ -190,6 +212,7 @@ export function PlanExperience({
         <ItineraryEditor
           initialItinerary={result.itinerary}
           intent={result.intent}
+          persisted={result.persisted}
         />
       </div>
     );
@@ -199,7 +222,7 @@ export function PlanExperience({
     <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
       <section className="rounded-3xl bg-[#183f34] p-6 text-white sm:p-8">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
-          Voice-first · full text fallback
+          Nói hoặc gõ · đều dùng được
         </p>
         <h2 className="font-display mt-4 text-4xl leading-tight sm:text-5xl">
           Kể về ngày bạn muốn có.
@@ -256,6 +279,7 @@ export function PlanExperience({
           }}
           rows={5}
           maxLength={4000}
+          placeholder={REQUIRED_VIETNAMESE_SAMPLE}
           className="mt-4 w-full rounded-2xl border border-[#c9ccc5] p-4 leading-7 outline-none focus:border-[#183f34]"
         />
         <div className="mt-4 grid gap-2">
@@ -289,10 +313,20 @@ export function PlanExperience({
                 Xác nhận ý định
               </h3>
               <span className="rounded-full bg-[#eef3ef] px-3 py-1 text-xs font-bold text-[#356957]">
-                Editable
+                Có thể sửa
               </span>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-bold">
+                Ngày đi
+                <input
+                  type="date"
+                  value={visitDate}
+                  min={minVisitDate}
+                  onChange={(event) => setVisitDate(event.target.value)}
+                  className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
+                />
+              </label>
               <label className="text-sm font-bold">
                 Thời lượng
                 <select
@@ -379,7 +413,7 @@ export function PlanExperience({
             <button
               type="button"
               onClick={confirmAndGenerate}
-              disabled={pending || adults + children + seniors < 1}
+              disabled={pending || !visitDate || adults + children + seniors < 1}
               className="mt-6 min-h-12 w-full rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17] disabled:opacity-50"
             >
               {pending

@@ -1,12 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DESTINATIONS,
   destinationInterests,
-  NINH_BINH_TOURISM_CORE,
   type DestinationCatalogItem,
   type DestinationInterest,
   type MobilityLevel,
@@ -30,107 +30,14 @@ const mobilityRank: Record<MobilityLevel, number> = {
   high: 3,
 };
 
-function pointPosition(coordinates: readonly [number, number]) {
-  const [latitude, longitude] = coordinates;
-  const { south, west, north, east } = NINH_BINH_TOURISM_CORE.bounds;
-  return {
-    left: `${((longitude - west) / (east - west)) * 100}%`,
-    top: `${((north - latitude) / (north - south)) * 100}%`,
-  };
-}
-
-function LocalTourismMap({
-  destinations,
-  selectedSlug,
-  onSelect,
-}: {
-  destinations: readonly DestinationCatalogItem[];
-  selectedSlug: string | null;
-  onSelect: (destination: DestinationCatalogItem, trigger: HTMLButtonElement) => void;
-}) {
-  if (destinations.length === 0) {
-    return (
-      <div className="grid min-h-96 place-items-center rounded-3xl border border-dashed border-[#8da69c] bg-[#edf3f0] p-8 text-center">
-        <div>
-          <p className="font-display text-2xl text-[#183f34]">
-            Không có điểm phù hợp
-          </p>
-          <p className="mt-2 text-sm text-[#59654b]">
-            Danh sách vẫn hoạt động; hãy nới một bộ lọc để xem lại điểm đến.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="relative min-h-[31rem] overflow-hidden rounded-3xl border border-[#b9cbc3] bg-[#dce9e3]"
-      role="group"
-      aria-label="Bản đồ ngữ cảnh Ninh Bình tourism core; không phải địa giới hành chính"
-    >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_70%,rgba(255,255,255,.74),transparent_24%),radial-gradient(circle_at_70%_25%,rgba(93,137,114,.18),transparent_28%),linear-gradient(145deg,#eaf2ed,#bed5ca)]" />
-      <svg
-        aria-hidden="true"
-        className="absolute inset-[6%] h-[88%] w-[88%]"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M 10 88 L 10 40 L 20 7 L 55 7 L 90 40 L 90 84 L 55 95 Z"
-          fill="rgba(250,248,239,.58)"
-          stroke="#527968"
-          strokeWidth="1.2"
-          strokeDasharray="2 2"
-        />
-        <path
-          d="M 18 82 C 34 60, 32 35, 56 19 S 74 58, 86 72"
-          fill="none"
-          stroke="#8eb9b5"
-          strokeWidth="2"
-        />
-        <path
-          d="M 24 92 C 35 68, 50 74, 61 53 S 72 25, 79 14"
-          fill="none"
-          stroke="#a8cec1"
-          strokeWidth="1"
-        />
-      </svg>
-      <div className="absolute left-4 top-4 z-10 max-w-[14rem] rounded-2xl border border-white/80 bg-white/88 p-3 shadow-sm backdrop-blur">
-        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#356957]">
-          Local geographic fallback
-        </p>
-        <p className="mt-1 text-xs leading-5 text-[#59654b]">
-          Tourism-core outline · không có lớp ranh giới Việt Nam · hoạt động
-          không cần tile mạng.
-        </p>
-      </div>
-      {destinations.map((destination, index) => {
-        const active = destination.slug === selectedSlug;
-        return (
-          <button
-            key={destination.id}
-            type="button"
-            onClick={(event) => onSelect(destination, event.currentTarget)}
-            aria-label={`Mở ${destination.name.vi} trên bản đồ`}
-            aria-pressed={active}
-            className={`absolute z-20 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 text-sm font-extrabold shadow-lg transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#d58c35] ${
-              active
-                ? "scale-125 border-white bg-[#d58c35] text-[#151a17]"
-                : "border-white bg-[#183f34] text-white hover:scale-110"
-            }`}
-            style={pointPosition(destination.coordinates)}
-          >
-            {index + 1}
-          </button>
-        );
-      })}
-      <p className="absolute bottom-3 right-4 text-[0.68rem] font-bold uppercase tracking-[0.13em] text-[#436354]">
-        WGS 84 · product scope, not an official boundary
-      </p>
+const ExploreMap = dynamic(() => import("./explore-map"), {
+  loading: () => (
+    <div className="grid min-h-[31rem] place-items-center rounded-3xl border border-[#b9cbc3] bg-[#dce9e3]">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#a8cec1] border-t-[#183f34]" />
     </div>
-  );
-}
+  ),
+  ssr: false,
+});
 
 function DestinationSheet({
   destination,
@@ -227,7 +134,7 @@ export function ExploreExperience() {
   const [family, setFamily] = useState<FamilyFilter>("all");
   const [availableOnly, setAvailableOnly] = useState(true);
   const [selected, setSelected] = useState<DestinationCatalogItem | null>(null);
-  const returnFocusRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const filtered = useMemo(() => {
     const paceMinutes =
@@ -249,7 +156,7 @@ export function ExploreExperience() {
 
   function selectDestination(
     destination: DestinationCatalogItem,
-    trigger: HTMLButtonElement,
+    trigger: HTMLElement,
   ) {
     returnFocusRef.current = trigger;
     setSelected(destination);
@@ -374,7 +281,7 @@ export function ExploreExperience() {
 
       <div className="mt-5 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:gap-6">
         <div className={viewMode === "map" ? "block" : "hidden lg:block"}>
-          <LocalTourismMap
+          <ExploreMap
             destinations={filtered}
             selectedSlug={selected?.slug ?? null}
             onSelect={selectDestination}

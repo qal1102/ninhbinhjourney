@@ -114,7 +114,7 @@ test("NBJ-I06 production mode hides concept and demonstration controls", async (
   await expect(page.getByRole("link", { name: /Chọn gói/i })).toHaveCount(0);
 });
 
-test("discovery remains usable without interacting with a network tile map", async ({
+test("discovery list mode works without waiting on the map", async ({
   page,
 }) => {
   await page.goto("/explore");
@@ -122,6 +122,15 @@ test("discovery remains usable without interacting with a network tile map", asy
   await expect(page.getByRole("link", { name: /Plan/i })).toBeVisible();
   await page.getByRole("button", { name: "Danh sách" }).click();
   await expect(page.locator("article").first()).toBeVisible();
+});
+
+test("discovery map mode renders a real interactive map, not a static canvas", async ({
+  page,
+}) => {
+  await page.goto("/explore");
+  await page.getByRole("button", { name: "Bản đồ", exact: true }).click();
+  await expect(page.locator(".leaflet-container")).toBeVisible();
+  await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible();
 });
 
 test("captures local responsive evidence", async ({ page }, testInfo) => {

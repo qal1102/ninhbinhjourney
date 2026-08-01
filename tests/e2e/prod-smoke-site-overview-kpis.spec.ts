@@ -19,14 +19,10 @@ async function login(page: Page, username: string, password: string) {
 }
 
 async function logout(page: Page) {
-  await page.goto("/erp");
-  if (page.url().includes("/erp/login")) return;
-  const mobileMenu = page.getByRole("button", { name: "Mở menu" });
-  if (await mobileMenu.isVisible()) {
-    await mobileMenu.click();
-  }
-  await page.getByRole("button", { name: "Đăng xuất" }).click();
-  await expect(page).toHaveURL(/\/erp\/login/);
+  // Clearing the signed session cookie directly is far more reliable in a
+  // loop across four accounts than clicking through the UI logout button,
+  // whose visibility depends on viewport breakpoint.
+  await page.context().clearCookies();
 }
 
 // Each site now has its own manager account (V12 in

@@ -60,7 +60,9 @@ test("employee: the bell opens and shows either real categorized work or an hone
   const bell = page.locator('summary[aria-label="Mở trung tâm thông báo"]');
   await bell.click();
 
-  await expect(page.getByRole("heading", { name: "Việc của tôi" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Việc của tôi", exact: true, level: 2 }),
+  ).toBeVisible();
 
   const hasWork = page.getByText(/Ca bị trả lại|Phiếu việc bị trả lại|Sự cố đang xử lý/);
   const empty = page.getByText("Không có việc gấp đang chờ tài khoản này.");

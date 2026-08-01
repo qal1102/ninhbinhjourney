@@ -82,7 +82,15 @@ function cookieOptions(maxAge: number) {
     httpOnly: true,
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
-    path: "/erp",
+    // Must cover both /erp/** (pages/actions) and /api/erp/** (the
+    // assistant route) -- a cookie path of "/erp" does NOT match
+    // "/api/erp/assistant" per RFC 6265 path-matching (the request path
+    // has to start with the cookie path as a literal prefix; "/api/..."
+    // does not start with "/erp"). Found by prod Playwright verification:
+    // the bell and voice assistant were silently sending zero cookies to
+    // their own API route and always falling back to the loading-failed
+    // state.
+    path: "/",
     maxAge,
   };
 }

@@ -391,6 +391,7 @@ Con số này đo mức **sẵn sàng vận hành/ready**, không phủ nhận n
 ### G6.2. Capability và phân tách nhiệm vụ
 
 - [ ] Quyền theo role + site + module + action + active shift + thời hạn + training.
+  - Bằng chứng 02/08/2026 (V14, L13): **quản lý cơ sở nay được phân quyền thật** thay vì cấp cứng toàn bộ 15 module trong `demo-session.ts`. Danh sách module đọc từ `erp_employee_access` — đúng kho nhân viên đang dùng (migration `202608020018`, seed 13/13/12/13 module khác nhau theo cơ sở, không ai có `bao-cao`); phạm vi cơ sở vẫn theo sơ đồ tổ chức. Giám đốc cấp quyền được cho quản lý ở `/erp/<cơ sở>/nhan-su`; quản lý không sửa được quyền của bất kỳ quản lý nào kể cả của mình. Kiểm chứng production `tests/e2e/prod-smoke-manager-module-grant.spec.ts` **8/8 pass** (quản lý Tam Cốc vào được `xe-trung-chuyen` nhưng bị chặn `sop-dien-tap`, còn quản lý Tràng An thì ngược lại — cùng vai trò, khác quyền). **Ô này vẫn `[ ]`** vì chưa có ràng buộc theo ca đang trực và thời hạn training cho cấp quản lý.
 - [ ] Tách create/review/approve/post/close/export/admin.
 - [ ] Kế toán lập ≠ checker duyệt; quản lý không tự duyệt hồ sơ mình tạo.
 - [ ] Nhân viên thời vụ hết ca/hết hạn mất quyền tự động.

@@ -42,6 +42,11 @@ async function login(page: Page, username: string, password: string) {
 test("a camera-flagged report, and the transition made on it, are both real server state seen from a brand-new session", async ({
   browser,
 }) => {
+  // Two logins and five real server actions (create, then four transitions
+  // to walk the incident back to closed) -- past the 30s default once the
+  // full sweep is running in parallel.
+  test.slow();
+
   const firstContext = await browser.newContext();
   const firstPage = await firstContext.newPage();
   let createdIncidentId = "";

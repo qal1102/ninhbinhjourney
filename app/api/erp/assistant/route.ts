@@ -6,6 +6,8 @@ import type { SupplierApInvoice } from "@/domain/erp-supplier-ap";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import { listAccountingJournals } from "@/lib/erp/accounting-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { getIncidentCases } from "@/lib/erp/incident-repository";
+import { listPendingProjectChangeRequests } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import { listWorkdaysForUser } from "@/lib/erp/workday-view";
@@ -18,8 +20,11 @@ const RequestSchema = z.object({
     "guests",
     "supplier-payables",
     "urgent",
+    "inbox",
   ]),
 });
+
+type InboxItem = { label: string; count: number; href: string; hrefLabel: string };
 
 function formatVnd(value: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -384,6 +389,160 @@ export async function POST(request: Request) {
     const managerShiftActions = allShifts.filter(
       (record) => record.status === "submitted",
     ).length;
+
+    if (intent === "inbox") {
+      const [incidentCases, projectChangeRequests] = await Promise.all([
+        user.role === "accountant" || user.role === "chief-accountant"
+          ? Promise.resolve([])
+          : Promise.all(
+              user.siteIds.map((siteId) => getIncidentCases(siteId)),
+            ).then((bySite) => bySite.flat()),
+        user.role === "director"
+          ? listPendingProjectChangeRequests(user.siteIds)
+          : Promise.resolve([]),
+      ]);
+
+      const items: InboxItem[] = [];
+      const firstSiteHref = (siteId: string | undefined, path: string) =>
+        siteId ? `/erp/${siteId}/${path}` : "/erp";
+
+      if (user.role === "employee") {
+        items.push({
+          label: "Ca bị trả lại",
+          count: allShifts.filter(
+            (record) =>
+              record.submittedBy.id === user.id &&
+              record.status === "manager-returned",
+          ).length,
+          href: "/erp",
+          hrefLabel: "Xem ca của tôi",
+        });
+        items.push({
+          label: "Phiếu việc bị trả lại hoặc khẩn",
+          count: workdays.filter(
+            (record) =>
+              record.employee.id === user.id &&
+              (record.status === "manager-returned" ||
+                (record.priority === "critical" &&
+                  !["submitted", "approved"].includes(record.status))),
+          ).length,
+          href: "/erp",
+          hrefLabel: "Xem phiếu việc",
+        });
+        const myIncidents = incidentCases.filter(
+          (item) =>
+            item.assigneeId === user.id &&
+            (item.status === "acknowledged" || item.status === "in-progress"),
+        );
+        items.push({
+          label: "Sự cố đang xử lý",
+          count: myIncidents.length,
+          href: firstSiteHref(myIncidents[0]?.siteId ?? user.siteIds[0], "su-co"),
+          hrefLabel: "Mở Sự cố",
+        });
+      } else if (user.role === "manager") {
+        items.push({
+          label: "Ca chờ xác nhận",
+          count: managerShiftActions,
+          href: "/erp",
+          hrefLabel: "Xem chốt ca",
+        });
+        items.push({
+          label: "Phiếu việc chờ duyệt hoặc khẩn",
+          count: workdays.filter(
+            (record) =>
+              record.status === "submitted" ||
+              (record.priority === "critical" && record.status !== "approved"),
+          ).length,
+          href: "/erp",
+          hrefLabel: "Xem phiếu việc",
+        });
+        items.push({
+          label: "Hoá đơn nhà cung cấp cần bổ sung",
+          count: supplierApActions.length,
+          href: firstSiteHref(
+            supplierApActions[0]?.siteId ?? user.siteIds[0],
+            "doi-tac-nha-cung-ung",
+          ),
+          hrefLabel: "Mở hồ sơ NCC",
+        });
+        const managerIncidents = incidentCases.filter(
+          (item) => item.status === "reported" || item.status === "verification",
+        );
+        items.push({
+          label: "Sự cố mới hoặc chờ xác minh",
+          count: managerIncidents.length,
+          href: firstSiteHref(managerIncidents[0]?.siteId ?? user.siteIds[0], "su-co"),
+          hrefLabel: "Mở Sự cố",
+        });
+      } else if (user.role === "accountant") {
+        items.push({
+          label: "Ca cần đối soát",
+          count: accountingShiftActions,
+          href: "/erp/finance",
+          hrefLabel: "Mở đối soát",
+        });
+        items.push({
+          label: "Hồ sơ công nợ cần xử lý",
+          count: supplierApActions.length,
+          href: "/erp/finance#supplier-payables",
+          hrefLabel: "Mở công nợ",
+        });
+        items.push({
+          label: "Bút toán bị trả",
+          count: pendingJournals,
+          href: "/erp/finance",
+          hrefLabel: "Mở sổ",
+        });
+      } else if (user.role === "chief-accountant") {
+        items.push({
+          label: "Bút toán chờ duyệt",
+          count: pendingJournals,
+          href: "/erp/finance",
+          hrefLabel: "Mở sổ",
+        });
+        items.push({
+          label: "Hoá đơn NCC chờ kiểm tra",
+          count: supplierApActions.length,
+          href: "/erp/finance#supplier-payables",
+          hrefLabel: "Mở công nợ",
+        });
+      } else {
+        items.push({
+          label: "Ngoại lệ chốt ca",
+          count: shiftDirectorExceptions,
+          href: "/erp",
+          hrefLabel: "Xem chốt ca",
+        });
+        items.push({
+          label: "Hồ sơ NCC cần quyết định",
+          count: supplierApActions.length,
+          href: "/erp/finance#supplier-payables",
+          hrefLabel: "Mở công nợ",
+        });
+        const escalated = incidentCases.filter(
+          (item) => item.escalated && item.status !== "closed",
+        );
+        items.push({
+          label: "Sự cố đã chuyển cấp",
+          count: escalated.length,
+          href: firstSiteHref(escalated[0]?.siteId, "su-co"),
+          hrefLabel: "Mở Sự cố",
+        });
+        items.push({
+          label: "Yêu cầu đổi phạm vi dự án",
+          count: projectChangeRequests.length,
+          href: firstSiteHref(projectChangeRequests[0]?.siteId, "du-an-su-kien"),
+          hrefLabel: "Mở Dự án",
+        });
+      }
+
+      return NextResponse.json({
+        items,
+        count: items.reduce((total, item) => total + item.count, 0),
+      });
+    }
+
     const urgent = urgentWorkCount(
       user.role,
       user.id,

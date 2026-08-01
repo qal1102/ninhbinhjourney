@@ -14,12 +14,9 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [notificationState, setNotificationState] = useState<NotificationPermission | "unsupported">("default");
-  const [workflowNotice, setWorkflowNotice] = useState<{
+  const [inbox, setInbox] = useState<{
     count: number;
-    answer: string;
-    detail: string;
-    href?: string;
-    hrefLabel?: string;
+    items: { label: string; count: number; href: string; hrefLabel: string }[];
   } | null>(null);
   const [noticeLoaded, setNoticeLoaded] = useState(false);
 
@@ -57,27 +54,21 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
     void fetch("/api/erp/assistant", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ intent: "urgent" }),
+      body: JSON.stringify({ intent: "inbox" }),
       signal: controller.signal,
     })
       .then(async (response) => {
         if (!response.ok) return null;
         return (await response.json()) as {
           count?: number;
-          answer?: string;
-          detail?: string;
-          href?: string;
-          hrefLabel?: string;
+          items?: { label: string; count: number; href: string; hrefLabel: string }[];
         };
       })
       .then((payload) => {
         if (!payload || !active) return;
-        setWorkflowNotice({
+        setInbox({
           count: payload.count ?? 0,
-          answer: payload.answer ?? "Không có việc mới",
-          detail: payload.detail ?? "",
-          href: payload.href,
-          hrefLabel: payload.hrefLabel,
+          items: payload.items ?? [],
         });
       })
       .catch((error: unknown) => {
@@ -128,9 +119,9 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
             <path d="M10 21h4" />
           </svg>
-          {workflowNotice && workflowNotice.count > 0 ? (
+          {inbox && inbox.count > 0 ? (
             <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full border-2 border-white bg-[#c8523c] px-0.5 text-[9px] font-black leading-none text-white">
-              {workflowNotice.count > 9 ? "9+" : workflowNotice.count}
+              {inbox.count > 9 ? "9+" : inbox.count}
             </span>
           ) : null}
         </summary>
@@ -142,23 +133,35 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
             <p className="mt-4 rounded-xl bg-[#f1f5f2] px-4 py-5 text-center text-sm leading-6 text-[#65746d]">
               Đang đọc hàng việc…
             </p>
-          ) : workflowNotice ? (
-            <div className="mt-4 rounded-xl bg-[#f1f5f2] p-4">
-              <p className="text-sm font-black text-[#2d4038]">
-                {workflowNotice.answer}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-[#6d7a73]">
-                {workflowNotice.detail}
-              </p>
-              {workflowNotice.href ? (
-                <Link
-                  href={workflowNotice.href}
-                  className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-xs font-black text-[#285e4b]"
-                >
-                  {workflowNotice.hrefLabel ?? "Mở hàng việc"}
-                </Link>
-              ) : null}
-            </div>
+          ) : inbox && inbox.items.some((item) => item.count > 0) ? (
+            <ul className="mt-4 space-y-2">
+              {inbox.items
+                .filter((item) => item.count > 0)
+                .map((item) => (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      className="flex items-center justify-between gap-3 rounded-xl bg-[#f1f5f2] p-3 transition hover:bg-[#e6ede8]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black text-[#2d4038]">
+                          {item.label}
+                        </span>
+                        <span className="block text-xs text-[#6d7a73]">
+                          {item.hrefLabel}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-black text-[#285e4b]">
+                        {item.count}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          ) : inbox ? (
+            <p className="mt-4 rounded-xl bg-[#f1f5f2] px-4 py-5 text-center text-sm leading-6 text-[#65746d]">
+              Không có việc gấp đang chờ tài khoản này.
+            </p>
           ) : (
             <p className="mt-4 rounded-xl bg-[#f1f5f2] px-4 py-5 text-center text-sm leading-6 text-[#65746d]">
               Chưa đọc được hàng việc lúc này.

@@ -74,6 +74,10 @@ function parseBillion(text: string) {
 test("quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở phiên khác, ngân sách sự kiện cập nhật xuyên tài khoản", async ({
   browser,
 }) => {
+  // Four real logins across three contexts (raise, approve, restore,
+  // approve) -- the restore leg roughly doubles the original runtime.
+  test.slow();
+
   const stamp = Date.now();
   const uniqueSummary = `PROD-SMOKE tăng ngân sách ${stamp}`;
   const restoreSummary = `PROD-SMOKE trả lại ngân sách ${stamp}`;
@@ -149,7 +153,9 @@ test("quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở p
     // drifts up by 0,1 tỷ on every single run and nobody notices until the
     // demo shows a number that was never approved by anyone.
     await fileBudgetRequest(restoreSummary, originalBudget);
-    await directorPage.reload();
+    // goto, not reload: the director's last navigation was the approval
+    // Server Action's POST, and reloading would re-submit it.
+    await directorPage.goto("/erp/trang-an/du-an-su-kien");
     const restoreItem = directorPage.locator("li").filter({ hasText: restoreSummary });
     await expect(restoreItem).toBeVisible({ timeout: 15_000 });
     await restoreItem.getByRole("button", { name: "Duyệt" }).click();

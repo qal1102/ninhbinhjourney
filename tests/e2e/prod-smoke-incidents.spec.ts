@@ -65,7 +65,7 @@ test("a manager's incident transition is real server state, visible from a compl
 
     // 2. Transition it once, in this session.
     await firstPage.goto("/erp/tam-chuc/su-co");
-    const card = firstPage.locator("details").filter({ hasText: incidentId });
+    const card = firstPage.locator("details").filter({ hasText: incidentId }).first();
     await card.locator("summary").click();
     await expect(card.getByText("Mới báo", { exact: true })).toBeVisible();
     await card.getByRole("button", { name: MANAGER_STEPS[0] }).click();
@@ -86,12 +86,12 @@ test("a manager's incident transition is real server state, visible from a compl
     await login(secondPage, "ql.tamchuc", "Quanly@2026");
     await secondPage.goto("/erp/tam-chuc/su-co");
 
-    const card = secondPage.locator("details").filter({ hasText: incidentId });
+    const card = secondPage.locator("details").filter({ hasText: incidentId }).first();
     await expect(card).toBeVisible({ timeout: 15_000 });
     await card.locator("summary").click();
     await expect(card.getByText("Đã tiếp nhận", { exact: true })).toBeVisible();
-    await expect(card.getByText("Tiếp nhận sự cố")).toBeVisible();
-    await expect(card.getByText("Trần Đức Long")).toBeVisible();
+    await expect(card.getByText("Tiếp nhận sự cố").first()).toBeVisible();
+    await expect(card.getByText("Trần Đức Long").first()).toBeVisible();
 
     // 4. Close out what this test opened, so it never shows up as an open
     //    incident on the site's dashboard.

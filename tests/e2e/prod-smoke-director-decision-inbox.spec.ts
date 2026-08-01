@@ -66,9 +66,21 @@ test("quản lý gửi yêu cầu đổi phạm vi dự án, giám đốc thấy
     await form.locator('select[name="kind"]').selectOption("scope");
     await form.locator('input[name="summary"]').fill(uniqueSummary);
     await form.getByRole("button", { name: "Gửi yêu cầu" }).click();
-    await expect(managerPage.getByText(uniqueSummary)).toBeVisible({
-      timeout: 15_000,
-    });
+    // Re-navigate (never page.reload()) when the revalidated list has not
+    // landed yet: the last navigation was the Server Action's POST, so a
+    // reload re-submits it -- that is how duplicate change requests ended up
+    // on production, two of them 15ms apart. A genuinely failed submission
+    // still fails here, because the request never appears.
+    await expect
+      .poll(
+        async () => {
+          const found = await managerPage.getByText(uniqueSummary).count();
+          if (found === 0) await managerPage.goto("/erp/bai-dinh/du-an-su-kien");
+          return found;
+        },
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(0);
   } finally {
     await managerContext.close();
   }

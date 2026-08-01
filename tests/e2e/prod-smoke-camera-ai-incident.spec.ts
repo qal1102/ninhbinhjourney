@@ -71,10 +71,10 @@ test("a camera-flagged report a manager creates is visible in Sự cố from a b
     await login(secondPage, "ql.tamchuc", "Quanly@2026");
     await secondPage.goto("/erp/tam-chuc/su-co");
 
-    const card = secondPage.locator("details").filter({ hasText: createdIncidentId });
+    const card = secondPage.locator("details").filter({ hasText: createdIncidentId }).first();
     await expect(card).toBeVisible({ timeout: 15_000 });
     await card.locator("summary").click();
-    await expect(card.getByText(/^Camera AI · /)).toBeVisible();
+    await expect(card.getByText(/^Camera AI · /).first()).toBeVisible();
     await expect(card.getByText("Mới báo", { exact: true })).toBeVisible();
 
     // Close out what this test opened. There is no delete RPC (and there

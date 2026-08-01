@@ -21,16 +21,12 @@ async function login(page: Page, username: string, password: string) {
   await expect(page).toHaveURL(/\/erp$/);
 }
 
-// FIXME (found 01/08/2026 while verifying V12, unrelated to it -- see mục 23
-// in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md): nv.trangan no longer has the
-// du-an-su-kien module on production (goto now redirects to
-// ?denied=module). staff-access-manager.tsx only lets a manager grant
-// modules that are in both `employeeAssignable` and the employee's static
-// `trainedModuleIds` (domain/demo-data.ts) -- du-an-su-kien is in neither
-// list for any employee, so ANY save of that employee's access panel
-// silently drops a Supabase-side grant the UI can never re-offer. The
-// module grant was seeded directly into Supabase outside this UI when the
-// project module was built; some later save appears to have wiped it.
+// L18 (quyền module) đã sửa 01/08/2026 -- nv.trangan vào được
+// /erp/trang-an/du-an-su-kien và bấm "Bắt đầu xử lý" bình thường, xác nhận
+// trực tiếp. Bài vẫn còn `test.fixme()` vì phần còn lại của luồng (quản lý
+// ở PHIÊN KHÁC thấy trạng thái mới) vẫn fail -- cùng lỗi L17 (mục 23 file
+// đánh giá): thay đổi ghi ở một phiên không hiện với phiên khác. Chưa sửa
+// được L17 (thiếu quyền truy cập log/connection Supabase trực tiếp).
 test.fixme(
   "nhân viên bắt đầu xử lý một gói việc, quản lý ở phiên khác thấy đúng trạng thái mới",
   async ({ browser }) => {

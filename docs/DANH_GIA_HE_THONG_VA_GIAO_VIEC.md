@@ -221,3 +221,166 @@ Làm đúng 5 điều trên thì tính năng này **vừa tiện cho demo vừa 
 ## 9. Tóm tắt một câu
 
 **Phần lõi kỹ thuật đã ở mức doanh nghiệp thật; phần dữ liệu đầu vào và bề mặt hiển thị vẫn ở mức demo — và vì bề mặt là thứ khách nhìn thấy trước, nên ba việc rẻ nhất (V1, V2, V3) lại là ba việc đáng làm nhất ngay lúc này.**
+
+---
+
+# PHẦN II — Rà soát bổ sung ngày 01/08/2026
+
+> Bổ sung theo yêu cầu chủ dự án: (a) đối chiếu các quy trình do những phiên AI trước dựng lên với **quy trình doanh nghiệp thật**, (b) đánh giá **mô hình tài khoản** hiện tại.
+
+## 10. Các quy trình có đúng chuẩn doanh nghiệp thật không?
+
+Đánh giá từng quy trình theo tiêu chuẩn kiểm soát nội bộ thực tế, không theo cảm tính.
+
+### 10.1 Bảng chấm điểm
+
+| Quy trình | Trạng thái so với chuẩn thật | Kết luận |
+|---|---|---|
+| **Công nợ nhà cung cấp** | Đối chiếu 3 chiều PO ↔ nghiệm thu ↔ hóa đơn, 7 mã ngoại lệ, maker≠checker, có đảo bút toán | ✅ **Đúng chuẩn sách giáo khoa.** Phần làm tốt nhất hệ thống. |
+| **Chốt ca → ghi sổ** | Nộp → quản lý duyệt → kế toán lập → kế toán trưởng ghi sổ; ngưỡng trọng yếu 1.000đ; ngoại lệ lên giám đốc | ✅ Đúng nguyên tắc "người thu tiền ≠ người duyệt ≠ người ghi sổ". |
+| **Phiếu công việc trong ca** | Giao → điểm danh vị trí → làm → nộp bằng chứng → duyệt/trả lại | ✅ Đúng. |
+| **Dự án & sự kiện** | WBS → phụ thuộc → nghiệm thu maker≠checker → đổi phạm vi → quyết toán | ✅ Đúng cấu trúc quản lý dự án thật. |
+| **Sự cố** | Báo → tiếp nhận → giao → xác minh → đóng, có chuyển cấp | ⚠️ Đúng khung, **sai đồng hồ** (xem L8). |
+| **Kỳ kế toán** | Mở/khóa kỳ, chỉ kế toán trưởng | ✅ Đúng. |
+
+**Nhận định chung: các quy trình đã dựng thì dựng đúng.** Chúng phản ánh đúng kiểm soát nội bộ của doanh nghiệp thật, không phải quy trình bịa cho đẹp. Vấn đề nằm ở **những bước bị thiếu ở hai đầu dây chuyền**, không phải ở phần giữa.
+
+### 10.2 🟠 L8. Đồng hồ SLA đứng yên — sự cố quá hạn không tự chuyển cấp
+
+**Bằng chứng:** `elapsed_minutes` là **cột số nguyên lưu cứng** trong bảng `erp_incidents` (`migrations/202607310011:37`), không bao giờ tính lại từ `reported_at`. `incident-repository.ts:443` đọc thẳng giá trị đó ra. `incident-workflow-workspace.tsx:61` lấy `slaMinutes - elapsedMinutes` để hiển thị thời gian còn lại.
+
+**Hệ quả:** một sự cố mở từ ba ngày trước vẫn hiển thị "còn 1 phút". Đồng hồ SLA đóng băng tại thời điểm seed dữ liệu.
+
+**Nghiêm trọng hơn:** không có cơ chế **tự động chuyển cấp khi quá hạn**. Chuyển cấp hiện chỉ xảy ra khi có người bấm nút. Trong một trung tâm điều hành thật, chuyển cấp là **do thời gian**, không do trí nhớ của người trực — đó chính là lý do tồn tại của SLA. Tài liệu khách đặt KPI "phản ứng y tế khu vực núi dưới 4 phút"; với đồng hồ đứng yên thì KPI này không đo được.
+
+Đây cũng là biểu hiện của một khoảng trống lớn hơn: **hệ thống chưa có cơ chế chạy nền theo thời gian** (quá hạn, nhắc việc, tự sinh việc khi vượt ngưỡng). Mọi thứ hiện chỉ xảy ra khi có người bấm.
+
+### 10.3 🟡 L9. Chốt ca kết thúc ở bút toán, không kết thúc ở tiền
+
+Quy trình hiện dừng tại trạng thái `posted` (đã ghi sổ). Thực tế doanh nghiệp thu tiền mặt còn **hai bước nữa**: *nộp tiền về quỹ* → *nộp ngân hàng* → *đối chiếu sao kê*.
+
+Không có hai bước này thì tiền có thể được duyệt trên giấy mà **không bao giờ về đến két**, và hệ thống không phát hiện được. Tài liệu khách yêu cầu rõ *"đối soát nguồn tiền 100%"* — hiện mới đối soát tới bút toán, chưa tới dòng tiền.
+
+### 10.4 🟡 L10. Công nợ ghi nhận xong nhưng không có bước chi tiền
+
+**Bằng chứng:** `SupplierApStatus` không có trạng thái `paid`; trong `domain/erp-supplier-ap.ts` chỉ có `paymentTermsDays` như một thuộc tính nhà cung cấp, không có luồng thanh toán nào. Capability `accounting.payment.prepare` đã khai báo nhưng không có quy trình đứng sau.
+
+Vòng đời AP thật là: hóa đơn → ghi nhận nợ → **đề nghị thanh toán → duyệt chi → ủy nhiệm chi → đối chiếu**. Hiện hệ thống làm nửa đầu rất tốt và **dừng hẳn ở giữa**. Nhà cung cấp gọi điện hỏi "bao giờ trả tiền" thì hệ thống không trả lời được.
+
+Thiếu luôn: **nơi tạo đơn mua hàng (PO)**. Quy trình AP giả định PO đã tồn tại (`purchaseOrderReference` là chuỗi nhập tay) nhưng không module nào tạo ra PO. Tức là mắt xích đầu của chuỗi mua sắm cũng đang là số gõ tay — giống hệt vấn đề của chốt ca.
+
+### 10.5 🟡 L11. Không có đối tượng "Bàn giao ca"
+
+Tài liệu khách yêu cầu rất cụ thể: *"Bàn giao ca/công việc cần thời gian, vị trí, checklist, ảnh hoặc bằng chứng và chữ ký xác nhận"*, và ở mục tự động hóa: *"Cuối ca tự tổng hợp việc mở, sự cố, bằng chứng và người tiếp nhận thành biên bản bàn giao"*.
+
+Hiện `handover` chỉ xuất hiện như **tên một vài đầu việc mẫu** trong `erp-workday-catalog.ts`, không phải một đối tượng dữ liệu có người giao/người nhận/chữ ký. Đây là một trong bốn tiêu chí nghiệm thu pilot của khách (*"Bàn giao ca không cần tổng hợp lại từ tin nhắn rời rạc"*) — hiện chưa đạt.
+
+### 10.6 Tổng kết phần quy trình
+
+Vẽ theo dòng giá trị thật của doanh nghiệp:
+
+```
+[Bán vé]  →  [Đón khách]  →  [Vận hành ca]  →  [Chốt ca]  →  [Kế toán]  →  [Ghi sổ]  →  [Nộp tiền]
+  ✗ gõ tay     ✗ chưa nối      ✓ thật          ✓ thật       ✓ thật       ✓ thật      ✗ thiếu
+
+[Đề xuất mua]  →  [PO]  →  [Nhận hàng/nghiệm thu]  →  [Hóa đơn]  →  [Ghi nợ]  →  [Chi tiền]
+    ✗ thiếu       ✗ thiếu        ✓ (trong dự án)         ✓ thật      ✓ thật      ✗ thiếu
+```
+
+**Kết luận: phần giữa của cả hai dây chuyền làm rất chắc và đúng chuẩn; cả hai đầu đều hở.** Hệ thống hiện là một bộ máy kiểm soát tốt đặt giữa một nguồn vào tự khai và một đầu ra chưa chạm tới tiền thật.
+
+---
+
+## 11. Đánh giá mô hình tài khoản
+
+Hiện có **10 tài khoản / 5 vai trò** (`lib/erp/demo-data.ts`): 1 giám đốc, 1 kế toán trưởng, 1 kế toán, 1 quản lý, 6 nhân viên.
+
+### 11.1 Điểm làm đúng
+
+- **5 vai trò là con số hợp lý**, không phình. Cách phân biệt "vai trò = mức quyền, nghề nghiệp = tập module được cấp" là đúng hướng: thêm một loại nhân viên mới không cần thêm vai trò mới.
+- **Có vòng đời hiệu lực** (`accessStartsAt` / `accessEndsAt`) và tài khoản thời vụ hết hạn 31/08/2026 sẽ tự mất quyền — chi tiết này rất sát thực tế ngành du lịch mùa vụ, hiếm hệ thống demo nào nghĩ tới.
+- **Phân tách kế toán / kế toán trưởng** đúng chuẩn, không gộp làm một.
+
+### 11.2 🔴 L12. Không thể tạo tài khoản mới — nhân sự nằm cứng trong mã nguồn
+
+**Bằng chứng:** `DEMO_ERP_ACCOUNTS` là mảng hằng trong `lib/erp/demo-data.ts`. `demo-session.ts:100` tra người dùng bằng `findDemoErpAccountById` — **không có bảng tài khoản nào trong Supabase**. Module Nhân sự (`staff-access-manager.tsx`) chỉ cấp/thu hồi cơ sở + module cho **những người đã có sẵn trong mảng đó**.
+
+**Hệ quả:** tuyển một nhân viên thời vụ = sửa mã nguồn + deploy lại. Với một doanh nghiệp du lịch tuyển mùa vụ theo tuần, đây là điểm chặn triển khai thật sự — không phải chi tiết nhỏ.
+
+Đây là **khoảng cách lớn nhất giữa hệ thống hiện tại và một hệ thống dùng được**: mọi quy trình phía sau đã sẵn sàng, nhưng không thể đưa người thật vào dùng.
+
+### 11.3 🟠 L13. Quản lý và giám đốc được cấp toàn bộ 15 module, không qua phân quyền
+
+**Bằng chứng:** `demo-session.ts:114-133` — với `director` và `manager`, hệ thống gán thẳng `ERP_MODULES.map(m => m.id)` cho **mọi cơ sở**. Trường `initialModuleIds` của hai tài khoản này là `[]` và bị bỏ qua hoàn toàn.
+
+**Hệ quả:**
+- Câu chuyện phân quyền chỉ đúng một nửa: **chỉ nhân viên mới thực sự bị phân quyền.**
+- Không thể có "quản lý phụ trách an toàn" khác "quản lý phụ trách thương mại" — mọi quản lý đều thấy mọi thứ.
+- Khi demo phần phân quyền, nếu khách hỏi "cấp quyền cho quản lý thế nào?" thì hiện không có câu trả lời.
+
+### 11.4 🟠 L14. Cơ cấu tổ chức không phản ánh doanh nghiệp 4 cơ sở
+
+Ba mâu thuẫn cùng lúc:
+
+| Vấn đề | Bằng chứng | Vì sao sai |
+|---|---|---|
+| **Một quản lý cho cả 4 cơ sở** | `manager-trang-an` có `managedSiteIds` = 4 cơ sở | Doanh nghiệp 4 khu du lịch phải có 4 người phụ trách. Toàn bộ khái niệm "cách ly theo cơ sở" chưa từng được kiểm chứng ở cấp quản lý. |
+| **Mọi nhân viên đều báo cáo về Tràng An** | 6/6 nhân viên có `supervisorId: "manager-trang-an"` | Nhân viên Bái Đính đang báo cáo cho quản lý Tràng An. |
+| **Nhãn vai trò sai** | `ERP_ROLE_LABELS.manager = "Quản lý cơ sở"` nhưng `jobTitle = "Quản lý vận hành toàn vùng"` | Giao diện gọi là quản lý cơ sở, dữ liệu lại là quản lý vùng. |
+
+Ngoài ra **giám đốc và quản lý có phạm vi truy cập y hệt nhau** (4 cơ sở, 15 module) — chỉ khác ở capability. Trong tổ chức thật, giám đốc *xem* toàn vùng nhưng không *vận hành* trực tiếp; sự khác biệt hiện quá mờ.
+
+**Đây chính là câu trả lời cho câu hỏi "để account như hiện tại có ngáo quá không":** không ngáo ở chỗ có 10 tài khoản — con số đó hợp lý. **Ngáo ở chỗ sơ đồ tổ chức sai:** một người quản lý cả bốn khu, và ai cũng báo cáo về cùng một chỗ.
+
+### 11.5 🟠 L15. Mật khẩu dùng chung theo cấp — làm hỏng chính giá trị của nhật ký kiểm toán
+
+**Bằng chứng:** `demo-data.ts:34-35` — cả 5 nhân viên chính thức dùng chung `Nhanvien@2026`.
+
+Tiện cho demo, nhưng nếu để nguyên khi chạy thật thì **mọi dòng audit trở nên chối bỏ được**: "không phải tôi, ai cũng biết mật khẩu đó". Hệ thống này lấy maker≠checker và nhật ký kiểm toán làm giá trị cốt lõi — mà giá trị đó phụ thuộc hoàn toàn vào việc **một tài khoản = một người**. Không có đổi mật khẩu, không có bắt đổi lần đầu, không có 2FA cho vai trò tài chính.
+
+### 11.6 🟡 L16. Thiếu các vai trò mà tài liệu khách đã nêu
+
+Tài liệu khách (Flow Board) liệt kê: hướng dẫn viên, lái đò, tài xế, điều hành, nhà bán, đại lý, khách sạn. Hiện tất cả đều phải là "nhân viên" hoặc không tồn tại.
+
+Chấp nhận được ở giai đoạn 1 (khách cũng xếp portal đối tác vào giai đoạn 3), **nhưng thiếu một vai trò thuộc giai đoạn 1: trưởng ca.** Với 4 cơ sở × nhiều ca/ngày, cấp trung gian giữa nhân viên và quản lý là bắt buộc — người duyệt phiếu công việc trong ca thực tế là trưởng ca, không phải quản lý cơ sở ngồi văn phòng.
+
+### 11.7 Kết luận về tài khoản
+
+**Số lượng tài khoản không phải vấn đề. Ba thứ này mới là vấn đề, xếp theo mức chặn:**
+
+1. **Không tạo được người mới** (L12) — chặn triển khai thật, không chặn demo.
+2. **Sơ đồ tổ chức sai** (L14) — chặn demo, vì khách sẽ hỏi ngay "ai quản Tam Chúc?".
+3. **Quản lý/giám đốc không bị phân quyền** (L13) — làm câu chuyện phân quyền kém thuyết phục khi trình bày.
+
+Trong đó **L14 rẻ nhất và nên sửa trước**: chỉ cần thêm 3 tài khoản quản lý cho Tam Chúc / Tam Cốc / Bái Đính, sửa `supervisorId` của nhân viên về đúng quản lý cơ sở mình, thu `managedSiteIds` của quản lý Tràng An về đúng 1 cơ sở. Việc này còn làm **tăng giá trị demo** ngay lập tức: lúc đó mới chứng minh được "quản lý Tam Chúc không thấy dữ liệu Tràng An" — đúng thứ khách cần thấy.
+
+---
+
+## 12. GIAO VIỆC BỔ SUNG
+
+> Chèn vào danh sách ở mục 7. Ưu tiên vẫn theo nguyên tắc: rẻ + khách nhìn thấy → làm trước.
+
+### Bổ sung vào Đợt 1 (trước demo)
+
+- [ ] **V12. Sửa sơ đồ tổ chức tài khoản** — thêm 3 quản lý cơ sở (Tam Chúc, Tam Cốc, Bái Đính), mỗi người `managedSiteIds` đúng 1 cơ sở; sửa `supervisorId` của 6 nhân viên về đúng quản lý cơ sở mình; thống nhất nhãn vai trò. Xử lý L14. *(Nhỏ — sửa dữ liệu, không sửa kiến trúc. Làm cùng V3 thì bộ chuyển vai trò demo được ngay giá trị lớn nhất: chứng minh cách ly theo cơ sở.)*
+- [ ] **V13. Đồng hồ SLA chạy thật** — tính `elapsedMinutes` từ `reported_at` khi đọc thay vì đọc cột lưu cứng; đánh dấu rõ hồ sơ đã quá hạn. Xử lý L8 phần hiển thị. *(Nhỏ.)*
+
+### Bổ sung vào Đợt 2
+
+- [ ] **V14. Phân quyền module cho quản lý** — bỏ việc cấp cứng toàn bộ 15 module cho `manager`; dùng đúng cơ chế cấp quyền đang áp dụng cho nhân viên. Giữ giám đốc toàn quyền xem. Xử lý L13. *(Vừa — chạm vào `demo-session.ts`, cần rà lại toàn bộ test phân quyền.)*
+- [ ] **V15. Tự động chuyển cấp khi quá hạn SLA** — cần một cơ chế chạy nền (cron/edge function). Xử lý L8 phần logic. Đây là tiền đề cho mọi tự động hóa khác mà khách yêu cầu (cảnh báo ngưỡng, nhắc việc quá hạn). *(Vừa–lớn, nhưng mở khóa nhiều thứ.)*
+- [ ] **V16. Đối tượng "Bàn giao ca"** — người giao/người nhận/checklist/bằng chứng/xác nhận, tự tổng hợp việc mở + sự cố cuối ca. Xử lý L11. Đây là **một trong tám tiêu chí nghiệm thu pilot** của khách. *(Vừa.)*
+
+### Bổ sung vào Đợt 3–4
+
+- [ ] **V17. Bảng tài khoản thật trong Supabase** + màn hình tạo/khóa/đổi mật khẩu người dùng, một tài khoản một người, bắt đổi mật khẩu lần đầu. Xử lý L12 + L15. Đi kèm V10 (auth thật). *(Lớn — nhưng bắt buộc trước khi có người thật dùng.)*
+- [ ] **V18. Khép đầu cuối dòng tiền** — bước nộp quỹ/ngân hàng sau chốt ca (L9) và bước đề nghị–duyệt–chi thanh toán nhà cung cấp (L10). *(Lớn.)*
+- [ ] **V19. Vai trò trưởng ca** (L16) — làm cùng lúc với V16, vì trưởng ca chính là người ký bàn giao ca.
+
+---
+
+## 13. Tóm tắt Phần II
+
+**Quy trình đã dựng thì dựng đúng — đúng chuẩn kiểm soát nội bộ thật, không phải quy trình trang trí. Cái sai không nằm ở phần đã làm mà ở phần chưa làm: cả hai đầu dây chuyền (nguồn vào và dòng tiền ra) còn hở, và hệ thống chưa có bất kỳ cơ chế nào chạy theo thời gian.**
+
+**Về tài khoản: số lượng ổn, nhưng sơ đồ tổ chức sai (một quản lý ôm bốn khu, ai cũng báo cáo về Tràng An) và không tạo được người mới. Sửa sơ đồ tổ chức là việc rẻ nhất trong toàn bộ danh sách và cho hiệu quả demo cao nhất — nên gộp làm cùng V3.**

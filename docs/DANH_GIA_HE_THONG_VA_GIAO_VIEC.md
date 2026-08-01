@@ -589,9 +589,13 @@ Ba lưu ý:
 
 **Đánh giá: định vị này vững, và vững hơn phương án "cả hai lớp" tôi nêu ở mục 14.3.** Lý do: nó có một câu chuyện thật đứng sau, không phải một thủ thuật xếp hạng. Trang giới thiệu toàn diện Ninh Bình, và các cơ sở do Xuân Trường đầu tư được nêu bật vì **họ là người tài trợ hạ tầng số này** — đó là điều có thể nói thẳng ra trên trang.
 
-**Một điều chỉnh nhỏ, không phải phản đối:** "tri ân" là *động cơ*, còn thứ hiện trên giao diện vẫn nên là *thông tin*. Cụ thể chỉ cần một dòng nơi phần chân trang hoặc trang giới thiệu: *"Nền tảng này được Doanh nghiệp Xuân Trường tài trợ nhằm quảng bá du lịch Ninh Bình"*, cộng nhãn "Cơ sở thành viên" trên các điểm/khách sạn/nhà hàng thuộc hệ thống.
+**Cách thể hiện — đã chốt ngày 01/08/2026:** tôi có đề xuất ghi một dòng công bố tài trợ ở chân trang; **chủ dự án bác bỏ và giữ nguyên quyết định**, lý do: ghi ra thì người xem lại tưởng đây là trang quảng cáo, mà bên tài trợ cũng không cần được nêu tên.
 
-Nói ra thì **mạnh hơn** là để khách tự đoán: nó biến "vì sao chỗ này hiện lên trước" từ một câu hỏi khó chịu thành một câu trả lời đẹp.
+**Kết luận thi hành: KHÔNG ghi công bố tài trợ. Ưu tiên được cài âm thầm ở tầng gợi ý** — hệ thống recommend các cơ sở trong hệ sinh thái nhiều hơn, trang vẫn trình bày như một trang du lịch Ninh Bình bình thường.
+
+Về mặt thực thi, đây là chuyện hoàn toàn bình thường: mọi nền tảng đặt dịch vụ đều xếp thứ tự gợi ý theo tiêu chí thương mại của mình. **Ranh giới duy nhất cần nhớ về sau:** chừng nào trang **không tự nhận là bảng xếp hạng khách quan** thì không có gì mâu thuẫn. Chỉ khi nào sau này thêm các yếu tố hàm ý khách quan — "Top 10 điểm đến tốt nhất", điểm sao do người dùng chấm, "được bình chọn nhiều nhất" — thì mới cần xem lại, vì lúc đó thứ tự gợi ý và lời tuyên bố sẽ nói hai điều khác nhau. Hiện tại trang không có yếu tố nào như vậy, nên cứ triển khai như chủ dự án đã chốt.
+
+- [ ] **W12. Tầng gợi ý có trọng số** — thêm trường độ ưu tiên cho điểm đến/khách sạn/nhà hàng và dùng nó khi xếp thứ tự gợi ý, đề xuất combo, kết quả tìm kiếm. Không hiển thị nhãn nào ra ngoài.
 
 ### 18.3 Tam Chúc — câu hỏi của tôi đã lỗi thời
 
@@ -613,4 +617,76 @@ Phân biệt của chủ dự án đúng: **giới thiệu** và **bán** là ha
 Việc thêm Tam Chúc lên web vì thế không chỉ là thêm một bản ghi: **phải nới ranh giới vùng du lịch trong `config`/`content`**, nếu không điểm này sẽ rơi ra ngoài bản đồ và ngoài bộ lọc theo vùng.
 
 - [ ] **W10. Cập nhật địa giới sau sáp nhập tỉnh** — sửa `province` của Tam Chúc, nới `NINH_BINH_TOURISM_CORE.bounds`, rà lại mọi chỗ ghi "Hà Nam". Sau đó thêm Tam Chúc vào danh mục điểm đến công khai. *(Nhỏ, nhưng phải làm trước W2.)*
+### 18.4 `/ops` là gì — giải thích
+
+`/ops` **không phải bản nháp của `/erp`. Nó là một hệ thống khác, ra đời trước, theo một kiến trúc khác hẳn.**
+
+| | `/ops` (cũ) | `/erp` (mới) |
+|---|---|---|
+| Đăng nhập | **Supabase Auth thật** — email + mật khẩu (`supabase.auth.signInWithPassword`) | Cookie tự ký, tài khoản hard-code trong `demo-data.ts` |
+| Vai trò | `check-in-agent`, `site-supervisor`, `icc-operator`, `finance`, `admin` (tiếng Anh) | `employee`, `manager`, `accountant`, `chief-accountant`, `director` (tiếng Việt) |
+| Đơn vị cách ly | **"Demo room"** — mỗi buổi demo là một phòng riêng, dữ liệu tách biệt, có QR ghép khách vào phòng | Cơ sở (Tràng An / Tam Chúc / Tam Cốc / Bái Đính) |
+| Phạm vi | 13 trang: bookings, check-in, capacity, incidents, copilot, catalog, modules… | 15 module nghiệp vụ |
+
+Nói ngắn: `/ops` là sản phẩm **"DestinationOS"** ban đầu — thiết kế để nhiều người cùng demo song song mà không đụng dữ liệu nhau. `/erp` là hệ thống vận hành tiếng Việt dựng sau, theo hướng doanh nghiệp thật.
+
+**Vì sao nó không chỉ là rác cần xóa:** `/ops` **đã có đăng nhập thật bằng Supabase Auth** — đúng thứ mà V10 và V17 đang định xây cho `/erp`. Nếu xóa thẳng thì vứt luôn phần đó.
+
+**Và vì sao nó gây hại nếu để nguyên:** kiến trúc "demo room" của `/ops` **đã chặn ngang web công khai** — chính là lỗi P1 ở mục 19 dưới đây. Nó không nằm yên một chỗ.
+
+**Khuyến nghị:** giữ `/ops` như **kho tham khảo kỹ thuật đóng băng** (không thêm tính năng, không sửa trừ khi nó chặn cái khác), rút phần Supabase Auth ra dùng cho `/erp` khi làm V17, rồi mới gỡ. **Không** phát triển song song hai hệ — mỗi tính năng làm hai lần là cách chắc chắn nhất để không cái nào xong.
+
+---
+
+## 19. Lỗi đã phát hiện và sửa ngày 01/08/2026 — trình lập hành trình & bản đồ
+
+Chủ dự án báo "plan trip và map đang bị hỏng". Đã truy được nguyên nhân và sửa. Đây **không phải lỗi giao diện** — nghiêm trọng hơn nhiều.
+
+### 19.1 🔴 P1. Trình lập hành trình chết hoàn toàn với khách thường
+
+**Nguyên nhân gốc:** `app/api/journeys/route.ts` đòi **hai** thứ trước khi trả về bất cứ gì:
+1. cookie `nbj-active-run` — chỉ được cấp bởi `/api/demo-runs` hoặc `/api/demo-runs/join`;
+2. một phiên Supabase **ẩn danh đã xác thực**.
+
+Rà toàn bộ mã nguồn: **không có middleware nào, và không nơi nào gọi `signInAnonymously`.** Khách vào `/plan` từ trang chủ **không có cả hai**. Bấm "Xác nhận và tạo hành trình" → luôn thất bại.
+
+Nói cách khác: **kiến trúc "demo room" của `/ops` đã chặn ngang tính năng chính của web công khai.** Đây là ví dụ cụ thể cho lý do phải chốt số phận `/ops` (mục 18.4).
+
+**Đã sửa:** demo room giờ chỉ cần khi muốn **lưu**. Không có room thì API vẫn sinh và kiểm tra lịch trình đầy đủ, trả về kèm `persisted: false`; hành trình sống trong trình duyệt. Có room thì giữ nguyên hành vi cũ.
+
+**⚠️ Còn lại:** `/api/quotes` (báo giá / đặt gói) **vẫn còn đúng ràng buộc này** và chưa được sửa trong đợt này — xem W13.
+
+### 19.2 🟠 P2. Mọi hành trình đều đi vào ngày 15/08/2026
+
+`plan-experience.tsx` gửi `visitDate: "2026-08-15"` **viết cứng**. Không có ô chọn ngày. Một trang lập kế hoạch du lịch mà khách không chọn được ngày đi.
+
+**Đã sửa:** thêm ô chọn ngày, mặc định hôm nay + 7 ngày, không cho chọn quá khứ.
+
+### 19.3 🟠 P3. Bản đồ trong lịch trình là hình vẽ giả
+
+Khối "bản đồ" trong `itinerary-editor.tsx` là một **đa giác SVG vẽ tay** — không phải hình Ninh Bình, chỉ là hình thù trang trí — với các chấm đặt bằng cách quy đổi toạ độ vào khung đó. Nhãn góc ghi *"Route reveal · local tourism-core canvas"*.
+
+Vi phạm thẳng `docs/UI_UX_RULES.md`: *"Use a real interactive map, not a fake text map."* Nghịch lý là dự án **đã có Leaflet thật** ở trang chủ.
+
+**Đã sửa:** thay bằng bản đồ Leaflet thật — marker đánh số theo thứ tự, đường nối các chặng, tự căn khung theo các điểm dừng.
+
+### 19.4 🟠 P4. "Bạn đang ở đây" gắn nhầm chỗ trên bản đồ chính
+
+`app/tourism-map.tsx` gắn nhãn cố định `youAreHere` lên **cả marker chào đón lẫn điểm đến đang chọn**. Hệ quả: bấm vào Tràng An là hiện **"Bạn đang ở đây"** — dù khách đang ngồi ở Hà Nội. Và hai nhãn có thể hiện cùng lúc.
+
+**Đã sửa:** nhãn đó giờ **chỉ thuộc marker định vị GPS thật**; điểm đến đang chọn hiện **tên của chính nó**; marker chào đón chỉ hiện nhãn khi chưa chọn điểm nào. Kèm memo hóa icon Leaflet (trước đây tạo lại mỗi lần render).
+
+### 19.5 Kiểm chứng
+
+`typecheck` / `lint` sạch · `test:run` **255 pass / 1 skip** · `build` sạch.
+
+**Không verify được cục bộ** — máy này không có `NEXT_PUBLIC_SUPABASE_*` nên `/plan` render màn "chưa cấu hình". Đã theo đúng cadence dự án: push → `vercel inspect` xác nhận deployment **Ready** → chạy Playwright thật trên production.
+
+Bài mới `tests/e2e/public-journey-planner.spec.ts` (khách thường tạo được hành trình / tự chọn ngày / sửa hành trình chưa lưu) cùng `public-surfaces.spec.ts`: **28/28 pass trên cả desktop và mobile.**
+
+### 19.6 Việc phát sinh
+
+- [ ] **W13. Gỡ ràng buộc demo room khỏi `/api/quotes`** — cùng bệnh với P1, chưa sửa. Luồng báo giá/đặt gói của khách thường nhiều khả năng vẫn đang chết. **Nên kiểm tra ngay.**
+- [ ] **W14. Rà các lối vào công khai khác còn phụ thuộc demo room** — `/api/journeys/[id]` (PATCH), `/checkout`, `/booking/[code]`. Cần một lượt quét có hệ thống, không sửa lắt nhắt.
+
 - [ ] **W11. Rà soát toàn bộ nội dung theo địa giới mới** — sau sáp nhập, Ninh Bình còn có các điểm của Nam Định và Hà Nam cũ (Phủ Dầy, đền Trần, chùa Tam Chúc...). Nếu định vị là *toàn diện du lịch Ninh Bình* thì phạm vi nội dung nay **rộng hơn 8 điểm hiện có đáng kể**. Đây vừa là việc phải làm, vừa là **cơ hội**: rất ít trang du lịch đã cập nhật theo địa giới mới. *(Vừa — chủ yếu là công biên tập.)*

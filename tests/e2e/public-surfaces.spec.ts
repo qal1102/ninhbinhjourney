@@ -1,13 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const criticalRoutes = [
-  "/",
-  "/explore",
-  "/packages",
-  "/plan",
-  "/demo/ops",
-] as const;
+// T2 removed "/demo/ops": it is the console of the abandoned stack and now
+// answers 404 in production. Auditing the accessibility of a page nobody can
+// reach was measuring the wrong thing.
+const criticalRoutes = ["/", "/explore", "/packages", "/plan"] as const;
 
 test("home intro keeps all four identity words with separated timing", async ({
   page,

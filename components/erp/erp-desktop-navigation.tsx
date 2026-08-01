@@ -139,7 +139,14 @@ export function ErpDesktopNavigation({ site, modules, activeModuleId }: Props) {
                         : "text-[#53665d] hover:bg-[#f0f4f1]"
                     }`}
                   >
-                    {module.name}
+                    <span className="flex items-center justify-between gap-2">
+                      <span>{module.name}</span>
+                      {module.status === "planned" ? (
+                        <span className="shrink-0 rounded-full bg-[#f6ecd8] px-2 py-0.5 text-[10px] font-black text-[#8a6b27]">
+                          Sau
+                        </span>
+                      ) : null}
+                    </span>
                   </Link>
                 ))}
               </div>

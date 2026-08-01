@@ -148,7 +148,7 @@ export function HomeEditorial({
               Khám phá bản đồ
             </Link>
             <Link
-              href="/ops/login"
+              href="/erp/login"
               className="inline-flex min-h-12 items-center rounded-full border border-[#183f34] px-6 font-bold"
             >
               Operator sign in

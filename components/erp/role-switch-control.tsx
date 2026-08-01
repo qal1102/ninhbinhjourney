@@ -2,13 +2,20 @@ import { ERP_ROLE_LABELS } from "@/domain/erp";
 import { switchDemoRoleAction } from "@/app/erp/actions";
 import { DEMO_ERP_ACCOUNTS } from "@/lib/erp/demo-data";
 
-export function RoleSwitchControl() {
-  const targets = DEMO_ERP_ACCOUNTS.filter((account) => account.role !== "director");
+type Props = {
+  /** The account currently being viewed, when a switch is already active. */
+  currentUserId?: string;
+};
+
+export function RoleSwitchControl({ currentUserId }: Props) {
+  const targets = DEMO_ERP_ACCOUNTS.filter(
+    (account) => account.role !== "director" && account.id !== currentUserId,
+  );
 
   return (
     <details className="relative">
       <summary className="flex min-h-10 cursor-pointer list-none items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7]">
-        Xem theo vai trò
+        {currentUserId ? "Đổi vai trò khác" : "Xem theo vai trò"}
       </summary>
       <form
         action={switchDemoRoleAction}
@@ -33,8 +40,9 @@ export function RoleSwitchControl() {
           ))}
         </select>
         <p className="mt-2 text-xs leading-5 text-[#7c8882]">
-          Đổi thẳng phiên đăng nhập sang tài khoản này — thấy đúng những gì họ thấy, kể cả bị chặn.
-          Ghi vào nhật ký. Có thể quay lại giám đốc bất kỳ lúc nào.
+          Đổi thẳng phiên đăng nhập sang tài khoản này — thấy đúng những gì họ
+          thấy, kể cả bị chặn. Ghi vào nhật ký. Đổi tiếp sang vai trò khác được
+          ngay, không cần quay về giám đốc.
         </p>
         <button
           type="submit"

@@ -2,6 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { loginErpAction } from "../actions";
+import {
+  DEMO_ERP_ACCOUNTS,
+  areDemoPasswordsVisible,
+} from "@/lib/erp/demo-data";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 
 type Props = {
@@ -19,6 +23,7 @@ export default async function ErpLoginPage({ searchParams }: Props) {
   const params = (await searchParams) ?? {};
   const rawError = Array.isArray(params.error) ? params.error[0] : params.error;
   const error = rawError ? errorMessages[rawError] : null;
+  const showPasswords = areDemoPasswordsVisible();
 
   return (
     <main className="grid min-h-screen bg-[#10241e] text-white lg:grid-cols-[1.06fr_0.94fr]">
@@ -118,20 +123,33 @@ export default async function ErpLoginPage({ searchParams }: Props) {
 
           <details className="mt-6 rounded-xl border border-white/12 bg-white/[0.04] p-4 text-sm">
             <summary className="cursor-pointer font-bold text-white/78">Tài khoản đăng nhập được cấp</summary>
+            {/* T4: usernames are not secret and keep the demo navigable;
+                passwords are, and appear only where NEXT_PUBLIC_ERP_SHOW_DEMO_PASSWORDS
+                is turned on. Derived from DEMO_ERP_ACCOUNTS rather than typed
+                out again, so a new account cannot be missing from this list. */}
             <div className="mt-4 grid gap-3 text-white/62 sm:grid-cols-2">
-              <p><strong className="block text-white">Giám đốc</strong>giamdoc<br />Giamdoc@2026</p>
-              <p><strong className="block text-white">Quản lý Tràng An</strong>ql.vanhanh<br />Quanly@2026</p>
-              <p><strong className="block text-white">Quản lý Tam Chúc</strong>ql.tamchuc<br />Quanly@2026</p>
-              <p><strong className="block text-white">Quản lý Tam Cốc</strong>ql.tamcoc<br />Quanly@2026</p>
-              <p><strong className="block text-white">Quản lý Bái Đính</strong>ql.baidinh<br />Quanly@2026</p>
-              <p><strong className="block text-white">Kế toán trưởng</strong>ketoantruong<br />Ketoantruong@2026</p>
-              <p><strong className="block text-white">Kế toán tổng hợp</strong>ketoan<br />Ketoan@2026</p>
-              <p><strong className="block text-white">Nhân viên Tràng An</strong>nv.trangan<br />Nhanvien@2026</p>
-              <p><strong className="block text-white">Nhân viên Tam Chúc</strong>nv.tamchuc<br />Nhanvien@2026</p>
-              <p><strong className="block text-white">Nhân viên Tam Cốc</strong>nv.tamcoc<br />Nhanvien@2026</p>
-              <p><strong className="block text-white">Nhân viên Bái Đính</strong>nv.baidinh<br />Nhanvien@2026</p>
-              <p><strong className="block text-white">Nhân viên thời vụ Tràng An</strong>tv.trangan<br />Thoivu@2026</p>
-              <p className="sm:col-span-2"><strong className="block text-white">Tương thích kịch bản cũ</strong>ql.trangan vẫn đăng nhập vào tài khoản quản lý Tràng An.</p>
+              {DEMO_ERP_ACCOUNTS.map((account) => (
+                <p key={account.id}>
+                  <strong className="block text-white">{account.jobTitle}</strong>
+                  {account.username}
+                  {showPasswords ? (
+                    <>
+                      <br />
+                      {account.password}
+                    </>
+                  ) : null}
+                </p>
+              ))}
+              <p className="sm:col-span-2">
+                <strong className="block text-white">Tương thích kịch bản cũ</strong>
+                ql.trangan vẫn đăng nhập vào tài khoản quản lý Tràng An.
+              </p>
+              {showPasswords ? null : (
+                <p className="sm:col-span-2 text-white/50">
+                  Mật khẩu được bàn giao riêng cho từng người, không hiển thị
+                  trên màn hình đăng nhập.
+                </p>
+              )}
             </div>
           </details>
 

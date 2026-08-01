@@ -195,7 +195,7 @@ export function HomeLanding({
             <Link href={`/plan?${routeQuery}`} className="hover:text-[#e7c78d]">
               {t.navPlan}
             </Link>
-            <Link href="/demo/ops" className="hover:text-[#e7c78d]">
+            <Link href="/erp/login" className="hover:text-[#e7c78d]">
               {t.navOps}
             </Link>
           </nav>
@@ -263,8 +263,11 @@ export function HomeLanding({
             <p className="mt-6 max-w-xl text-lg leading-8 text-[#4d5b55]">
               {t.scopeBody}
             </p>
+            {/* T2: both operator entry points now open the ERP that actually
+                works. They used to open /demo/ops, the console of an
+                abandoned stack with an empty database behind it. */}
             <Link
-              href="/demo/ops"
+              href="/erp/login"
               className="mt-8 inline-flex min-h-12 items-center rounded-full bg-[#183f34] px-6 font-extrabold text-white transition hover:bg-[#24594a]"
             >
               {t.openOps}

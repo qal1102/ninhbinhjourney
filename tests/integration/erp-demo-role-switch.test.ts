@@ -108,15 +108,43 @@ describe("ERP demo role switch (V3)", () => {
     });
   });
 
-  it("blocks a chained switch -- must return to director first", async () => {
+  it("hops straight from one role to the next, still owned by the director", async () => {
+    // T4 replaced the old "return to director between every pair" rule: it
+    // doubled the clicks in the exact activity the feature exists for, which
+    // is comparing what two roles see of the same screen. What must not
+    // change is who the session really belongs to.
     vi.stubEnv("ERP_DEMO_ROLE_SWITCH", "true");
     const jar = createCookieJar();
     doubles.cookies.mockResolvedValue(jar);
     await setErpSession(DIRECTOR_ID);
     await startRoleSwitch(EMPLOYEE_ID);
 
-    await expect(startRoleSwitch(MANAGER_ID)).rejects.toThrow(
-      /quay lại giám đốc trước/,
+    const hop = await startRoleSwitch(MANAGER_ID);
+    expect(hop.target.id).toBe(MANAGER_ID);
+    expect(hop.director.id).toBe(DIRECTOR_ID);
+    // The account being left behind is reported so the audit trail can close
+    // it out instead of leaving a session that never ended.
+    expect(hop.previous?.id).toBe(EMPLOYEE_ID);
+
+    const asManager = await getCurrentErpUser();
+    expect(asManager?.id).toBe(MANAGER_ID);
+    expect(asManager?.actingAs?.directorId).toBe(DIRECTOR_ID);
+
+    // And the way back is still to the real owner, not to the previous hop.
+    const { director } = await endRoleSwitch();
+    expect(director.id).toBe(DIRECTOR_ID);
+    expect((await getCurrentErpUser())?.actingAs).toBeUndefined();
+  });
+
+  it("refuses a switch into the account already being viewed", async () => {
+    vi.stubEnv("ERP_DEMO_ROLE_SWITCH", "true");
+    const jar = createCookieJar();
+    doubles.cookies.mockResolvedValue(jar);
+    await setErpSession(DIRECTOR_ID);
+    await startRoleSwitch(EMPLOYEE_ID);
+
+    await expect(startRoleSwitch(EMPLOYEE_ID)).rejects.toThrow(
+      /đúng tài khoản này rồi/,
     );
   });
 

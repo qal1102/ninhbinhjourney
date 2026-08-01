@@ -87,7 +87,20 @@ export async function logoutErpAction() {
 
 export async function switchDemoRoleAction(formData: FormData) {
   const targetUserId = String(formData.get("targetUserId") ?? "");
-  const { director, target } = await startRoleSwitch(targetUserId);
+  const { director, target, previous } = await startRoleSwitch(targetUserId);
+  // T4 allows hopping role to role without returning to the director. The
+  // audit trail must still read as one closed session per account, so a hop
+  // writes the "ended" leg for the account being left behind.
+  if (previous) {
+    await recordRoleSwitch({
+      directorId: director.id,
+      directorName: director.name,
+      targetId: previous.id,
+      targetName: previous.name,
+      targetRole: previous.role,
+      action: "ended",
+    });
+  }
   await recordRoleSwitch({
     directorId: director.id,
     directorName: director.name,

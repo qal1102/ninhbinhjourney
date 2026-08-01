@@ -93,7 +93,15 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
                 <span className="grid h-11 w-11 place-items-center rounded-xl text-sm font-black text-white" style={{ backgroundColor: module.accent }}>
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <span className="text-xl text-[#91a098] transition group-hover:translate-x-1 group-hover:text-[#286655]">→</span>
+                {/* T3: a module with no workflow behind it says so before it
+                    is opened, not after. */}
+                {module.status === "planned" ? (
+                  <span className="rounded-full bg-[#f6ecd8] px-3 py-1 text-[11px] font-black text-[#8a6b27]">
+                    Giai đoạn sau
+                  </span>
+                ) : (
+                  <span className="text-xl text-[#91a098] transition group-hover:translate-x-1 group-hover:text-[#286655]">→</span>
+                )}
               </div>
               <h3 className="mt-5 text-lg font-black text-[#24372f]">{module.name}</h3>
               <p className="mt-2 min-h-12 text-sm leading-6 text-[#697770]">{module.description}</p>
@@ -111,7 +119,12 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
               {secondaryModules.map((module, index) => (
                 <Link key={module.id} href={`/erp/${site.id}/${module.id}`} className="flex items-center gap-3 rounded-xl border border-[#e0e6e2] p-4 transition hover:border-[#a8bbb2] hover:bg-[#f8faf8]">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-black text-white" style={{ backgroundColor: module.accent }}>{String(index + 1).padStart(2, "0")}</span>
-                  <div className="min-w-0"><p className="truncate text-sm font-black text-[#2f4239]">{module.name}</p><p className="mt-1 truncate text-xs text-[#7a8781]">{module.description}</p></div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-[#2f4239]">{module.name}</p>
+                    <p className="mt-1 truncate text-xs text-[#7a8781]">
+                      {module.status === "planned" ? "Giai đoạn sau · chưa có nghiệp vụ" : module.description}
+                    </p>
+                  </div>
                 </Link>
               ))}
             </div>

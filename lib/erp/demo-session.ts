@@ -207,6 +207,8 @@ export function isRoleSwitchEnabled() {
 export type RoleSwitchResult = {
   director: DemoErpAccount;
   target: DemoErpAccount;
+  /** The account being viewed before this switch, when hopping role to role. */
+  previous: DemoErpAccount | null;
 };
 
 /**
@@ -216,9 +218,14 @@ export type RoleSwitchResult = {
  * `accountCanAccessSite`/`accountCanAccessModule` check downstream of
  * `getCurrentErpUser()` applies to the target account exactly as if they
  * had logged in themselves, including being blocked wherever they would
- * normally be blocked. Only callable by an active director session, only
- * when `ERP_DEMO_ROLE_SWITCH=true`, and only from a session not already
- * mid-switch (must return to director first).
+ * normally be blocked. Only callable when `ERP_DEMO_ROLE_SWITCH=true`, and
+ * only for a session whose real owner is a director.
+ *
+ * T4: hopping straight from one role to another is allowed. The old rule --
+ * return to the director between every pair -- doubled the clicks in the one
+ * activity this feature exists for, comparing what two roles see of the same
+ * screen. `actingAsFor` still names the real director throughout, so the
+ * session can always be handed back and every hop is still attributable.
  */
 export async function startRoleSwitch(targetUserId: string): Promise<RoleSwitchResult> {
   if (!isRoleSwitchEnabled()) {
@@ -229,16 +236,21 @@ export async function startRoleSwitch(targetUserId: string): Promise<RoleSwitchR
   if (!session || session.expiresAt <= Date.now()) {
     throw new Error("Phiên đăng nhập đã hết hạn.");
   }
-  if (session.actingAsFor) {
-    throw new Error("Đang xem theo vai trò khác — quay lại giám đốc trước khi đổi tiếp.");
-  }
-  const director = findDemoErpAccountById(session.userId);
+  // Mid-switch the session's own userId is the impersonated account, so the
+  // real owner is whoever `actingAsFor` names.
+  const director = findDemoErpAccountById(session.actingAsFor ?? session.userId);
   if (!director || director.role !== "director") {
     throw new Error("Chỉ tài khoản giám đốc mới dùng được tính năng này.");
   }
+  const previous = session.actingAsFor
+    ? (findDemoErpAccountById(session.userId) ?? null)
+    : null;
   const target = findDemoErpAccountById(targetUserId);
   if (!target || target.role === "director") {
     throw new Error("Không tìm thấy tài khoản để xem thử.");
+  }
+  if (target.id === session.userId) {
+    throw new Error("Đang xem đúng tài khoản này rồi.");
   }
   const now = Date.now();
   const payload: SessionPayload = {
@@ -248,7 +260,7 @@ export async function startRoleSwitch(targetUserId: string): Promise<RoleSwitchR
     actingAsFor: director.id,
   };
   store.set(SESSION_COOKIE, encodeSigned(payload), cookieOptions(SESSION_SECONDS));
-  return { director, target };
+  return { director, target, previous };
 }
 
 /** Hand the session back to the real director, dropping `actingAsFor`. */
@@ -270,7 +282,7 @@ export async function endRoleSwitch(): Promise<RoleSwitchResult> {
     expiresAt: now + SESSION_SECONDS * 1000,
   };
   store.set(SESSION_COOKIE, encodeSigned(payload), cookieOptions(SESSION_SECONDS));
-  return { director, target };
+  return { director, target, previous: null };
 }
 
 export function accountCanAccessSite(user: CurrentErpUser, siteId: ErpSiteId) {

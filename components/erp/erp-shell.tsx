@@ -29,6 +29,13 @@ export function ErpShell({ user, site, activeModuleId, children }: Props) {
       )
     : [];
 
+  // T4: the switcher stays reachable while impersonating, so a director can
+  // hop straight from one role to the next instead of returning to their own
+  // account between every comparison. `user.actingAs` proves the real owner is
+  // a director even though `user.role` currently reports the target's role.
+  const roleSwitchAvailable =
+    isRoleSwitchEnabled() && (user.role === "director" || Boolean(user.actingAs));
+
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f2f4f1] text-[#17231f]">
       <header className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
@@ -41,7 +48,8 @@ export function ErpShell({ user, site, activeModuleId, children }: Props) {
               siteIds={user.siteIds}
               currentSiteId={site?.id}
               modules={visibleModules}
-              roleSwitchEnabled={!user.actingAs && isRoleSwitchEnabled()}
+              roleSwitchEnabled={roleSwitchAvailable}
+              actingAsUserId={user.actingAs ? user.id : undefined}
             />
             <Link href="/erp" className="flex shrink-0 items-center gap-2" aria-label="ERP Ninh Bình">
               <Image
@@ -69,9 +77,11 @@ export function ErpShell({ user, site, activeModuleId, children }: Props) {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ErpAppControls role={user.role} />
-            {user.role === "director" && !user.actingAs && isRoleSwitchEnabled() ? (
+            {roleSwitchAvailable ? (
               <div className="hidden lg:block">
-                <RoleSwitchControl />
+                <RoleSwitchControl
+                  currentUserId={user.actingAs ? user.id : undefined}
+                />
               </div>
             ) : null}
             <div className="hidden text-right md:block">

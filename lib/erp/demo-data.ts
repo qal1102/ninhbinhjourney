@@ -43,6 +43,18 @@ const chiefAccountantPassword =
 const seasonalPassword =
   process.env.ERP_DEMO_SEASONAL_PASSWORD ?? "Thoivu@2026";
 
+/**
+ * T4. The login screen used to print every username *and* password in the
+ * clear, on production. That makes every audit line in this system deniable --
+ * "anyone could have signed in as me" is true, and it is the one claim the
+ * whole maker-checker design cannot survive. The account list stays visible so
+ * a demo is still navigable; the passwords appear only where this is turned on
+ * explicitly, and must be off at handover.
+ */
+export function areDemoPasswordsVisible() {
+  return process.env.NEXT_PUBLIC_ERP_SHOW_DEMO_PASSWORDS === "true";
+}
+
 export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
   {
     id: "director-001",

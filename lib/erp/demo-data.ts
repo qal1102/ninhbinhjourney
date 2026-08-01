@@ -1,5 +1,8 @@
-import type { ErpModuleId, ErpRole, ErpSiteId } from "@/domain/erp";
-import { ERP_ACCOUNTANT_MODULE_IDS } from "@/domain/erp-role-policy";
+import { ERP_MODULES, type ErpModuleId, type ErpRole, type ErpSiteId } from "@/domain/erp";
+import {
+  ERP_ACCOUNTANT_MODULE_IDS,
+  ERP_MANAGER_BASE_MODULE_IDS,
+} from "@/domain/erp-role-policy";
 
 export type ErpEmploymentType = "permanent" | "seasonal" | "contractor";
 
@@ -84,7 +87,9 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: managerPassword,
     initialSiteIds: ["trang-an"],
     managedSiteIds: ["trang-an"],
-    initialModuleIds: [],
+    // Tràng An runs the boat piers and the heaviest fixed infrastructure, so
+    // this manager also holds assets/acceptance and the SOP drill book.
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "tai-san-bao-tri", "sop-dien-tap"],
   },
   {
     id: "manager-tam-chuc",
@@ -95,7 +100,9 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: managerPassword,
     initialSiteIds: ["tam-chuc"],
     managedSiteIds: ["tam-chuc"],
-    initialModuleIds: [],
+    // Tam Chúc is the crowd-scale/festival site: SOP drills plus the shuttle
+    // fleet that moves visitors between the gate and the temple complex.
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "sop-dien-tap", "xe-trung-chuyen"],
   },
   {
     id: "manager-tam-coc",
@@ -106,7 +113,8 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: managerPassword,
     initialSiteIds: ["tam-coc"],
     managedSiteIds: ["tam-coc"],
-    initialModuleIds: [],
+    // Smallest operation of the four: base modules plus the shuttle only.
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "xe-trung-chuyen"],
   },
   {
     id: "manager-bai-dinh",
@@ -117,7 +125,9 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: managerPassword,
     initialSiteIds: ["bai-dinh"],
     managedSiteIds: ["bai-dinh"],
-    initialModuleIds: [],
+    // Bái Đính runs the largest electric-shuttle fleet and a big maintained
+    // estate, but its drills are led from Tràng An.
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "xe-trung-chuyen", "tai-san-bao-tri"],
   },
   {
     id: "employee-trang-an-01",
@@ -257,6 +267,18 @@ export function getEmployeeAssignableModuleIds(account: DemoErpAccount) {
   return account.workforceProfile?.trainedModuleIds ?? account.initialModuleIds;
 }
 
+/**
+ * Modules a director may tick on/off for this account in the staff-access
+ * screen. Employees are limited to what they were trained on; a site manager
+ * can be granted any module, because a manager's job scope is an
+ * organisational decision rather than a training record.
+ */
+export function getGrantableModuleIds(account: DemoErpAccount): ErpModuleId[] {
+  if (account.role === "employee") return getEmployeeAssignableModuleIds(account);
+  if (account.role === "manager") return ERP_MODULES.map((module) => module.id);
+  return [];
+}
+
 export function findDemoErpAccountById(id: string) {
   return DEMO_ERP_ACCOUNTS.find((account) => account.id === id);
 }
@@ -274,4 +296,8 @@ export function findDemoErpAccountByUsername(username: string) {
 
 export function listDemoEmployees() {
   return DEMO_ERP_ACCOUNTS.filter((account) => account.role === "employee");
+}
+
+export function listDemoSiteManagers() {
+  return DEMO_ERP_ACCOUNTS.filter((account) => account.role === "manager");
 }

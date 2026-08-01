@@ -147,13 +147,20 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
     };
   }
 
+  // V14: a manager's site scope still comes from the org chart
+  // (`managedSiteIds`), but their modules now come from the same grant store
+  // employees use. Before this, managers were handed `ERP_MODULES` outright
+  // and the whole permission story only really applied to employees (L13).
   if (account.role === "manager") {
-    const allModules = ERP_MODULES.map((module) => module.id);
+    const managerAccess = (await getAccessState()).employees[account.id];
     return {
       ...safeAccount,
       siteIds: [...account.managedSiteIds],
       moduleIdsBySite: Object.fromEntries(
-        account.managedSiteIds.map((siteId) => [siteId, allModules]),
+        account.managedSiteIds.map((siteId) => [
+          siteId,
+          managerAccess?.moduleIdsBySite[siteId] ?? [],
+        ]),
       ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
       actingAs,
     };

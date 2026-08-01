@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { ERP_SITES } from "@/domain/erp";
+import { ERP_MODULES, ERP_SITES } from "@/domain/erp";
+import { ERP_MANAGER_BASE_MODULE_IDS } from "@/domain/erp-role-policy";
 import { ERP_WORKFORCE_SUMMARY } from "@/domain/erp-operating-data";
 import {
   DEMO_ERP_ACCOUNTS,
   findDemoErpAccountByUsername,
   getEmployeeAssignableModuleIds,
+  getGrantableModuleIds,
   isDemoErpAccountActive,
+  listDemoSiteManagers,
 } from "@/lib/erp/demo-data";
 
 describe("ERP workforce assignments", () => {
@@ -68,6 +71,37 @@ describe("ERP workforce assignments", () => {
       // Every employee reports to the manager who actually owns their site.
       expect(supervisor?.managedSiteIds).toEqual(employee.initialSiteIds);
     }
+  });
+
+  it("permissions each manager individually instead of handing out all 15 modules", () => {
+    // L13: managers used to be given ERP_MODULES outright in demo-session.ts,
+    // so only employees were ever really permissioned. V14 made a manager's
+    // modules a grant like everyone else's -- these assertions are the
+    // regression guard that nobody quietly restores the blanket grant.
+    const managers = listDemoSiteManagers();
+    const grantedSets = new Set<string>();
+
+    for (const manager of managers) {
+      const granted = manager.initialModuleIds;
+      expect(granted.length, manager.id).toBeGreaterThan(0);
+      expect(granted.length, manager.id).toBeLessThan(ERP_MODULES.length);
+      // Regional forecasting stays with the director and accounting.
+      expect(granted, manager.id).not.toContain("bao-cao");
+      // Every manager keeps what their own capabilities need to act on.
+      expect(granted, manager.id).toEqual(
+        expect.arrayContaining([...ERP_MANAGER_BASE_MODULE_IDS]),
+      );
+      expect(new Set(granted).size, `${manager.id} has duplicates`).toBe(granted.length);
+      grantedSets.add([...granted].sort().join(","));
+
+      // A director may still tick any module for a manager; the narrowing is
+      // an assignment, not a hard ceiling.
+      expect(getGrantableModuleIds(manager)).toEqual(ERP_MODULES.map((m) => m.id));
+    }
+
+    // Not all four are identical -- the point of L13 is that "quản lý phụ
+    // trách an toàn" can genuinely differ from a commercial one.
+    expect(grantedSets.size).toBeGreaterThan(1);
   });
 
   it("provides a separate regional chief accountant account", () => {

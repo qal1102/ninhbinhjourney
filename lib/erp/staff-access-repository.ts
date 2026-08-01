@@ -11,7 +11,7 @@ import {
 } from "@/domain/erp";
 import {
   DEMO_ERP_ACCOUNTS,
-  getEmployeeAssignableModuleIds,
+  getGrantableModuleIds,
 } from "@/lib/erp/demo-data";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
@@ -30,6 +30,13 @@ const signingSecret =
   process.env.ERP_DEMO_SESSION_SECRET ??
   "destinationos-ninh-binh-demo-session-v1-change-before-live-data";
 
+/**
+ * Since V14 this store holds grants for site managers as well as employees --
+ * a manager's module list is no longer hard-coded to all 15 in
+ * `demo-session.ts`. The `employee*` naming (and the `erp_employee_access`
+ * table it maps to) is kept as-is so no migration has to rename a live table;
+ * read it as "staff account", not "role === employee".
+ */
 export type EmployeeAccess = {
   siteIds: ErpSiteId[];
   moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>>;
@@ -156,10 +163,16 @@ function isModuleId(value: string): value is ErpModuleId {
   return ERP_MODULES.some((module) => module.id === value);
 }
 
+/** Accounts whose site/module access is decided by a grant, not by their role. */
+function listGrantedAccounts() {
+  return DEMO_ERP_ACCOUNTS.filter(
+    (account) => account.role === "employee" || account.role === "manager",
+  );
+}
+
 function createDefaultAccessState(): ErpAccessState {
   const employees: Record<string, EmployeeAccess> = {};
-  for (const account of DEMO_ERP_ACCOUNTS) {
-    if (account.role !== "employee") continue;
+  for (const account of listGrantedAccounts()) {
     const moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>> = {};
     for (const siteId of account.initialSiteIds) {
       moduleIdsBySite[siteId] = [...account.initialModuleIds];
@@ -177,18 +190,23 @@ function sanitizeAccessState(value: ErpAccessState | null): ErpAccessState {
   if (!value || value.version !== 1 || typeof value.employees !== "object") {
     return fallback;
   }
-  for (const account of DEMO_ERP_ACCOUNTS) {
-    if (account.role !== "employee") continue;
+  for (const account of listGrantedAccounts()) {
     const candidate = value.employees[account.id];
     if (!candidate) continue;
-    const trainedModules = new Set(getEmployeeAssignableModuleIds(account));
+    const grantableModules = new Set(getGrantableModuleIds(account));
     const siteIds = candidate.siteIds.filter(isSiteId).slice(0, 1);
     const moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>> = {};
     for (const siteId of siteIds) {
       moduleIdsBySite[siteId] = (candidate.moduleIdsBySite[siteId] ?? [])
         .filter(isModuleId)
-        .filter((moduleId) => trainedModules.has(moduleId))
-        .filter((moduleId) => moduleId !== "nhan-su" && moduleId !== "bao-cao");
+        .filter((moduleId) => grantableModules.has(moduleId))
+        // Employees never run staff assignment or regional forecasting;
+        // a manager legitimately can, so this floor is employee-only.
+        .filter(
+          (moduleId) =>
+            account.role !== "employee" ||
+            (moduleId !== "nhan-su" && moduleId !== "bao-cao"),
+        );
     }
     fallback.employees[account.id] = { siteIds, moduleIdsBySite };
   }

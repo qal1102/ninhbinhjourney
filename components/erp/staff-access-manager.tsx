@@ -1,9 +1,11 @@
 import { updateEmployeeAccessAction } from "@/app/erp/actions";
 import { ERP_MODULES, ERP_SITES, type ErpSite } from "@/domain/erp";
 import {
+  findDemoErpAccountById,
   getEmployeeAssignableModuleIds,
   isDemoErpAccountActive,
   listDemoEmployees,
+  listDemoSiteManagers,
 } from "@/lib/erp/demo-data";
 import type {
   AttendanceEvent,
@@ -41,8 +43,71 @@ export function StaffAccessManager({ site, user, access, attendance }: Props) {
     if (user.role === "director") return true;
     return assignedSites.length === 0 || assignedSites.includes(site.id);
   });
+  // V14: a manager's modules are a real grant now, not a hard-coded all-15.
+  // Only the director may change them, and only for the manager who actually
+  // runs this site -- the server action re-checks both.
+  const siteManagers =
+    user.role === "director"
+      ? listDemoSiteManagers().filter((manager) => manager.managedSiteIds.includes(site.id))
+      : [];
+
   return (
     <div className="space-y-5">
+      {siteManagers.length > 0 ? (
+        <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#477565]">Phân quyền cấp quản lý</p>
+          <h2 className="mt-2 text-2xl font-black text-[#20342c]">Quản lý phụ trách {site.shortName}</h2>
+          <p className="mt-2 text-sm text-[#6b7a72]">
+            Quản lý cơ sở chỉ mở được những nghiệp vụ giám đốc giao ở đây — không còn mặc định thấy toàn bộ hệ thống.
+          </p>
+          <div className="mt-5 space-y-3">
+            {siteManagers.map((manager) => {
+              const managerAccess = access.employees[manager.id] ?? { siteIds: [], moduleIdsBySite: {} };
+              const selectedModules = managerAccess.moduleIdsBySite[site.id] ?? [];
+              return (
+                <details key={manager.id} className="group rounded-xl border border-[#e1e7e3] bg-[#fbfcfb] open:border-[#a9bdb3] open:bg-white">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-black text-[#293a33]">{manager.name}</p>
+                        <span className="rounded-full bg-[#e8edf5] px-2 py-0.5 text-[11px] font-black text-[#49617d]">Quản lý cơ sở</span>
+                      </div>
+                      <p className="mt-1 truncate text-sm text-[#75817b]">{manager.jobTitle} · {manager.username}</p>
+                    </div>
+                    <p className="shrink-0 text-xs font-bold text-[#586961]">{selectedModules.length}/{ERP_MODULES.length} nghiệp vụ</p>
+                  </summary>
+                  <form action={updateEmployeeAccessAction} className="border-t border-[#e5eae7] p-4 sm:p-5">
+                    <input type="hidden" name="siteId" value={site.id} />
+                    <input type="hidden" name="employeeId" value={manager.id} />
+                    {/* A manager's site comes from the org chart, not from this
+                        grant, so the site toggle stays on; the checkboxes below
+                        are the only lever. */}
+                    <input type="hidden" name="siteActive" value="on" />
+                    <fieldset>
+                      <legend className="text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Nghiệp vụ được giao</legend>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {ERP_MODULES.map((module) => (
+                          <label key={module.id} className="flex items-center gap-3 rounded-lg border border-[#e0e6e2] px-3 py-2.5 text-sm font-bold text-[#52635b]">
+                            <input type="checkbox" name="moduleIds" value={module.id} defaultChecked={selectedModules.includes(module.id)} className="h-4 w-4 accent-[#286655]" />
+                            {module.shortName}
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <div className="mt-4 flex items-center justify-between gap-4">
+                      <p className="text-xs text-[#7c8882]">Chỉ giám đốc đổi được mục này; thay đổi được ghi vào nhật ký.</p>
+                      <button type="submit" className="min-h-10 rounded-xl bg-[#183f34] px-5 text-sm font-black text-white">
+                        Lưu quyền quản lý
+                      </button>
+                    </div>
+                  </form>
+                </details>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
@@ -127,7 +192,7 @@ export function StaffAccessManager({ site, user, access, attendance }: Props) {
         <h2 className="mt-2 text-xl font-black text-[#20342c]">Thay đổi quyền gần đây</h2>
         <ol className="mt-4 divide-y divide-[#e5eae7]">
           {access.audit.filter((event) => event.siteId === site.id).slice(-6).reverse().map((event) => {
-            const target = listDemoEmployees().find((employee) => employee.id === event.targetId);
+            const target = findDemoErpAccountById(event.targetId);
             return (
               <li key={event.id} className="flex items-center justify-between gap-4 py-3 text-sm">
                 <p><strong>{target?.name ?? event.targetId}</strong> · {event.action === "employee.site.revoked" ? "thu hồi quyền cơ sở" : "cập nhật module"}</p>

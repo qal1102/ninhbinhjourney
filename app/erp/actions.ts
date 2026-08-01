@@ -14,7 +14,7 @@ import {
 import {
   findDemoErpAccountById,
   findDemoErpAccountByUsername,
-  getEmployeeAssignableModuleIds,
+  getGrantableModuleIds,
   isDemoErpAccountActive,
 } from "@/lib/erp/demo-data";
 import {
@@ -125,8 +125,20 @@ export async function updateEmployeeAccessAction(formData: FormData) {
   }
 
   const employee = findDemoErpAccountById(employeeId);
-  if (!employee || employee.role !== "employee") {
+  if (!employee || (employee.role !== "employee" && employee.role !== "manager")) {
     throw new Error("Không tìm thấy nhân viên.");
+  }
+  // V14: managers are now permissioned through this same grant, so their row
+  // is editable here -- but only by a director, and only on the site they
+  // actually manage. A manager must never be able to widen their own scope
+  // (or a peer's) through the screen they themselves operate.
+  if (employee.role === "manager") {
+    if (actor.role !== "director") {
+      throw new Error("Chỉ giám đốc mới đổi được quyền của quản lý cơ sở.");
+    }
+    if (!employee.managedSiteIds.includes(siteValue)) {
+      throw new Error("Quản lý này không phụ trách cơ sở đang mở.");
+    }
   }
 
   const access = await getAccessState();
@@ -140,18 +152,20 @@ export async function updateEmployeeAccessAction(formData: FormData) {
   }
 
   const siteActive = formData.get("siteActive") === "on";
-  const trainedModules = new Set(getEmployeeAssignableModuleIds(employee));
-  // Only modules that are both globally employee-assignable AND on this
-  // employee's trained list ever appear as a checkbox in the UI (see
-  // staff-access-manager.tsx's `assignableModules`). A module the employee
-  // already holds outside that set (e.g. granted directly via a migration
-  // seed, never added to their trainedModuleIds) is invisible to the form
-  // and must be preserved here -- otherwise saving ANY other change for
-  // this employee silently revokes it, since the form can only submit what
-  // it can show.
+  const grantableModules = new Set(getGrantableModuleIds(employee));
+  // Only the modules the UI actually renders as a checkbox may be toggled
+  // here (see staff-access-manager.tsx): for an employee that is the
+  // intersection of globally employee-assignable and their trained list; for
+  // a manager it is every module. A module the account already holds outside
+  // that set (e.g. granted directly via a migration seed, never added to
+  // their trainedModuleIds) is invisible to the form and must be preserved
+  // here -- otherwise saving ANY other change silently revokes it, since the
+  // form can only submit what it can show.
   const visibleModules = new Set(
     ERP_MODULES.filter(
-      (module) => module.employeeAssignable && trainedModules.has(module.id),
+      (module) =>
+        grantableModules.has(module.id) &&
+        (employee.role === "manager" || module.employeeAssignable),
     ).map((module) => module.id),
   );
   const submittedVisible = formData

@@ -6,7 +6,7 @@ const doubles = vi.hoisted(() => ({
   findDemoErpAccountById: vi.fn(),
   getAccessState: vi.fn(),
   getCurrentErpUser: vi.fn(),
-  getEmployeeAssignableModuleIds: vi.fn(),
+  getGrantableModuleIds: vi.fn(),
   isDemoErpAccountActive: vi.fn(),
   recordAttendanceEvent: vi.fn(),
   revalidatePath: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/erp/demo-data", () => ({
   findDemoErpAccountById: doubles.findDemoErpAccountById,
   findDemoErpAccountByUsername: vi.fn(),
-  getEmployeeAssignableModuleIds: doubles.getEmployeeAssignableModuleIds,
+  getGrantableModuleIds: doubles.getGrantableModuleIds,
   isDemoErpAccountActive: doubles.isDemoErpAccountActive,
 }));
 
@@ -108,6 +108,12 @@ const employeeAccount = {
   role: "employee" as const,
 };
 
+const managerAccount = {
+  id: "manager-trang-an",
+  role: "manager" as const,
+  managedSiteIds: ["trang-an"] as const,
+};
+
 const employeeUser = {
   id: "employee-trang-an-01",
   name: "Đỗ Thị Lan",
@@ -139,7 +145,7 @@ beforeEach(() => {
   doubles.accountCanAccessSite.mockReturnValue(true);
   doubles.accountCanAccessModule.mockReturnValue(true);
   doubles.findDemoErpAccountById.mockReturnValue(employeeAccount);
-  doubles.getEmployeeAssignableModuleIds.mockReturnValue([
+  doubles.getGrantableModuleIds.mockReturnValue([
     "check-in-khach",
     "cham-cong",
   ]);
@@ -239,6 +245,58 @@ describe("updateEmployeeAccessAction", () => {
     expect(doubles.updateEmployeeAccessGrant).toHaveBeenCalledWith(
       expect.objectContaining({ siteActive: false, siteContextId: "trang-an" }),
     );
+  });
+
+  // --- V14: managers are permissioned through this same grant --------------
+
+  it("lets a director set a site manager's module grant", async () => {
+    doubles.getCurrentErpUser.mockResolvedValue(directorUser);
+    doubles.findDemoErpAccountById.mockReturnValue(managerAccount);
+    doubles.getGrantableModuleIds.mockReturnValue(["nhan-su", "su-co", "bao-cao"]);
+    await updateEmployeeAccessAction(
+      accessForm({
+        employeeId: managerAccount.id,
+        moduleIds: ["nhan-su", "su-co"],
+      }),
+    );
+    const call = doubles.updateEmployeeAccessGrant.mock.calls[0][0];
+    expect(call.employeeId).toBe(managerAccount.id);
+    expect(call.actorRole).toBe("director");
+    // "nhan-su" is not employeeAssignable, but a manager may absolutely hold
+    // it -- the employee-only floor must not apply here.
+    expect(call.moduleIds.sort()).toEqual(["nhan-su", "su-co"].sort());
+  });
+
+  it("blocks a manager from editing any manager's grant, including their own", async () => {
+    doubles.getCurrentErpUser.mockResolvedValue(managerUser);
+    doubles.findDemoErpAccountById.mockReturnValue(managerAccount);
+    await expect(
+      updateEmployeeAccessAction(accessForm({ employeeId: managerAccount.id })),
+    ).rejects.toThrow(/chỉ giám đốc/i);
+    expect(doubles.updateEmployeeAccessGrant).not.toHaveBeenCalled();
+  });
+
+  it("blocks granting a manager modules on a site they do not manage", async () => {
+    doubles.getCurrentErpUser.mockResolvedValue(directorUser);
+    doubles.findDemoErpAccountById.mockReturnValue(managerAccount);
+    await expect(
+      updateEmployeeAccessAction(
+        accessForm({ employeeId: managerAccount.id, siteId: "tam-chuc" }),
+      ),
+    ).rejects.toThrow(/không phụ trách/i);
+    expect(doubles.updateEmployeeAccessGrant).not.toHaveBeenCalled();
+  });
+
+  it("rejects an account that is neither employee nor manager", async () => {
+    doubles.getCurrentErpUser.mockResolvedValue(directorUser);
+    doubles.findDemoErpAccountById.mockReturnValue({
+      id: "accountant-001",
+      role: "accountant" as const,
+    });
+    await expect(
+      updateEmployeeAccessAction(accessForm({ employeeId: "accountant-001" })),
+    ).rejects.toThrow(/không tìm thấy/i);
+    expect(doubles.updateEmployeeAccessGrant).not.toHaveBeenCalled();
   });
 });
 

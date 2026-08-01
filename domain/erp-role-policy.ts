@@ -10,6 +10,36 @@ export const ERP_ACCOUNTANT_MODULE_IDS: readonly ErpModuleId[] = [
   "bao-cao",
 ] as const;
 
+/**
+ * Modules every site manager needs to run their own site: the ones their
+ * capabilities actually act on (shift-close review, field reports, staff
+ * assignment, incidents, project work, AP source documents...).
+ *
+ * This is a *default grant*, not a bypass. Since V14 a manager's real module
+ * list is read from the same `erp_employee_access` grant store used for
+ * employees, so a director can widen or narrow it per person -- which is the
+ * whole point: before V14 every manager was handed all 15 modules directly in
+ * `demo-session.ts` and the grant mechanism only ever applied to employees.
+ *
+ * Deliberately excluded here: `bao-cao` (regional forecasting belongs to the
+ * director and accounting), plus `xe-trung-chuyen`, `tai-san-bao-tri` and
+ * `sop-dien-tap`, which are granted per manager in `demo-data.ts` according to
+ * what their site actually operates.
+ */
+export const ERP_MANAGER_BASE_MODULE_IDS: readonly ErpModuleId[] = [
+  "ve-dat-cho",
+  "check-in-khach",
+  "suc-chua",
+  "camera-ai",
+  "bao-cao-hien-truong",
+  "du-an-su-kien",
+  "su-co",
+  "nhan-su",
+  "cham-cong",
+  "doi-tac-nha-cung-ung",
+  "tai-chinh-doi-soat",
+] as const;
+
 export type ErpCapability =
   | "finance.regional.read"
   | "accounting.document.verify"

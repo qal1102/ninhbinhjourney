@@ -21,15 +21,9 @@ async function login(page: Page, username: string, password: string) {
   await expect(page).toHaveURL(/\/erp$/);
 }
 
-// L18 (quyền module) đã sửa 01/08/2026 -- nv.trangan vào được
-// /erp/trang-an/du-an-su-kien và bấm "Bắt đầu xử lý" bình thường, xác nhận
-// trực tiếp. Bài vẫn còn `test.fixme()` vì phần còn lại của luồng (quản lý
-// ở PHIÊN KHÁC thấy trạng thái mới) vẫn fail -- cùng lỗi L17 (mục 23 file
-// đánh giá): thay đổi ghi ở một phiên không hiện với phiên khác. Chưa sửa
-// được L17 (thiếu quyền truy cập log/connection Supabase trực tiếp).
-test.fixme(
-  "nhân viên bắt đầu xử lý một gói việc, quản lý ở phiên khác thấy đúng trạng thái mới",
-  async ({ browser }) => {
+test("nhân viên bắt đầu xử lý một gói việc, quản lý ở phiên khác thấy đúng trạng thái mới", async ({
+  browser,
+}) => {
   const employeeContext = await browser.newContext();
   const employeePage = await employeeContext.newPage();
   try {
@@ -67,24 +61,16 @@ test.fixme(
   } finally {
     await managerContext.close();
   }
-  },
-);
+});
 
 function parseBillion(text: string) {
   const match = text.match(/([\d.,]+)/);
   return match ? Number(match[1].replace(",", ".")) : NaN;
 }
 
-// FIXME (found 01/08/2026 while verifying V12, unrelated to it -- see mục 23
-// in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md): a project change request
-// submitted in one session is invisible to every other fresh session even
-// 45+ seconds later, despite the route being genuinely uncached
-// (Cache-Control: no-store, X-Vercel-Cache: MISS). Reproduces identically
-// on the untouched prod-smoke-director-decision-inbox.spec.ts test with a
-// different account/site, so this is not specific to this test's account.
-test.fixme(
-  "quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở phiên khác, ngân sách sự kiện cập nhật xuyên tài khoản",
-  async ({ browser }) => {
+test("quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở phiên khác, ngân sách sự kiện cập nhật xuyên tài khoản", async ({
+  browser,
+}) => {
   const uniqueSummary = `PROD-SMOKE tăng ngân sách ${Date.now()}`;
   let proposedBudget = 0;
 
@@ -137,5 +123,4 @@ test.fixme(
   } finally {
     await directorContext.close();
   }
-  },
-);
+});

@@ -36,16 +36,9 @@ function employeeCard(page: Page) {
   return accessSection.locator("details").filter({ hasText: "Đỗ Thị Lan" }).first();
 }
 
-// FIXME (found 01/08/2026, L17 in docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md
-// mục 23): a write in one session is invisible to any other fresh session.
-// This test used to pass; re-run 01/08/2026 and it no longer does -- the
-// employee kept access to "su-co" in a brand new session even after the
-// manager's revoke was confirmed to have taken effect in the manager's own
-// session. Root cause not found yet -- needs direct Supabase log/connection
-// access this session does not have.
-test.fixme(
-  "revoking an employee's module in one session denies it for that employee in a completely separate session",
-  async ({ browser }) => {
+test("revoking an employee's module in one session denies it for that employee in a completely separate session", async ({
+  browser,
+}) => {
   const managerContext = await browser.newContext();
   const managerPage = await managerContext.newPage();
   await login(managerPage, "ql.vanhanh", "Quanly@2026");
@@ -94,5 +87,4 @@ test.fixme(
     await logout(managerPage);
     await managerContext.close();
   }
-  },
-);
+});

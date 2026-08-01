@@ -395,6 +395,16 @@ Sau mỗi thay đổi quan trọng:
 
 ## Nhật ký thay đổi
 
+### 01/08/2026 — [Claude Sonnet] Thay bản đồ giả cuối cùng trên `/explore` bằng Leaflet thật
+
+- Chủ dự án yêu cầu dứt điểm mọi "bản đồ giả bố" sau đợt kiểm chứng trước đó phát hiện `/explore` vẫn là SVG vẽ tay (P8/W18 trong file đánh giá). Đây là bản đồ giả **cuối cùng** còn sót — bản đồ trang chủ và bản đồ lịch trình đã sửa trong batch trước.
+- Thêm `components/discovery/explore-map.tsx`: Leaflet thật, nạp động `dynamic(..., { ssr: false })` đúng khuôn `app/tourism-map.tsx` và `components/journey/itinerary-route-map.tsx`. Marker đánh số theo `divIcon` dùng lại class `nb-marker`/`nb-marker-active` có sẵn trong `globals.css`; tự `fitBounds` theo đúng tập điểm đang lọc (0/1/nhiều điểm đều xử lý riêng).
+- Sửa `explore-experience.tsx`: xoá hẳn `LocalTourismMap` (khối `<svg viewBox="0 0 100 100">` + toán quy đổi toạ độ sang phần trăm + nhãn "Local geographic fallback"/"WGS 84 · product scope, not an official boundary") và `pointPosition`. Kiểu `returnFocusRef`/`selectDestination` nới từ `HTMLButtonElement` sang `HTMLElement` vì marker Leaflet không phải `<button>` — nút "Tập trung trên bản đồ" ở chế độ danh sách vẫn hoạt động y hệt cũ vì `HTMLButtonElement` là subtype. Chọn điểm qua marker dùng `event.target.getElement()` (Leaflet tự gắn `tabindex="0"`/`role="button"` cho marker nên bàn phím vẫn dùng được) để giữ đúng hành vi "focus quay lại nút vừa bấm khi đóng khung chi tiết" như bản cũ.
+- `tests/e2e/public-surfaces.spec.ts`: bài `"discovery remains usable without interacting with a network tile map"` trước đây **coi bản đồ giả là hành vi mong muốn** — đổi tên thành `"discovery list mode works without waiting on the map"` (khẳng định vẫn đúng: chế độ danh sách không phụ thuộc mạng) và thêm bài mới `"discovery map mode renders a real interactive map, not a static canvas"` khẳng định `.leaflet-container` + `.leaflet-marker-icon` hiển thị thật.
+- Kiểm chứng: `typecheck`/`lint`/`test:run` (255 pass/1 skip)/`build` sạch cục bộ. Playwright cục bộ 12/12 pass. Push → `vercel inspect` xác nhận deployment `ninhbinhjourney-h0266i1yu` **Ready** → Playwright thật trên `https://ninhbinhjourney.vercel.app`: **30/30 pass, cả desktop-chromium và mobile-chromium**.
+- Quét lại toàn bộ `app/` + `components/` bằng `grep -rl "viewBox=\"0 0 100 100\""`: **không còn kết quả nào** — không còn bản đồ giả nào trong web công khai.
+- Đã đánh dấu `[x]` W18 trong `docs/DANH_GIA_HE_THONG_VA_GIAO_VIEC.md` mục P8.
+
 ### 01/08/2026 — [Claude Opus] Sửa trình lập hành trình công khai và bản đồ; rà soát web ngoài
 
 - **Lỗi chặn thật, đã kiểm chứng bằng mã nguồn:** `/plan` không dùng được với khách thường. `app/api/journeys/route.ts` yêu cầu cookie `nbj-active-run` (chỉ do `/api/demo-runs*` cấp) **và** một phiên Supabase ẩn danh; không có middleware nào và **không nơi nào gọi `signInAnonymously`**. Khách vào từ trang chủ không có cả hai → bấm "Xác nhận và tạo hành trình" luôn trả `DEMO_ROOM_NOT_JOINED`. Đây là kiến trúc "demo room" cũ của `/ops` chặn ngang luồng công khai. Lưu ý: `/api/quotes` **vẫn còn** cùng ràng buộc này — luồng báo giá/đặt gói chưa được sửa trong batch này.

@@ -743,11 +743,19 @@ POST /api/quotes → HTTP 409
 
 Hang Múa là một trong những điểm được chụp ảnh nhiều nhất Ninh Bình. Khách vào lần đầu sẽ không bao giờ thấy nó. **Không phải lỗi mã — là mặc định che nội dung mà không nói.**
 
-#### 🟠 P8. `/explore` vẫn dùng bản đồ SVG giả
+#### 🟠 P8. ~~`/explore` vẫn dùng bản đồ SVG giả~~ — **ĐÃ SỬA 01/08/2026**
 
 Đo trên production ở chế độ "Bản đồ": `leaflet-container = 0`, `leaflet-tile = 0`, marker = 0. Kiểm tra mã: `explore-experience.tsx` vẽ `<svg viewBox="0 0 100 100">`, `aria-label` ghi *"Bản đồ ngữ cảnh… không phải địa giới hành chính"*.
 
-Cùng loại với bản đồ giả trong lịch trình vừa sửa ở mục 19.3. **Khác biệt:** bài test `public-surfaces.spec.ts` hiện **ghi nhận đây là hành vi mong muốn** (*"discovery remains usable without interacting with a network tile map"*). Vậy đây là **quyết định sản phẩm cần chốt lại**, không phải bug âm thầm — nhưng nó mâu thuẫn với `UI_UX_RULES.md` (*"use a real interactive map, not a fake text map"*). Trang chủ đã có Leaflet thật chạy tốt.
+Cùng loại với bản đồ giả trong lịch trình đã sửa ở mục 19.3.
+
+**Đã sửa:** thêm `components/discovery/explore-map.tsx` — Leaflet thật, nạp động `ssr:false`, cùng khuôn với bản đồ trang chủ và bản đồ lịch trình. Tự căn khung (`fitBounds`) theo đúng tập điểm đang lọc; chọn điểm bằng marker hoặc nút "Tập trung trên bản đồ" ở danh sách đều mở cùng một khung chi tiết như trước; focus quay lại đúng phần tử vừa bấm khi đóng khung — tận dụng việc Leaflet tự gắn `tabindex`/`role=button` cho marker.
+
+Bài test `public-surfaces.spec.ts` từng ghi nhận bản đồ giả là hành vi mong muốn (*"discovery remains usable without interacting with a network tile map"*) — đã đổi tên thành *"discovery list mode works without waiting on the map"* (vẫn đúng: chế độ danh sách không phụ thuộc mạng) và thêm bài mới khẳng định chế độ bản đồ hiện render `.leaflet-container` thật kèm marker.
+
+**Kiểm chứng:** `typecheck`/`lint`/`test:run` (255 pass) / `build` sạch cục bộ → push → `vercel inspect` xác nhận deployment `ninhbinhjourney-h0266i1yu` **Ready** → Playwright thật trên production: **30/30 pass, cả desktop và mobile**, gồm bài khẳng định `.leaflet-container` + marker hiển thị.
+
+Không còn bản đồ giả nào trong toàn bộ web công khai — đã quét lại `grep -rl "viewBox=\"0 0 100 100\""` trên `app/`, `components/`, ra rỗng.
 
 #### 🟠 P9. Trang không tồn tại vẫn trả HTTP 200
 
@@ -841,7 +849,7 @@ Ghi rõ để phiên sau không tưởng nhầm là đã xong:
 - [ ] **W15. Trả HTTP 404 thật** cho `/destination/<slug lạ>` và `/journey/<id lạ>` (P9).
 - [ ] **W16. Sửa trạng thái lỗi của `/pass` và `/booking`** — báo lỗi tiếng Việt, rút ngắn thời gian chờ, có hành động tiếp theo (P10).
 - [ ] **W17. Bộ lọc `/explore` phải nói ra khi đang ẩn bớt** — hiện "7/8 điểm · đang lọc theo mức đi bộ" kèm nút bỏ lọc (P7).
-- [ ] **W18. Chốt số phận bản đồ `/explore`** — dùng Leaflet thật như trang chủ, hay giữ SVG và sửa `UI_UX_RULES.md` cho khớp. Không để mâu thuẫn giữa tài liệu và mã (P8).
+- [x] **W18. Chốt số phận bản đồ `/explore`** — **ĐÃ SỬA 01/08/2026**, xem P8: thay bằng Leaflet thật, khớp `UI_UX_RULES.md`.
 - [ ] **W13 (nâng ưu tiên). Gỡ ràng buộc demo room khỏi `/api/quotes`** — đã xác nhận chết bằng runtime.
 - [ ] **V2 (nâng lên ưu tiên số 1).** Sự cố quá SLA đang vô hình với giám đốc — bằng chứng ở 20.4.
 

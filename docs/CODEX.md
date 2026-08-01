@@ -403,6 +403,16 @@ Sau mỗi thay đổi quan trọng:
 
 ## Nhật ký thay đổi
 
+### 02/08/2026 — [Claude Opus] Rà soát từ góc nhìn khách hàng (chỉ ghi chú, chưa sửa gì)
+
+- Theo yêu cầu chủ dự án: đứng ở vị trí người mua, đi lại toàn bộ ERP + web công khai, đối chiếu quy trình với vận hành thật, trả lời câu hỏi về account switcher, và kết luận thẳng "có nên đầu tư không".
+- **Kết quả nằm ở .** Mọi khẳng định trong đó đều kiểm trực tiếp trên mã nguồn hoặc production ngày 02/08/2026, không chép lại tài liệu cũ.
+- Ba phát hiện nặng nhất, đều kiểm ở tầng cơ sở dữ liệu: (a)  **không có khoá ngoại tới vé/booking, không ràng buộc , không idempotency key** — cổng soát vé nhận bất kỳ chuỗi 6 ký tự nào và ghi trùng được; (b) chốt ca dừng ở , **không có bước nộp quỹ/ngân hàng**; (c) công nợ NCC dừng ở /, **không có trạng thái **. Hệ thống kiểm soát chặt khúc giữa nhưng hở cả hai đầu dòng tiền.
+- Ba thứ mất điểm nặng với người mua nhưng **rẻ nhất để sửa**: ba hệ điều hành song song cùng chạy công khai trên production ( cookie phiên,  Supabase Auth,  số liệu hư cấu — cả ba đều HTTP 200); 5/15 module vẫn là bảng số tĩnh (trong đó có Sức chứa và SOP, đúng hai thứ khách nhấn mạnh nhất); mật khẩu 9 tài khoản in thẳng trên  production.
+- Web công khai: thanh toán **bị chặn ở tầng cấu hình** ( cấm production bật sandbox checkout, và không có cổng thật) nên nửa thương mại chưa tồn tại; web có 8 điểm còn ERP vận hành 4, **Tam Chúc không xuất hiện lần nào trên web** dù là cơ sở dùng nhiều nhất trong ERP.
+- Về account switcher: đã có (V3) nhưng chỉ giám đốc thấy, **chỉ nhảy được một chặng** (phải quay về giám đốc mới đổi tiếp) và nút nằm khuất — nên đúng là chưa giải quyết được việc khách cần. Đề xuất cho nhảy thẳng giữa hai vai trò (an toàn không đổi vì  vẫn giữ danh tính giám đốc), thêm thanh trình diễn luôn hiện, ẩn mật khẩu theo biến môi trường, và **bắt buộc tắt được khi bàn giao**.
+- **Chưa sửa gì theo đúng yêu cầu.** Thứ tự việc đề xuất ghi ở mục 5 của file rà soát.
+
 ### 02/08/2026 — [Claude Opus] V15: sự cố quá hạn SLA tự chuyển cấp (việc đầu tiên trong hệ thống chạy theo thời gian)
 
 - **Vấn đề (mục 10.2, L8):** V13 đã làm đồng hồ SLA chạy thật, nhưng chuyển cấp vẫn chỉ xảy ra khi có người bấm nút — ngược hoàn toàn với lý do SLA tồn tại, và là lý do KPI "phản ứng dưới 4 phút" của khách không đo được. Rộng hơn: trước migration này **không một thứ gì trong hệ thống xảy ra theo thời gian**.

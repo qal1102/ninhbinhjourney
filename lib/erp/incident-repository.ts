@@ -56,6 +56,8 @@ export type IncidentCase = {
   escalated: boolean;
   escalationReason?: string;
   reportedAt: string;
+  reportedAtIso: string;
+  updatedAtIso: string;
   slaMinutes: number;
   elapsedMinutes: number;
   reporter: string;
@@ -141,6 +143,27 @@ function displayTime() {
   }).format(new Date());
 }
 
+// A closed case's elapsed time is a fixed historical fact ("hoàn tất trong
+// N phút") and must stop ticking once closed; an open case's elapsed time
+// keeps growing against the real clock. Both RPCs already set `updated_at
+// = now()` on every transition including the closing one, so it doubles as
+// the "closed at" timestamp without a dedicated column.
+function computeElapsedMinutes(item: Pick<IncidentCase, "status" | "reportedAtIso" | "updatedAtIso">): number {
+  const reportedAtMs = Date.parse(item.reportedAtIso);
+  if (Number.isNaN(reportedAtMs)) return 0;
+  const referenceMs = item.status === "closed" ? Date.parse(item.updatedAtIso) : Date.now();
+  if (Number.isNaN(referenceMs)) return 0;
+  return Math.max(0, Math.round((referenceMs - reportedAtMs) / 60_000));
+}
+
+function withLiveElapsed(item: IncidentCase): IncidentCase {
+  return { ...item, elapsedMinutes: computeElapsedMinutes(item) };
+}
+
+function minutesAgoIso(minutes: number): string {
+  return new Date(Date.now() - minutes * 60_000).toISOString();
+}
+
 const siteCode: Record<ErpSiteId, string> = {
   "trang-an": "TA",
   "tam-chuc": "TC",
@@ -193,6 +216,8 @@ function createSeedCases(siteId: ErpSiteId): IncidentCase[] {
       escalationReason:
         "Cần quyết định mở làn dự phòng trong 30 phút để giữ lối tiếp cận cho tổ y tế.",
       reportedAt: "09:16",
+      reportedAtIso: minutesAgoIso(4),
+      updatedAtIso: minutesAgoIso(4),
       slaMinutes: 5,
       elapsedMinutes: 4,
       reporter: employee.name,
@@ -221,6 +246,8 @@ function createSeedCases(siteId: ErpSiteId): IncidentCase[] {
       status: "in-progress",
       escalated: false,
       reportedAt: "09:02",
+      reportedAtIso: minutesAgoIso(7),
+      updatedAtIso: minutesAgoIso(7),
       slaMinutes: 10,
       elapsedMinutes: 7,
       reporter: "Camera AI · CAM 02",
@@ -250,6 +277,8 @@ function createSeedCases(siteId: ErpSiteId): IncidentCase[] {
       status: "closed",
       escalated: false,
       reportedAt: "08:21",
+      reportedAtIso: minutesAgoIso(6),
+      updatedAtIso: new Date().toISOString(),
       slaMinutes: 15,
       elapsedMinutes: 6,
       reporter: "Quầy hỗ trợ 01",
@@ -385,6 +414,7 @@ async function managerTransitionInCookie(input: IncidentActionInput): Promise<In
     assigneeId: shouldAssign ? employee.id : incident.assigneeId,
     assigneeName: shouldAssign ? employee.name : incident.assigneeName,
     nextAction: transition.nextAction,
+    updatedAtIso: new Date().toISOString(),
     timeline: [
       { id: crypto.randomUUID(), at: displayTime(), actor: input.actorName, action: transition.action, note: transition.note },
       ...incident.timeline,
@@ -413,6 +443,7 @@ async function employeeProgressInCookie(input: IncidentActionInput): Promise<Inc
     status: "verification",
     sop: { ...incident.sop, completedSteps: incident.sop.totalSteps },
     nextAction: "Chờ quản lý kiểm tra hiện trường và bằng chứng",
+    updatedAtIso: new Date().toISOString(),
     timeline: [
       { id: crypto.randomUUID(), at: displayTime(), actor: input.actorName, action: "Báo đã xử lý", note: "Đã hoàn thành checklist và chuyển quản lý xác minh kết quả." },
       ...incident.timeline,
@@ -439,8 +470,10 @@ function caseFromRow(row: Record<string, unknown>): IncidentCase | null {
     escalated: row.escalated as boolean,
     escalationReason: (row.escalation_reason as string | null) ?? undefined,
     reportedAt: row.reported_at as string,
+    reportedAtIso: row.reported_at_ts as string,
+    updatedAtIso: row.updated_at as string,
     slaMinutes: row.sla_minutes as number,
-    elapsedMinutes: row.elapsed_minutes as number,
+    elapsedMinutes: 0,
     reporter: row.reporter as string,
     assigneeId: (row.assignee_id as string | null) ?? null,
     assigneeName: row.assignee_name as string,
@@ -524,8 +557,9 @@ async function employeeProgressInSupabase(input: IncidentActionInput): Promise<I
 // --- public API -----------------------------------------------------------
 
 export async function getIncidentCases(siteId: ErpSiteId): Promise<IncidentCase[]> {
-  if (readMode() === "supabase") return readSupabaseCases(siteId);
-  return readCookieCases(siteId);
+  const cases =
+    readMode() === "supabase" ? await readSupabaseCases(siteId) : await readCookieCases(siteId);
+  return cases.map(withLiveElapsed);
 }
 
 export async function listEscalatedIncidents(
@@ -538,11 +572,17 @@ export async function listEscalatedIncidents(
 }
 
 export async function transitionIncidentByManager(input: IncidentActionInput): Promise<IncidentCase> {
-  if (readMode() === "supabase") return managerTransitionInSupabase(input);
-  return managerTransitionInCookie(input);
+  const result =
+    readMode() === "supabase"
+      ? await managerTransitionInSupabase(input)
+      : await managerTransitionInCookie(input);
+  return withLiveElapsed(result);
 }
 
 export async function progressIncidentByEmployee(input: IncidentActionInput): Promise<IncidentCase> {
-  if (readMode() === "supabase") return employeeProgressInSupabase(input);
-  return employeeProgressInCookie(input);
+  const result =
+    readMode() === "supabase"
+      ? await employeeProgressInSupabase(input)
+      : await employeeProgressInCookie(input);
+  return withLiveElapsed(result);
 }

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { reportIncidentFromCameraAction } from "@/app/erp/actions";
 import type { ErpSite } from "@/domain/erp";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 
@@ -58,6 +59,7 @@ export function CameraAiWorkspace({ site, user, initialCameraId }: Props) {
   const [selected, setSelected] = useState<CameraFeed | null>(null);
   const [now, setNow] = useState<Date | null>(null);
   const [actionMessage, setActionMessage] = useState("");
+  const [isReporting, setIsReporting] = useState(false);
   const viewerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,13 +99,21 @@ export function CameraAiWorkspace({ site, user, initialCameraId }: Props) {
     await viewerRef.current?.requestFullscreen?.();
   }
 
-  function createAction(feed: CameraFeed) {
-    const message = user.role === "director"
-      ? `Đã giao quản lý ${site.shortName} kiểm tra ${feed.zone}.`
-      : user.role === "manager"
-        ? `Đã tạo phiếu kiểm tra hiện trường tại ${feed.zone}.`
-        : `Đã báo quản lý về ${feed.zone}.`;
-    setActionMessage(message);
+  async function createAction(feed: CameraFeed) {
+    setIsReporting(true);
+    try {
+      const result = await reportIncidentFromCameraAction({
+        siteId: site.id,
+        cameraName: feed.name,
+        zone: feed.zone,
+        note: feed.note,
+        peopleCount: feed.people,
+        cameraStatus: feed.status,
+      });
+      setActionMessage(result.message);
+    } finally {
+      setIsReporting(false);
+    }
   }
 
   return (
@@ -165,7 +175,7 @@ export function CameraAiWorkspace({ site, user, initialCameraId }: Props) {
                 {selected.status !== "offline" ? <div className="absolute bottom-[18%] left-[23%] h-20 w-16 rounded border-2 border-[#83e7b5]"><span className="absolute -top-6 left-0 bg-[#83e7b5] px-1.5 py-0.5 text-[9px] font-black text-[#11362a]">PERSON</span></div> : null}
                 <button type="button" onClick={enterFullscreen} className="absolute bottom-4 right-4 rounded-lg bg-black/55 px-3 py-2 text-xs font-black text-white">Toàn màn hình</button>
               </div>
-              <aside className="p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#477565]">Phân tích hiện trường</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-white p-4"><p className="text-xs text-[#75827c]">Mật độ</p><p className="mt-1 text-2xl font-black text-[#294139]">{selected.people}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs text-[#75827c]">Độ tin cậy</p><p className="mt-1 text-2xl font-black text-[#294139]">{selected.confidence}%</p></div></div><p className="mt-4 rounded-xl bg-white p-4 text-sm leading-6 text-[#5f7068]">{selected.note}. AI chỉ đếm và nhận dạng tình huống an toàn, không nhận diện danh tính.</p><button type="button" onClick={() => createAction(selected)} className="mt-4 min-h-11 w-full rounded-xl bg-[#183f34] px-4 text-sm font-black text-white">{user.role === "director" ? "Giao quản lý kiểm tra" : user.role === "manager" ? "Tạo phiếu hiện trường" : "Báo quản lý"}</button>{actionMessage ? <p role="status" className="mt-3 rounded-xl bg-[#dff0e8] p-3 text-xs font-bold text-[#286149]">{actionMessage}</p> : null}</aside>
+              <aside className="p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#477565]">Phân tích hiện trường</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-white p-4"><p className="text-xs text-[#75827c]">Mật độ</p><p className="mt-1 text-2xl font-black text-[#294139]">{selected.people}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs text-[#75827c]">Độ tin cậy</p><p className="mt-1 text-2xl font-black text-[#294139]">{selected.confidence}%</p></div></div><p className="mt-4 rounded-xl bg-white p-4 text-sm leading-6 text-[#5f7068]">{selected.note}. AI chỉ đếm và nhận dạng tình huống an toàn, không nhận diện danh tính.</p><button type="button" disabled={isReporting} onClick={() => createAction(selected)} className="mt-4 min-h-11 w-full rounded-xl bg-[#183f34] px-4 text-sm font-black text-white disabled:cursor-wait disabled:opacity-60">{isReporting ? "Đang tạo hồ sơ..." : user.role === "director" ? "Giao quản lý kiểm tra" : user.role === "manager" ? "Tạo phiếu hiện trường" : "Báo quản lý"}</button>{actionMessage ? <p role="status" className="mt-3 rounded-xl bg-[#dff0e8] p-3 text-xs font-bold text-[#286149]">{actionMessage}</p> : null}</aside>
             </div>
           </section>
         </div>, document.body) : null}

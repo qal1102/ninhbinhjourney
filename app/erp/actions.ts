@@ -38,7 +38,9 @@ import {
 } from "@/lib/erp/attendance-repository";
 import {
   IncidentRepositoryConflictError,
+  IncidentRepositoryError,
   progressIncidentByEmployee,
+  reportIncidentFromCamera,
   transitionIncidentByManager,
   type IncidentCase,
 } from "@/lib/erp/incident-repository";
@@ -380,6 +382,64 @@ export async function progressIncidentAction(
       return { success: false, message: error.message };
     }
     return { success: false, message: "Chưa thể cập nhật sự cố. Hãy thử lại." };
+  }
+}
+
+export type CameraIncidentReportActionInput = {
+  siteId: string;
+  cameraName: string;
+  zone: string;
+  note: string;
+  peopleCount: number;
+  cameraStatus: "stable" | "attention" | "offline";
+};
+
+const cameraReportSuccessLabel: Record<"director" | "manager" | "employee", string> = {
+  director: "Đã giao quản lý kiểm tra",
+  manager: "Đã tạo phiếu hiện trường",
+  employee: "Đã báo quản lý",
+};
+
+export async function reportIncidentFromCameraAction(
+  input: CameraIncidentReportActionInput,
+): Promise<IncidentActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { success: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) {
+    return { success: false, message: "Cơ sở không hợp lệ." };
+  }
+  const siteId: ErpSiteId = input.siteId;
+  if (
+    (user.role !== "director" && user.role !== "manager" && user.role !== "employee") ||
+    !accountCanAccessSite(user, siteId) ||
+    !accountCanAccessModule(user, siteId, "su-co")
+  ) {
+    return { success: false, message: "Bạn không có quyền tạo hồ sơ sự cố tại cơ sở này." };
+  }
+
+  try {
+    const incident = await reportIncidentFromCamera({
+      siteId,
+      actorId: user.id,
+      actorName: user.name,
+      actorRole: user.role,
+      cameraName: input.cameraName,
+      zone: input.zone,
+      note: input.note,
+      peopleCount: input.peopleCount,
+      cameraStatus: input.cameraStatus,
+    });
+    revalidatePath(`/erp/${siteId}/su-co`);
+    return {
+      success: true,
+      message: `${cameraReportSuccessLabel[user.role]}: hồ sơ ${incident.id} đã được tạo trong module Sự cố.`,
+      incident,
+    };
+  } catch (error) {
+    if (error instanceof IncidentRepositoryError) {
+      return { success: false, message: error.message };
+    }
+    return { success: false, message: "Chưa thể tạo hồ sơ sự cố. Hãy thử lại." };
   }
 }
 

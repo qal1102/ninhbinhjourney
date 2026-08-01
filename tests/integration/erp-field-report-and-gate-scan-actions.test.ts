@@ -54,7 +54,9 @@ const { MockIncidentRepositoryConflictError } = vi.hoisted(() => ({
 
 vi.mock("@/lib/erp/incident-repository", () => ({
   IncidentRepositoryConflictError: MockIncidentRepositoryConflictError,
+  IncidentRepositoryError: MockIncidentRepositoryConflictError,
   progressIncidentByEmployee: vi.fn(),
+  reportIncidentFromCamera: vi.fn(),
   transitionIncidentByManager: vi.fn(),
 }));
 

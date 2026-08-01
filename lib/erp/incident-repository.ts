@@ -82,6 +82,18 @@ export type IncidentActionInput = {
   actorName: string;
 };
 
+export type CameraIncidentReportInput = {
+  siteId: ErpSiteId;
+  actorId: string;
+  actorName: string;
+  actorRole: "director" | "manager" | "employee";
+  cameraName: string;
+  zone: string;
+  note: string;
+  peopleCount: number;
+  cameraStatus: "stable" | "attention" | "offline";
+};
+
 export class IncidentRepositoryError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
@@ -454,6 +466,75 @@ async function employeeProgressInCookie(input: IncidentActionInput): Promise<Inc
   return updated;
 }
 
+const cameraActionLabel: Record<CameraIncidentReportInput["actorRole"], string> = {
+  director: "Giao quản lý kiểm tra",
+  manager: "Tạo phiếu hiện trường",
+  employee: "Báo quản lý",
+};
+
+const cameraActionNote: Record<CameraIncidentReportInput["actorRole"], string> = {
+  director: "Giám đốc giao quản lý cơ sở kiểm tra cảnh báo camera.",
+  manager: "Quản lý tạo phiếu kiểm tra hiện trường từ cảnh báo camera.",
+  employee: "Nhân viên báo quản lý về cảnh báo camera.",
+};
+
+async function reportIncidentFromCameraInCookie(
+  input: CameraIncidentReportInput,
+): Promise<IncidentCase> {
+  const state = await readCookieAllSites();
+  const cases = state.casesBySite[input.siteId] ?? createSeedCases(input.siteId);
+  const code = siteCode[input.siteId];
+  const nowIso = new Date().toISOString();
+  const severity: IncidentSeverity = input.cameraStatus === "attention" ? "P3" : "P4";
+  const created: IncidentCase = {
+    id: `INC-${code}-CAM${Date.now()}`,
+    siteId: input.siteId,
+    title: `Cảnh báo camera tại ${input.zone}`,
+    area: input.zone,
+    summary: `${input.note.trim() || "Camera AI ghi nhận bất thường tại khu vực này."} Mật độ ghi nhận: ${input.peopleCount} người.`,
+    severity,
+    status: "reported",
+    escalated: false,
+    reportedAt: displayTime(),
+    reportedAtIso: nowIso,
+    updatedAtIso: nowIso,
+    slaMinutes: severity === "P3" ? 10 : 15,
+    elapsedMinutes: 0,
+    reporter: `Camera AI · ${input.cameraName}`,
+    assigneeId: null,
+    assigneeName: "Chưa giao",
+    assigneeTeam: "Chưa giao",
+    sop: {
+      code: "SOP-CAM-01",
+      title: "Kiểm tra và xác minh cảnh báo camera AI",
+      completedSteps: 0,
+      totalSteps: 4,
+    },
+    nextAction: "Quản lý xác minh hiện trường và giao xử lý nếu cần",
+    evidence: [
+      {
+        id: crypto.randomUUID(),
+        kind: "Ảnh hiện trường",
+        label: `Khung hình từ ${input.cameraName}`,
+        addedBy: `Camera AI · ${input.cameraName}`,
+        addedAt: displayTime(),
+      },
+    ],
+    timeline: [
+      {
+        id: crypto.randomUUID(),
+        at: displayTime(),
+        actor: input.actorName,
+        action: cameraActionLabel[input.actorRole],
+        note: cameraActionNote[input.actorRole],
+      },
+    ],
+  };
+  state.casesBySite[input.siteId] = [created, ...cases];
+  await writeCookieAllSites(state);
+  return created;
+}
+
 // --- supabase mode ------------------------------------------------------
 
 function caseFromRow(row: Record<string, unknown>): IncidentCase | null {
@@ -554,6 +635,33 @@ async function employeeProgressInSupabase(input: IncidentActionInput): Promise<I
   return updated;
 }
 
+async function reportIncidentFromCameraInSupabase(
+  input: CameraIncidentReportInput,
+): Promise<IncidentCase> {
+  const client = createAdminClient();
+  const result = await client.rpc("erp_incident_report_from_camera", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_actor_account_id: input.actorId,
+    p_actor_name: input.actorName,
+    p_actor_role: input.actorRole,
+    p_camera_name: input.cameraName,
+    p_zone: input.zone,
+    p_note: input.note,
+    p_people_count: input.peopleCount,
+    p_camera_status: input.cameraStatus,
+  });
+  if (result.error) {
+    throw repositoryError("tạo hồ sơ sự cố từ camera", result.error);
+  }
+  const row = (Array.isArray(result.data) ? result.data[0] : result.data) as Record<string, unknown>;
+  const created = caseFromRow(row);
+  if (!created) {
+    throw new IncidentRepositoryError("Cơ sở trong hồ sơ sự cố không hợp lệ.");
+  }
+  return created;
+}
+
 // --- public API -----------------------------------------------------------
 
 export async function getIncidentCases(siteId: ErpSiteId): Promise<IncidentCase[]> {
@@ -584,5 +692,15 @@ export async function progressIncidentByEmployee(input: IncidentActionInput): Pr
     readMode() === "supabase"
       ? await employeeProgressInSupabase(input)
       : await employeeProgressInCookie(input);
+  return withLiveElapsed(result);
+}
+
+export async function reportIncidentFromCamera(
+  input: CameraIncidentReportInput,
+): Promise<IncidentCase> {
+  const result =
+    readMode() === "supabase"
+      ? await reportIncidentFromCameraInSupabase(input)
+      : await reportIncidentFromCameraInCookie(input);
   return withLiveElapsed(result);
 }

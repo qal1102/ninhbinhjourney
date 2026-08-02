@@ -5,7 +5,7 @@ import { readPublicEnvironment } from "@/config/experience";
 export const metadata = {
   title: "Khám phá Ninh Bình | Ninh Bình Journey",
   description:
-    "Bản đồ và danh sách đồng bộ cho tám điểm trong Ninh Bình tourism core.",
+    "Bản đồ và danh sách đi cùng nhau: lọc theo thời gian, mức đi bộ và nhóm khách.",
 };
 
 export default function ExplorePage() {
@@ -37,7 +37,7 @@ export default function ExplorePage() {
       </header>
       <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-          Ninh Bình tourism core
+          Khám phá Ninh Bình
         </p>
         <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_0.7fr] lg:items-end">
           <h1 className="font-display text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">

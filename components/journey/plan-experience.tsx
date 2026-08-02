@@ -246,8 +246,11 @@ export function PlanExperience({
           </span>
         </button>
         <p className="mt-6 text-center text-sm leading-6 text-white/62">
-          Âm thanh demo không được lưu. Microphone chỉ được hỏi quyền sau khi
-          bạn nhấn nút. Trạng thái: <strong>{voiceState}</strong>.
+          {/* Trạng thái máy (`idle`/`listening`) là chữ dành cho lập trình
+              viên. Khách chỉ cần biết hai điều: giọng nói không bị lưu lại, và
+              micro chỉ bật khi họ chủ động bấm. */}
+          Giọng nói của bạn không được lưu lại. Micro chỉ bật sau khi bạn bấm
+          nút.
         </p>
         {showDemoCommand ? (
           <button

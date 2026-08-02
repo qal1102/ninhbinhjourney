@@ -177,6 +177,16 @@ Chưa kiểm thử tự động được phần micro: Chromium headless không 
 - Không bán được hàng, bị chặn ở tầng cấu hình (`config/experience.ts` cấm production bật sandbox checkout, và không có cổng thanh toán thật).
 - **Luồng QR khách du lịch (`/pass/[token]`) vẫn chưa dựng lại.** T8 đã tạo nền (`erp_tickets`); W1 là việc nối luồng khách vào đó.
 
+**Dựng lại trang chủ 03/08 — chủ dự án tự dùng thử rồi nhận xét thẳng: "nhiều thứ đấy nhưng dùng xong không hiểu gì hết, lung tung".** Không phải thiếu chức năng — trang chủ (`app/ninh-binh-landing.tsx`) cao **11.365px**, làm việc của năm trang gộp lại (ảnh mở đầu → câu chuyện → bản đồ → toàn bộ 9 điểm đến dạng thẻ lớn → lưới 6 điểm phụ → công cụ dựng tuyến → lịch trình), không nói cho khách biết nên bắt đầu từ đâu, và **trùng với `/explore`** vốn đã có bản đồ + bộ lọc tốt hơn.
+
+Đã sửa:
+- Thêm khối **"Ba lối vào. Chọn một."** ngay dưới ảnh mở đầu: Xem bản đồ (`/explore`) · Kể về ngày bạn (`/plan`) · Lấy tuyến dựng sẵn (`/packages`). Đây là phần đổi cảm giác nhiều nhất — khách vào biết ngay có ba việc có thể làm, không phải đọc hết trang mới biết.
+- Trang chủ chỉ còn dựng **3 câu chuyện** (trước là 10 thẻ lớn + 6 thẻ nhỏ = 16), rồi dẫn sang `/explore` bằng một nút "Xem tất cả điểm đến (N)" — hết trùng, danh mục đầy đủ chỉ còn một chỗ.
+- Nút "Khám phá gần đây" từng cuộn xuống danh mục đã bị gỡ; giờ dẫn thẳng sang `/explore`.
+- Gỡ ngôn ngữ nội bộ lọt ra mặt khách: `Ninh Bình tourism core`, `Intent → rules → validated itinerary`, `Có khung giờ demo`, `Trạng thái: idle`. Khách không hiểu và không nên thấy.
+
+Kết quả: cao **7.259px** (giảm ~36%). Đã xác minh: `npm run lint`/`build` sạch, 28/28 e2e công khai xanh (`public-surfaces.spec.ts`, `public-journey-planner.spec.ts`), tự chụp ảnh trang chủ cả hai khổ màn hình. **Cố ý chưa làm trong đợt này:** phần "Câu chuyện điểm đến", bản đồ nhúng và công cụ dựng tuyến trên trang chủ vẫn giữ nguyên — chỉ sắp xếp lại thứ tự và cắt phần trùng, chưa đánh giá lại từng phần trong đó. Nếu vẫn còn cảm giác rối sau đợt này, cần chủ dự án chỉ rõ đang rối ở khúc nào (mở đầu, hay công cụ dựng tuyến, hay điều hướng) để sửa đúng chỗ thay vì đoán.
+
 ---
 
 ## 3. ✅ Lỗi nghiêm trọng cũ — đã vá và xác minh xong trên production 02/08

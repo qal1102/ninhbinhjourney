@@ -248,14 +248,14 @@ export function ExploreExperience() {
             onChange={(event) => setAvailableOnly(event.target.checked)}
             className="h-5 w-5 accent-[#183f34]"
           />
-          Có khung giờ demo
+          Còn khung giờ
         </label>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-[#59654b]" aria-live="polite">
-          <strong className="text-[#183f34]">{filtered.length}</strong> điểm
-          trong Ninh Bình tourism core
+          <strong className="text-[#183f34]">{filtered.length}</strong> điểm hợp
+          với bộ lọc của bạn
         </p>
         <div
           className="flex rounded-full border border-[#b9c4bd] bg-white p-1"

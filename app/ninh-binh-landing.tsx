@@ -127,6 +127,19 @@ const copy = {
     hiddenGems: "Hidden gems western travelers notice",
     hiddenGemsIntro:
       "Quieter stops for visitors who want less-crowded nature, small temples and ethical side trips.",
+    pathsLabel: "Start here",
+    pathsTitle: "Three ways in. Pick one.",
+    pathMapTitle: "Browse the map",
+    pathMapBody:
+      "See every place on a real map, filter by time on foot and pace, then keep what fits.",
+    pathPlanTitle: "Tell us your day",
+    pathPlanBody:
+      "Describe the day you want, in your own words. We build an itinerary that respects opening hours and walking limits.",
+    pathPackageTitle: "Take a ready route",
+    pathPackageBody:
+      "Four packaged days, already sequenced. Pick one and adjust it later.",
+    pathOpen: "Open",
+    seeAllDestinations: "See all destinations",
     companionLabel: "Journey Builder",
     companionTitle: "Build a route that feels human",
     companionBody:
@@ -208,6 +221,19 @@ const copy = {
     hiddenGems: "Điểm ít đông được khách Tây chú ý",
     hiddenGemsIntro:
       "Những điểm yên hơn dành cho du khách muốn thiên nhiên vắng, đền chùa nhỏ và trải nghiệm có trách nhiệm.",
+    pathsLabel: "Bắt đầu ở đây",
+    pathsTitle: "Ba lối vào. Chọn một.",
+    pathMapTitle: "Xem trên bản đồ",
+    pathMapBody:
+      "Thấy hết các điểm trên bản đồ thật, lọc theo thời gian và mức đi bộ, rồi giữ lại thứ hợp với mình.",
+    pathPlanTitle: "Kể về ngày của bạn",
+    pathPlanBody:
+      "Nói bằng lời của bạn về ngày bạn muốn có. Lịch trình dựng ra sẽ tôn trọng giờ mở cửa và giới hạn đi bộ.",
+    pathPackageTitle: "Lấy tuyến dựng sẵn",
+    pathPackageBody:
+      "Bốn ngày đã đóng gói, đã xếp thứ tự. Chọn một rồi chỉnh sau cũng được.",
+    pathOpen: "Mở",
+    seeAllDestinations: "Xem tất cả điểm đến",
     companionLabel: "Bộ lập tuyến hành trình",
     companionTitle: "Dựng một tuyến đi có nhịp người thật",
     companionBody:
@@ -996,7 +1022,16 @@ const destinationFacts: Record<DestinationId, DestinationFacts> = {
 const paymentMethods = ["Visa", "Mastercard", "JCB", "VietQR", "MoMo", "ZaloPay", "Pay at counter"];
 const paymentMethodsVi = ["Visa", "Mastercard", "JCB", "VietQR", "MoMo", "ZaloPay", "Thanh toán tại quầy"];
 const signatureDestinations = destinations.filter((destination) => destination.tier === "signature");
-const hiddenDestinations = destinations.filter((destination) => destination.tier === "hidden");
+
+/**
+ * Trang chủ chỉ dựng ba chương đầu. Trước đây nó đổ hết 10 thẻ lớn + 6 thẻ nhỏ
+ * xuống một trang dài hơn 11.000 pixel, làm đúng công việc mà `/explore` đã
+ * làm tốt hơn (có bản đồ thật, bộ lọc theo thời gian và mức đi bộ). Danh mục
+ * đầy đủ trả về cho `/explore`; trang chủ là cửa vào, không phải cái kho.
+ */
+const HOMEPAGE_STORY_COUNT = 3;
+const homepageStories = signatureDestinations.slice(0, HOMEPAGE_STORY_COUNT);
+const totalDestinationCount = destinations.length;
 
 const routeCollections = [
   {
@@ -1394,6 +1429,49 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
+      {/* Ba lối đi. Đặt ngay dưới ảnh mở đầu vì đây là chỗ khách hay đứng lại:
+          trước đây trang chủ đổ thẳng vào một danh mục dài, không nói cho ai
+          biết nên bắt đầu từ đâu. */}
+      <section className="bg-[#FBFAF6] px-5 pt-16 text-[#1D2925] sm:px-8 sm:pt-20">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#3F7568]">
+            {t.pathsLabel}
+          </p>
+          <h2 className="font-display mt-3 max-w-3xl text-4xl leading-tight text-[#183F34] sm:text-5xl">
+            {t.pathsTitle}
+          </h2>
+          <div className="mt-9 grid gap-4 md:grid-cols-3">
+            {(
+              [
+                [t.pathMapTitle, t.pathMapBody, "/explore"],
+                [t.pathPlanTitle, t.pathPlanBody, "/plan"],
+                [t.pathPackageTitle, t.pathPackageBody, "/packages"],
+              ] as Array<[string, string, string]>
+            ).map(([title, body, href], index) => (
+              <a
+                key={href}
+                href={`${href}?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
+                className="group flex flex-col justify-between rounded-[8px] border border-[#A8CEC1]/70 bg-white p-6 transition hover:border-[#183F34] hover:shadow-lg hover:shadow-[#183F34]/10"
+              >
+                <div>
+                  <span className="font-display text-2xl text-[#A8CEC1] transition group-hover:text-[#E7B96A]">
+                    0{index + 1}
+                  </span>
+                  <h3 className="font-display mt-2 text-3xl text-[#183F34]">{title}</h3>
+                  <p className="mt-3 leading-7 text-[#4d5b55]">{body}</p>
+                </div>
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-[#183F34]">
+                  {t.pathOpen}
+                  <span aria-hidden="true" className="transition group-hover:translate-x-1">
+                    →
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="bg-[#FBFAF6] py-16 text-[#1D2925] sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <div className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
@@ -1455,7 +1533,15 @@ export default function NinhBinhLanding({
             </div>
             <p className="mt-7 max-w-xl text-lg leading-8 text-[#4d5b55]">{t.mapBody}</p>
             <p className="mt-3 max-w-xl text-sm font-semibold text-[#3F7568]">{t.mapHint}</p>
-            <button type="button" onClick={() => scrollToId("stories")} className="mt-7 rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white">{t.nearby}</button>
+            {/* Trước đây nút này cuộn xuống danh mục ngay bên dưới. Danh mục
+                đã chuyển sang /explore nên nút phải dẫn tới đó, không cuộn tới
+                một chỗ không còn nữa. */}
+            <a
+              href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
+              className="mt-7 inline-flex rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white transition hover:bg-[#24594a]"
+            >
+              {t.nearby}
+            </a>
           </div>
           <div className="relative z-0 isolate overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#F6F1E7] p-3 shadow-xl shadow-[#183F34]/10">
             <TourismMap
@@ -1489,7 +1575,7 @@ export default function NinhBinhLanding({
           <h2 className="font-display mt-3 max-w-4xl text-4xl leading-tight sm:text-6xl">{t.storiesIntro}</h2>
           <p className="mt-8 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{t.signatureStories}</p>
           <div className="mt-10 grid gap-6">
-            {signatureDestinations.map((place, index) => (
+            {homepageStories.map((place, index) => (
               <article
                 id={`destination-${place.id}`}
                 key={place.id}
@@ -1527,28 +1613,19 @@ export default function NinhBinhLanding({
               </article>
             ))}
           </div>
-          <div className="mt-16">
-            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{t.hiddenGems}</p>
-            <p className="mt-3 max-w-3xl text-lg leading-8 text-[#FBFAF6]/78">{t.hiddenGemsIntro}</p>
-            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {hiddenDestinations.map((place) => (
-                <article key={place.id} className="group overflow-hidden rounded-[8px] border border-white/12 bg-white/[0.06]">
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <Image src={place.image} alt={place.name[lang]} fill sizes="(min-width: 1280px) 31vw, (min-width: 768px) 45vw, 100vw" className="object-cover transition duration-700 group-hover:scale-[1.04]" style={{ objectPosition: place.imagePosition }} />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(29,41,37,.55))]" />
-                  </div>
-                  <div className="p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#A8CEC1]">{place.category[lang]} · {place.duration[lang]}</p>
-                    <h3 className="font-display mt-2 text-3xl">{place.name[lang]}</h3>
-                    <p className="mt-3 leading-7 text-[#FBFAF6]/76">{place.shortDescription[lang]}</p>
-                    <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-                      <button type="button" onClick={() => openDetail(place.id)} className="rounded-full bg-[#FBFAF6] px-4 py-2 text-sm font-semibold text-[#183F34] transition hover:bg-[#E7B96A]">{t.discover}</button>
-                      <button type="button" onClick={() => addDestination(place.id)} className="rounded-full border border-white/30 px-4 py-2 text-sm font-semibold transition hover:bg-white/12">{selectedIds.includes(place.id) ? t.added : t.add}</button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+          {/* Danh mục đầy đủ nằm ở /explore, nơi có bản đồ thật và bộ lọc.
+              Trang chủ chỉ dẫn sang, không chép lại. */}
+          <div className="mt-14 flex flex-col gap-4 border-t border-white/15 pt-8 sm:flex-row sm:items-center sm:justify-between">
+            <p className="max-w-2xl text-lg leading-8 text-[#FBFAF6]/78">
+              {t.hiddenGemsIntro}
+            </p>
+            <a
+              href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#E7B96A] px-6 py-3 font-semibold text-[#183F34] transition hover:bg-[#f0c87c]"
+            >
+              {t.seeAllDestinations} ({totalDestinationCount})
+              <span aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
       </section>

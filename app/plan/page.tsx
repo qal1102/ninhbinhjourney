@@ -35,7 +35,7 @@ export default function PlanPage() {
       </header>
       <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-          Intent → rules → validated itinerary
+          Lập hành trình
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-5xl leading-[0.96] text-[#183f34] sm:text-7xl">
           Một lịch trình biết giới hạn của nó.

@@ -14,7 +14,9 @@ async function login(page: Page, username: string, password: string) {
   await page.getByLabel(/Tên đăng nhập|Email hoặc tên đăng nhập/).fill(username);
   await page.getByLabel("Mật khẩu").fill(password);
   await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
-  await expect(page).toHaveURL(/\/erp$/);
+  // Trên production đây là một vòng gọi Supabase thật; chạy song song nhiều
+  // worker thì 8 giây mặc định của expect không đủ.
+  await expect(page).toHaveURL(/\/erp$/, { timeout: 25_000 });
 }
 
 async function openAssistant(page: Page) {

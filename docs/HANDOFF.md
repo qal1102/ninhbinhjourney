@@ -133,7 +133,7 @@ Cùng lúc xoá **`domain/erp-operating-data.ts`** (nguồn của số bịa) v�
 - Màn hình tự nhận mình là mô phỏng ở ngay dải trên cùng, thẻ "Độ trễ hình ảnh" bỏ con số "1,4 giây" bịa và ghi "—".
 - **Nút tạo sự cố từ camera vẫn tắt** và sẽ tắt cho tới khi có nguồn đếm người thật. Số mô phỏng, dù đã đẹp hơn, vẫn không được phép trở thành hồ sơ nghiệp vụ.
 
-Đã xác minh: `tests/unit/erp-camera-ai.test.ts` (10 bài — tính tất định, trần 2 sự kiện quét qua 500 khung × 4 cơ sở, chặn theo vai trò, số luôn nằm trong sức chứa) và `tests/e2e/erp-camera-ai-simulation.spec.ts` (4 bài × 2 khổ màn hình, chạy cục bộ: nhãn mô phỏng hiện ra, số không đổi sau khi F5, quản lý không thấy kịch bản còn giám đốc thấy đúng 1 sự kiện sau ~12 giây, không còn nút tạo sự cố). **Chưa xác minh trên production** — chưa deploy tại thời điểm ghi.
+Đã xác minh: `tests/unit/erp-camera-ai.test.ts` (10 bài — tính tất định, trần 2 sự kiện quét qua 500 khung × 4 cơ sở, chặn theo vai trò, số luôn nằm trong sức chứa) và `tests/e2e/erp-camera-ai-simulation.spec.ts` (4 bài × 2 khổ màn hình: nhãn mô phỏng hiện ra, số không đổi sau khi F5, quản lý không thấy kịch bản còn giám đốc thấy đúng 1 sự kiện sau ~12 giây, không còn nút tạo sự cố). **Đã xác minh trên production thật** (`https://ninhbinhjourney.vercel.app`, deploy `oisk3b6mu`): 14/14 lượt xanh gồm cả spec trợ lý, cả hai khổ màn hình. Cả hai spec chỉ đọc — không gọi hành động ghi nào, nên không để lại gì.
 
 ### 2.7b Trợ lý điều hành bằng giọng nói
 
@@ -147,7 +147,7 @@ Nút tròn góc dưới phải mọi màn hình ERP (`components/erp/voice-comma
 
 Phần nhận từ khoá → điều hướng (`resolveErpNavigationCommand`, 15 module × 4 cơ sở) **đã có từ trước và không đổi**; `tests/unit/erp-voice-command.test.ts` giữ nguyên. Điều quan trọng cần nói thẳng: **đây là so khớp từ khoá, không phải mô hình ngôn ngữ** — nói ngoài bộ từ đã khai báo thì trợ lý trả lời "chưa tìm thấy màn hình phù hợp" chứ không đoán. Các câu hỏi số liệu đi qua `app/api/erp/assistant/route.ts`, đọc dữ liệu thật trong phạm vi tài khoản và **từ chối trả lời khi thiếu một vế** thay vì dựng số.
 
-Chưa kiểm thử tự động được phần micro: Chromium headless không có đường ra dịch vụ nhận dạng. `tests/e2e/erp-assistant-thread.spec.ts` (3 bài × 2 khổ màn hình) kiểm phần còn lại — cùng một hàm `execute` mà giọng nói gọi vào.
+Chưa kiểm thử tự động được phần micro: Chromium headless không có đường ra dịch vụ nhận dạng. `tests/e2e/erp-assistant-thread.spec.ts` (3 bài × 2 khổ màn hình, đã chạy trên production thật) kiểm phần còn lại — cùng một hàm `execute` mà giọng nói gọi vào.
 
 `domain/erp.ts` giữ 4 cơ sở + danh sách module trong code — **không tính là lỗi**, đó là cấu hình phần mềm, cố ý không cho sửa từ giao diện. Riêng `ErpSite.snapshot` (visitors/checkedIn/employeesOnShift/openIncidents/capacityPercent) trong cùng file **giờ không còn nơi nào đọc** sau khi sửa T13 — an toàn vì không hiển thị sai ở đâu nữa, nhưng nên xoá khỏi type trong một đợt dọn sau, gộp cùng lúc xử lý Camera AI.
 

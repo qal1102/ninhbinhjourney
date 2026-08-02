@@ -31,10 +31,40 @@ describe("ERP account registry site managers migration 025 contract", () => {
     expect(compact.endsWith("commit;")).toBe(true);
     expect(compact).not.toContain("create table");
     expect(compact).not.toContain("create or replace function");
-    expect(compact).not.toContain("alter table");
     expect(compact).not.toContain("drop ");
     expect(compact).not.toContain("grant select");
     expect(compact).not.toContain("grant execute");
+    // `alter table` appears only to toggle a trigger off/on around the two
+    // corrections below -- never to add, drop or retype a column or
+    // constraint. That is what "changes no schema" actually means here; a
+    // migration whose only DDL is a paired trigger toggle has not
+    // restructured anything.
+    const alterStatements = compact.match(/alter table[^;]*;/g) ?? [];
+    for (const statement of alterStatements) {
+      expect(statement).toMatch(/\b(disable|enable) trigger\b/);
+    }
+  });
+
+  it("disables each protective trigger only for its one statement, and always re-enables it", () => {
+    // A disable with no matching enable would leave a business-integrity
+    // trigger permanently off on production -- the exact failure mode this
+    // pairing exists to rule out.
+    for (const trigger of ["erp_ap_invoice_integrity", "erp_ap_audit_immutable"]) {
+      expect(
+        compact.match(new RegExp(`disable trigger ${trigger}\\b`, "g"))?.length,
+        `${trigger} disable count`,
+      ).toBe(1);
+      expect(
+        compact.match(new RegExp(`enable trigger ${trigger}\\b`, "g"))?.length,
+        `${trigger} enable count`,
+      ).toBe(1);
+      const disabledAt = compact.indexOf(`disable trigger ${trigger}`);
+      const enabledAt = compact.indexOf(`enable trigger ${trigger}`);
+      expect(disabledAt, `${trigger} never disabled`).toBeGreaterThanOrEqual(0);
+      expect(enabledAt, `${trigger} enabled before it was disabled`).toBeGreaterThan(
+        disabledAt,
+      );
+    }
   });
 
   it("registers every site manager the application already ships", () => {

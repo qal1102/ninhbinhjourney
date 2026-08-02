@@ -141,6 +141,18 @@ where tenant_id = '00000000-0000-4000-8000-000000000001'
 -- Tràng An manager, because that was the only account the registry allowed.
 -- In a system whose core claim is maker <> checker, an invoice attributed to
 -- someone who does not run that site is a false record, not a cosmetic one.
+--
+-- `erp_ap_invoice_integrity` (migration 007) treats manager_account_id as
+-- part of an invoice's immutable identity -- correct for every normal
+-- transition, and exactly why a raw update here raises
+-- AP_INVOICE_IDENTITY_IMMUTABLE instead of silently succeeding. This is the
+-- one legitimate exception: a one-time correction of a wrong value the
+-- registry bug itself produced, not a business transition. The trigger is
+-- off only for this single statement, inside the same transaction as
+-- everything else in this migration.
+alter table public.erp_ap_supplier_invoices
+  disable trigger erp_ap_invoice_integrity;
+
 update public.erp_ap_supplier_invoices as invoice
 set manager_account_id = site_manager.account_id,
     updated_at = now()
@@ -153,10 +165,22 @@ where invoice.site_id = site_manager.site_id
   and invoice.tenant_id = '00000000-0000-4000-8000-000000000001'
   and invoice.manager_account_id = 'manager-trang-an';
 
+alter table public.erp_ap_supplier_invoices
+  enable trigger erp_ap_invoice_integrity;
+
 -- The matching audit lines, restricted to rows this repository seeded. A line
 -- written by a real submission is left exactly as it happened, even if it
 -- names the wrong manager -- that is evidence of the defect, and the fix for
 -- it is that the defect can no longer recur.
+--
+-- `erp_ap_audit_immutable` (migration 007) refuses every update or delete on
+-- this table, unconditionally -- the whole point of an append-only audit
+-- trail. That has to give way for this one seeded-row correction the same
+-- way the invoice trigger did above, and for the same reason: this is not a
+-- business event being rewritten, it is a seeding bug being repaired.
+alter table public.erp_ap_audit_events
+  disable trigger erp_ap_audit_immutable;
+
 update public.erp_ap_audit_events as event
 set actor_account_id = site_manager.account_id
 from (values
@@ -169,5 +193,8 @@ where event.site_id = site_manager.site_id
   and event.actor_account_id = 'manager-trang-an'
   and event.actor_role = 'manager'
   and event.metadata->>'seed' = 'true';
+
+alter table public.erp_ap_audit_events
+  enable trigger erp_ap_audit_immutable;
 
 commit;

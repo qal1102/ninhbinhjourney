@@ -4,7 +4,8 @@ const doubles = vi.hoisted(() => ({
   accountCanAccessModule: vi.fn(),
   accountCanAccessSite: vi.fn(),
   getCurrentErpUser: vi.fn(),
-  recordGateScan: vi.fn(),
+  validateGateScan: vi.fn(),
+  searchTickets: vi.fn(),
   revalidatePath: vi.fn(),
   submitFieldReport: vi.fn(),
 }));
@@ -75,7 +76,17 @@ const { MockGateScanRepositoryError } = vi.hoisted(() => ({
 
 vi.mock("@/lib/erp/gate-scan-repository", () => ({
   GateScanRepositoryError: MockGateScanRepositoryError,
-  recordGateScan: doubles.recordGateScan,
+  validateGateScan: doubles.validateGateScan,
+  searchTickets: doubles.searchTickets,
+  GATE_SCAN_RESULT_LABELS: {
+    accepted: "Hợp lệ, mời khách vào",
+    "not-found": "Không tìm thấy vé",
+    "wrong-site": "Vé của cơ sở khác",
+    "wrong-day": "Vé không dùng cho hôm nay",
+    exhausted: "Vé đã dùng hết lượt",
+    void: "Vé đã bị huỷ",
+    "legacy-uncheckable": "Lượt quét cũ, chưa đối chiếu được vé",
+  },
 }));
 
 import {
@@ -208,39 +219,96 @@ describe("recordGateScanAction", () => {
     doubles.accountCanAccessModule.mockReturnValue(false);
     const result = await recordGateScanAction({ siteId: "trang-an", code: "QR-NB-82431" });
     expect(result.success).toBe(false);
-    expect(doubles.recordGateScan).not.toHaveBeenCalled();
+    expect(doubles.validateGateScan).not.toHaveBeenCalled();
   });
 
   it("rejects a code shorter than 6 characters before touching the repository", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(employeeUser);
     const result = await recordGateScanAction({ siteId: "trang-an", code: "AB1" });
     expect(result).toEqual({ success: false, message: "Mã QR không hợp lệ." });
-    expect(doubles.recordGateScan).not.toHaveBeenCalled();
+    expect(doubles.validateGateScan).not.toHaveBeenCalled();
   });
 
-  it("records the scan and revalidates the module page on success", async () => {
+  it("admits a valid ticket and revalidates the module page", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(employeeUser);
-    doubles.recordGateScan.mockResolvedValue({
-      id: "scan-1",
-      siteId: "trang-an",
-      code: "QR-NB-82431",
-      scannedByName: employeeUser.name,
+    doubles.validateGateScan.mockResolvedValue({
+      result: "accepted",
+      code: "TA-2026-000101",
       scannedAt: "2026-08-01T00:00:00.000Z",
+      replayed: false,
+      ticket: {
+        ticketCode: "TA-2026-000101",
+        product: "adult",
+        guestName: "Nguyễn Thị Bích",
+        guestPhone: "0912345678",
+        bookingReference: "NB-82419",
+        channel: "website",
+        validOn: "2026-08-01",
+        entriesAllowed: 1,
+        entriesUsed: 1,
+        status: "used",
+      },
     });
-    const result = await recordGateScanAction({ siteId: "trang-an", code: "qr-nb-82431" });
-    expect(doubles.recordGateScan).toHaveBeenCalledWith({
+    const result = await recordGateScanAction({
       siteId: "trang-an",
-      code: "QR-NB-82431",
+      code: "ta-2026-000101",
+      idempotencyKey: "key-1",
+    });
+    expect(doubles.validateGateScan).toHaveBeenCalledWith({
+      siteId: "trang-an",
+      code: "TA-2026-000101",
       actorId: employeeUser.id,
       actorName: employeeUser.name,
+      idempotencyKey: "key-1",
     });
     expect(result.success).toBe(true);
+    // The guest's name is what the person at the gate needs to see, not a
+    // scan id -- it is how they check the ticket belongs to who is standing
+    // in front of them.
+    expect(result.message).toContain("Nguyễn Thị Bích");
     expect(doubles.revalidatePath).toHaveBeenCalledWith("/erp/trang-an/check-in-khach");
+  });
+
+  it("reports a refusal as a refusal, with the reason, not as an error", async () => {
+    // T8: before this the gate had nothing to check against, so there was no
+    // such thing as a refusal -- any six characters admitted a visitor.
+    doubles.getCurrentErpUser.mockResolvedValue(employeeUser);
+    doubles.validateGateScan.mockResolvedValue({
+      result: "exhausted",
+      code: "TA-2026-000103",
+      scannedAt: "2026-08-01T00:00:00.000Z",
+      replayed: false,
+      ticket: null,
+    });
+    const result = await recordGateScanAction({
+      siteId: "trang-an",
+      code: "TA-2026-000103",
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("đã dùng hết lượt");
+  });
+
+  it("does not admit twice when the same scan is retried", async () => {
+    doubles.getCurrentErpUser.mockResolvedValue(employeeUser);
+    doubles.validateGateScan.mockResolvedValue({
+      result: "accepted",
+      code: "TA-2026-000101",
+      scannedAt: "2026-08-01T00:00:00.000Z",
+      replayed: true,
+      ticket: null,
+    });
+    const result = await recordGateScanAction({
+      siteId: "trang-an",
+      code: "TA-2026-000101",
+      idempotencyKey: "key-1",
+    });
+    expect(result.success).toBe(true);
+    expect(result.message).toContain("không tính thêm lượt");
   });
 
   it("surfaces a repository error as a plain failure message", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(employeeUser);
-    doubles.recordGateScan.mockRejectedValue(new MockGateScanRepositoryError("Mã QR không hợp lệ."));
+    doubles.validateGateScan.mockRejectedValue(new MockGateScanRepositoryError("Mã QR không hợp lệ."));
     const result = await recordGateScanAction({ siteId: "trang-an", code: "QR-NB-82431" });
     expect(result).toEqual({ success: false, message: "Mã QR không hợp lệ." });
   });

@@ -50,9 +50,13 @@ import {
   type FieldReport,
 } from "@/lib/erp/field-report-repository";
 import {
+  GATE_SCAN_RESULT_LABELS,
   GateScanRepositoryError,
-  recordGateScan,
+  searchTickets,
+  validateGateScan,
+  type GateScanDecision,
   type GateScanEvent,
+  type TicketSummary,
 } from "@/lib/erp/gate-scan-repository";
 import { canSubmitFieldOperation } from "@/domain/erp-role-policy";
 
@@ -539,12 +543,18 @@ export async function submitFieldReportAction(
 }
 
 export type GateScanActionResult =
-  | { success: true; message: string; event: GateScanEvent }
-  | { success: false; message: string };
+  | {
+      success: true;
+      message: string;
+      event: GateScanEvent;
+      decision: GateScanDecision;
+    }
+  | { success: false; message: string; decision?: GateScanDecision };
 
 export async function recordGateScanAction(input: {
   siteId: string;
   code: string;
+  idempotencyKey?: string;
 }): Promise<GateScanActionResult> {
   const user = await getCurrentErpUser();
   if (!user) return { success: false, message: "Phiên đăng nhập đã hết hạn." };
@@ -564,26 +574,107 @@ export async function recordGateScanAction(input: {
   }
 
   try {
-    const event = await recordGateScan({
+    // T8: the gate now decides against a real ticket. A refusal is a normal,
+    // recorded outcome -- not an error -- so it comes back with the reason
+    // attached instead of a generic failure.
+    const decision = await validateGateScan({
       siteId,
       code: normalized,
       actorId: user.id,
       actorName: user.name,
+      idempotencyKey: input.idempotencyKey,
     });
     revalidatePath(`/erp/${siteId}/check-in-khach`);
+    const clock = new Intl.DateTimeFormat("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Ho_Chi_Minh",
+    }).format(new Date(decision.scannedAt));
+    const event: GateScanEvent = {
+      id: decision.code + decision.scannedAt,
+      siteId,
+      code: decision.code,
+      scannedByName: user.name,
+      scannedAt: decision.scannedAt,
+    };
+    if (decision.result !== "accepted") {
+      return {
+        success: false,
+        message: `${decision.code}: ${GATE_SCAN_RESULT_LABELS[decision.result]}.`,
+        decision,
+      };
+    }
+    const guest = decision.ticket?.guestName
+      ? ` · ${decision.ticket.guestName}`
+      : "";
+    const remaining = decision.ticket
+      ? ` (${decision.ticket.entriesUsed}/${decision.ticket.entriesAllowed} lượt)`
+      : "";
     return {
       success: true,
-      message: `Đã ghi nhận ${event.code} qua Cổng A lúc ${new Intl.DateTimeFormat("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Ho_Chi_Minh",
-      }).format(new Date(event.scannedAt))}.`,
+      message: decision.replayed
+        ? `${decision.code} đã được ghi nhận trước đó lúc ${clock}, không tính thêm lượt.`
+        : `Vé hợp lệ${guest}${remaining} — vào cổng lúc ${clock}.`,
       event,
+      decision,
     };
   } catch (error) {
     if (error instanceof GateScanRepositoryError) {
       return { success: false, message: error.message };
     }
     return { success: false, message: "Chưa thể ghi nhận lượt quét. Hãy thử lại." };
+  }
+}
+
+export type TicketLookupResult = {
+  tickets: TicketSummary[];
+  message: string;
+};
+
+/**
+ * T8. A guest at the gate has lost their phone, not their identity: the ticket
+ * has to be findable by name, by phone or by booking reference, not only by
+ * the code they can no longer show. Before this the only way in was the code
+ * itself, so the answer to a flat battery was "buy another ticket".
+ */
+export async function lookupTicketsAction(input: {
+  siteId: string;
+  query: string;
+}): Promise<TicketLookupResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { tickets: [], message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) {
+    return { tickets: [], message: "Cơ sở không hợp lệ." };
+  }
+  const siteId: ErpSiteId = input.siteId;
+  if (
+    !accountCanAccessSite(user, siteId) ||
+    !accountCanAccessModule(user, siteId, "check-in-khach")
+  ) {
+    return {
+      tickets: [],
+      message: "Bạn không được phân công check-in tại cơ sở này.",
+    };
+  }
+  const query = input.query.trim();
+  if (query.length < 3) {
+    return {
+      tickets: [],
+      message: "Nhập ít nhất 3 ký tự của mã vé, tên khách hoặc số điện thoại.",
+    };
+  }
+  try {
+    const tickets = await searchTickets(siteId, query);
+    return {
+      tickets,
+      message: tickets.length
+        ? `Tìm thấy ${tickets.length} vé khớp.`
+        : "Không tìm thấy vé nào khớp tại cơ sở này.",
+    };
+  } catch (error) {
+    if (error instanceof GateScanRepositoryError) {
+      return { tickets: [], message: error.message };
+    }
+    return { tickets: [], message: "Chưa tra cứu được vé. Hãy thử lại." };
   }
 }

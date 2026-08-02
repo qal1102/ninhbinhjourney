@@ -38,6 +38,61 @@ export type RecordGateScanInput = {
   actorName: string;
 };
 
+/**
+ * T8. Until migration 028 the gate had nothing to check against: the scan
+ * table held `code text` and no foreign key, so any six characters recorded a
+ * visitor and one real ticket scanned ten times recorded ten. These are the
+ * outcomes a gate can now reach, and each is logged -- a gate that records
+ * only successes cannot answer "how many people were turned away and why",
+ * which is the first question after a bad day at the entrance.
+ */
+export type GateScanResult =
+  | "accepted"
+  | "not-found"
+  | "wrong-site"
+  | "wrong-day"
+  | "exhausted"
+  | "void"
+  | "legacy-uncheckable";
+
+export const GATE_SCAN_RESULT_LABELS: Readonly<Record<GateScanResult, string>> =
+  Object.freeze({
+    accepted: "Hợp lệ, mời khách vào",
+    "not-found": "Không tìm thấy vé",
+    "wrong-site": "Vé của cơ sở khác",
+    "wrong-day": "Vé không dùng cho hôm nay",
+    exhausted: "Vé đã dùng hết lượt",
+    void: "Vé đã bị huỷ",
+    "legacy-uncheckable": "Lượt quét cũ, chưa đối chiếu được vé",
+  });
+
+export type TicketSummary = {
+  ticketCode: string;
+  product: string;
+  guestName: string;
+  guestPhone: string;
+  bookingReference: string;
+  channel: string;
+  validOn: string;
+  entriesAllowed: number;
+  entriesUsed: number;
+  status: string;
+};
+
+export type GateScanDecision = {
+  result: GateScanResult;
+  code: string;
+  scannedAt: string;
+  /** True when an idempotency key matched an earlier scan; nobody was admitted twice. */
+  replayed: boolean;
+  ticket: TicketSummary | null;
+};
+
+export type ValidateGateScanInput = RecordGateScanInput & {
+  /** Same key on a retry returns the first outcome instead of admitting again. */
+  idempotencyKey?: string;
+};
+
 export class GateScanRepositoryError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
@@ -258,7 +313,121 @@ async function recordInSupabase(input: RecordGateScanInput): Promise<GateScanEve
   return event;
 }
 
+function ticketFromRow(value: unknown): TicketSummary | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  return {
+    ticketCode: String(row.ticket_code ?? ""),
+    product: String(row.product ?? ""),
+    guestName: String(row.guest_name ?? ""),
+    guestPhone: String(row.guest_phone ?? ""),
+    bookingReference: String(row.booking_reference ?? ""),
+    channel: String(row.channel ?? ""),
+    validOn: String(row.valid_on ?? ""),
+    entriesAllowed: Number(row.entries_allowed ?? 0),
+    entriesUsed: Number(row.entries_used ?? 0),
+    status: String(row.status ?? ""),
+  };
+}
+
+async function validateInSupabase(
+  input: ValidateGateScanInput,
+): Promise<GateScanDecision> {
+  const client = createAdminClient();
+  const result = await client.rpc("erp_gate_scan_ticket", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_code: input.code,
+    p_actor_account_id: input.actorId,
+    p_actor_name: input.actorName,
+    p_idempotency_key: input.idempotencyKey ?? null,
+  });
+  if (result.error) {
+    if (/GATE_SCAN_CODE_INVALID/.test(result.error.message ?? "")) {
+      throw new GateScanRepositoryError("Mã vé không hợp lệ.");
+    }
+    throw repositoryError("đối chiếu vé tại cổng", result.error);
+  }
+  const data = (result.data ?? {}) as Record<string, unknown>;
+  return {
+    result: String(data.result ?? "not-found") as GateScanResult,
+    code: String(data.code ?? input.code).toUpperCase(),
+    scannedAt: String(data.scanned_at ?? new Date().toISOString()),
+    replayed: Boolean(data.replayed),
+    ticket: ticketFromRow(data.ticket),
+  };
+}
+
+/**
+ * Demo-cookie mode has no ticket table. Rather than pretend every code is
+ * valid -- which is the behaviour T8 exists to remove -- it accepts only codes
+ * shaped like a real one and reports the rest as not found, so the refusal
+ * path is reachable in local development too.
+ */
+async function validateInCookie(
+  input: ValidateGateScanInput,
+): Promise<GateScanDecision> {
+  const event = await recordInCookie(input);
+  const looksIssued = /^[A-Z]{2,4}-\d{4}-\d{6}$/.test(event.code);
+  return {
+    result: looksIssued ? "accepted" : "not-found",
+    code: event.code,
+    scannedAt: event.scannedAt,
+    replayed: false,
+    ticket: null,
+  };
+}
+
+async function searchTicketsInSupabase(
+  siteId: ErpSiteId,
+  query: string,
+): Promise<TicketSummary[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 3) return [];
+  const client = createAdminClient();
+  const digits = trimmed.replace(/[^0-9]/g, "");
+  // A guest at the counter has lost their phone, not their identity: code,
+  // name or phone all have to find the booking.
+  const filters = [
+    `ticket_code.ilike.%${trimmed}%`,
+    `guest_name.ilike.%${trimmed}%`,
+    `booking_reference.ilike.%${trimmed}%`,
+  ];
+  if (digits.length >= 3) {
+    filters.push(`guest_phone_normalized.ilike.%${digits}%`);
+  }
+  const result = await client
+    .from("erp_tickets")
+    .select(
+      "ticket_code, product, guest_name, guest_phone, booking_reference, channel, valid_on, entries_allowed, entries_used, status",
+    )
+    .eq("tenant_id", TENANT_ID)
+    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId])
+    .or(filters.join(","))
+    .order("valid_on", { ascending: false })
+    .limit(10);
+  if (result.error) throw repositoryError("tra cứu vé", result.error);
+  return (result.data ?? [])
+    .map(ticketFromRow)
+    .filter((ticket): ticket is TicketSummary => ticket !== null);
+}
+
 // --- public API -----------------------------------------------------------
+
+export async function validateGateScan(
+  input: ValidateGateScanInput,
+): Promise<GateScanDecision> {
+  if (readMode() === "supabase") return validateInSupabase(input);
+  return validateInCookie(input);
+}
+
+export async function searchTickets(
+  siteId: ErpSiteId,
+  query: string,
+): Promise<TicketSummary[]> {
+  if (readMode() === "supabase") return searchTicketsInSupabase(siteId, query);
+  return [];
+}
 
 export async function getRecentGateScans(siteId: ErpSiteId): Promise<GateScanEvent[]> {
   if (readMode() === "supabase") return readSupabaseScans(siteId);

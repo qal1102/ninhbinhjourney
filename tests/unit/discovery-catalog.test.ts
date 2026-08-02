@@ -30,9 +30,11 @@ const metadataPath = fileURLToPath(
 
 describe("Ninh Bình discovery catalog and local map", () => {
   it("NBJ-M01 keeps the required destination set stable and unique", () => {
-    expect(DESTINATIONS).toHaveLength(8);
-    expect(new Set(DESTINATIONS.map((item) => item.id)).size).toBe(8);
-    expect(new Set(DESTINATIONS.map((item) => item.slug)).size).toBe(8);
+    // W3 added Tam Chúc: the ERP runs it, and the public web denied it
+    // existed. It is the ninth.
+    expect(DESTINATIONS).toHaveLength(9);
+    expect(new Set(DESTINATIONS.map((item) => item.id)).size).toBe(9);
+    expect(new Set(DESTINATIONS.map((item) => item.slug)).size).toBe(9);
     expect(DESTINATIONS.map((item) => item.slug)).toEqual(
       expect.arrayContaining([...requiredSlugs]),
     );
@@ -41,6 +43,12 @@ describe("Ninh Bình discovery catalog and local map", () => {
   it("NBJ-M02 scopes every POI to the configured tourism core", () => {
     const { south, west, north, east } = NINH_BINH_TOURISM_CORE.bounds;
     for (const destination of DESTINATIONS) {
+      // A destination the operator runs but which genuinely sits outside the
+      // mapped core (Tam Chúc is in Hà Nam) declares that instead of being
+      // quietly dragged inside the bounds. The rule still binds everything
+      // else -- widening the box to swallow it would have made "Ninh Bình
+      // tourism core" mean nothing.
+      if (destination.outsideTourismCore) continue;
       const [latitude, longitude] = destination.coordinates;
       expect(destination.regionKey).toBe(REGION_KEY);
       expect(destination.regionKey).toBe("region-ninh-binh-demo");

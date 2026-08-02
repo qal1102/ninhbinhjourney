@@ -40,6 +40,13 @@ export type DestinationCatalogItem = {
   description: Localized;
   story: Localized;
   coordinates: readonly [number, number];
+  /**
+   * True for a destination the operator runs that lies outside the mapped
+   * Ninh Bình tourism core. Tam Chúc is in Hà Nam; pretending otherwise would
+   * either move the map's bounds to somewhere nobody calls Ninh Bình, or drop
+   * the site the ERP handles most heavily off the public web entirely.
+   */
+  outsideTourismCore?: boolean;
   suggestedMinutes: number;
   interests: readonly DestinationInterest[];
   mobilityLevel: MobilityLevel;
@@ -380,6 +387,53 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       label: "Vietnam National Authority of Tourism — Back to nature at Van Long",
       url: "https://vietnamtourism.gov.vn/en/post/9342",
       reviewedAt: "2026-07-24",
+    },
+  },
+  {
+    // W3: Tam Chúc is the site the ERP handles most heavily -- its own manager,
+    // its own incidents, its own shift closes -- and it appeared nowhere on the
+    // visitor-facing web. A client comparing the two screens found a place the
+    // internal system runs and the public one denies exists. It sits in Hà Nam
+    // rather than Ninh Bình, which the copy says outright instead of quietly
+    // absorbing it into the region.
+    id: "10000000-0000-4000-8000-000000000009",
+    regionId: CORE_IDS.regionId,
+    regionKey: REGION_KEY,
+    slug: "tam-chuc",
+    name: { vi: "Khu du lịch Tam Chúc", en: "Tam Chuc Complex" },
+    editorialLine: {
+      vi: "Quy mô rất lớn, mặt hồ rộng và nhịp đi bộ dài.",
+      en: "Vast scale, an open lake and a long walking rhythm.",
+    },
+    description: {
+      vi: "Quần thể tâm linh quy mô lớn bên hồ, thuộc tỉnh Hà Nam, cách trung tâm Ninh Bình khoảng một giờ xe.",
+      en: "A large lakeside spiritual complex in Ha Nam province, about an hour by road from central Ninh Binh.",
+    },
+    story: {
+      vi: "Tam Chúc thường được ghép cùng Bái Đính thành một ngày trọn vẹn. Khoảng cách giữa các điện lớn nên hãy tính trước thời gian đi bộ và xe điện, nhất là vào mùa lễ hội.",
+      en: "Tam Chuc is usually paired with Bai Dinh to fill a full day. The halls stand far apart, so plan for walking time and the shuttle, especially in festival season.",
+    },
+    coordinates: [20.5579, 105.7817],
+    outsideTourismCore: true,
+    suggestedMinutes: 210,
+    interests: ["heritage", "photography", "family"],
+    mobilityLevel: "moderate",
+    mobilityNote: {
+      vi: "Quãng đi bộ dài và nhiều bậc; nên dùng xe điện và bố trí điểm nghỉ cho người lớn tuổi.",
+      en: "Long distances and many steps; use the shuttle and plan rest stops for older visitors.",
+    },
+    suitableFor: ["children", "seniors"],
+    demoOpeningWindow: "06:00–18:00",
+    image: "/images/destinations/tam-chuc.jpg",
+    imageAlt: {
+      vi: "Quần thể chùa Tam Chúc bên mặt hồ",
+      en: "The Tam Chuc pagoda complex beside its lake",
+    },
+    relatedSlugs: ["bai-dinh", "trang-an", "hoa-lu-ancient-capital"],
+    source: {
+      label: "DestinationOS editorial review — demonstration information",
+      url: nationalTourismGuide,
+      reviewedAt: "2026-08-02",
     },
   },
 ] as const;

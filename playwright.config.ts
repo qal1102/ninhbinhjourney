@@ -33,12 +33,18 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
+  // `NEXT_PUBLIC_*` được Next **nhúng vào bundle lúc build**, không đọc lúc
+  // chạy. Đặt chúng ở `env` bên dưới chỉ phục vụ phần chạy trên máy chủ; nếu
+  // bản build được dựng mà thiếu chúng thì `/plan` trả về màn hình "thiếu cấu
+  // hình" và ba bài journey-planner đỏ vì một lý do không liên quan gì tới sản
+  // phẩm. Vì thế webServer tự dựng lại với đúng bộ biến, thay vì chỉ `start`.
   webServer: remoteBaseUrl
     ? undefined
     : {
-        command: `npm run start -- --hostname 127.0.0.1 --port ${port}`,
+        command: `npm run build && npm run start -- --hostname 127.0.0.1 --port ${port}`,
         url: `http://127.0.0.1:${port}`,
-        timeout: 120_000,
+        // Đủ chỗ cho cả bước build ở trên.
+        timeout: 300_000,
         reuseExistingServer: !process.env.CI,
         env: {
           NEXT_PUBLIC_SUPABASE_URL:

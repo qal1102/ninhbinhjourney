@@ -39,8 +39,28 @@ test("manager handoff persists and accountant prepares the liability journal", a
   await login(page, "ql.vanhanh", "Quanly@2026");
   await page.goto("/erp/trang-an/doi-tac-nha-cung-ung");
 
+  // Bài test cũ giả định `AP-TA-202607-024` đã ở trạng thái "Sẵn sàng hạch
+  // toán" ngay từ đầu. Dữ liệu mồi lại đặt hoá đơn này ở "Cần bổ sung nguồn"
+  // (thiếu biên bản nghiệm thu) — nên nó đỏ, và đỏ vì đúng lý do AGENTS.md
+  // cấm: **giả định một trạng thái mình không tự tạo ra**. Giờ spec tự đưa hồ
+  // sơ tới trạng thái nó cần, bằng chính luồng của sản phẩm.
   const card = invoiceCard(page, "AP-TA-202607-024");
-  await expect(card).toContainText("Sẵn sàng hạch toán");
+  await expect(card).toContainText("Cần bổ sung nguồn");
+  await expect(card).toContainText("Thiếu biên bản nhận hàng/nghiệm thu");
+
+  // Thẻ hồ sơ là một `<details>` đóng sẵn; chưa mở thì mọi ô bên trong đều
+  // không thao tác được.
+  if (!(await card.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await card.locator("summary").click();
+  }
+  await card.locator('input[name="acceptanceReference"]').fill("NT-TA-2026-024");
+  await card.locator('input[name="acceptedTotalVnd"]').fill("118800000");
+  await card
+    .getByRole("button", { name: "Gửi lại cho kế toán" })
+    .click();
+  await expect(card).toContainText("Sẵn sàng hạch toán", {
+    timeout: REMOTE_ACTION_TIMEOUT,
+  });
   await expect(card).not.toContainText("Thiếu biên bản nhận hàng/nghiệm thu");
   await expectNoHorizontalOverflow(page);
 

@@ -23,15 +23,18 @@ test("director sees each operating site as a separate branch", async ({ page }, 
   await expect(page).toHaveURL(/\/erp\/login/);
   await login(page, "giamdoc", "Giamdoc@2026");
 
-  await expect(page.getByRole("heading", { level: 1, name: /11\.450 khách dự kiến · 1,84 tỷ doanh thu/ })).toBeVisible();
-  await expect(page.getByText("Toàn vùng · 4 cơ sở · 28/07/2026", { exact: true })).toBeVisible();
-  await expect(page.getByText("Nhật ký gần đây", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Ngân sách, tiến độ và mốc gần nhất" })).toBeVisible();
-  await expect(page.getByText("Khách dự kiến cả ngày", { exact: true })).toBeVisible();
-  await expect(page.getByText("Chi phí ghi nhận", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /\d+ hồ sơ cần xử lý/ })).toBeVisible();
-  await expect(page.getByText("Dự án & sự kiện", { exact: true })).toBeVisible();
-  await expect(page.getByText("DEC-TC-028", { exact: true })).toBeVisible();
+  // T13 đã xoá bộ số bịa từng đứng ở đầu màn hình này ("11.450 khách dự kiến ·
+  // 1,84 tỷ doanh thu", "Khách dự kiến cả ngày", "Chi phí ghi nhận") cùng với
+  // `domain/erp-operating-data.ts`. Các khẳng định cũ ở đây bám vào đúng những
+  // con số đó, nên chúng đỏ từ lúc T13 xong — và một bài test đỏ thường trực
+  // thì không chặn được hồi quy nào cả. Thay bằng thứ màn hình thật sự hiển
+  // thị, và **kèm khẳng định ngược** để số bịa không lẳng lặng quay lại.
+  await expect(page.getByRole("heading", { name: /hồ sơ đang chờ/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Ca bán vé, công việc và sổ kế toán" }),
+  ).toBeVisible();
+  await expect(page.getByText(/khách dự kiến · .* tỷ doanh thu/)).toHaveCount(0);
+  await expect(page.getByText("Khách dự kiến cả ngày", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Việc sắp đến hạn", { exact: true })).toHaveCount(0);
   await expect(page.locator('a[href="/erp/trang-an"]').first()).toBeVisible();
   await expect(page.locator('a[href="/erp/tam-chuc"]').first()).toBeVisible();
@@ -60,30 +63,26 @@ test("director sees each operating site as a separate branch", async ({ page }, 
   await expect(page.getByText("Việc sắp đến hạn", { exact: true })).toHaveCount(0);
 });
 
-test("director compares finance periods and opens only the selected metric detail", async ({ page }, testInfo) => {
+test("bảng tài chính hợp nhất bịa số đã bị gỡ, không quay lại", async ({ page }, testInfo) => {
+  // Bài này trước đây kiểm màn hình "Tài chính hợp nhất" so sánh kỳ với
+  // 38,6 tỷ doanh thu và 13,6 tỷ lợi nhuận — toàn bộ là số hằng trong mã
+  // nguồn, và T13 đã xoá cả `executive-finance-overview.tsx` lẫn
+  // `finance-dashboard.tsx`. Chủ thể của bài test không còn tồn tại, nên giữ
+  // nguyên là để một bài đỏ vĩnh viễn. Đổi thành hàng rào cho chính T13.
   await login(page, "giamdoc", "Giamdoc@2026");
+  await expect(page.getByRole("heading", { name: "Tài chính hợp nhất" })).toHaveCount(0);
+  await expect(page.getByText("38,6 tỷ")).toHaveCount(0);
+  await expect(page.getByText("13,6 tỷ")).toHaveCount(0);
 
-  await expect(page.getByRole("heading", { name: "Tài chính hợp nhất" })).toBeVisible();
-  await expect(page.getByRole("region", { name: /Chi tiết/ })).toHaveCount(0);
-  await page.getByRole("button", { name: "Tháng", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Tháng · Tháng 7/2026" })).toBeVisible();
-
-  const revenue = page.getByRole("button").filter({ hasText: "38,6 tỷ" });
-  await revenue.click();
-  const revenueDetail = page.getByRole("region", { name: "Chi tiết Doanh thu" });
-  await expect(revenueDetail).toContainText("Tháng trước");
-  await expect(revenueDetail).toContainText("Cùng tháng năm trước");
-  await expect(revenueDetail).toContainText("Vé tham quan");
-  await expect(revenueDetail).toContainText("Nguồn:");
-
-  await page.getByRole("button").filter({ hasText: "13,6 tỷ" }).click();
-  await expect(page.getByRole("region", { name: "Chi tiết Lợi nhuận vận hành" })).toContainText("Tràng An");
-  await expect(revenueDetail).toHaveCount(0);
+  await page.goto("/erp/finance");
+  // Số ở đây phải đến từ hồ sơ thật (ca đã chốt, hoá đơn đã ghi sổ). Không
+  // khẳng định một con số cụ thể — dữ liệu thật thì thay đổi.
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
-  await page.screenshot({ path: testInfo.outputPath("finance-overview-month.png"), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath("finance-overview.png"), fullPage: true });
 });
 
-test("director can open an AI camera view and delegate a field check", async ({ page }) => {
+test("director opens an AI camera view and cannot turn a simulated number into an incident", async ({ page }) => {
   await login(page, "giamdoc", "Giamdoc@2026");
   await page.goto("/erp/tam-chuc/camera-ai");
 
@@ -91,8 +90,13 @@ test("director can open an AI camera view and delegate a field check", async ({ 
   await expect(page.getByText("Camera theo khu vực")).toBeVisible();
   await page.getByRole("button", { name: /CAM 02/ }).click();
   await expect(page.getByRole("dialog", { name: /Camera Bến thuyền/ })).toBeVisible();
-  await page.getByRole("button", { name: "Giao quản lý kiểm tra" }).click();
-  await expect(page.getByRole("status")).toContainText("Đã giao quản lý Tam Chúc");
+
+  // T17: nút "Giao quản lý kiểm tra" từng gửi `feed.people` (số mô phỏng) vào
+  // `reportIncidentFromCameraAction` và tạo một sự cố thật mang số liệu giả.
+  // Nút đã gỡ; bài test giữ cho nó không quay lại, và kiểm màn hình tự khai
+  // báo là mô hình chứ không phải số đo.
+  await expect(page.getByRole("button", { name: "Giao quản lý kiểm tra" })).toHaveCount(0);
+  await expect(page.getByText("Đây là mô hình, không phải số đo")).toBeVisible();
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
@@ -104,7 +108,10 @@ test("director can track an event project with budget, deadline and urgent work"
   await expect(page.getByRole("heading", { level: 1, name: "Dự án & sự kiện" })).toBeVisible();
   await expect(page.getByText("Lễ hội Tràng An 2026")).toBeVisible();
   await expect(page.getByText("12,8 tỷ")).toBeVisible();
-  await expect(page.getByText("Việc đã chuyển cấp")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Gói việc" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Yêu cầu đổi ngân sách / hạn / phạm vi" }),
+  ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
 });
 
@@ -116,8 +123,11 @@ test("employee is blocked from another site and can check attendance by GPS", as
   await context.setGeolocation({ latitude: 20.25245, longitude: 105.91755 });
   await login(page, "nv.trangan", "Nhanvien@2026");
 
-  await expect(page.locator('a[href^="/erp/trang-an/"]').first()).toBeVisible();
-  await expect(page.locator('a[href^="/erp/tam-chuc/"]')).toHaveCount(0);
+  // Khoanh trong `main`: menu di động dựng bằng portal và ẩn trên desktop, mà
+  // link đầu tiên theo thứ tự DOM lại nằm trong đó — `.first()` toàn trang bắt
+  // trúng một phần tử ẩn rồi báo "không nhìn thấy".
+  await expect(page.locator('main a[href^="/erp/trang-an/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href^="/erp/tam-chuc/"]')).toHaveCount(0);
 
   await page.goto("/erp/tam-chuc");
   await expect(page).toHaveURL(/\/erp\?denied=site/);
@@ -137,7 +147,7 @@ test("accountant works from a real source-to-ledger queue without field-control 
 
   await expect(page.getByText("Bàn làm việc kế toán", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: "Phạm Thu Trang" })).toBeVisible();
-  await expect(page.locator('a[href="/erp/finance"]').first()).toBeVisible();
+  await expect(page.locator("main a[href=\"/erp/finance\"]").first()).toBeVisible();
   await expect(page.getByText("Ca của tôi", { exact: true })).toHaveCount(0);
 
   if (testInfo.project.name.startsWith("mobile")) {
@@ -361,12 +371,20 @@ test("employee submits an image-backed field report with accounting trace", asyn
 test("manager can record QR, inspect comparisons and review an employee shift", async ({ page }) => {
   await login(page, "ql.trangan", "Quanly@2026");
   await page.goto("/erp/trang-an/check-in-khach");
+  // Bài này trước đây khẳng định gõ `QR-TEST-2026-001` là "Đã ghi nhận" — tức
+  // là khẳng định đúng cái lỗi T8 đã vá: gõ mã bất kỳ cũng ghi nhận một khách.
+  // Để nguyên thì nguy hiểm hơn là đỏ: ai đó "sửa cho xanh" là mất luôn tính
+  // chất bảo mật. Đảo lại thành hàng rào cho T8.
   await page.getByPlaceholder("Đưa mã vào máy quét hoặc nhập mã QR").fill("QR-TEST-2026-001");
   await page.getByRole("button", { name: "Xác thực & ghi nhận" }).click();
-  await expect(page.getByRole("status")).toContainText("Đã ghi nhận QR-TEST-2026-001");
+  await expect(page.locator('[role="status"], [role="alert"]').first()).not.toContainText(
+    "Đã ghi nhận QR-TEST-2026-001",
+  );
 
-  await page.getByRole("button", { name: "Năm", exact: true }).click();
-  await expect(page.getByText("+15,3% so với bình quân năm 2023–2025")).toBeVisible();
+  // "+15,3% so với bình quân năm 2023–2025" là một chuỗi hằng trong mã nguồn,
+  // đã đi cùng bộ số bịa T13 xoá. Không có ba năm dữ liệu thật nào để so sánh,
+  // nên khẳng định đúng điều đó thay vì chờ nó quay lại.
+  await expect(page.getByText(/so với bình quân năm 2023–2025/)).toHaveCount(0);
 
   await page.goto("/erp/trang-an/ve-dat-cho");
   await expect(page.getByRole("button", { name: "Gửi quản lý xác nhận" })).toHaveCount(0);
@@ -458,9 +476,12 @@ test("ticket shift follows employee to manager and accounting without duplicate 
   await accountingShift
     .getByRole("button", { name: "Chuyển giám đốc quyết định" })
     .click();
-  await expect(accountingShift).toContainText(
-    "Đang chờ quyết định ngoại lệ của giám đốc.",
-  );
+  // Chuyển cấp xong thì hồ sơ **rời khỏi hàng việc của kế toán** — không còn
+  // nằm đó với một dòng trạng thái như bài test cũ chờ đợi. Đây mới là hành vi
+  // đúng: một hồ sơ đang chờ người khác quyết định mà vẫn nằm trong hàng của
+  // mình thì hàng việc mất hết ý nghĩa. Bước giám đốc ngay dưới chứng minh nó
+  // đã sang đúng chỗ, chứ không phải biến mất.
+  await expect(accountingShift).toHaveCount(0);
 
   await logout(page);
   await login(page, "giamdoc", "Giamdoc@2026");
@@ -477,16 +498,21 @@ test("ticket shift follows employee to manager and accounting without duplicate 
   await logout(page);
   await login(page, "ketoan", "Ketoan@2026");
   await page.goto("/erp/finance");
-  const postingShift = page.locator("details").filter({ hasText: shiftCode! });
-  await postingShift.locator("summary").click();
-  await postingShift.getByLabel("Số bút toán").fill("JV-E2E-TA-001");
+  // Giám đốc duyệt xong thì ca quay lại kế toán ở "Hàng lập bút toán". Bài test
+  // cũ tìm một `details` với ô "Số bút toán" và nút "Đối soát xong & liên kết
+  // bút toán" — màn hình lập bút toán đã được dựng lại thành thẻ `article` với
+  // luồng maker/checker (T10), nên khẳng định cũ đỏ dù nghiệp vụ chạy đúng.
+  const postingShift = page.locator("article").filter({ hasText: shiftCode! });
+  await expect(postingShift).toBeVisible();
   await postingShift
-    .getByPlaceholder("Nguồn chênh lệch, chứng từ đã kiểm tra và hướng xử lý")
+    .getByLabel("Ghi chú kiểm tra nguồn")
     .fill("Đã liên kết quyết định ngoại lệ và chứng từ settlement để ghi sổ.");
   await postingShift
-    .getByRole("button", { name: "Đối soát xong & liên kết bút toán" })
+    .getByRole("button", { name: "Lập bút toán và gửi kiểm tra" })
     .click();
-  await expect(postingShift).toContainText("Đã đối soát");
+  // Gửi đi rồi thì rời hàng của kế toán lập, sang kế toán trưởng kiểm tra —
+  // đúng nguyên tắc người lập ≠ người duyệt.
+  await expect(postingShift).toHaveCount(0);
 });
 
 test("manager return goes back to the employee before the same shift can continue", async ({

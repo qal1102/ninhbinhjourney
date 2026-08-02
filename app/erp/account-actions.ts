@@ -20,14 +20,20 @@ import {
 } from "@/lib/erp/account-registry-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 
-export type AccountActionState = {
+// Not exported: a "use server" file may only export async functions. This
+// object export was undetected locally because /erp/tai-khoan's own build
+// happened not to trip the check, but ModuleWorkspace imports every module's
+// workspace component unconditionally, so account-administration.tsx (and
+// this file behind it) ends up bundled into the SAME server-action chunk as
+// every other ERP module -- including ones with no relation to accounts at
+// all. A crash here surfaces as "A 'use server' file can only export async
+// functions" on any POST from any module page, not just this one. See
+// app/erp/actions.ts for where this pattern first broke `next build`
+// locally; this instance only broke at runtime on production, because the
+// bad chunk is resolved lazily when an action actually gets invoked.
+type AccountActionState = {
   status: "idle" | "success" | "error";
   message: string;
-};
-
-export const INITIAL_ACCOUNT_ACTION_STATE: AccountActionState = {
-  status: "idle",
-  message: "",
 };
 
 /**

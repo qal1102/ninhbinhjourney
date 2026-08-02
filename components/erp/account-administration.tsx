@@ -11,11 +11,9 @@ import {
 } from "@/domain/erp-account-roles";
 import {
   grantLoginAction,
-  INITIAL_ACCOUNT_ACTION_STATE,
   setAccountStatusAction,
   setRoleAssignmentAction,
   upsertAccountAction,
-  type AccountActionState,
 } from "@/app/erp/account-actions";
 import type {
   ErpAccountAdminEvent,
@@ -28,6 +26,19 @@ type Props = {
 };
 
 const SITE_NAME_BY_ID = new Map(ERP_SITES.map((site) => [site.id, site.shortName]));
+
+// A "use server" file may only export async functions, so this screen's
+// action-state type and initial value live here instead of in
+// app/erp/account-actions.ts.
+type AccountActionState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
+
+const INITIAL_ACCOUNT_ACTION_STATE: AccountActionState = {
+  status: "idle",
+  message: "",
+};
 
 function ActionMessage({ state }: { state: AccountActionState }) {
   if (state.status === "idle") return null;

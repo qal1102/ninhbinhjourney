@@ -16,14 +16,14 @@ import {
   submitShiftHandover,
 } from "@/lib/erp/shift-handover-repository";
 
-export type ShiftHandoverActionState = {
+// Not exported: a "use server" file may only export async functions. This
+// object export was the second instance of the bug documented next to
+// AccountActionState in app/erp/account-actions.ts -- ModuleWorkspace bundles
+// every module's actions into one server-action chunk, so a bad export here
+// breaks POSTs from unrelated module pages too, not just this one's.
+type ShiftHandoverActionState = {
   status: "idle" | "success" | "error";
   message: string;
-};
-
-export const INITIAL_SHIFT_HANDOVER_STATE: ShiftHandoverActionState = {
-  status: "idle",
-  message: "",
 };
 
 function errorState(error: unknown): ShiftHandoverActionState {

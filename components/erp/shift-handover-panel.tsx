@@ -4,13 +4,24 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import type { ErpSite } from "@/domain/erp";
 import {
-  INITIAL_SHIFT_HANDOVER_STATE,
   decideShiftHandoverAction,
   submitShiftHandoverAction,
-  type ShiftHandoverActionState,
 } from "@/app/erp/shift-handover-actions";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import type { ShiftHandover } from "@/lib/erp/shift-handover-repository";
+
+// A "use server" file may only export async functions, so this panel's
+// action-state type and initial value live here instead of in
+// app/erp/shift-handover-actions.ts.
+type ShiftHandoverActionState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
+
+const INITIAL_SHIFT_HANDOVER_STATE: ShiftHandoverActionState = {
+  status: "idle",
+  message: "",
+};
 
 type Colleague = { id: string; name: string; jobTitle: string };
 

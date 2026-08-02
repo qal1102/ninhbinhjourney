@@ -7,7 +7,36 @@ export type SupplierApStatus =
   | "accounting-returned"
   | "director-exception"
   | "posted"
+  // T10: `posted` used to be the end of the road, so the system could say who
+  // was owed money and never that anybody had been paid. Every payables figure
+  // was therefore a gross total rather than an outstanding one.
+  | "payment-requested"
+  | "paid"
   | "reversed";
+
+export const SUPPLIER_AP_STATUS_LABELS: Readonly<
+  Record<SupplierApStatus, string>
+> = Object.freeze({
+  "match-exception": "Lệch ba chiều",
+  "ready-for-accounting": "Chờ kế toán",
+  "accounting-review": "Chờ kế toán trưởng",
+  "accounting-returned": "Kế toán trả lại",
+  "director-exception": "Chờ giám đốc",
+  posted: "Đã ghi nhận công nợ",
+  "payment-requested": "Chờ duyệt chi",
+  paid: "Đã thanh toán",
+  reversed: "Đã đảo",
+});
+
+export type SupplierApPaymentMethod = "bank-transfer" | "cash" | "offset";
+
+export const SUPPLIER_AP_PAYMENT_METHOD_LABELS: Readonly<
+  Record<SupplierApPaymentMethod, string>
+> = Object.freeze({
+  "bank-transfer": "Chuyển khoản",
+  cash: "Tiền mặt",
+  offset: "Bù trừ công nợ",
+});
 
 export type SupplierApMatchStatus = "matched" | "exception";
 
@@ -119,6 +148,14 @@ export type SupplierApInvoice = {
     | "posted"
     | null;
   journalLines: readonly SupplierApJournalLine[];
+  paymentRequestedByAccountId: string | null;
+  paymentRequestedAt: string | null;
+  paymentMethod: SupplierApPaymentMethod | null;
+  paymentReference: string | null;
+  paymentNote: string | null;
+  paidByAccountId: string | null;
+  paidAt: string | null;
+  paidAmountVnd: number | null;
   submittedAt: string;
   postedAt: string | null;
   createdAt: string;

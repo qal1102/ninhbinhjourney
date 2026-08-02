@@ -297,6 +297,14 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   AP_EXCEPTION_REQUIRES_ACCOUNTANT_VERIFICATION:
     "Ngoại lệ phải được kế toán kiểm tra trước khi trình giám đốc.",
 
+  // --- Thanh toán nhà cung cấp ---
+  AP_INVOICE_NOT_PAYABLE:
+    "Chỉ hóa đơn đã ghi nhận công nợ mới lập được đề nghị chi.",
+  AP_INVOICE_NOT_PENDING_PAYMENT: "Hóa đơn không còn chờ duyệt chi.",
+  AP_PAYMENT_INPUT_INVALID: "Thông tin đề nghị chi chưa hợp lệ.",
+  AP_PAYMENT_AMOUNT_INVALID:
+    "Số tiền chi phải lớn hơn 0 và không vượt giá trị hóa đơn.",
+
   // --- Bàn giao ca ---
   SHIFT_HANDOVER_NOT_FOUND: "Không tìm thấy phiếu bàn giao ca.",
   SHIFT_HANDOVER_INPUT_INVALID: "Dữ liệu bàn giao ca chưa hợp lệ.",

@@ -221,6 +221,8 @@ function asStatus(value: unknown): SupplierApStatus {
     "accounting-returned",
     "director-exception",
     "posted",
+    "payment-requested",
+    "paid",
     "reversed",
   ];
   if (!statuses.includes(value as SupplierApStatus)) {
@@ -396,6 +398,16 @@ function invoiceFromRows(
     journalLines: journalLineRows
       .map(journalLineFromRow)
       .sort((left, right) => left.lineNumber - right.lineNumber),
+    paymentRequestedByAccountId: asNullableString(row.payment_requested_by_account_id),
+    paymentRequestedAt: asNullableString(row.payment_requested_at),
+    paymentMethod: (asNullableString(row.payment_method) ?? null) as SupplierApInvoice["paymentMethod"],
+    paymentReference: asNullableString(row.payment_reference),
+    paymentNote: asNullableString(row.payment_note),
+    paidByAccountId: asNullableString(row.paid_by_account_id),
+    paidAt: asNullableString(row.paid_at),
+    paidAmountVnd: row.paid_amount_vnd === null || row.paid_amount_vnd === undefined
+      ? null
+      : Number(row.paid_amount_vnd),
     submittedAt: asString(row.submitted_at, "Thời điểm gửi"),
     postedAt: asNullableString(row.posted_at),
     createdAt: asString(row.created_at, "Thời điểm tạo"),
@@ -724,6 +736,14 @@ function demoRecord(input: {
           },
         ]
       : [],
+    paymentRequestedByAccountId: null,
+    paymentRequestedAt: null,
+    paymentMethod: null,
+    paymentReference: null,
+    paymentNote: null,
+    paidByAccountId: null,
+    paidAt: null,
+    paidAmountVnd: null,
     submittedAt: now,
     postedAt: input.status === "posted" ? now : null,
     createdAt: now,
@@ -1201,6 +1221,14 @@ export async function submitSupplierInvoice(
       journalVersion: null,
       journalStatus: null,
       journalLines: [],
+      paymentRequestedByAccountId: null,
+      paymentRequestedAt: null,
+      paymentMethod: null,
+      paymentReference: null,
+      paymentNote: null,
+      paidByAccountId: null,
+      paidAt: null,
+      paidAmountVnd: null,
       submittedAt: now,
       postedAt: null,
       createdAt: now,
@@ -1596,6 +1624,146 @@ export async function reviewSupplierInvoiceJournal(
               : "invoice.liability-returned",
           fromStatus: current.status,
           toStatus: status,
+          actorAccountId: context.actorAccountId,
+          actorRole: "chief-accountant",
+          note: context.note,
+        }),
+      ],
+    };
+    return replaceRecord(state, updated);
+  });
+}
+
+/**
+ * T10. `posted` used to be the end of the road, so every payables figure the
+ * product showed was a gross total rather than an outstanding one. These two
+ * commands are the discharge half: the accountant asks to pay, the chief
+ * accountant settles or returns it, and the two may not be the same person --
+ * which matters most sharply at the moment money actually leaves.
+ */
+export async function requestSupplierPayment(
+  invoiceId: string,
+  expectedVersion: number,
+  paymentMethod: NonNullable<SupplierApInvoice["paymentMethod"]>,
+  paymentReference: string,
+  context: CommandContext,
+) {
+  if (readMode() === "supabase") {
+    return rpcMutation(
+      "erp_ap_request_supplier_payment",
+      {
+        p_invoice_id: invoiceId,
+        p_expected_version: expectedVersion,
+        p_actor_account_id: context.actorAccountId,
+        p_payment_method: paymentMethod,
+        p_payment_reference: paymentReference,
+        p_note: context.note,
+        p_idempotency_key: context.idempotencyKey,
+      },
+      invoiceId,
+    );
+  }
+  return mutateDemo(context.idempotencyKey, (state) => {
+    const current = state.records.find((record) => record.id === invoiceId);
+    if (!current) throw new SupplierApRepositoryError("Không tìm thấy hóa đơn.");
+    requireVersion(current, expectedVersion);
+    if (current.status !== "posted") {
+      throw new SupplierApRepositoryConflictError(
+        "Chỉ hóa đơn đã ghi nhận công nợ mới lập được đề nghị chi.",
+      );
+    }
+    const now = new Date().toISOString();
+    const updated: SupplierApInvoice = {
+      ...current,
+      status: "payment-requested",
+      ownerRole: "chief-accountant",
+      version: current.version + 1,
+      paymentRequestedByAccountId: context.actorAccountId,
+      paymentRequestedAt: now,
+      paymentMethod,
+      paymentReference: paymentReference || null,
+      paymentNote: context.note,
+      updatedAt: now,
+      auditTrail: [
+        ...current.auditTrail,
+        nextAudit(current, {
+          eventType: "payment.requested",
+          fromStatus: current.status,
+          toStatus: "payment-requested",
+          actorAccountId: context.actorAccountId,
+          actorRole: "accountant",
+          note: context.note,
+        }),
+      ],
+    };
+    return replaceRecord(state, updated);
+  });
+}
+
+export async function settleSupplierPayment(
+  invoiceId: string,
+  expectedVersion: number,
+  approve: boolean,
+  paidAmountVnd: number | null,
+  context: CommandContext,
+) {
+  if (readMode() === "supabase") {
+    return rpcMutation(
+      "erp_ap_settle_supplier_payment",
+      {
+        p_invoice_id: invoiceId,
+        p_expected_version: expectedVersion,
+        p_actor_account_id: context.actorAccountId,
+        p_approve: approve,
+        p_paid_amount_vnd: paidAmountVnd,
+        p_note: context.note,
+        p_idempotency_key: context.idempotencyKey,
+      },
+      invoiceId,
+    );
+  }
+  return mutateDemo(context.idempotencyKey, (state) => {
+    const current = state.records.find((record) => record.id === invoiceId);
+    if (!current) throw new SupplierApRepositoryError("Không tìm thấy hóa đơn.");
+    requireVersion(current, expectedVersion);
+    if (current.status !== "payment-requested") {
+      throw new SupplierApRepositoryConflictError(
+        "Hóa đơn không còn chờ duyệt chi.",
+      );
+    }
+    if (current.paymentRequestedByAccountId === context.actorAccountId) {
+      throw new SupplierApRepositoryError(
+        "Người lập đề nghị chi không được tự duyệt chi.",
+      );
+    }
+    if (approve && (!paidAmountVnd || paidAmountVnd > current.totalVnd)) {
+      throw new SupplierApRepositoryError(
+        "Số tiền chi phải lớn hơn 0 và không vượt giá trị hóa đơn.",
+      );
+    }
+    const now = new Date().toISOString();
+    const updated: SupplierApInvoice = {
+      ...current,
+      status: approve ? "paid" : "posted",
+      ownerRole: approve ? "none" : "accountant",
+      version: current.version + 1,
+      paidByAccountId: approve ? context.actorAccountId : null,
+      paidAt: approve ? now : null,
+      paidAmountVnd: approve ? paidAmountVnd : null,
+      paymentRequestedByAccountId: approve
+        ? current.paymentRequestedByAccountId
+        : null,
+      paymentRequestedAt: approve ? current.paymentRequestedAt : null,
+      paymentMethod: approve ? current.paymentMethod : null,
+      paymentReference: approve ? current.paymentReference : null,
+      paymentNote: context.note,
+      updatedAt: now,
+      auditTrail: [
+        ...current.auditTrail,
+        nextAudit(current, {
+          eventType: approve ? "payment.settled" : "payment.returned",
+          fromStatus: current.status,
+          toStatus: approve ? "paid" : "posted",
           actorAccountId: context.actorAccountId,
           actorRole: "chief-accountant",
           note: context.note,

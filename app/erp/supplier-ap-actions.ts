@@ -21,8 +21,10 @@ import {
   getSupplierInvoice,
   listSupplierAp,
   prepareSupplierInvoiceJournal,
+  requestSupplierPayment,
   resubmitSupplierInvoice,
   reviewSupplierInvoiceJournal,
+  settleSupplierPayment,
   submitSupplierInvoice,
 } from "@/lib/erp/supplier-ap-repository";
 
@@ -121,7 +123,9 @@ function requireCapability(
     | "ap.liability.prepare"
     | "ap.liability.check"
     | "ap.liability.post"
-    | "ap.exception.decide",
+    | "ap.exception.decide"
+    | "accounting.payment.prepare"
+    | "accounting.journal.check",
 ) {
   if (!hasErpCapability(user.role, capability)) {
     throw new Error("Tài khoản không có quyền thực hiện bước nghiệp vụ này.");
@@ -555,6 +559,112 @@ export async function reviewSupplierInvoiceJournalAction(
         input.decision === "approve"
           ? `${record.journalCode ?? "Bút toán"} đã ghi sổ; công nợ 331 được ghi nhận.`
           : "Đã trả bút toán về kế toán và ghi rõ nội dung cần sửa.",
+      record,
+    };
+  } catch (error) {
+    return errorState(error);
+  }
+}
+
+/**
+ * T10. The two steps that finally discharge a payable. Capability names mirror
+ * the ones already used for the journal: the accountant prepares, the chief
+ * accountant checks. The database refuses if they are the same person, and so
+ * does the repository in demo mode -- this rule is not allowed to hold in only
+ * one of the two persistence paths.
+ */
+export async function requestSupplierPaymentAction(
+  _previous: SupplierApActionState,
+  formData: FormData,
+): Promise<SupplierApActionState> {
+  try {
+    const input = z
+      .object({
+        invoiceId: IdSchema,
+        expectedVersion: VersionSchema,
+        paymentMethod: z.enum(["bank-transfer", "cash", "offset"]),
+        paymentReference: z.string().trim().max(100),
+        note: NoteSchema,
+      })
+      .parse({
+        invoiceId: formData.get("invoiceId"),
+        expectedVersion: formData.get("expectedVersion"),
+        paymentMethod: formData.get("paymentMethod"),
+        paymentReference: formData.get("paymentReference") ?? "",
+        note: formData.get("note"),
+      });
+    const user = requireUser(await getCurrentErpUser());
+    requireCapability(user, "accounting.payment.prepare");
+    const invoice = await loadInvoiceForUser(user, input.invoiceId);
+    const envelope = requestEnvelope("request-supplier-payment", user.id, {
+      invoiceId: input.invoiceId,
+      expectedVersion: input.expectedVersion,
+      paymentMethod: input.paymentMethod,
+      paymentReference: input.paymentReference,
+    });
+    const record = await requestSupplierPayment(
+      input.invoiceId,
+      input.expectedVersion,
+      input.paymentMethod,
+      input.paymentReference,
+      { actorAccountId: user.id, note: input.note, ...envelope },
+    );
+    revalidateSupplierAp(invoice.siteId);
+    return {
+      status: "success",
+      message: `${record.caseCode} đã chuyển kế toán trưởng duyệt chi.`,
+      record,
+    };
+  } catch (error) {
+    return errorState(error);
+  }
+}
+
+export async function settleSupplierPaymentAction(
+  _previous: SupplierApActionState,
+  formData: FormData,
+): Promise<SupplierApActionState> {
+  try {
+    const decision = String(formData.get("decision") ?? "");
+    if (decision !== "settle" && decision !== "return") {
+      throw new Error("Quyết định duyệt chi không hợp lệ.");
+    }
+    const input = z
+      .object({
+        invoiceId: IdSchema,
+        expectedVersion: VersionSchema,
+        paidAmountVnd: MoneySchema.optional(),
+        note: NoteSchema,
+      })
+      .parse({
+        invoiceId: formData.get("invoiceId"),
+        expectedVersion: formData.get("expectedVersion"),
+        paidAmountVnd: formData.get("paidAmountVnd") ?? undefined,
+        note: formData.get("note"),
+      });
+    const user = requireUser(await getCurrentErpUser());
+    requireCapability(user, "accounting.journal.check");
+    const invoice = await loadInvoiceForUser(user, input.invoiceId);
+    const envelope = requestEnvelope("settle-supplier-payment", user.id, {
+      invoiceId: input.invoiceId,
+      expectedVersion: input.expectedVersion,
+      decision,
+      paidAmountVnd: input.paidAmountVnd ?? 0,
+    });
+    const record = await settleSupplierPayment(
+      input.invoiceId,
+      input.expectedVersion,
+      decision === "settle",
+      decision === "settle" ? (input.paidAmountVnd ?? null) : null,
+      { actorAccountId: user.id, note: input.note, ...envelope },
+    );
+    revalidateSupplierAp(invoice.siteId);
+    return {
+      status: "success",
+      message:
+        decision === "settle"
+          ? `${record.caseCode} đã ghi nhận thanh toán cho nhà cung cấp.`
+          : `${record.caseCode} đã trả lại kế toán để bổ sung đề nghị chi.`,
       record,
     };
   } catch (error) {

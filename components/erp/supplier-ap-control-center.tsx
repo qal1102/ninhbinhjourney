@@ -7,7 +7,9 @@ import {
   escalateSupplierInvoiceAction,
   prepareSupplierInvoiceJournalAction,
   resubmitSupplierInvoiceAction,
+  requestSupplierPaymentAction,
   reviewSupplierInvoiceJournalAction,
+  settleSupplierPaymentAction,
   submitSupplierInvoiceAction,
   type SupplierApActionState,
 } from "@/app/erp/supplier-ap-actions";
@@ -71,6 +73,14 @@ function statusMeta(status: SupplierApInvoice["status"]) {
     },
     posted: {
       label: "Đã ghi nhận công nợ",
+      className: "bg-[#dff1e8] text-[#246249]",
+    },
+    "payment-requested": {
+      label: "Chờ duyệt chi",
+      className: "bg-[#fff0ce] text-[#77531c]",
+    },
+    paid: {
+      label: "Đã thanh toán",
       className: "bg-[#dff1e8] text-[#246249]",
     },
     reversed: {
@@ -308,6 +318,106 @@ function CreateInvoiceForm({
         <ActionMessage state={state} />
       </form>
     </details>
+  );
+}
+
+/**
+ * T10. A liability the system can recognise but never discharge leaves every
+ * payables figure a gross total. These two forms are the discharge: the
+ * accountant asks, the chief accountant settles -- and never the same person.
+ */
+function PaymentRequestForm({ invoice }: { invoice: SupplierApInvoice }) {
+  const [state, action] = useActionState(
+    requestSupplierPaymentAction,
+    INITIAL_ACTION_STATE,
+  );
+  return (
+    <form action={action} className="mt-4 border-t border-[#e0e7e3] pt-4">
+      <input type="hidden" name="invoiceId" value={invoice.id} />
+      <input type="hidden" name="expectedVersion" value={invoice.version} />
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#477565]">
+        Đề nghị chi · {formatVnd(invoice.totalVnd)}
+      </p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <label className="grid gap-1 text-xs font-bold text-[#5f7068]">
+          Hình thức chi
+          <select
+            name="paymentMethod"
+            required
+            defaultValue="bank-transfer"
+            className="min-h-11 min-w-0 rounded-xl border border-[#ced8d1] bg-white px-3 text-sm font-medium"
+          >
+            <option value="bank-transfer">Chuyển khoản</option>
+            <option value="cash">Tiền mặt</option>
+            <option value="offset">Bù trừ công nợ</option>
+          </select>
+        </label>
+        <TextField
+          name="paymentReference"
+          label="Số uỷ nhiệm chi / chứng từ"
+          required={false}
+        />
+      </div>
+      <label className="mt-3 grid gap-1 text-xs font-bold text-[#5f7068]">
+        Lý do đề nghị chi
+        <textarea
+          name="note"
+          required
+          minLength={4}
+          maxLength={2_000}
+          rows={2}
+          defaultValue="Hóa đơn đã ghi nhận công nợ, đến hạn thanh toán theo hợp đồng."
+          className="min-w-0 rounded-xl border border-[#ced8d1] bg-white p-3 text-sm font-medium"
+        />
+      </label>
+      <div className="mt-3">
+        <SubmitButton>Trình kế toán trưởng duyệt chi</SubmitButton>
+      </div>
+      <ActionMessage state={state} />
+    </form>
+  );
+}
+
+function PaymentSettleForm({ invoice }: { invoice: SupplierApInvoice }) {
+  const [state, action] = useActionState(
+    settleSupplierPaymentAction,
+    INITIAL_ACTION_STATE,
+  );
+  return (
+    <form action={action} className="mt-4 border-t border-[#e0e7e3] pt-4">
+      <input type="hidden" name="invoiceId" value={invoice.id} />
+      <input type="hidden" name="expectedVersion" value={invoice.version} />
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#477565]">
+        Duyệt chi · đề nghị bởi {invoice.paymentRequestedByAccountId ?? "—"}
+      </p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <MoneyField
+          name="paidAmountVnd"
+          label="Số tiền thực chi (đ)"
+          defaultValue={invoice.totalVnd}
+        />
+      </div>
+      <label className="mt-3 grid gap-1 text-xs font-bold text-[#5f7068]">
+        Ý kiến kiểm soát
+        <textarea
+          name="note"
+          required
+          minLength={4}
+          maxLength={2_000}
+          rows={2}
+          className="min-w-0 rounded-xl border border-[#ced8d1] bg-white p-3 text-sm font-medium"
+        />
+      </label>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <SubmitButton name="decision" value="settle">
+          Xác nhận đã chi
+        </SubmitButton>
+        <SubmitButton name="decision" value="return" tone="danger">
+          Trả lại kế toán
+        </SubmitButton>
+      </div>
+      <ActionMessage state={state} />
+    </form>
   );
 }
 
@@ -763,6 +873,13 @@ function InvoiceCard({
             invoice.status === "director-exception" &&
             invoice.ownerRole === "director" ? (
               <DirectorDecisionForm invoice={invoice} />
+            ) : null}
+            {user.role === "accountant" && invoice.status === "posted" ? (
+              <PaymentRequestForm invoice={invoice} />
+            ) : null}
+            {user.role === "chief-accountant" &&
+            invoice.status === "payment-requested" ? (
+              <PaymentSettleForm invoice={invoice} />
             ) : null}
           </aside>
         </div>

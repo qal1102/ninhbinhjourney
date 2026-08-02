@@ -11,6 +11,7 @@ import {
   hasSystemAdmin,
 } from "@/lib/erp/account-registry-repository";
 import { isRoleSwitchEnabled, type CurrentErpUser } from "@/lib/erp/demo-session";
+import { listRoleSwitchTargets } from "@/lib/erp/staff-directory";
 import { logoutErpAction } from "@/app/erp/actions";
 import { ErpAppControls } from "./erp-app-controls";
 import { ErpDesktopNavigation } from "./erp-desktop-navigation";
@@ -43,6 +44,13 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
   const roleSwitchAvailable =
     isRoleSwitchEnabled() && (user.role === "director" || Boolean(user.actingAs));
 
+  // T14b: danh sách xem thử đọc từ registry, nên tài khoản giám đốc vừa tạo
+  // xuất hiện ngay. Chỉ đọc khi tính năng thật sự bật — mọi trang ERP đều dựng
+  // qua shell này, không nên thêm một truy vấn cho mọi người dùng.
+  const roleSwitchTargets = roleSwitchAvailable
+    ? await listRoleSwitchTargets(user.actingAs ? user.id : undefined)
+    : [];
+
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f2f4f1] text-[#17231f]">
       <header className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
@@ -56,6 +64,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
               currentSiteId={site?.id}
               modules={visibleModules}
               roleSwitchEnabled={roleSwitchAvailable}
+              roleSwitchTargets={roleSwitchTargets}
               actingAsUserId={user.actingAs ? user.id : undefined}
             />
             <Link href="/erp" className="flex shrink-0 items-center gap-2" aria-label="ERP Ninh Bình">
@@ -96,6 +105,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
               <div className="hidden lg:block">
                 <RoleSwitchControl
                   currentUserId={user.actingAs ? user.id : undefined}
+                  targets={roleSwitchTargets}
                 />
               </div>
             ) : null}

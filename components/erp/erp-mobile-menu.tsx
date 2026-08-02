@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { logoutErpAction } from "@/app/erp/actions";
 import { ERP_SITES, type ErpModule, type ErpRole, type ErpSiteId } from "@/domain/erp";
 import { groupVisibleErpModules } from "@/domain/erp-navigation";
+import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 import { RoleSwitchControl } from "./role-switch-control";
 
 type Props = {
@@ -16,6 +17,8 @@ type Props = {
   currentSiteId?: ErpSiteId;
   modules: readonly ErpModule[];
   roleSwitchEnabled?: boolean;
+  /** T14b: danh sach doc tu registry, truyen xuong vi day la client component. */
+  roleSwitchTargets?: readonly ErpStaffDirectoryEntry[];
   /** Account being viewed, when a role switch is already active. */
   actingAsUserId?: string;
 };
@@ -28,6 +31,7 @@ export function ErpMobileMenu({
   currentSiteId,
   modules,
   roleSwitchEnabled,
+  roleSwitchTargets = [],
   actingAsUserId,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -111,7 +115,7 @@ export function ErpMobileMenu({
 
             {roleSwitchEnabled ? (
               <div className="border-t border-[#dce3de] p-4">
-                <RoleSwitchControl currentUserId={actingAsUserId} />
+                <RoleSwitchControl currentUserId={actingAsUserId} targets={roleSwitchTargets} />
               </div>
             ) : null}
 

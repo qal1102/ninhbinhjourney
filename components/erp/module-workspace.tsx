@@ -20,6 +20,7 @@ import type {
 } from "@/lib/erp/gate-scan-repository";
 import type { ProjectWorkspace } from "@/lib/erp/project-repository";
 import type { ShiftHandover } from "@/lib/erp/shift-handover-repository";
+import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 import { listWorkdayEmployeeOptions } from "@/lib/erp/workday-view";
 import { AttendancePanel } from "./attendance-panel";
 import { ShiftHandoverPanel } from "./shift-handover-panel";
@@ -53,6 +54,7 @@ type Props = {
   ticketSales: TicketSalesSummary | null;
   projectWorkspace: ProjectWorkspace | null;
   shiftHandovers: readonly ShiftHandover[];
+  staffDirectory: readonly ErpStaffDirectoryEntry[];
   initialCameraId?: string;
 };
 
@@ -295,6 +297,7 @@ export function ModuleWorkspace({
   ticketSales,
   projectWorkspace,
   shiftHandovers,
+  staffDirectory,
   initialCameraId,
 }: Props) {
   if (module.id === "su-co") {
@@ -330,6 +333,7 @@ export function ModuleWorkspace({
           user={user}
           access={access}
           attendance={attendance}
+          directory={staffDirectory}
         />
       </div>
     );

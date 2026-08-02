@@ -94,6 +94,46 @@ function deriveRoleFromGrants(
 }
 
 /**
+ * T14b — danh tính tối thiểu để đổi phiên và ghi nhật ký, tra ở **cả hai** kho.
+ *
+ * Trước đây mọi bước của tính năng xem thử đều đi qua `findDemoErpAccountById`,
+ * nên một tài khoản do giám đốc tạo trên `/erp/tai-khoan` sẽ bị từ chối với
+ * "Không tìm thấy tài khoản để xem thử" — kể cả khi nó đã hiện trong danh sách
+ * chọn. Danh sách và hành động phải nhìn cùng một nguồn, nếu không màn hình chỉ
+ * là hình vẽ.
+ *
+ * Không nới quyền: tài khoản không đăng nhập được (`suspended`/`revoked`) hoặc
+ * không giữ vai trò nghiệp vụ nào đều trả `null` như trước.
+ */
+type SwitchIdentity = {
+  id: string;
+  name: string;
+  role: DemoErpAccount["role"];
+};
+
+async function resolveSwitchIdentity(
+  accountId: string | undefined,
+): Promise<SwitchIdentity | null> {
+  if (!accountId) return null;
+  const demo = findDemoErpAccountById(accountId);
+  if (demo) return { id: demo.id, name: demo.name, role: demo.role };
+  const registry = await getRegistryAccount(accountId).catch(() => null);
+  if (!registry || !canAccountSignIn(registry.status)) return null;
+  const role = deriveRoleFromGrants(registry);
+  if (!role) return null;
+  return { id: registry.accountId, name: registry.displayName, role };
+}
+
+async function resolveActingAs(
+  directorAccountId: string | undefined,
+): Promise<CurrentErpUser["actingAs"]> {
+  const director = await resolveSwitchIdentity(directorAccountId);
+  return director
+    ? { directorId: director.id, directorName: director.name }
+    : undefined;
+}
+
+/**
  * Builds a session purely from the registry + grant stores -- no read of
  * `demo-data.ts` at all. This is what makes a director-created account (one
  * that was never hand-written into that file) actually able to sign in and
@@ -103,7 +143,12 @@ function deriveRoleFromGrants(
  */
 async function buildCurrentUserFromRegistry(
   account: ErpRegistryAccount,
-  authUserId: string,
+  /**
+   * Vắng mặt khi phiên không đến từ Supabase Auth — trường hợp duy nhất hiện
+   * nay là giám đốc "xem thử" một tài khoản chỉ tồn tại trong registry (T14b).
+   */
+  authUserId?: string,
+  actingAs?: CurrentErpUser["actingAs"],
 ): Promise<CurrentErpUser | null> {
   const role = deriveRoleFromGrants(account);
   if (!role) return null;
@@ -116,8 +161,11 @@ async function buildCurrentUserFromRegistry(
     role,
     jobTitle: account.jobTitle,
     initialModuleIds: [] as ErpModuleId[],
-    mustChangePassword: account.mustChangePassword,
+    // Xem thử thì không được bắt đổi mật khẩu: đó là mật khẩu của người khác,
+    // và giám đốc không có gì để đổi.
+    mustChangePassword: authUserId ? account.mustChangePassword : false,
     authUserId,
+    actingAs,
   };
 
   if (role === "director") {
@@ -308,7 +356,20 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
   const session = decodeSigned<SessionPayload>(store.get(SESSION_COOKIE)?.value);
   if (!session || session.expiresAt <= Date.now()) return null;
   const account = findDemoErpAccountById(session.userId);
-  if (!account) return null;
+  if (!account) {
+    // T14b: phiên trỏ vào một tài khoản không có trong mã nguồn. Đường duy
+    // nhất tạo ra phiên như vậy là giám đốc xem thử một tài khoản do chính họ
+    // tạo trên `/erp/tai-khoan`. Không phải lỗi, và cũng không nới quyền:
+    // danh tính vẫn dựng từ registry + phiếu cấp quyền, đúng như khi người đó
+    // tự đăng nhập bằng Supabase Auth.
+    const registryOnly = await getRegistryAccount(session.userId).catch(() => null);
+    if (!registryOnly || !canAccountSignIn(registryOnly.status)) return null;
+    return buildCurrentUserFromRegistry(
+      registryOnly,
+      undefined,
+      await resolveActingAs(session.actingAsFor),
+    );
+  }
   // T6: suspension has to bite on every request, not only at the login form,
   // or a suspended person keeps working until their cookie expires.
   if (!(await isRegistryAccountAllowedIn(account.id))) return null;
@@ -323,12 +384,7 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
     initialModuleIds: account.initialModuleIds,
     workforceProfile: account.workforceProfile,
   };
-  const actingAs = session.actingAsFor
-    ? (() => {
-        const director = findDemoErpAccountById(session.actingAsFor!);
-        return director ? { directorId: director.id, directorName: director.name } : undefined;
-      })()
-    : undefined;
+  const actingAs = await resolveActingAs(session.actingAsFor);
 
   if (account.role === "director") {
     const allModules = ERP_MODULES.map((module) => module.id);
@@ -417,10 +473,10 @@ export function isRoleSwitchEnabled() {
 }
 
 export type RoleSwitchResult = {
-  director: DemoErpAccount;
-  target: DemoErpAccount;
+  director: SwitchIdentity;
+  target: SwitchIdentity;
   /** The account being viewed before this switch, when hopping role to role. */
-  previous: DemoErpAccount | null;
+  previous: SwitchIdentity | null;
 };
 
 /**
@@ -450,14 +506,14 @@ export async function startRoleSwitch(targetUserId: string): Promise<RoleSwitchR
   }
   // Mid-switch the session's own userId is the impersonated account, so the
   // real owner is whoever `actingAsFor` names.
-  const director = findDemoErpAccountById(session.actingAsFor ?? session.userId);
+  const director = await resolveSwitchIdentity(session.actingAsFor ?? session.userId);
   if (!director || director.role !== "director") {
     throw new Error("Chỉ tài khoản giám đốc mới dùng được tính năng này.");
   }
   const previous = session.actingAsFor
-    ? (findDemoErpAccountById(session.userId) ?? null)
+    ? await resolveSwitchIdentity(session.userId)
     : null;
-  const target = findDemoErpAccountById(targetUserId);
+  const target = await resolveSwitchIdentity(targetUserId);
   if (!target || target.role === "director") {
     throw new Error("Không tìm thấy tài khoản để xem thử.");
   }
@@ -482,8 +538,8 @@ export async function endRoleSwitch(): Promise<RoleSwitchResult> {
   if (!session || !session.actingAsFor) {
     throw new Error("Không đang xem theo vai trò khác.");
   }
-  const director = findDemoErpAccountById(session.actingAsFor);
-  const target = findDemoErpAccountById(session.userId);
+  const director = await resolveSwitchIdentity(session.actingAsFor);
+  const target = await resolveSwitchIdentity(session.userId);
   if (!director || !target) {
     throw new Error("Không tìm thấy tài khoản để quay lại.");
   }

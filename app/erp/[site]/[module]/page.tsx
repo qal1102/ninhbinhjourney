@@ -13,6 +13,7 @@ import { getRecentGateScans, getTicketSalesSummary } from "@/lib/erp/gate-scan-r
 import { getProjectWorkspace } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listShiftHandovers } from "@/lib/erp/shift-handover-repository";
+import { listStaffDirectory } from "@/lib/erp/staff-directory";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import {
   listWorkdayEmployeeOptions,
@@ -37,7 +38,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   }
   const isTicketModule =
     moduleDefinition.id === "check-in-khach" || moduleDefinition.id === "ve-dat-cho";
-  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers] =
+  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory] =
     await Promise.all([
     getAccessState(),
     getAttendanceState(),
@@ -68,6 +69,10 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
             console.error("Shift handover read failed", error);
             return [];
           })
+        : Promise.resolve([]),
+      // T14b: chi doc khi man hinh that su liet ke nguoi.
+      moduleDefinition.id === "nhan-su"
+        ? listStaffDirectory()
         : Promise.resolve([]),
     ]);
   const query = (await searchParams) ?? {};
@@ -112,6 +117,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         ticketSales={ticketSales}
         projectWorkspace={projectWorkspace}
         shiftHandovers={shiftHandovers}
+        staffDirectory={staffDirectory}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

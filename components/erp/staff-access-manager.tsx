@@ -1,23 +1,23 @@
 import { updateEmployeeAccessAction } from "@/app/erp/actions";
 import { ERP_MODULES, ERP_SITES, type ErpSite } from "@/domain/erp";
-import {
-  findDemoErpAccountById,
-  getEmployeeAssignableModuleIds,
-  isDemoErpAccountActive,
-  listDemoEmployees,
-  listDemoSiteManagers,
-} from "@/lib/erp/demo-data";
 import type {
   AttendanceEvent,
   CurrentErpUser,
   ErpAccessState,
 } from "@/lib/erp/demo-session";
+import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 
 type Props = {
   site: ErpSite;
   user: CurrentErpUser;
   access: ErpAccessState;
   attendance: AttendanceEvent[];
+  /**
+   * T14b: danh bạ đọc từ registry thay cho `DEMO_ERP_ACCOUNTS`. Trước đây một
+   * người do giám đốc tạo trên `/erp/tai-khoan` đăng nhập được nhưng **không
+   * hiện ra ở màn hình này**, tức là tuyển xong không phân được việc.
+   */
+  directory: readonly ErpStaffDirectoryEntry[];
 };
 
 function formatTime(value: string) {
@@ -37,18 +37,31 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export function StaffAccessManager({ site, user, access, attendance }: Props) {
-  const employees = listDemoEmployees().filter((employee) => {
-    const assignedSites = access.employees[employee.id]?.siteIds ?? [];
-    if (user.role === "director") return true;
-    return assignedSites.length === 0 || assignedSites.includes(site.id);
-  });
+export function StaffAccessManager({
+  site,
+  user,
+  access,
+  attendance,
+  directory,
+}: Props) {
+  const nameByAccountId = new Map(
+    directory.map((entry) => [entry.accountId, entry.displayName]),
+  );
+  const employees = directory
+    .filter((entry) => entry.role === "employee")
+    .filter((employee) => {
+      const assignedSites = access.employees[employee.accountId]?.siteIds ?? [];
+      if (user.role === "director") return true;
+      return assignedSites.length === 0 || assignedSites.includes(site.id);
+    });
   // V14: a manager's modules are a real grant now, not a hard-coded all-15.
   // Only the director may change them, and only for the manager who actually
   // runs this site -- the server action re-checks both.
   const siteManagers =
     user.role === "director"
-      ? listDemoSiteManagers().filter((manager) => manager.managedSiteIds.includes(site.id))
+      ? directory.filter(
+          (entry) => entry.role === "manager" && entry.siteIds.includes(site.id),
+        )
       : [];
 
   return (
@@ -62,23 +75,23 @@ export function StaffAccessManager({ site, user, access, attendance }: Props) {
           </p>
           <div className="mt-5 space-y-3">
             {siteManagers.map((manager) => {
-              const managerAccess = access.employees[manager.id] ?? { siteIds: [], moduleIdsBySite: {} };
+              const managerAccess = access.employees[manager.accountId] ?? { siteIds: [], moduleIdsBySite: {} };
               const selectedModules = managerAccess.moduleIdsBySite[site.id] ?? [];
               return (
-                <details key={manager.id} className="group rounded-xl border border-[#e1e7e3] bg-[#fbfcfb] open:border-[#a9bdb3] open:bg-white">
+                <details key={manager.accountId} className="group rounded-xl border border-[#e1e7e3] bg-[#fbfcfb] open:border-[#a9bdb3] open:bg-white">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-black text-[#293a33]">{manager.name}</p>
+                        <p className="font-black text-[#293a33]">{manager.displayName}</p>
                         <span className="rounded-full bg-[#e8edf5] px-2 py-0.5 text-[11px] font-black text-[#49617d]">Quản lý cơ sở</span>
                       </div>
-                      <p className="mt-1 truncate text-sm text-[#75817b]">{manager.jobTitle} · {manager.username}</p>
+                      <p className="mt-1 truncate text-sm text-[#75817b]">{manager.jobTitle} · {manager.email ?? manager.username ?? manager.accountId}</p>
                     </div>
                     <p className="shrink-0 text-xs font-bold text-[#586961]">{selectedModules.length}/{ERP_MODULES.length} nghiệp vụ</p>
                   </summary>
                   <form action={updateEmployeeAccessAction} className="border-t border-[#e5eae7] p-4 sm:p-5">
                     <input type="hidden" name="siteId" value={site.id} />
-                    <input type="hidden" name="employeeId" value={manager.id} />
+                    <input type="hidden" name="employeeId" value={manager.accountId} />
                     {/* A manager's site comes from the org chart, not from this
                         grant, so the site toggle stays on; the checkboxes below
                         are the only lever. */}
@@ -115,40 +128,41 @@ export function StaffAccessManager({ site, user, access, attendance }: Props) {
             <h2 className="mt-2 text-2xl font-black text-[#20342c]">Đội ngũ {site.shortName}</h2>
           </div>
           <span className="w-fit rounded-full bg-[#e8f1ec] px-3 py-1 text-xs font-black text-[#32614f]">
-            {employees.filter((employee) => access.employees[employee.id]?.siteIds.includes(site.id)).length} người được gán
+            {employees.filter((employee) => access.employees[employee.accountId]?.siteIds.includes(site.id)).length} người được gán
           </span>
         </div>
 
         <div className="mt-6 space-y-3">
           {employees.map((employee) => {
-            const employeeAccess = access.employees[employee.id] ?? { siteIds: [], moduleIdsBySite: {} };
+            const employeeAccess = access.employees[employee.accountId] ?? { siteIds: [], moduleIdsBySite: {} };
             const assignedHere = employeeAccess.siteIds.includes(site.id);
             const assignedElsewhere = employeeAccess.siteIds.find((id) => id !== site.id);
             const selectedModules = employeeAccess.moduleIdsBySite[site.id] ?? [];
             const latestAttendance = attendance
-              .filter((event) => event.userId === employee.id && event.siteId === site.id)
+              .filter((event) => event.userId === employee.accountId && event.siteId === site.id)
               .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
             const otherSite = assignedElsewhere ? ERP_SITES.find((candidate) => candidate.id === assignedElsewhere) : null;
-            const active = isDemoErpAccountActive(employee);
-            const locked = !active || Boolean(assignedElsewhere && user.role !== "director");
-            const trainedModules = new Set(getEmployeeAssignableModuleIds(employee));
+            const locked = !employee.active || Boolean(assignedElsewhere && user.role !== "director");
+            // Danh sách module được phép tích do danh bạ quyết định: hồ sơ đào
+            // tạo nếu có, còn không thì mọi module giao được cho nhân viên.
+            const grantable = new Set(employee.grantableModuleIds);
             const assignableModules = ERP_MODULES.filter(
-              (module) => module.employeeAssignable && trainedModules.has(module.id),
+              (module) => module.employeeAssignable && grantable.has(module.id),
             );
             const profile = employee.workforceProfile;
 
             return (
-              <details key={employee.id} className="group rounded-xl border border-[#e1e7e3] bg-[#fbfcfb] open:border-[#a9bdb3] open:bg-white">
+              <details key={employee.accountId} className="group rounded-xl border border-[#e1e7e3] bg-[#fbfcfb] open:border-[#a9bdb3] open:bg-white">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-black text-[#293a33]">{employee.name}</p>
+                      <p className="font-black text-[#293a33]">{employee.displayName}</p>
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${assignedHere ? "bg-[#dcefe7] text-[#236148]" : "bg-[#edf0ee] text-[#6f7b75]"}`}>
                         {assignedHere ? "Đã phân công" : otherSite ? `Thuộc ${otherSite.shortName}` : "Chưa phân công"}
                       </span>
                       {profile ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${profile.employmentType === "seasonal" ? "bg-[#fff0ce] text-[#77531c]" : "bg-[#e8edf5] text-[#49617d]"}`}>{profile.employmentType === "seasonal" ? "Thời vụ" : "Chính thức"}</span> : null}
                     </div>
-                    <p className="mt-1 truncate text-sm text-[#75817b]">{employee.jobTitle} · {employee.username}</p>
+                    <p className="mt-1 truncate text-sm text-[#75817b]">{employee.jobTitle} · {employee.email ?? employee.username ?? employee.accountId}</p>
                     {profile ? <p className="mt-1 text-xs text-[#8a958f]">{profile.primaryStation} · Ca {profile.shiftLabel}{profile.accessEndsAt ? ` · Quyền đến ${formatDate(profile.accessEndsAt)}` : ""}</p> : null}
                   </div>
                   <div className="shrink-0 text-right">
@@ -158,7 +172,7 @@ export function StaffAccessManager({ site, user, access, attendance }: Props) {
                 </summary>
                 <form action={updateEmployeeAccessAction} className="border-t border-[#e5eae7] p-4 sm:p-5">
                   <input type="hidden" name="siteId" value={site.id} />
-                  <input type="hidden" name="employeeId" value={employee.id} />
+                  <input type="hidden" name="employeeId" value={employee.accountId} />
                   <label className="flex items-center gap-3 rounded-xl bg-[#f2f6f3] p-3 text-sm font-black text-[#34473f]">
                     <input type="checkbox" name="siteActive" defaultChecked={assignedHere} disabled={locked} className="h-4 w-4 accent-[#286655]" />
                     Cho phép nhân viên làm việc và xem {site.shortName}
@@ -175,7 +189,11 @@ export function StaffAccessManager({ site, user, access, attendance }: Props) {
                     </div>
                   </fieldset>
                   <div className="mt-4 flex items-center justify-between gap-4">
-                    <p className="text-xs text-[#7c8882]">Chỉ hiện nghiệp vụ người này đã được đào tạo; thay đổi được ghi vào nhật ký.</p>
+                    <p className="text-xs text-[#7c8882]">
+                      {employee.hasTrainingRecord
+                        ? "Chỉ hiện nghiệp vụ người này đã được đào tạo; thay đổi được ghi vào nhật ký."
+                        : "Tài khoản này chưa có hồ sơ đào tạo, nên đang hiện mọi nghiệp vụ giao được cho nhân viên — người giao tự chịu trách nhiệm. Thay đổi được ghi vào nhật ký."}
+                    </p>
                     <button type="submit" disabled={locked} className="min-h-10 rounded-xl bg-[#183f34] px-5 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
                       Lưu phân công
                     </button>
@@ -192,10 +210,10 @@ export function StaffAccessManager({ site, user, access, attendance }: Props) {
         <h2 className="mt-2 text-xl font-black text-[#20342c]">Thay đổi quyền gần đây</h2>
         <ol className="mt-4 divide-y divide-[#e5eae7]">
           {access.audit.filter((event) => event.siteId === site.id).slice(-6).reverse().map((event) => {
-            const target = findDemoErpAccountById(event.targetId);
+            const targetName = nameByAccountId.get(event.targetId);
             return (
               <li key={event.id} className="flex items-center justify-between gap-4 py-3 text-sm">
-                <p><strong>{target?.name ?? event.targetId}</strong> · {event.action === "employee.site.revoked" ? "thu hồi quyền cơ sở" : "cập nhật module"}</p>
+                <p><strong>{targetName ?? event.targetId}</strong> · {event.action === "employee.site.revoked" ? "thu hồi quyền cơ sở" : "cập nhật module"}</p>
                 <time className="shrink-0 text-xs text-[#7d8983]">{new Date(event.createdAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</time>
               </li>
             );

@@ -9,7 +9,7 @@ import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { getAttendanceState } from "@/lib/erp/attendance-repository";
 import { getIncidentCases } from "@/lib/erp/incident-repository";
 import { getFieldReports } from "@/lib/erp/field-report-repository";
-import { getRecentGateScans } from "@/lib/erp/gate-scan-repository";
+import { getRecentGateScans, getTicketSalesSummary } from "@/lib/erp/gate-scan-repository";
 import { getProjectWorkspace } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listShiftHandovers } from "@/lib/erp/shift-handover-repository";
@@ -35,7 +35,9 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   if (!accountCanAccessModule(user, site.id, moduleDefinition.id)) {
     redirect(`/erp/${site.id}?denied=module`);
   }
-  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, projectWorkspace, shiftHandovers] =
+  const isTicketModule =
+    moduleDefinition.id === "check-in-khach" || moduleDefinition.id === "ve-dat-cho";
+  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers] =
     await Promise.all([
     getAccessState(),
     getAttendanceState(),
@@ -53,6 +55,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
       moduleDefinition.id === "check-in-khach"
         ? getRecentGateScans(site.id)
         : Promise.resolve([]),
+      isTicketModule ? getTicketSalesSummary(site.id) : Promise.resolve(null),
       moduleDefinition.id === "du-an-su-kien"
         ? getProjectWorkspace(site.id)
         : Promise.resolve(null),
@@ -106,6 +109,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         incidents={incidents}
         fieldReports={fieldReports}
         gateScans={gateScans}
+        ticketSales={ticketSales}
         projectWorkspace={projectWorkspace}
         shiftHandovers={shiftHandovers}
         initialCameraId={requestedCamera}

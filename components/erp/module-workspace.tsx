@@ -14,7 +14,10 @@ import type {
 } from "@/lib/erp/demo-session";
 import type { IncidentCase } from "@/lib/erp/incident-repository";
 import type { FieldReport } from "@/lib/erp/field-report-repository";
-import type { GateScanEvent } from "@/lib/erp/gate-scan-repository";
+import type {
+  GateScanEvent,
+  TicketSalesSummary,
+} from "@/lib/erp/gate-scan-repository";
 import type { ProjectWorkspace } from "@/lib/erp/project-repository";
 import type { ShiftHandover } from "@/lib/erp/shift-handover-repository";
 import { listWorkdayEmployeeOptions } from "@/lib/erp/workday-view";
@@ -47,6 +50,7 @@ type Props = {
   incidents: readonly IncidentCase[];
   fieldReports: readonly FieldReport[];
   gateScans: readonly GateScanEvent[];
+  ticketSales: TicketSalesSummary | null;
   projectWorkspace: ProjectWorkspace | null;
   shiftHandovers: readonly ShiftHandover[];
   initialCameraId?: string;
@@ -288,6 +292,7 @@ export function ModuleWorkspace({
   incidents,
   fieldReports,
   gateScans,
+  ticketSales,
   projectWorkspace,
   shiftHandovers,
   initialCameraId,
@@ -367,10 +372,10 @@ export function ModuleWorkspace({
     );
   }
   if (module.id === "ve-dat-cho") {
-    return <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} />;
+    return <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} />;
   }
   if (module.id === "check-in-khach") {
-    return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} />;
+    return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} />;
   }
   if (module.id === "doi-tac-nha-cung-ung") {
     return (

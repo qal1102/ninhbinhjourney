@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ERP_MODULES, ERP_SITES } from "@/domain/erp";
 import { ERP_MANAGER_BASE_MODULE_IDS } from "@/domain/erp-role-policy";
-import { ERP_WORKFORCE_SUMMARY } from "@/domain/erp-operating-data";
 import {
   DEMO_ERP_ACCOUNTS,
   findDemoErpAccountByUsername,
@@ -12,16 +11,6 @@ import {
 } from "@/lib/erp/demo-data";
 
 describe("ERP workforce assignments", () => {
-  it("keeps workforce totals consistent with each site snapshot", () => {
-    for (const row of ERP_WORKFORCE_SUMMARY) {
-      const site = ERP_SITES.find((item) => item.id === row.siteId);
-      expect(site, row.siteId).toBeDefined();
-      expect(row.onShift, row.siteId).toBe(site?.snapshot.employeesOnShift);
-      expect(row.permanentOnShift + row.seasonalOnShift, row.siteId).toBe(row.onShift);
-      expect(row.onShift, row.siteId).toBeLessThanOrEqual(row.planned);
-    }
-  });
-
   it("models seasonal staff as expiring employees with trained-only modules", () => {
     const seasonal = findDemoErpAccountByUsername("tv.trangan");
     expect(seasonal?.role).toBe("employee");

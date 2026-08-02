@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { reportIncidentFromCameraAction } from "@/app/erp/actions";
 import type { ErpSite } from "@/domain/erp";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 
@@ -53,13 +52,11 @@ const statusStyle: Record<CameraStatus, { label: string; className: string }> = 
   offline: { label: "Mất tín hiệu", className: "bg-[#ecefed] text-[#68756f]" },
 };
 
-export function CameraAiWorkspace({ site, user, initialCameraId }: Props) {
+export function CameraAiWorkspace({ site, initialCameraId }: Props) {
   const feeds = useMemo(() => createFeeds(site), [site]);
   const [filter, setFilter] = useState<"all" | CameraStatus>("all");
   const [selected, setSelected] = useState<CameraFeed | null>(null);
   const [now, setNow] = useState<Date | null>(null);
-  const [actionMessage, setActionMessage] = useState("");
-  const [isReporting, setIsReporting] = useState(false);
   const viewerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,7 +66,6 @@ export function CameraAiWorkspace({ site, user, initialCameraId }: Props) {
     if (!requestedFeed) return;
     const timer = window.setTimeout(() => {
       setSelected(requestedFeed);
-      setActionMessage("");
     }, 0);
     return () => window.clearTimeout(timer);
   }, [feeds, initialCameraId]);
@@ -99,23 +95,6 @@ export function CameraAiWorkspace({ site, user, initialCameraId }: Props) {
     await viewerRef.current?.requestFullscreen?.();
   }
 
-  async function createAction(feed: CameraFeed) {
-    setIsReporting(true);
-    try {
-      const result = await reportIncidentFromCameraAction({
-        siteId: site.id,
-        cameraName: feed.name,
-        zone: feed.zone,
-        note: feed.note,
-        peopleCount: feed.people,
-        cameraStatus: feed.status,
-      });
-      setActionMessage(result.message);
-    } finally {
-      setIsReporting(false);
-    }
-  }
-
   return (
     <div className="min-w-0 space-y-5">
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -141,7 +120,7 @@ export function CameraAiWorkspace({ site, user, initialCameraId }: Props) {
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           {visibleFeeds.map((feed) => (
-            <button key={feed.id} type="button" onClick={() => { setSelected(feed); setActionMessage(""); }} className="group overflow-hidden rounded-2xl border border-[#dce3df] bg-[#122a23] text-left shadow-sm transition hover:border-[#769b8c]">
+            <button key={feed.id} type="button" onClick={() => setSelected(feed)} className="group overflow-hidden rounded-2xl border border-[#dce3df] bg-[#122a23] text-left shadow-sm transition hover:border-[#769b8c]">
               <div className="relative aspect-video overflow-hidden">
                 {feed.status !== "offline" ? <Image src={site.image} alt={`Khung hình ${feed.zone}`} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover opacity-80 transition duration-700 group-hover:scale-[1.03]" style={{ objectPosition: feed.position }} /> : <div className="absolute inset-0 grid place-items-center bg-[#25342f] text-sm font-bold text-white/45">Không có tín hiệu</div>}
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,18,14,.42),transparent_38%,rgba(5,18,14,.72))]" />
@@ -175,7 +154,24 @@ export function CameraAiWorkspace({ site, user, initialCameraId }: Props) {
                 {selected.status !== "offline" ? <div className="absolute bottom-[18%] left-[23%] h-20 w-16 rounded border-2 border-[#83e7b5]"><span className="absolute -top-6 left-0 bg-[#83e7b5] px-1.5 py-0.5 text-[9px] font-black text-[#11362a]">PERSON</span></div> : null}
                 <button type="button" onClick={enterFullscreen} className="absolute bottom-4 right-4 rounded-lg bg-black/55 px-3 py-2 text-xs font-black text-white">Toàn màn hình</button>
               </div>
-              <aside className="p-5 sm:p-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#477565]">Phân tích hiện trường</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-xl bg-white p-4"><p className="text-xs text-[#75827c]">Mật độ</p><p className="mt-1 text-2xl font-black text-[#294139]">{selected.people}</p></div><div className="rounded-xl bg-white p-4"><p className="text-xs text-[#75827c]">Độ tin cậy</p><p className="mt-1 text-2xl font-black text-[#294139]">{selected.confidence}%</p></div></div><p className="mt-4 rounded-xl bg-white p-4 text-sm leading-6 text-[#5f7068]">{selected.note}. AI chỉ đếm và nhận dạng tình huống an toàn, không nhận diện danh tính.</p><button type="button" disabled={isReporting} onClick={() => createAction(selected)} className="mt-4 min-h-11 w-full rounded-xl bg-[#183f34] px-4 text-sm font-black text-white disabled:cursor-wait disabled:opacity-60">{isReporting ? "Đang tạo hồ sơ..." : user.role === "director" ? "Giao quản lý kiểm tra" : user.role === "manager" ? "Tạo phiếu hiện trường" : "Báo quản lý"}</button>{actionMessage ? <p role="status" className="mt-3 rounded-xl bg-[#dff0e8] p-3 text-xs font-bold text-[#286149]">{actionMessage}</p> : null}</aside>
+              <aside className="p-5 sm:p-6">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#477565]">Phân tích hiện trường</p>
+                <div className="mt-4 rounded-xl border border-[#efd4a8] bg-[#fff9ed] p-4 text-sm leading-6 text-[#7a5a1d]">
+                  <p className="font-black">Số đếm người và độ tin cậy tạm khoá</p>
+                  <p className="mt-1">
+                    Camera này chưa nối cảm biến đếm người thật — số liệu ở đây
+                    trước nay là mô phỏng, không phải AI đo được. Đã tắt tạm
+                    nút tạo sự cố từ camera để số mô phỏng không lọt vào nhật
+                    ký sự cố thật, chờ quyết định hướng làm thật (T17,
+                    docs/HANDOFF.md).
+                  </p>
+                </div>
+                <p className="mt-4 rounded-xl bg-white p-4 text-sm leading-6 text-[#5f7068]">
+                  Phát hiện bất thường qua hình ảnh trực tiếp thì vẫn báo qua{" "}
+                  <span className="font-bold">Báo cáo hiện trường</span> hoặc{" "}
+                  <span className="font-bold">Sự cố &amp; điều phối</span> như bình thường.
+                </p>
+              </aside>
             </div>
           </section>
         </div>, document.body) : null}

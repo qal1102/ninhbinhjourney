@@ -297,6 +297,15 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   AP_EXCEPTION_REQUIRES_ACCOUNTANT_VERIFICATION:
     "Ngoại lệ phải được kế toán kiểm tra trước khi trình giám đốc.",
 
+  // --- Quản trị tài khoản ---
+  ACCOUNT_ADMIN_ROLE_REQUIRED:
+    "Chỉ tài khoản có quyền quản trị hệ thống mới tạo, khoá hoặc cấp vai trò được.",
+  ACCOUNT_ADMIN_ACCOUNT_NOT_FOUND: "Không tìm thấy tài khoản này.",
+  ACCOUNT_ADMIN_INPUT_INVALID: "Thông tin tài khoản chưa hợp lệ.",
+  ACCOUNT_ADMIN_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
+  ACCOUNT_ADMIN_CANNOT_LOCK_SELF:
+    "Không tự khoá hoặc tự thu hồi quyền quản trị của chính mình được — sẽ không còn đường mở lại.",
+
   // --- Thương mại (stack /ops) ---
   CAPACITY_UNAVAILABLE: "Khung giờ này đã hết chỗ.",
   QUOTE_EXPIRED: "Báo giá đã hết hiệu lực. Hãy tạo lại báo giá mới.",

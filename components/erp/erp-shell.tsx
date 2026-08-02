@@ -6,6 +6,10 @@ import {
   ERP_ROLE_LABELS,
   type ErpSite,
 } from "@/domain/erp";
+import {
+  getRegistryAccount,
+  hasSystemAdmin,
+} from "@/lib/erp/account-registry-repository";
 import { isRoleSwitchEnabled, type CurrentErpUser } from "@/lib/erp/demo-session";
 import { logoutErpAction } from "@/app/erp/actions";
 import { ErpAppControls } from "./erp-app-controls";
@@ -22,7 +26,10 @@ type Props = {
   children: ReactNode;
 };
 
-export function ErpShell({ user, site, activeModuleId, children }: Props) {
+export async function ErpShell({ user, site, activeModuleId, children }: Props) {
+  // T6/T7: the account-administration entry point appears only for the
+  // `system-admin` grant, which is a separate power from being the director.
+  const systemAdmin = hasSystemAdmin(await getRegistryAccount(user.id));
   const visibleModules = site
     ? ERP_MODULES.filter((module) =>
         (user.moduleIdsBySite[site.id] ?? []).includes(module.id),
@@ -77,6 +84,14 @@ export function ErpShell({ user, site, activeModuleId, children }: Props) {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ErpAppControls role={user.role} />
+            {systemAdmin ? (
+              <Link
+                href="/erp/tai-khoan"
+                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
+              >
+                Tài khoản
+              </Link>
+            ) : null}
             {roleSwitchAvailable ? (
               <div className="hidden lg:block">
                 <RoleSwitchControl

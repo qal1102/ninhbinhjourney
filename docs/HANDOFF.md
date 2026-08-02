@@ -1,4 +1,4 @@
-# NINH BÌNH JOURNEY — BÀN GIAO
+,# NINH BÌNH JOURNEY — BÀN GIAO
 
 > **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
 >

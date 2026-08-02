@@ -194,7 +194,11 @@ function sanitizeAccessState(value: ErpAccessState | null): ErpAccessState {
     const candidate = value.employees[account.id];
     if (!candidate) continue;
     const grantableModules = new Set(getGrantableModuleIds(account));
-    const siteIds = candidate.siteIds.filter(isSiteId).slice(0, 1);
+    // T7 removed the `.slice(0, 1)` that used to sit here. One account holding
+    // several sites is the whole point of the multi-site permission model:
+    // "quản lý X phụ trách ba khu" was previously not expressible at any
+    // layer, storage or otherwise.
+    const siteIds = [...new Set(candidate.siteIds.filter(isSiteId))];
     const moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>> = {};
     for (const siteId of siteIds) {
       moduleIdsBySite[siteId] = (candidate.moduleIdsBySite[siteId] ?? [])
@@ -226,12 +230,22 @@ async function writeCookieState(state: ErpAccessState) {
 
 async function updateInCookie(input: UpdateEmployeeAccessInput) {
   const state = await readCookieState();
-  state.employees[input.employeeId] = {
-    siteIds: input.siteActive ? [input.siteContextId] : [],
-    moduleIdsBySite: input.siteActive
-      ? { [input.siteContextId]: input.moduleIds }
-      : {},
+  // T7: grant and revoke act on one site, leaving every other site the account
+  // holds untouched. Previously both replaced the account's entire scope,
+  // which is why nobody could hold two.
+  const current = state.employees[input.employeeId] ?? {
+    siteIds: [],
+    moduleIdsBySite: {},
   };
+  const moduleIdsBySite = { ...current.moduleIdsBySite };
+  let siteIds = current.siteIds.filter((siteId) => siteId !== input.siteContextId);
+  if (input.siteActive) {
+    siteIds = [...siteIds, input.siteContextId];
+    moduleIdsBySite[input.siteContextId] = input.moduleIds;
+  } else {
+    delete moduleIdsBySite[input.siteContextId];
+  }
+  state.employees[input.employeeId] = { siteIds, moduleIdsBySite };
   const auditEvent: ErpAuditEvent = {
     id: crypto.randomUUID(),
     actorId: input.actorId,
@@ -262,15 +276,18 @@ async function readSupabaseState(): Promise<ErpAccessState> {
   if (accessResult.error) {
     throw repositoryError("đọc phân quyền nhân viên", accessResult.error);
   }
+  // T7: one row per (account, site), so an account is assembled from every row
+  // that names it rather than from a single row that could only ever hold one
+  // site.
   const employees: Record<string, EmployeeAccess> = {};
   for (const row of accessResult.data ?? []) {
     const siteId = siteSlugFromUuid(row.site_id);
-    employees[row.employee_account_id as string] = siteId
-      ? {
-          siteIds: [siteId],
-          moduleIdsBySite: { [siteId]: (row.module_ids ?? []) as ErpModuleId[] },
-        }
-      : { siteIds: [], moduleIdsBySite: {} };
+    if (!siteId) continue;
+    const accountId = row.employee_account_id as string;
+    const current = employees[accountId] ?? { siteIds: [], moduleIdsBySite: {} };
+    if (!current.siteIds.includes(siteId)) current.siteIds.push(siteId);
+    current.moduleIdsBySite[siteId] = (row.module_ids ?? []) as ErpModuleId[];
+    employees[accountId] = current;
   }
 
   const auditResult = await client
@@ -314,14 +331,14 @@ async function updateInSupabase(input: UpdateEmployeeAccessInput) {
   if (result.error) {
     throw repositoryError("cập nhật phân quyền nhân viên", result.error);
   }
-  const row = (Array.isArray(result.data) ? result.data[0] : result.data) as {
-    site_id: string | null;
-    module_ids: string[];
+  // The RPC now reports only the row it touched, because revoking one site
+  // deletes that row and leaves the account's other sites alone. Re-read the
+  // account so callers still get its full, current scope.
+  const state = await readSupabaseState();
+  const employeeAccess: EmployeeAccess = state.employees[input.employeeId] ?? {
+    siteIds: [],
+    moduleIdsBySite: {},
   };
-  const siteId = siteSlugFromUuid(row.site_id);
-  const employeeAccess: EmployeeAccess = siteId
-    ? { siteIds: [siteId], moduleIdsBySite: { [siteId]: row.module_ids as ErpModuleId[] } }
-    : { siteIds: [], moduleIdsBySite: {} };
   const auditEvent: ErpAuditEvent = {
     id: crypto.randomUUID(),
     actorId: input.actorId,

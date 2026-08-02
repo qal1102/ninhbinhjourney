@@ -12,6 +12,10 @@ import {
   type DemoErpAccount,
 } from "./demo-data";
 import { getAccessState } from "./staff-access-repository";
+import {
+  getRegistryAccount,
+  sitesFromGrants,
+} from "./account-registry-repository";
 
 export type {
   EmployeeAccess,
@@ -111,12 +115,58 @@ export async function clearErpSession() {
   store.set(SESSION_COOKIE, "", cookieOptions(0));
 }
 
+/**
+ * T6. `erp_account_registry.status` is the switch that lets somebody be locked
+ * out without a deploy. A registry that cannot be read must not lock everyone
+ * out, so an unreachable store falls through to "allowed" — the same posture
+ * every other read in this file takes, and the reason suspension is enforced
+ * again inside the RPCs rather than only here.
+ */
+async function isRegistryAccountAllowedIn(accountId: string): Promise<boolean> {
+  try {
+    const account = await getRegistryAccount(accountId);
+    if (!account) return true;
+    return account.status === "active";
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * T7 lets the registry decide which sites a manager runs. That is only safe
+ * once migrations 025 and 027 have actually been applied: before 025 the
+ * registry still holds the pre-V12 org chart, where one manager carried
+ * `regional-manager` on all four sites, and obeying it would silently widen
+ * that account's scope rather than narrow it.
+ *
+ * So the switch is explicit. Deploy the code, apply the migrations, then set
+ * ERP_REGISTRY_SITE_SCOPE=true. Stopping between any two of those steps leaves
+ * a working system, which is the rule this project broke last time.
+ */
+function isRegistrySiteScopeEnabled() {
+  return process.env.ERP_REGISTRY_SITE_SCOPE === "true";
+}
+
+/** Sites the registry grants this account, empty when it cannot say. */
+async function sitesForAccount(accountId: string): Promise<ErpSiteId[]> {
+  if (!isRegistrySiteScopeEnabled()) return [];
+  try {
+    const account = await getRegistryAccount(accountId);
+    return account ? sitesFromGrants(account) : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
   const store = await cookies();
   const session = decodeSigned<SessionPayload>(store.get(SESSION_COOKIE)?.value);
   if (!session || session.expiresAt <= Date.now()) return null;
   const account = findDemoErpAccountById(session.userId);
   if (!account) return null;
+  // T6: suspension has to bite on every request, not only at the login form,
+  // or a suspended person keeps working until their cookie expires.
+  if (!(await isRegistryAccountAllowedIn(account.id))) return null;
   const safeAccount = {
     id: account.id,
     username: account.username,
@@ -153,11 +203,19 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
   // and the whole permission story only really applied to employees (L13).
   if (account.role === "manager") {
     const managerAccess = (await getAccessState()).employees[account.id];
+    // T7: which sites a manager runs is a grant, not a constant. The org chart
+    // in demo-data.ts is only the starting point now -- a director widening
+    // someone's scope adds a row, and that row has to be what the app obeys,
+    // or the account-management screen would be theatre.
+    const grantedSites = await sitesForAccount(account.id);
+    const siteIds = grantedSites.length
+      ? grantedSites
+      : [...account.managedSiteIds];
     return {
       ...safeAccount,
-      siteIds: [...account.managedSiteIds],
+      siteIds,
       moduleIdsBySite: Object.fromEntries(
-        account.managedSiteIds.map((siteId) => [
+        siteIds.map((siteId) => [
           siteId,
           managerAccess?.moduleIdsBySite[siteId] ?? [],
         ]),

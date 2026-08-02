@@ -124,6 +124,17 @@ for (const [siteId, username, password] of SITE_MANAGERS) {
     });
     await expect(form).toBeAttached({ timeout: 15_000 });
 
+    // The submission form lives inside a collapsed <details> ("Gửi hóa đơn
+    // kèm PO và nghiệm thu") so the page doesn't open with a form dumped in
+    // the reader's face. This is the first Playwright run this spec has
+    // ever made against a real production deploy (the code sat 16 commits
+    // behind origin/main until this session), which is exactly how a
+    // missing "open the disclosure first" step went unnoticed until now.
+    const disclosure = form.locator("xpath=ancestor::details[1]");
+    if (!(await disclosure.evaluate((element) => (element as HTMLDetailsElement).open))) {
+      await disclosure.locator("summary").click();
+    }
+
     // Any active supplier of this site will do; the gate is checked after the
     // supplier lookup, so it has to resolve.
     const supplierSelect = form.locator('select[name="supplierId"]');

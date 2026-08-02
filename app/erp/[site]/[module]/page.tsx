@@ -55,8 +55,15 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
       moduleDefinition.id === "du-an-su-kien"
         ? getProjectWorkspace(site.id)
         : Promise.resolve(null),
+      // The handover panel is additive to a module that already worked, so a
+      // store that cannot answer must not take the whole staffing screen down
+      // with it -- including in the window between deploying this code and
+      // applying migration 029.
       moduleDefinition.id === "nhan-su"
-        ? listShiftHandovers(site.id)
+        ? listShiftHandovers(site.id).catch((error) => {
+            console.error("Shift handover read failed", error);
+            return [];
+          })
         : Promise.resolve([]),
     ]);
   const query = (await searchParams) ?? {};

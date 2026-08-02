@@ -99,12 +99,15 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 />
               </div>
             ) : null}
-            <div className="hidden text-right md:block">
-              <p className="text-sm font-bold text-[#25352f]">{user.name}</p>
+            <Link
+              href={`/erp/ho-so/${user.id}`}
+              className="hidden text-right md:block"
+            >
+              <p className="text-sm font-bold text-[#25352f] hover:underline">{user.name}</p>
               <p className="text-xs text-[#738078]">
                 {ERP_ROLE_LABELS[user.role]} · {user.jobTitle}
               </p>
-            </div>
+            </Link>
             <form action={logoutErpAction} className="hidden lg:block">
               <button
                 type="submit"

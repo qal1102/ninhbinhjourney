@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { ERP_SITES } from "@/domain/erp";
@@ -309,15 +310,23 @@ export function AccountAdministration({ accounts, audit }: Props) {
                   {account.jobTitle} · <span className="font-mono">{account.accountId}</span>
                 </p>
               </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-black ${
-                  account.status === "active"
-                    ? "bg-[#dff1e8] text-[#246249]"
-                    : "bg-[#ffe4de] text-[#934336]"
-                }`}
-              >
-                {ERP_ACCOUNT_STATUS_LABELS[account.status]}
-              </span>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ${
+                    account.status === "active"
+                      ? "bg-[#dff1e8] text-[#246249]"
+                      : "bg-[#ffe4de] text-[#934336]"
+                  }`}
+                >
+                  {ERP_ACCOUNT_STATUS_LABELS[account.status]}
+                </span>
+                <Link
+                  href={`/erp/ho-so/${account.accountId}`}
+                  className="rounded-full border border-[#ced8d1] bg-white px-3 py-1 text-xs font-black text-[#385047] hover:border-[#8fa99f]"
+                >
+                  Xem hồ sơ
+                </Link>
+              </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">

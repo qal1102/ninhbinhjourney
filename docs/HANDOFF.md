@@ -10,7 +10,7 @@
 
 ## 0. ⚠️ VIỆC PHẢI LÀM ĐẦU TIÊN Ở PHIÊN SAU
 
-**Bảy migration (025 → 031) đã viết xong, đã có bài kiểm tra hợp đồng, nhưng CHƯA được đẩy lên Supabase production.** Mỗi phiên gần đây đều bị môi trường chặn lệnh `supabase db push`, không phải vì migration có vấn đề — đây là **việc số một của phiên sau**, mọi thứ khác xếp hàng sau nó.
+**Tám migration (025 → 032) đã viết xong, đã có bài kiểm tra hợp đồng, nhưng CHƯA được đẩy lên Supabase production.** Mỗi phiên gần đây đều bị môi trường chặn lệnh `supabase db push`, không phải vì migration có vấn đề — đây là **việc số một của phiên sau**, mọi thứ khác xếp hàng sau nó.
 
 Cho tới khi đẩy xong, **toàn bộ mục 2 và 3 dưới đây mô tả mã nguồn, không mô tả production.** Không được nói bất kỳ mục nào trong số này là "đã chạy thật" trước khi kiểm chứng.
 
@@ -27,6 +27,7 @@ npx supabase db push --linked
 | `029_erp_shift_handover` | 2 bảng mới | Thấp |
 | `030_erp_ap_payment_settlement` | Sửa trigger + check của `erp_ap_supplier_invoices` | **Cao** — chạm hoá đơn thật |
 | `031_erp_auth_bridge` | T6b. Thêm cột `email`/`must_change_password` + 2 RPC liên kết đăng nhập | Thấp — chỉ cộng thêm, không sửa gì đang chạy |
+| `032_erp_staff_profile` | T14. Thêm cột `phone`/`started_at` + 2 RPC sửa hồ sơ theo cấp quản lý | Thấp — chỉ cộng thêm |
 
 **Sau khi đẩy, theo đúng thứ tự:**
 
@@ -98,9 +99,15 @@ Năm module chưa làm **trước đây hiển thị dữ liệu bịa** — tê
   - **Tìm thấy khi làm:** `user.managedSiteIds` (không phải `user.siteIds`) là thứ `workflow-actions.ts:313` kiểm khi duyệt chốt ca cho quản lý — trước đây nó giữ nguyên `demo-data.ts.managedSiteIds` gốc dù `siteIds` đã được T7 nới rộng qua registry, nên một quản lý được giám đốc cấp thêm cơ sở qua `/erp/tai-khoan` vẫn có thể bị từ chối duyệt ở cơ sở mới với thông báo "Hồ sơ nằm ngoài cơ sở bạn quản lý". Đã sửa cả hai đường dựng phiên (registry và demo-data) để `managedSiteIds` luôn bằng `siteIds`.
   - **Test:** `tests/security/erp-auth-bridge-migration-contract.test.ts` (migration 031), `tests/integration/erp-auth-actions.test.ts` (10 bài — cả hai đường đăng nhập, đăng xuất, ba đường lỗi đổi mật khẩu, một đường thành công). `typecheck`/`lint`/`test:run` (380 bài)/`build` sạch cục bộ.
   - **Chưa kiểm chứng trên production** — migration 031 nằm trong hàng chờ đẩy ở mục 0, và luồng cấp-đăng-nhập-thật chưa từng chạy qua một Supabase thật (chỉ qua giả lập). Bước 5 ở mục 0 là bài kiểm thủ công bắt buộc trước khi công bố "xong".
-  - **Cố ý chưa làm — hai việc riêng, không phải quên:**
-    - **T6c (RLS thật):** vẫn service role + tự kiểm bằng TypeScript. 143 policy chưa bảo vệ gì cho `/erp`. Đây là việc lớn nhất, tách riêng theo đúng nguyên tắc "mỗi bước tự đứng được".
-    - **`staff-access-manager.tsx` và `role-switch-control.tsx` vẫn liệt kê nhân sự từ `DEMO_ERP_ACCOUNTS`**, không từ registry — một nhân viên chỉ tồn tại trong registry (chưa từng ở `demo-data.ts`) đăng nhập được (T6b làm xong việc đó), nhưng chưa hiện ra trong hai màn hình quản lý-cấp-quyền này để được cấp module. Đây chính là việc T14 (hồ sơ nhân sự) phải giải quyết — đã xếp lịch ngay sau, không phải lỗ hổng mới phát sinh.
+  - **Cố ý chưa làm:** **T6c (RLS thật)** — vẫn service role + tự kiểm bằng TypeScript. 143 policy chưa bảo vệ gì cho `/erp`. Việc lớn nhất, tách riêng theo đúng nguyên tắc "mỗi bước tự đứng được".
+
+- ✅🟡 **T14 bước 1 — hồ sơ nhân sự sửa được theo đúng cấp, viết xong, chưa chạy qua production.** Đặc tả đầy đủ ở `SO_TAY_HE_THONG_VI.md` mục 6. Đã làm:
+  - Migration `032`: `erp_account_registry` thêm `phone`, `started_at`; RPC `erp_manager_update_profile` — **không có tham số `status` hay `role` nào cả**, nên không có đường nào cho một quản lý tự nâng quyền qua RPC này dù tầng ứng dụng có lỡ sai; gọi được nếu là `system-admin` hoặc chia sẻ ít nhất một cơ sở với người được sửa (`erp_manager_shares_site_with_account`).
+  - `/erp/ho-so/[accountId]` — 4 khối đúng như sổ tay (danh tính/công việc/quyền hạn/hoạt động), form sửa chỉ hiện khi được phép, nhân viên chỉ xem không sửa được. Vào được từ tên mình trên thanh điều hướng (`erp-shell.tsx`) hoặc nút "Xem hồ sơ" ở `/erp/tai-khoan`.
+  - Khối "Hoạt động" đọc `erp_account_admin_audit` lọc theo `target_account_id` — **đây là bản xem trước một phần của T15**, chỉ có sự kiện quản trị tài khoản (tạo, sửa hồ sơ, cấp/thu hồi vai trò), chưa có thao tác nghiệp vụ (duyệt chi, xử lý sự cố...). Trang tự ghi rõ điều này, không nhận vơ là nhật ký đầy đủ.
+  - **Test:** `tests/security/erp-staff-profile-migration-contract.test.ts` (migration 032), `tests/integration/erp-profile-actions.test.ts` (6 bài). `typecheck`/`lint`/`test:run` (392 bài)/`build` sạch cục bộ.
+  - **Chưa kiểm chứng trên production** — migration 032 xếp hàng sau 031 ở mục 0.
+  - **Cố ý chưa làm — T14 bước 2:** `staff-access-manager.tsx` và `role-switch-control.tsx` vẫn liệt kê nhân sự từ `DEMO_ERP_ACCOUNTS`, không từ registry. Một nhân viên chỉ tồn tại trong registry giờ **đăng nhập được** (T6b) và **có hồ sơ sửa được** (T14 bước 1) — nhưng chưa hiện ra trong hai màn hình đó để được cấp module hay xuất hiện khi giám đốc chọn người xem-thử. Đây là một việc sửa lại một màn hình đang hoạt động, tách riêng có chủ đích khỏi việc mở đường ghi dữ liệu mới ở bước 1.
 - **Không có chế độ ngoại tuyến** ở bất kỳ đâu.
 
 ### 2.7 Dữ liệu còn nhét cứng trong mã nguồn — rà ngày 02/08
@@ -150,16 +157,17 @@ RPC `erp_ap_submit_supplier_invoice` chặn bằng `erp_account_has_active_role(
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|
-| 1 | **T0** | **Đẩy 7 migration + đặt biến môi trường + xác minh** | Mục 0. **Trước mọi thứ khác.** Bao gồm kiểm T6b thủ công trên production (bước 5 của mục 0) |
-| — | ~~T6b~~ | ~~Đăng nhập Supabase Auth~~ | **Bước 1 viết xong 02/08** (mục 2.4) — hai đường đăng nhập song song, cấp đăng nhập qua `/erp/tai-khoan`, bắt đổi mật khẩu lần đầu, phiên dựng thẳng từ registry. Còn RLS thật tách thành T6c bên dưới, và cần bước 5/mục 0 kiểm qua production trước khi tính hẳn là xong |
-| 2 | **T14** | **Hồ sơ nhân sự & chức danh** | Registry đã có `display_name`/`job_title`/`employment_type`. Cần màn hình hồ sơ + trường bổ sung (SĐT, khu vực phụ trách, ngày vào làm) + bảng phân quyền sửa ở `SO_TAY_HE_THONG_VI.md` mục 6, và **chuyển `staff-access-manager.tsx`/`role-switch-control.tsx` từ liệt kê `DEMO_ERP_ACCOUNTS` sang liệt kê registry** (mục 2.4) — nếu không, một nhân viên chỉ tồn tại trong registry đăng nhập được nhưng không ai cấp module cho họ được vì màn hình cấp quyền không thấy họ. **Bẫy: chức danh ≠ vai trò** — quản lý sửa được chức danh nhưng cấp vai trò chỉ giám đốc |
-| 3 | **T15** | **Nhật ký tập trung: ai làm gì, theo tên và khu vực** | Hiện lộn xộn — vài bảng đã snapshot `actor_display_name` (chấm công, chốt ca), vài bảng chỉ có `actor_account_id` (`erp_account_admin_audit`, `erp_employee_access_audit`). Chưa có màn hình xem tập trung. Yêu cầu đầy đủ ở `SO_TAY_HE_THONG_VI.md` mục 5. **Hai bẫy: (a)** phải lưu **cả** ảnh chụp tên/chức danh/khu vực **lẫn** mã tài khoản — chỉ lưu tên thì hai anh Long lẫn nhau, chỉ lưu mã thì đổi cơ sở là viết lại lịch sử; **(b)** phạm vi nhìn phải chặn ở máy chủ, lọc ở giao diện chỉ là giấu |
+| 1 | **T0** | **Đẩy 8 migration + đặt biến môi trường + xác minh** | Mục 0. **Trước mọi thứ khác.** Bao gồm kiểm T6b thủ công trên production (bước 5 của mục 0) |
+| — | ~~T6b bước 1~~ | ~~Đăng nhập Supabase Auth~~ | **Viết xong 02/08** (mục 2.4) — hai đường đăng nhập song song, cấp đăng nhập qua `/erp/tai-khoan`, bắt đổi mật khẩu lần đầu, phiên dựng thẳng từ registry. RLS thật tách thành T6c bên dưới; cần bước 5/mục 0 kiểm qua production trước khi tính hẳn là xong |
+| — | ~~T14 bước 1~~ | ~~Hồ sơ nhân sự sửa được theo cấp~~ | **Viết xong 02/08** (mục 2.4) — `/erp/ho-so/[accountId]`, RPC không có tham số status/role nên quản lý không có đường nâng quyền qua đó. T14 bước 2 (chuyển `staff-access-manager.tsx`/`role-switch-control.tsx` khỏi `DEMO_ERP_ACCOUNTS`) tách riêng, xem mục 2.4 |
+| 2 | **T14b** | **Chuyển `staff-access-manager.tsx` và `role-switch-control.tsx` sang liệt kê registry** | Nếu không làm, một nhân viên chỉ tồn tại trong registry đăng nhập được (T6b) và có hồ sơ (T14 bước 1), nhưng không hiện ra ở màn hình cấp module hay màn hình giám đốc chọn xem-thử. Việc sửa một màn hình đang hoạt động, không phải mở đường ghi mới — cẩn thận không phá luồng demo-cookie hiện có |
+| 3 | **T15** | **Nhật ký tập trung: ai làm gì, theo tên và khu vực** | Đã có một bản xem trước một phần ở `/erp/ho-so` (chỉ sự kiện quản trị tài khoản, xem mục 2.4). Còn thiếu: gộp cả nhật ký nghiệp vụ (duyệt chi, xử lý sự cố...) đang nằm rải rác — vài bảng đã snapshot `actor_display_name`, vài bảng chỉ có `actor_account_id`. Chưa có màn hình xem tập trung toàn hệ thống. Yêu cầu đầy đủ ở `SO_TAY_HE_THONG_VI.md` mục 5. **Hai bẫy: (a)** phải lưu **cả** ảnh chụp tên/chức danh/khu vực **lẫn** mã tài khoản — chỉ lưu tên thì hai anh Long lẫn nhau, chỉ lưu mã thì đổi cơ sở là viết lại lịch sử; **(b)** phạm vi nhìn phải chặn ở máy chủ, lọc ở giao diện chỉ là giấu |
 | 4 | **T13** | **Gỡ số tài chính bịa; tính từ dữ liệu thật** | Mục 2.7. Sửa `ticket-guest-workspace.tsx` lấy doanh thu từ vé quét thật (T8 đã ghi lượt kèm giờ); thay `ERP_WORKFORCE_SUMMARY` bằng số đếm từ registry; **xoá** `executive-finance-overview.tsx` + `finance-dashboard.tsx` (code chết) |
 | 5 | **T10b** | **Đóng nốt đầu tiền mặt:** nộp quỹ → ngân hàng → đối chiếu sao kê sau chốt ca | Chủ dự án đã quyết **làm cả hai nguồn**: `statement_source` = `manual` \| `bank-api`, cùng một bộ đối khớp. **Nhập tay làm trước và làm trọn** (kể cả khi có API vẫn phải có đường nhập tay: API rớt, giao dịch về chậm, khoản nộp quầy không khớp dạng sao kê). Nửa API chỉ viết adapter — **không được tuyên bố chạy được cho tới khi cắm credential thật**. Còn chờ khách cho biết ngân hàng nào |
 | 6 | **T11** | **Sức chứa có ngưỡng thật + SOP Go/No-Go** | Chủ dự án đồng ý cho **tự tính ước lượng trước** vì chưa có số. Bắt buộc: tính bằng mô hình vật lý *(số phương tiện × chỗ/phương tiện ÷ thời gian vòng)*, **hiện phép tính ra màn hình**, và mỗi ngưỡng mang nhãn nguồn `ước-lượng` / `khách-cung-cấp` / `đo-thực-tế`. Đặt ngưỡng **theo giờ tại điểm nghẽn** (bến đò, cửa soát vé, bãi xe điện), không theo tổng ngày — chỗ vỡ trận là 9–10h sáng chứ không phải tổng khách. T8 chạy vài tuần là thay được bằng số đo thật |
 | 7 | **T6c** | **RLS thật thay cho service role + TypeScript** | Việc lớn nhất, dễ bỏ dở nhất, tách khỏi T6b có chủ đích. Viết lại 143 policy theo `erp_account_role_assignments`. Chỉ bắt đầu khi đủ thời gian đi hết |
 | 8 | **T12** | **Dọn ~20 bảng chết của `/ops`** | **Hoãn có lý do:** phải sau khi T6/T7 chạy thật trên production |
-| 9 | **T16** | **Migration xoá dữ liệu mồi để nhập dữ liệu thật** | **Làm cuối cùng**, khi không còn gì nhét cứng (T6b + T13 + W4 xong). Xoá theo điều kiện hẹp (`id like 'INC-%'`, `metadata->>'seed' = 'true'`), **không truncate, không xoá theo khoảng thời gian**. Giữ nguyên cấu hình. Xem `SO_TAY_HE_THONG_VI.md` mục 7 |
+| 9 | **T16** | **Migration xoá dữ liệu mồi để nhập dữ liệu thật** | **Làm cuối cùng**, khi không còn gì nhét cứng (T14b + T13 + W4 xong — `demo-data.ts` chỉ hết vai trò hoàn toàn khi T14b dứt điểm luôn hai màn hình liệt kê còn lại). Xoá theo điều kiện hẹp (`id like 'INC-%'`, `metadata->>'seed' = 'true'`), **không truncate, không xoá theo khoảng thời gian**. Giữ nguyên cấu hình. Xem `SO_TAY_HE_THONG_VI.md` mục 7 |
 | — | **W1** | Dựng lại luồng QR pass **trên `erp_tickets`** (T8 đã tạo nền) | |
 | — | **W2** | Quyết định mô hình thanh toán thật | Quyết định kinh doanh |
 | — | **W4** | Đưa nội dung ra khỏi mã nguồn | Chặn T16 |

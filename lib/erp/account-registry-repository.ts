@@ -41,6 +41,9 @@ export type ErpRegistryAccount = {
   email: string | null;
   /** True until the person signs in and sets their own password. */
   mustChangePassword: boolean;
+  phone: string | null;
+  /** ISO date (yyyy-mm-dd), null when never recorded. */
+  startedAt: string | null;
   grants: ErpRoleGrant[];
 };
 
@@ -132,6 +135,8 @@ function demoRegistry(): ErpRegistryAccount[] {
       // Demo-cookie mode has no Supabase Auth session to change a password
       // in, so there is nothing to force here.
       mustChangePassword: false,
+      phone: null,
+      startedAt: null,
       grants,
     };
   });
@@ -142,7 +147,7 @@ async function readSupabaseRegistry(): Promise<ErpRegistryAccount[]> {
   const accounts = await client
     .from("erp_account_registry")
     .select(
-      "account_id, display_name, job_title, employment_type, status, auth_user_id, email, must_change_password",
+      "account_id, display_name, job_title, employment_type, status, auth_user_id, email, must_change_password, phone, started_at",
     )
     .eq("tenant_id", TENANT_ID)
     .order("account_id", { ascending: true });
@@ -188,6 +193,8 @@ async function readSupabaseRegistry(): Promise<ErpRegistryAccount[]> {
       hasAuthUser: row.auth_user_id !== null,
       email: row.email === null ? null : String(row.email),
       mustChangePassword: Boolean(row.must_change_password),
+      phone: row.phone === null ? null : String(row.phone),
+      startedAt: row.started_at === null ? null : String(row.started_at),
       grants: grantsByAccount.get(String(row.account_id)) ?? [],
     };
   });
@@ -259,15 +266,38 @@ export function hasSystemAdmin(account: ErpRegistryAccount | null): boolean {
   );
 }
 
+/**
+ * T14: a profile is visible to its own account, to a manager who shares at
+ * least one site with it, and to anyone holding `system-admin`. This is the
+ * same shared-site rule `erp_manager_update_profile` enforces at the RPC
+ * layer for *writes* -- kept here, on the read side, as a plain TypeScript
+ * function rather than a round trip, since visibility only gates what a page
+ * renders and the RPC is the actual authority the moment someone submits an
+ * edit.
+ */
+export function canViewRegistryProfile(
+  viewer: { accountId: string; siteIds: readonly ErpSiteId[] },
+  isSystemAdminViewer: boolean,
+  target: ErpRegistryAccount,
+): boolean {
+  if (isSystemAdminViewer) return true;
+  if (viewer.accountId === target.accountId) return true;
+  const targetSites = sitesFromGrants(target);
+  return targetSites.some((siteId) => viewer.siteIds.includes(siteId));
+}
+
 export async function listAccountAdminAudit(
   limit = 30,
+  targetAccountId?: string,
 ): Promise<ErpAccountAdminEvent[]> {
   if (readMode() !== "supabase") return [];
   const client = createAdminClient();
-  const result = await client
+  let query = client
     .from("erp_account_admin_audit")
     .select("id, actor_account_id, target_account_id, action, detail, created_at")
-    .eq("tenant_id", TENANT_ID)
+    .eq("tenant_id", TENANT_ID);
+  if (targetAccountId) query = query.eq("target_account_id", targetAccountId);
+  const result = await query
     .order("created_at", { ascending: false })
     .limit(limit);
   if (result.error) throw registryError("đọc nhật ký quản trị", result.error);
@@ -353,6 +383,40 @@ export async function setRegistryRoleAssignment(input: {
     p_active: input.active,
   });
   if (result.error) throw registryError("đổi phân vai trò", result.error);
+}
+
+export type UpdateProfileInput = {
+  actorAccountId: string;
+  accountId: string;
+  displayName: string;
+  jobTitle: string;
+  phone: string;
+  employmentType: string;
+};
+
+/**
+ * The manager/system-admin path for editing a profile. Deliberately cannot
+ * touch status or role -- `erp_manager_update_profile` has no parameter for
+ * either, so there is no request shape that could smuggle a privilege change
+ * through here even if a future edit to this function got that wrong.
+ */
+export async function updateRegistryProfile(input: UpdateProfileInput) {
+  if (readMode() !== "supabase") {
+    throw new AccountRegistryError(
+      "Chế độ demo cục bộ không lưu được hồ sơ. Bật ERP_PERSISTENCE_MODE=supabase.",
+    );
+  }
+  const client = createAdminClient();
+  const result = await client.rpc("erp_manager_update_profile", {
+    p_tenant_id: TENANT_ID,
+    p_actor_account_id: input.actorAccountId,
+    p_account_id: input.accountId,
+    p_display_name: input.displayName,
+    p_job_title: input.jobTitle,
+    p_phone: input.phone,
+    p_employment_type: input.employmentType,
+  });
+  if (result.error) throw registryError("lưu hồ sơ", result.error);
 }
 
 /** 16 random characters from an alphabet with no visually ambiguous glyphs. */

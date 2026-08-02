@@ -328,6 +328,10 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Không tự khoá hoặc tự thu hồi quyền quản trị của chính mình được — sẽ không còn đường mở lại.",
   ACCOUNT_ADMIN_EMAIL_ALREADY_LINKED:
     "Email này đã được dùng để đăng nhập cho một tài khoản khác.",
+  PROFILE_MANAGER_SCOPE_REQUIRED:
+    "Bạn chỉ sửa được hồ sơ của nhân sự thuộc cơ sở mình quản lý.",
+  PROFILE_INPUT_INVALID: "Thông tin hồ sơ chưa hợp lệ.",
+  PROFILE_ACCOUNT_NOT_FOUND: "Không tìm thấy tài khoản này.",
 
   // --- Thương mại (stack /ops) ---
   CAPACITY_UNAVAILABLE: "Khung giờ này đã hết chỗ.",

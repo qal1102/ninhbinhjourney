@@ -16,7 +16,10 @@ import type { IncidentCase } from "@/lib/erp/incident-repository";
 import type { FieldReport } from "@/lib/erp/field-report-repository";
 import type { GateScanEvent } from "@/lib/erp/gate-scan-repository";
 import type { ProjectWorkspace } from "@/lib/erp/project-repository";
+import type { ShiftHandover } from "@/lib/erp/shift-handover-repository";
+import { listWorkdayEmployeeOptions } from "@/lib/erp/workday-view";
 import { AttendancePanel } from "./attendance-panel";
+import { ShiftHandoverPanel } from "./shift-handover-panel";
 import { StaffAccessManager } from "./staff-access-manager";
 import { CameraAiWorkspace } from "./camera-ai-workspace";
 import { ProjectEventWorkspace } from "./project-event-workspace";
@@ -45,6 +48,7 @@ type Props = {
   fieldReports: readonly FieldReport[];
   gateScans: readonly GateScanEvent[];
   projectWorkspace: ProjectWorkspace | null;
+  shiftHandovers: readonly ShiftHandover[];
   initialCameraId?: string;
 };
 
@@ -54,6 +58,33 @@ function formatVnd(value: number) {
     currency: "VND",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+/** Today in Asia/Ho_Chi_Minh — the operating day, not the server's. */
+function vietnamBusinessDate() {
+  return new Date(Date.now() + 7 * 60 * 60 * 1_000).toISOString().slice(0, 10);
+}
+
+/**
+ * Who this shift can be handed to: everyone else granted access at this site.
+ * A handover names a person, so the list has to come from the grant store
+ * rather than from a fixed roster.
+ */
+function shiftHandoverColleagues(
+  access: ErpAccessState,
+  siteId: ErpSite["id"],
+  currentUserId: string,
+) {
+  return listWorkdayEmployeeOptions(access, [siteId])
+    .filter(
+      (employee) =>
+        employee.id !== currentUserId && employee.siteIds.includes(siteId),
+    )
+    .map((employee) => ({
+      id: employee.id,
+      name: employee.name,
+      jobTitle: employee.jobTitle,
+    }));
 }
 
 function SiteFinanceSource({
@@ -258,6 +289,7 @@ export function ModuleWorkspace({
   fieldReports,
   gateScans,
   projectWorkspace,
+  shiftHandovers,
   initialCameraId,
 }: Props) {
   if (module.id === "su-co") {
@@ -276,6 +308,17 @@ export function ModuleWorkspace({
             employees={workdayEmployees}
           />
         ) : null}
+        {/* T9: shift handover lives in "Nhân sự & ca trực" because that is
+            where ca trực is managed. Being shift leader is a duty for one
+            shift at one station, not a sixth global role -- the same employee
+            leads the gate this morning and works the pier tomorrow. */}
+        <ShiftHandoverPanel
+          site={site}
+          user={user}
+          handovers={shiftHandovers}
+          colleagues={shiftHandoverColleagues(access, site.id, user.id)}
+          businessDate={vietnamBusinessDate()}
+        />
         <StaffPerformanceWorkspace site={site} />
         <StaffAccessManager
           site={site}

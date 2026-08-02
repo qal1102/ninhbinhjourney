@@ -297,6 +297,19 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   AP_EXCEPTION_REQUIRES_ACCOUNTANT_VERIFICATION:
     "Ngoại lệ phải được kế toán kiểm tra trước khi trình giám đốc.",
 
+  // --- Bàn giao ca ---
+  SHIFT_HANDOVER_NOT_FOUND: "Không tìm thấy phiếu bàn giao ca.",
+  SHIFT_HANDOVER_INPUT_INVALID: "Dữ liệu bàn giao ca chưa hợp lệ.",
+  SHIFT_HANDOVER_SAME_PERSON:
+    "Người bàn giao và người nhận ca phải là hai người khác nhau.",
+  SHIFT_HANDOVER_WRONG_ACTOR:
+    "Chỉ người được bàn giao mới xác nhận nhận ca được.",
+  SHIFT_HANDOVER_ALREADY_DECIDED: "Phiếu bàn giao này đã được xử lý.",
+  SHIFT_HANDOVER_DISPUTE_NEEDS_REASON: "Từ chối nhận ca phải nêu lý do.",
+  SHIFT_HANDOVER_VERSION_CONFLICT:
+    "Phiếu bàn giao vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
+  SHIFT_HANDOVER_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
+
   // --- Quản trị tài khoản ---
   ACCOUNT_ADMIN_ROLE_REQUIRED:
     "Chỉ tài khoản có quyền quản trị hệ thống mới tạo, khoá hoặc cấp vai trò được.",

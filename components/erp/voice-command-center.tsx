@@ -4,11 +4,18 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import type { ErpModuleId, ErpRole, ErpSiteId } from "@/domain/erp";
+import {
+  ERP_MODULES,
+  ERP_SITES,
+  type ErpModuleId,
+  type ErpRole,
+  type ErpSiteId,
+} from "@/domain/erp";
 import { ERP_ACCOUNTANT_MODULE_IDS } from "@/domain/erp-role-policy";
 
 type RecognitionResultEvent = Event & {
-  results: ArrayLike<{ 0: { transcript: string } }>;
+  resultIndex: number;
+  results: ArrayLike<{ 0: { transcript: string }; isFinal: boolean }>;
 };
 
 type RecognitionInstance = {
@@ -22,6 +29,46 @@ type RecognitionInstance = {
   onend: (() => void) | null;
   onerror: ((event: { error: string }) => void) | null;
 };
+
+/**
+ * Một lượt trong luồng trợ lý. Giữ lại lịch sử thay vì chỉ hiện câu trả lời
+ * cuối, để giám đốc thấy được mình đã hỏi gì và hệ thống đã mở gì — giống một
+ * đoạn hội thoại tin nhắn thoại, không phải một ô kết quả chớp tắt.
+ */
+type ThreadEntry =
+  | { kind: "voice"; id: string; text: string; durationMs: number; at: number }
+  | { kind: "typed"; id: string; text: string; at: number }
+  | {
+      kind: "reply";
+      id: string;
+      at: number;
+      answer: string;
+      detail: string;
+      href?: string;
+      hrefLabel?: string;
+    };
+
+const THREAD_STORAGE_KEY = "erp-assistant-thread";
+const THREAD_MAX_ENTRIES = 24;
+
+// Dựng lượt hội thoại ở phạm vi module, không phải trong thân component: đọc
+// đồng hồ và sinh mã ngẫu nhiên là việc của trình xử lý sự kiện, không được
+// nằm trên đường render.
+function nextEntryId(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createSpokenEntry(text: string, durationMs: number): ThreadEntry {
+  return { kind: "voice", id: nextEntryId("voice"), text, durationMs, at: Date.now() };
+}
+
+function createTypedEntry(text: string): ThreadEntry {
+  return { kind: "typed", id: nextEntryId("typed"), text, at: Date.now() };
+}
+
+function createReplyEntry(reply: CommandResult): ThreadEntry {
+  return { kind: "reply", id: nextEntryId("reply"), at: Date.now(), ...reply };
+}
 
 type RecognitionConstructor = new () => RecognitionInstance;
 
@@ -173,6 +220,24 @@ function findCameraId(command: string) {
   return zoneAliases.find(([, aliases]) => aliases.some((alias) => containsTerm(command, alias)))?.[0];
 }
 
+function formatDuration(milliseconds: number) {
+  const totalSeconds = Math.max(0, Math.round(milliseconds / 1000));
+  return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
+}
+
+/** Tên màn hình đọc được cho con người, dùng trong dòng "Đã mở …". */
+function describeDestination(href: string) {
+  const [path] = href.split("#");
+  const segments = path.split("/").filter(Boolean);
+  if (path === "/erp") return "Tổng quan điều hành";
+  if (segments[1] === "finance") return "Tài chính tổng hợp";
+  const site = ERP_SITES.find((item) => item.id === segments[1]);
+  const moduleName = ERP_MODULES.find((item) => item.id === segments[2])?.name;
+  if (site && moduleName) return `${moduleName} · ${site.shortName}`;
+  if (site) return `Tổng quan ${site.shortName}`;
+  return "màn hình được yêu cầu";
+}
+
 export function resolveErpNavigationCommand(rawCommand: string, role: ErpRole, siteIds: readonly ErpSiteId[], currentSiteId?: ErpSiteId) {
   const command = normalize(rawCommand);
   const namedSite = findSite(command, siteIds);
@@ -210,12 +275,54 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
   const recognitionRef = useRef<RecognitionInstance | null>(null);
   const commandInputRef = useRef<HTMLInputElement>(null);
   const heardSpeechRef = useRef(false);
+  const startedAtRef = useRef(0);
+  const durationTimerRef = useRef<number | null>(null);
+  const threadEndRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [result, setResult] = useState<CommandResult | null>(null);
+  const [interim, setInterim] = useState("");
+  const [recordingMs, setRecordingMs] = useState(0);
+  const [thread, setThread] = useState<ThreadEntry[]>([]);
   const [speechSupported, setSpeechSupported] = useState(true);
   const [voiceMessage, setVoiceMessage] = useState("");
+
+  function pushEntry(entry: ThreadEntry) {
+    setThread((previous) => [...previous, entry].slice(-THREAD_MAX_ENTRIES));
+  }
+
+  function pushReply(reply: CommandResult) {
+    pushEntry(createReplyEntry(reply));
+  }
+
+  // Luồng hội thoại sống trong sessionStorage: đóng trợ lý rồi mở lại, hoặc
+  // chuyển sang màn hình vừa được mở, vẫn thấy lại mình đã nói gì. Đóng tab thì
+  // hết -- đây là ngữ cảnh thao tác, không phải nhật ký, và nhật ký thật nằm ở
+  // chỗ khác.
+  useEffect(() => {
+    try {
+      const stored = window.sessionStorage.getItem(THREAD_STORAGE_KEY);
+      // Không đọc được ở lượt khởi tạo state: máy chủ không có sessionStorage,
+      // đọc sớm hơn effect là lệch HTML giữa máy chủ và client.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (stored) setThread(JSON.parse(stored) as ThreadEntry[]);
+    } catch {
+      // Trình duyệt chặn sessionStorage thì trợ lý vẫn phải dùng được.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(THREAD_STORAGE_KEY, JSON.stringify(thread));
+    } catch {
+      // Như trên.
+    }
+  }, [thread]);
+
+  useEffect(() => {
+    if (!open) return;
+    threadEndRef.current?.scrollIntoView({ block: "end" });
+  }, [open, thread, interim]);
 
   useEffect(() => {
     if (!open) return;
@@ -235,7 +342,6 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     recognitionRef.current?.stop();
     setListening(false);
     setOpen(false);
-    setResult(null);
     router.push(href);
   }
 
@@ -261,10 +367,15 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
       if (!response.ok) {
         throw new Error(payload.message ?? "Không đọc được số liệu.");
       }
-      setResult(payload);
+      pushReply({
+        answer: payload.answer,
+        detail: payload.detail,
+        href: payload.href,
+        hrefLabel: payload.hrefLabel,
+      });
       setVoiceMessage("Đã đọc xong số liệu trong phạm vi tài khoản.");
     } catch (error) {
-      setResult({
+      pushReply({
         answer: "Chưa đọc được số liệu lúc này",
         detail:
           error instanceof Error
@@ -275,22 +386,32 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     }
   }
 
-  async function execute(rawCommand: string) {
+  async function execute(rawCommand: string, spoken?: { durationMs: number }) {
     const command = normalize(rawCommand);
     const namedSite = findSite(command, siteIds);
     const targetSite = namedSite ?? currentSiteId ?? siteIds[0];
     const matchedModule = findModule(command);
 
     setTranscript(rawCommand);
+    setInterim("");
+    pushEntry(
+      spoken ? createSpokenEntry(rawCommand, spoken.durationMs) : createTypedEntry(rawCommand),
+    );
 
     const navigationHref = resolveErpNavigationCommand(rawCommand, role, siteIds, currentSiteId);
     if (navigationHref) {
+      // Ghi lại đã mở màn hình nào trước khi chuyển trang, để mở lại trợ lý là
+      // thấy ngay lịch sử chứ không phải một ô trống.
+      pushReply({
+        answer: `Đã mở ${describeDestination(navigationHref)}`,
+        detail: "Nhận ra từ khoá trong câu và chuyển thẳng tới màn hình tương ứng.",
+      });
       navigate(navigationHref);
       return;
     }
 
     if ((role === "accountant" || role === "chief-accountant") && matchedModule && !ERP_ACCOUNTANT_MODULE_IDS.includes(matchedModule.id)) {
-      setResult({
+      pushReply({
         answer: "Nghiệp vụ này không thuộc quyền kế toán",
         detail: "Tài khoản kế toán chỉ được mở hồ sơ nguồn và các nghiệp vụ tài chính đã phân quyền.",
         href: "/erp/finance",
@@ -333,7 +454,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     }
 
     if (/(qua tai|dong nhat|can chu y|suc chua)/.test(command)) {
-      setResult({
+      pushReply({
         answer: "Mở màn hình sức chứa để xem theo cơ sở",
         detail: "Trợ lý chưa nhận được luồng đếm người thời gian thực nên không tự đưa ra một tỷ lệ tải.",
         href: targetSite ? `/erp/${targetSite}/suc-chua` : undefined,
@@ -343,7 +464,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     }
 
     if (/(su co|canh bao)/.test(command)) {
-      setResult({
+      pushReply({
         answer: "Mở danh sách sự cố của cơ sở",
         detail: "Trợ lý chỉ báo số khi sự cố đã được ghi vào nguồn dữ liệu vận hành.",
         href: targetSite ? `/erp/${targetSite}/su-co` : undefined,
@@ -353,7 +474,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     }
 
     if (/(du bao|30 ngay|thang toi|sap toi)/.test(command)) {
-      setResult({
+      pushReply({
         answer: "Chưa đủ chuỗi dữ liệu để dự báo 30 ngày",
         detail: "Cần dữ liệu đặt chỗ, công suất và lịch sự kiện đã được ghi nhận trước khi đưa ra dự báo.",
         href: role === "director" ? "/erp/finance#forecast" : undefined,
@@ -362,10 +483,17 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
       return;
     }
 
-    setResult({
+    pushReply({
       answer: "Chưa tìm thấy màn hình phù hợp",
       detail: "Hãy nói “Mở” kèm nghiệp vụ và cơ sở, ví dụ: “Mở camera Tam Chúc” hoặc “Mở nhân sự Tràng An”.",
     });
+  }
+
+  function stopDurationTimer() {
+    if (durationTimerRef.current !== null) {
+      window.clearInterval(durationTimerRef.current);
+      durationTimerRef.current = null;
+    }
   }
 
   function startListening() {
@@ -383,28 +511,50 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     setSpeechSupported(true);
     setVoiceMessage("Đang xin quyền sử dụng micro…");
     heardSpeechRef.current = false;
+    setInterim("");
     const recognition = new Recognition();
     recognition.lang = "vi-VN";
     recognition.continuous = false;
-    recognition.interimResults = false;
+    // Bật kết quả tạm: chữ hiện dần ngay khi đang nói, thay vì im lặng rồi
+    // nhảy ra cả câu. Đây là phần "tự chuyển ra text" nhìn thấy được.
+    recognition.interimResults = true;
     recognition.onstart = () => {
       setListening(true);
+      startedAtRef.current = Date.now();
+      setRecordingMs(0);
+      durationTimerRef.current = window.setInterval(() => {
+        setRecordingMs(Date.now() - startedAtRef.current);
+      }, 100);
       setVoiceMessage("Đang nghe. Hãy nói tên màn hình và cơ sở.");
     };
     recognition.onresult = (event) => {
-      const spoken = event.results[0]?.[0]?.transcript ?? "";
-      if (spoken) {
+      let finalText = "";
+      let pendingText = "";
+      for (let index = 0; index < event.results.length; index += 1) {
+        const alternative = event.results[index]?.[0]?.transcript ?? "";
+        if (event.results[index]?.isFinal) finalText += alternative;
+        else pendingText += alternative;
+      }
+      if (pendingText) setInterim(pendingText);
+      if (finalText.trim()) {
         heardSpeechRef.current = true;
-        setVoiceMessage(`Đã nghe: “${spoken}”`);
-        execute(spoken);
+        stopDurationTimer();
+        setVoiceMessage(`Đã chuyển thành văn bản: “${finalText.trim()}”`);
+        execute(finalText.trim(), {
+          durationMs: Math.max(1, Date.now() - startedAtRef.current),
+        });
       }
     };
     recognition.onend = () => {
       setListening(false);
+      stopDurationTimer();
+      setInterim("");
       if (!heardSpeechRef.current) setVoiceMessage("Chưa nghe rõ. Chạm micro để thử lại hoặc nhập lệnh bên dưới.");
     };
     recognition.onerror = (event) => {
       setListening(false);
+      stopDurationTimer();
+      setInterim("");
       const messages: Record<string, string> = {
         "not-allowed": "Micro đang bị chặn. Hãy cho phép quyền micro trong cài đặt trình duyệt.",
         "audio-capture": "Không tìm thấy micro trên thiết bị.",
@@ -426,9 +576,13 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
   function closeDialog() {
     recognitionRef.current?.stop();
+    stopDurationTimer();
     setListening(false);
+    setInterim("");
     setOpen(false);
   }
+
+  useEffect(() => stopDurationTimer, []);
 
   return (
     <>
@@ -454,16 +608,92 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
               <button type="button" onClick={closeDialog} aria-label="Đóng" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#d4ddd7] bg-white text-xl text-[#42554c]">×</button>
             </div>
 
-            <button type="button" onClick={startListening} disabled={listening} className={`mt-4 flex min-h-16 w-full items-center justify-center gap-3 rounded-2xl border px-4 transition ${listening ? "border-[#d27460] bg-[#fff0ec] text-[#8f3f32]" : "border-[#b9ccc3] bg-white text-[#183f34] hover:border-[#6d9686]"}`}>
-              <span className={`grid h-10 w-10 place-items-center rounded-full ${listening ? "animate-pulse bg-[#d45f49] text-white" : "bg-[#e3eee9]"}`}>
+            <div
+              aria-live="polite"
+              data-testid="assistant-thread"
+              className="mt-4 max-h-[38dvh] space-y-2.5 overflow-y-auto sm:max-h-72"
+            >
+              {thread.length === 0 && !interim ? (
+                <p className="rounded-2xl bg-white/70 p-3 text-xs leading-5 text-[#69786f]">
+                  Giữ micro và nói bình thường. Hệ thống chuyển giọng nói thành văn bản
+                  ngay khi bạn đang nói, nghe ra từ khoá rồi mở thẳng màn hình tương ứng.
+                </p>
+              ) : null}
+
+              {thread.map((entry) =>
+                entry.kind === "reply" ? (
+                  <article
+                    key={entry.id}
+                    className="mr-6 rounded-2xl rounded-tl-md bg-[#183f34] p-3.5 text-white"
+                  >
+                    <p className="text-sm font-black leading-5">{entry.answer}</p>
+                    <p className="mt-1.5 text-xs leading-5 text-white/68">{entry.detail}</p>
+                    {entry.href ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate(entry.href!)}
+                        className="mt-2.5 min-h-10 w-full rounded-xl bg-white px-4 text-sm font-black text-[#183f34]"
+                      >
+                        {entry.hrefLabel}
+                      </button>
+                    ) : null}
+                  </article>
+                ) : (
+                  <div
+                    key={entry.id}
+                    className="ml-6 rounded-2xl rounded-tr-md border border-[#cfdcd5] bg-white p-3"
+                  >
+                    {entry.kind === "voice" ? (
+                      <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#6f8d7f]">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 17v5" /></svg>
+                        Tin nhắn thoại · {formatDuration(entry.durationMs)}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#8b9a92]">
+                        Lệnh nhập
+                      </p>
+                    )}
+                    <p className="mt-1.5 text-sm leading-5 text-[#2c4237]">{entry.text}</p>
+                  </div>
+                ),
+              )}
+
+              {interim ? (
+                <div className="ml-6 rounded-2xl rounded-tr-md border border-dashed border-[#c0d2c8] bg-[#f0f6f2] p-3">
+                  <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#6f8d7f]">
+                    {/* Sóng âm: cao thấp và lệch pha khác nhau cho ra nhịp nói. */}
+                    <span className="flex h-3.5 items-end gap-0.5" aria-hidden="true">
+                      {[
+                        [0, 6],
+                        [120, 12],
+                        [240, 9],
+                        [80, 14],
+                      ].map(([delay, height]) => (
+                        <span
+                          key={delay}
+                          style={{ animationDelay: `${delay}ms`, height: `${height}px` }}
+                          className="block w-0.5 animate-pulse rounded-full bg-[#4f806f] motion-reduce:animate-none"
+                        />
+                      ))}
+                    </span>
+                    Đang chuyển thành văn bản · {formatDuration(recordingMs)}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-5 text-[#4c6155]">{interim}</p>
+                </div>
+              ) : null}
+              <div ref={threadEndRef} />
+            </div>
+
+            <button type="button" onClick={startListening} disabled={listening} className={`mt-3 flex min-h-16 w-full items-center justify-center gap-3 rounded-2xl border px-4 transition ${listening ? "border-[#d27460] bg-[#fff0ec] text-[#8f3f32]" : "border-[#b9ccc3] bg-white text-[#183f34] hover:border-[#6d9686]"}`}>
+              <span className={`grid h-10 w-10 place-items-center rounded-full ${listening ? "animate-pulse bg-[#d45f49] text-white motion-reduce:animate-none" : "bg-[#e3eee9]"}`}>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8" /></svg>
               </span>
-              <span className="text-left"><strong className="block text-sm">{listening ? "Đang nghe…" : "Nói để mở nhanh"}</strong><span className="mt-0.5 block text-xs opacity-65">“Mở camera Tam Chúc”</span></span>
+              <span className="text-left"><strong className="block text-sm">{listening ? `Đang nghe… ${formatDuration(recordingMs)}` : "Nói để mở nhanh"}</strong><span className="mt-0.5 block text-xs opacity-65">“Mở camera Tam Chúc”</span></span>
             </button>
 
             {voiceMessage ? <p role="status" className={`mt-3 rounded-xl px-3 py-2 text-xs ${speechSupported ? "bg-[#e6f0eb] text-[#315e4d]" : "bg-[#fff0dc] text-[#76501d]"}`}>{voiceMessage}</p> : null}
 
-            <form className="mt-3 flex gap-2" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); execute(String(data.get("command") ?? "")); }}>
+            <form className="mt-3 flex gap-2" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); const value = String(data.get("command") ?? "").trim(); if (value) execute(value); }}>
               <input ref={commandInputRef} name="command" value={transcript} onChange={(event) => setTranscript(event.target.value)} className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#ccd8d1] bg-white px-3 text-sm outline-none focus:border-[#4f806f]" placeholder="Ví dụ: Mở tài chính tổng hợp" />
               <button type="submit" aria-label="Gửi lệnh" className="grid min-h-11 w-11 place-items-center rounded-xl bg-[#183f34] text-white">
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>
@@ -471,19 +701,18 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
             </form>
 
             <div className="mt-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#718078]">Lệnh nhanh</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#718078]">Lệnh nhanh</p>
+                {thread.length ? (
+                  <button type="button" onClick={() => setThread([])} className="text-[11px] font-bold text-[#7d8c84] underline underline-offset-2">
+                    Xoá hội thoại
+                  </button>
+                ) : null}
+              </div>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 {suggestionsByRole[role].map((suggestion) => <button key={suggestion} type="button" onClick={() => execute(suggestion)} className="min-h-10 rounded-xl border border-[#d5ded8] bg-white px-3 py-2 text-left text-xs font-bold leading-4 text-[#53675e] transition hover:border-[#8ba99c]">{suggestion}</button>)}
               </div>
             </div>
-
-            {result ? (
-              <article aria-live="polite" className="mt-4 rounded-2xl bg-[#183f34] p-4 text-white">
-                <p className="text-lg font-black">{result.answer}</p>
-                <p className="mt-1.5 text-xs leading-5 text-white/68">{result.detail}</p>
-                {result.href ? <button type="button" onClick={() => navigate(result.href!)} className="mt-3 min-h-10 w-full rounded-xl bg-white px-4 text-sm font-black text-[#183f34]">{result.hrefLabel}</button> : null}
-              </article>
-            ) : null}
           </section>
         </div>,
         document.body,

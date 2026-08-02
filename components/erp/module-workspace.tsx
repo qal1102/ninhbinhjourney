@@ -353,7 +353,22 @@ export function ModuleWorkspace({
     );
   }
   if (module.id === "camera-ai") {
-    return <CameraAiWorkspace site={site} user={user} initialCameraId={initialCameraId} />;
+    // Thời điểm dựng cảnh lấy ở máy chủ để lần render đầu ở client trùng khít
+    // với HTML đã gửi xuống; sau đó client tự sang khung 5 phút mới.
+    //
+    // Đây là server component (trang này vốn đã động vì đọc phiên đăng nhập),
+    // nên đọc đồng hồ lúc dựng trang là đúng chỗ. Quy tắc purity của React
+    // Compiler nhắm vào client component render lại nhiều lần, không phân biệt
+    // được hai trường hợp.
+    return (
+      <CameraAiWorkspace
+        site={site}
+        user={user}
+        // eslint-disable-next-line react-hooks/purity
+        sceneAt={Date.now()}
+        initialCameraId={initialCameraId}
+      />
+    );
   }
   if (module.id === "du-an-su-kien" && projectWorkspace) {
     return <ProjectEventWorkspace site={site} user={user} workspace={projectWorkspace} />;

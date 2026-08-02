@@ -176,14 +176,24 @@ function GrantLoginForm({ account }: { account: ErpRegistryAccount }) {
   );
   if (account.hasAuthUser) {
     return (
-      <p className="text-sm font-bold text-[#245e48]">
-        Đã cấp đăng nhập · {account.email}
-        {account.mustChangePassword ? (
-          <span className="ml-2 rounded-full bg-[#fff2df] px-2 py-0.5 text-xs font-black text-[#8a5a12]">
-            Đang chờ đổi mật khẩu lần đầu
-          </span>
-        ) : null}
-      </p>
+      <div className="space-y-2">
+        {/* The one-time temporary password lives in `state.message` from the
+            action that just ran. `account.hasAuthUser` flips to true as soon
+            as revalidatePath refetches, which -- without this check --
+            replaced the success message with the plain "already granted"
+            line before a director had any real chance to read or copy the
+            password. `state` is local client state, untouched by that
+            server refetch, so it still holds the message here. */}
+        {state.status === "success" ? <ActionMessage state={state} /> : null}
+        <p className="text-sm font-bold text-[#245e48]">
+          Đã cấp đăng nhập · {account.email}
+          {account.mustChangePassword ? (
+            <span className="ml-2 rounded-full bg-[#fff2df] px-2 py-0.5 text-xs font-black text-[#8a5a12]">
+              Đang chờ đổi mật khẩu lần đầu
+            </span>
+          ) : null}
+        </p>
+      </div>
     );
   }
   return (

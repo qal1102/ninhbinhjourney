@@ -146,9 +146,10 @@ Nguyên nhân, không cái nào là lỗi sản phẩm:
 - **1 bài** giả định hoá đơn `AP-TA-202607-024` đã ở trạng thái "Sẵn sàng hạch toán" — vi phạm đúng điều AGENTS.md cấm: *giả định trạng thái mình không tự tạo ra*. Giờ spec tự đưa hồ sơ tới trạng thái đó bằng luồng của sản phẩm.
 - **2 bài** dùng `.first()` trên toàn trang, bắt trúng link ẩn trong portal menu di động. Đã khoanh vào `main`.
 - **3 bài** `/plan` đỏ vì **`playwright.config.ts` đặt `NEXT_PUBLIC_*` ở `webServer.env`** — mà Next nhúng các biến đó **lúc build**, không đọc lúc chạy. Bản build thiếu chúng thì `/plan` trả màn hình "thiếu cấu hình". Đã sửa `webServer.command` thành `npm run build && npm run start`.
+- **1 spec production cũng đỏ vì đúng lý do đó:** `prod-smoke-field-reports-and-gate-scans.spec.ts` gõ mã bịa rồi khẳng định "Đã ghi nhận" — đỏ trên production từ khi T8 lên. Viết lại để giữ **cả hai** tính chất mà không tiêu gì: mã lạ phải bị từ chối, **và** lượt bị từ chối vẫn được ghi lại nên phiên khác nhìn thấy — đúng điều bài cũ muốn chứng minh (trạng thái máy chủ thật, không phải state trong React).
 - **1 spec production đã chết:** `prod-smoke-camera-ai-incident.spec.ts` bấm đúng nút T17 gỡ đi, không bao giờ chạy được nữa. **Đã xoá.** Tính chất nó canh giữ (số camera không được biến thành sự cố thật) giờ do `erp-camera-ai-simulation.spec.ts` canh, và spec đó **đã chạy trên production**. RPC `erp_incident_report_from_camera` cùng bài kiểm tra hợp đồng của nó **giữ nguyên** cho T17b.
 
-Kết quả: **42 xanh / 8 skip / 0 đỏ** từ một bản build sạch. Lưu ý cho phiên sau: `npx playwright test` **không kèm đường dẫn** sẽ nuốt luôn các spec `prod-smoke-*` và chúng đỏ hàng loạt vì đang trỏ vào máy cục bộ — chỉ định spec, hoặc đặt `PLAYWRIGHT_BASE_URL`.
+Kết quả: **42 xanh / 8 skip / 0 đỏ** cục bộ từ một bản build sạch, và **34 lượt xanh / 0 đỏ trên production thật** (toàn bộ `prod-smoke-*`, chạy sau khi T14b lên). Đã xác minh bằng SQL: 9 tài khoản `qa-%` do các spec tạo ra đều ở trạng thái `suspended`, không còn cái nào hoạt động. Lưu ý cho phiên sau: `npx playwright test` **không kèm đường dẫn** sẽ nuốt luôn các spec `prod-smoke-*` và chúng đỏ hàng loạt vì đang trỏ vào máy cục bộ — chỉ định spec, hoặc đặt `PLAYWRIGHT_BASE_URL`.
 
 ### 2.7b Trợ lý điều hành bằng giọng nói
 

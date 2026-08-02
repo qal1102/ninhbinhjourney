@@ -78,9 +78,20 @@ test("a field report an employee submits, photo included, is visible to the dire
   }
 });
 
-test("a QR scanned by an employee is visible to the manager in a completely separate session", async ({
+test("a refused QR scan is still real server state the manager sees in a completely separate session", async ({
   browser,
 }) => {
+  // Bài này trước đây gõ một mã bịa rồi khẳng định "Đã ghi nhận" — tức là
+  // khẳng định đúng cái lỗi T8 đã vá (gõ mã bất kỳ cũng ghi nhận một khách),
+  // nên nó đỏ trên production kể từ khi T8 lên. Viết lại để giữ **cả hai** tính
+  // chất mà không tiêu tốn gì:
+  //
+  //  - mã lạ phải **bị từ chối** (hàng rào cho T8);
+  //  - lượt bị từ chối vẫn **được ghi lại** và người khác nhìn thấy ở phiên
+  //    hoàn toàn khác — đúng điều bài cũ muốn chứng minh: đây là trạng thái
+  //    máy chủ thật, không phải state trong React hay cookie của một máy.
+  //
+  // Không tiêu một lượt vé nào, nên không cần dọn dẹp gì.
   const uniqueCode = `PRODSMOKE${Date.now()}`;
 
   const employeeContext = await browser.newContext();
@@ -92,9 +103,12 @@ test("a QR scanned by an employee is visible to the manager in a completely sepa
       .getByPlaceholder("Đưa mã vào máy quét hoặc nhập mã QR")
       .fill(uniqueCode);
     await employeePage.getByRole("button", { name: "Xác thực & ghi nhận" }).click();
+    const refusal = employeePage.locator('p[role="alert"]');
+    await expect(refusal).toBeVisible({ timeout: 15_000 });
+    await expect(refusal).toContainText("Không tìm thấy vé");
     await expect(
       employeePage.getByText(new RegExp(`Đã ghi nhận ${uniqueCode}`)),
-    ).toBeVisible({ timeout: 15_000 });
+    ).toHaveCount(0);
   } finally {
     await employeeContext.close();
   }

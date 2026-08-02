@@ -73,6 +73,7 @@ export function ErpMobileMenu({
               <div className="mt-2 space-y-1">
                 <Link href="/erp" onClick={() => setOpen(false)} className="flex min-h-11 items-center justify-between rounded-xl bg-white px-4 text-sm font-black text-[#294139]">Tổng quan <span>→</span></Link>
                 {role === "director" || role === "accountant" || role === "chief-accountant" ? <Link href="/erp/finance" onClick={() => setOpen(false)} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">{role === "director" ? "Tài chính toàn vùng" : role === "chief-accountant" ? "Kiểm soát & sổ cái" : "Đối soát & lập bút toán"} <span>→</span></Link> : null}
+                <Link href="/erp/nhat-ky" onClick={() => setOpen(false)} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Nhật ký <span>→</span></Link>
               </div>
 
               <p className="mt-6 px-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#718078]">Cơ sở</p>

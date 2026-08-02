@@ -93,6 +93,16 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ErpAppControls role={user.role} />
+            {/* T15: mọi vai trò đều vào được — phạm vi nhìn do máy chủ cắt,
+                nên nhân viên vào chỉ thấy việc của chính mình. Giấu lối vào
+                với một số người sẽ khiến nhật ký trông như đặc quyền, trong
+                khi mục đích của nó là ai cũng kiểm tra được việc của mình. */}
+            <Link
+              href="/erp/nhat-ky"
+              className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
+            >
+              Nhật ký
+            </Link>
             {systemAdmin ? (
               <Link
                 href="/erp/tai-khoan"

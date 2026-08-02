@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { StaffProfileView } from "@/components/erp/staff-profile-view";
+import { AuditTimelineView } from "@/components/erp/audit-timeline-view";
 import {
   canViewRegistryProfile,
   getRegistryAccount,
@@ -8,6 +9,7 @@ import {
   listAccountAdminAudit,
   sitesFromGrants,
 } from "@/lib/erp/account-registry-repository";
+import { listAuditTimeline } from "@/lib/erp/audit-timeline-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 
 type Props = {
@@ -42,9 +44,33 @@ export default async function StaffProfilePage({ params }: Props) {
 
   const audit = await listAccountAdminAudit(30, target.accountId);
 
+  // T15: "bấm vào profile thấy toàn bộ hoạt động của riêng họ". Phạm vi vẫn do
+  // `erp_audit_timeline` quyết định theo vai trò **người đang xem** — lọc theo
+  // một người chỉ thu hẹp, không mở thêm gì.
+  const activity = await listAuditTimeline({
+    viewerAccountId: user.id,
+    actorAccountId: target.accountId,
+    limit: 100,
+  }).catch((error) => {
+    console.error("Profile activity read failed", error);
+    return [];
+  });
+
   return (
     <ErpShell user={user}>
-      <StaffProfileView account={target} canEdit={canEdit} audit={audit} />
+      <div className="space-y-5">
+        <StaffProfileView account={target} canEdit={canEdit} audit={audit} />
+        <section>
+          <h2 className="mb-3 text-xl font-black text-[#20342c]">
+            Hoạt động của {target.displayName}
+          </h2>
+          <AuditTimelineView
+            entries={activity}
+            compact
+            emptyMessage={`Chưa có thao tác nào của ${target.displayName} trong phạm vi bạn được xem.`}
+          />
+        </section>
+      </div>
     </ErpShell>
   );
 }

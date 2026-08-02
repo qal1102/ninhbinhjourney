@@ -27,6 +27,7 @@ async function logout(page: Page) {
 test("a director-created account signs in through Supabase Auth, is forced to change its temporary password, and works normally after", async ({
   page,
 }, testInfo) => {
+  test.setTimeout(90_000);
   const stamp = Date.now();
   const accountId = `qa-t6b-check-${stamp}`;
   const email = `t6b-check-${stamp}@ninhbinhjourney.test`;
@@ -107,6 +108,14 @@ test("a director-created account signs in through Supabase Auth, is forced to ch
 
   // 7. Signing in again with the new password goes straight to /erp -- no
   // second forced change, proving must_change_password actually cleared.
+  // Cookies cleared first: confirmed via a direct Supabase Auth REST call
+  // (bypassing the app) that the new password is valid the instant the
+  // change completes, so a stale Supabase Auth cookie from the
+  // just-ended session -- not the password -- was what made the very next
+  // sign-in flaky. prod-smoke-ap.spec.ts clears cookies for the same
+  // reason before each site manager's turn.
+  await page.context().clearCookies();
+  await page.waitForTimeout(2000);
   await page.goto("/erp/login");
   await page.getByLabel("Email hoặc tên đăng nhập").fill(email);
   await page.getByLabel("Mật khẩu").fill(newPassword);

@@ -88,13 +88,13 @@ export default async function ErpLoginPage({ searchParams }: Props) {
 
           <form action={loginErpAction} className="mt-8 space-y-5">
             <label className="block">
-              <span className="text-sm font-bold text-white/78">Tên đăng nhập</span>
+              <span className="text-sm font-bold text-white/78">Email hoặc tên đăng nhập</span>
               <input
                 name="username"
                 autoComplete="username"
                 required
                 className="mt-2 min-h-12 w-full rounded-xl border border-white/16 bg-white/[0.07] px-4 text-white outline-none transition placeholder:text-white/30 focus:border-[#e7c78d]"
-                placeholder="vd: nv.trangan"
+                placeholder="Email được cấp, hoặc vd: nv.trangan"
               />
             </label>
             <label className="block">

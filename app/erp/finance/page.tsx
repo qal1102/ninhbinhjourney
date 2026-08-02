@@ -17,6 +17,7 @@ type Props = {
 export default async function ErpFinancePage({ searchParams }: Props) {
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
+  if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
   if (!canViewRegionalFinance(user.role)) redirect("/erp");
   const [shiftClosures, journals, periods, supplierAp, params] = await Promise.all([
     listShiftClosures({ siteIds: user.siteIds }),

@@ -9,6 +9,7 @@ import {
   ERP_REGISTRY_ROLE_LABELS,
 } from "@/domain/erp-account-roles";
 import {
+  grantLoginAction,
   INITIAL_ACCOUNT_ACTION_STATE,
   setAccountStatusAction,
   setRoleAssignmentAction,
@@ -142,9 +143,10 @@ function CreateAccountForm() {
           </label>
         </div>
         <p className="mt-3 text-xs leading-5 text-[#7c8882]">
-          Tài khoản mới chưa đăng nhập được cho tới khi có mật khẩu riêng — bước
-          nối sang Supabase Auth vẫn đang chờ. Cấp vai trò bên dưới thì quyền có
-          hiệu lực ngay với các nghiệp vụ kiểm quyền ở tầng cơ sở dữ liệu.
+          Lưu tài khoản xong, cấp vai trò bên dưới để quyền có hiệu lực với
+          các nghiệp vụ. Tài khoản vẫn <strong>chưa đăng nhập được</strong>{" "}
+          cho tới khi bấm &ldquo;Cấp đăng nhập&rdquo; ở thẻ của người đó — hai
+          bước tách rời có chủ đích, vì cấp đăng nhập cần một email thật.
         </p>
         <div className="mt-4">
           <SubmitButton>Lưu tài khoản</SubmitButton>
@@ -152,6 +154,44 @@ function CreateAccountForm() {
         <ActionMessage state={state} />
       </form>
     </details>
+  );
+}
+
+function GrantLoginForm({ account }: { account: ErpRegistryAccount }) {
+  const [state, action] = useActionState(
+    grantLoginAction,
+    INITIAL_ACCOUNT_ACTION_STATE,
+  );
+  if (account.hasAuthUser) {
+    return (
+      <p className="text-sm font-bold text-[#245e48]">
+        Đã cấp đăng nhập · {account.email}
+        {account.mustChangePassword ? (
+          <span className="ml-2 rounded-full bg-[#fff2df] px-2 py-0.5 text-xs font-black text-[#8a5a12]">
+            Đang chờ đổi mật khẩu lần đầu
+          </span>
+        ) : null}
+      </p>
+    );
+  }
+  return (
+    <form action={action} className="grid gap-2 sm:grid-cols-[1fr_auto]">
+      <input type="hidden" name="accountId" value={account.accountId} />
+      <label className="grid gap-1 text-xs font-bold text-[#5f7068]">
+        Email đăng nhập
+        <input
+          name="email"
+          type="email"
+          required
+          placeholder="ten.nguoi@donvi.vn"
+          className="min-h-10 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
+        />
+      </label>
+      <SubmitButton tone="secondary">Cấp đăng nhập</SubmitButton>
+      <div className="sm:col-span-2">
+        <ActionMessage state={state} />
+      </div>
+    </form>
   );
 }
 
@@ -301,6 +341,9 @@ export function AccountAdministration({ accounts, audit }: Props) {
             </div>
 
             <GrantForm account={account} />
+            <div className="mt-3 border-t border-[#eaefec] pt-3">
+              <GrantLoginForm account={account} />
+            </div>
             <div className="mt-3 border-t border-[#eaefec] pt-3">
               <StatusForm account={account} />
             </div>

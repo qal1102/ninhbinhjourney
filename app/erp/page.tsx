@@ -23,6 +23,7 @@ type Props = {
 export default async function ErpHomePage({ searchParams }: Props) {
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
+  if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
   const shouldReadAccounting =
     user.role === "director" ||
     user.role === "accountant" ||

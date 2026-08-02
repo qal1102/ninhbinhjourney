@@ -31,6 +31,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   if (!site || !moduleDefinition) notFound();
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
+  if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
   if (!accountCanAccessModule(user, site.id, moduleDefinition.id)) {
     redirect(`/erp/${site.id}?denied=module`);
   }

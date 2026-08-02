@@ -26,6 +26,8 @@ import {
   setErpSession,
   startRoleSwitch,
 } from "@/lib/erp/demo-session";
+import { confirmPasswordChanged } from "@/lib/erp/account-registry-repository";
+import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { recordRoleSwitch } from "@/lib/erp/role-switch-audit-repository";
 import {
   getAccessState,
@@ -70,12 +72,29 @@ function loginError(code: "missing" | "invalid"): never {
   redirect(`/erp/login?error=${code}`);
 }
 
+/**
+ * T6b: an identifier with "@" is a real email, so it goes through Supabase
+ * Auth -- the only accounts that can be are ones a system-admin has already
+ * linked via `/erp/tai-khoan`. Everything else still goes through the
+ * shared-password demo path exactly as before. Two paths, one form: nobody
+ * has to know which kind of account they hold to find the login screen.
+ */
 export async function loginErpAction(formData: FormData) {
-  const username = String(formData.get("username") ?? "").trim();
+  const identifier = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!username || !password) loginError("missing");
+  if (!identifier || !password) loginError("missing");
 
-  const account = findDemoErpAccountByUsername(username);
+  if (identifier.includes("@")) {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: identifier,
+      password,
+    });
+    if (error) loginError("invalid");
+    redirect("/erp");
+  }
+
+  const account = findDemoErpAccountByUsername(identifier);
   if (!account || !safePasswordEqual(password, account.password) || !isDemoErpAccountActive(account)) {
     loginError("invalid");
   }
@@ -85,8 +104,56 @@ export async function loginErpAction(formData: FormData) {
 }
 
 export async function logoutErpAction() {
+  // A Supabase Auth session and the legacy demo cookie can never both be
+  // live for the same request (getCurrentErpUser only ever resolves one),
+  // but a browser could still be holding a stale one of either kind, so both
+  // are cleared unconditionally rather than branching on which was active.
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut();
   await clearErpSession();
   redirect("/erp/login");
+}
+
+// Not exported: a "use server" file may only export async functions --
+// account-actions.ts's INITIAL_ACCOUNT_ACTION_STATE const looked like a safe
+// precedent for the same shape here, but it is what broke
+// `next build` (found while shipping T6b): "A 'use server' file can only
+// export async functions, found object". The type and initial value for this
+// form now live with its one caller, components/erp/change-password-form.tsx.
+type ChangePasswordActionState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
+
+export async function changePasswordErpAction(
+  _previous: ChangePasswordActionState,
+  formData: FormData,
+): Promise<ChangePasswordActionState> {
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+  if (password.length < 8) {
+    return { status: "error", message: "Mật khẩu mới phải có ít nhất 8 ký tự." };
+  }
+  if (password !== confirmPassword) {
+    return { status: "error", message: "Hai lần nhập mật khẩu không khớp nhau." };
+  }
+  const user = await getCurrentErpUser();
+  if (!user || !user.authUserId) {
+    return {
+      status: "error",
+      message: "Phiên đăng nhập không hợp lệ. Hãy đăng nhập lại.",
+    };
+  }
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    return {
+      status: "error",
+      message: "Không đổi được mật khẩu. Thử lại sau ít phút.",
+    };
+  }
+  await confirmPasswordChanged(user.authUserId);
+  redirect("/erp");
 }
 
 export async function switchDemoRoleAction(formData: FormData) {

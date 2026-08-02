@@ -9,8 +9,11 @@ import {
 } from "@/domain/erp-account-roles";
 import {
   AccountRegistryError,
+  createAuthUserForAccount,
+  generateTemporaryPassword,
   getRegistryAccount,
   hasSystemAdmin,
+  linkAuthUser,
   setRegistryAccountStatus,
   setRegistryRoleAssignment,
   upsertRegistryAccount,
@@ -169,6 +172,55 @@ export async function setRoleAssignmentAction(
       message: active
         ? `Đã cấp vai trò cho ${accountId}.`
         : `Đã thu hồi vai trò của ${accountId}.`,
+    };
+  } catch (error) {
+    return errorState(error);
+  }
+}
+
+const GrantLoginSchema = z.object({
+  accountId: z.string().trim().min(2).max(100),
+  email: z.string().trim().email("Email không hợp lệ."),
+});
+
+/**
+ * T6b: the one step that turns a registry row into an account someone can
+ * actually sign into. Creates the real `auth.users` row (only the Supabase
+ * Auth admin API can do that -- no migration can), links it, and returns a
+ * one-time temporary password in the success message for the system-admin
+ * to relay out of band. There is no email delivery here on purpose: this
+ * project has no transactional-email sender, and bolting one on to mail a
+ * password is a bigger, separate decision than this action should make.
+ * Whoever holds the temporary password must change it before doing anything
+ * else -- enforced by `must_change_password` and the `/erp/doi-mat-khau`
+ * redirect, not by convention.
+ */
+export async function grantLoginAction(
+  _previous: AccountActionState,
+  formData: FormData,
+): Promise<AccountActionState> {
+  try {
+    const actor = await requireSystemAdmin();
+    const input = GrantLoginSchema.parse({
+      accountId: formData.get("accountId"),
+      email: formData.get("email"),
+    });
+    const temporaryPassword = generateTemporaryPassword();
+    const authUserId = await createAuthUserForAccount({
+      accountId: input.accountId,
+      email: input.email,
+      temporaryPassword,
+    });
+    await linkAuthUser({
+      actorAccountId: actor.id,
+      accountId: input.accountId,
+      authUserId,
+      email: input.email,
+    });
+    revalidateAccounts();
+    return {
+      status: "success",
+      message: `Đã cấp đăng nhập cho ${input.accountId}. Mật khẩu tạm (chỉ hiện một lần, hãy sao chép ngay): ${temporaryPassword} — gửi riêng cho người này qua kênh khác, không dán vào đây. Họ bắt buộc phải đổi mật khẩu ngay lần đăng nhập đầu tiên.`,
     };
   } catch (error) {
     return errorState(error);

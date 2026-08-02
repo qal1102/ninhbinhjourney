@@ -326,6 +326,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   ACCOUNT_ADMIN_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
   ACCOUNT_ADMIN_CANNOT_LOCK_SELF:
     "Không tự khoá hoặc tự thu hồi quyền quản trị của chính mình được — sẽ không còn đường mở lại.",
+  ACCOUNT_ADMIN_EMAIL_ALREADY_LINKED:
+    "Email này đã được dùng để đăng nhập cho một tài khoản khác.",
 
   // --- Thương mại (stack /ops) ---
   CAPACITY_UNAVAILABLE: "Khung giờ này đã hết chỗ.",

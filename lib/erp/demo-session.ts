@@ -6,6 +6,9 @@ import {
   type ErpModuleId,
   type ErpSiteId,
 } from "@/domain/erp";
+import { appRoleFromRegistryRole, canAccountSignIn } from "@/domain/erp-account-roles";
+import { ERP_ACCOUNTANT_MODULE_IDS } from "@/domain/erp-role-policy";
+import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   findDemoErpAccountById,
   isDemoErpAccountActive,
@@ -14,7 +17,9 @@ import {
 import { getAccessState } from "./staff-access-repository";
 import {
   getRegistryAccount,
+  getRegistryAccountByAuthUserId,
   sitesFromGrants,
+  type ErpRegistryAccount,
 } from "./account-registry-repository";
 
 export type {
@@ -50,7 +55,132 @@ export type CurrentErpUser = Omit<DemoErpAccount, "password"> & {
   siteIds: ErpSiteId[];
   moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>>;
   actingAs?: { directorId: string; directorName: string };
+  /**
+   * True only for a Supabase Auth session whose registry row still has
+   * `must_change_password`. Legacy cookie sessions (T6b not yet reached this
+   * account) are never forced -- there is no personal password to change
+   * yet. `app/erp/page.tsx` and friends redirect to `/erp/doi-mat-khau`
+   * whenever this is true, before anything else renders.
+   */
+  mustChangePassword?: boolean;
+  /** Present only for a session resolved through Supabase Auth (T6b). */
+  authUserId?: string;
 };
+
+const ROLE_PRECEDENCE: readonly DemoErpAccount["role"][] = [
+  "director",
+  "chief-accountant",
+  "accountant",
+  "manager",
+  "employee",
+];
+
+/**
+ * `system-admin` carries no business role of its own (see
+ * domain/erp-account-roles.ts), so an account can hold it alongside exactly
+ * one of the five below. Precedence only matters for the theoretical case of
+ * more than one business grant on the same account; today's data never does
+ * that.
+ */
+function deriveRoleFromGrants(
+  account: ErpRegistryAccount,
+): DemoErpAccount["role"] | null {
+  const roles = new Set(
+    account.grants
+      .map((grant) => appRoleFromRegistryRole(grant.role))
+      .filter((role): role is DemoErpAccount["role"] => role !== null),
+  );
+  return ROLE_PRECEDENCE.find((role) => roles.has(role)) ?? null;
+}
+
+/**
+ * Builds a session purely from the registry + grant stores -- no read of
+ * `demo-data.ts` at all. This is what makes a director-created account (one
+ * that was never hand-written into that file) actually able to sign in and
+ * see something: T6/T7 already let a director create the account and grant
+ * it sites/modules, but until this function existed, `getCurrentErpUser()`
+ * could only resolve an identity that also happened to live in source code.
+ */
+async function buildCurrentUserFromRegistry(
+  account: ErpRegistryAccount,
+  authUserId: string,
+): Promise<CurrentErpUser | null> {
+  const role = deriveRoleFromGrants(account);
+  if (!role) return null;
+
+  const grantedSites = sitesFromGrants(account);
+  const base = {
+    id: account.accountId,
+    username: account.email ?? account.accountId,
+    name: account.displayName,
+    role,
+    jobTitle: account.jobTitle,
+    initialModuleIds: [] as ErpModuleId[],
+    mustChangePassword: account.mustChangePassword,
+    authUserId,
+  };
+
+  if (role === "director") {
+    const allModules = ERP_MODULES.map((module) => module.id);
+    return {
+      ...base,
+      siteIds: ERP_SITES.map((site) => site.id),
+      managedSiteIds: ERP_SITES.map((site) => site.id),
+      initialSiteIds: ERP_SITES.map((site) => site.id),
+      moduleIdsBySite: Object.fromEntries(
+        ERP_SITES.map((site) => [site.id, allModules]),
+      ) as Record<ErpSiteId, ErpModuleId[]>,
+    };
+  }
+
+  if (role === "manager" || role === "employee") {
+    // Module access is always a grant (`erp_employee_access`), never a
+    // default this function invents -- a director must hand out modules
+    // explicitly, same as for every account created before T6b.
+    const access = (await getAccessState()).employees[account.accountId];
+    const siteIds = access?.siteIds.length ? access.siteIds : grantedSites;
+    return {
+      ...base,
+      siteIds,
+      // Kept equal to `siteIds` on purpose: `managedSiteIds` is what
+      // workflow-actions.ts checks a manager's scope against, and it must
+      // reflect the registry grant, not a stale org-chart constant.
+      managedSiteIds: siteIds,
+      initialSiteIds: siteIds,
+      moduleIdsBySite: Object.fromEntries(
+        siteIds.map((siteId) => [siteId, access?.moduleIdsBySite[siteId] ?? []]),
+      ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
+    };
+  }
+
+  // accountant / chief-accountant: cấp toàn vùng theo đúng vai trò, không
+  // phải một danh sách module tự bịa.
+  return {
+    ...base,
+    siteIds: grantedSites,
+    managedSiteIds: grantedSites,
+    initialSiteIds: grantedSites,
+    moduleIdsBySite: Object.fromEntries(
+      grantedSites.map((siteId) => [siteId, [...ERP_ACCOUNTANT_MODULE_IDS]]),
+    ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
+  };
+}
+
+/**
+ * A missing/misconfigured Supabase environment or an anonymous request must
+ * read as "no Auth session", not as an error -- that is exactly the signal
+ * that falls through to the legacy cookie path below.
+ */
+async function getSupabaseAuthUser() {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) return null;
+    return data.user;
+  } catch {
+    return null;
+  }
+}
 
 function sign(payload: string) {
   return createHmac("sha256", signingSecret).update(payload).digest("base64url");
@@ -159,6 +289,21 @@ async function sitesForAccount(accountId: string): Promise<ErpSiteId[]> {
 }
 
 export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
+  // T6b: an account whose registry row is linked to a real Supabase Auth
+  // user signs in that way from here on. Checked first, and on its own
+  // terms -- a Supabase session that resolves to no active registry account
+  // must NOT fall through to the legacy cookie below, or a stranger with a
+  // valid Auth session on a shared browser could inherit whatever demo
+  // identity that cookie happened to hold.
+  const authUser = await getSupabaseAuthUser();
+  if (authUser) {
+    const registryAccount = await getRegistryAccountByAuthUserId(authUser.id).catch(
+      () => null,
+    );
+    if (!registryAccount || !canAccountSignIn(registryAccount.status)) return null;
+    return buildCurrentUserFromRegistry(registryAccount, authUser.id);
+  }
+
   const store = await cookies();
   const session = decodeSigned<SessionPayload>(store.get(SESSION_COOKIE)?.value);
   if (!session || session.expiresAt <= Date.now()) return null;
@@ -214,6 +359,15 @@ export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
     return {
       ...safeAccount,
       siteIds,
+      // Found alongside T6b: this used to stay `account.managedSiteIds` from
+      // demo-data.ts even when `siteIds` above had already been widened by a
+      // registry grant, so a manager given an extra site through
+      // `/erp/tai-khoan` could see it in the nav yet still get
+      // "Hồ sơ nằm ngoài cơ sở bạn quản lý" from workflow-actions.ts, which
+      // checks `managedSiteIds` specifically. `managedSiteIds` has to mean
+      // the same scope `siteIds` does, or the two checks disagree about the
+      // same account -- the exact failure mode mục 3 of HANDOFF.md is about.
+      managedSiteIds: siteIds,
       moduleIdsBySite: Object.fromEntries(
         siteIds.map((siteId) => [
           siteId,

@@ -43,6 +43,14 @@ vi.mock("@/lib/erp/staff-access-repository", () => ({
   updateEmployeeAccessGrant: doubles.updateEmployeeAccessGrant,
 }));
 
+vi.mock("@/lib/erp/account-registry-repository", () => ({
+  confirmPasswordChanged: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(),
+}));
+
 const { MockAttendanceRepositoryConflictError } = vi.hoisted(() => ({
   MockAttendanceRepositoryConflictError: class extends Error {},
 }));

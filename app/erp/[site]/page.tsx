@@ -22,6 +22,7 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
   if (!site) notFound();
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
+  if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
   if (!accountCanAccessSite(user, site.id)) redirect("/erp?denied=site");
   const [employeesOnShift, gateScansToday, openIncidents] = await Promise.all([
     countEmployeesOnShift(site.id),

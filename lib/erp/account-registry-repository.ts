@@ -36,8 +36,11 @@ export type ErpRegistryAccount = {
   jobTitle: string;
   employmentType: string;
   status: ErpAccountStatus;
-  /** True once this account is wired to a real Supabase Auth user (T6 bước 4). */
+  /** True once this account is wired to a real Supabase Auth user (T6b). */
   hasAuthUser: boolean;
+  email: string | null;
+  /** True until the person signs in and sets their own password. */
+  mustChangePassword: boolean;
   grants: ErpRoleGrant[];
 };
 
@@ -125,6 +128,10 @@ function demoRegistry(): ErpRegistryAccount[] {
       employmentType: account.role === "employee" ? "permanent" : "management",
       status: "active" as const,
       hasAuthUser: false,
+      email: null,
+      // Demo-cookie mode has no Supabase Auth session to change a password
+      // in, so there is nothing to force here.
+      mustChangePassword: false,
       grants,
     };
   });
@@ -134,7 +141,9 @@ async function readSupabaseRegistry(): Promise<ErpRegistryAccount[]> {
   const client = createAdminClient();
   const accounts = await client
     .from("erp_account_registry")
-    .select("account_id, display_name, job_title, employment_type, status, auth_user_id")
+    .select(
+      "account_id, display_name, job_title, employment_type, status, auth_user_id, email, must_change_password",
+    )
     .eq("tenant_id", TENANT_ID)
     .order("account_id", { ascending: true });
   if (accounts.error) throw registryError("đọc danh sách tài khoản", accounts.error);
@@ -177,6 +186,8 @@ async function readSupabaseRegistry(): Promise<ErpRegistryAccount[]> {
       employmentType: String(row.employment_type),
       status: isErpAccountStatus(status) ? status : "revoked",
       hasAuthUser: row.auth_user_id !== null,
+      email: row.email === null ? null : String(row.email),
+      mustChangePassword: Boolean(row.must_change_password),
       grants: grantsByAccount.get(String(row.account_id)) ?? [],
     };
   });
@@ -200,6 +211,30 @@ export async function getRegistryAccount(
 ): Promise<ErpRegistryAccount | null> {
   const accounts = await listRegistryAccounts();
   return accounts.find((account) => account.accountId === accountId) ?? null;
+}
+
+/**
+ * Session resolution for a Supabase Auth-linked account starts from the
+ * Auth user id, not the registry's own account id -- this is the one lookup
+ * direction `listRegistryAccounts()` cannot serve, so it goes straight to
+ * the table instead of scanning the cached list.
+ */
+export async function getRegistryAccountByAuthUserId(
+  authUserId: string,
+): Promise<ErpRegistryAccount | null> {
+  if (readMode() !== "supabase") return null;
+  const client = createAdminClient();
+  const result = await client
+    .from("erp_account_registry")
+    .select("account_id")
+    .eq("tenant_id", TENANT_ID)
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
+  if (result.error) {
+    throw registryError("tra cứu tài khoản theo phiên đăng nhập", result.error);
+  }
+  if (!result.data) return null;
+  return getRegistryAccount(String(result.data.account_id));
 }
 
 /** Sites an account may open, derived from its active role grants. */
@@ -318,4 +353,85 @@ export async function setRegistryRoleAssignment(input: {
     p_active: input.active,
   });
   if (result.error) throw registryError("đổi phân vai trò", result.error);
+}
+
+/** 16 random characters from an alphabet with no visually ambiguous glyphs. */
+export function generateTemporaryPassword(): string {
+  const alphabet =
+    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+}
+
+/**
+ * Creates the real Supabase Auth user behind an account. This is the one
+ * step in T6b that no SQL migration can do -- `auth.users` is written
+ * through GoTrue's admin API, not a table a migration can insert into
+ * safely. Returns the new auth user's id, to be handed straight to
+ * `linkAuthUser`.
+ */
+export async function createAuthUserForAccount(input: {
+  email: string;
+  temporaryPassword: string;
+  accountId: string;
+}): Promise<string> {
+  const client = createAdminClient();
+  const result = await client.auth.admin.createUser({
+    email: input.email,
+    password: input.temporaryPassword,
+    email_confirm: true,
+    user_metadata: { erp_account_id: input.accountId },
+  });
+  if (result.error || !result.data.user) {
+    const alreadyRegistered = result.error?.message
+      ?.toLowerCase()
+      .includes("already been registered");
+    throw new AccountRegistryError(
+      alreadyRegistered
+        ? "Email này đã được dùng cho một tài khoản đăng nhập khác."
+        : "Không tạo được tài khoản đăng nhập trên Supabase Auth.",
+      { cause: result.error ?? undefined },
+    );
+  }
+  return result.data.user.id;
+}
+
+export async function linkAuthUser(input: {
+  actorAccountId: string;
+  accountId: string;
+  authUserId: string;
+  email: string;
+}) {
+  if (readMode() !== "supabase") {
+    throw new AccountRegistryError(
+      "Chế độ demo cục bộ không liên kết được đăng nhập thật. Bật ERP_PERSISTENCE_MODE=supabase.",
+    );
+  }
+  const client = createAdminClient();
+  const result = await client.rpc("erp_admin_link_auth_user", {
+    p_tenant_id: TENANT_ID,
+    p_actor_account_id: input.actorAccountId,
+    p_account_id: input.accountId,
+    p_auth_user_id: input.authUserId,
+    p_email: input.email,
+  });
+  if (result.error) throw registryError("liên kết đăng nhập", result.error);
+}
+
+/**
+ * Called after `supabase.auth.updateUser({ password })` succeeds for the
+ * signed-in session itself -- never on behalf of another account. The RPC
+ * re-derives which registry row that is from the auth user id, so there is
+ * no account id here for a caller to get wrong or spoof.
+ */
+export async function confirmPasswordChanged(authUserId: string) {
+  const client = createAdminClient();
+  const result = await client.rpc("erp_confirm_password_changed", {
+    p_tenant_id: TENANT_ID,
+    p_auth_user_id: authUserId,
+  });
+  if (result.error) {
+    throw registryError("xác nhận đổi mật khẩu", result.error);
+  }
 }

@@ -107,7 +107,6 @@ const copy = {
     journeysTitle: "Stories, not stops",
     journeysBody:
       "Drag through composed routes inspired by luxury travel collections: water first, temples next, forest and lantern light when the day slows down.",
-    dragHint: "Drag the route cards",
     viewRoute: "View route",
     addRoute: "Add route",
     youAreHere: "You are here",
@@ -201,7 +200,6 @@ const copy = {
     journeysTitle: "Câu chuyện, không chỉ điểm dừng",
     journeysBody:
       "Kéo qua các tuyến được biên tập như một collection du lịch cao cấp: nước trước, chùa sau, rừng và ánh đèn khi ngày chậm lại.",
-    dragHint: "Kéo ngang để xem tuyến",
     viewRoute: "Xem tuyến",
     addRoute: "Thêm tuyến",
     youAreHere: "Bạn đang ở đây",
@@ -1417,11 +1415,6 @@ export default function NinhBinhLanding({
           <p className="fade-up mb-6 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{(t.introWords as string[]).join(" ")}</p>
           <h1 className="fade-up font-display text-6xl leading-[0.9] text-[#FBFAF6] sm:text-8xl lg:text-[9rem]">{t.title}</h1>
           <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
-          <div className="fade-up mt-8 grid max-w-3xl grid-cols-3 border-y border-white/25 py-4 text-xs font-bold uppercase tracking-[0.16em] text-white/78 sm:text-sm">
-            {(t.introWords as string[]).map((word) => (
-              <span key={word}>{word.replace(/\.$/, "")}</span>
-            ))}
-          </div>
           <div className="fade-up mt-9 flex flex-col gap-3 sm:flex-row">
             <a href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
             <a href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
@@ -1481,7 +1474,6 @@ export default function NinhBinhLanding({
             </div>
             <div className="max-w-2xl lg:justify-self-end">
               <p className="text-lg leading-8 text-[#4d5b55]">{t.journeysBody}</p>
-              <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.24em] text-[#855B1C]">{t.dragHint}</p>
             </div>
           </div>
         </div>

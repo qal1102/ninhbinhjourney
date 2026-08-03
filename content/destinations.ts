@@ -61,6 +61,28 @@ export type DestinationCatalogItem = {
     url: string;
     reviewedAt: string;
   };
+  /**
+   * Báo chí và tổ chức đã viết về điểm đến này.
+   *
+   * Luật bắt buộc, đừng phá:
+   * - Chỉ thêm mục mà người thêm đã **tự đọc tận nơi**. Không chép lại lời
+   *   trích của một bài khác rồi ghi nguồn là tờ gốc.
+   * - `verbatim: true` chỉ khi `text` là **nguyên văn từng chữ**. Giao diện
+   *   sẽ đặt câu đó trong ngoặc kép. Diễn giải lại mà để `verbatim: true`
+   *   là bịa lời cho tờ báo.
+   * - `verbatim: false` dùng cho sự thật đã kiểm chứng nhưng không lấy được
+   *   nguyên văn (ví dụ trang gốc chặn truy cập). Giao diện sẽ **không**
+   *   đóng ngoặc kép.
+   * - `via` bắt buộc khi không đọc được bản gốc mà phải qua một tờ khác.
+   */
+  press?: readonly {
+    text: Localized;
+    verbatim: boolean;
+    publisher: string;
+    year: number;
+    url: string;
+    via?: { label: string; url: string };
+  }[];
 };
 
 const nationalTourismGuide =
@@ -84,8 +106,8 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "A slow boat journey through flooded valleys, water caves and sacred sites within the Trang An Landscape Complex.",
     },
     story: {
-      vi: "Tràng An là chương mở đầu giàu cảm xúc của Ninh Bình. Cảnh quan hỗn hợp được UNESCO ghi danh kết nối địa chất karst, khảo cổ và dấu tích văn hóa trong cùng một không gian sông núi.",
-      en: "Trang An is Ninh Binh's most evocative opening chapter. The UNESCO-listed mixed landscape brings karst geology, archaeology and cultural traces into one river-and-mountain setting.",
+      vi: "Tràng An là chương mở đầu của Ninh Bình — nơi đá vôi hàng triệu năm tuổi, dấu chân người ở từ thời tiền sử và mái đền cổ cùng nằm trong một khung cảnh sông núi. Không phải ngẫu nhiên UNESCO gọi đây là di sản kép: vừa của tự nhiên, vừa của con người.",
+      en: "Trang An is Ninh Binh's opening chapter — where limestone millions of years old, traces of prehistoric settlement and old temple roofs all sit inside one river-and-mountain scene. UNESCO did not call this a dual heritage site by accident: both natural and human-made.",
     },
     coordinates: [20.2503, 105.897],
     suggestedMinutes: 180,
@@ -108,6 +130,35 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       url: "https://whc.unesco.org/en/list/1438/",
       reviewedAt: "2026-07-24",
     },
+    press: [
+      {
+        // Không đặt trong ngoặc kép: trang UNESCO trả 403 khi truy cập nên
+        // chưa lấy được nguyên văn phần Outstanding Universal Value. Các dữ
+        // kiện dưới đây đối chiếu khớp qua nhiều nguồn thứ cấp.
+        text: {
+          vi: "Được ghi danh năm 2014 là Di sản Thế giới hỗn hợp — vừa văn hóa vừa thiên nhiên — theo ba tiêu chí (v), (vii) và (viii). Vùng lõi rộng 6.172 ha, và các hang động ở đây lưu dấu người ở liên tục suốt hơn 30.000 năm.",
+          en: "Inscribed in 2014 as a mixed World Heritage property — both cultural and natural — under criteria (v), (vii) and (viii). The core zone covers 6,172 ha, and its caves hold traces of continuous human occupation spanning more than 30,000 years.",
+        },
+        verbatim: false,
+        publisher: "UNESCO World Heritage Centre",
+        year: 2014,
+        url: "https://whc.unesco.org/en/list/1438/",
+      },
+      {
+        text: {
+          vi: "Nơi này đang nổi lên trên mạng xã hội, nên sẽ không còn là viên ngọc giấu kín được lâu nữa. Hãy đi khi nó vẫn còn cho ta một trải nghiệm miền Bắc Việt Nam rất thật.",
+          en: "It's rising in popularity on social media, so it won't stay a hidden gem for too long. Go while it still offers a very authentic northern Vietnam experience.",
+        },
+        verbatim: true,
+        publisher: "Forbes — 23 best places to travel this year",
+        year: 2023,
+        url: "https://www.forbes.com/",
+        via: {
+          label: "VnExpress International, 02/04/2023",
+          url: "https://e.vnexpress.net/news/places/ninh-binh-one-of-the-best-places-to-visit-this-year-forbes-4588091.html",
+        },
+      },
+    ],
   },
   {
     id: "10000000-0000-4000-8000-000000000002",
@@ -120,12 +171,12 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "A tenth-century capital held within a ring of limestone cliffs.",
     },
     description: {
-      vi: "Cụm di tích đền vua Đinh, vua Lê và không gian cố đô giúp hành trình Ninh Bình có chiều sâu lịch sử.",
-      en: "The temples of the Dinh and Le kings and the former-capital landscape give a Ninh Binh journey historical depth.",
+      vi: "Đền vua Đinh và đền vua Lê đứng lặng giữa vòng núi đá, giữ nguyên trục thần đạo từ hơn nghìn năm trước.",
+      en: "The temples of King Dinh and King Le stand quietly inside a ring of limestone, keeping the same sacred axis laid out more than a thousand years ago.",
     },
     story: {
-      vi: "Hoa Lư từng là kinh đô của nhà nước Đại Cồ Việt. Một điểm dừng có hướng dẫn viên giúp phân biệt rõ lớp cố đô lịch sử với không gian phố cổ đương đại.",
-      en: "Hoa Lu was the capital of Dai Co Viet. A guided stop helps distinguish the historic citadel from the contemporary old-town experience.",
+      vi: "Hoa Lư từng là kinh đô của nhà nước Đại Cồ Việt — triều đại độc lập đầu tiên sau nghìn năm Bắc thuộc. Đi cùng người hiểu chuyện sẽ dễ tách bạch: đâu là cố đô nghìn năm, đâu là phố cổ mới dựng gần đây.",
+      en: "Hoa Lu was once the capital of Dai Co Viet — the first independent state after a thousand years under Chinese rule. Going with someone who knows the story makes it easy to tell apart: which parts are the thousand-year-old citadel, and which are the old town built more recently.",
     },
     coordinates: [20.2845, 105.9082],
     suggestedMinutes: 90,
@@ -148,6 +199,21 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       url: nationalTourismGuide,
       reviewedAt: "2026-07-24",
     },
+    press: [
+      {
+        // Không ngoặc kép: chưa lấy được nguyên văn hồ sơ UNESCO (trang gốc
+        // trả 403). Dữ kiện "Cố đô Hoa Lư là một trong ba khu bảo vệ nằm
+        // trong vùng di sản Tràng An" đối chiếu khớp qua nhiều nguồn.
+        text: {
+          vi: "Cố đô Hoa Lư là một trong ba khu bảo vệ nằm trong Quần thể danh thắng Tràng An — di sản được UNESCO ghi danh năm 2014. Nói cách khác, kinh thành cũ và vùng núi đá quanh nó được thế giới công nhận như một chỉnh thể, không tách rời.",
+          en: "The Hoa Lu Ancient Capital is one of three protected areas inside the Trang An Landscape Complex, inscribed by UNESCO in 2014. The old citadel and the limestone country around it are recognised as one whole, not as separate things.",
+        },
+        verbatim: false,
+        publisher: "UNESCO World Heritage Centre",
+        year: 2014,
+        url: "https://whc.unesco.org/en/list/1438/",
+      },
+    ],
   },
   {
     id: "10000000-0000-4000-8000-000000000003",
@@ -160,12 +226,12 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "Bells, stone corridors and a measured hillside rhythm.",
     },
     description: {
-      vi: "Một quần thể tâm linh quy mô lớn kết nối không gian chùa cổ, kiến trúc mới và các tầm nhìn rộng.",
-      en: "A large spiritual complex connecting an older sacred site, newer architecture and expansive views.",
+      vi: "Chuông chùa cổ vọng cạnh những mái ngói mới dựng, và nhìn xuống từ hành lang cao là cả một vùng núi mở ra trước mắt.",
+      en: "An old temple bell echoes beside newly built roofs, and from the high corridor the whole mountain range opens out below.",
     },
     story: {
-      vi: "Bái Đính tạo khoảng lặng tâm linh cho tuyến di sản. Quy mô khuôn viên khiến việc chọn xe điện và giới hạn quãng đi bộ đặc biệt quan trọng với gia đình nhiều thế hệ.",
-      en: "Bai Dinh adds a contemplative pause to the heritage route. Its scale makes electric-cart use and walking limits especially important for multigenerational groups.",
+      vi: "Bái Đính là khoảng lặng giữa hành trình di sản — chỗ để chậm lại, thắp một nén nhang, rồi đi tiếp. Khuôn viên trải rất rộng, nên với gia đình có ông bà đi cùng, xe điện là lựa chọn nên tính trước.",
+      en: "Bai Dinh is a pause inside the heritage route — a place to slow down, light incense, then move on. The grounds stretch wide, so for families travelling with grandparents, the electric cart is worth planning ahead for.",
     },
     coordinates: [20.2768, 105.8656],
     suggestedMinutes: 150,
@@ -200,12 +266,12 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "Lantern light and reflections for an easy evening chapter.",
     },
     description: {
-      vi: "Không gian trải nghiệm đương đại bên hồ với phố đi bộ, ẩm thực và thuyền đèn lồng.",
-      en: "A contemporary lakeside experience with walking streets, food and lantern boats.",
+      vi: "Phố đi bộ ven hồ, quán ăn đèn vàng và thuyền đèn lồng trôi chậm trên mặt nước khi trời vừa tắt nắng.",
+      en: "A lakeside walking street, lantern-lit food stalls, and boats drifting slowly on the water as the sun goes down.",
     },
     story: {
-      vi: "Phố cổ phù hợp để kết ngày mà không thêm một chặng di chuyển xa. Đây là không gian văn hóa đương đại, không phải khu Cố đô Hoa Lư lịch sử.",
-      en: "The old town is an easy way to close the day without another long transfer. It is a contemporary cultural space, not the historic Hoa Lu citadel.",
+      vi: "Đây là điểm khép một ngày nhẹ nhàng, không cần thêm một chặng xe nào nữa. Xin nói rõ: đây là khu văn hóa mới dựng, khác với Cố đô Hoa Lư nghìn năm tuổi ở gần đó — tên gọi giống nhau, nhưng là hai câu chuyện khác nhau.",
+      en: "This is a gentle way to close the day, no further transfer needed. To be clear: this is a newly built cultural quarter, not the thousand-year-old Hoa Lu Ancient Capital nearby — the names sound alike, but they are two different stories.",
     },
     coordinates: [20.2579, 105.9741],
     suggestedMinutes: 90,
@@ -240,12 +306,12 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "The Ngo Dong River slips through rice fields and three caves.",
     },
     description: {
-      vi: "Tuyến thuyền làng quê kết hợp dễ dàng với chùa Bích Động và những nhịp đạp xe ngắn.",
-      en: "A countryside boat route that pairs naturally with Bich Dong Pagoda and short cycling loops.",
+      vi: "Thuyền len qua đồng lúa và ba hang núi, rồi ghé chùa Bích Động trên sườn đá — cả tuyến đi vừa một buổi, thêm dăm vòng xe đạp quanh làng.",
+      en: "The boat winds through rice fields and three caves, then stops at Bich Dong Pagoda on the hillside — the whole route fits a morning, with a few laps by bicycle around the village.",
     },
     story: {
-      vi: "Tam Cốc mang chất làng quê rõ hơn Tràng An: thuyền thấp, đồng lúa theo mùa và đời sống ven sông. Bích Động thêm một lớp tâm linh gần gũi trên sườn núi.",
-      en: "Tam Coc feels more rural than Trang An, with low boats, seasonal rice and riverside life. Bich Dong adds an intimate spiritual layer on the mountainside.",
+      vi: "So với Tràng An, Tam Cốc mang hơi thở làng quê rõ hơn: thuyền be bé, đồng lúa đổi màu theo mùa, và người dân vẫn sống ngay bên bờ sông. Bích Động góp thêm một khoảng tĩnh tâm linh, nép mình trên sườn núi đá.",
+      en: "Compared with Trang An, Tam Coc feels more like the countryside: small boats, rice fields that change colour with the season, and people still living right along the riverbank. Bich Dong adds a quiet spiritual pause, tucked into the hillside.",
     },
     coordinates: [20.2169, 105.9368],
     suggestedMinutes: 150,
@@ -268,6 +334,19 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       url: nationalTourismGuide,
       reviewedAt: "2026-07-24",
     },
+    press: [
+      {
+        // Không ngoặc kép: chưa lấy được nguyên văn hồ sơ UNESCO (403).
+        text: {
+          vi: "Khu danh thắng Tràng An – Tam Cốc – Bích Động nằm trong vùng di sản được UNESCO ghi danh năm 2014, và là di tích quốc gia đặc biệt.",
+          en: "The Trang An–Tam Coc–Bich Dong scenic area lies within the UNESCO property inscribed in 2014, and is a special national monument.",
+        },
+        verbatim: false,
+        publisher: "UNESCO World Heritage Centre",
+        year: 2014,
+        url: "https://whc.unesco.org/en/list/1438/",
+      },
+    ],
   },
   {
     id: "10000000-0000-4000-8000-000000000006",
@@ -280,12 +359,12 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "Height reveals the river bends and limestone ridges.",
     },
     description: {
-      vi: "Điểm ngắm cảnh với tuyến bậc đá dốc mở ra tầm nhìn xuống Tam Cốc và các thung lũng lân cận.",
-      en: "A steep stepped viewpoint opening onto Tam Coc and the surrounding limestone valleys.",
+      vi: "Bậc đá dốc leo dần lên đỉnh, và đến nơi là cả Tam Cốc cùng những thung lũng lân cận trải ra dưới chân.",
+      en: "Steep stone steps climb toward the summit, and at the top, Tam Coc and the surrounding valleys spread out below.",
     },
     story: {
-      vi: "Hang Múa cho hành trình một góc nhìn toàn cảnh nhưng đòi hỏi thể lực và thời tiết phù hợp. Đây không phải lựa chọn mặc định cho yêu cầu ít đi bộ.",
-      en: "Hang Mua provides a defining panorama but requires fitness and suitable weather. It is not a default choice for low-walking requests.",
+      vi: "Hang Múa đổi lại một tầm nhìn hiếm có bằng vài trăm bậc đá dưới nắng — xứng đáng, nhưng cần sức và cần trời quang. Với người muốn đi ít, đây không phải điểm nên chọn trước.",
+      en: "Hang Mua trades a rare view for a few hundred stone steps under the sun — worth it, but it takes stamina and clear weather. For those who prefer to walk less, this is not the place to start with.",
     },
     coordinates: [20.229, 105.9361],
     suggestedMinutes: 120,
@@ -320,12 +399,12 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "Water, reeds and the evening rhythm of returning birds.",
     },
     description: {
-      vi: "Một nhánh thiên nhiên yên hơn phía tây Tam Cốc, phù hợp buổi chiều chậm và quan sát chim.",
-      en: "A quieter nature branch west of Tam Coc, suited to a slow afternoon and birdwatching.",
+      vi: "Lau sậy và mặt nước yên tĩnh phía tây Tam Cốc — một buổi chiều chậm rãi, dành cho ai muốn ngồi lặng ngắm chim về tổ.",
+      en: "Reeds and quiet water west of Tam Coc — a slow afternoon, for anyone who wants to sit still and watch the birds come home.",
     },
     story: {
-      vi: "Thung Nham giúp hành trình giảm nhịp sau các điểm di sản đông khách. Trải nghiệm đẹp nhất phụ thuộc thời điểm và cần giữ tiếng nhỏ gần sinh cảnh chim.",
-      en: "Thung Nham lets a journey decompress after busier heritage sites. Its best moments are time-dependent and quiet behavior matters around bird habitats.",
+      vi: "Sau những điểm di sản đông người, Thung Nham là chỗ để hạ nhịp thở. Đến đúng lúc chim về mới trọn vẹn, và gần khu sinh cảnh thì nên đi khẽ, nói khẽ.",
+      en: "After the busier heritage sites, Thung Nham is where the pace drops. It is best timed to when the birds return, and near the habitat, footsteps and voices should stay soft.",
     },
     coordinates: [20.2136, 105.9027],
     suggestedMinutes: 150,
@@ -360,12 +439,12 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "A quiet mirror of water with an unhurried sense of place.",
     },
     description: {
-      vi: "Khu đất ngập nước với thuyền nan, vách núi phản chiếu và giá trị bảo tồn thiên nhiên.",
-      en: "A wetland landscape of bamboo boats, reflected cliffs and significant conservation value.",
+      vi: "Thuyền nan lướt nhẹ qua mặt nước phẳng như gương, vách núi soi bóng ngược, và cả vùng đầm này là đất bảo tồn.",
+      en: "A bamboo boat glides over water flat as a mirror, the cliffs reflected upside down, and the whole wetland is protected land.",
     },
     story: {
-      vi: "Vân Long phù hợp người tìm sự tĩnh lặng và một tuyến thuyền nhẹ. Hành trình nên tôn trọng sinh cảnh, không hứa trước việc quan sát động vật hoang dã.",
-      en: "Van Long suits travelers seeking quiet and a gentle boat route. A responsible visit respects habitats and never guarantees wildlife sightings.",
+      vi: "Vân Long dành cho người muốn một buổi sáng thật tĩnh, chỉ có tiếng mái chèo khua nước. Đây là đất của voọc mông trắng và nhiều loài chim quý, nhưng gặp được hay không còn tùy duyên — không ai hứa trước điều đó.",
+      en: "Van Long is for those who want a truly still morning, with only the sound of the paddle in the water. This is home to the white-rumped langur and many rare birds, but seeing them is a matter of chance — nobody can promise that in advance.",
     },
     coordinates: [20.3636, 105.8773],
     suggestedMinutes: 120,

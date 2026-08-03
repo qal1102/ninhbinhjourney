@@ -73,6 +73,33 @@ Map, canvas, iframe and third-party widgets often create high stacking contexts.
 - Avoid nested cards.
 - Keep maps and modals usable with one hand.
 
+## Voice Rules (Giọng văn)
+
+Reference site: heritagevietnamairlines.com and comparable premium travel editorial sites — not generic AI/SaaS copy. Applies to **prose**: subtitles, section intros, destination `description`/`story`, editorial copy. Does **not** apply to UI micro-copy (button labels, nav items) or to the one-shot animated intro words (see Intro Rule below) — those must stay short and literal.
+
+Test: read the sentence with "Ninh Bình" swapped for "Hạ Long". If it still reads true, it is generic — rewrite it with something only Ninh Bình can claim (a named place, a real number, a specific season/behavior).
+
+Four techniques to use:
+- Từ láy (reduplicative words) for texture and rhythm.
+- Vế đối (parallel, balanced clauses) — "đá vôi hàng triệu năm tuổi, dấu chân người ở từ thời tiền sử" not a flat list.
+- Long-short-long sentence rhythm, not uniform sentence length.
+- Đính chính định kiến — name the assumption, then correct it, then invite ("Không phải ai cũng... — chỉ có...").
+
+Five patterns to ban:
+- Stacked abstract nouns as a prose lead ("Trải nghiệm — Kết nối — Giá trị").
+- "Không X, không Y" used as ad-parallelism rather than a real correction.
+- Selling with raw numbers in emotional copy (save numbers for spec sheets, not story copy).
+- Internal/technical/product jargon leaking into user-facing text (see incident below).
+- Em-dash fragments used to replace periods throughout a paragraph.
+
+**Known incident, 03/08:** a UI section titled literally "Three ways in. Pick one." / "Ba lối vào. Chọn một." shipped as an instructional list-style header — it read like a bot menu, not an invitation. Fixed by keeping the three-card layout (it solves a real navigation problem) and rewriting only the header using the đính-chính-định-kiến pattern: "No two journeys start the same way." / "Không ai bắt đầu một chuyến đi giống ai." Lesson: a UI pattern can be structurally right and still fail on voice — check the header text specifically, not just whether the section exists.
+
+## Intro Rule (one-shot, do not touch lightly)
+
+- `introTop` / `introWords` (currently "Ninh Binh" / "Nature. Heritage. Wonder." and vi equivalent) are a locked, tested sequence — an e2e spec asserts the exact words and timing. This is **not** prose and the swap-test above does not apply to it.
+- Must render exactly once per page load (on mount), never re-triggered by click/scroll elsewhere on the page.
+- Do not duplicate the same words a second time anywhere in the static hero below the intro overlay — if a kicker line above the H1 already shows them, do not also render them in a second band/grid further down. (This exact duplication was found and fixed once already on the monorepo-side history; if it resurfaces here, remove the second occurrence, not the first.)
+
 ## Pre-Ship Audit
 
 Before finishing visible UI work:

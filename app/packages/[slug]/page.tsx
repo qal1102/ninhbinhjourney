@@ -40,8 +40,8 @@ export default async function PackageDetailPage({
           <section>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
               {flags.sandboxCheckout
-                ? `Demonstration Data · ${item.durationLabel}`
-                : `Indicative catalog · ${item.durationLabel}`}
+                ? `Dữ liệu minh họa · ${item.durationLabel}`
+                : `Bảng giá tham khảo · ${item.durationLabel}`}
             </p>
             <h1 className="font-display mt-4 text-6xl leading-[0.92] sm:text-8xl">
               {item.name}

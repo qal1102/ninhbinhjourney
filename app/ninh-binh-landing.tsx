@@ -128,7 +128,7 @@ const copy = {
     hiddenGemsIntro:
       "Quieter stops for visitors who want less-crowded nature, small temples and ethical side trips.",
     pathsLabel: "Start here",
-    pathsTitle: "Three ways in. Pick one.",
+    pathsTitle: "No two journeys start the same way.",
     pathMapTitle: "Browse the map",
     pathMapBody:
       "See every place on a real map, filter by time on foot and pace, then keep what fits.",
@@ -222,7 +222,7 @@ const copy = {
     hiddenGemsIntro:
       "Những điểm yên hơn dành cho du khách muốn thiên nhiên vắng, đền chùa nhỏ và trải nghiệm có trách nhiệm.",
     pathsLabel: "Bắt đầu ở đây",
-    pathsTitle: "Ba lối vào. Chọn một.",
+    pathsTitle: "Không ai bắt đầu một chuyến đi giống ai.",
     pathMapTitle: "Xem trên bản đồ",
     pathMapBody:
       "Thấy hết các điểm trên bản đồ thật, lọc theo thời gian và mức đi bộ, rồi giữ lại thứ hợp với mình.",

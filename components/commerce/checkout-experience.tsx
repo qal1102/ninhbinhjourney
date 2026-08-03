@@ -40,14 +40,14 @@ export function CheckoutExperience({
       });
       setQuote(nextQuote);
       setMessage(
-        "Server quote ready. Capacity and demonstration pricing were checked in the active room.",
+        "Đã có báo giá. Hệ thống vừa kiểm tra chỗ trống và giá minh họa.",
       );
     } catch (error) {
       setQuote(null);
       setMessage(
         error instanceof Error
           ? error.message
-          : "Không thể tạo báo giá từ server.",
+          : "Không thể tạo báo giá lúc này.",
       );
     } finally {
       setPending(false);
@@ -78,7 +78,7 @@ export function CheckoutExperience({
       setMessage(
         error instanceof Error
           ? error.message
-          : "Không thể xác nhận demo booking.",
+          : "Không thể xác nhận đặt chỗ minh họa.",
       );
     } finally {
       setPending(false);
@@ -89,11 +89,11 @@ export function CheckoutExperience({
     <div className="grid gap-7 lg:grid-cols-[1fr_0.72fr]">
       <section className="rounded-3xl border border-[#d7d5cd] bg-white p-6 shadow-sm sm:p-8">
         <p className="rounded-xl border border-[#c68f48]/35 bg-[#fff7e9] p-4 text-sm font-bold text-[#78551e]">
-          Sandbox Payment — no real charge. Không nhập số thẻ, tài khoản ngân
-          hàng hoặc dữ liệu thanh toán thật.
+          Thanh toán mô phỏng — không thu tiền thật. Không nhập số thẻ, tài
+          khoản ngân hàng hoặc dữ liệu thanh toán thật.
         </p>
         <h2 className="font-display mt-7 text-3xl text-[#183f34]">
-          Guest checkout tối thiểu
+          Đặt chỗ nhanh, không cần tài khoản
         </h2>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <label className="text-sm font-bold sm:col-span-2">
@@ -173,10 +173,10 @@ export function CheckoutExperience({
               className="mt-1 h-5 w-5 accent-[#183f34]"
             />
             <span>
-              <strong className="block">DestinationOS Sandbox</strong>
+              <strong className="block">Cổng thanh toán mô phỏng</strong>
               <span className="mt-1 block text-sm leading-6 text-[#59654b]">
-                Một lifecycle mô phỏng có chữ ký, event idempotency và callback
-                approved. Không kết nối mạng thanh toán.
+                Toàn bộ quy trình được mô phỏng và có ghi lại để kiểm chứng.
+                Không kết nối tới mạng lưới thanh toán thật.
               </span>
             </span>
           </label>
@@ -188,14 +188,14 @@ export function CheckoutExperience({
             onChange={(event) => setConsent(event.target.checked)}
             className="mt-1 h-5 w-5 accent-[#183f34]"
           />
-          Tôi xác nhận đây là dữ liệu khách giả lập trong demo room và đồng ý
-          lưu thông tin liên hệ tối thiểu cho luồng minh họa.
+          Tôi xác nhận đây là dữ liệu khách giả lập cho mục đích minh họa, và
+          đồng ý lưu thông tin liên hệ tối thiểu cho luồng này.
         </label>
       </section>
 
       <aside className="h-fit rounded-3xl bg-[#183f34] p-6 text-white sm:p-8">
         <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#e7c78d]">
-          Demonstration Data
+          Dữ liệu minh họa
         </p>
         <h2 className="font-display mt-3 text-3xl">{packageItem.name}</h2>
         <dl className="mt-6 space-y-4 border-y border-white/15 py-5 text-sm">
@@ -207,14 +207,10 @@ export function CheckoutExperience({
             <dt className="text-white/58">Số khách</dt>
             <dd>{partySize}</dd>
           </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-white/58">Ledger</dt>
-            <dd>service-commerce</dd>
-          </div>
         </dl>
         {quote ? (
           <div className="mt-6 rounded-2xl bg-white/8 p-5">
-            <p className="text-sm text-white/58">Server-calculated total</p>
+            <p className="text-sm text-white/58">Tổng cộng đã tính</p>
             <p className="font-display mt-2 text-3xl text-[#e7c78d]">
               {quote.totalVnd.toLocaleString("vi-VN")} VND
             </p>
@@ -224,8 +220,7 @@ export function CheckoutExperience({
           </div>
         ) : (
           <p className="mt-6 rounded-2xl border border-dashed border-white/20 p-5 text-sm leading-6 text-white/58">
-            Báo giá hiển thị ở đây sau khi server kiểm tra catalog, ngày và
-            capacity.
+            Báo giá sẽ hiện ở đây sau khi hệ thống kiểm tra ngày và chỗ trống.
           </p>
         )}
         {!quote ? (
@@ -235,7 +230,7 @@ export function CheckoutExperience({
             disabled={pending || partySize < 1 || partySize > 20}
             className="mt-6 min-h-12 w-full rounded-full bg-[#f4f0e7] px-6 font-extrabold text-[#183f34] disabled:opacity-50"
           >
-            {pending ? "Đang kiểm tra…" : "Lấy báo giá từ server"}
+            {pending ? "Đang kiểm tra…" : "Xem báo giá"}
           </button>
         ) : (
           <button
@@ -244,7 +239,7 @@ export function CheckoutExperience({
             disabled={pending || !consent}
             className="mt-6 min-h-12 w-full rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17] disabled:opacity-50"
           >
-            {pending ? "Đang xác nhận…" : "Confirm demo booking"}
+            {pending ? "Đang xác nhận…" : "Xác nhận đặt chỗ minh họa"}
           </button>
         )}
         {message ? (
@@ -253,8 +248,7 @@ export function CheckoutExperience({
           </p>
         ) : null}
         <p className="mt-5 text-xs leading-5 text-white/42">
-          Một idempotency key được giữ cho lần gửi này. Nhấn lặp lại không tạo
-          booking thứ hai.
+          Nhấn lặp lại cũng không tạo thêm một đặt chỗ thứ hai.
         </p>
       </aside>
     </div>

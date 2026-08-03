@@ -67,8 +67,12 @@ export default async function DestinationPage({
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,28,23,.12),rgba(12,28,23,.84))]" />
         <div className="relative z-10 mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-end px-5 pb-12 text-white sm:px-8 sm:pb-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#e7c78d]">
-            {destination.suggestedMinutes} phút · mobility{" "}
-            {destination.mobilityLevel}
+            {destination.suggestedMinutes} phút ·{" "}
+            {destination.mobilityLevel === "low"
+              ? "đi bộ ít"
+              : destination.mobilityLevel === "moderate"
+                ? "đi bộ vừa"
+                : "đi bộ nhiều"}
           </p>
           <h1 className="font-display mt-4 max-w-5xl text-6xl leading-[0.9] sm:text-8xl">
             {destination.name.vi}
@@ -108,6 +112,49 @@ export default async function DestinationPage({
               </span>
             ))}
           </div>
+
+          {destination.press?.length ? (
+            <section className="mt-12 border-t border-[#dcd9d1] pt-8">
+              <h2 className="font-display text-3xl text-[#183f34]">
+                Người ta đã viết gì về nơi này
+              </h2>
+              <div className="mt-6 space-y-7">
+                {destination.press.map((entry) => (
+                  <figure key={entry.url + entry.year}>
+                    <blockquote className="border-l-2 border-[#b8cfbf] pl-5 text-lg leading-8 text-[#3f4f48]">
+                      {entry.verbatim
+                        ? `“${entry.text.vi}”`
+                        : entry.text.vi}
+                    </blockquote>
+                    <figcaption className="mt-3 pl-5 text-sm text-[#6b7973]">
+                      <a
+                        href={entry.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-[#2c6350] underline underline-offset-4"
+                      >
+                        {entry.publisher}
+                      </a>
+                      <span>, {entry.year}</span>
+                      {entry.via ? (
+                        <span>
+                          {" · dẫn lại theo "}
+                          <a
+                            href={entry.via.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-4"
+                          >
+                            {entry.via.label}
+                          </a>
+                        </span>
+                      ) : null}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </article>
         <aside className="h-fit rounded-3xl border border-[#d7d5cd] bg-white p-6 shadow-sm">
           <h2 className="font-display text-2xl text-[#183f34]">

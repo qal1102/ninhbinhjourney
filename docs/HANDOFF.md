@@ -2,7 +2,7 @@
 
 > **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
 >
-> Cập nhật: **02/08/2026** — sau đợt làm T1–T10, W3, buổi chốt thiết kế danh tính/hồ sơ/nhật ký, **và đợt đẩy toàn bộ lên production** (T0 xong, mục 0).
+> Cập nhật: **03/08/2026** — sau đợt làm T1–T10, W3, buổi chốt thiết kế danh tính/hồ sơ/nhật ký, đợt đẩy toàn bộ lên production (T0 xong, mục 0), và đợt sửa tiêu đề "Ba lối vào" + viết lại mô tả 9 điểm đến (mục 2.6).
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -186,6 +186,18 @@ Chưa kiểm thử tự động được phần micro: Chromium headless không 
 - Gỡ ngôn ngữ nội bộ lọt ra mặt khách: `Ninh Bình tourism core`, `Intent → rules → validated itinerary`, `Có khung giờ demo`, `Trạng thái: idle`. Khách không hiểu và không nên thấy.
 
 Kết quả: cao **7.259px** (giảm ~36%). Đã xác minh: `npm run lint`/`build` sạch, 28/28 e2e công khai xanh (`public-surfaces.spec.ts`, `public-journey-planner.spec.ts`), tự chụp ảnh trang chủ cả hai khổ màn hình. **Cố ý chưa làm trong đợt này:** phần "Câu chuyện điểm đến", bản đồ nhúng và công cụ dựng tuyến trên trang chủ vẫn giữ nguyên — chỉ sắp xếp lại thứ tự và cắt phần trùng, chưa đánh giá lại từng phần trong đó. Nếu vẫn còn cảm giác rối sau đợt này, cần chủ dự án chỉ rõ đang rối ở khúc nào (mở đầu, hay công cụ dựng tuyến, hay điều hướng) để sửa đúng chỗ thay vì đoán.
+
+**03/08 (đợt hai, sau khi hợp nhất hai lịch sử git) — sửa tiêu đề "Ba lối vào. Chọn một.", viết lại mô tả 9 điểm đến, thêm trích dẫn báo chí.**
+
+Đúng cái khối vừa ghi công ở trên bị chính chủ dự án chê ngay ngày hôm sau: *"ba lối vào chọn 1 nghe đần độn vc như kiểu con bot hướng dẫn ấy"*. Cấu trúc ba thẻ (bản đồ / kể ngày bạn / tuyến dựng sẵn, đánh số 01–02–03) vẫn đúng — nó giải quyết thật vấn đề "vào trang không biết bắt đầu từ đâu". Cái sai chỉ là **tiêu đề dịch thẳng kiểu liệt kê UI** ("Three ways in. Pick one." → "Ba lối vào. Chọn một."), đọc như lệnh máy chứ không phải lời mời. Đã sửa riêng dòng tiêu đề, giữ nguyên khung ba thẻ:
+- VI: "Ba lối vào. Chọn một." → "Không ai bắt đầu một chuyến đi giống ai."
+- EN: "Three ways in. Pick one." → "No two journeys start the same way."
+
+Cùng đợt: viết lại `description`/`story` cho toàn bộ 9 điểm đến trong `content/destinations.ts` theo bốn kỹ thuật giọng văn ghi ở `docs/reference/UI_UX_RULES.md#voice-rules` (từ láy, vế đối, câu dài-ngắn-dài, đính chính định kiến), tham chiếu giọng heritagevietnamairlines.com. Thêm trường `press` (trích dẫn UNESCO + Forbes cho Tràng An, Hoa Lư, Tam Cốc–Bích Động) với cờ `verbatim` bắt buộc — `true` chỉ khi nguyên văn từng chữ, `false` cho sự thật đã kiểm chứng nhưng không đọc được nguyên văn (trang UNESCO trả 403). Còn thiếu `press` cho Bái Đính, Phố cổ Hoa Lư, Hang Múa, Thung Nham, Vân Long, Tam Chúc — chưa có nguồn đã tự đọc.
+
+**Biết nhưng cố ý chưa đụng trong đợt này:** khối in `introWords` ("Nature. Heritage. Wonder." / "Thiên nhiên. Di sản. Kỳ quan.") xuất hiện **hai lần** trong hero tĩnh sau màn intro — một dòng kicker ngay trên `<h1>` (dòng ~1417), một dải 3 cột lặp lại y hệt bên dưới subtitle (dòng ~1420-1424). Không phải lỗi re-trigger animation, chỉ là render trùng tĩnh. Chưa gỡ vì nằm ngoài phạm vi được giao lần này — xem `docs/reference/UI_UX_RULES.md#intro-rule` để sửa đúng (gỡ lần xuất hiện thứ hai, giữ dòng kicker).
+
+**Bối cảnh git đáng ghi lại một lần:** dự án được làm trên hai máy, một máy dùng repo bọc ngoài + `git subtree` để đẩy (sinh hash commit khác dù nội dung giống hệt tại điểm đồng bộ 31/07), một máy clone thẳng repo này. Lịch sử tưởng như "không có tổ tiên chung" nhưng đã xác minh cây thư mục trùng khít tại thời điểm rẽ nhánh — không phải mất dữ liệu hay bị ghi đè. Máy bọc-ngoài từ nay chuyển sang clone thẳng như thế này để tránh lặp lại nhầm lẫn.
 
 ---
 

@@ -26,15 +26,17 @@ export default async function PackagesPage({
         </Link>
         <p className="mt-10 text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
           {flags.sandboxCheckout
-            ? "Demonstration Data · service-commerce only"
-            : "Indicative catalog · online booking unavailable"}
+            ? "Dữ liệu minh họa · giữ chỗ mô phỏng, chưa thu tiền thật"
+            : "Bảng giá tham khảo · chưa mở đặt online"}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-5xl leading-[0.95] text-[#183f34] sm:text-7xl">
-          Bốn cách đóng gói, không có lựa chọn đánh lạc hướng.
+          Bốn cách đi Ninh Bình, mỗi cách một nhịp riêng.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
-          Giá dưới đây là dữ liệu minh họa theo người lớn, không phải giá thị
-          trường hiện hành. Donation và sponsorship không đi vào tổng checkout.
+          Chọn theo thời gian bạn có và điều bạn muốn cảm nhận — di sản trọn
+          ngày, một ngày chậm rãi, buổi sáng cùng gia đình hay một chiều hoàng
+          hôn cho ảnh đẹp. Giá dưới đây là dữ liệu minh họa theo người lớn,
+          không phải giá thị trường hiện hành.
         </p>
         <div className="mt-10 grid gap-5 lg:grid-cols-2">
           {PACKAGES.map((item) => (

@@ -6,6 +6,7 @@ import {
   DESTINATIONS,
   getDestinationBySlug,
 } from "@/content/destinations";
+import { DestinationTimeline } from "@/components/discovery/destination-timeline";
 
 type DestinationPageProps = {
   params: Promise<{ slug: string }>;
@@ -112,6 +113,10 @@ export default async function DestinationPage({
               </span>
             ))}
           </div>
+
+          {destination.timeline?.length ? (
+            <DestinationTimeline entries={destination.timeline} />
+          ) : null}
 
           {destination.press?.length ? (
             <section className="mt-12 border-t border-[#dcd9d1] pt-8">

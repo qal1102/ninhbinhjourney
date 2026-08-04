@@ -83,6 +83,17 @@ export type DestinationCatalogItem = {
     url: string;
     via?: { label: string; url: string };
   }[];
+  /**
+   * Mốc lịch sử cho các điểm đến có bề dày lịch sử thật (Tràng An, Cố đô
+   * Hoa Lư, Bái Đính) — dựng thành dòng thời gian tương tác trên trang chi
+   * tiết thay vì một đoạn văn phẳng. Chỉ thêm mốc đã kiểm chứng qua nguồn
+   * đáng tin (giống luật của `press`), không suy đoán ngày tháng.
+   */
+  timeline?: readonly {
+    year: Localized;
+    label: Localized;
+    detail: Localized;
+  }[];
 };
 
 const nationalTourismGuide =
@@ -159,6 +170,32 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         },
       },
     ],
+    timeline: [
+      {
+        year: { vi: "Hơn 30.000 năm trước", en: "More than 30,000 years ago" },
+        label: { vi: "Người ở trong hang đá", en: "People sheltering in the caves" },
+        detail: {
+          vi: "Các hang động trong lòng Tràng An giữ dấu tích người ở liên tục — không phải một lần dừng chân, mà nhiều thế hệ nối nhau sống giữa núi đá này.",
+          en: "The caves inside Trang An hold traces of continuous human presence — not a single stopover, but generations living among these limestone mountains one after another.",
+        },
+      },
+      {
+        year: { vi: "Thế kỷ X", en: "10th century" },
+        label: { vi: "Kinh đô nằm trong lòng núi", en: "A capital held inside the mountains" },
+        detail: {
+          vi: "Vùng lõi Cố đô Hoa Lư — kinh đô đầu tiên của nhà nước phong kiến tập quyền Đại Cồ Việt — nằm ngay trong ranh giới Tràng An, là một trong ba khu được bảo vệ của quần thể.",
+          en: "The core zone of Hoa Lu Ancient Capital — the first capital of the centralized feudal state of Dai Co Viet — sits inside Trang An's boundary, one of the complex's three protected areas.",
+        },
+      },
+      {
+        year: { vi: "2014", en: "2014" },
+        label: { vi: "UNESCO ghi danh di sản kép", en: "UNESCO inscribes a dual heritage" },
+        detail: {
+          vi: "Tràng An trở thành Di sản Thế giới hỗn hợp — vừa văn hóa vừa thiên nhiên — một trong số ít nơi trên thế giới được công nhận cả hai vế cùng lúc.",
+          en: "Trang An becomes a mixed World Heritage property — both cultural and natural — one of the few places worldwide recognised under both categories at once.",
+        },
+      },
+    ],
   },
   {
     id: "10000000-0000-4000-8000-000000000002",
@@ -214,6 +251,40 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         url: "https://whc.unesco.org/en/list/1438/",
       },
     ],
+    timeline: [
+      {
+        year: { vi: "968", en: "968" },
+        label: { vi: "Đinh Bộ Lĩnh lập kinh đô", en: "Dinh Bo Linh founds the capital" },
+        detail: {
+          vi: "Sau khi dẹp loạn 12 sứ quân, Đinh Bộ Lĩnh lên ngôi hoàng đế, đặt tên nước Đại Cồ Việt và chọn Hoa Lư — nơi núi non bao bọc như một tòa thành tự nhiên — làm kinh đô.",
+          en: "After putting down the rebellion of the 12 warlords, Dinh Bo Linh crowned himself emperor, named the country Dai Co Viet, and chose Hoa Lu — ringed by mountains like a natural citadel — as the capital.",
+        },
+      },
+      {
+        year: { vi: "968–1010", en: "968–1010" },
+        label: { vi: "42 năm, ba triều đại", en: "42 years, three dynasties" },
+        detail: {
+          vi: "Hoa Lư giữ vai trò trung tâm quyền lực qua nhà Đinh, Tiền Lê và những năm đầu nhà Lý — chứng kiến việc thống nhất đất nước, chống quân Tống và dẹp Chiêm Thành.",
+          en: "Hoa Lu remained the seat of power through the Dinh, Earlier Le and early Ly dynasties — witnessing national unification, resistance against the Song and campaigns against Champa.",
+        },
+      },
+      {
+        year: { vi: "1010", en: "1010" },
+        label: { vi: "Lý Thái Tổ dời đô", en: "Ly Thai To moves the capital" },
+        detail: {
+          vi: "Nhận thấy Hoa Lư quá chật hẹp để trở thành một đô thị lớn, Lý Thái Tổ dời đô về Thăng Long. Hoa Lư từ đây trở thành cố đô — kinh đô cũ, không còn là trung tâm nhưng vẫn giữ nguyên trục thần đạo.",
+          en: "Recognising that Hoa Lu was too cramped to grow into a proper capital city, Ly Thai To moved the seat of power to Thang Long. Hoa Lu became the former capital from then on — no longer the center, but keeping the same sacred axis.",
+        },
+      },
+      {
+        year: { vi: "2014", en: "2014" },
+        label: { vi: "UNESCO ghi danh cùng Tràng An", en: "UNESCO inscription, alongside Trang An" },
+        detail: {
+          vi: "Cố đô Hoa Lư trở thành một trong ba khu bảo vệ của Quần thể danh thắng Tràng An — Di sản Thế giới hỗn hợp, vừa văn hóa vừa thiên nhiên.",
+          en: "Hoa Lu Ancient Capital becomes one of three protected areas within the Trang An Landscape Complex — a mixed World Heritage property, both cultural and natural.",
+        },
+      },
+    ],
   },
   {
     id: "10000000-0000-4000-8000-000000000003",
@@ -264,6 +335,32 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         publisher: "Vietnam Airlines — Travel Guide",
         year: 2026,
         url: "https://www.vietnamairlines.com/us/en/plan-book/travel/travel-guide/bai-dinh-pagoda",
+      },
+    ],
+    timeline: [
+      {
+        year: { vi: "1136", en: "1136" },
+        label: { vi: "Quốc sư lập chùa trong hang núi", en: "A royal monk founds a cave temple" },
+        detail: {
+          vi: "Thiền sư Nguyễn Minh Không — quốc sư nhà Lý — tìm được một hang động trên núi Đính trong lúc đi tìm thuốc chữa bệnh cho vua, và chọn nơi này lập chùa, tạc tượng thờ Phật.",
+          en: "Zen master Nguyen Minh Khong — a royal preceptor of the Ly dynasty — found a cave on Mount Dinh while searching for medicine to treat the king, and chose the spot to found a temple and carve Buddha statues.",
+        },
+      },
+      {
+        year: { vi: "2003", en: "2003" },
+        label: { vi: "Khởi công quần thể mới", en: "Construction of the new complex begins" },
+        detail: {
+          vi: "Bên cạnh chùa cổ trong hang, một quần thể chùa mới được khởi công — quy mô lớn hơn nhiều lần, nhưng vẫn giữ chùa cổ nguyên vẹn như điểm khởi đầu của cả câu chuyện.",
+          en: "Beside the old cave temple, a much larger new complex broke ground — while the ancient temple was kept intact as the starting point of the whole story.",
+        },
+      },
+      {
+        year: { vi: "2012", en: "2012" },
+        label: { vi: "Chín kỷ lục được xác lập", en: "Nine records set" },
+        detail: {
+          vi: "Hành lang La Hán dài gần 3 km với 500 pho tượng đá nguyên khối trở thành hành lang La Hán dài nhất châu Á — một trong chín kỷ lục Bái Đính nắm giữ tính đến năm này.",
+          en: "The nearly 3-kilometer Arhat corridor, holding 500 monolithic stone statues, became the longest Arhat corridor in Asia — one of nine records Bai Dinh held by this year.",
+        },
       },
     ],
   },

@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
 
 export type Language = "en" | "vi";
@@ -1190,6 +1190,45 @@ export default function NinhBinhLanding({
   const [introVisible, setIntroVisible] = useState(true);
   const modalOpen = Boolean(detailId || checkoutOpen);
 
+  // Kéo chuột thật cho route-rail. Trước đó chỉ có CSS cursor:grab -- con
+  // trỏ hứa hẹn kéo được nhưng không có xử lý nào chạy, mouse-drag không
+  // làm gì cả (chỉ touch/trackpad mới cuộn ngang tự nhiên). Bấm-kéo bằng
+  // pointer event, và chặn click "giả" khi vừa kéo xong để không mở nhầm
+  // chi tiết điểm đến ngay sau một cú kéo.
+  const railRef = useRef<HTMLDivElement>(null);
+  const railDrag = useRef({ dragging: false, startX: 0, startScrollLeft: 0, moved: false });
+
+  function handleRailPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "touch") return;
+    const rail = railRef.current;
+    if (!rail) return;
+    railDrag.current = { dragging: true, startX: event.clientX, startScrollLeft: rail.scrollLeft, moved: false };
+    rail.style.userSelect = "none";
+  }
+
+  function handleRailPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const rail = railRef.current;
+    const drag = railDrag.current;
+    if (!rail || !drag.dragging) return;
+    const delta = event.clientX - drag.startX;
+    if (Math.abs(delta) > 4) drag.moved = true;
+    rail.scrollLeft = drag.startScrollLeft - delta;
+  }
+
+  function endRailDrag() {
+    const rail = railRef.current;
+    if (rail) rail.style.userSelect = "";
+    railDrag.current.dragging = false;
+  }
+
+  function handleRailClickCapture(event: React.MouseEvent<HTMLDivElement>) {
+    if (railDrag.current.moved) {
+      event.preventDefault();
+      event.stopPropagation();
+      railDrag.current.moved = false;
+    }
+  }
+
   const sourceDestinationId = useMemo<DestinationId | "welcome">(() => {
     const normalized = normalizeSource(source);
     return destinations.find((destination) => destination.sourceKeys.includes(normalized))?.id ?? "welcome";
@@ -1416,11 +1455,22 @@ export default function NinhBinhLanding({
             </div>
           </Reveal>
         </div>
-        <div className="route-rail mt-10 flex snap-x gap-4 overflow-x-auto px-5 pb-4 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]">
+        <div
+          ref={railRef}
+          className="route-rail mt-10 flex snap-x gap-4 overflow-x-auto px-5 pb-4 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]"
+          onPointerDown={handleRailPointerDown}
+          onPointerMove={handleRailPointerMove}
+          onPointerUp={endRailDrag}
+          onPointerLeave={endRailDrag}
+          onClickCapture={handleRailClickCapture}
+        >
           {routeCollections.map((route, index) => {
             const firstStop = route.stops[0];
             return (
-              <article key={route.id} className="route-card group relative h-[520px] w-[82vw] shrink-0 snap-center overflow-hidden rounded-[8px] bg-[#183F34] text-white shadow-2xl shadow-[#183F34]/18 sm:w-[560px] lg:w-[620px]">
+              <article
+                key={route.id}
+                onClick={() => openDetail(firstStop)}
+                className="route-card group relative h-[520px] w-[82vw] shrink-0 cursor-pointer snap-center overflow-hidden rounded-[8px] bg-[#183F34] text-white shadow-2xl shadow-[#183F34]/18 sm:w-[560px] lg:w-[620px]">
                 <Image
                   src={route.image}
                   alt={route.title[lang]}
@@ -1443,8 +1493,8 @@ export default function NinhBinhLanding({
                     })}
                   </div>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" onClick={() => openDetail(firstStop)} className="rounded-full bg-[#FBFAF6] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#E7B96A]">{t.viewRoute}</button>
-                    <button type="button" onClick={() => addRoute(route.stops)} className="rounded-full border border-white/35 px-5 py-3 font-semibold text-white transition hover:bg-white/12">{t.addRoute}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); openDetail(firstStop); }} className="rounded-full bg-[#FBFAF6] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#E7B96A]">{t.viewRoute}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); addRoute(route.stops); }} className="rounded-full border border-white/35 px-5 py-3 font-semibold text-white transition hover:bg-white/12">{t.addRoute}</button>
                   </div>
                 </div>
               </article>
@@ -1512,7 +1562,8 @@ export default function NinhBinhLanding({
               <article
                 id={`destination-${place.id}`}
                 key={place.id}
-                className="story-card group grid overflow-hidden rounded-[8px] border border-white/12 bg-[#FBFAF6] text-[#1D2925] shadow-2xl shadow-black/20 lg:grid-cols-[1.05fr_.95fr]"
+                onClick={() => openDetail(place.id)}
+                className="story-card group grid cursor-pointer overflow-hidden rounded-[8px] border border-white/12 bg-[#FBFAF6] text-[#1D2925] shadow-2xl shadow-black/20 transition hover:shadow-[0_32px_80px_-24px_rgba(0,0,0,0.55)] lg:grid-cols-[1.05fr_.95fr]"
               >
                 <div className={`relative min-h-80 overflow-hidden sm:min-h-[420px] lg:min-h-[560px] ${index % 2 ? "lg:order-2" : ""}`}>
                   <Image
@@ -1539,8 +1590,8 @@ export default function NinhBinhLanding({
                     </div>
                   </div>
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" onClick={() => openDetail(place.id)} className="rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white transition hover:bg-[#24594a]">{t.discover}</button>
-                    <button type="button" onClick={() => addDestination(place.id)} className="rounded-full border border-[#A8CEC1] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#F6F1E7]">{selectedIds.includes(place.id) ? t.added : t.add}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); openDetail(place.id); }} className="rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white transition hover:bg-[#24594a]">{t.discover}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); addDestination(place.id); }} className="rounded-full border border-[#A8CEC1] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#F6F1E7]">{selectedIds.includes(place.id) ? t.added : t.add}</button>
                   </div>
                 </div>
               </article>

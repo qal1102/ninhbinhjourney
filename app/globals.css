@@ -240,48 +240,6 @@ select {
   transform: translateY(0);
 }
 
-/*
- * "Cang keo xuong cang open hon" -- khoi anh bat dau nhu mot the bo tron,
- * roi tu no gian ra day man hinh dung theo vi tri cuon, khong dung JS.
- * animation-timeline: view() la ky thuat CSS chuan (Chrome/Edge/Firefox
- * dieu khien tren compositor thread, khong ton main thread nhu GSAP).
- * Trinh duyet chua ho tro thi @supports rot xuong trang thai tinh da mo
- * san -- khong bao gio vo layout.
- */
-.scroll-open-frame {
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-}
-
-.scroll-open-media {
-  border-radius: 40px;
-  inset: 0;
-  overflow: hidden;
-  position: absolute;
-  transform: scale(0.7);
-  transform-origin: center;
-}
-
-@supports (animation-timeline: view()) {
-  .scroll-open-media {
-    animation: scroll-open-media linear both;
-    animation-range: entry 0% entry 100%;
-    animation-timeline: view();
-  }
-}
-
-@keyframes scroll-open-media {
-  from {
-    border-radius: 40px;
-    transform: scale(0.7);
-  }
-  to {
-    border-radius: 0;
-    transform: scale(1);
-  }
-}
-
 .story-card {
   scroll-margin-top: 24px;
 }

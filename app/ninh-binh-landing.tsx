@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
-import { WaterRipple } from "@/components/shared/water-ripple";
 
 export type Language = "en" | "vi";
 export type DestinationId =
@@ -115,8 +114,6 @@ const copy = {
     youAreHere: "You are here",
     qrSource: "QR source",
     welcomePoint: "Ninh Binh welcome point",
-    touchWaterLabel: "Touch the water",
-    touchWaterTitle: "Ninh Binh never shows you everything at once. Touch the water, and let it carry you further.",
     mapTitle: "Interactive tourism map",
     mapBody:
       "Here the mountains never stand alone: rivers thread between the karsts, temples shelter under trees, an ancient capital rests inside a valley. Touch a point on the map, and let that place tell its own story.",
@@ -199,8 +196,6 @@ const copy = {
     youAreHere: "Bạn đang ở đây",
     qrSource: "Nguồn QR",
     welcomePoint: "Điểm chào đón Ninh Bình",
-    touchWaterLabel: "Chạm vào mặt nước",
-    touchWaterTitle: "Ninh Bình không cho bạn thấy hết cùng một lúc. Chạm vào mặt nước, để nó đưa bạn đi xa hơn.",
     mapTitle: "Bản đồ du lịch tương tác",
     mapBody:
       "Ở đây núi không đứng một mình: sông luồn giữa đá, đền nép dưới cây, cố đô nằm gọn trong lòng thung. Chạm một điểm trên bản đồ, để nơi ấy tự kể chuyện của mình.",
@@ -1505,34 +1500,6 @@ export default function NinhBinhLanding({
               </article>
             );
           })}
-        </div>
-      </section>
-
-      {/* Khoi "mo ra khi cuon": khung anh bat dau nhu the bo tron (scale
-          0.7, bo goc 40px), tu gian ra day khung hinh theo dung vi tri cuon
-          bang animation-timeline: view() -- CSS thuan, khong JS, chay tren
-          compositor thread. Ben trong la mat nuoc Trang An tuong tac that
-          (WaterRipple): cham/luot chuot hay tay tao gon song lan ra quanh
-          con thuyen giua khung. Tat het qua @supports/prefers-reduced-motion
-          -- xem globals.css va water-ripple.tsx. */}
-      <section className="scroll-open-frame bg-[#06120f]">
-        <div className="scroll-open-media">
-          <WaterRipple
-            src="/images/destinations/intro-trang-an-rain.png"
-            alt="Thuyền trôi trên mặt nước Tràng An trong sương"
-            className="h-full w-full"
-            wakeSourceX={0.63}
-            wakeSourceY={0.27}
-          />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.15),rgba(6,18,15,.1)_45%,rgba(6,18,15,.72))]" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-16 text-center text-white sm:px-8">
-            <p className="text-xs font-extrabold uppercase tracking-[0.28em] text-[#E7B96A]">
-              {t.touchWaterLabel}
-            </p>
-            <h2 className="font-display mx-auto mt-4 max-w-3xl text-3xl leading-tight sm:text-5xl">
-              {t.touchWaterTitle}
-            </h2>
-          </div>
         </div>
       </section>
 

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
 import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned-story";
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
+import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 
 export type Language = "en" | "vi";
 export type DestinationId =
@@ -302,6 +303,77 @@ const copy = {
  * Ba diem nay cung co chu dich khac han bo ba o khoi "Cau chuyen diem
  * den" ben duoi (Trang An / Bai Dinh / Tam Chuc) -- khong lap lai.
  */
+
+/*
+ * Ba bang video dien anh chay nen. Video do chu du an chon.
+ *
+ * Video Qe1LqAOY9C0 da bi BO vi co watermark cua tac gia dong tren
+ * khung hinh: de nguyen thi vuong mat, ma cat di thi thanh xoa dau ten
+ * nguoi quay. Ba video con lai nhung nguyen ban qua youtube-nocookie,
+ * giu nguyen credit va luot xem cho tac gia.
+ *
+ * Bat dau tu giay 12 (bo doan dau chua vao hinh), moi doan 17-18 giay
+ * roi lap lai -- dung yeu cau cua chu du an.
+ *
+ * Khi nao co file mp4 tu-host co giay phep thi doi `youTubeId` thanh
+ * `src`; component da ho tro san va che do do nhe hon han vi khong phai
+ * nhung ca mot trinh phat.
+ */
+const cinematicClips: Record<Language, CinematicClip[]> = {
+  vi: [
+    {
+      youTubeId: "OA4lO9rrk4Q",
+      start: 12,
+      end: 30,
+      eyebrow: "Sông nước Ninh Bình",
+      headline: "Từ mặt nước nhìn lên, núi đá cao hơn hẳn lúc đứng trên bờ.",
+      credit: "Nguồn: YouTube — bản quyền thuộc về tác giả",
+    },
+    {
+      youTubeId: "0NHfpdPHFE4",
+      start: 12,
+      end: 29,
+      eyebrow: "Giữa lòng thung",
+      headline: "Đá vôi dựng thành vách, còn dòng nước thì cứ lách qua.",
+      credit: "Nguồn: YouTube — bản quyền thuộc về tác giả",
+    },
+    {
+      youTubeId: "ZDCPQDr4YHE",
+      start: 12,
+      end: 30,
+      eyebrow: "Đất cố đô",
+      headline: "Nghìn năm trước, kinh đô Đại Cồ Việt nằm gọn giữa vòng núi này.",
+      credit: "Nguồn: YouTube — bản quyền thuộc về tác giả",
+    },
+  ],
+  en: [
+    {
+      youTubeId: "OA4lO9rrk4Q",
+      start: 12,
+      end: 30,
+      eyebrow: "The waterways of Ninh Binh",
+      headline: "Seen from the water, the limestone stands far taller than it does from the bank.",
+      credit: "Source: YouTube — rights remain with the original creators",
+    },
+    {
+      youTubeId: "0NHfpdPHFE4",
+      start: 12,
+      end: 29,
+      eyebrow: "Deep in the valley",
+      headline: "The limestone rises into walls, and the water simply slips between them.",
+      credit: "Source: YouTube — rights remain with the original creators",
+    },
+    {
+      youTubeId: "ZDCPQDr4YHE",
+      start: 12,
+      end: 30,
+      eyebrow: "Land of the ancient capital",
+      headline: "A thousand years ago the capital of Dai Co Viet sat inside this ring of mountains.",
+      credit: "Source: YouTube — rights remain with the original creators",
+    },
+  ],
+};
+
 const storyBeats: Record<Language, PinnedStoryBeat[]> = {
   en: [
     {
@@ -1592,6 +1664,8 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
+      <CinematicVideo clip={cinematicClips[lang][0]} />
+
       <PinnedStory beats={storyBeats[lang]} />
 
       <section id="map" className="px-5 py-16 sm:px-8 lg:py-24">
@@ -1640,6 +1714,8 @@ export default function NinhBinhLanding({
           </div>
         </div>
       </section>
+
+      <CinematicVideo clip={cinematicClips[lang][1]} />
 
       <section id="stories" className="bg-[#183F34] px-5 py-16 text-[#FBFAF6] sm:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
@@ -1744,6 +1820,8 @@ export default function NinhBinhLanding({
         onAdd={(id) => addDestination(id as DestinationId)}
         isAdded={(id) => selectedIds.includes(id as DestinationId)}
       />
+
+      <CinematicVideo clip={cinematicClips[lang][2]} />
 
       <section id="ai" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">

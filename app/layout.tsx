@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "@fontsource-variable/fraunces/full.css";
 import "@fontsource-variable/manrope/index.css";
 import "./globals.css";
+import { PageTransition } from "@/components/shared/page-transition";
+import { ScrollProgress } from "@/components/shared/scroll-progress";
 
 export const metadata: Metadata = {
   title: "Ninh Bình Journey",
@@ -15,7 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className="h-full scroll-smooth antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ScrollProgress />
+        <PageTransition>{children}</PageTransition>
+      </body>
     </html>
   );
 }

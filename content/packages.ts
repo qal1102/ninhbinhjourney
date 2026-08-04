@@ -17,6 +17,12 @@ export type PackageCatalogItem = {
   schedule: readonly string[];
 };
 
+export const PACE_LABEL: Record<PackageCatalogItem["pace"], string> = {
+  relaxed: "nhịp thư thả",
+  balanced: "nhịp cân bằng",
+  active: "nhịp năng động",
+};
+
 export const PACKAGES: readonly PackageCatalogItem[] = [
   {
     id: "40000000-0000-4000-8000-000000000001",

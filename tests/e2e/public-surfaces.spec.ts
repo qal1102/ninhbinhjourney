@@ -116,7 +116,11 @@ test("discovery list mode works without waiting on the map", async ({
 }) => {
   await page.goto("/explore");
   await expect(page.getByRole("main")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Plan/i })).toBeVisible();
+  // Nhãn nav từng là "Lập hành trình / Plan" (song ngữ trộn trên trang không
+  // có nút đổi ngôn ngữ) — đã gọn lại còn tiếng Việt ngày 04/08.
+  await expect(
+    page.getByRole("link", { name: "Lập hành trình" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Danh sách" }).click();
   await expect(page.locator("article").first()).toBeVisible();
 });

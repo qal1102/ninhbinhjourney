@@ -41,9 +41,9 @@ export default function PlanPage() {
           Một lịch trình biết giới hạn của nó.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
-          Ngôn ngữ giúp hiểu ý định; luật cấu hình quyết định thời gian, điểm
-          đến, mức đi bộ và khả dụng. Bạn luôn xác nhận trước khi dữ liệu được
-          lưu.
+          Kể về ngày bạn muốn — đi với ai, thích gì, đi bộ được bao nhiêu.
+          Lịch trình dựng ra sẽ tôn trọng giờ mở cửa và sức chân của bạn,
+          và không có gì được lưu khi bạn chưa gật đầu.
         </p>
         <div className="mt-10">
           <PlanExperience

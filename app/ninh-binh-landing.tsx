@@ -108,7 +108,7 @@ const copy = {
     journeysLabel: "Curated Ninh Binh",
     journeysTitle: "Stories, not stops",
     journeysBody:
-      "Drag through composed routes inspired by luxury travel collections: water first, temples next, forest and lantern light when the day slows down.",
+      "Each route tells its own thread: water first, temples next, then forest and lantern light as the day slows down. Drag through, and pick the one that sounds like the day you want.",
     viewRoute: "View route",
     addRoute: "Add route",
     youAreHere: "You are here",
@@ -116,35 +116,23 @@ const copy = {
     welcomePoint: "Ninh Binh welcome point",
     mapTitle: "Interactive tourism map",
     mapBody:
-      "Explore the wider Ninh Binh region through heritage water routes, spiritual landmarks, ancient capitals, forest edges and coastal architecture.",
+      "Here the mountains never stand alone: rivers thread between the karsts, temples shelter under trees, an ancient capital rests inside a valley. Touch a point on the map, and let that place tell its own story.",
     nearby: "Explore nearby",
     discover: "Discover",
     add: "Add to journey",
     added: "Added",
     stories: "Destination stories",
     storiesIntro:
-      "Editorial chapters for the places that shape a full Ninh Binh journey.",
+      "Three stories to begin with. Read them slowly — these places have waited thousands of years, and they are in no hurry.",
     signatureStories: "Signature route",
-    hiddenGems: "Hidden gems western travelers notice",
+    hiddenGems: "The quiet corners few people know",
     hiddenGemsIntro:
-      "Quieter stops for visitors who want less-crowded nature, small temples and ethical side trips.",
-    pathsLabel: "Start here",
-    pathsTitle: "No two journeys start the same way.",
-    pathMapTitle: "Browse the map",
-    pathMapBody:
-      "See every place on a real map, filter by time on foot and pace, then keep what fits.",
-    pathPlanTitle: "Tell us your day",
-    pathPlanBody:
-      "Describe the day you want, in your own words. We build an itinerary that respects opening hours and walking limits.",
-    pathPackageTitle: "Take a ready route",
-    pathPackageBody:
-      "Four packaged days, already sequenced. Pick one and adjust it later.",
-    pathOpen: "Open",
+      "Emptier, slower places — where the sound of an oar in the water still carries further than voices.",
     seeAllDestinations: "See all destinations",
     companionLabel: "Journey Builder",
     companionTitle: "Build a route that feels human",
     companionBody:
-      "Select your time, pace and interests. The route is assembled locally from curated sample data and stays editable before any reservation.",
+      "Tell us how many hours you have, who is coming, and whether water or mountains call you more. The route takes shape from there — and nothing is booked until you say so.",
     prompt: "Tell me what kind of journey you want...",
     create: "Create journey",
     creating: "Composing your route...",
@@ -202,7 +190,7 @@ const copy = {
     journeysLabel: "Ninh Bình tuyển chọn",
     journeysTitle: "Câu chuyện, không chỉ điểm dừng",
     journeysBody:
-      "Kéo qua các tuyến được biên tập như một collection du lịch cao cấp: nước trước, chùa sau, rừng và ánh đèn khi ngày chậm lại.",
+      "Mỗi tuyến là một mạch kể: nước trước, chùa sau, rồi rừng và ánh đèn lồng khi ngày chậm lại. Kéo qua, chọn mạch nào giống ngày bạn đang mong.",
     viewRoute: "Xem tuyến",
     addRoute: "Thêm tuyến",
     youAreHere: "Bạn đang ở đây",
@@ -210,35 +198,23 @@ const copy = {
     welcomePoint: "Điểm chào đón Ninh Bình",
     mapTitle: "Bản đồ du lịch tương tác",
     mapBody:
-      "Khám phá vùng Ninh Bình mở rộng qua tuyến nước di sản, điểm tâm linh, cố đô, rìa rừng và kiến trúc ven biển.",
+      "Ở đây núi không đứng một mình: sông luồn giữa đá, đền nép dưới cây, cố đô nằm gọn trong lòng thung. Chạm một điểm trên bản đồ, để nơi ấy tự kể chuyện của mình.",
     nearby: "Khám phá gần đây",
     discover: "Khám phá",
     add: "Thêm vào lịch trình",
     added: "Đã thêm",
     stories: "Câu chuyện điểm đến",
     storiesIntro:
-      "Những chương ảnh lớn dành cho các điểm đến làm nên một hành trình Ninh Bình trọn vẹn.",
+      "Ba câu chuyện để bắt đầu. Đọc chậm thôi — những nơi này đã chờ hàng nghìn năm, không vội.",
     signatureStories: "Tuyến nổi bật",
-    hiddenGems: "Điểm ít đông được khách Tây chú ý",
+    hiddenGems: "Những góc lặng ít người biết",
     hiddenGemsIntro:
-      "Những điểm yên hơn dành cho du khách muốn thiên nhiên vắng, đền chùa nhỏ và trải nghiệm có trách nhiệm.",
-    pathsLabel: "Bắt đầu ở đây",
-    pathsTitle: "Không ai bắt đầu một chuyến đi giống ai.",
-    pathMapTitle: "Xem trên bản đồ",
-    pathMapBody:
-      "Thấy hết các điểm trên bản đồ thật, lọc theo thời gian và mức đi bộ, rồi giữ lại thứ hợp với mình.",
-    pathPlanTitle: "Kể về ngày của bạn",
-    pathPlanBody:
-      "Nói bằng lời của bạn về ngày bạn muốn có. Lịch trình dựng ra sẽ tôn trọng giờ mở cửa và giới hạn đi bộ.",
-    pathPackageTitle: "Lấy tuyến dựng sẵn",
-    pathPackageBody:
-      "Bốn ngày đã đóng gói, đã xếp thứ tự. Chọn một rồi chỉnh sau cũng được.",
-    pathOpen: "Mở",
+      "Chỗ vắng hơn, chậm hơn — nơi tiếng chèo khua nước còn nghe rõ hơn tiếng người.",
     seeAllDestinations: "Xem tất cả điểm đến",
     companionLabel: "Bộ lập tuyến hành trình",
     companionTitle: "Dựng một tuyến đi có nhịp người thật",
     companionBody:
-      "Chọn thời lượng, nhịp đi và sở thích. Tuyến được ghép cục bộ từ dữ liệu mẫu đã biên tập và luôn có thể chỉnh trước khi giữ chỗ.",
+      "Kể chúng tôi nghe bạn có mấy giờ, đi cùng ai, thích nước hay thích núi hơn. Tuyến đi sẽ tự thành hình từ đó — và chưa có gì được giữ chỗ khi bạn chưa gật đầu.",
     prompt: "Bạn muốn một hành trình như thế nào...",
     create: "Tạo lịch trình",
     creating: "Đang sắp xếp tuyến...",
@@ -1425,52 +1401,9 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
-      {/* Ba lối đi. Đặt ngay dưới ảnh mở đầu vì đây là chỗ khách hay đứng lại:
-          trước đây trang chủ đổ thẳng vào một danh mục dài, không nói cho ai
-          biết nên bắt đầu từ đâu. */}
-      <section className="bg-[#FBFAF6] px-5 pt-16 text-[#1D2925] sm:px-8 sm:pt-20">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#3F7568]">
-              {t.pathsLabel}
-            </p>
-            <h2 className="font-display mt-3 max-w-3xl text-4xl leading-tight text-[#183F34] sm:text-5xl">
-              {t.pathsTitle}
-            </h2>
-          </Reveal>
-          <div className="mt-9 grid gap-4 md:grid-cols-3">
-            {(
-              [
-                [t.pathMapTitle, t.pathMapBody, "/explore"],
-                [t.pathPlanTitle, t.pathPlanBody, "/plan"],
-                [t.pathPackageTitle, t.pathPackageBody, "/packages"],
-              ] as Array<[string, string, string]>
-            ).map(([title, body, href], index) => (
-              <Reveal key={href} delayMs={index * 90}>
-                <a
-                  href={`${href}?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
-                  className="group flex h-full flex-col justify-between rounded-[8px] border border-[#A8CEC1]/70 bg-white p-6 transition hover:border-[#183F34] hover:shadow-lg hover:shadow-[#183F34]/10"
-                >
-                  <div>
-                    <span className="font-display text-2xl text-[#A8CEC1] transition group-hover:text-[#E7B96A]">
-                      0{index + 1}
-                    </span>
-                    <h3 className="font-display mt-2 text-3xl text-[#183F34]">{title}</h3>
-                    <p className="mt-3 leading-7 text-[#4d5b55]">{body}</p>
-                  </div>
-                  <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-[#183F34]">
-                    {t.pathOpen}
-                    <span aria-hidden="true" className="transition group-hover:translate-x-1">
-                      →
-                    </span>
-                  </span>
-                </a>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
+      {/* Khối "Ba lối vào" (3 thẻ điều hướng) từng đứng ở đây — chủ dự án bỏ
+          hẳn ngày 04/08: nó lặp lại đúng các đường đi đã có ở hero và nav,
+          bắt khách đọc thêm một màn chữ trước khi thấy nội dung thật. */}
       <section className="bg-[#FBFAF6] py-16 text-[#1D2925] sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <Reveal className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">

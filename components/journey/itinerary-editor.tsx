@@ -7,6 +7,18 @@ import { DESTINATIONS } from "@/content/destinations";
 import { rebuildItineraryWithSites } from "@/domain/journey";
 import type { Itinerary, JourneyIntent } from "@/domain/models";
 
+const walkingLabel: Record<JourneyIntent["walkingTolerance"], string> = {
+  low: "ít",
+  moderate: "vừa",
+  high: "nhiều",
+};
+
+const paceLabel: Record<JourneyIntent["pace"], string> = {
+  relaxed: "thư thả",
+  balanced: "cân bằng",
+  active: "năng động",
+};
+
 const ItineraryRouteMap = dynamic(() => import("./itinerary-route-map"), {
   loading: () => (
     <div className="grid min-h-[24rem] place-items-center rounded-2xl bg-[#12211c]">
@@ -252,8 +264,9 @@ export function ItineraryEditor({
             </ul>
           ) : null}
           <p className="mt-4 text-xs text-[#59654b]">
-            Tổng {itinerary.totalMinutes} / {intent.durationMinutes} phút · mức
-            đi bộ {intent.walkingTolerance} · nhịp {intent.pace}
+            Tổng {itinerary.totalMinutes} / {intent.durationMinutes} phút · đi
+            bộ {walkingLabel[intent.walkingTolerance]} · nhịp{" "}
+            {paceLabel[intent.pace]}
           </p>
         </section>
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PACKAGES } from "@/content/packages";
+import { PACE_LABEL, PACKAGES } from "@/content/packages";
 import {
   getExperiencePresentationFlags,
   readPublicEnvironment,
@@ -47,7 +47,7 @@ export default async function PackagesPage({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">
-                    {item.durationLabel} · {item.pace}
+                    {item.durationLabel} · {PACE_LABEL[item.pace]}
                   </p>
                   <h2 className="font-display mt-2 text-3xl text-[#183f34]">
                     {item.name}

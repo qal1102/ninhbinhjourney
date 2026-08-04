@@ -30,6 +30,12 @@ const mobilityRank: Record<MobilityLevel, number> = {
   high: 3,
 };
 
+const mobilityLabel: Record<MobilityLevel, string> = {
+  low: "đi bộ ít",
+  moderate: "đi bộ vừa",
+  high: "đi bộ nhiều",
+};
+
 const ExploreMap = dynamic(() => import("./explore-map"), {
   loading: () => (
     <div className="grid min-h-[31rem] place-items-center rounded-3xl border border-[#b9cbc3] bg-[#dce9e3]">
@@ -91,8 +97,8 @@ function DestinationSheet({
         </div>
         <div className="p-6">
           <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#356957]">
-            {destination.suggestedMinutes} phút · đi bộ{" "}
-            {destination.mobilityLevel}
+            {destination.suggestedMinutes} phút ·{" "}
+            {mobilityLabel[destination.mobilityLevel]}
           </p>
           <h2
             id="destination-sheet-title"
@@ -332,8 +338,8 @@ export function ExploreExperience() {
                 </div>
                 <div className="py-1">
                   <p className="text-xs font-extrabold text-[#557568]">
-                    {index + 1} · {destination.suggestedMinutes} phút · đi bộ{" "}
-                    {destination.mobilityLevel}
+                    {index + 1} · {destination.suggestedMinutes} phút ·{" "}
+                    {mobilityLabel[destination.mobilityLevel]}
                   </p>
                   <h2 className="font-display mt-1 text-xl text-[#183f34]">
                     {destination.name.vi}

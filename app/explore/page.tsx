@@ -25,7 +25,7 @@ export default function ExplorePage() {
           </Link>
           <nav className="flex items-center gap-2 text-sm font-bold">
             <Link href="/plan" className="rounded-full px-4 py-2">
-              Lập hành trình / Plan
+              Lập hành trình
             </Link>
             {clientDemo ? (
               <span className="hidden rounded-full bg-[#e8dfcf] px-3 py-1 text-xs text-[#5f593f] sm:inline-flex">
@@ -46,9 +46,9 @@ export default function ExplorePage() {
             không chỉ chọn điểm.
           </h1>
           <p className="max-w-xl text-lg leading-8 text-[#59654b]">
-            Lọc theo thời gian, mức đi bộ và nhóm khách. Bản đồ dùng lớp ngữ
-            cảnh local, không hiển thị ranh giới quốc gia và vẫn dùng được khi
-            tile mạng không khả dụng.
+            Có người muốn đi thật chậm, có người muốn thấy thật nhiều. Lọc theo
+            thời gian bạn có, mức đi bộ chịu được và nhóm đi cùng — bản đồ sẽ
+            chỉ giữ lại những nơi hợp với bạn.
           </p>
         </div>
         <div className="mt-10">

@@ -277,13 +277,17 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Đèn lồng và mặt nước cho một chương buổi tối nhẹ.",
       en: "Lantern light and reflections for an easy evening chapter.",
     },
+    // Không phải press: mượn dữ kiện (dựng theo dáng kinh đô Đại Cồ Việt thế
+    // kỷ X, gian hàng thủ công từ các làng nghề trong tỉnh) từ nhiều bài viết
+    // đã đọc để viết lại bằng giọng riêng — không trích dẫn nguyên văn, không
+    // ghi nguồn, vì không bài nào đủ tin cậy để đứng tên trong `press`.
     description: {
-      vi: "Phố đi bộ ven hồ, quán ăn đèn vàng và thuyền đèn lồng trôi chậm trên mặt nước khi trời vừa tắt nắng.",
-      en: "A lakeside walking street, lantern-lit food stalls, and boats drifting slowly on the water as the sun goes down.",
+      vi: "Không gian được dựng lại theo dáng kinh đô Đại Cồ Việt thế kỷ X, nay là phố đi bộ ven hồ với gian hàng thủ công từ các làng nghề khắp tỉnh, quán ăn đèn vàng và thuyền đèn lồng trôi chậm khi trời vừa tắt nắng.",
+      en: "Built to echo the shape of the tenth-century Dai Co Viet capital, this is now a lakeside walking street lined with handicraft stalls from villages across the province, lantern-lit food stalls, and boats drifting slowly as the sun goes down.",
     },
     story: {
-      vi: "Đây là điểm khép một ngày nhẹ nhàng, không cần thêm một chặng xe nào nữa. Xin nói rõ: đây là khu văn hóa mới dựng, khác với Cố đô Hoa Lư nghìn năm tuổi ở gần đó — tên gọi giống nhau, nhưng là hai câu chuyện khác nhau.",
-      en: "This is a gentle way to close the day, no further transfer needed. To be clear: this is a newly built cultural quarter, not the thousand-year-old Hoa Lu Ancient Capital nearby — the names sound alike, but they are two different stories.",
+      vi: "Đây là điểm khép một ngày nhẹ nhàng, không cần thêm một chặng xe nào nữa — ánh đèn lồng thay cho ánh nắng, và nhịp phố thay cho nhịp núi. Xin nói rõ: đây là khu văn hóa mới dựng, khác với Cố đô Hoa Lư nghìn năm tuổi ở gần đó — tên gọi giống nhau, nhưng là hai câu chuyện khác nhau.",
+      en: "This is a gentle way to close the day, no further transfer needed — lantern light replaces sunlight, and the street's rhythm replaces the mountain's. To be clear: this is a newly built cultural quarter, not the thousand-year-old Hoa Lu Ancient Capital nearby — the names sound alike, but they are two different stories.",
     },
     coordinates: [20.2579, 105.9741],
     suggestedMinutes: 90,
@@ -370,13 +374,17 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Độ cao làm lộ rõ đường sông và sống núi.",
       en: "Height reveals the river bends and limestone ridges.",
     },
+    // Không phải press: mượn tích vua Trần Thái Tông xem múa hát (giải thích
+    // tên núi) từ nhiều bài viết đã đọc để viết lại bằng giọng riêng — không
+    // trích dẫn nguyên văn, không ghi nguồn, vì không bài nào đủ tin cậy để
+    // đứng tên trong `press`.
     description: {
       vi: "Bậc đá dốc leo dần lên đỉnh, và đến nơi là cả Tam Cốc cùng những thung lũng lân cận trải ra dưới chân.",
       en: "Steep stone steps climb toward the summit, and at the top, Tam Coc and the surrounding valleys spread out below.",
     },
     story: {
-      vi: "Hang Múa đổi lại một tầm nhìn hiếm có bằng vài trăm bậc đá dưới nắng — xứng đáng, nhưng cần sức và cần trời quang. Với người muốn đi ít, đây không phải điểm nên chọn trước.",
-      en: "Hang Mua trades a rare view for a few hundred stone steps under the sun — worth it, but it takes stamina and clear weather. For those who prefer to walk less, this is not the place to start with.",
+      vi: "Người ta hay gọi đây là \"vịnh Hạ Long trên cạn\", nhưng tên thật của ngọn núi lại kể một câu chuyện khác: tương truyền vua Trần Thái Tông từng dừng chân xem múa hát nơi này, nên núi mang tên Hang Múa — múa, chứ không phải vịnh. Vài trăm bậc đá dưới nắng đổi lấy một tầm nhìn hiếm có, xứng đáng nhưng cần sức và cần trời quang. Với người muốn đi ít, đây không phải điểm nên chọn trước.",
+      en: "People often call it \"Ha Long Bay on land\", but the mountain's real name tells a different story: legend says Emperor Tran Thai Tong once stopped here to watch a dance performance, and so the peak became Hang Mua — the dancing cave, not a bay. A few hundred stone steps under the sun trade for a rare view, worth it but demanding stamina and clear skies. For those who prefer to walk less, this is not the place to start with.",
     },
     coordinates: [20.229, 105.9361],
     suggestedMinutes: 120,

@@ -125,8 +125,23 @@ Observed patterns:
 - Chủ dự án tự dùng site và báo trực tiếp (nguồn chính xác hơn cả bài viết Awwwards): hiệu ứng nền dạng hạt mưa rơi xuống nước, "nhìn kiểu yên bình" — và một lỗi UX thật: trên điện thoại, kéo một ngón tay bị site "ăn" vào tương tác thay vì cuộn trang, phải bấm 2 ngón mới cuộn được bình thường.
 
 How to adapt:
-- **Đã áp dụng 04/08**: `components/shared/water-ripple.tsx` — mặt nước Tràng An tương tác WebGL, gợn sóng phát ra quanh vị trí con thuyền (đổi từ ý "mưa rơi ngẫu nhiên" ban đầu sang "thuyền tự rẽ nước" theo góp ý sau khi xem preview).
-- **Bài học UX lấy trực tiếp từ lỗi của Alkemy Market, tránh lặp lại**: không được set `touch-action: none` chặn cuộn chạm một-ngón trên mobile chỉ để giữ vùng tương tác — đã cố tình bỏ hẳn thuộc tính này trong `WaterRipple`, chạm vẫn cuộn trang bình thường, ripple là hiệu ứng "ăn theo" chứ không giữ chân người dùng.
+- **Đã áp dụng 04/08, rồi gỡ bỏ cùng ngày**: `components/shared/water-ripple.tsx` — mặt nước Tràng An tương tác WebGL, gợn sóng phát ra quanh vị trí con thuyền. Tự kiểm bằng Playwright (không đọc code) mới thấy vấn đề thật: dùng y hệt ảnh nền của intro, gợn sóng quá nhỏ để nhận ra trên ảnh thật — chủ dự án chê "nhìn ngáo, không cần thiết". Đã gỡ toàn bộ (section, component, CSS). Bài học: một kỹ thuật hay (WebGL ripple) vẫn có thể sai lựa chọn nội dung (ảnh lặp lại) — kiểm bằng mắt người trước khi giữ lại.
+- **Bài học UX lấy trực tiếp từ lỗi của Alkemy Market, vẫn đúng dù đã gỡ tính năng trên**: không được set `touch-action: none` chặn cuộn chạm một-ngón trên mobile chỉ để giữ vùng tương tác — áp dụng cho bất kỳ khối tương tác cảm ứng nào làm sau này.
+
+## Inversa
+
+Reference:
+- https://inversa.com/
+- https://www.awwwards.com/sites/inversa (Site of the Day, 7.48/10 — Design 7.6, Usability 7.2, Creativity 7.72, Content 7.34)
+
+Observed patterns:
+- Ảnh thiên nhiên lớn ghim khung khi cuộn (pinned scrollytelling), nhịp chuyển cảnh chậm rãi có chủ đích — dùng GSAP thật.
+- Preloader hiện chỉ số kiểu HUD kỹ thuật ("PHASE 31%", "FREQ 16HZ", font monospace) và một khung viewfinder-bracket theo dõi tiến độ cuộn suốt trang.
+- Chủ dự án tự xem trực tiếp, thích cách ghim ảnh nhưng chê rõ phần HUD/bracket: "trông xấu", "quá technical", muốn "sang trọng thiên nhiên hơn".
+
+How to adapt:
+- **Đã áp dụng 04/08**: `components/discovery/pinned-story.tsx` — 3 nhịp ảnh/chữ ghim khung, crossfade theo đúng vị trí cuộn bằng `animation-timeline: view()` thuần CSS (không GSAP, giữ đúng quy ước tránh GSAP của dự án). Học đúng phần "ghim ảnh, kể chuyện chậm", **chủ động bỏ hẳn phần HUD/số phần trăm/monospace** — không có chỉ số kỹ thuật nào hiển thị, chỉ ảnh thật + tiêu đề serif Fraunces + dòng mô tả, đúng góp ý "sang trọng thiên nhiên hơn".
+- Bài học kỹ thuật: `animation-timeline`/`animation-range` phải khai báo SAU shorthand `animation`, nếu không shorthand sẽ reset timeline về `auto` khiến animation chạy tức thời thay vì ăn theo cuộn — lỗi thật bắt được bằng cách đọc opacity tính toán qua Playwright ở nhiều mốc cuộn.
 
 ## Marvell Tile & Stone
 

@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
+import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned-story";
 
 export type Language = "en" | "vi";
 export type DestinationId =
@@ -261,6 +262,55 @@ const copy = {
     locationDenied: "Bạn chưa cấp quyền vị trí.",
   },
 } satisfies Record<Language, Record<string, string | string[]>>;
+
+const storyBeats: Record<Language, PinnedStoryBeat[]> = {
+  en: [
+    {
+      image: "/images/destinations/tam-chuc.jpg",
+      alt: "Tam Chuc's lake-side halls seen across still water",
+      eyebrow: "Wide lake, slow pace",
+      headline: "Tam Chuc does not hurry.",
+      body: "A large lakeside spiritual complex with long walking distances between halls — but no one here rushes you.",
+    },
+    {
+      image: "/images/destinations/van-long.png",
+      alt: "A bamboo boat crossing the still water of Van Long wetland",
+      eyebrow: "A still, quiet mirror",
+      headline: "Van Long shows nothing off.",
+      body: "Paddle strokes on water flat as a mirror, cliffs reflected upside down — whether the white-rumped langurs appear is a matter of chance.",
+    },
+    {
+      image: "/images/destinations/thung-nham.png",
+      alt: "Water and limestone in the Thung Nham ecological area",
+      eyebrow: "After the crowded sites",
+      headline: "Thung Nham is where the pace drops.",
+      body: "Near the bird habitat, footsteps and voices stay soft — only wingbeats are allowed to be loud.",
+    },
+  ],
+  vi: [
+    {
+      image: "/images/destinations/tam-chuc.jpg",
+      alt: "Các điện thờ Tam Chúc nhìn qua mặt hồ tĩnh lặng",
+      eyebrow: "Hồ rộng, bước chậm",
+      headline: "Tam Chúc không vội.",
+      body: "Quần thể tâm linh quy mô lớn bên hồ, đường đi dài giữa các điện — nhưng ở đây, chẳng ai giục ai.",
+    },
+    {
+      image: "/images/destinations/van-long.png",
+      alt: "Thuyền nan lướt qua mặt nước tĩnh lặng ở Vân Long",
+      eyebrow: "Mặt gương phẳng lặng",
+      headline: "Vân Long không phô diễn.",
+      body: "Mái chèo khua nước, vách núi soi bóng ngược — voọc mông trắng ghé qua hay không, còn tùy duyên.",
+    },
+    {
+      image: "/images/destinations/thung-nham.png",
+      alt: "Mặt nước và núi đá trong vùng sinh thái Thung Nham",
+      eyebrow: "Sau chỗ đông người",
+      headline: "Thung Nham là lúc hạ nhịp thở.",
+      body: "Gần khu chim về nên bước khẽ, nói khẽ — chỉ tiếng cánh vỗ mới được phép ồn.",
+    },
+  ],
+};
 
 const destinations: Destination[] = [
   {
@@ -1502,6 +1552,8 @@ export default function NinhBinhLanding({
           })}
         </div>
       </section>
+
+      <PinnedStory beats={storyBeats[lang]} />
 
       <section id="map" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">

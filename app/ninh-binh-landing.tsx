@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
 import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned-story";
+import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 
 export type Language = "en" | "vi";
 export type DestinationId =
@@ -130,6 +131,19 @@ const copy = {
     hiddenGemsIntro:
       "Emptier, slower places — where the sound of an oar in the water still carries further than voices.",
     seeAllDestinations: "See all destinations",
+    zigzagLabel: "Every destination",
+    zigzagTitle: "Fifteen places, fifteen different rhythms.",
+    zigzagIntro:
+      "Some are reached only by boat, when the paddle echoes off a sheer limestone wall. Some ask a few hundred stone steps of you, in full sun. And some ask only that you sit very still, and wait for the birds to come home at dusk.",
+    zigzagCtaTitle: "Not sure where to begin?",
+    zigzagCtaBody:
+      "Fifteen places sit within one small region, yet each asks for a rhythm of its own. Tell us how many days you have, who travels with you and how unhurried you would like it to be — the arranging is ours to do.",
+    zigzagCtaPrimary: "Plan a journey with us",
+    zigzagCtaSecondary: "View our ready-made packages",
+    zigzagCtaOffer:
+      "Reserving through the website takes 10% off the counter price, paid by QR code right in your browser.",
+    zigzagCtaOfferPlain:
+      "Describe what you have in mind in ordinary words; we will build the itinerary from there.",
     companionLabel: "Journey Builder",
     companionTitle: "Build a route that feels human",
     companionBody:
@@ -212,6 +226,19 @@ const copy = {
     hiddenGemsIntro:
       "Chỗ vắng hơn, chậm hơn — nơi tiếng chèo khua nước còn nghe rõ hơn tiếng người.",
     seeAllDestinations: "Xem tất cả điểm đến",
+    zigzagLabel: "Toàn bộ điểm đến",
+    zigzagTitle: "Mười lăm nơi, mười lăm nhịp thở khác nhau.",
+    zigzagIntro:
+      "Có nơi chỉ đến được bằng thuyền, khi mái chèo khua vào vách đá dựng đứng. Có nơi đổi lại bằng mấy trăm bậc đá giữa nắng. Và có nơi chỉ cần ngồi thật yên, đợi đàn chim về lúc chiều buông.",
+    zigzagCtaTitle: "Chưa biết nên bắt đầu từ đâu?",
+    zigzagCtaBody:
+      "Mười lăm nơi nằm trên một vùng đất không rộng, nhưng mỗi nơi đòi một nhịp đi riêng. Bạn cho chúng tôi biết mình có mấy ngày, đi cùng ai và muốn thong thả tới đâu — phần sắp xếp còn lại xin để chúng tôi lo.",
+    zigzagCtaPrimary: "Lập hành trình cùng chúng tôi",
+    zigzagCtaSecondary: "Xem các gói có sẵn",
+    zigzagCtaOffer:
+      "Giữ chỗ qua website được giảm 10% so với giá tại quầy, thanh toán bằng mã QR ngay trên trình duyệt.",
+    zigzagCtaOfferPlain:
+      "Bạn có thể mô tả mong muốn bằng lời thường; chúng tôi sẽ dựng lịch trình từ đó.",
     companionLabel: "Bộ lập tuyến hành trình",
     companionTitle: "Dựng một tuyến đi có nhịp người thật",
     companionBody:
@@ -1677,6 +1704,46 @@ export default function NinhBinhLanding({
           </div>
         </div>
       </section>
+
+      {/* Toan bo 15 diem den xep so le, cuon toi dau hien toi do, ket bang
+          khoi dan sang Lap hanh trinh. Noi dung lay thang tu `destinations`
+          da bien tap san -- khong viet them cau moi o day. */}
+      <DestinationZigzag
+        items={destinations.map((place) => ({
+          id: place.id,
+          name: place.name[lang],
+          image: place.image,
+          imagePosition: place.imagePosition,
+          category: place.category[lang],
+          duration: place.duration[lang],
+          tagline: place.tagline[lang],
+          description: place.description[lang],
+          highlights: place.highlights[lang],
+        }))}
+        copy={{
+          sectionLabel: t.zigzagLabel as string,
+          sectionTitle: t.zigzagTitle as string,
+          sectionIntro: t.zigzagIntro as string,
+          explore: t.discover as string,
+          add: t.add as string,
+          added: t.added as string,
+          ctaTitle: t.zigzagCtaTitle as string,
+          ctaBody: t.zigzagCtaBody as string,
+          ctaPrimary: t.zigzagCtaPrimary as string,
+          ctaSecondary: t.zigzagCtaSecondary as string,
+          /*
+           * Chi hua thanh toan QR khi thanh toan sandbox that su bat
+           * (NEXT_PUBLIC_EXPERIENCE_MODE=client-demo). O che do production
+           * /checkout tra ve "Online checkout is not configured" -- hua
+           * roi dan khach vao ngo cut con te hon la khong hua. Da kiem
+           * that bang curl len production truoc khi viet dong nay.
+           */
+          ctaOffer: (clientDemo ? t.zigzagCtaOffer : t.zigzagCtaOfferPlain) as string,
+        }}
+        onExplore={(id) => openDetail(id as DestinationId)}
+        onAdd={(id) => addDestination(id as DestinationId)}
+        isAdded={(id) => selectedIds.includes(id as DestinationId)}
+      />
 
       <section id="ai" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">

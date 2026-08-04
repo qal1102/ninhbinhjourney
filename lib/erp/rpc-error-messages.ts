@@ -336,6 +336,47 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   // --- Thương mại (stack /ops) ---
   CAPACITY_UNAVAILABLE: "Khung giờ này đã hết chỗ.",
   QUOTE_EXPIRED: "Báo giá đã hết hiệu lực. Hãy tạo lại báo giá mới.",
+
+  // --- Đối soát tiền mặt (T10b) ---
+  CASH_DEPOSIT_INPUT_INVALID: "Thông tin lượt nộp quỹ chưa hợp lệ.",
+  CASH_ACCOUNTANT_ROLE_REQUIRED:
+    "Bạn chưa được ghi nhận là kế toán tại cơ sở này.",
+  CASH_SHIFT_NOT_POSTED_OR_NOT_FOUND:
+    "Có ca chưa chốt xong hoặc không thuộc cơ sở này trong danh sách chọn.",
+  CASH_DEPOSIT_AMOUNT_MUST_BE_POSITIVE:
+    "Tổng tiền mặt của các ca đã chọn phải lớn hơn 0.",
+  CASH_SHIFT_ALREADY_DEPOSITED:
+    "Có ca đã được gộp vào một lượt nộp khác rồi — mỗi ca chỉ nộp một lần.",
+  CASH_DEPOSIT_NOT_FOUND: "Không tìm thấy lượt nộp quỹ này.",
+  CASH_DEPOSIT_VERSION_CONFLICT:
+    "Lượt nộp quỹ vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
+  CASH_DEPOSIT_NOT_MATCHABLE:
+    "Lượt nộp quỹ không còn ở trạng thái chờ đối khớp.",
+  CASH_STATEMENT_LINE_INPUT_INVALID: "Thông tin dòng sao kê chưa hợp lệ.",
+  CASH_STATEMENT_LINE_NOT_FOUND: "Không tìm thấy dòng sao kê này.",
+  CASH_STATEMENT_LINE_ACCOUNT_MISMATCH:
+    "Dòng sao kê không cùng tài khoản ngân hàng hoặc cơ sở với lượt nộp.",
+  CASH_STATEMENT_LINE_VERSION_CONFLICT:
+    "Dòng sao kê vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
+  CASH_STATEMENT_LINE_NOT_AVAILABLE:
+    "Dòng sao kê này đã được khớp với một lượt nộp khác.",
+  CASH_MATCH_INPUT_INVALID: "Thông tin đối khớp chưa hợp lệ.",
+  CASH_JOURNAL_REQUIRES_CASH_WORKFLOW:
+    "Bút toán của lượt nộp quỹ chỉ được sửa qua luồng đối soát tiền mặt.",
+  CASH_EXCEPTION_INPUT_INVALID: "Thông tin quyết định ngoại lệ chưa hợp lệ.",
+  CASH_CHECKER_OR_DIRECTOR_ROLE_REQUIRED:
+    "Chỉ kế toán trưởng hoặc giám đốc mới quyết định được ngoại lệ chênh lệch.",
+  CASH_DEPOSIT_NOT_PENDING_EXCEPTION_DECISION:
+    "Lượt nộp quỹ không còn chờ quyết định ngoại lệ.",
+  CASH_REVIEW_INPUT_INVALID: "Thông tin duyệt bút toán chưa hợp lệ.",
+  CASH_CHECKER_ROLE_REQUIRED:
+    "Bạn chưa được ghi nhận là kế toán trưởng tại cơ sở này.",
+  CASH_DEPOSIT_NOT_PENDING_REVIEW:
+    "Lượt nộp quỹ không còn chờ kế toán trưởng ghi sổ.",
+  CASH_JOURNAL_NOT_PENDING_CHECKER: "Bút toán không còn chờ duyệt.",
+  CASH_JOURNAL_VERSION_CONFLICT:
+    "Bút toán vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
+  CASH_JOURNAL_NOT_BALANCED: "Bút toán chưa cân đối Nợ và Có.",
 });
 
 /**

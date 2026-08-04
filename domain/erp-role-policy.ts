@@ -71,7 +71,10 @@ export type ErpCapability =
   | "project.work.accept"
   | "project.change.request"
   | "project.change.decide"
-  | "project.settlement.record";
+  | "project.settlement.record"
+  | "cash.deposit.submit"
+  | "cash.exception.decide"
+  | "cash.deposit.review";
 
 const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
   employee: [
@@ -101,6 +104,7 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "ap.liability.prepare",
     "ticket.shift.reconcile",
     "project.settlement.record",
+    "cash.deposit.submit",
   ],
   "chief-accountant": [
     "finance.regional.read",
@@ -111,6 +115,8 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "accounting.period.reopen",
     "ap.liability.check",
     "ap.liability.post",
+    "cash.exception.decide",
+    "cash.deposit.review",
   ],
   director: [
     "finance.regional.read",
@@ -120,6 +126,7 @@ const ROLE_CAPABILITIES: Record<ErpRole, readonly ErpCapability[]> = {
     "staff.access.manage",
     "project.work.accept",
     "project.change.decide",
+    "cash.exception.decide",
   ],
 };
 
@@ -192,4 +199,16 @@ export function canDecideProjectChange(role: ErpRole) {
 
 export function canRecordProjectSettlement(role: ErpRole) {
   return hasErpCapability(role, "project.settlement.record");
+}
+
+export function canSubmitCashDeposit(role: ErpRole) {
+  return hasErpCapability(role, "cash.deposit.submit");
+}
+
+export function canDecideCashException(role: ErpRole) {
+  return hasErpCapability(role, "cash.exception.decide");
+}
+
+export function canReviewCashDeposit(role: ErpRole) {
+  return hasErpCapability(role, "cash.deposit.review");
 }

@@ -13,7 +13,12 @@ import {
   type AccountingJournalLine,
   type AccountingPeriod,
 } from "@/domain/erp-accounting";
-import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
+import { ERP_SITES, type ErpSite, type ErpSiteId } from "@/domain/erp";
+import type {
+  BankStatementLine,
+  CashDeposit,
+  CashDepositEligibleShift,
+} from "@/domain/erp-cash-deposit";
 import {
   SHIFT_CLOSE_MATERIALITY_VND,
   type ShiftCloseRecord,
@@ -23,6 +28,7 @@ import type {
   SupplierApSupplier,
 } from "@/domain/erp-supplier-ap";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { CashDepositReconciliationCenter } from "./cash-deposit-reconciliation-center";
 import { ShiftCloseAccountingQueue } from "./shift-close-workflow";
 import { SupplierApControlCenter } from "./supplier-ap-control-center";
 
@@ -593,6 +599,10 @@ export function AccountingControlCenter({
   periods,
   supplierApInvoices,
   supplierApSuppliers,
+  cashSites,
+  cashDeposits,
+  cashUnmatchedStatementLines,
+  cashEligibleShiftsBySite,
   initialSourceId,
 }: {
   user: CurrentErpUser;
@@ -601,6 +611,10 @@ export function AccountingControlCenter({
   periods: readonly AccountingPeriod[];
   supplierApInvoices: readonly SupplierApInvoice[];
   supplierApSuppliers: readonly SupplierApSupplier[];
+  cashSites: readonly ErpSite[];
+  cashDeposits: readonly CashDeposit[];
+  cashUnmatchedStatementLines: readonly BankStatementLine[];
+  cashEligibleShiftsBySite: Readonly<Record<string, readonly CashDepositEligibleShift[]>>;
   initialSourceId?: string;
 }) {
   const journalBySource = new Map<string, AccountingJournal>();
@@ -738,6 +752,27 @@ export function AccountingControlCenter({
           suppliers={supplierApSuppliers}
           embedded
         />
+      </div>
+
+      <div id="cash-deposits" className="scroll-mt-24">
+        <div className="rounded-2xl border border-[#cbdad3] bg-[#f5faf7] p-5 sm:p-6">
+          <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
+            Đối soát tiền mặt
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-[#20342c]">
+            Nộp quỹ → ngân hàng → đối chiếu sao kê
+          </h2>
+        </div>
+        <div className="mt-4">
+          <CashDepositReconciliationCenter
+            user={user}
+            sites={cashSites}
+            eligibleShiftsBySite={cashEligibleShiftsBySite}
+            deposits={cashDeposits}
+            unmatchedStatementLines={cashUnmatchedStatementLines}
+            embedded
+          />
+        </div>
       </div>
 
       {user.role === "accountant" && materialExceptions.length > 0 ? (

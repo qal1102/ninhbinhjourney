@@ -173,12 +173,12 @@ export async function listEligibleShiftsForDeposit(
 
   let query = client
     .from("erp_shift_close_workflows")
-    .select("id, shift_code, business_date, station, cash_vnd")
+    .select("id, business_code, shift_date, station_code, cash_vnd")
     .eq("tenant_id", TENANT_ID)
     .eq("site_id", siteUuid)
     .eq("status", "posted")
     .gt("cash_vnd", 0)
-    .order("business_date", { ascending: false })
+    .order("shift_date", { ascending: false })
     .limit(100);
   if (excludeIds.length > 0) {
     query = query.not("id", "in", `(${excludeIds.join(",")})`);
@@ -187,9 +187,9 @@ export async function listEligibleShiftsForDeposit(
   if (error) throw repositoryError("đọc ca đã chốt", error);
   return (data ?? []).map((row) => ({
     id: String(row.id),
-    shiftCode: String(row.shift_code),
-    businessDate: String(row.business_date),
-    station: String(row.station ?? ""),
+    shiftCode: String(row.business_code),
+    businessDate: String(row.shift_date),
+    station: String(row.station_code ?? ""),
     cashVnd: Number(row.cash_vnd),
   }));
 }

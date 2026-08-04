@@ -123,40 +123,79 @@ export default async function DestinationPage({
               <h2 className="font-display text-3xl text-[#183f34]">
                 Người ta đã viết gì về nơi này
               </h2>
-              <div className="mt-6 space-y-7">
-                {destination.press.map((entry) => (
-                  <figure key={entry.url + entry.year}>
-                    <blockquote className="border-l-2 border-[#b8cfbf] pl-5 text-lg leading-8 text-[#3f4f48]">
-                      {entry.verbatim
-                        ? `“${entry.text.vi}”`
-                        : entry.text.vi}
-                    </blockquote>
-                    <figcaption className="mt-3 pl-5 text-sm text-[#6b7973]">
-                      <a
-                        href={entry.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-bold text-[#2c6350] underline underline-offset-4"
+              <div className="mt-7 space-y-8">
+                {destination.press.map((entry, index) =>
+                  entry.verbatim ? (
+                    <figure
+                      key={entry.url + entry.year + index}
+                      className="rounded-3xl bg-[#f4f0e7] px-6 py-8 sm:px-10 sm:py-10"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="font-display block text-6xl leading-none text-[#c9a15c] sm:text-7xl"
                       >
-                        {entry.publisher}
-                      </a>
-                      <span>, {entry.year}</span>
-                      {entry.via ? (
-                        <span>
-                          {" · dẫn lại theo "}
-                          <a
-                            href={entry.via.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline underline-offset-4"
-                          >
-                            {entry.via.label}
-                          </a>
-                        </span>
-                      ) : null}
-                    </figcaption>
-                  </figure>
-                ))}
+                        &ldquo;
+                      </span>
+                      <blockquote className="font-display -mt-3 max-w-2xl text-2xl leading-snug text-[#183f34] sm:text-3xl">
+                        {entry.text.vi}
+                      </blockquote>
+                      <figcaption className="mt-6 text-sm">
+                        <a
+                          href={entry.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-extrabold uppercase tracking-[0.08em] text-[#2c6350] underline underline-offset-4"
+                        >
+                          {entry.publisher}
+                        </a>
+                        <span className="text-[#6b7973]">, {entry.year}</span>
+                        {entry.via ? (
+                          <span className="text-[#6b7973]">
+                            {" · dẫn lại theo "}
+                            <a
+                              href={entry.via.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline underline-offset-4"
+                            >
+                              {entry.via.label}
+                            </a>
+                          </span>
+                        ) : null}
+                      </figcaption>
+                    </figure>
+                  ) : (
+                    <figure key={entry.url + entry.year + index}>
+                      <blockquote className="border-l-2 border-[#b8cfbf] pl-5 text-base leading-7 text-[#3f4f48]">
+                        {entry.text.vi}
+                      </blockquote>
+                      <figcaption className="mt-3 pl-5 text-xs text-[#6b7973]">
+                        <a
+                          href={entry.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-[#2c6350] underline underline-offset-4"
+                        >
+                          {entry.publisher}
+                        </a>
+                        <span>, {entry.year}</span>
+                        {entry.via ? (
+                          <span>
+                            {" · dẫn lại theo "}
+                            <a
+                              href={entry.via.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline underline-offset-4"
+                            >
+                              {entry.via.label}
+                            </a>
+                          </span>
+                        ) : null}
+                      </figcaption>
+                    </figure>
+                  ),
+                )}
               </div>
             </section>
           ) : null}
@@ -165,6 +204,16 @@ export default async function DestinationPage({
           <h2 className="font-display text-2xl text-[#183f34]">
             Thông tin vận hành
           </h2>
+          {destination.realLimit ? (
+            <div className="mt-4 rounded-2xl border border-[#c68f48]/35 bg-[#fff7e9] p-4">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#8a6b38]">
+                Giới hạn thật
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#6b5326]">
+                {destination.realLimit.vi}
+              </p>
+            </div>
+          ) : null}
           <dl className="mt-5 space-y-5 text-sm">
             <div>
               <dt className="font-bold text-[#59654b]">Thời lượng đề xuất</dt>

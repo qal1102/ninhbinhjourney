@@ -101,6 +101,7 @@ const copy = {
     introWords: ["Nature.", "Heritage.", "Wonder."],
     title: "Ninh Binh",
     subtitle: "A journey between mountains, water and timeless heritage",
+    footerNote: "Ninh Binh Journey · A journey between mountains, water and timeless heritage.",
     begin: "Plan my journey",
     exploreMap: "Explore map",
     journeysLabel: "Curated Ninh Binh",
@@ -194,6 +195,7 @@ const copy = {
     introWords: ["Thiên nhiên.", "Di sản.", "Kỳ quan."],
     title: "Ninh Bình",
     subtitle: "Hành trình giữa núi, nước và di sản vượt thời gian",
+    footerNote: "Ninh Bình Journey · Hành trình giữa núi, nước và di sản vượt thời gian.",
     begin: "Lập hành trình",
     exploreMap: "Khám phá bản đồ",
     journeysLabel: "Ninh Bình tuyển chọn",
@@ -1707,6 +1709,10 @@ export default function NinhBinhLanding({
           </aside>
         </div>
       </section>
+
+      <footer className="border-t border-[#e2ded2] bg-[#FBFAF6] px-5 py-10 text-center sm:px-8">
+        <p className="font-display text-lg text-[#183F34]">{t.footerNote}</p>
+      </footer>
 
       {detailDestination && detailFacts ? (
         <div

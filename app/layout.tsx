@@ -3,9 +3,8 @@ import "@fontsource-variable/fraunces/full.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ninh Binh AI Journey",
-  description:
-    "A premium mobile-first journey through Ninh Binh's mountains, water, and heritage.",
+  title: "Ninh Bình Journey",
+  description: "Hành trình giữa núi, nước và di sản vượt thời gian.",
 };
 
 export default function RootLayout({

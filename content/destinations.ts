@@ -94,6 +94,13 @@ export type DestinationCatalogItem = {
     label: Localized;
     detail: Localized;
   }[];
+  /**
+   * Giới hạn thật, nói thẳng — không phải đồng hồ đếm ngược giả hay ô
+   * "chỉ còn N chỗ" bịa ra. Chỉ điền khi có một ràng buộc vật lý/mùa vụ
+   * thật và đã kiểm chứng (giống luật của `press`): số khách mỗi thuyền,
+   * mùa dễ gặp động vật hoang dã. Không thêm cho đủ số điểm đến.
+   */
+  realLimit?: Localized;
 };
 
 const nationalTourismGuide =
@@ -196,6 +203,10 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         },
       },
     ],
+    realLimit: {
+      vi: "Mỗi thuyền chở tối đa 4 khách, chèo tay dọc một tuyến sông cố định — không có làn ưu tiên. Giờ cao điểm buổi sáng thường phải xếp hàng thật ở bến, không phải cảm giác dàn dựng.",
+      en: "Each boat carries up to 4 passengers, hand-rowed along a single fixed river route — there is no fast lane. Morning peak hours mean a real queue at the dock, not a staged one.",
+    },
   },
   {
     id: "10000000-0000-4000-8000-000000000002",
@@ -619,6 +630,10 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         url: "https://news.mongabay.com/2021/03/thriving-population-of-endangered-monkeys-gives-hope-to-conservationists/",
       },
     ],
+    realLimit: {
+      vi: "Voọc mông trắng dễ gặp nhất vào mùa khô, từ tháng 11 đến tháng 4, rõ nhất lúc sáng sớm và chiều muộn. Ngoài khung này, khả năng gặp thấp hơn hẳn — không ai hứa trước được điều gì.",
+      en: "Delacour's langurs are easiest to spot in the dry season, November through April, clearest at early morning and late afternoon. Outside that window, sightings are far less likely — nobody can promise anything in advance.",
+    },
   },
   {
     // W3: Tam Chúc is the site the ERP handles most heavily -- its own manager,

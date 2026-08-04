@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
 import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned-story";
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
-import { ReedField } from "@/components/shared/reed-field";
 
 export type Language = "en" | "vi";
 export type DestinationId =
@@ -1834,13 +1833,8 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
-      {/* Chan trang: cau neu thuong hieu dat tren mot doi lau nga theo gio,
-          chuot luot ngang thi lau re ra hai ben. Cho lau, khong phai cay
-          canh -- trong chinh anh Thung Nham va Van Long cua du an da co
-          san bo lau trang. */}
-      <footer className="relative overflow-hidden border-t border-[#12281f] bg-[#0B1A14] pt-12 text-center">
-        <p className="font-display px-5 text-lg text-[#EDE6D4] sm:px-8">{t.footerNote}</p>
-        <ReedField className="mt-4" />
+      <footer className="border-t border-[#e2ded2] bg-[#FBFAF6] px-5 py-10 text-center sm:px-8">
+        <p className="font-display text-lg text-[#183F34]">{t.footerNote}</p>
       </footer>
 
       {detailDestination && detailFacts ? (

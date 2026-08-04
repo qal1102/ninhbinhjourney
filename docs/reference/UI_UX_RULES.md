@@ -98,7 +98,7 @@ Five patterns to ban:
 
 - `introTop` / `introWords` (currently "Ninh Binh" / "Nature. Heritage. Wonder." and vi equivalent) are a locked, tested sequence — an e2e spec asserts the exact words and timing. This is **not** prose and the swap-test above does not apply to it.
 - Must render exactly once per page load (on mount), never re-triggered by click/scroll elsewhere on the page.
-- Do not duplicate the same words a second time anywhere in the static hero below the intro overlay — if a kicker line above the H1 already shows them, do not also render them in a second band/grid further down. (This exact duplication was found and fixed once already on the monorepo-side history; if it resurfaces here, remove the second occurrence, not the first.)
+- Do not duplicate the same words a second time anywhere in the static hero below the intro overlay — if a kicker line above the H1 already shows them, do not also render them in a second band/grid further down. **Fixed 03/08, commit `3311280`:** a second 3-column band below the subtitle repeated the same four words right after the kicker line; removed, kicker line kept. If this resurfaces, remove the second occurrence, not the first.
 
 ## Pre-Ship Audit
 

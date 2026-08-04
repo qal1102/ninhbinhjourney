@@ -254,6 +254,18 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       url: ninhBinhTourismSource,
       reviewedAt: "2026-07-24",
     },
+    press: [
+      {
+        text: {
+          vi: "Hành lang La Hán trải dài gần 3 km, được công nhận là hành lang La Hán dài nhất châu Á, với 500 pho tượng La Hán bằng đá nguyên khối cao từ 1,5 đến 2 mét.",
+          en: "The Arhat corridor stretches nearly 3 kilometers, making it the longest Arhat corridor in Asia, holding 500 monolithic Arhat statues ranging from 1.5 to 2 meters in height.",
+        },
+        verbatim: false,
+        publisher: "Vietnam Airlines — Travel Guide",
+        year: 2026,
+        url: "https://www.vietnamairlines.com/us/en/plan-book/travel/travel-guide/bai-dinh-pagoda",
+      },
+    ],
   },
   {
     id: "10000000-0000-4000-8000-000000000004",
@@ -427,6 +439,18 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       url: nationalTourismGuide,
       reviewedAt: "2026-07-24",
     },
+    press: [
+      {
+        text: {
+          vi: "Vườn chim Thung Nham rộng 18 héc-ta bên mặt nước xanh ngọc của hồ Tiên, là nơi trú ngụ của khoảng 5.000 tổ chim thuộc hơn 40 loài — trong đó có hai loài nằm trong Sách Đỏ Việt Nam.",
+          en: "Thung Nham Bird Garden covers 18 hectares set amid the cool, emerald waters of Tien Lake, home to around 5,000 nests of various kinds belonging to more than 40 species — two of which are listed in the Vietnam Red Book.",
+        },
+        verbatim: false,
+        publisher: "Nhân Dân (Nhan Dan Online)",
+        year: 2026,
+        url: "https://en.nhandan.vn/sustainable-conservation-of-thung-nham-bird-garden-post152754.html",
+      },
+    ],
   },
   {
     id: "10000000-0000-4000-8000-000000000008",
@@ -467,6 +491,29 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       url: "https://vietnamtourism.gov.vn/en/post/9342",
       reviewedAt: "2026-07-24",
     },
+    press: [
+      {
+        text: {
+          vi: "Lần đầu đến đây năm 1993, tôi thấy một quần thể chỉ khoảng 50 con voọc, và nhanh chóng nhận ra: nếu không lập khu bảo tồn, đàn voọc này sẽ sớm biến mất.",
+          en: "When I first visited the area in 1993, I discovered a population of about 50 langurs and quickly realized that if we don't establish a nature reserve, the langurs will soon be gone.",
+        },
+        verbatim: true,
+        publisher: "Mongabay — Tilo Nadler, primatologist who led the reserve's founding conservation effort",
+        year: 2021,
+        url: "https://news.mongabay.com/2021/03/thriving-population-of-endangered-monkeys-gives-hope-to-conservationists/",
+      },
+      {
+        // Không ngoặc kép: đây là dữ kiện tổng hợp từ nhiều đoạn trong cùng bài, không phải một câu nguyên văn.
+        text: {
+          vi: "Vân Long là khu bảo tồn đất ngập nước duy nhất của Việt Nam lọt vào Danh sách Xanh của IUCN, và được Công ước Ramsar công nhận là vùng đất ngập nước có tầm quan trọng quốc tế. Đây cũng là nơi sinh sống của phần lớn quần thể voọc mông trắng còn lại trên thế giới — loài chỉ còn khoảng 234 đến 275 cá thể trong tự nhiên.",
+          en: "Van Long is the only Vietnamese protected area on the IUCN Green List, and is recognised by the Ramsar Convention as a wetland of international importance. It is also home to most of the world's remaining Delacour's langurs — a species with only between 234 and 275 individuals left in the wild.",
+        },
+        verbatim: false,
+        publisher: "Mongabay",
+        year: 2021,
+        url: "https://news.mongabay.com/2021/03/thriving-population-of-endangered-monkeys-gives-hope-to-conservationists/",
+      },
+    ],
   },
   {
     // W3: Tam Chúc is the site the ERP handles most heavily -- its own manager,
@@ -514,6 +561,29 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       url: nationalTourismGuide,
       reviewedAt: "2026-08-02",
     },
+    press: [
+      {
+        // Không ngoặc kép: tổng hợp từ nhiều câu trong bài, không phải một câu nguyên văn.
+        text: {
+          vi: "Quần thể Tam Chúc rộng khoảng 5.100 héc-ta, gồm 1.000 héc-ta mặt hồ, 3.000 héc-ta núi đá tự nhiên và 1.000 héc-ta thung lũng. Điện Tam Thế cao 39 mét, diện tích 5.400 m², đủ chỗ cho 5.000 phật tử hành lễ cùng lúc. Chùa còn lưu giữ một cây Bồ Đề được Chủ tịch Quốc hội Sri Lanka trao tặng — Việt Nam là quốc gia thứ hai sau Nepal nhận được giống cây quý này.",
+          en: "The Tam Chuc complex covers roughly 5,100 hectares, including 1,000 hectares of lake, 3,000 hectares of natural rocky mountain and 1,000 hectares of valley. Tam The Palace stands 39 meters tall across 5,400 square meters, enough for 5,000 Buddhists to perform ceremonies at once. The pagoda also holds a Bodhi tree gifted by Sri Lanka's Parliament Speaker — Vietnam is the second country after Nepal to receive this tree.",
+        },
+        verbatim: false,
+        publisher: "VietnamPlus (Vietnam News Agency)",
+        year: 2026,
+        url: "https://en.vietnamplus.vn/tam-chuc-pagoda-ancient-beauty-amidst-majestic-scenery-post166820.vnp",
+      },
+      {
+        text: {
+          vi: "Năm 2019, Tam Chúc là nơi tổ chức Đại lễ Vesak Liên Hợp Quốc lần thứ 16, đón hơn 1.650 đại biểu từ 112 quốc gia và vùng lãnh thổ, cùng khoảng 20.000 tăng ni phật tử Việt Nam.",
+          en: "In 2019, Tam Chuc hosted the 16th United Nations Day of Vesak Celebrations, attracting more than 1,650 delegates from 112 countries and territories, along with some 20,000 Vietnamese Buddhist dignitaries, monks, nuns and followers.",
+        },
+        verbatim: false,
+        publisher: "Buddhistdoor Global",
+        year: 2019,
+        url: "https://www.buddhistdoor.net/news/vietnam-hosts-16th-united-nations-day-of-vesak-celebrations/",
+      },
+    ],
   },
 ] as const;
 

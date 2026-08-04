@@ -182,7 +182,8 @@ How to adapt:
 
 ## Implementation Notes
 
-- Prefer CSS or Motion-style timing for lightweight hero intro. Avoid adding GSAP unless the interaction needs complex timelines.
+- Prefer CSS or Motion-style timing for lightweight hero intro.
+- **GSAP đã được cài từ 04/08 và được phép dùng** (`gsap` + `ScrollTrigger`). Lý do thay đổi quan điểm cũ ("tránh GSAP"): `animation-timeline: view()` thuần CSS **chỉ chạy trên Chrome/Edge** — Safari và Firefox rơi thẳng về bố cục tĩnh, tức là phần lớn khách dùng iPhone xem bản không có hiệu ứng nào. Đó không phải chuyện "tinh gọn" mà là hỏng tính năng với một nửa người dùng. Vẫn giữ nguyên tắc: dùng CSS cho hiệu ứng đơn giản, GSAP khi cần dàn cảnh nhiều bước hoặc cần chạy trên mọi trình duyệt.
 - Respect `prefers-reduced-motion`.
 - Intro must not block the app too long and must not prevent language switching after it exits.
 - If the user asks for a “Douglus-like” intro, include all four identity words, not only `Ninh Bình`.

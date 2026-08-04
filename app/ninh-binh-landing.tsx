@@ -263,51 +263,63 @@ const copy = {
   },
 } satisfies Record<Language, Record<string, string | string[]>>;
 
+/*
+ * Ba nhip nay CHI dung du kien that da kiem chung, khong viet tho mood.
+ * Ban dau tung viet ba cau cung mot khuon ("Tam Chuc khong voi" / "Van
+ * Long khong pho dien" / "Thung Nham la luc...") -- vua sao rong, vua
+ * dung dung loi "khong X, khong Y" ma UI_UX_RULES.md cam. Nguon:
+ *  - Van Long: Mongabay 2021 (Danh sach Xanh IUCN, Ramsar, 234-275 ca
+ *    the vooc mong trang con lai) -- xem `press` trong content/destinations.ts
+ *  - Cuc Phuong: vuon quoc gia dau tien cua Viet Nam (`history`)
+ *  - Phat Diem: mai go Viet + kien truc da Cong giao (`history`)
+ * Ba diem nay cung co chu dich khac han bo ba o khoi "Cau chuyen diem
+ * den" ben duoi (Trang An / Bai Dinh / Tam Chuc) -- khong lap lai.
+ */
 const storyBeats: Record<Language, PinnedStoryBeat[]> = {
   en: [
     {
-      image: "/images/destinations/tam-chuc.jpg",
-      alt: "Tam Chuc's lake-side halls seen across still water",
-      eyebrow: "Wide lake, slow pace",
-      headline: "Tam Chuc does not hurry.",
-      body: "A large lakeside spiritual complex with long walking distances between halls — but no one here rushes you.",
-    },
-    {
       image: "/images/destinations/van-long.png",
       alt: "A bamboo boat crossing the still water of Van Long wetland",
-      eyebrow: "A still, quiet mirror",
-      headline: "Van Long shows nothing off.",
-      body: "Paddle strokes on water flat as a mirror, cliffs reflected upside down — whether the white-rumped langurs appear is a matter of chance.",
+      eyebrow: "Ramsar site · IUCN Green List",
+      headline: "Fewer than 300 Delacour's langurs are left on earth. Most of them live here.",
+      body: "Van Long is the only wetland reserve in Vietnam on the IUCN Green List. The bamboo boat moves slowly and the paddle stays quiet — whether the langurs come out is still down to luck.",
     },
     {
-      image: "/images/destinations/thung-nham.png",
-      alt: "Water and limestone in the Thung Nham ecological area",
-      eyebrow: "After the crowded sites",
-      headline: "Thung Nham is where the pace drops.",
-      body: "Near the bird habitat, footsteps and voices stay soft — only wingbeats are allowed to be loud.",
+      image: "/images/destinations/cuc-phuong.png",
+      alt: "Ancient forest canopy in Cuc Phuong National Park",
+      eyebrow: "Established 1962",
+      headline: "Before Vietnam had a second national park, there was Cuc Phuong.",
+      body: "Old-growth forest, thousand-year trees and primate rescue programmes still running today. Come here and the region changes register entirely: cooler, slower, a deeper shade of green.",
+    },
+    {
+      image: "/images/destinations/phat-diem.png",
+      alt: "Stone and timber architecture at Phat Diem Cathedral",
+      eyebrow: "Phat Diem stone cathedral",
+      headline: "A Vietnamese communal-house roof, sitting on a Catholic cathedral.",
+      body: "People assume Ninh Binh is only karst and river. Phat Diem lies out toward the coast and tells another story — built from stone and timber rather than concrete, where two architectural traditions meet and neither one gives way.",
     },
   ],
   vi: [
     {
-      image: "/images/destinations/tam-chuc.jpg",
-      alt: "Các điện thờ Tam Chúc nhìn qua mặt hồ tĩnh lặng",
-      eyebrow: "Hồ rộng, bước chậm",
-      headline: "Tam Chúc không vội.",
-      body: "Quần thể tâm linh quy mô lớn bên hồ, đường đi dài giữa các điện — nhưng ở đây, chẳng ai giục ai.",
-    },
-    {
       image: "/images/destinations/van-long.png",
       alt: "Thuyền nan lướt qua mặt nước tĩnh lặng ở Vân Long",
-      eyebrow: "Mặt gương phẳng lặng",
-      headline: "Vân Long không phô diễn.",
-      body: "Mái chèo khua nước, vách núi soi bóng ngược — voọc mông trắng ghé qua hay không, còn tùy duyên.",
+      eyebrow: "Khu Ramsar · Danh sách Xanh IUCN",
+      headline: "Cả thế giới còn chưa tới 300 con voọc mông trắng. Phần lớn sống ở đây.",
+      body: "Vân Long là khu bảo tồn đất ngập nước duy nhất của Việt Nam có tên trong Danh sách Xanh IUCN. Thuyền nan đi chậm, mái chèo khua khẽ — còn voọc có ra hay không thì vẫn tùy duyên.",
     },
     {
-      image: "/images/destinations/thung-nham.png",
-      alt: "Mặt nước và núi đá trong vùng sinh thái Thung Nham",
-      eyebrow: "Sau chỗ đông người",
-      headline: "Thung Nham là lúc hạ nhịp thở.",
-      body: "Gần khu chim về nên bước khẽ, nói khẽ — chỉ tiếng cánh vỗ mới được phép ồn.",
+      image: "/images/destinations/cuc-phuong.png",
+      alt: "Tán rừng già trong Vườn quốc gia Cúc Phương",
+      eyebrow: "Thành lập năm 1962",
+      headline: "Trước khi Việt Nam có vườn quốc gia thứ hai, đã có Cúc Phương.",
+      body: "Rừng già, cây nghìn năm tuổi và những chương trình cứu hộ linh trưởng vẫn chạy tới hôm nay. Vào tới đây là cả vùng đổi giọng: mát hơn, chậm hơn, xanh sẫm hơn hẳn.",
+    },
+    {
+      image: "/images/destinations/phat-diem.png",
+      alt: "Kiến trúc đá và gỗ tại Nhà thờ đá Phát Diệm",
+      eyebrow: "Nhà thờ đá Phát Diệm",
+      headline: "Một mái đình Việt, đặt trên một nhà thờ Công giáo.",
+      body: "Người ta hay đóng khung Ninh Bình trong núi đá với sông nước. Phát Diệm nằm chếch về phía biển và kể chuyện khác — dựng bằng đá và gỗ chứ không phải bê tông, nơi hai truyền thống kiến trúc gặp nhau mà không bên nào phải nhường bên nào.",
     },
   ],
 };

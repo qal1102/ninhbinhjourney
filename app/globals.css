@@ -562,183 +562,60 @@ select {
 }
 
 /*
- * PinnedStory: ghim 1 khung 100vh, 3 nhip anh/chu lan luot mo-tat theo
- * dung vi tri cuon qua view-timeline dat tren khoi cha cao 300vh --
- * thuan CSS, khong GSAP, chay tren compositor thread. Mac dinh (truoc
- * @supports, va duoi prefers-reduced-motion vi @media loc o day) la bo
- * cuc xep chong binh thuong: khong ghim, khong absolute, doc tuan tu tu
- * tren xuong -- khong bao gio vo layout hay hien khung trong.
+ * PinnedStory -- chi lo BO CUC va FALLBACK o day. Toan bo chuyen dong
+ * (ghim, wipe, hien chu tung dong, parallax) do GSAP ScrollTrigger dieu
+ * khien trong components/discovery/pinned-story.tsx.
+ *
+ * Vi sao khong dung animation-timeline: view() thuan CSS nua: no chi
+ * chay tren Chrome/Edge. Safari va Firefox roi thang ve bo cuc tinh --
+ * mot phan lon khach (iPhone) se xem ban khong co hieu ung nao.
+ *
+ * Trang thai mac dinh ben duoi la trang thai KHONG-JS / giam-chuyen-dong:
+ * ba nhip xep chong theo chieu doc, doc tuan tu tu tren xuong, du ca noi
+ * dung. GSAP se tu chuyen sang absolute + ghim khi no khoi dong.
  */
+.pinned-story {
+  height: 300vh;
+}
+
 .pinned-story-sticky {
-  position: static;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
 }
 
 .pinned-story-beat {
-  position: relative;
-  height: 78vh;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
-.pinned-story-beat + .pinned-story-beat {
-  margin-top: 2px;
-}
-
 .pinned-story-media {
-  position: relative;
-  height: 100%;
-}
-
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .pinned-story {
-      height: 300vh;
-      view-timeline-name: --pinned-story;
-      view-timeline-axis: block;
-    }
-
-    .pinned-story-sticky {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .pinned-story-beat {
-      position: absolute;
-      inset: 0;
-      height: 100%;
-      margin-top: 0;
-    }
-
-    /*
-     * Anh va chu tach rieng animation: anh duoc phep crossfade rong,
-     * mem (de chong lan giua 2 nhip trong luc chuyen canh); chu dung
-     * mot khung hep hon, khong chong len khung cua nhip ben canh -- neu
-     * khong se ra 2 dong tieu de de len nhau, khong doc duoc (bat qua
-     * chup anh thuc te tren mobile). animation-timeline/-range phai
-     * khai bao SAU shorthand "animation" -- shorthand reset ca hai ve
-     * mac dinh neu dat truoc no.
-     */
-    .pinned-story-media {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      animation: pinned-beat-hold-out linear both;
-      animation-timeline: --pinned-story;
-      animation-range: 0% 40%;
-    }
-
-    .pinned-story-caption {
-      opacity: 0;
-      animation: pinned-caption-hold-out linear both;
-      animation-timeline: --pinned-story;
-      animation-range: 0% 40%;
-    }
-
-    .pinned-story-beat[data-beat="2"] .pinned-story-media {
-      animation-name: pinned-beat-in-out;
-      animation-range: 25% 70%;
-    }
-
-    .pinned-story-beat[data-beat="2"] .pinned-story-caption {
-      animation-name: pinned-caption-in-out;
-      animation-range: 25% 70%;
-    }
-
-    .pinned-story-beat[data-beat="3"] .pinned-story-media {
-      animation-name: pinned-beat-in-hold;
-      animation-range: 55% 100%;
-    }
-
-    .pinned-story-beat[data-beat="3"] .pinned-story-caption {
-      animation-name: pinned-caption-in-hold;
-      animation-range: 55% 100%;
-    }
-  }
-}
-
-@keyframes pinned-beat-hold-out {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  80% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes pinned-beat-in-out {
-  0% {
-    opacity: 0;
-    transform: scale(1);
-  }
-  20%,
-  80% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes pinned-beat-in-hold {
-  0% {
-    opacity: 0;
-    transform: scale(1);
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
+  position: absolute;
+  inset: 0;
 }
 
 /*
- * Khung chu hep hon khung anh cua chinh no, va co "khoang lang" o hai
- * dau khong chong len khung chu cua nhip ke ben -- xem toan bo phep
- * tinh lay du lieu that tu Playwright trong docs/HANDOFF.md.
+ * Khong co JS (hoac GSAP chua khoi dong) thi khong the ghim -- rot ve
+ * danh sach doc binh thuong de khong bao gio co khung trong.
  */
-@keyframes pinned-caption-hold-out {
-  0%,
-  55% {
-    opacity: 1;
+@media (prefers-reduced-motion: reduce) {
+  .pinned-story {
+    height: auto;
   }
-  70%,
-  100% {
-    opacity: 0;
-  }
-}
 
-@keyframes pinned-caption-in-out {
-  0%,
-  30% {
-    opacity: 0;
+  .pinned-story-sticky {
+    height: auto;
+    overflow: visible;
   }
-  42%,
-  58% {
-    opacity: 1;
-  }
-  70%,
-  100% {
-    opacity: 0;
-  }
-}
 
-@keyframes pinned-caption-in-hold {
-  0%,
-  38% {
-    opacity: 0;
+  .pinned-story-beat {
+    position: relative;
+    inset: auto;
+    height: 78vh;
   }
-  52%,
-  100% {
-    opacity: 1;
+
+  .pinned-story-beat + .pinned-story-beat {
+    margin-top: 2px;
   }
 }

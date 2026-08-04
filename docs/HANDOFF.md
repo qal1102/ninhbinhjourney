@@ -270,6 +270,26 @@ Tự soi production bằng Playwright (chụp ảnh nhiều mốc cuộn, không
 
 Đã xác minh: tsc/lint/build sạch, 22/22 e2e công khai xanh (bao gồm axe accessibility cho `/`), quét opacity thật qua Playwright ở cả desktop và mobile xác nhận không còn điểm chồng chữ, reduced-motion fallback xếp chồng bình thường không vỡ layout, không còn cảnh báo hydration.
 
+**04/08 (đợt mười một) — chủ dự án xem production và chê thẳng "cái đống nó làm ra là cái quái gì". Tự chụp lại production mới thấy đúng: khối vừa đẩy lên hỏng nặng.** Ba lỗi bắt được bằng cách quét ảnh thật ở nhiều mốc cuộn (không đọc code):
+1. **Hai tấm ảnh phong cảnh chồng mờ lên nhau thành một đống nhòe** — dissolve bằng `opacity` giữa hai ảnh chi tiết thì luôn ra bùn, không bao giờ sang. Đây là lỗi thiết kế gốc, không phải lỗi tinh chỉnh.
+2. **Nhiều đoạn dài không có chữ nào** — chính "khoảng lặng" thêm vào ở đợt trước để chống đè chữ đã tạo ra vùng chết.
+3. **Chữ mờ nằm trên nền ảnh rối, không đọc nổi** — scrim quá nhạt.
+
+**Sửa gốc, đổi cả kỹ thuật lẫn nội dung:**
+- **Bỏ `animation-timeline: view()` thuần CSS, chuyển sang GSAP ScrollTrigger** (`npm i gsap`). Lý do thật, không phải sở thích: `animation-timeline` **chỉ chạy trên Chrome/Edge** — Safari/Firefox rơi về bố cục tĩnh, tức là khách dùng iPhone xem bản không có hiệu ứng nào. Chủ dự án nói thẳng "cần GSAP thì bỏ GSAP vào, sao không dùng" — đúng. Đã cập nhật lại khuyến nghị cũ trong `REFERENCE_SITE_ANALYSIS.md#implementation-notes`.
+- **Ảnh không dissolve nữa mà `clip-path` wipe**: tấm mới lộ dần đè lên tấm cũ, không bao giờ có hai ảnh cùng bán trong suốt → không thể nhòe. Đúng kỹ thuật đã ghi từ MERSI mà trước đó không dùng.
+- **Nguyên tắc dàn cảnh bắt buộc: mọi wipe chỉ chạy khi màn hình KHÔNG có chữ.** Giữ chữ cũ → tắt chữ → wipe ảnh → hiện chữ mới từng dòng. Nếu không, đường wipe cắt ngang giữa dòng tiêu đề (đã chụp được và sửa).
+- **Hai lớp scrim thay vì một** (dọc ở đáy + ngang bên trái) — ảnh Phát Diệm có trời sáng đúng chỗ chữ căn lề, chỉ gradient dọc thì chữ trắng chìm hẳn.
+- **Viết lại toàn bộ nội dung 3 nhịp bằng dữ kiện thật.** Bản cũ do tôi bịa thơ mood, ba câu cùng một khuôn ("Tam Chúc không vội" / "Vân Long không phô diễn" / "Thung Nham là lúc..."), trong đó hai câu dùng đúng lối "không X, không Y" mà `UI_UX_RULES.md#voice-rules` **cấm** — chủ dự án chê "vừa không có skills vừa sáo rỗng", đúng. Bản mới đổi sang Vân Long / Cúc Phương / Phát Diệm (khác hẳn bộ ba Tràng An/Bái Đính/Tam Chúc ở khối dưới, không lặp) và chỉ dùng dữ kiện đã kiểm chứng:
+  - Vân Long: Danh sách Xanh IUCN + Ramsar + "cả thế giới còn chưa tới 300 con voọc mông trắng" — Mongabay 2021, đã có sẵn trong `press` của `content/destinations.ts`.
+  - Cúc Phương: "vườn quốc gia đầu tiên của Việt Nam" (đã có trong `history`); **mốc năm 1962 tra lại Wikipedia + Vietnam Airlines + Tổng cục Du lịch trước khi đưa vào code** — không lấy từ trí nhớ.
+  - Phát Diệm: mái gỗ Việt + kiến trúc đá Công giáo (đã có trong `history`).
+- **Lỗi dàn cảnh thật bắt được sau khi chuyển GSAP**: đặt fade-out ngay tại vị trí 0 của timeline nên nhịp 1 **chưa bao giờ đạt opacity 1** (đo được 0.27/0.41/0.55 qua Playwright — mắt thường dễ tưởng là do ảnh tối). Đã thêm mốc "hold" ở đầu mỗi đoạn; đo lại được 1.00/1.00/1.00.
+
+**Bẫy môi trường lặp lại lần thứ ba, ghi ra để phiên sau khỏi mất thời gian:** Turbopack cache CSS cũ rất dai khi sửa `globals.css` nhiều lần liên tiếp — `getComputedStyle` trả về giá trị của bản CSS trước đó, làm tưởng logic sai. **Triệu chứng nhận dạng: số đo khớp chính xác với bộ giá trị cũ.** Cách xử lý: `rm -rf .next` rồi khởi động lại dev server.
+
+Đã xác minh: tsc/lint/build sạch, 22/22 e2e công khai xanh (gồm axe cho `/`), quét Playwright xác nhận 0 khung có hai khối chữ chồng nhau, 0 khung wipe cắt ngang chữ, 0 lỗi JS; mobile 390px đọc được; reduced-motion rơi về xếp chồng dọc với toàn bộ chữ opacity 1.
+
 **Việc mở cho phiên sau, từ cùng đợt review "dùng như người":** (a) intro có ~1,2 giây đầu gần như đen tuyền trước khi chữ đầu tiên hiện — cân nhắc rút delay; (b) "phải nhấn đúng nút mới ăn" — nhiều thẻ (route card, thẻ danh sách /explore) chỉ có nút con bấm được, thân thẻ không; mở rộng vùng bấm cả thẻ là việc đáng làm nhưng đụng cấu trúc DOM + test, tách riêng; (c) câu neo `subtitle` giờ xuất hiện ở hero + footer + meta — đợt sau khi thêm trang mới nhớ giữ đúng một câu này.
 
 **Bối cảnh git đáng ghi lại một lần:** dự án được làm trên hai máy, một máy dùng repo bọc ngoài + `git subtree` để đẩy (sinh hash commit khác dù nội dung giống hệt tại điểm đồng bộ 31/07), một máy clone thẳng repo này. Lịch sử tưởng như "không có tổ tiên chung" nhưng đã xác minh cây thư mục trùng khít tại thời điểm rẽ nhánh — không phải mất dữ liệu hay bị ghi đè. Máy bọc-ngoài từ nay chuyển sang clone thẳng như thế này để tránh lặp lại nhầm lẫn.

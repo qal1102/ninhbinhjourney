@@ -229,16 +229,16 @@ const copy = {
     zigzagLabel: "Toàn bộ điểm đến",
     zigzagTitle: "Mười lăm nơi, mười lăm nhịp thở khác nhau.",
     zigzagIntro:
-      "Có nơi chỉ đến được bằng thuyền, khi mái chèo khua vào vách đá dựng đứng. Có nơi đổi lại bằng mấy trăm bậc đá giữa nắng. Và có nơi chỉ cần ngồi thật yên, đợi đàn chim về lúc chiều buông.",
+      "Có nơi chỉ đến được bằng thuyền, khi mái chèo khua vào vách đá dựng đứng. Nơi khác đổi lại bằng mấy trăm bậc đá giữa nắng. Lại có chỗ chẳng đòi gì, ngoài việc ngồi thật yên đợi đàn chim về lúc chiều buông.",
     zigzagCtaTitle: "Chưa biết nên bắt đầu từ đâu?",
     zigzagCtaBody:
-      "Mười lăm nơi nằm trên một vùng đất không rộng, nhưng mỗi nơi đòi một nhịp đi riêng. Bạn cho chúng tôi biết mình có mấy ngày, đi cùng ai và muốn thong thả tới đâu — phần sắp xếp còn lại xin để chúng tôi lo.",
+      "Mười lăm nơi gói trong một vùng đất không rộng, mà mỗi nơi một nhịp riêng. Bạn cho chúng tôi biết mình có mấy ngày, đi với ai, muốn thong thả tới đâu — còn lại cứ để chúng tôi sắp.",
     zigzagCtaPrimary: "Lập hành trình cùng chúng tôi",
     zigzagCtaSecondary: "Xem các gói có sẵn",
     zigzagCtaOffer:
-      "Giữ chỗ qua website được giảm 10% so với giá tại quầy, thanh toán bằng mã QR ngay trên trình duyệt.",
+      "Đặt qua website giảm 10% so với giá tại quầy, thanh toán bằng mã QR ngay trên trình duyệt.",
     zigzagCtaOfferPlain:
-      "Bạn có thể mô tả mong muốn bằng lời thường; chúng tôi sẽ dựng lịch trình từ đó.",
+      "Bạn cứ nói mình muốn đi kiểu gì; chúng tôi dựng lịch trình từ đó.",
     companionLabel: "Bộ lập tuyến hành trình",
     companionTitle: "Dựng một tuyến đi có nhịp người thật",
     companionBody:

@@ -220,6 +220,19 @@ select {
   animation: fade-up 900ms ease both;
 }
 
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .story-card {
   scroll-margin-top: 24px;
 }
@@ -519,22 +532,24 @@ select {
     transform: none;
   }
 
-  .opening-sequence span {
-    animation: none !important;
-    font-size: clamp(1.6rem, 6vw, 3.5rem);
-    opacity: 1;
-    transform: none;
-    white-space: normal;
-  }
-
+  /*
+   * The word-by-word cycle (.opening-sequence) is motion by definition --
+   * there is no meaningful static equivalent, so it is hidden outright
+   * rather than flattened into a cramped, tiny-text row. The resting frame
+   * that motion was building toward already exists: .opening-lockup (big
+   * "Ninh Bình" title, divider, word list). Show that immediately instead.
+   */
   .opening-sequence {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
-    justify-content: center;
+    display: none;
   }
 
   .opening-lockup {
-    display: none;
+    animation: none !important;
+    opacity: 1;
+  }
+
+  .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
   }
 }

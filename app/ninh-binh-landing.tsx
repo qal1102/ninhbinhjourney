@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { Reveal } from "@/components/shared/reveal";
 
 export type Language = "en" | "vi";
 export type DestinationId =
@@ -1429,12 +1430,14 @@ export default function NinhBinhLanding({
           biết nên bắt đầu từ đâu. */}
       <section className="bg-[#FBFAF6] px-5 pt-16 text-[#1D2925] sm:px-8 sm:pt-20">
         <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#3F7568]">
-            {t.pathsLabel}
-          </p>
-          <h2 className="font-display mt-3 max-w-3xl text-4xl leading-tight text-[#183F34] sm:text-5xl">
-            {t.pathsTitle}
-          </h2>
+          <Reveal>
+            <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#3F7568]">
+              {t.pathsLabel}
+            </p>
+            <h2 className="font-display mt-3 max-w-3xl text-4xl leading-tight text-[#183F34] sm:text-5xl">
+              {t.pathsTitle}
+            </h2>
+          </Reveal>
           <div className="mt-9 grid gap-4 md:grid-cols-3">
             {(
               [
@@ -1443,25 +1446,26 @@ export default function NinhBinhLanding({
                 [t.pathPackageTitle, t.pathPackageBody, "/packages"],
               ] as Array<[string, string, string]>
             ).map(([title, body, href], index) => (
-              <a
-                key={href}
-                href={`${href}?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
-                className="group flex flex-col justify-between rounded-[8px] border border-[#A8CEC1]/70 bg-white p-6 transition hover:border-[#183F34] hover:shadow-lg hover:shadow-[#183F34]/10"
-              >
-                <div>
-                  <span className="font-display text-2xl text-[#A8CEC1] transition group-hover:text-[#E7B96A]">
-                    0{index + 1}
+              <Reveal key={href} delayMs={index * 90}>
+                <a
+                  href={`${href}?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
+                  className="group flex h-full flex-col justify-between rounded-[8px] border border-[#A8CEC1]/70 bg-white p-6 transition hover:border-[#183F34] hover:shadow-lg hover:shadow-[#183F34]/10"
+                >
+                  <div>
+                    <span className="font-display text-2xl text-[#A8CEC1] transition group-hover:text-[#E7B96A]">
+                      0{index + 1}
+                    </span>
+                    <h3 className="font-display mt-2 text-3xl text-[#183F34]">{title}</h3>
+                    <p className="mt-3 leading-7 text-[#4d5b55]">{body}</p>
+                  </div>
+                  <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-[#183F34]">
+                    {t.pathOpen}
+                    <span aria-hidden="true" className="transition group-hover:translate-x-1">
+                      →
+                    </span>
                   </span>
-                  <h3 className="font-display mt-2 text-3xl text-[#183F34]">{title}</h3>
-                  <p className="mt-3 leading-7 text-[#4d5b55]">{body}</p>
-                </div>
-                <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-[#183F34]">
-                  {t.pathOpen}
-                  <span aria-hidden="true" className="transition group-hover:translate-x-1">
-                    →
-                  </span>
-                </span>
-              </a>
+                </a>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -1469,7 +1473,7 @@ export default function NinhBinhLanding({
 
       <section className="bg-[#FBFAF6] py-16 text-[#1D2925] sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
+          <Reveal className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
               <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#3F7568]">{t.journeysLabel}</p>
               <h2 className="font-display mt-4 max-w-3xl text-5xl leading-none text-[#183F34] sm:text-7xl">{t.journeysTitle}</h2>
@@ -1477,7 +1481,7 @@ export default function NinhBinhLanding({
             <div className="max-w-2xl lg:justify-self-end">
               <p className="text-lg leading-8 text-[#4d5b55]">{t.journeysBody}</p>
             </div>
-          </div>
+          </Reveal>
         </div>
         <div className="route-rail mt-10 flex snap-x gap-4 overflow-x-auto px-5 pb-4 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]">
           {routeCollections.map((route, index) => {
@@ -1518,7 +1522,7 @@ export default function NinhBinhLanding({
 
       <section id="map" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
-          <div className="reveal-panel">
+          <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.youAreHere}</p>
             <h2 className="font-display mt-3 text-5xl text-[#183F34] sm:text-6xl">Ninh Bình</h2>
             <div className="mt-6 rounded-[8px] border border-[#A8CEC1]/60 bg-white/80 p-5 shadow-sm">
@@ -1536,7 +1540,7 @@ export default function NinhBinhLanding({
             >
               {t.nearby}
             </a>
-          </div>
+          </Reveal>
           <div className="relative z-0 isolate overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#F6F1E7] p-3 shadow-xl shadow-[#183F34]/10">
             <TourismMap
               activeDestinationId={focusedDestinationId}
@@ -1565,9 +1569,11 @@ export default function NinhBinhLanding({
 
       <section id="stories" className="bg-[#183F34] px-5 py-16 text-[#FBFAF6] sm:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
-          <p className="text-sm uppercase tracking-[0.24em] text-[#A8CEC1]">{t.stories}</p>
-          <h2 className="font-display mt-3 max-w-4xl text-4xl leading-tight sm:text-6xl">{t.storiesIntro}</h2>
-          <p className="mt-8 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{t.signatureStories}</p>
+          <Reveal>
+            <p className="text-sm uppercase tracking-[0.24em] text-[#A8CEC1]">{t.stories}</p>
+            <h2 className="font-display mt-3 max-w-4xl text-4xl leading-tight sm:text-6xl">{t.storiesIntro}</h2>
+            <p className="mt-8 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{t.signatureStories}</p>
+          </Reveal>
           <div className="mt-10 grid gap-6">
             {homepageStories.map((place, index) => (
               <article
@@ -1626,12 +1632,12 @@ export default function NinhBinhLanding({
 
       <section id="ai" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
+          <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.companionLabel}</p>
             <h2 className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl">{t.companionTitle}</h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-[#4d5b55]">{t.companionBody}</p>
-          </div>
-          <div className="rounded-[8px] border border-[#A8CEC1]/70 bg-white p-5 shadow-xl shadow-[#183F34]/10">
+          </Reveal>
+          <Reveal delayMs={120} className="rounded-[8px] border border-[#A8CEC1]/70 bg-white p-5 shadow-xl shadow-[#183F34]/10">
             <div className="grid grid-cols-3 gap-2">
               {durations.map((duration) => (
                 <button key={duration.id} type="button" onClick={() => setSelectedDuration(duration.id)} className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedDuration === duration.id ? "border-[#183F34] bg-[#183F34] text-white" : "border-[#A8CEC1] text-[#183F34]"}`}>
@@ -1655,16 +1661,18 @@ export default function NinhBinhLanding({
                 {loading ? t.creating : t.create}
               </button>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       <section id="itinerary" className="bg-[#F6F1E7] px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_.95fr]">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.itinerary}</p>
-            <h2 className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl">{t.itinerary}</h2>
-            <p className="mt-3 text-[#58665F]">{t.itineraryNote}</p>
+            <Reveal>
+              <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.itinerary}</p>
+              <h2 className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl">{t.itinerary}</h2>
+              <p className="mt-3 text-[#58665F]">{t.itineraryNote}</p>
+            </Reveal>
             <div className="mt-6 overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#FBFAF6]">
               {itinerary.map((stop, index) => (
                 <article key={`${stop.time}-${stop.id}-${index}`} className="grid gap-4 border-b border-[#A8CEC1]/40 p-4 last:border-b-0 sm:grid-cols-[88px_1fr_auto]">

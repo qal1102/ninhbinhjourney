@@ -149,8 +149,13 @@ export function DestinationZigzag({
                 </div>
 
                 <div className={`zigzag-copy ${fromLeft ? "lg:order-2" : "lg:order-1"}`}>
+                  {/* KHONG danh so 01/02/03 o day: 15 diem den khong phai
+                      mot chuoi tuan tu, khach khong can biet cai nao "thu
+                      may". Danh so chi dung khi thu tu mang thong tin that
+                      (quy trinh, dong thoi gian). Theo skill frontend-design
+                      cua Anthropic -- va do la loi phan xa em vua mac. */}
                   <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#3F7568]">
-                    {String(index + 1).padStart(2, "0")} · {item.category} · {item.duration}
+                    {item.category} · {item.duration}
                   </p>
                   <h3 className="font-display mt-3 text-3xl text-[#183F34] sm:text-5xl">{item.name}</h3>
                   <p className="mt-3 text-lg text-[#2C3B35]">{item.tagline}</p>

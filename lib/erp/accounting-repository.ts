@@ -345,7 +345,8 @@ function journalFromRows(
   }
   if (
     row.source_type !== "shift-close" &&
-    row.source_type !== "supplier-invoice"
+    row.source_type !== "supplier-invoice" &&
+    row.source_type !== "cash-deposit"
   ) {
     throw new AccountingRepositoryError(
       "Nguồn bút toán chưa được hệ thống hỗ trợ.",
@@ -355,11 +356,18 @@ function journalFromRows(
   const sourceSupplierInvoiceId = asNullableString(
     row.source_supplier_invoice_id,
   );
+  // T10b (migration 202608050034) mo them source_type "cash-deposit", danh
+  // dau bang cot rieng source_cash_deposit_id -- domain/erp-accounting.ts
+  // chua co truong doc cot do (khong noi nao dung toi), nen o day chi can
+  // xac nhan CA HAI cot cu (workflow/supplier-invoice) deu null cho dung
+  // rang buoc CHECK cua migration, khong can doc them gi.
   if (
     (row.source_type === "shift-close" &&
       (!sourceWorkflowId || sourceSupplierInvoiceId)) ||
     (row.source_type === "supplier-invoice" &&
-      (sourceWorkflowId || !sourceSupplierInvoiceId))
+      (sourceWorkflowId || !sourceSupplierInvoiceId)) ||
+    (row.source_type === "cash-deposit" &&
+      (sourceWorkflowId || sourceSupplierInvoiceId))
   ) {
     throw new AccountingRepositoryError(
       "Liên kết nguồn bút toán trong kho dữ liệu không hợp lệ.",

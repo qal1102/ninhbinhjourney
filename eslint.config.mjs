@@ -15,6 +15,9 @@ const eslintConfig = defineConfig([
     "build/**",
     "artifacts/**",
     "next-env.d.ts",
+    // Tai nguyen skill Claude Code (vd. helper script cua brainstorming) --
+    // ma nguon vendor cua ho, khong phai code cua repo nay, khong nen lint.
+    ".claude/**",
   ]),
 ]);
 

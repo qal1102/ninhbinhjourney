@@ -369,9 +369,15 @@ export async function reverseAccountingJournalAction(
     const user = requireCurrentUser(await getCurrentErpUser());
     requireChecker(user, "accounting.journal.reverse");
     const original = await loadJournalForUser(user, input.journalId);
-    if (original.sourceType !== "shift-close") {
+    // Hoan but chi mo cho chot ca (T9) va nop quy tien mat (T10b) -- ca hai
+    // dung chung dung mot RPC erp_accounting_reverse_journal, khong rieng
+    // rieng. AP (supplier-invoice) CO CHU DICH chua mo o day: luong cong no
+    // NCC dung "da tra" lam trang thai cuoi, chua co ca su dao but toan da
+    // tra trong dac ta -- mo som se tao mot duong sua so ma UI_UX_RULES.md
+    // chua co quy tac kiem soat.
+    if (original.sourceType !== "shift-close" && original.sourceType !== "cash-deposit") {
       throw new Error(
-        "Hoàn bút hóa đơn nhà cung cấp chưa mở ở luồng này; không được dùng thao tác của chốt ca.",
+        "Hoàn bút hóa đơn nhà cung cấp chưa mở ở luồng này; không được dùng thao tác của chốt ca hoặc nộp quỹ.",
       );
     }
     if (original.version !== input.expectedVersion) {

@@ -578,8 +578,11 @@ function JournalCard({
             journal.status === "pending-checker" ? (
               <ReviewJournalForm journal={journal} />
             ) : null}
+            {/* Hoan but mo cho ca chot ca lan nop quy tien mat -- dung chung
+                mot RPC erp_accounting_reverse_journal (xem accounting-actions.ts).
+                AP (supplier-invoice) chua mo, giu dung pham vi da chan o server action. */}
             {user.role === "chief-accountant" &&
-            journal.sourceType === "shift-close" &&
+            (journal.sourceType === "shift-close" || journal.sourceType === "cash-deposit") &&
             journal.status === "posted" &&
             !journal.reversalOfJournalId &&
             !hasReversal ? (

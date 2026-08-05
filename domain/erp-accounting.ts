@@ -8,7 +8,11 @@ export type AccountingJournalStatus =
 export type AccountingReviewDecision = "approve" | "return";
 export type AccountingPeriodStatus = "open" | "locked";
 export type AccountingPeriodAction = "lock" | "reopen";
-export type AccountingSourceType = "shift-close" | "supplier-invoice";
+// "cash-deposit" (T10b) them vao day sau -- schema SQL (migration 034) da
+// mo source_type nay tu truoc nhung type domain quen cap nhat theo, dung
+// bay "hai nguon su that lech nhau" ma HANDOFF.md tu canh bao (o day la
+// schema DB vs. type TypeScript, khong phai hai bang runtime).
+export type AccountingSourceType = "shift-close" | "supplier-invoice" | "cash-deposit";
 
 export type AccountingJournalLine = {
   id: string;

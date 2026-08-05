@@ -323,6 +323,52 @@ describe("ERP accounting server-action guards", () => {
     expect(doubles.changeAccountingPeriod).toHaveBeenCalledOnce();
   });
 
+  it("allows the chief accountant to reverse a cash-deposit sourced journal", async () => {
+    // T10b mo rong: hoan but tung chi cho shift-close, gio dung chung mot
+    // cong voi cash-deposit (xem accounting-actions.ts). AP van bi chan --
+    // xem bai test ngay duoi.
+    doubles.getCurrentErpUser.mockResolvedValue(chiefAccountant);
+    doubles.getAccountingJournal.mockResolvedValue({
+      ...journal,
+      sourceType: "cash-deposit",
+      sourceWorkflowId: null,
+      status: "posted",
+    });
+    const reversalForm = new FormData();
+    reversalForm.set("journalId", JOURNAL_ID);
+    reversalForm.set("expectedVersion", "1");
+    reversalForm.set("reason", "Sai lượt nộp quỹ, đảo để nộp lại đúng số.");
+
+    const result = await reverseAccountingJournalAction(previous, reversalForm);
+
+    expect(result.status).toBe("success");
+    expect(doubles.reverseAccountingJournal).toHaveBeenCalledOnce();
+  });
+
+  it("still refuses to reverse a supplier-invoice sourced journal", async () => {
+    // AP chua mo duong hoan but -- luong cong no NCC dung "da tra" lam
+    // trang thai cuoi, chua co dac ta cho dao but toan da tra. Mo som se
+    // tao mot duong sua so ngoai dac ta.
+    doubles.getCurrentErpUser.mockResolvedValue(chiefAccountant);
+    doubles.getAccountingJournal.mockResolvedValue({
+      ...journal,
+      sourceType: "supplier-invoice",
+      sourceWorkflowId: null,
+      sourceSupplierInvoiceId: "invoice-001",
+      status: "posted",
+    });
+    const reversalForm = new FormData();
+    reversalForm.set("journalId", JOURNAL_ID);
+    reversalForm.set("expectedVersion", "1");
+    reversalForm.set("reason", "Thử đảo bút toán công nợ NCC.");
+
+    const result = await reverseAccountingJournalAction(previous, reversalForm);
+
+    expect(result.status).toBe("error");
+    expect(result.message).toMatch(/chưa mở ở luồng này/);
+    expect(doubles.reverseAccountingJournal).not.toHaveBeenCalled();
+  });
+
   it("fails closed when production persistence is unavailable", async () => {
     doubles.prepareShiftCloseAccountingJournal.mockRejectedValue(
       new AccountingRepositoryConfigurationError(

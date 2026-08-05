@@ -20,6 +20,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ScrollProgress />
         <PageTransition>{children}</PageTransition>
+        {/*
+          Lop hat phim + rua mau am, dat NGOAI <PageTransition> giong
+          <ScrollProgress>: bat cu thu gi `position: fixed` ma nam ben
+          trong `.page-enter` deu tung bi hong vi lop boc do tao containing
+          block (xem chu thich o .page-enter trong globals.css).
+        */}
+        <div className="film-grade" aria-hidden="true" />
       </body>
     </html>
   );

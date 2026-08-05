@@ -158,29 +158,6 @@ select {
   width: min(90vw, 900px);
 }
 
-.opening-skip {
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 999px;
-  color: rgba(255, 255, 255, 0.86);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  min-height: 2.75rem;
-  padding: 0.6rem 1rem;
-  position: absolute;
-  right: clamp(1.25rem, 3vw, 2.5rem);
-  text-transform: uppercase;
-  top: clamp(1.25rem, 3vw, 2.5rem);
-  z-index: 2;
-}
-
-.opening-skip:hover,
-.opening-skip:focus-visible {
-  background: rgba(255, 255, 255, 0.12);
-  outline: 2px solid #e7b96a;
-  outline-offset: 3px;
-}
-
 .opening-lockup p {
   font-family: "Fraunces Variable", Georgia, serif;
   font-size: clamp(3rem, 10vw, 8rem);
@@ -237,6 +214,35 @@ select {
 
 .reveal-on-scroll.is-visible {
   opacity: 1;
+  transform: translateY(0);
+}
+
+/*
+ * Mask reveal theo tu (components/shared/reveal-heading.tsx). Mask ngoai
+ * cat het phan chua troi len; lop trong dich tu duoi len 0.
+ *
+ * `line-height: 1.08em` tren mask (thay vi 1em) chua them 8% chieu cao --
+ * du de khong cat mat dau tieng Viet nam duoi dong co ban (nang, ...) ma
+ * khong lam lech dong so voi cac chu khong qua component nay.
+ * `padding-bottom: 0.06em` bu lai phan do de baseline khop voi van ban
+ * thuong xung quanh.
+ */
+.reveal-word-mask {
+  display: inline-block;
+  line-height: 1.08em;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+  vertical-align: top;
+}
+
+.reveal-word-inner {
+  display: inline-block;
+  transform: translateY(112%);
+  transition: transform 640ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.reveal-word-inner.is-visible {
   transform: translateY(0);
 }
 
@@ -559,6 +565,10 @@ select {
     opacity: 1;
     transform: none;
   }
+
+  .reveal-word-inner {
+    transform: none;
+  }
 }
 
 /*
@@ -625,6 +635,117 @@ select {
  * do cuon. Ca hai deu la CSS thuan, khong phu thuoc thu vien, va deu tat
  * duoi prefers-reduced-motion.
  */
+/*
+ * HAT PHIM + HIEU CHINH MAU AM -- hai lop phu co dinh, phu toan trang.
+ *
+ * Van de that: anh cua site den tu nhieu nguon khac nhau nen moi tam mot
+ * tong -- tam am, tam lanh, tam bet. Do la thu tach "anh chup" khoi "anh
+ * bien tap", va la ly do trang nhin nhu ghep tu nhieu cho.
+ *
+ * Hai lop nay keo tat ca ve MOT bang mau: mot lop nhieu hat (grain) va
+ * mot lop rua am rat nhe. Vi chung phu toan man hinh nen moi tam anh,
+ * moi khoi mau deu di qua cung mot bo loc -- dat duoc su thong nhat ma
+ * neu chinh tay tung tam se mat hang gio va van lech.
+ *
+ * z-index 60: tren noi dung, DUOI hop thoai (1200/1300) va thanh tien do
+ * cuon (1500) -- hop thoai phai luon sach, khong bi phu hat.
+ * `pointer-events: none`: khong bao gio chan mot cu bam nao.
+ * Ca hai deu TINH, khong animation -- khong ton pin, khong can tat duoi
+ * prefers-reduced-motion.
+ */
+.film-grade {
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 60;
+}
+
+.film-grade::before,
+.film-grade::after {
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* Lop hat: nhieu Perlin dung san trong mot data URI, khong tai file. */
+.film-grade::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  mix-blend-mode: overlay;
+  opacity: 0.05;
+}
+
+/* Lop rua am: keo toan bo trang ve phia nang chieu, dung tong ho phach
+   cua thuong hieu (#E7B96A) chu khong phai mot mau cam bat ky. */
+.film-grade::after {
+  background: radial-gradient(
+    120% 90% at 50% 12%,
+    rgba(231, 185, 106, 0.1),
+    rgba(231, 185, 106, 0.03) 46%,
+    rgba(24, 63, 52, 0.05) 100%
+  );
+  mix-blend-mode: soft-light;
+}
+
+/*
+ * Khung video dien anh (components/shared/cinematic-video.tsx).
+ *
+ * Truoc 05/08 iframe dung `h-[145%] w-[145%]` -- mot HE SO CUNG. Khong co
+ * con so cung nao dung cho ca hai kho: YouTube luon giu ti le 16:9 BEN
+ * TRONG iframe, nen tren khung doc 390x658 cua dien thoai, iframe 565x954
+ * chi ve duoc video 565x318 o giua -> vien den tren va duoi. Da chup duoc.
+ *
+ * Cong thuc duoi doc la: "rong bang khung, nhung neu khung doc qua thi
+ * rong theo chieu cao x 16/9". `max()` tu chon ve lon hon nen KHONG BAO
+ * GIO ho mep, du 1440x900 hay 390x658. He so 1.2 la phan doi ra de day
+ * thanh dieu khien va dong tieu de cua YouTube ra ngoai mep.
+ *
+ * `cqw`/`cqh` do theo KHUNG CHUA (can `container-type: size` o cha) chu
+ * khong theo khung nhin -- dung hon `vw`/`vh` vi khung nay cao 78vh tren
+ * dien thoai va 100vh tu sm tro len. Dong `vw`/`vh` ngay tren la ban du
+ * phong cho trinh duyet chua ho tro don vi container.
+ */
+.cinematic-frame {
+  container-type: size;
+}
+
+.cinematic-frame iframe {
+  aspect-ratio: 16 / 9;
+  border: 0;
+  height: auto;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  translate: -50% -50%;
+  width: max(120vw, calc(120vh * 16 / 9));
+  width: max(120cqw, calc(120cqh * 16 / 9));
+}
+
+/*
+ * CHI DUOC ANIMATE `opacity` O DAY -- KHONG BAO GIO DUNG `transform`.
+ *
+ * `.page-enter` boc TOAN BO moi trang (app/layout.tsx). Mot animation co
+ * `transform` trong keyframe, voi `fill-mode: both`, giu khung hinh cuoi
+ * ap vinh vien -- nen computed style la `transform: matrix(1,0,0,1,0,0)`
+ * chu KHONG phai `none`. Transform khac `none` (ke ca ma tran don vi) tao
+ * containing block cho moi con `position: fixed`.
+ *
+ * Hau qua that, do duoc tren production 05/08 truoc khi vá:
+ *  - GSAP `pin` (pinned-story.tsx) ghim bang position:fixed -> tinh toa do
+ *    theo hop `.page-enter` cao 21.852px thay vi theo khung nhin, nen
+ *    rect.top = -scrollY: khoi ghim nam ngoai man hinh suot ca 1.800px
+ *    ghim. Khach cuon qua 2.700px chi thay nen kem trong tron.
+ *  - Moi `fixed inset-0` (3 hop thoai o trang chu, 1 o /explore) tro thanh
+ *    1440x21.852 dan vao dinh tai lieu: bam "Kham pha" o giua trang thi
+ *    noi dung hop thoai nam cach cho dang nhin 11.000px, khach chi thay
+ *    mot lop kinh mo.
+ *
+ * Bo `transform` khoi keyframe la het ca hai. Mat dung 10px truot len --
+ * khong ai nhan ra. Doi `both` -> `forwards` KHONG cuu duoc: forwards cung
+ * giu khung cuoi, transform van ra matrix.
+ */
 .page-enter {
   animation: page-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -632,11 +753,9 @@ select {
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 

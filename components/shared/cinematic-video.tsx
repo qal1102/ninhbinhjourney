@@ -9,87 +9,137 @@ export type CinematicClip = {
   youTubeId?: string;
   /** Giay bat dau -- bo qua doan dau chua vao hinh. */
   start?: number;
-  /** Giay ket thuc. */
+  /** Giay ket thuc. Xem canh bao ve `end` o duoi. */
   end?: number;
-  poster?: string;
+  /**
+   * BAT BUOC. Khung hinh tinh nam DUOI trinh phat, luon luon hien.
+   * Khong co no thi khoi video la mot hinh chu nhat den tuyen trong luc
+   * trinh phat dang boot, va den vinh vien khi trinh duyet bat giam
+   * chuyen dong -- ca hai deu da xay ra that va da chup duoc 05/08.
+   */
+  poster: string;
   eyebrow: string;
   headline: string;
-  credit?: string;
 };
 
 /**
  * Bang video dien anh chay nen, tu dong chay, khong nut bam.
  *
- * Hai che do:
- *  1. `src` -- file mp4 tu-host trong /public/videos. DAY LA CHE DO NEN
- *     DUNG: khong khung vien YouTube, khong logo, chu dong hoan toan ve
- *     chat luong, va nhe hon han vi khong phai nhung ca mot trinh phat.
- *  2. `youTubeId` -- nhung YouTube. Dung khi chua co file tu-host. Giu
- *     nguyen watermark cua tac gia; khong cat, khong che.
+ * BA LOP, XEP TU DUOI LEN -- day la diem mau chot:
+ *  1. `poster` (<img>) -- luon hien, khong dieu kien. Khong bao gio con
+ *     khung den.
+ *  2. Trinh phat (mp4 hoac YouTube) -- chi gan khi can, va chi HIEN RA
+ *     sau `REVEAL_DELAY_MS` ke tu luc gan.
+ *  3. Scrim + chu.
  *
- * Video chi chay khi dang o trong man hinh (IntersectionObserver) --
- * bon bang video cung chay mot luc se an het bang thong va pin.
- * prefers-reduced-motion: dung han o khung poster.
+ * VI SAO PHAI TRE `REVEAL_DELAY_MS` TRUOC KHI HIEN TRINH PHAT:
+ * YouTube ve mot cum nut `⏮ ⏸ ⏭` giua khung trong vai giay dau khi trinh
+ * phat khoi dong, roi tu tan. Da do that tren production 05/08: chup moi
+ * 3 giay suot 78 giay (4 vong lap) -- cum nut CHI hien luc t=0, khong bao
+ * gio quay lai o cac vong sau. Nen day thuan tuy la van de THOI DIEM.
+ * `controls=0` khong go duoc cum nay, va meo phong to 145% roi cat cung
+ * khong: cum nut nam o TAM khung phat, ma tam thi phong bao nhieu lan
+ * cung van la tam. Che no bang poster trong luc no dang tan la cach duy
+ * nhat vua re vua chac.
+ *
+ * `eager`: gan trinh phat ngay luc mount thay vi doi cuon toi. Dung cho
+ * clip DAU TIEN -- man intro khoa man hinh vai giay o dau trang, tan dung
+ * dung khoang do de boot san. Khong bat `eager` cho ca ba: ba trinh phat
+ * YouTube nap cung luc la qua nang tren 4G.
  */
+
+const REVEAL_DELAY_MS = 1400;
+/** Boot som hon mot man hinh ruoi -- thua thoi gian de cum nut tan. */
+const PRELOAD_MARGIN = "1400px 0px";
+
 export function CinematicVideo({
   clip,
   className = "",
+  eager = false,
 }: {
   clip: CinematicClip;
   className?: string;
+  eager?: boolean;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [inView, setInView] = useState(false);
-  const reducedRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedRef.current = media.matches;
-    // Doc qua listener thay vi setState thang trong than effect: doc
-    // thang gay cascading render (lint chan), va cach nay con bat duoc
-    // ca luc nguoi dung doi thiet lap giua chung.
-    const onChange = () => {
-      reducedRef.current = media.matches;
-      setReduced(media.matches);
-    };
+    const onChange = () => setReduced(media.matches);
     onChange();
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
   }, []);
 
+  // Gan trinh phat: ngay lap tuc neu `eager`, khong thi doi cuon gan toi.
   useEffect(() => {
+    if (reduced || mounted) return;
+    if (eager) {
+      // queueMicrotask thay vi goi setState thang trong than effect: goi
+      // thang gay cascading render (lint chan) -- cung cach da dung o
+      // components/commerce/booking-confirmation.tsx.
+      queueMicrotask(() => setMounted(true));
+      return;
+    }
     const wrap = wrapRef.current;
     if (!wrap) return;
     const io = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { rootMargin: "200px 0px" },
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setMounted(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: PRELOAD_MARGIN },
     );
     io.observe(wrap);
     return () => io.disconnect();
-  }, []);
+  }, [eager, reduced, mounted]);
 
-  // Tam dung khi ra khoi man hinh, chay lai khi vao -- tiet kiem pin va
-  // bang thong, nhat la tren dien thoai.
+  // Hien trinh phat sau khi no da co thoi gian ve xong khung dau va cum
+  // nut khoi dong da tan.
+  useEffect(() => {
+    if (!mounted) return;
+    const id = window.setTimeout(() => setRevealed(true), REVEAL_DELAY_MS);
+    return () => window.clearTimeout(id);
+  }, [mounted]);
+
+  // mp4: tam dung khi ra khoi man hinh -- tiet kiem pin va bang thong.
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || reduced) return;
-    if (inView) void video.play().catch(() => {});
-    else video.pause();
-  }, [inView, reduced]);
+    if (!video || !clip.src || reduced) return;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) void video.play().catch(() => {});
+      else video.pause();
+    });
+    io.observe(video);
+    return () => io.disconnect();
+  }, [clip.src, reduced]);
 
-  // Lap dung doan da chon thay vi lap ca video.
+  // Lap dung doan da chon thay vi lap ca video (chi lam duoc voi mp4).
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || clip.end === undefined) return;
+    if (!video || !clip.src || clip.end === undefined) return;
     function onTime() {
       if (video!.currentTime >= clip.end!) video!.currentTime = clip.start ?? 0;
     }
     video.addEventListener("timeupdate", onTime);
     return () => video.removeEventListener("timeupdate", onTime);
-  }, [clip.end, clip.start]);
+  }, [clip.src, clip.end, clip.start]);
 
+  /*
+   * CANH BAO ve `end`: nhung YouTube o che do `loop=1&playlist=ID` BO QUA
+   * `end`. Da xac minh 05/08 -- chup tai t=21s/39s/54s ra ba canh khac
+   * han nhau, video chay tuot qua moc 30 giay chu khong lap doan 12->30.
+   * Van truyen `end` vi no van co tac dung o lan phat dau, nhung dung tin
+   * rang doan phat se dung 17-18 giay. Muon cat dung doan phai dung
+   * YouTube IFrame Player API (`onStateChange` + `seekTo`), them mot
+   * script -- chua lam, can quyet dinh cua chu du an.
+   */
   const ytSrc = clip.youTubeId
     ? `https://www.youtube-nocookie.com/embed/${clip.youTubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${clip.youTubeId}` +
       `&start=${clip.start ?? 0}${clip.end ? `&end=${clip.end}` : ""}` +
@@ -99,37 +149,49 @@ export function CinematicVideo({
   return (
     <section
       ref={wrapRef}
-      className={`relative h-[78vh] w-full overflow-hidden bg-[#06120f] sm:h-screen ${className}`.trim()}
+      className={`cinematic-frame relative h-[78vh] w-full overflow-hidden bg-[#06120f] sm:h-screen ${className}`.trim()}
     >
-      {clip.src ? (
-        <video
-          ref={videoRef}
-          className="absolute inset-0 h-full w-full object-cover"
-          src={reduced ? undefined : clip.src}
-          poster={clip.poster}
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-hidden="true"
-        />
-      ) : inView && !reduced && clip.youTubeId ? (
-        // Phong to 1.45 lan roi cat bot: giau thanh dieu khien va dong
-        // chu tieu de cua YouTube o hai mep, con lai dung khung hinh.
-        <iframe
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[145%] w-[145%] -translate-x-1/2 -translate-y-1/2"
-          src={ytSrc}
-          title={clip.headline}
-          allow="autoplay; encrypted-media"
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
-      ) : (
-        clip.poster && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={clip.poster} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        )
-      )}
+      {/* Lop 1 -- luon hien, khong bao gio de lo khung den. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={clip.poster}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
 
+      {/* Lop 2 -- trinh phat, mo dan len tren poster khi da san sang. */}
+      {mounted && !reduced ? (
+        <div
+          className="cinematic-player absolute inset-0 transition-opacity duration-1000"
+          style={{ opacity: revealed ? 1 : 0 }}
+        >
+          {clip.src ? (
+            <video
+              ref={videoRef}
+              className="absolute inset-0 h-full w-full object-cover"
+              src={clip.src}
+              poster={clip.poster}
+              muted
+              loop
+              playsInline
+              preload="auto"
+              aria-hidden="true"
+            />
+          ) : clip.youTubeId ? (
+            <iframe
+              src={ytSrc}
+              title={clip.headline}
+              allow="autoplay; encrypted-media"
+              referrerPolicy="strict-origin-when-cross-origin"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Lop 3 -- scrim + chu. */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.34),rgba(6,18,15,.12)_38%,rgba(6,18,15,.86))]" />
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-14 text-white sm:px-10 sm:pb-20">
@@ -138,9 +200,6 @@ export function CinematicVideo({
             {clip.eyebrow}
           </p>
           <h2 className="font-display mt-4 text-3xl leading-[1.1] sm:text-6xl">{clip.headline}</h2>
-          {clip.credit && (
-            <p className="mt-5 text-xs tracking-wide text-white/55">{clip.credit}</p>
-          )}
         </div>
       </div>
     </section>

@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 // reach was measuring the wrong thing.
 const criticalRoutes = ["/", "/explore", "/packages", "/plan"] as const;
 
-test("home intro keeps all four identity words with separated timing", async ({
+test("home intro keeps all four identity words with separated timing, then auto-dismisses with no skip control", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -25,16 +25,26 @@ test("home intro keeps all four identity words with separated timing", async ({
   );
   expect(delays).toEqual([0.35, 1.55, 2.75, 3.95]);
 
-  await page.getByRole("button", { name: "Bỏ qua intro" }).click();
-  await expect(page.getByTestId("opening-intro")).toHaveCount(0);
+  // Cố ý KHÔNG có nút "Bỏ qua intro" và bấm vào đâu cũng không tắt được
+  // -- theo yêu cầu chủ dự án 05/08: khung 6,5 giây này là khoảng duy
+  // nhất để 3 trình phát video kịp boot xong trước khi khách cuộn tới.
+  await expect(page.getByRole("button", { name: /skip|bỏ qua/i })).toHaveCount(0);
+  await page.locator('[data-testid="opening-intro"]').click({ force: true });
+  await expect(page.getByTestId("opening-intro")).toHaveCount(1);
+
+  // Tự tắt đúng lúc animation CSS kết thúc (~6,5s) -- không phải hẹn giờ
+  // đoán mò trong bài test.
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 9000 });
 });
 
 test("language switch updates immediately, persists and preserves source", async ({
   page,
 }) => {
+  // Không còn nút bỏ qua intro -- dùng reduced-motion để đi qua khung
+  // intro nhanh (CSS rút còn 1,4s), không phải để kiểm reduced-motion.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?lang=vi&source=trang_an");
-  const skipIntro = page.getByRole("button", { name: "Bỏ qua intro" });
-  if (await skipIntro.isVisible()) await skipIntro.click();
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 4000 });
   await expect(
     page.getByRole("heading", {
       level: 1,
@@ -53,8 +63,7 @@ test("language switch updates immediately, persists and preserves source", async
   await expect(page).toHaveURL(/source=trang_an/);
 
   await page.reload();
-  const skipEnglishIntro = page.getByRole("button", { name: "Skip intro" });
-  if (await skipEnglishIntro.isVisible()) await skipEnglishIntro.click();
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 4000 });
   await expect(
     page.getByRole("heading", {
       level: 1,
@@ -64,9 +73,9 @@ test("language switch updates immediately, persists and preserves source", async
 });
 
 test("Build a route opens the real planner", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?lang=vi&source=trang_an");
-  const skipIntro = page.getByRole("button", { name: "Bỏ qua intro" });
-  if (await skipIntro.isVisible()) await skipIntro.click();
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 4000 });
   await page.getByRole("link", { name: "Lập hành trình" }).first().click();
   await expect(page).toHaveURL(/\/plan\?lang=vi&source=trang_an/);
   await expect(page.getByRole("main")).toBeVisible();
@@ -135,9 +144,9 @@ test("discovery map mode renders a real interactive map, not a static canvas", a
 });
 
 test("captures local responsive evidence", async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?lang=vi");
-  const skipIntro = page.getByRole("button", { name: "Bỏ qua intro" });
-  if (await skipIntro.isVisible()) await skipIntro.click();
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 4000 });
   await page.screenshot({
     path: testInfo.outputPath("home-full-page.png"),
     fullPage: true,

@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
+import { RevealHeading } from "@/components/shared/reveal-heading";
 import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned-story";
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
@@ -319,31 +320,38 @@ const copy = {
  * `src`; component da ho tro san va che do do nhe hon han vi khong phai
  * nhung ca mot trinh phat.
  */
+/*
+ * `poster` chon tu ba tam CHUA DUNG O DAU tren trang chu (`tam-coc.jpg`,
+ * `hero-ninh-binh.png`, `bai-dinh.jpg`) -- co y, de khung tinh khong lap
+ * lai bat ky anh nao khach vua nhin thay. Dung `trang-an.jpg` o day la
+ * tai pham dung loi da bi che mot lan: khoi moi hien ra lai la tam anh
+ * vua xem, nhin nhu loi lap khoi chu khong phai mot canh moi.
+ */
 const cinematicClips: Record<Language, CinematicClip[]> = {
   vi: [
     {
       youTubeId: "OA4lO9rrk4Q",
       start: 12,
       end: 30,
+      poster: "/images/destinations/tam-coc.jpg",
       eyebrow: "Sông nước Ninh Bình",
       headline: "Từ mặt nước nhìn lên, núi đá cao hơn hẳn lúc đứng trên bờ.",
-      credit: "Nguồn: YouTube — bản quyền thuộc về tác giả",
     },
     {
       youTubeId: "0NHfpdPHFE4",
       start: 12,
       end: 29,
+      poster: "/hero-ninh-binh.png",
       eyebrow: "Giữa lòng thung",
       headline: "Đá vôi dựng thành vách, còn dòng nước thì cứ lách qua.",
-      credit: "Nguồn: YouTube — bản quyền thuộc về tác giả",
     },
     {
       youTubeId: "ZDCPQDr4YHE",
       start: 12,
       end: 30,
+      poster: "/images/destinations/bai-dinh.jpg",
       eyebrow: "Đất cố đô",
       headline: "Nghìn năm trước, kinh đô Đại Cồ Việt nằm gọn giữa vòng núi này.",
-      credit: "Nguồn: YouTube — bản quyền thuộc về tác giả",
     },
   ],
   en: [
@@ -351,25 +359,25 @@ const cinematicClips: Record<Language, CinematicClip[]> = {
       youTubeId: "OA4lO9rrk4Q",
       start: 12,
       end: 30,
+      poster: "/images/destinations/tam-coc.jpg",
       eyebrow: "The waterways of Ninh Binh",
       headline: "Seen from the water, the limestone stands far taller than it does from the bank.",
-      credit: "Source: YouTube — rights remain with the original creators",
     },
     {
       youTubeId: "0NHfpdPHFE4",
       start: 12,
       end: 29,
+      poster: "/hero-ninh-binh.png",
       eyebrow: "Deep in the valley",
       headline: "The limestone rises into walls, and the water simply slips between them.",
-      credit: "Source: YouTube — rights remain with the original creators",
     },
     {
       youTubeId: "ZDCPQDr4YHE",
       start: 12,
       end: 30,
+      poster: "/images/destinations/bai-dinh.jpg",
       eyebrow: "Land of the ancient capital",
       headline: "A thousand years ago the capital of Dai Co Viet sat inside this ring of mountains.",
-      credit: "Source: YouTube — rights remain with the original creators",
     },
   ],
 };
@@ -1159,17 +1167,17 @@ const destinationFacts: Record<DestinationId, DestinationFacts> = {
 
 const paymentMethods = ["Visa", "Mastercard", "JCB", "VietQR", "MoMo", "ZaloPay", "Pay at counter"];
 const paymentMethodsVi = ["Visa", "Mastercard", "JCB", "VietQR", "MoMo", "ZaloPay", "Thanh toán tại quầy"];
-const signatureDestinations = destinations.filter((destination) => destination.tier === "signature");
 
-/**
- * Trang chủ chỉ dựng ba chương đầu. Trước đây nó đổ hết 10 thẻ lớn + 6 thẻ nhỏ
- * xuống một trang dài hơn 11.000 pixel, làm đúng công việc mà `/explore` đã
- * làm tốt hơn (có bản đồ thật, bộ lọc theo thời gian và mức đi bộ). Danh mục
- * đầy đủ trả về cho `/explore`; trang chủ là cửa vào, không phải cái kho.
+/*
+ * `homepageStories` / `HOMEPAGE_STORY_COUNT` / `totalDestinationCount` da
+ * bi xoa 05/08 cung luc voi danh sach the lap o `#stories` -- ba diem dau
+ * duoc dung lai NGUYEN VAN trong `DestinationZigzag` ngay ben duoi.
+ *
+ * VIEC CON DANG DO, chua lam trong dot nay: tach danh muc 15 diem thanh
+ * hai nhip (zigzag cho vai diem dau + danh sach chu bam-con-tro cho phan
+ * con lai) de cat bot 9.540px hien dang doc rat deu deu. Se dung lai
+ * `destinations.filter((d) => d.tier === "signature")` luc lam viec do.
  */
-const HOMEPAGE_STORY_COUNT = 3;
-const homepageStories = signatureDestinations.slice(0, HOMEPAGE_STORY_COUNT);
-const totalDestinationCount = destinations.length;
 
 const routeCollections = [
   {
@@ -1513,11 +1521,30 @@ export default function NinhBinhLanding({
 
   return (
     <main className="min-h-screen bg-[#FBFAF6] text-[#1D2925]">
+      {/*
+        INTRO -- KHONG CO DUONG BO QUA. Co y, theo yeu cau chu du an 05/08.
+        Truoc day co ca nut "Bo qua intro" LAN bam-cho-nao-cung-tat.
+        Ca hai da go: man intro 6,5 giay nay la khoang thoi gian duy nhat
+        de ba trinh phat video kip boot xong TRUOC khi khach cuon toi --
+        cat ngan no la cum nut khoi dong cua YouTube lai dap vao mat khach
+        (xem chu thich trong cinematic-video.tsx).
+
+        Chay DUNG MOT LAN moi lan tai trang: component chi mount mot lan,
+        va doi ngon ngu khong lam no chay lai (switchLanguage doi state
+        noi bo + history.replaceState, khong dieu huong, nen `key` o
+        app/page.tsx khong doi).
+
+        Tu go bo bang `onAnimationEnd` thay vi hen gio cung 6500ms: duoi
+        prefers-reduced-motion, CSS rut animation con 1400ms, hen gio cung
+        se giu mot lop phu vo hinh them 5 giay khong ly do.
+      */}
       {introVisible ? (
         <div
           className="opening-screen"
           data-testid="opening-intro"
-          onClick={() => setIntroVisible(false)}
+          onAnimationEnd={(event) => {
+            if (event.target === event.currentTarget) setIntroVisible(false);
+          }}
         >
           <Image
             src="/images/destinations/intro-trang-an-rain.png"
@@ -1528,16 +1555,6 @@ export default function NinhBinhLanding({
             className="opening-image object-cover"
           />
           <div className="opening-vignette" />
-          <button
-            type="button"
-            className="opening-skip"
-            onClick={(event) => {
-              event.stopPropagation();
-              setIntroVisible(false);
-            }}
-          >
-            {lang === "vi" ? "Bỏ qua intro" : "Skip intro"}
-          </button>
           <div className="opening-sequence">
             {trailerWords.map((word, index) => (
               <span key={`${word}-${index}`}>{word}</span>
@@ -1609,7 +1626,11 @@ export default function NinhBinhLanding({
           <Reveal className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
               <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#3F7568]">{t.journeysLabel}</p>
-              <h2 className="font-display mt-4 max-w-3xl text-5xl leading-none text-[#183F34] sm:text-7xl">{t.journeysTitle}</h2>
+              <RevealHeading
+                as="h2"
+                text={t.journeysTitle as string}
+                className="font-display mt-4 max-w-3xl text-5xl leading-none text-[#183F34] sm:text-7xl"
+              />
             </div>
             <div className="max-w-2xl lg:justify-self-end">
               <p className="text-lg leading-8 text-[#4d5b55]">{t.journeysBody}</p>
@@ -1664,7 +1685,14 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
-      <CinematicVideo clip={cinematicClips[lang][0]} />
+      {/*
+        `eager` CHI dat o clip dau: man intro khoa man hinh vai giay ngay
+        dau trang, tan dung dung khoang do de trinh phat boot xong va cum
+        nut khoi dong cua YouTube kip tan truoc khi khach cuon toi. Hai
+        clip sau khong dat `eager` -- ba trinh phat nap cung luc qua nang
+        tren 4G; chung dung `rootMargin` rong (1400px) de boot som.
+      */}
+      <CinematicVideo clip={cinematicClips[lang][0]} eager />
 
       <PinnedStory beats={storyBeats[lang]} />
 
@@ -1672,7 +1700,7 @@ export default function NinhBinhLanding({
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
           <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.youAreHere}</p>
-            <h2 className="font-display mt-3 text-5xl text-[#183F34] sm:text-6xl">Ninh Bình</h2>
+            <RevealHeading as="h2" text="Ninh Bình" className="font-display mt-3 text-5xl text-[#183F34] sm:text-6xl" />
             <div className="mt-6 rounded-[8px] border border-[#A8CEC1]/60 bg-white/80 p-5 shadow-sm">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6D756F]">{t.qrSource}</p>
               <p className="mt-2 text-xl text-[#183F34]">{activeLabel}</p>
@@ -1717,67 +1745,30 @@ export default function NinhBinhLanding({
 
       <CinematicVideo clip={cinematicClips[lang][1]} />
 
+      {/*
+        Khoi nay TUNG dung 3 the lon (Trang An / Bai Dinh / Tam Chuc) --
+        va ca ba deu duoc dung LAI nguyen van o `DestinationZigzag` ngay
+        ben duoi, vi zigzag doc ca 15 diem tu cung mang `destinations`.
+        Do tren production 05/08: 3 tieu de lap 2-3 lan, 3 doan mo ta lap
+        NGUYEN VAN cach nhau ~2.400px, 7 tam anh dung lai 2-3 lan. Khoi
+        tren con dung `index % 2 ? "lg:order-2"` -- tuc no CUNG la zigzag,
+        ban kem hon dat ngay tren ban tot.
+        Da xoa danh sach the; giu lai dung phan dan chuyen, gio no lam
+        chuong dan vao danh muc that o duoi. Nut "Xem tat ca diem den ->
+        /explore" cung bo: danh muc day du nam ngay khoi ke tiep, day
+        khach sang trang khac de xem thu dang o duoi la vo ly.
+      */}
       <section id="stories" className="bg-[#183F34] px-5 py-16 text-[#FBFAF6] sm:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
           <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#A8CEC1]">{t.stories}</p>
-            <h2 className="font-display mt-3 max-w-4xl text-4xl leading-tight sm:text-6xl">{t.storiesIntro}</h2>
-            <p className="mt-8 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{t.signatureStories}</p>
+            <RevealHeading
+              as="h2"
+              text={t.storiesIntro as string}
+              className="font-display mt-3 max-w-4xl text-4xl leading-tight sm:text-6xl"
+            />
+            <p className="mt-8 max-w-2xl text-lg leading-8 text-[#FBFAF6]/78">{t.hiddenGemsIntro}</p>
           </Reveal>
-          <div className="mt-10 grid gap-6">
-            {homepageStories.map((place, index) => (
-              <article
-                id={`destination-${place.id}`}
-                key={place.id}
-                onClick={() => openDetail(place.id)}
-                className="story-card group grid cursor-pointer overflow-hidden rounded-[8px] border border-white/12 bg-[#FBFAF6] text-[#1D2925] shadow-2xl shadow-black/20 transition hover:shadow-[0_32px_80px_-24px_rgba(0,0,0,0.55)] lg:grid-cols-[1.05fr_.95fr]"
-              >
-                <div className={`relative min-h-80 overflow-hidden sm:min-h-[420px] lg:min-h-[560px] ${index % 2 ? "lg:order-2" : ""}`}>
-                  <Image
-                    src={place.image}
-                    alt={place.name[lang]}
-                    fill
-                    sizes="(min-width: 1024px) 52vw, 100vw"
-                    className="story-image object-cover transition duration-700 group-hover:scale-[1.025]"
-                    style={{ objectPosition: place.imagePosition }}
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_45%,rgba(24,63,52,.42))]" />
-                  <span className="absolute bottom-5 left-5 rounded-full bg-[#FBFAF6]/90 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.18em] text-[#183F34]">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </div>
-                <div className="flex flex-col justify-between p-6 sm:p-10 lg:p-12">
-                  <div>
-                    <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#3F7568]">{place.category[lang]} · {place.duration[lang]}</p>
-                    <h3 className="font-display mt-4 max-w-2xl text-4xl leading-tight text-[#183F34] sm:text-6xl">{place.name[lang]}</h3>
-                    <p className="mt-6 max-w-2xl text-xl leading-8 text-[#1D2925]">{place.tagline[lang]}</p>
-                    <p className="mt-4 max-w-2xl leading-7 text-[#4d5b55]">{place.description[lang]}</p>
-                    <div className="mt-7 flex flex-wrap gap-2">
-                      {place.tags[lang].map((tag) => <span key={tag} className="rounded-full border border-[#A8CEC1] bg-[#F6F1E7] px-3 py-1 text-sm font-semibold text-[#3F7568]">{tag}</span>)}
-                    </div>
-                  </div>
-                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" onClick={(event) => { event.stopPropagation(); openDetail(place.id); }} className="rounded-full bg-[#183F34] px-5 py-3 font-semibold text-white transition hover:bg-[#24594a]">{t.discover}</button>
-                    <button type="button" onClick={(event) => { event.stopPropagation(); addDestination(place.id); }} className="rounded-full border border-[#A8CEC1] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#F6F1E7]">{selectedIds.includes(place.id) ? t.added : t.add}</button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-          {/* Danh mục đầy đủ nằm ở /explore, nơi có bản đồ thật và bộ lọc.
-              Trang chủ chỉ dẫn sang, không chép lại. */}
-          <div className="mt-14 flex flex-col gap-4 border-t border-white/15 pt-8 sm:flex-row sm:items-center sm:justify-between">
-            <p className="max-w-2xl text-lg leading-8 text-[#FBFAF6]/78">
-              {t.hiddenGemsIntro}
-            </p>
-            <a
-              href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
-              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#E7B96A] px-6 py-3 font-semibold text-[#183F34] transition hover:bg-[#f0c87c]"
-            >
-              {t.seeAllDestinations} ({totalDestinationCount})
-              <span aria-hidden="true">→</span>
-            </a>
-          </div>
         </div>
       </section>
 
@@ -1827,7 +1818,11 @@ export default function NinhBinhLanding({
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.companionLabel}</p>
-            <h2 className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl">{t.companionTitle}</h2>
+            <RevealHeading
+              as="h2"
+              text={t.companionTitle as string}
+              className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl"
+            />
             <p className="mt-5 max-w-xl text-lg leading-8 text-[#4d5b55]">{t.companionBody}</p>
           </Reveal>
           <Reveal delayMs={120} className="rounded-[8px] border border-[#A8CEC1]/70 bg-white p-5 shadow-xl shadow-[#183F34]/10">
@@ -1863,7 +1858,11 @@ export default function NinhBinhLanding({
           <div>
             <Reveal>
               <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.itinerary}</p>
-              <h2 className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl">{t.itinerary}</h2>
+              <RevealHeading
+                as="h2"
+                text={t.itinerary as string}
+                className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl"
+              />
               <p className="mt-3 text-[#58665F]">{t.itineraryNote}</p>
             </Reveal>
             <div className="mt-6 overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#FBFAF6]">

@@ -323,10 +323,13 @@ describe("ERP accounting server-action guards", () => {
     expect(doubles.changeAccountingPeriod).toHaveBeenCalledOnce();
   });
 
-  it("allows the chief accountant to reverse a cash-deposit sourced journal", async () => {
-    // T10b mo rong: hoan but tung chi cho shift-close, gio dung chung mot
-    // cong voi cash-deposit (xem accounting-actions.ts). AP van bi chan --
-    // xem bai test ngay duoi.
+  it("still refuses to reverse a cash-deposit sourced journal", async () => {
+    // Thu that tren production 05/08: mo rong ranh gioi nay tung khien nut
+    // "Hoan but" hien that nhung bam vao luon loi, vi
+    // erp_accounting_reverse_journal (migration 202607290006) tra
+    // erp_shift_close_workflows theo source_workflow_id -- cot nay luon
+    // null voi cash-deposit nen RPC luon "khong tim thay ca chot". Can mot
+    // migration SQL sua RPC truoc khi mo lai o day. Xem accounting-actions.ts.
     doubles.getCurrentErpUser.mockResolvedValue(chiefAccountant);
     doubles.getAccountingJournal.mockResolvedValue({
       ...journal,
@@ -341,8 +344,9 @@ describe("ERP accounting server-action guards", () => {
 
     const result = await reverseAccountingJournalAction(previous, reversalForm);
 
-    expect(result.status).toBe("success");
-    expect(doubles.reverseAccountingJournal).toHaveBeenCalledOnce();
+    expect(result.status).toBe("error");
+    expect(result.message).toMatch(/chưa mở ở luồng này/);
+    expect(doubles.reverseAccountingJournal).not.toHaveBeenCalled();
   });
 
   it("still refuses to reverse a supplier-invoice sourced journal", async () => {

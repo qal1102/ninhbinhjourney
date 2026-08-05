@@ -44,6 +44,10 @@ test("T10b round-trip thật: chốt ca -> ghi sổ -> nộp quỹ -> khớp -> 
     testInfo.project.name !== "desktop-chromium",
     "chỉ chạy một lần trên một project -- xem lý do ở trên",
   );
+  // 7 bước, mỗi bước tự đăng nhập một vai trò riêng -- vượt xa mặc định 30s
+  // của playwright.config.ts (mặc định đó nhắm vào spec một trang, một vai
+  // trò).
+  test.setTimeout(240_000);
 
   let shiftCode = "";
   let shiftJournalCode = "";
@@ -98,7 +102,10 @@ test("T10b round-trip thật: chốt ca -> ghi sổ -> nộp quỹ -> khớp -> 
     await expect(details).toHaveCount(1);
     await details.locator("summary").click();
     await details.getByRole("button", { name: "Xác nhận & chuyển kế toán" }).click();
-    await expect(details.getByText("Chờ kế toán")).toBeVisible();
+    // "Chờ kế toán" xuất hiện cả ở nhãn trạng thái lẫn dòng nhật ký hồ sơ
+    // bên dưới -- .first() vì chỉ cần xác nhận có ít nhất một, không quan
+    // tâm đúng phần tử nào.
+    await expect(details.getByText("Chờ kế toán").first()).toBeVisible();
 
     await context.close();
   });
@@ -116,12 +123,14 @@ test("T10b round-trip thật: chốt ca -> ghi sổ -> nộp quỹ -> khớp -> 
     await article.getByLabel("Ghi chú kiểm tra nguồn").fill(`${MARKER} — đã đối chiếu, lập bút toán test round-trip.`);
     await article.getByRole("button", { name: "Lập bút toán và gửi kiểm tra" }).click();
 
-    const status = article.getByRole("status").filter({ hasText: "đã được lập và chuyển kế toán trưởng kiểm tra" });
-    await expect(status).toBeVisible();
-    const message = (await status.textContent()) ?? "";
-    const match = message.match(/(JV-[A-Z0-9-]+)/);
-    expect(match, `không đọc được mã bút toán từ thông báo: ${message}`).not.toBeNull();
-    shiftJournalCode = match![1];
+    // Mã bút toán suy ra trực tiếp từ mã ca: RPC dựng "JV-" + business_code
+    // (xem migration 202607290006, dòng v_journal_code). KHÔNG đọc từ thông
+    // báo thành công -- <article> chứa PrepareJournalForm biến mất ngay sau
+    // khi thành công (ca không còn "đủ điều kiện lập bút toán" nữa nên rớt
+    // khỏi eligibleSources), làm ActionMessage biến mất theo trước khi kịp
+    // đọc. Xác nhận thành công thật ở đúng bước 4, khi tìm được thẻ bút
+    // toán này trên trang của kế toán trưởng.
+    shiftJournalCode = `JV-${shiftCode}`;
 
     await context.close();
   });
@@ -139,7 +148,7 @@ test("T10b round-trip thật: chốt ca -> ghi sổ -> nộp quỹ -> khớp -> 
     await expect(card).toBeVisible();
     await card.getByLabel("Kết luận kiểm tra").fill(`${MARKER} — đã kiểm tra định khoản, duyệt ghi sổ.`);
     await card.getByRole("button", { name: "Duyệt và ghi sổ" }).click();
-    await expect(card.getByText("Đã ghi sổ")).toBeVisible();
+    await expect(card.getByText("Đã ghi sổ").first()).toBeVisible();
 
     await context.close();
   });
@@ -185,7 +194,7 @@ test("T10b round-trip thật: chốt ca -> ghi sổ -> nộp quỹ -> khớp -> 
     await expect(depositCard).toHaveCount(1);
     await depositCard.locator('select[name="statementLineCandidate"]').selectOption({ index: 1 });
     await depositCard.getByRole("button", { name: "Đối khớp" }).click();
-    await expect(depositCard.getByText("Chờ kế toán trưởng ghi sổ")).toBeVisible();
+    await expect(depositCard.getByText("Chờ kế toán trưởng ghi sổ").first()).toBeVisible();
 
     await context.close();
   });
@@ -202,7 +211,9 @@ test("T10b round-trip thật: chốt ca -> ghi sổ -> nộp quỹ -> khớp -> 
     await expect(depositCard).toHaveCount(1);
     await depositCard.getByLabel("Ghi chú kiểm tra").fill(`${MARKER} — đã đối chiếu sao kê, duyệt ghi sổ nộp quỹ.`);
     await depositCard.getByRole("button", { name: "Duyệt, ghi sổ" }).click();
-    await expect(depositCard.getByText("Đã ghi sổ")).toBeVisible();
+    // "Đã ghi sổ" xuất hiện cả ở nhãn trạng thái lẫn dòng "Đã ghi sổ ... bởi
+    // ..." bên dưới -- .first() cho lý do tương tự bước duyệt ca.
+    await expect(depositCard.getByText("Đã ghi sổ").first()).toBeVisible();
 
     await context.close();
   });
@@ -217,24 +228,28 @@ test("T10b round-trip thật: chốt ca -> ghi sổ -> nộp quỹ -> khớp -> 
     await login(page, CHIEF_ACCOUNTANT.username, CHIEF_ACCOUNTANT.password);
     await page.goto("/erp/finance");
 
+    // Journal "posted" KHÔNG defaultOpen (chỉ journal "pending-checker" tự
+    // mở) -- phải bấm summary trước khi điền form ẩn bên trong.
     const depositJournalCard = page.locator("details").filter({ hasText: "32.000.000" });
     await expect(
       depositJournalCard,
       "không định vị được đúng một bút toán nộp quỹ 32.000.000 để hoàn tác",
     ).toHaveCount(1);
+    await depositJournalCard.locator("summary").click();
     await depositJournalCard
       .getByLabel("Lý do đảo bút toán")
       .fill(`${MARKER} — hoàn tác bút toán nộp quỹ test round-trip, đưa sổ về net-zero.`);
     await depositJournalCard.getByRole("button", { name: "Tạo bút toán đảo" }).click();
-    await expect(depositJournalCard.getByText("Đã có bút toán đảo")).toBeVisible();
+    await expect(depositJournalCard.getByText("Đã có bút toán đảo").first()).toBeVisible();
 
     const shiftJournalCard = page.locator("details").filter({ hasText: shiftJournalCode });
     await expect(shiftJournalCard).toHaveCount(1);
+    await shiftJournalCard.locator("summary").click();
     await shiftJournalCard
       .getByLabel("Lý do đảo bút toán")
       .fill(`${MARKER} — hoàn tác bút toán doanh thu ca test round-trip, đưa sổ về net-zero.`);
     await shiftJournalCard.getByRole("button", { name: "Tạo bút toán đảo" }).click();
-    await expect(shiftJournalCard.getByText("Đã có bút toán đảo")).toBeVisible();
+    await expect(shiftJournalCard.getByText("Đã có bút toán đảo").first()).toBeVisible();
 
     await context.close();
   });

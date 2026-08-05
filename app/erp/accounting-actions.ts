@@ -369,15 +369,19 @@ export async function reverseAccountingJournalAction(
     const user = requireCurrentUser(await getCurrentErpUser());
     requireChecker(user, "accounting.journal.reverse");
     const original = await loadJournalForUser(user, input.journalId);
-    // Hoan but chi mo cho chot ca (T9) va nop quy tien mat (T10b) -- ca hai
-    // dung chung dung mot RPC erp_accounting_reverse_journal, khong rieng
-    // rieng. AP (supplier-invoice) CO CHU DICH chua mo o day: luong cong no
-    // NCC dung "da tra" lam trang thai cuoi, chua co ca su dao but toan da
-    // tra trong dac ta -- mo som se tao mot duong sua so ma UI_UX_RULES.md
-    // chua co quy tac kiem soat.
-    if (original.sourceType !== "shift-close" && original.sourceType !== "cash-deposit") {
+    // CHUA mo cho cash-deposit: da thu that tren production (05/08) --
+    // erp_accounting_reverse_journal (migration 202607290006) luon tra
+    // erp_shift_close_workflows theo source_workflow_id de xac nhan ca goc
+    // con "posted" truoc khi cho dao. Cash-deposit khong co
+    // source_workflow_id (dung source_cash_deposit_id rieng), nen RPC luon
+    // "khong tim thay ca chot" va tu choi -- khong phai loi version/xung
+    // dot nhu thong bao chung chung o day che di. Mo dung nghia can mot
+    // migration SQL sua RPC nay truoc (nhanh workflow check theo
+    // source_type), chua lam trong dot nay. Tam thoi giu dung pham vi cu:
+    // chi shift-close.
+    if (original.sourceType !== "shift-close") {
       throw new Error(
-        "Hoàn bút hóa đơn nhà cung cấp chưa mở ở luồng này; không được dùng thao tác của chốt ca hoặc nộp quỹ.",
+        "Hoàn bút hóa đơn nhà cung cấp và nộp quỹ tiền mặt chưa mở ở luồng này; chỉ dùng cho chốt ca.",
       );
     }
     if (original.version !== input.expectedVersion) {

@@ -70,6 +70,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Chứng từ gốc không ở bước soát xét kế toán.",
   ACCOUNTING_SOURCE_ALREADY_POSTED: "Chứng từ gốc đã được ghi sổ.",
   ACCOUNTING_SHIFT_CLOSE_NOT_FOUND: "Không tìm thấy phiếu chốt ca tương ứng.",
+  ACCOUNTING_CASH_DEPOSIT_NOT_FOUND: "Không tìm thấy lượt nộp quỹ tương ứng.",
 
   // --- Kỳ kế toán ---
   ACCOUNTING_PERIOD_IS_LOCKED:
@@ -137,6 +138,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Chỉ đảo được bút toán gốc đã ghi sổ.",
   ACCOUNTING_POSTED_SOURCE_REQUIRED_FOR_REVERSAL:
     "Phải có chứng từ gốc đã ghi sổ mới lập được bút toán đảo.",
+  ACCOUNTING_REVERSAL_SOURCE_TYPE_NOT_SUPPORTED:
+    "Nguồn bút toán này chưa hỗ trợ đảo bút toán.",
   AP_JOURNAL_REQUIRES_AP_WORKFLOW:
     "Bút toán công nợ phải đi theo quy trình hóa đơn nhà cung cấp.",
 

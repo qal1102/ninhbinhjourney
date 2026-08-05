@@ -248,7 +248,14 @@ function eventFromRow(row: Record<string, unknown>): AttendanceEvent | null {
     userId: row.user_account_id as string,
     siteId,
     type: row.event_type as "check-in" | "check-out",
-    createdAt: row.created_at as string,
+    // PostgREST tra ve timestamptz dang "...+00:00", khong phai "...Z" --
+    // ky tu "+" khong nam trong bang an toan cua requireIdempotencyKey
+    // (shift-close-repository.ts), lam submitShiftCloseAction gay that tren
+    // production voi loi "idempotency key must be 8-160 safe ASCII
+    // characters" ngay khi openAttendance.createdAt duoc noi thang vao key.
+    // Chuan hoa ve ISO "Z" ngay tai diem doc, dung nhu duong ghi da lam
+    // (new Date().toISOString()) o duoi.
+    createdAt: new Date(row.created_at as string).toISOString(),
     latitude: (row.latitude as number) ?? null,
     longitude: (row.longitude as number) ?? null,
     accuracy: (row.accuracy_meters as number | null) ?? null,

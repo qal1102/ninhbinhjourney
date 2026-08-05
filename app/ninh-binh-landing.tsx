@@ -5,8 +5,11 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
 import { RevealHeading } from "@/components/shared/reveal-heading";
+import { useNinhBinhHour, type DayBand } from "@/components/shared/ninh-binh-hour";
 import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned-story";
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
+import { DestinationIndex } from "@/components/discovery/destination-index";
+import { JourneyCta } from "@/components/discovery/journey-cta";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 
 export type Language = "en" | "vi";
@@ -101,7 +104,9 @@ const TourismMap = dynamic(() => import("./tourism-map"), {
 
 const copy = {
   en: {
-    nav: ["Map", "Stories", "Builder", "Journey"],
+    // Nhan thu hai tung la "Stories", tro toi khoi `#stories` da xoa.
+    // Gio no tro toi danh muc diem den, nen phai goi dung ten.
+    nav: ["Map", "Destinations", "Builder", "Journey"],
     introTop: "Ninh Binh",
     introWords: ["Nature.", "Heritage.", "Wonder."],
     title: "Ninh Binh",
@@ -109,6 +114,22 @@ const copy = {
     footerNote: "Ninh Binh Journey · A journey between mountains, water and timeless heritage.",
     begin: "Plan my journey",
     exploreMap: "Explore map",
+    /*
+     * Dong gio thuc tai Ninh Binh. Moi khung gio mot chi tiet CHI NINH
+     * BINH moi noi duoc -- dat phep thu o UI_UX_RULES.md#voice-rules:
+     * doi "Ninh Binh" thanh "Ha Long" ma cau van dung thi cau do la cau
+     * chung chung, phai viet lai. "Mat song", "ben Trang An", "trien lua
+     * Tam Coc", "Thung Nham", "vom hang" deu khong the chuyen cho.
+     */
+    hourLead: "In Ninh Bình it is",
+    hourPhrases: {
+      dawn: "and the mist has not lifted off the river",
+      morning: "and the boats left Tràng An early",
+      midday: "and the sun stands straight above the limestone",
+      afternoon: "and late light runs gold across the Tam Cốc fields",
+      dusk: "and the birds are coming back to Thung Nham",
+      night: "and there is only an oar, somewhere under the caves",
+    },
     journeysLabel: "Curated Ninh Binh",
     journeysTitle: "Stories, not stops",
     journeysBody:
@@ -133,6 +154,16 @@ const copy = {
     hiddenGemsIntro:
       "Emptier, slower places — where the sound of an oar in the water still carries further than voices.",
     seeAllDestinations: "See all destinations",
+    /*
+     * `zigzag*` gio chi con dung cho VAI DIEM DAU (xem `ZIGZAG_FEATURED`).
+     * `index*` la khoi danh sach cho phan con lai. Khong bia con so nao o
+     * day -- khong co du lieu that ve so ngay khach o lai.
+     */
+    indexLabel: "The rest of the map",
+    indexTitle: "Ten more, and few people get to all of them.",
+    indexIntro:
+      "These are the ones that get cut first when the trip is short. Which is also why they are still quiet.",
+    indexHint: "Hover a name to see it.",
     zigzagLabel: "Every destination",
     zigzagTitle: "Fifteen places, fifteen different rhythms.",
     zigzagIntro:
@@ -196,7 +227,7 @@ const copy = {
     locationDenied: "Location permission was not granted.",
   },
   vi: {
-    nav: ["Bản đồ", "Câu chuyện", "Lập tuyến", "Lịch trình"],
+    nav: ["Bản đồ", "Điểm đến", "Lập tuyến", "Lịch trình"],
     introTop: "Ninh Bình",
     introWords: ["Thiên nhiên.", "Di sản.", "Kỳ quan."],
     title: "Ninh Bình",
@@ -204,6 +235,15 @@ const copy = {
     footerNote: "Ninh Bình Journey · Hành trình giữa núi, nước và di sản vượt thời gian.",
     begin: "Lập hành trình",
     exploreMap: "Khám phá bản đồ",
+    hourLead: "Ở Ninh Bình bây giờ",
+    hourPhrases: {
+      dawn: "sương chưa tan khỏi mặt sông",
+      morning: "thuyền đã rời bến Tràng An từ sớm",
+      midday: "nắng đứng bóng trên vách đá vôi",
+      afternoon: "nắng xiên vàng dọc triền lúa Tam Cốc",
+      dusk: "đàn chim đang về Thung Nham",
+      night: "chỉ còn tiếng mái chèo khua dưới vòm hang",
+    },
     journeysLabel: "Ninh Bình tuyển chọn",
     journeysTitle: "Câu chuyện, không chỉ điểm dừng",
     journeysBody:
@@ -228,6 +268,11 @@ const copy = {
     hiddenGemsIntro:
       "Chỗ vắng hơn, chậm hơn — nơi tiếng chèo khua nước còn nghe rõ hơn tiếng người.",
     seeAllDestinations: "Xem tất cả điểm đến",
+    indexLabel: "Phần còn lại của bản đồ",
+    indexTitle: "Mười nơi nữa, ít ai kịp đi hết.",
+    indexIntro:
+      "Đây là những chỗ bị gạch đầu tiên khi lịch trình ngắn lại. Cũng chính vì thế mà chúng còn vắng.",
+    indexHint: "Rê chuột lên một cái tên để xem trước.",
     zigzagLabel: "Toàn bộ điểm đến",
     zigzagTitle: "Mười lăm nơi, mười lăm nhịp thở khác nhau.",
     zigzagIntro:
@@ -290,7 +335,9 @@ const copy = {
     locationOutside: "Có vẻ bạn đang ngoài vùng, bản đồ sẽ quay về Tràng An.",
     locationDenied: "Bạn chưa cấp quyền vị trí.",
   },
-} satisfies Record<Language, Record<string, string | string[]>>;
+  // `Record<DayBand, string>` la de cho `hourPhrases` -- bang cau theo
+  // khung gio trong ngay, tra cuu bang `ninhBinhHour.band`.
+} satisfies Record<Language, Record<string, string | string[] | Record<DayBand, string>>>;
 
 /*
  * Ba nhip nay CHI dung du kien that da kiem chung, khong viet tho mood.
@@ -335,7 +382,7 @@ const cinematicClips: Record<Language, CinematicClip[]> = {
       end: 30,
       poster: "/images/destinations/tam-coc.jpg",
       eyebrow: "Sông nước Ninh Bình",
-      headline: "Từ mặt nước nhìn lên, núi đá cao hơn hẳn lúc đứng trên bờ.",
+      headline: "Người chèo đò ở đây chèo bằng chân, và đã chèo như thế cả đời.",
     },
     {
       youTubeId: "0NHfpdPHFE4",
@@ -343,7 +390,7 @@ const cinematicClips: Record<Language, CinematicClip[]> = {
       end: 29,
       poster: "/hero-ninh-binh.png",
       eyebrow: "Giữa lòng thung",
-      headline: "Đá vôi dựng thành vách, còn dòng nước thì cứ lách qua.",
+      headline: "Đá không chịu tránh, nên nước tự tìm lấy đường đi của mình.",
     },
     {
       youTubeId: "ZDCPQDr4YHE",
@@ -351,7 +398,7 @@ const cinematicClips: Record<Language, CinematicClip[]> = {
       end: 30,
       poster: "/images/destinations/bai-dinh.jpg",
       eyebrow: "Đất cố đô",
-      headline: "Nghìn năm trước, kinh đô Đại Cồ Việt nằm gọn giữa vòng núi này.",
+      headline: "Vua chọn nơi này vì núi che được. Rồi cháu con thấy chật, và dời đi.",
     },
   ],
   en: [
@@ -389,21 +436,21 @@ const storyBeats: Record<Language, PinnedStoryBeat[]> = {
       alt: "A bamboo boat crossing the still water of Van Long wetland",
       eyebrow: "Ramsar site · IUCN Green List",
       headline: "Fewer than 300 Delacour's langurs are left on earth. Most of them live here.",
-      body: "Van Long is the only wetland reserve in Vietnam on the IUCN Green List. The bamboo boat moves slowly and the paddle stays quiet — whether the langurs come out is still down to luck.",
+      body: "This is the only wetland reserve in Vietnam on the IUCN Green List. The boats run without engines and the rowers keep their voices down. Some mornings the langurs come right down to the water; some mornings you sit the whole way and see none.",
     },
     {
       image: "/images/destinations/cuc-phuong.png",
       alt: "Ancient forest canopy in Cuc Phuong National Park",
       eyebrow: "Established 1962",
       headline: "Before Vietnam had a second national park, there was Cuc Phuong.",
-      body: "Old-growth forest, thousand-year trees and primate rescue programmes still running today. Come here and the region changes register entirely: cooler, slower, a deeper shade of green.",
+      body: "Old-growth forest, trees that stood here before there was a road in, and primate rescue programmes still running today. Step through the gate and the whole region changes register: cooler, slower, a deeper green.",
     },
     {
       image: "/images/destinations/phat-diem.png",
       alt: "Stone and timber architecture at Phat Diem Cathedral",
       eyebrow: "Phat Diem stone cathedral",
       headline: "A Vietnamese communal-house roof, sitting on a Catholic cathedral.",
-      body: "People assume Ninh Binh is only karst and river. Phat Diem lies out toward the coast and tells another story — built from stone and timber rather than concrete, where two architectural traditions meet and neither one gives way.",
+      body: "People frame Ninh Bình as karst and river. Phát Diệm sits out toward the coast, built from stone and timber rather than concrete. Two architectural traditions meet here, and neither one gives way.",
     },
   ],
   vi: [
@@ -412,21 +459,21 @@ const storyBeats: Record<Language, PinnedStoryBeat[]> = {
       alt: "Thuyền nan lướt qua mặt nước tĩnh lặng ở Vân Long",
       eyebrow: "Khu Ramsar · Danh sách Xanh IUCN",
       headline: "Cả thế giới còn chưa tới 300 con voọc mông trắng. Phần lớn sống ở đây.",
-      body: "Vân Long là khu bảo tồn đất ngập nước duy nhất của Việt Nam có tên trong Danh sách Xanh IUCN. Thuyền nan đi chậm, mái chèo khua khẽ — còn voọc có ra hay không thì vẫn tùy duyên.",
+      body: "Đây là khu đất ngập nước duy nhất của Việt Nam có tên trong Danh sách Xanh IUCN. Thuyền không nổ máy, người chèo cũng không nói to. Có buổi voọc xuống tận mép nước, có buổi ngồi hết chuyến chẳng thấy con nào.",
     },
     {
       image: "/images/destinations/cuc-phuong.png",
       alt: "Tán rừng già trong Vườn quốc gia Cúc Phương",
       eyebrow: "Thành lập năm 1962",
       headline: "Trước khi Việt Nam có vườn quốc gia thứ hai, đã có Cúc Phương.",
-      body: "Rừng già, cây nghìn năm tuổi và những chương trình cứu hộ linh trưởng vẫn chạy tới hôm nay. Vào tới đây là cả vùng đổi giọng: mát hơn, chậm hơn, xanh sẫm hơn hẳn.",
+      body: "Rừng già, những cây đứng đây từ trước khi có đường vào, và các chương trình cứu hộ linh trưởng vẫn chạy tới hôm nay. Bước qua cổng vườn là cả vùng đổi giọng: mát hơn, chậm hơn, xanh sẫm hơn hẳn.",
     },
     {
       image: "/images/destinations/phat-diem.png",
       alt: "Kiến trúc đá và gỗ tại Nhà thờ đá Phát Diệm",
       eyebrow: "Nhà thờ đá Phát Diệm",
       headline: "Một mái đình Việt, đặt trên một nhà thờ Công giáo.",
-      body: "Người ta hay đóng khung Ninh Bình trong núi đá với sông nước. Phát Diệm nằm chếch về phía biển và kể chuyện khác — dựng bằng đá và gỗ chứ không phải bê tông, nơi hai truyền thống kiến trúc gặp nhau mà không bên nào phải nhường bên nào.",
+      body: "Người ta hay đóng khung Ninh Bình trong núi đá và sông nước. Phát Diệm nằm chếch về phía biển, dựng bằng đá và gỗ chứ không phải bê tông. Hai lối kiến trúc gặp nhau ở đây, và không bên nào phải nhường bên nào.",
     },
   ],
 };
@@ -1173,54 +1220,81 @@ const paymentMethodsVi = ["Visa", "Mastercard", "JCB", "VietQR", "MoMo", "ZaloPa
  * bi xoa 05/08 cung luc voi danh sach the lap o `#stories` -- ba diem dau
  * duoc dung lai NGUYEN VAN trong `DestinationZigzag` ngay ben duoi.
  *
- * VIEC CON DANG DO, chua lam trong dot nay: tach danh muc 15 diem thanh
- * hai nhip (zigzag cho vai diem dau + danh sach chu bam-con-tro cho phan
- * con lai) de cat bot 9.540px hien dang doc rat deu deu. Se dung lai
- * `destinations.filter((d) => d.tier === "signature")` luc lam viec do.
+ * Danh muc 15 diem gio chia lam hai nhip: `ZIGZAG_FEATURED` diem dau di
+ * qua `DestinationZigzag` (anh lon so le), phan con lai di qua
+ * `DestinationIndex` (danh sach ten lon, anh bam con tro).
  */
+const ZIGZAG_FEATURED = 5;
 
+/*
+ * VIET LAI TOAN BO 05/08. Ban cu bi chu du an che thang la "lon xon".
+ * Doc lai thi dung: ba trong bon tieu de la DANH SACH DANH TU chong len
+ * nhau ("Suong, thuyen va di san cham" / "Chua lon, co do, ho chua" /
+ * "Bong rung va du lich tu te") -- chinh la loi dau tien trong danh sach
+ * cam o UI_UX_RULES.md#voice-rules. Phan mo ta thi dinh tu noi bo ("duoc
+ * bien tap") va cau chung chung ai cung viet duoc ("cho nguoi muon di
+ * sau hon").
+ *
+ * Ban moi: moi tuyen mot cau co MOT y that, va phan mo ta chi dung du
+ * kien da kiem chung san trong repo (Hoa Lu la kinh do Dai Co Viet toi
+ * nam 1010, Cuc Phuong la vuon quoc gia dau tien cua Viet Nam -- ca hai
+ * deu da tra nguon o dot 04/08, xem HANDOFF). Khong con danh sach danh
+ * tu, khong con tu nghe nghiep.
+ */
 const routeCollections = [
   {
     id: "water-first",
     image: "/images/destinations/intro-trang-an-rain.png",
-    kicker: { en: "Water first", vi: "Nước trước" },
-    title: { en: "Mist, boats and slow heritage", vi: "Sương, thuyền và di sản chậm" },
+    kicker: { en: "By water", vi: "Đi bằng nước" },
+    title: {
+      en: "A whole morning with nothing but an oar",
+      vi: "Cả buổi sáng chỉ có tiếng mái chèo",
+    },
     body: {
-      en: "Start with Trang An while the river is quiet, then soften into Tam Coc and Thung Nham before dusk.",
-      vi: "Bắt đầu ở Tràng An khi mặt nước còn yên, rồi dịu dần qua Tam Cốc và Thung Nham trước hoàng hôn.",
+      en: "Tràng An before anyone has stirred the water, then Tam Cốc opening up between two walls of rock. Late afternoon at Thung Nham, sitting still while the birds come back.",
+      vi: "Tràng An lúc mặt nước chưa ai khuấy, rồi Tam Cốc mở ra giữa hai vách đá dựng. Chiều muộn về Thung Nham, ngồi thật yên đợi đàn chim kéo về.",
     },
     stops: ["trang_an", "tam_coc", "thung_nham"] as DestinationId[],
   },
   {
     id: "temple-scale",
     image: "/images/destinations/editorial/bai-dinh-editorial.png",
-    kicker: { en: "Sacred scale", vi: "Quy mô tâm linh" },
-    title: { en: "Pagodas, ancient capital, lake temple", vi: "Chùa lớn, cố đô, hồ chùa" },
+    kicker: { en: "Capital and pagoda", vi: "Cố đô và chùa lớn" },
+    title: {
+      en: "An old capital in the middle, a great pagoda at either end",
+      vi: "Kinh đô cũ nằm giữa, hai ngôi chùa lớn kẹp hai đầu",
+    },
     body: {
-      en: "A composed northern route for visitors who want the spiritual side of the expanded region.",
-      vi: "Một tuyến phía bắc được biên tập cho du khách muốn thấy lớp tâm linh của vùng mở rộng.",
+      en: "Hoa Lư was the capital of Đại Cồ Việt until the court moved to Thăng Long and left this valley to the mountains. Bái Đính and Tam Chúc do the opposite: new, vast, and built so that you feel small.",
+      vi: "Hoa Lư từng là kinh đô Đại Cồ Việt, tới khi triều Lý dời ra Thăng Long và nơi này ở lại với núi. Bái Đính và Tam Chúc thì ngược hẳn: mới, rộng, và cố ý để người ta thấy mình bé lại.",
     },
     stops: ["bai_dinh", "hoa_lu_ancient_capital", "tam_chuc"] as DestinationId[],
   },
   {
     id: "quiet-west",
     image: "/images/destinations/cuc-phuong.png",
-    kicker: { en: "Quiet west", vi: "Phía tây yên hơn" },
-    title: { en: "Forest shade and responsible travel", vi: "Bóng rừng và du lịch tử tế" },
+    kicker: { en: "Westward", vi: "Ngả về phía tây" },
+    title: {
+      en: "West, where the animals get the right of way",
+      vi: "Về phía tây, nơi con vật được ưu tiên hơn khách",
+    },
     body: {
-      en: "A calmer branch through Cuc Phuong, Van Long and the Bear Sanctuary for travelers who want depth.",
-      vi: "Một nhánh yên hơn qua Cúc Phương, Vân Long và cơ sở bảo tồn gấu cho người muốn đi sâu hơn.",
+      en: "Cúc Phương was Vietnam's first national park, and some of its trees stood here before there was a road in. Vân Long is quiet enough to hear a single oar. At the bear sanctuary, visitors come second.",
+      vi: "Cúc Phương là vườn quốc gia đầu tiên của Việt Nam, có những cây đứng đó từ trước khi có đường vào. Vân Long lặng tới mức nghe rõ một mái chèo. Còn ở khu bảo tồn gấu, khách là người đến sau.",
     },
     stops: ["cuc_phuong", "van_long", "bear_sanctuary"] as DestinationId[],
   },
   {
     id: "lantern-night",
     image: "/images/destinations/hoa-lu-old-town.jpg",
-    kicker: { en: "After dark", vi: "Sau hoàng hôn" },
-    title: { en: "Lanterns after limestone", vi: "Đèn lồng sau núi đá" },
+    kicker: { en: "Into the evening", vi: "Về chiều" },
+    title: {
+      en: "Climb for the height, come down for the light",
+      vi: "Trèo lên cho cao, rồi xuống cho chậm",
+    },
     body: {
-      en: "A softer end to the day: Hang Mua for altitude, Hoa Lu Old Town for lanterns and food.",
-      vi: "Một kết ngày nhẹ hơn: Hang Múa lấy độ cao, Phố cổ Hoa Lư cho đèn lồng và bữa tối.",
+      en: "Hang Múa asks for a few hundred stone steps and hands back the whole Tam Cốc valley below. Then you come down, Hoa Lư Old Town lights its lanterns, and the day closes slower than it opened.",
+      vi: "Hang Múa bắt trả bằng mấy trăm bậc đá, đổi lại là cả vùng Tam Cốc mở ra dưới chân. Xuống núi thì Phố cổ Hoa Lư vừa lên đèn, và ngày khép lại chậm hơn lúc nó bắt đầu.",
     },
     stops: ["hang_mua", "hoa_lu_old_town", "am_tien"] as DestinationId[],
   },
@@ -1358,6 +1432,7 @@ export default function NinhBinhLanding({
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [introVisible, setIntroVisible] = useState(true);
   const modalOpen = Boolean(detailId || checkoutOpen);
+  const ninhBinhHour = useNinhBinhHour();
 
   // Kéo chuột thật cho route-rail. Trước đó chỉ có CSS cursor:grab -- con
   // trỏ hứa hẹn kéo được nhưng không có xử lý nào chạy, mouse-drag không
@@ -1577,6 +1652,16 @@ export default function NinhBinhLanding({
           className="float-slow object-cover opacity-80"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(24,63,52,.16),rgba(24,63,52,.58)_48%,rgba(29,41,37,.9))]" />
+        {/*
+          Tong mau anh mo dau doi theo GIO THAT o Ninh Binh: hung vang luc
+          rang, trong luc trua, ho phach luc chieu, cham luc dem. Khong bia
+          so lieu nao -- chi la dong ho, va anh thi van la anh that.
+          `ninhBinhHour` la `null` cho toi khi mount xong tren may khach
+          (tranh lech HTML may chu), luc do khong ve lop nao ca.
+        */}
+        {ninhBinhHour ? (
+          <div className={`pointer-events-none absolute inset-0 hero-tod hero-tod-${ninhBinhHour.band}`} />
+        ) : null}
         <div className="absolute inset-x-0 top-0 z-20 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
           <a href="#top" className="flex items-center gap-2" aria-label="Ninh Bình Journey">
             <Image
@@ -1592,7 +1677,10 @@ export default function NinhBinhLanding({
           </a>
           <nav aria-label="Primary" className="hidden gap-6 text-sm text-[#FBFAF6]/82 md:flex">
             {(t.nav as string[]).map((item, index) => (
-              <a key={item} href={`#${["map", "stories", "ai", "itinerary"][index]}`} className="transition hover:text-[#E7B96A]">
+              // Neo thu hai truoc day tro toi `#stories` -- khoi do da xoa
+              // han 05/08 nen lien ket roi vao hu khong. Gio tro toi danh
+              // muc diem den, dung voi nhan moi cua no.
+              <a key={item} href={`#${["map", "all-destinations", "ai", "itinerary"][index]}`} className="transition hover:text-[#E7B96A]">
                 {item}
               </a>
             ))}
@@ -1603,14 +1691,34 @@ export default function NinhBinhLanding({
           </div>
         </div>
         <div id="top" className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-5 pb-16 pt-28 sm:px-8 lg:pb-24">
-          {clientDemo ? (
-            <span className="fade-up mb-5 w-fit rounded-full border border-white/25 bg-black/15 px-3 py-1 text-xs font-bold text-white/82 backdrop-blur">
-              Client demonstration · Supabase shared core
-            </span>
-          ) : null}
+          {/*
+            Nhan "Client demonstration · Supabase shared core" da GO HAN
+            05/08. Day la ngon ngu KY THUAT NOI BO lot thang ra mat khach
+            du lich: "Supabase shared core" khong co nghia gi voi nguoi
+            xem, va con lam trang trong nhu mot ban thu nghiem chua xong.
+            Dung bug nay da tung bi bat mot lan (xem HANDOFF 03/08: "Ninh
+            Binh tourism core", "Intent -> rules -> validated itinerary",
+            "Trang thai: idle") -- lan nay la cho con sot lai.
+            `clientDemo` van duoc dung o duoi (khoi `JourneyCta`) de quyet
+            dinh co hua thanh toan QR hay khong, nen KHONG bo bien nay.
+          */}
           <p className="fade-up mb-6 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{(t.introWords as string[]).join(" ")}</p>
           <h1 className="fade-up font-display text-6xl leading-[0.9] text-[#FBFAF6] sm:text-8xl lg:text-[9rem]">{t.title}</h1>
           <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
+          {/*
+            Gio that tai Ninh Binh. Bien trang tu mot to roi thanh mot noi
+            DANG TON TAI -- va vi moi khung gio keo theo mot chi tiet rieng
+            cua chinh vung nay, dong nay khong the copy sang site khac.
+            Chi hien sau khi mount (xem chu thich trong ninh-binh-hour.tsx).
+          */}
+          {ninhBinhHour ? (
+            <p className="mt-5 text-sm text-[#FBFAF6]/72 sm:text-base">
+              <span className="tabular-nums text-[#E7B96A]">
+                {t.hourLead as string} {ninhBinhHour.clock}
+              </span>
+              , {(t.hourPhrases as Record<DayBand, string>)[ninhBinhHour.band]}.
+            </p>
+          ) : null}
           <div className="fade-up mt-9 flex flex-col gap-3 sm:flex-row">
             <a href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
             <a href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
@@ -1743,40 +1851,33 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
-      <CinematicVideo clip={cinematicClips[lang][1]} />
+      {/*
+        Khoi `#stories` ("Ba cau chuyen de bat dau...") DA XOA HAN 05/08
+        theo yeu cau chu du an. Hai ly do, ca hai deu dung:
+         - Cau chu noi "Ba cau chuyen" nhung ba the that da bi go truoc do
+           (chung lap lai nguyen van voi zigzag) -- nen dong chu tu no da
+           thanh sai.
+         - Ngay ca khi sua so, no van chi la mot man chu bat khach doc
+           them truoc khi thay noi dung that. Danh muc ngay ben duoi tu
+           gioi thieu duoc.
+        Cac khoa chu `stories` / `storiesIntro` / `hiddenGemsIntro` van
+        con trong bang `copy` vi `/explore` dung chung -- dung xoa chung.
+      */}
 
       {/*
-        Khoi nay TUNG dung 3 the lon (Trang An / Bai Dinh / Tam Chuc) --
-        va ca ba deu duoc dung LAI nguyen van o `DestinationZigzag` ngay
-        ben duoi, vi zigzag doc ca 15 diem tu cung mang `destinations`.
-        Do tren production 05/08: 3 tieu de lap 2-3 lan, 3 doan mo ta lap
-        NGUYEN VAN cach nhau ~2.400px, 7 tam anh dung lai 2-3 lan. Khoi
-        tren con dung `index % 2 ? "lg:order-2"` -- tuc no CUNG la zigzag,
-        ban kem hon dat ngay tren ban tot.
-        Da xoa danh sach the; giu lai dung phan dan chuyen, gio no lam
-        chuong dan vao danh muc that o duoi. Nut "Xem tat ca diem den ->
-        /explore" cung bo: danh muc day du nam ngay khoi ke tiep, day
-        khach sang trang khac de xem thu dang o duoi la vo ly.
+        Danh muc diem den chia lam HAI NHIP, co chu dich (05/08).
+        Truoc do ca 15 diem di qua cung mot khuon zigzag: 9.540px lien
+        tuc, tuc 44% ca trang, va doc rat deu deu -- den diem thu bay thi
+        moi hang deu giong hang truoc.
+        Gio: `ZIGZAG_FEATURED` diem dau giu nguyen zigzag anh lon (phan
+        nay dep va da duoc chu du an khen), phan con lai chuyen sang
+        `DestinationIndex` -- danh sach ten lon, anh bam con tro tren may
+        de ban, anh vuong nho tren dien thoai. Hai nhip khac nhau doc nhu
+        mot to tap chi, VA van giu du ca 15 diem tren trang chu, khong
+        cat bot noi dung nao.
       */}
-      <section id="stories" className="bg-[#183F34] px-5 py-16 text-[#FBFAF6] sm:px-8 lg:py-24">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <p className="text-sm uppercase tracking-[0.24em] text-[#A8CEC1]">{t.stories}</p>
-            <RevealHeading
-              as="h2"
-              text={t.storiesIntro as string}
-              className="font-display mt-3 max-w-4xl text-4xl leading-tight sm:text-6xl"
-            />
-            <p className="mt-8 max-w-2xl text-lg leading-8 text-[#FBFAF6]/78">{t.hiddenGemsIntro}</p>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Toan bo 15 diem den xep so le, cuon toi dau hien toi do, ket bang
-          khoi dan sang Lap hanh trinh. Noi dung lay thang tu `destinations`
-          da bien tap san -- khong viet them cau moi o day. */}
       <DestinationZigzag
-        items={destinations.map((place) => ({
+        items={destinations.slice(0, ZIGZAG_FEATURED).map((place) => ({
           id: place.id,
           name: place.name[lang],
           image: place.image,
@@ -1794,10 +1895,38 @@ export default function NinhBinhLanding({
           explore: t.discover as string,
           add: t.add as string,
           added: t.added as string,
-          ctaTitle: t.zigzagCtaTitle as string,
-          ctaBody: t.zigzagCtaBody as string,
-          ctaPrimary: t.zigzagCtaPrimary as string,
-          ctaSecondary: t.zigzagCtaSecondary as string,
+        }}
+        onExplore={(id) => openDetail(id as DestinationId)}
+        onAdd={(id) => addDestination(id as DestinationId)}
+        isAdded={(id) => selectedIds.includes(id as DestinationId)}
+      />
+
+      <CinematicVideo clip={cinematicClips[lang][1]} />
+
+      <DestinationIndex
+        items={destinations.slice(ZIGZAG_FEATURED).map((place) => ({
+          id: place.id,
+          name: place.name[lang],
+          image: place.image,
+          imagePosition: place.imagePosition,
+          category: place.category[lang],
+          duration: place.duration[lang],
+        }))}
+        copy={{
+          sectionLabel: t.indexLabel as string,
+          sectionTitle: t.indexTitle as string,
+          sectionIntro: t.indexIntro as string,
+          hint: t.indexHint as string,
+        }}
+        onSelect={(id) => openDetail(id as DestinationId)}
+      />
+
+      <JourneyCta
+        copy={{
+          title: t.zigzagCtaTitle as string,
+          body: t.zigzagCtaBody as string,
+          primary: t.zigzagCtaPrimary as string,
+          secondary: t.zigzagCtaSecondary as string,
           /*
            * Chi hua thanh toan QR khi thanh toan sandbox that su bat
            * (NEXT_PUBLIC_EXPERIENCE_MODE=client-demo). O che do production
@@ -1805,11 +1934,8 @@ export default function NinhBinhLanding({
            * roi dan khach vao ngo cut con te hon la khong hua. Da kiem
            * that bang curl len production truoc khi viet dong nay.
            */
-          ctaOffer: (clientDemo ? t.zigzagCtaOffer : t.zigzagCtaOfferPlain) as string,
+          offer: (clientDemo ? t.zigzagCtaOffer : t.zigzagCtaOfferPlain) as string,
         }}
-        onExplore={(id) => openDetail(id as DestinationId)}
-        onAdd={(id) => addDestination(id as DestinationId)}
-        isAdded={(id) => selectedIds.includes(id as DestinationId)}
       />
 
       <CinematicVideo clip={cinematicClips[lang][2]} />

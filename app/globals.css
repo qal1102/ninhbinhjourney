@@ -56,11 +56,43 @@ select {
   color: var(--forest);
 }
 
+/*
+ * Fraunces la font BIEN THIEN: ngoai do dam no con hai truc rieng --
+ * `SOFT` (goc chu bo tron bao nhieu) va `opsz` (thiet ke cho co chu lon
+ * hay nho). Hai bien duoi duoc components/shared/scroll-type.tsx ghi lai
+ * theo TOC DO CUON: cuon nhanh thi chu cung va manh lai, dung thi no "no"
+ * ra mem va day hon.
+ *
+ * Vi sao dang lam nay: no lam trang co cam giac VAT LY, nhu giay in that
+ * phan ung voi tay nguoi. Gan nhu khong ai nhan ra mot cach co y thuc --
+ * va do dung la y do.
+ *
+ * Gia tri mac dinh duoi day CHINH LA bo so cu (opsz 84, SOFT 40, wght
+ * 620), nen khi khong co JS / bat giam chuyen dong, chu hien y het truoc.
+ */
+:root {
+  --display-opsz: 84;
+  --display-soft: 40;
+  --display-wght: 620;
+}
+
 .font-display {
   font-family: var(--font-heading);
-  font-variation-settings: "opsz" 84, "SOFT" 40, "WONK" 0;
-  font-weight: 620;
+  font-variation-settings:
+    "opsz" var(--display-opsz),
+    "SOFT" var(--display-soft),
+    "WONK" 0;
+  font-weight: var(--display-wght);
   letter-spacing: -0.02em;
+  transition:
+    font-variation-settings 420ms ease-out,
+    font-weight 420ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .font-display {
+    transition: none;
+  }
 }
 
 .fade-up {
@@ -635,6 +667,75 @@ select {
  * do cuon. Ca hai deu la CSS thuan, khong phu thuoc thu vien, va deu tat
  * duoi prefers-reduced-motion.
  */
+/*
+ * TONG MAU ANH MO DAU DOI THEO GIO THAT O NINH BINH
+ * (components/shared/ninh-binh-hour.tsx).
+ *
+ * Doi mem trong 1.2 giay: neu khach mo trang dung luc giao khung gio,
+ * lop mau truot sang tong moi thay vi nhay cai bup.
+ *
+ * Cac tong deu di theo bang mau da co cua thuong hieu (ho phach #E7B96A,
+ * xanh ram #183F34) chu khong phai mot bang mau moi -- de anh mo dau
+ * khong bao gio lech khoi phan con lai cua trang.
+ */
+.hero-tod {
+  transition: background 1200ms ease;
+}
+
+.hero-tod-dawn {
+  background: linear-gradient(
+    170deg,
+    rgba(231, 185, 106, 0.26),
+    rgba(231, 185, 106, 0.08) 42%,
+    rgba(24, 63, 52, 0.32)
+  );
+}
+
+.hero-tod-morning {
+  background: linear-gradient(
+    170deg,
+    rgba(168, 206, 193, 0.2),
+    rgba(251, 250, 246, 0.05) 46%,
+    rgba(24, 63, 52, 0.26)
+  );
+}
+
+.hero-tod-midday {
+  background: linear-gradient(
+    170deg,
+    rgba(251, 250, 246, 0.16),
+    rgba(251, 250, 246, 0.03) 44%,
+    rgba(24, 63, 52, 0.24)
+  );
+}
+
+.hero-tod-afternoon {
+  background: linear-gradient(
+    170deg,
+    rgba(231, 185, 106, 0.32),
+    rgba(214, 148, 78, 0.12) 45%,
+    rgba(24, 63, 52, 0.34)
+  );
+}
+
+.hero-tod-dusk {
+  background: linear-gradient(
+    170deg,
+    rgba(214, 122, 66, 0.34),
+    rgba(120, 74, 92, 0.2) 46%,
+    rgba(18, 34, 44, 0.5)
+  );
+}
+
+.hero-tod-night {
+  background: linear-gradient(
+    170deg,
+    rgba(28, 46, 74, 0.5),
+    rgba(20, 34, 46, 0.36) 44%,
+    rgba(10, 18, 26, 0.62)
+  );
+}
+
 /*
  * HAT PHIM + HIEU CHINH MAU AM -- hai lop phu co dinh, phu toan trang.
  *

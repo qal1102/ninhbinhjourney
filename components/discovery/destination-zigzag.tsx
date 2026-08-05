@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -25,11 +24,6 @@ export type ZigzagCopy = {
   explore: string;
   add: string;
   added: string;
-  ctaTitle: string;
-  ctaBody: string;
-  ctaPrimary: string;
-  ctaSecondary: string;
-  ctaOffer: string;
 };
 
 /**
@@ -73,24 +67,43 @@ export function DestinationZigzag({
         const copyEl = row.querySelector(".zigzag-copy");
         const fromLeft = row.dataset.side === "left";
 
-        // Anh va chu vao tu hai phia doi nhau, lech nhip mot chut de
-        // khong "bung" cung luc nhu banner quang cao.
-        gsap.from(media, {
-          opacity: 0,
-          xPercent: fromLeft ? -6 : 6,
-          yPercent: 4,
-          duration: 0.9,
-          ease: "power3.out",
-          scrollTrigger: { trigger: row, start: "top 82%", once: true },
-        });
+        /*
+         * Anh va chu vao tu HAI PHIA DOI NHAU, lech nhip mot chut de
+         * khong "bung" cung luc nhu banner quang cao.
+         *
+         * Bien do da nang manh len 05/08: ban cu dat xPercent 6 va y 26,
+         * nho toi muc chu du an cuon qua ma khong nhan ra co hieu ung nao
+         * ("sao no khong tu 2 ben di qua"). Gio anh di 14% be ngang cua
+         * chinh no va lo dan bang clip-path, con chu thi tung dong mot
+         * truot vao tu phia doi dien.
+         *
+         * Dung clip-path (khong phai opacity) cho anh: hai tam anh chi
+         * tiet chong mo len nhau luon ra mot dong nhoe -- bai hoc da tra
+         * gia o PinnedStory, ghi trong HANDOFF dot muoi mot.
+         */
+        gsap.fromTo(
+          media,
+          {
+            xPercent: fromLeft ? -14 : 14,
+            clipPath: fromLeft ? "inset(0% 0% 0% 100%)" : "inset(0% 100% 0% 0%)",
+          },
+          {
+            xPercent: 0,
+            clipPath: "inset(0% 0% 0% 0%)",
+            duration: 1.15,
+            ease: "power3.out",
+            scrollTrigger: { trigger: row, start: "top 84%", once: true },
+          },
+        );
         gsap.from(copyEl!.children, {
           opacity: 0,
-          y: 26,
-          duration: 0.75,
+          xPercent: fromLeft ? 10 : -10,
+          y: 30,
+          duration: 0.85,
           ease: "power3.out",
-          stagger: 0.08,
-          delay: 0.12,
-          scrollTrigger: { trigger: row, start: "top 82%", once: true },
+          stagger: 0.09,
+          delay: 0.22,
+          scrollTrigger: { trigger: row, start: "top 84%", once: true },
         });
 
         // Parallax rat nhe trong khung anh -- anh nhinh hon khung nen
@@ -192,29 +205,13 @@ export function DestinationZigzag({
           })}
         </div>
 
-        {/* Ket: nguoi doc vua luot qua 15 noi, cau hoi dat dung luc con
-            dang phan van -- dan thang sang bo lap hanh trinh. */}
-        <div className="zigzag-row mt-24 rounded-[10px] bg-[#183F34] px-6 py-14 text-center text-[#FBFAF6] sm:px-12 lg:mt-32 lg:py-20">
-          <div className="zigzag-copy mx-auto max-w-3xl">
-            <h3 className="font-display text-3xl leading-tight sm:text-5xl">{copy.ctaTitle}</h3>
-            <p className="mt-5 text-lg leading-relaxed text-[#D8E5DE]">{copy.ctaBody}</p>
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/plan"
-                className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#E7B96A] px-8 font-bold text-[#183F34] transition hover:bg-[#F2CE8C]"
-              >
-                {copy.ctaPrimary}
-              </Link>
-              <Link
-                href="/packages"
-                className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#FBFAF6]/40 px-8 font-semibold transition hover:bg-white/10"
-              >
-                {copy.ctaSecondary}
-              </Link>
-            </div>
-            <p className="mt-6 text-sm text-[#A8CEC1]">{copy.ctaOffer}</p>
-          </div>
-        </div>
+        {/*
+          Khoi ket ("Chua biet nen bat dau tu dau?") da chuyen sang
+          components/discovery/journey-cta.tsx ngay 05/08: danh muc gio
+          chia lam hai nhip (zigzag cho vai diem dau + DestinationIndex
+          cho phan con lai), nen khoi ket phai dung SAU CA HAI chu khong
+          con thuoc rieng zigzag.
+        */}
       </div>
     </section>
   );

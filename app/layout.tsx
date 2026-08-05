@@ -4,6 +4,7 @@ import "@fontsource-variable/manrope/index.css";
 import "./globals.css";
 import { PageTransition } from "@/components/shared/page-transition";
 import { ScrollProgress } from "@/components/shared/scroll-progress";
+import { ScrollType } from "@/components/shared/scroll-type";
 
 export const metadata: Metadata = {
   title: "Ninh Bình Journey",
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="vi" className="h-full scroll-smooth antialiased">
       <body className="min-h-full flex flex-col">
         <ScrollProgress />
+        <ScrollType />
         <PageTransition>{children}</PageTransition>
         {/*
           Lop hat phim + rua mau am, dat NGOAI <PageTransition> giong

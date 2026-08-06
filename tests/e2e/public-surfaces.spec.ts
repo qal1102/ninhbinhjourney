@@ -14,9 +14,31 @@ test("home intro keeps all four identity words with separated timing, then auto-
     waitUntil: "domcontentloaded",
   });
 
+  const intro = page.getByTestId("opening-intro");
   const words = page.locator(
     '[data-testid="opening-intro"] .opening-sequence span',
   );
+
+  /*
+   * Kiểm phần NHẠY THỜI GIAN trước tiên: màn intro chỉ sống 6,5 giây, nên
+   * mọi khẳng định "nó vẫn còn đó" phải chạy ngay đầu. Trước đây khối này
+   * nằm sau các phép đo chữ và độ trễ, và khi trang nặng thêm (nạp sẵn cả
+   * ba trình phát video từ 06/08) thì tới lượt nó intro đã tự tắt -- bài
+   * test đỏ vì đua thời gian chứ không phải vì sản phẩm sai.
+   *
+   * Cố ý KHÔNG có nút "Bỏ qua intro", và bấm vào đâu cũng không tắt được:
+   * khung 6,5 giây này là khoảng duy nhất để ba trình phát kịp boot xong
+   * trước khi khách cuộn tới.
+   */
+  await expect(intro).toHaveCount(1);
+  await expect(page.getByRole("button", { name: /skip|bỏ qua/i })).toHaveCount(0);
+  // Bấm bằng chuột vào giữa màn hình thay vì `locator.click()`: đây đúng
+  // là thứ khách làm khi muốn bỏ qua, và không vướng phép kiểm "visible"
+  // của Playwright trên một lớp phủ đang chạy animation.
+  const box = page.viewportSize()!;
+  await page.mouse.click(box.width / 2, box.height / 2);
+  await expect(intro).toHaveCount(1);
+
   await expect(words).toHaveCount(4);
   await expect(words).toHaveText(["Ninh Bình", "Thiên nhiên", "Di sản", "Kỳ quan"]);
 
@@ -25,16 +47,9 @@ test("home intro keeps all four identity words with separated timing, then auto-
   );
   expect(delays).toEqual([0.35, 1.55, 2.75, 3.95]);
 
-  // Cố ý KHÔNG có nút "Bỏ qua intro" và bấm vào đâu cũng không tắt được
-  // -- theo yêu cầu chủ dự án 05/08: khung 6,5 giây này là khoảng duy
-  // nhất để 3 trình phát video kịp boot xong trước khi khách cuộn tới.
-  await expect(page.getByRole("button", { name: /skip|bỏ qua/i })).toHaveCount(0);
-  await page.locator('[data-testid="opening-intro"]').click({ force: true });
-  await expect(page.getByTestId("opening-intro")).toHaveCount(1);
-
   // Tự tắt đúng lúc animation CSS kết thúc (~6,5s) -- không phải hẹn giờ
   // đoán mò trong bài test.
-  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 9000 });
+  await expect(intro).toHaveCount(0, { timeout: 12000 });
 });
 
 test("language switch updates immediately, persists and preserves source", async ({
@@ -85,8 +100,14 @@ for (const route of criticalRoutes) {
   test(`${route} has no critical accessibility violation or overflow`, async ({
     page,
   }) => {
-    await page.goto(route);
-    await page.waitForLoadState("networkidle");
+    // KHÔNG dùng `networkidle` cho các trang này. Từ 06/08 trang chủ nạp
+    // sẵn cả ba trình phát YouTube ngay khi mở (để cụm nút khởi động kịp
+    // tan trước khi khách cuộn tới), nên luồng mạng gần như không bao giờ
+    // "rảnh" và `networkidle` sẽ chờ tới hết giờ. Chờ theo trạng thái DOM
+    // rồi để yên một nhịp cho bố cục ổn định là đủ cho axe.
+    await page.goto(route, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(2500);
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])
       .analyze();

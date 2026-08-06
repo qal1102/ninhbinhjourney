@@ -28,8 +28,8 @@ export type CinematicClip = {
  * BA LOP, XEP TU DUOI LEN -- day la diem mau chot:
  *  1. `poster` (<img>) -- luon hien, khong dieu kien. Khong bao gio con
  *     khung den.
- *  2. Trinh phat (mp4 hoac YouTube) -- chi gan khi can, va chi HIEN RA
- *     sau `REVEAL_DELAY_MS` ke tu luc gan.
+ *  2. Trinh phat (mp4 hoac YouTube) -- chi gan khi can. MP4 hien ngay
+ *     khi `canPlay`; YouTube du phong van doi `REVEAL_DELAY_MS`.
  *  3. Scrim + chu.
  *
  * VI SAO PHAI TRE `REVEAL_DELAY_MS` TRUOC KHI HIEN TRINH PHAT:
@@ -120,13 +120,13 @@ export function CinematicVideo({
     return () => io.disconnect();
   }, [eager, eagerDelayMs, reduced, mounted]);
 
-  // Hien trinh phat sau khi no da co thoi gian ve xong khung dau va cum
-  // nut khoi dong da tan.
+  // YouTube du phong: doi cum nut khoi dong tan. MP4 tu goi setRevealed
+  // khi `canPlay`, khong bat khach nhin poster them 2,6 giay vo ly.
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || clip.src) return;
     const id = window.setTimeout(() => setRevealed(true), REVEAL_DELAY_MS);
     return () => window.clearTimeout(id);
-  }, [mounted]);
+  }, [mounted, clip.src]);
 
   // mp4: tam dung khi ra khoi man hinh -- tiet kiem pin va bang thong.
   useEffect(() => {
@@ -138,7 +138,36 @@ export function CinematicVideo({
     });
     io.observe(video);
     return () => io.disconnect();
-  }, [clip.src, reduced]);
+  }, [clip.src, reduced, mounted]);
+
+  // Parallax nhe tren MP4 local. Cap nhat truc tiep CSS variable de
+  // khong render React lai theo tung pixel cuon.
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap || !clip.src || reduced || !mounted) return;
+    let frame = 0;
+
+    function paint() {
+      frame = 0;
+      const rect = wrap!.getBoundingClientRect();
+      const viewport = window.innerHeight;
+      const progress = Math.max(0, Math.min(1, (viewport - rect.top) / (viewport + rect.height)));
+      wrap!.style.setProperty("--cinematic-y", `${(progress - 0.5) * 7}%`);
+    }
+
+    function schedule() {
+      if (!frame) frame = window.requestAnimationFrame(paint);
+    }
+
+    paint();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [clip.src, reduced, mounted]);
 
   // Lap dung doan da chon thay vi lap ca video (chi lam duoc voi mp4).
   useEffect(() => {
@@ -217,13 +246,15 @@ export function CinematicVideo({
           {clip.src ? (
             <video
               ref={videoRef}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="cinematic-local-video absolute inset-0 h-full w-full object-cover"
               src={clip.src}
               poster={clip.poster}
+              autoPlay
               muted
               loop
               playsInline
               preload="auto"
+              onCanPlay={() => setRevealed(true)}
               aria-hidden="true"
             />
           ) : clip.youTubeId ? (
@@ -239,6 +270,8 @@ export function CinematicVideo({
           ) : null}
         </div>
       ) : null}
+
+      <div className="cinematic-prism pointer-events-none absolute inset-0" aria-hidden="true" />
 
       {/* Lop 3 -- scrim + chu. */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.34),rgba(6,18,15,.12)_38%,rgba(6,18,15,.86))]" />

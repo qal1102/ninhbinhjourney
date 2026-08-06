@@ -71,6 +71,31 @@ test("home does not repeat the intro slogan and presents routes after the destin
     .locator("#destination-index, #curated-routes")
     .evaluateAll((sections) => sections.map((section) => section.id));
   expect(sectionOrder).toEqual(["destination-index", "curated-routes"]);
+  await expect(page.locator("#curated-routes .route-progress-track")).toHaveCount(1);
+});
+
+test("cinematic panels use local MP4 without embedded player controls", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 12000 });
+
+  const panels = page.locator(".cinematic-frame");
+  const videos = panels.locator("video");
+  await expect(panels).toHaveCount(3);
+  await expect(videos).toHaveCount(3, { timeout: 10000 });
+  await expect(panels.locator("iframe")).toHaveCount(0);
+
+  const sources = await videos.evaluateAll((items) =>
+    items.map((item) => ({
+      controls: (item as HTMLVideoElement).controls,
+      path: new URL((item as HTMLVideoElement).currentSrc).pathname,
+    })),
+  );
+  expect(sources).toEqual([
+    { controls: false, path: "/videos/cinematic/ninh-binh-water.mp4" },
+    { controls: false, path: "/videos/cinematic/tam-coc-river.mp4" },
+    { controls: false, path: "/videos/cinematic/trang-an-heritage.mp4" },
+  ]);
 });
 
 test("language switch updates immediately, persists and preserves source", async ({

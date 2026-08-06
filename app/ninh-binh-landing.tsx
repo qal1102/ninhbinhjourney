@@ -354,19 +354,17 @@ const copy = {
  */
 
 /*
- * Ba bang video dien anh chay nen. Video do chu du an chon.
+ * Ba bang video dien anh chay nen. Nguon do chu du an chon, da cat san
+ * thanh MP4 khong audio de demo khong con iframe/nut play YouTube.
  *
  * Video Qe1LqAOY9C0 da bi BO vi co watermark cua tac gia dong tren
  * khung hinh: de nguyen thi vuong mat, ma cat di thi thanh xoa dau ten
- * nguoi quay. Ba video con lai nhung nguyen ban qua youtube-nocookie,
- * giu nguyen credit va luot xem cho tac gia.
+ * nguoi quay. Ba video con lai duoc cat tu cac nguon OA4lO9rrk4Q /
+ * 0NHfpdPHFE4 / ZDCPQDr4YHE.
  *
- * Bat dau tu giay 12 (bo doan dau chua vao hinh), moi doan 17-18 giay
- * roi lap lai -- dung yeu cau cua chu du an.
- *
- * Khi nao co file mp4 tu-host co giay phep thi doi `youTubeId` thanh
- * `src`; component da ho tro san va che do do nhe hon han vi khong phai
- * nhung ca mot trinh phat.
+ * Cat dung 12-30 / 12-29 / 12-30 giay, H.264 1280px, `faststart`, khong
+ * audio. File da cat san nen loop chinh xac ma khong can `start`/`end`
+ * hay postMessage tua lai.
  */
 /*
  * `poster` chon tu ba tam CHUA DUNG O DAU tren trang chu (`tam-coc.jpg`,
@@ -378,25 +376,19 @@ const copy = {
 const cinematicClips: Record<Language, CinematicClip[]> = {
   vi: [
     {
-      youTubeId: "OA4lO9rrk4Q",
-      start: 12,
-      end: 30,
+      src: "/videos/cinematic/ninh-binh-water.mp4",
       poster: "/images/destinations/tam-coc.jpg",
       eyebrow: "Tuyến 1 · Tràng An",
       headline: "Hang Tối dài ba trăm hai mươi mét. Thuyền phải đi hết chừng ấy trong bóng.",
     },
     {
-      youTubeId: "0NHfpdPHFE4",
-      start: 12,
-      end: 29,
+      src: "/videos/cinematic/tam-coc-river.mp4",
       poster: "/hero-ninh-binh.png",
       eyebrow: "Sông Ngô Đồng · Tam Cốc",
       headline: "Sông Ngô Đồng không vòng qua núi. Nó khoét thẳng, thành ba cái hang.",
     },
     {
-      youTubeId: "ZDCPQDr4YHE",
-      start: 12,
-      end: 30,
+      src: "/videos/cinematic/trang-an-heritage.mp4",
       poster: "/images/destinations/bai-dinh.jpg",
       eyebrow: "Cố đô Hoa Lư · 968–1010",
       headline: "Ba trăm hecta, hai vòng thành, sáu vị vua. Rồi triều Lý dời đô, và Hoa Lư ở lại với núi.",
@@ -404,25 +396,19 @@ const cinematicClips: Record<Language, CinematicClip[]> = {
   ],
   en: [
     {
-      youTubeId: "OA4lO9rrk4Q",
-      start: 12,
-      end: 30,
+      src: "/videos/cinematic/ninh-binh-water.mp4",
       poster: "/images/destinations/tam-coc.jpg",
       eyebrow: "Route 1 · Tràng An",
       headline: "Hang Tối is 320 metres long. The boat goes through all of it in the dark.",
     },
     {
-      youTubeId: "0NHfpdPHFE4",
-      start: 12,
-      end: 29,
+      src: "/videos/cinematic/tam-coc-river.mp4",
       poster: "/hero-ninh-binh.png",
       eyebrow: "The Ngô Đồng river · Tam Cốc",
       headline: "The Ngô Đồng did not go around the mountain. It cut straight through, into three caves.",
     },
     {
-      youTubeId: "ZDCPQDr4YHE",
-      start: 12,
-      end: 30,
+      src: "/videos/cinematic/trang-an-heritage.mp4",
       poster: "/images/destinations/bai-dinh.jpg",
       eyebrow: "Hoa Lư, the old capital · 968–1010",
       headline: "Three hundred hectares, two rings of wall, six kings. Then the Lý court left, and Hoa Lư stayed with the mountains.",
@@ -1460,6 +1446,27 @@ export default function NinhBinhLanding({
   // chi tiết điểm đến ngay sau một cú kéo.
   const railRef = useRef<HTMLDivElement>(null);
   const railDrag = useRef({ dragging: false, startX: 0, startScrollLeft: 0, moved: false });
+  const [routeProgress, setRouteProgress] = useState(0);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    function measure() {
+      const max = rail!.scrollWidth - rail!.clientWidth;
+      setRouteProgress(max > 0 ? Math.max(0, Math.min(1, rail!.scrollLeft / max)) : 0);
+    }
+
+    rail.addEventListener("scroll", measure, { passive: true });
+    const resize = new ResizeObserver(measure);
+    resize.observe(rail);
+    const frame = window.requestAnimationFrame(measure);
+    return () => {
+      rail.removeEventListener("scroll", measure);
+      resize.disconnect();
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   function handleRailPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === "touch") return;
@@ -1490,6 +1497,24 @@ export default function NinhBinhLanding({
       event.stopPropagation();
       railDrag.current.moved = false;
     }
+  }
+
+  function handleRouteCardPointerMove(event: React.PointerEvent<HTMLElement>) {
+    if (event.pointerType !== "mouse" || railDrag.current.dragging) return;
+    const card = event.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+    card.style.setProperty("--route-tilt-x", `${(0.5 - y) * 5}deg`);
+    card.style.setProperty("--route-tilt-y", `${(x - 0.5) * 7}deg`);
+    card.style.setProperty("--route-glare-x", `${x * 100}%`);
+    card.style.setProperty("--route-glare-y", `${y * 100}%`);
+  }
+
+  function resetRouteCardTilt(event: React.PointerEvent<HTMLElement>) {
+    const card = event.currentTarget;
+    card.style.setProperty("--route-tilt-x", "0deg");
+    card.style.setProperty("--route-tilt-y", "0deg");
   }
 
   const sourceDestinationId = useMemo<DestinationId | "welcome">(() => {
@@ -1955,7 +1980,7 @@ export default function NinhBinhLanding({
         vao mot goc. Bo cuc moi tach anh va noi dung thanh hai mat phang;
         khong khoa chieu cao, nen chu duoc phep tho theo do dai that.
       */}
-      <section id="curated-routes" className="overflow-hidden bg-[#F6F1E7] py-20 text-[#1D2925] sm:py-24 lg:py-28">
+      <section id="curated-routes" className="route-showcase overflow-hidden bg-[#F6F1E7] py-20 text-[#1D2925] sm:py-24 lg:py-28">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <Reveal className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
@@ -1987,6 +2012,8 @@ export default function NinhBinhLanding({
               <article
                 key={route.id}
                 onClick={() => openDetail(firstStop)}
+                onPointerMove={handleRouteCardPointerMove}
+                onPointerLeave={resetRouteCardTilt}
                 className="route-card group grid w-[88vw] shrink-0 cursor-pointer snap-center overflow-hidden rounded-[12px] bg-[#183F34] text-white shadow-2xl shadow-[#183F34]/16 sm:w-[720px] lg:w-[1040px] lg:grid-cols-[0.9fr_1.1fr]"
               >
                 <div className="relative min-h-[270px] overflow-hidden sm:min-h-[360px] lg:min-h-[580px]">
@@ -2043,6 +2070,17 @@ export default function NinhBinhLanding({
               </article>
             );
           })}
+        </div>
+        <div className="mx-auto mt-5 flex max-w-7xl items-center gap-4 px-5 text-[0.68rem] font-extrabold uppercase tracking-[0.2em] text-[#3F7568] sm:px-8">
+          <span>{String(Math.min(routeCollections.length, Math.round(routeProgress * (routeCollections.length - 1)) + 1)).padStart(2, "0")}</span>
+          <div className="route-progress-track h-px flex-1 overflow-hidden bg-[#A8CEC1]/65" aria-hidden="true">
+            <span
+              className="block h-full origin-left bg-[#183F34] transition-transform duration-300"
+              style={{ transform: `scaleX(${Math.max(0.06, routeProgress)})` }}
+            />
+          </div>
+          <span>{String(routeCollections.length).padStart(2, "0")}</span>
+          <span className="hidden text-[#6D756F] sm:inline">{lang === "vi" ? "Kéo để chuyển tuyến" : "Drag to change route"}</span>
         </div>
       </section>
 

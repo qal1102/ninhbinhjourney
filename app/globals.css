@@ -365,7 +365,63 @@ select {
 }
 
 .route-card {
-  transform: translateZ(0);
+  --route-glare-x: 50%;
+  --route-glare-y: 50%;
+  --route-tilt-x: 0deg;
+  --route-tilt-y: 0deg;
+  position: relative;
+  transform: perspective(1400px) rotateX(var(--route-tilt-x)) rotateY(var(--route-tilt-y)) translateZ(0);
+  transform-style: preserve-3d;
+  transition: transform 180ms ease-out, box-shadow 300ms ease;
+  will-change: transform;
+}
+
+.route-card::after {
+  background: radial-gradient(
+    circle at var(--route-glare-x) var(--route-glare-y),
+    rgba(255, 238, 201, 0.34),
+    rgba(168, 206, 193, 0.08) 24%,
+    transparent 48%
+  );
+  content: "";
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 240ms ease;
+  z-index: 4;
+}
+
+.route-card:hover {
+  box-shadow: 0 42px 90px rgba(24, 63, 52, 0.28);
+}
+
+.route-card:hover::after {
+  opacity: 1;
+}
+
+.route-showcase {
+  isolation: isolate;
+  position: relative;
+}
+
+.route-showcase::before {
+  animation: route-showcase-field 14s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 18% 35%, rgba(168, 206, 193, 0.42), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgba(231, 185, 106, 0.3), transparent 31%);
+  content: "";
+  filter: blur(22px);
+  height: 34rem;
+  inset: -9rem 0 auto;
+  opacity: 0.72;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+.route-progress-track span {
+  will-change: transform;
 }
 
 .leaflet-container {
@@ -935,7 +991,23 @@ select {
  * phong cho trinh duyet chua ho tro don vi container.
  */
 .cinematic-frame {
+  --cinematic-y: 0%;
   container-type: size;
+}
+
+.cinematic-local-video {
+  transform: translate3d(0, var(--cinematic-y), 0) scale(1.09);
+  transform-origin: center;
+  will-change: transform;
+}
+
+.cinematic-prism {
+  animation: cinematic-prism-drift 11s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 78% 22%, rgba(231, 185, 106, 0.22), transparent 30%),
+    radial-gradient(circle at 18% 68%, rgba(74, 162, 137, 0.18), transparent 34%);
+  mix-blend-mode: screen;
+  opacity: 0.72;
 }
 
 .cinematic-frame iframe {
@@ -980,6 +1052,43 @@ select {
 @media (max-aspect-ratio: 1 / 1) {
   .cinematic-frame iframe {
     translate: -70% -50%;
+  }
+}
+
+@keyframes route-showcase-field {
+  from {
+    opacity: 0.54;
+    transform: translate3d(-4%, -2%, 0) scale(0.98);
+  }
+  to {
+    opacity: 0.88;
+    transform: translate3d(5%, 4%, 0) scale(1.06);
+  }
+}
+
+@keyframes cinematic-prism-drift {
+  from {
+    opacity: 0.44;
+    transform: translate3d(-4%, 2%, 0) scale(1.02);
+  }
+  to {
+    opacity: 0.82;
+    transform: translate3d(5%, -3%, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-card {
+    transform: none !important;
+  }
+
+  .route-showcase::before,
+  .cinematic-prism {
+    animation: none !important;
+  }
+
+  .cinematic-local-video {
+    transform: none !important;
   }
 }
 

@@ -31,6 +31,11 @@ test("home intro keeps all four identity words with separated timing, then auto-
    * trước khi khách cuộn tới.
    */
   await expect(intro).toHaveCount(1);
+  await expect(intro.locator(".opening-palette")).toHaveCount(1);
+  const openingImageOpacity = await intro
+    .locator(".opening-image")
+    .evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity));
+  expect(openingImageOpacity).toBeGreaterThan(0.7);
   await expect(page.getByRole("button", { name: /skip|bỏ qua/i })).toHaveCount(0);
   // Bấm bằng chuột vào giữa màn hình thay vì `locator.click()`: đây đúng
   // là thứ khách làm khi muốn bỏ qua, và không vướng phép kiểm "visible"
@@ -50,6 +55,22 @@ test("home intro keeps all four identity words with separated timing, then auto-
   // Tự tắt đúng lúc animation CSS kết thúc (~6,5s) -- không phải hẹn giờ
   // đoán mò trong bài test.
   await expect(intro).toHaveCount(0, { timeout: 12000 });
+});
+
+test("home does not repeat the intro slogan and presents routes after the destination catalog", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 4000 });
+
+  const hero = page.locator("main > section").first();
+  await expect(hero).not.toContainText("Thiên nhiên. Di sản. Kỳ quan.");
+
+  const sectionOrder = await page
+    .locator("#destination-index, #curated-routes")
+    .evaluateAll((sections) => sections.map((section) => section.id));
+  expect(sectionOrder).toEqual(["destination-index", "curated-routes"]);
 });
 
 test("language switch updates immediately, persists and preserves source", async ({

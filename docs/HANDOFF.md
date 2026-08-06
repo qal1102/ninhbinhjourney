@@ -2,7 +2,7 @@
 
 > **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
 >
-> Cập nhật: **03/08/2026** — sau đợt làm T1–T10, W3, buổi chốt thiết kế danh tính/hồ sơ/nhật ký, đợt đẩy toàn bộ lên production (T0 xong, mục 0), và đợt sửa tiêu đề "Ba lối vào" + viết lại mô tả 9 điểm đến (mục 2.6).
+> Cập nhật: **06/08/2026** — sau đợt làm T1–T10, W3, buổi chốt thiết kế danh tính/hồ sơ/nhật ký, các đợt public web và bản chỉnh màu intro đang kiểm chứng cục bộ (mục 2.6).
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -291,7 +291,18 @@ Tự soi production bằng Playwright (chụp ảnh nhiều mốc cuộn, không
 
 Đã xác minh: tsc/lint/build sạch, 22/22 e2e công khai xanh (gồm axe cho `/`), quét Playwright xác nhận 0 khung có hai khối chữ chồng nhau, 0 khung wipe cắt ngang chữ, 0 lỗi JS; mobile 390px đọc được; reduced-motion rơi về xếp chồng dọc với toàn bộ chữ opacity 1.
 
-**Việc mở cho phiên sau, từ cùng đợt review "dùng như người":** (a) intro có ~1,2 giây đầu gần như đen tuyền trước khi chữ đầu tiên hiện — cân nhắc rút delay; (b) "phải nhấn đúng nút mới ăn" — nhiều thẻ (route card, thẻ danh sách /explore) chỉ có nút con bấm được, thân thẻ không; mở rộng vùng bấm cả thẻ là việc đáng làm nhưng đụng cấu trúc DOM + test, tách riêng; (c) câu neo `subtitle` giờ xuất hiện ở hero + footer + meta — đợt sau khi thêm trang mới nhớ giữ đúng một câu này.
+**06/08 (local, chưa deploy) — sửa dứt điểm khoảng đen đầu intro và tăng màu mà không đổi nội dung.** Giữ nguyên chuỗi khóa `Ninh Bình → Thiên nhiên → Di sản → Kỳ quan`, đúng bốn delay 0,35 / 1,55 / 2,75 / 3,95 giây và tổng 6,5 giây. Ảnh nền giờ hiện ngay từ frame đầu (`opacity: 1`), tăng sáng/bão hòa vừa phải; thêm một lớp color-grade CSS gồm xanh rừng, xanh mặt nước và vàng nắng lấy từ chính ảnh Tràng An. Bốn nhịp chữ dùng kem / xanh non / vàng di sản / vàng nắng thay vì cùng một màu trắng. Không thêm WebGL, canvas hay video vào intro — đây là chỉnh màu trên ảnh thật, nhẹ và có fallback reduced-motion đứng yên. Ảnh chụp thật desktop + Pixel 7 đã kiểm tra, không tràn ngang; `typecheck`, lint, build sạch; `public-surfaces.spec.ts` **24/24 xanh**, đồng thời khóa thêm điều kiện lớp màu tồn tại và ảnh không được mở đầu ở opacity thấp.
+
+**06/08 (local, chưa deploy) — dọn lại nhịp trang chủ bằng ảnh chụp thật, không suy từ JSX.** Ảnh full-page Pixel 7 cho thấy phần đầu đang kể cùng một ý quá nhiều lần: intro bốn nhịp → hero in lại `Thiên nhiên. Di sản. Kỳ quan.` → ba thẻ tuyến chữ dày → video/story/map, nên khách phải đi qua nhiều màn hình trước khi tới danh mục có thể chọn. Đã sửa:
+
+- Gỡ hẳn dòng `introWords` khỏi hero; chuỗi này chỉ còn xuất hiện đúng một lần trong intro. Tên `Ninh Bình`, subtitle, giờ địa phương và hai hành động chính của hero giữ nguyên.
+- Chuyển toàn bộ ba tuyến gợi ý từ ngay dưới hero xuống **sau `DestinationIndex`**: khách xem đủ các điểm đến trước, rồi mới ghép chúng thành tuyến. Không xóa tuyến hay cắt nội dung.
+- Thẻ tuyến cũ khóa `height: 520px`, dùng ảnh làm nền cho toàn bộ tiêu đề/body/tag/nút nên chữ bị ép cả trên desktop lẫn mobile. Bố cục mới tách ảnh và chữ thành hai mặt phẳng: desktop là spread hai cột rộng 1040px, mobile xếp ảnh trên–chữ dưới, chiều cao tự giãn theo nội dung thật; rail vẫn kéo chuột/chạm và scroll-snap như trước.
+- Đã chụp riêng hero + khối tuyến trên Desktop Chrome và Pixel 7, rồi chụp lại full-page mobile để kiểm thứ tự bằng mắt. `typecheck`, lint, build sạch; `public-surfaces.spec.ts` **24/24 xanh** ở hai viewport. Test mới khóa cả hai quyết định: hero không được lặp slogan intro và `#curated-routes` phải đứng sau `#destination-index`.
+
+**Quyết định video của cùng đợt:** giữ nguyên ba YouTube embed hiện tại, chưa tải/cắt thành MP4 khi chưa có file gốc hoặc nguồn được phép tự host. Motion/GSAP và video không thay thế nhau: motion dùng cho nhịp chuyển/bố cục; MP4 chỉ nên dùng cho 1–3 khoảnh khắc phong cảnh khi có nguồn hợp lệ. `CinematicVideo` đã hỗ trợ sẵn `src`, `start`, `end`, loop đúng đoạn, poster và tạm dừng ngoài viewport; khi có MP4 chỉ đổi cấu hình clip, không phải viết lại component.
+
+**Việc mở cho phiên sau, từ cùng đợt review "dùng như người":** (a) "phải nhấn đúng nút mới ăn" — nhiều thẻ (route card, thẻ danh sách /explore) chỉ có nút con bấm được, thân thẻ không; mở rộng vùng bấm cả thẻ là việc đáng làm nhưng đụng cấu trúc DOM + test, tách riêng; (b) câu neo `subtitle` giờ xuất hiện ở hero + footer + meta — đợt sau khi thêm trang mới nhớ giữ đúng một câu này.
 
 **Bối cảnh git đáng ghi lại một lần:** dự án được làm trên hai máy, một máy dùng repo bọc ngoài + `git subtree` để đẩy (sinh hash commit khác dù nội dung giống hệt tại điểm đồng bộ 31/07), một máy clone thẳng repo này. Lịch sử tưởng như "không có tổ tiên chung" nhưng đã xác minh cây thư mục trùng khít tại thời điểm rẽ nhánh — không phải mất dữ liệu hay bị ghi đè. Máy bọc-ngoài từ nay chuyển sang clone thẳng như thế này để tránh lặp lại nhầm lẫn.
 

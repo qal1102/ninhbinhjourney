@@ -1710,6 +1710,12 @@ export default function NinhBinhLanding({
             sizes="100vw"
             className="opening-image object-cover"
           />
+          {/*
+            Ba lop mau lay tu chinh phong canh: xanh rong/da voi, vang
+            nang muon va dat nung di san. Day la color-grade thuần CSS
+            tren anh that, khong phai mot man WebGL doc lap chen vao intro.
+          */}
+          <div className="opening-palette" aria-hidden="true" />
           <div className="opening-vignette" />
           <div className="opening-sequence">
             {trailerWords.map((word, index) => (
@@ -1783,7 +1789,6 @@ export default function NinhBinhLanding({
             `clientDemo` van duoc dung o duoi (khoi `JourneyCta`) de quyet
             dinh co hua thanh toan QR hay khong, nen KHONG bo bien nay.
           */}
-          <p className="fade-up mb-6 text-sm font-bold uppercase tracking-[0.22em] text-[#E7B96A]">{(t.introWords as string[]).join(" ")}</p>
           <h1 className="fade-up font-display text-6xl leading-[0.9] text-[#FBFAF6] sm:text-8xl lg:text-[9rem]">{t.title}</h1>
           <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
           {/*
@@ -1804,73 +1809,6 @@ export default function NinhBinhLanding({
             <a href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
             <a href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
           </div>
-        </div>
-      </section>
-
-      {/* Khối "Ba lối vào" (3 thẻ điều hướng) từng đứng ở đây — chủ dự án bỏ
-          hẳn ngày 04/08: nó lặp lại đúng các đường đi đã có ở hero và nav,
-          bắt khách đọc thêm một màn chữ trước khi thấy nội dung thật. */}
-      <section className="bg-[#FBFAF6] py-16 text-[#1D2925] sm:py-20 lg:py-24">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <Reveal className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
-            <div>
-              <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#3F7568]">{t.journeysLabel}</p>
-              <RevealHeading
-                as="h2"
-                text={t.journeysTitle as string}
-                className="font-display mt-4 max-w-3xl text-5xl leading-none text-[#183F34] sm:text-7xl"
-              />
-            </div>
-            <div className="max-w-2xl lg:justify-self-end">
-              <p className="text-lg leading-8 text-[#4d5b55]">{t.journeysBody}</p>
-            </div>
-          </Reveal>
-        </div>
-        <div
-          ref={railRef}
-          className="route-rail mt-10 flex snap-x gap-4 overflow-x-auto px-5 pb-4 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]"
-          onPointerDown={handleRailPointerDown}
-          onPointerMove={handleRailPointerMove}
-          onPointerUp={endRailDrag}
-          onPointerLeave={endRailDrag}
-          onClickCapture={handleRailClickCapture}
-        >
-          {routeCollections.map((route, index) => {
-            const firstStop = route.stops[0];
-            return (
-              <article
-                key={route.id}
-                onClick={() => openDetail(firstStop)}
-                className="route-card group relative h-[520px] w-[82vw] shrink-0 cursor-pointer snap-center overflow-hidden rounded-[8px] bg-[#183F34] text-white shadow-2xl shadow-[#183F34]/18 sm:w-[560px] lg:w-[620px]">
-                <Image
-                  src={route.image}
-                  alt={route.title[lang]}
-                  fill
-                  sizes="(min-width: 1024px) 620px, 82vw"
-                  className="object-cover transition duration-700 group-hover:scale-[1.035]"
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.12),rgba(6,18,15,.35)_42%,rgba(6,18,15,.88))]" />
-                <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 text-xs font-extrabold uppercase tracking-[0.2em] text-white/82">
-                  <span>{route.kicker[lang]}</span>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
-                  <h3 className="font-display max-w-lg text-4xl leading-tight sm:text-5xl">{route.title[lang]}</h3>
-                  <p className="mt-4 max-w-lg leading-7 text-white/78">{route.body[lang]}</p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {route.stops.map((id) => {
-                      const stop = destinations.find((destination) => destination.id === id);
-                      return stop ? <span key={id} className="rounded-full border border-white/24 bg-white/12 px-3 py-1 text-xs font-bold backdrop-blur">{stop.name[lang]}</span> : null;
-                    })}
-                  </div>
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" onClick={(event) => { event.stopPropagation(); openDetail(firstStop); }} className="rounded-full bg-[#FBFAF6] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#E7B96A]">{t.viewRoute}</button>
-                    <button type="button" onClick={(event) => { event.stopPropagation(); addRoute(route.stops); }} className="rounded-full border border-white/35 px-5 py-3 font-semibold text-white transition hover:bg-white/12">{t.addRoute}</button>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
         </div>
       </section>
 
@@ -2005,6 +1943,108 @@ export default function NinhBinhLanding({
         }}
         onSelect={(id) => openDetail(id as DestinationId)}
       />
+
+      {/*
+        Ba tuyen goi y tung nam ngay sau hero, truoc ca video, ban do va
+        danh muc diem den. Tren dien thoai no bat khach doc ba man chu dai
+        truoc khi biet trang co nhung noi nao. Dat o day de khach xem het
+        danh muc truoc, roi moi ghep cac diem thanh mot hanh trinh.
+
+        The cu dung anh lam nen cho TOAN BO chu va khoa chieu cao 520px:
+        tren desktop van chat, tren mobile thi body + tag + hai nut bi ep
+        vao mot goc. Bo cuc moi tach anh va noi dung thanh hai mat phang;
+        khong khoa chieu cao, nen chu duoc phep tho theo do dai that.
+      */}
+      <section id="curated-routes" className="overflow-hidden bg-[#F6F1E7] py-20 text-[#1D2925] sm:py-24 lg:py-28">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+          <Reveal className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
+            <div>
+              <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#3F7568]">{t.journeysLabel}</p>
+              <RevealHeading
+                as="h2"
+                text={t.journeysTitle as string}
+                className="font-display mt-4 max-w-3xl text-5xl leading-[0.98] text-[#183F34] sm:text-7xl"
+              />
+            </div>
+            <div className="max-w-2xl lg:justify-self-end">
+              <p className="text-lg leading-8 text-[#4d5b55]">{t.journeysBody}</p>
+            </div>
+          </Reveal>
+        </div>
+
+        <div
+          ref={railRef}
+          className="route-rail mt-12 flex items-stretch snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-5 sm:gap-6 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]"
+          onPointerDown={handleRailPointerDown}
+          onPointerMove={handleRailPointerMove}
+          onPointerUp={endRailDrag}
+          onPointerLeave={endRailDrag}
+          onClickCapture={handleRailClickCapture}
+        >
+          {routeCollections.map((route, index) => {
+            const firstStop = route.stops[0];
+            return (
+              <article
+                key={route.id}
+                onClick={() => openDetail(firstStop)}
+                className="route-card group grid w-[88vw] shrink-0 cursor-pointer snap-center overflow-hidden rounded-[12px] bg-[#183F34] text-white shadow-2xl shadow-[#183F34]/16 sm:w-[720px] lg:w-[1040px] lg:grid-cols-[0.9fr_1.1fr]"
+              >
+                <div className="relative min-h-[270px] overflow-hidden sm:min-h-[360px] lg:min-h-[580px]">
+                  <Image
+                    src={route.image}
+                    alt={route.title[lang]}
+                    fill
+                    sizes="(min-width: 1024px) 470px, (min-width: 640px) 720px, 88vw"
+                    className="object-cover transition duration-700 group-hover:scale-[1.035]"
+                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.06),rgba(6,18,15,.28))]" />
+                  <span className="absolute right-5 top-5 text-xs font-extrabold tracking-[0.22em] text-white/88">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                <div className="flex flex-col p-6 sm:p-8 lg:p-12">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#A8CEC1]">{route.kicker[lang]}</p>
+                  <h3 className="font-display mt-5 max-w-xl text-4xl leading-[1.03] sm:text-5xl lg:text-6xl">{route.title[lang]}</h3>
+                  <p className="mt-6 max-w-xl text-[0.98rem] leading-7 text-white/76 sm:text-base sm:leading-8">{route.body[lang]}</p>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {route.stops.map((id) => {
+                      const stop = destinations.find((destination) => destination.id === id);
+                      return stop ? (
+                        <span key={id} className="rounded-full border border-white/22 bg-white/8 px-3 py-1.5 text-xs font-bold text-white/86">
+                          {stop.name[lang]}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                  <div className="mt-auto flex flex-col gap-3 pt-8 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openDetail(firstStop);
+                      }}
+                      className="rounded-full bg-[#FBFAF6] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#E7B96A]"
+                    >
+                      {t.viewRoute}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        addRoute(route.stops);
+                      }}
+                      className="rounded-full border border-white/35 px-5 py-3 font-semibold text-white transition hover:bg-white/12"
+                    >
+                      {t.addRoute}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       <JourneyCta
         copy={{

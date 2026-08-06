@@ -122,15 +122,65 @@ select {
 
 .opening-image {
   animation: opening-image 6.5s ease forwards;
-  filter: saturate(0.85) contrast(1.08) brightness(0.7);
+  filter: saturate(1.18) contrast(1.06) brightness(0.88);
   transform: scale(1.06);
+}
+
+.opening-palette {
+  animation: opening-palette 6.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  background:
+    radial-gradient(circle at 79% 22%, rgba(246, 186, 100, 0.6), transparent 31%),
+    radial-gradient(circle at 18% 66%, rgba(39, 126, 97, 0.52), transparent 42%),
+    radial-gradient(circle at 64% 76%, rgba(60, 139, 137, 0.38), transparent 36%),
+    linear-gradient(118deg, rgba(17, 74, 58, 0.42), transparent 43%, rgba(193, 100, 62, 0.28));
+  inset: 0;
+  mix-blend-mode: color;
+  opacity: 0.78;
+  pointer-events: none;
+  position: absolute;
+}
+
+.opening-palette::before {
+  animation: opening-sun-sweep 6.5s ease-in-out forwards;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 225, 166, 0.62),
+    rgba(238, 170, 91, 0.2) 36%,
+    transparent 68%
+  );
+  content: "";
+  height: 78vmax;
+  position: absolute;
+  right: -28vmax;
+  top: -39vmax;
+  transform: translate3d(0, 0, 0) scale(0.82);
+  width: 78vmax;
+}
+
+.opening-palette::after {
+  animation: opening-water-light 6.5s ease-in-out forwards;
+  background: linear-gradient(
+    96deg,
+    transparent 10%,
+    rgba(155, 220, 204, 0.22) 48%,
+    rgba(255, 213, 143, 0.3) 71%,
+    transparent 92%
+  );
+  bottom: 0;
+  content: "";
+  filter: blur(22px);
+  height: 34%;
+  left: -8%;
+  position: absolute;
+  transform: skewY(-2deg);
+  width: 116%;
 }
 
 .opening-vignette {
   background:
-    radial-gradient(circle at 50% 44%, rgba(251, 250, 246, 0.08), transparent 33%),
-    linear-gradient(180deg, rgba(6, 18, 15, 0.55), rgba(6, 18, 15, 0.2) 42%, rgba(6, 18, 15, 0.78)),
-    linear-gradient(90deg, rgba(6, 18, 15, 0.74), rgba(6, 18, 15, 0.18) 50%, rgba(6, 18, 15, 0.7));
+    radial-gradient(circle at 50% 44%, rgba(251, 250, 246, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(6, 18, 15, 0.28), rgba(6, 18, 15, 0.08) 42%, rgba(6, 18, 15, 0.66)),
+    linear-gradient(90deg, rgba(6, 18, 15, 0.48), rgba(6, 18, 15, 0.08) 50%, rgba(6, 18, 15, 0.42));
   inset: 0;
   position: absolute;
 }
@@ -162,18 +212,22 @@ select {
 
 .opening-sequence span:nth-child(1) {
   animation-delay: 0.35s;
+  color: #fff7e8;
 }
 
 .opening-sequence span:nth-child(2) {
   animation-delay: 1.55s;
+  color: #c9e8c9;
 }
 
 .opening-sequence span:nth-child(3) {
   animation-delay: 2.75s;
+  color: #f3c779;
 }
 
 .opening-sequence span:nth-child(4) {
   animation-delay: 3.95s;
+  color: #ffd6a0;
 }
 
 .opening-lockup {
@@ -486,16 +540,76 @@ select {
 
 @keyframes opening-image {
   0% {
-    opacity: 0;
+    opacity: 1;
     transform: scale(1.1);
   }
-  9%,
   91% {
     opacity: 1;
   }
   100% {
     opacity: 0.45;
     transform: scale(1.02);
+  }
+}
+
+@keyframes opening-palette {
+  0% {
+    filter: saturate(0.92) hue-rotate(-5deg);
+    opacity: 0.58;
+  }
+  24% {
+    filter: saturate(1.12) hue-rotate(-2deg);
+    opacity: 0.82;
+  }
+  43% {
+    filter: saturate(1.18) hue-rotate(3deg);
+    opacity: 0.88;
+  }
+  62% {
+    filter: saturate(1.28) hue-rotate(7deg);
+    opacity: 0.94;
+  }
+  91% {
+    filter: saturate(1.18) hue-rotate(2deg);
+    opacity: 0.82;
+  }
+  100% {
+    filter: saturate(1.05);
+    opacity: 0.38;
+  }
+}
+
+@keyframes opening-sun-sweep {
+  0% {
+    opacity: 0.42;
+    transform: translate3d(5%, -3%, 0) scale(0.82);
+  }
+  42% {
+    opacity: 0.66;
+  }
+  72% {
+    opacity: 0.86;
+    transform: translate3d(-13%, 10%, 0) scale(1.02);
+  }
+  100% {
+    opacity: 0.38;
+    transform: translate3d(-18%, 13%, 0) scale(1.08);
+  }
+}
+
+@keyframes opening-water-light {
+  0%,
+  18% {
+    opacity: 0.26;
+    transform: translate3d(-4%, 8%, 0) skewY(-2deg);
+  }
+  64% {
+    opacity: 0.72;
+    transform: translate3d(3%, -3%, 0) skewY(-2deg);
+  }
+  100% {
+    opacity: 0.28;
+    transform: translate3d(6%, -6%, 0) skewY(-2deg);
   }
 }
 
@@ -575,6 +689,12 @@ select {
     animation: none !important;
     opacity: 1;
     transform: none;
+  }
+
+  .opening-palette,
+  .opening-palette::before,
+  .opening-palette::after {
+    animation: none !important;
   }
 
   /*

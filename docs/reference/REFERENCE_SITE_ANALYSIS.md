@@ -180,6 +180,81 @@ How to adapt:
 - Ảnh dọc "coi là điểm mạnh, không ép lưới" — áp dụng được ngay cho khối "Người ta đã viết gì về nơi này" hoặc timeline: nếu sau này có ảnh tư liệu lịch sử dạng dọc, không cần crop vuông cho khớp lưới.
 - `/plan` (Lập hành trình): không có pattern nào từ MERSI đáng mượn trực tiếp. Trang hiện tại (mô tả bằng lời, gợi ý, xác nhận trước khi lưu) đã đúng hướng UX tối giản mà MERSI theo đuổi — không cần thêm gì từ tham chiếu này.
 
+## Mua vé Di sản Tràng An (đối thủ trực tiếp — trang chính thức của BQL)
+
+Reference:
+- https://muave.disantrangan.vn/home/vi
+- https://muave.disantrangan.vn/gioi-thieu/vi
+- https://muave.disantrangan.vn/hanh-trinh-di-san/vi
+
+**Đây là trang chính thức của Ban Quản lý Khu du lịch sinh thái Tràng An — không phải một trang tham khảo thẩm mỹ, mà là đối thủ trực tiếp trên đúng địa bàn.** Chủ dự án chỉ định đọc để học cách hành văn, ngày 06/08.
+
+### Đo được (Playwright, không phải đọc mô tả)
+
+- Trang chủ cao **4.748px**, gồm 8 khối: hero carousel → thanh đặt vé → Dịch Vụ (giá vé) → 4 mùa → UNESCO → Ấn tượng từ du khách → form liên hệ → footer.
+- Font: **SF Pro Display** (font hệ thống của Apple) — không phải một lựa chọn thiết kế, chỉ là mặc định.
+- Bảng màu: trắng + đúng hai sắc xanh `#1A6733` / `#0F7A3A`. Không có sắc nhấn thứ hai.
+- Class kiểu Bootstrap (`container my-5`), lưới đều, thẻ bo góc. Không có chuyển động theo cuộn nào đáng kể.
+
+### Họ hơn ta ở đâu — nói thẳng
+
+**Hành văn của họ hay hơn hẳn, và lý do rất cụ thể: họ GỌI TÊN, còn ta MÔ TẢ.**
+
+Văn của ta dùng danh từ chung — "núi đá vôi", "mặt nước", "mái chèo", "vách đá". Văn của họ dùng **danh từ riêng có lịch sử đính kèm**:
+
+> "Tuyến 1 là tuyến tham quan du khách có thể chiêm ngưỡng nhiều hang động nhất — **9 hang** — trong đó có một hang động đi xuyên 2 chiều và 3 điểm tâm linh. Là hành trình tìm hiểu lịch sử **triều đại nhà Đinh** qua các di tích và truyền thuyết về **Đền Trình, Phủ Khống**… Đây cũng là tuyến duy nhất bạn có thể khám phá **Đền Trần — trái tim của Di sản**."
+
+> "Du khách cũng sẽ được chiêm ngưỡng mùa kết trái của **cây thị 1000 năm tuổi tại Phủ Khống**."
+
+> "nơi thờ **Đức Thánh Quý Minh Đại Vương** tại Đền Suối Tiên — **vị tướng thời Hùng Vương thứ 18**. Hàng năm vào **ngày 17, 18/3 âm lịch**, Tràng An lại nô nức tổ chức lễ hội."
+
+Sáu kỹ thuật rút ra, dùng được ngay:
+
+1. **Gọi tên riêng thay vì tả chung.** Phủ Khống, Hang Đột, Hành Cung Vũ Lâm, Thủy Đình, núi Phượng Hoàng — mỗi cái tên tự mang theo một câu chuyện. Đây là điểm khác biệt lớn nhất.
+2. **Con số làm điểm neo, không phải để khoe.** "9 hang", "hơn 1000m", "1000 năm tuổi", "Hùng Vương thứ 18".
+3. **Neo vào triều đại.** Nhà Đinh, nhà Trần, loạn 12 sứ quân — biến phong cảnh thành lịch sử.
+4. **Dùng lịch âm.** "Tháng 4-6 (âm lịch)", "ngày 17, 18/3 âm lịch" — đúng nhịp của người Việt đi lễ, và không trang nước ngoài nào bắt chước được.
+5. **Tiêu đề đảo tính từ lên trước.** "Rực rỡ Mùa Hè", "Lắng đọng Mùa Đông", "Nên thơ Mùa Thu" — một công thức nhất quán, dễ nhớ.
+6. **Định danh vai trò cho một địa điểm.** "Đền Trần — trái tim của Di sản", "hang động đẹp và dài nhất Tràng An".
+
+### Chỗ họ dở — đừng bê nguyên
+
+- Sáo ngữ: "một bức tranh hoàn hảo", "chốn bồng lai tiên cảnh", "như bước ra từ những bức tranh trong các bài thơ về mùa Thu của các thi sĩ".
+- Nặng tính từ, nhẹ động từ.
+- Khối UNESCO là một đoạn văn hành chính đọc không vào.
+- **Ta đã cấm đúng mấy lỗi này ở `UI_UX_RULES.md#voice-rules` từ trước — giữ nguyên lệnh cấm.** Học phần *gọi tên và con số*, không học phần *sáo ngữ*.
+
+### Ta hơn họ ở đâu (tính tới 06/08)
+
+| | Ta | Họ |
+|---|---|---|
+| Số điểm đến | 15 | 1 (Tràng An) |
+| Bản đồ tương tác thật | ✅ Leaflet | ❌ |
+| Bộ lập hành trình | ✅ | ❌ |
+| Song ngữ | ✅ VI/EN | ✅ VI/EN |
+| Màn intro điện ảnh | ✅ | ❌ |
+| Video nền tự phát | ✅ 3 khối | ❌ |
+| Ghim ảnh kể chuyện theo cuộn | ✅ | ❌ |
+| Danh mục ảnh bám con trỏ | ✅ | ❌ |
+| Ảnh nở từ thẻ sang chi tiết (FLIP) | ✅ | ❌ |
+| Giờ địa phương + tông màu theo buổi | ✅ | ❌ |
+| Hạt phim + hiệu chỉnh màu | ✅ | ❌ |
+| Font biến thiên theo tốc độ cuộn | ✅ | ❌ |
+| Tiêu đề hiện theo từng từ | ✅ | ❌ |
+| Bán vé thật | ❌ (chưa có cổng thanh toán) | ✅ |
+| Cảm nhận du khách có tên/nơi/ngày | ❌ | ✅ |
+| Nội dung theo 4 mùa | ❌ | ✅ |
+| Q&A / nội quy / chính sách hoàn vé | ❌ | ✅ |
+
+**Kết luận thẳng:** ta hơn hẳn về kỹ thuật tương tác và thẩm mỹ; họ hơn hẳn về **độ dày nội dung và độ cụ thể địa phương**, cộng với một luồng thương mại thật. Khoảng cách cần lấp không nằm ở hiệu ứng — nằm ở chữ.
+
+### Việc nên làm, xếp theo giá trị
+
+1. **Viết lại toàn bộ mô tả 15 điểm đến theo lối gọi tên.** Mỗi điểm phải có ít nhất một danh từ riêng và một con số/mốc lịch sử đã kiểm chứng. Đây là việc đáng giá nhất và chưa làm.
+2. **Thêm khối 4 mùa.** Ta có 15 điểm nên làm được thứ họ không làm được: *mùa nào nên đi đâu*. Họ chỉ nói được về một nơi.
+3. **Lịch âm + lễ hội theo ngày.** Cần tra nguồn thật cho từng lễ hội trước khi viết.
+4. **Cảm nhận du khách** — chỉ khi có cảm nhận THẬT. Bịa là vi phạm nguyên tắc không-dữ-liệu-giả của dự án.
+
 ## Implementation Notes
 
 - Prefer CSS or Motion-style timing for lightweight hero intro.

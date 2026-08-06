@@ -94,6 +94,48 @@ Five patterns to ban:
 
 **Known incident, 03/08:** a UI section titled literally "Three ways in. Pick one." / "Ba lối vào. Chọn một." shipped as an instructional list-style header — it read like a bot menu, not an invitation. Fixed by keeping the three-card layout (it solves a real navigation problem) and rewriting only the header using the đính-chính-định-kiến pattern: "No two journeys start the same way." / "Không ai bắt đầu một chuyến đi giống ai." Lesson: a UI pattern can be structurally right and still fail on voice — check the header text specifically, not just whether the section exists.
 
+## Yêu cầu chủ dự án — ghi lại 05–06/08, còn hiệu lực
+
+Ghi ra đây theo đúng yêu cầu ("nhớ note lại mấy yêu cầu của t"). Đây là **quyết định của chủ dự án**, không phải gợi ý — model sau không được tự ý đảo ngược.
+
+**Về nội dung / chữ nghĩa**
+- **Nội dung do chủ dự án và phiên làm việc hiện tại viết. Model khác KHÔNG được tự sửa chữ.** Lý do nêu thẳng: các bản viết trước "ngáo đá máy móc", không bắt được giọng heritagevietnamairlines.com.
+- Chuẩn hành văn phải đạt: **muave.disantrangan.vn** (xem `REFERENCE_SITE_ANALYSIS.md`). Yêu cầu nguyên văn: *"hành văn hay hơn nhiều… học cách hành văn của bọn nó đi"*.
+- Cấm tuyệt đối kiểu liệt kê danh từ chồng nhau làm tiêu đề ("Chùa lớn, cố đô, hồ chùa") — đã bị chê "lộn xộn".
+- Cấm chữ kỹ thuật nội bộ lọt ra mặt khách. Đã sập 2 lần: "Ninh Binh tourism core" (03/08), "Client demonstration · Supabase shared core" (06/08).
+
+**Về intro đầu trang**
+- Chạy **đúng một lần mỗi lần tải trang**, chỉ lặp lại khi F5 hoặc mở lại trang.
+- **KHÔNG có đường bỏ qua** — không nút, không bấm-để-tắt. Khung 6,5 giây này là thời gian duy nhất để ba trình phát video kịp boot xong.
+
+**Về video**
+- Tự phát, **không có dấu play**, không viền đen ở bất kỳ khổ màn hình nào.
+- **Không gắn dòng ghi nguồn YouTube.** Chỉ dùng để demo cho đỡ trống, không dùng kinh doanh — chuyện bản quyền tạm gác lại theo quyết định của chủ dự án. Không lặp lại lời cảnh báo này.
+
+**Về mức độ và cách kiểm chứng**
+- **Số lượng "skill" phải nhiều hơn và trang phải đẹp hơn muave.disantrangan.vn.**
+- Yêu cầu nguyên văn: *"tao không quan tâm mấy cái test xanh test đỏ… thứ tao quan tâm nhất là liệu có hoạt động không, show khách được chưa"*. **Bắt buộc tự soi bằng ảnh chụp thật (Playwright, desktop + mobile + reduced-motion) trước khi tuyên bố xong.** Test xanh không phải bằng chứng.
+- Ưu tiên tốc độ: cần bản demo được càng sớm càng tốt, khách chờ lâu sẽ chán.
+
+## Voice Rule bổ sung 06/08 — GỌI TÊN, ĐỪNG TẢ
+
+Bài học rút ra khi đối chiếu trực tiếp với muave.disantrangan.vn, và nó giải thích chính xác vì sao văn cũ của ta nhạt:
+
+**Ta dùng danh từ chung; họ dùng danh từ riêng có lịch sử đính kèm.**
+
+- ❌ "mái chèo khua vào vách đá dựng đứng"
+- ✅ "cây thị 1000 năm tuổi tại Phủ Khống"
+- ❌ "một ngôi đền bên mặt nước"
+- ✅ "Đền Trần — trái tim của Di sản"
+
+Bốn thứ phải có trong mỗi đoạn mô tả một địa điểm:
+1. **Ít nhất một danh từ riêng** (tên đền, hang, phủ, nhân vật lịch sử).
+2. **Một con số hoặc mốc thời gian đã kiểm chứng** — 9 hang, hơn 1000m, năm 968, Hùng Vương thứ 18.
+3. **Một neo lịch sử** nếu có (triều đại, sự kiện, tích truyện).
+4. **Lịch âm** khi nói về lễ hội, không dùng lịch dương.
+
+Vẫn giữ nguyên toàn bộ danh sách cấm ở `#voice-rules` phía trên — đặc biệt là sáo ngữ ("bức tranh hoàn hảo", "chốn bồng lai tiên cảnh") mà chính trang tham chiếu cũng mắc. **Học phần gọi tên và con số, không học phần sáo ngữ.**
+
 ## Intro Rule (one-shot, do not touch lightly)
 
 - `introTop` / `introWords` (currently "Ninh Binh" / "Nature. Heritage. Wonder." and vi equivalent) are a locked, tested sequence — an e2e spec asserts the exact words and timing. This is **not** prose and the swap-test above does not apply to it.

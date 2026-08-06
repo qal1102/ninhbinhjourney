@@ -11,6 +11,7 @@ import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
+import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 
 export type Language = "en" | "vi";
@@ -136,6 +137,8 @@ const copy = {
     journeysBody:
       "Each route tells its own thread: water first, temples next, then forest and lantern light as the day slows down. Drag through, and pick the one that sounds like the day you want.",
     viewRoute: "View route",
+    exploreRouteStop: "Explore this stop",
+    routeStopLabel: "Stop",
     addRoute: "Add route",
     youAreHere: "You are here",
     qrSource: "QR source",
@@ -164,7 +167,8 @@ const copy = {
     indexTitle: "Ten more, and few people get to all of them.",
     indexIntro:
       "These are the ones that get cut first when the trip is short. Which is also why they are still quiet.",
-    indexHint: "Hover a name to see it.",
+    indexHint: "Move through the names. The image and journey rhythm change with each place.",
+    indexOpen: "Open this place",
     zigzagLabel: "Every destination",
     zigzagTitle: "Fifteen places, fifteen different rhythms.",
     zigzagIntro:
@@ -250,6 +254,8 @@ const copy = {
     journeysBody:
       "Mỗi tuyến là một mạch kể: nước trước, chùa sau, rồi rừng và ánh đèn lồng khi ngày chậm lại. Kéo qua, chọn mạch nào giống ngày bạn đang mong.",
     viewRoute: "Xem tuyến",
+    exploreRouteStop: "Khám phá điểm này",
+    routeStopLabel: "Chặng",
     addRoute: "Thêm tuyến",
     youAreHere: "Bạn đang ở đây",
     qrSource: "Nguồn QR",
@@ -273,7 +279,8 @@ const copy = {
     indexTitle: "Mười nơi nữa, ít ai kịp đi hết.",
     indexIntro:
       "Đây là những chỗ bị gạch đầu tiên khi lịch trình ngắn lại. Cũng chính vì thế mà chúng còn vắng.",
-    indexHint: "Rê chuột lên một cái tên để xem trước.",
+    indexHint: "Rê qua từng tên. Ảnh và nhịp chuyến đi sẽ đổi theo từng nơi.",
+    indexOpen: "Mở điểm đến",
     zigzagLabel: "Toàn bộ điểm đến",
     zigzagTitle: "Mười lăm nơi, mười lăm nhịp thở khác nhau.",
     zigzagIntro:
@@ -367,51 +374,53 @@ const copy = {
  * hay postMessage tua lai.
  */
 /*
- * `poster` chon tu ba tam CHUA DUNG O DAU tren trang chu (`tam-coc.jpg`,
- * `hero-ninh-binh.png`, `bai-dinh.jpg`) -- co y, de khung tinh khong lap
- * lai bat ky anh nao khach vua nhin thay. Dung `trang-an.jpg` o day la
- * tai pham dung loi da bi che mot lan: khoi moi hien ra lai la tam anh
- * vua xem, nhin nhu loi lap khoi chu khong phai mot canh moi.
+ * Mapping được rà lại 07/08 từ tiêu đề nguồn gốc + frame thật + phản hồi
+ * trực tiếp của chủ dự án. Tên file cũ KHÔNG được coi là địa danh:
+ *  - OA4lO9rrk4Q: tiêu đề gốc ghi Hang Mua Peak and Tam Coc.
+ *  - 0NHfpdPHFE4: tiêu đề chỉ ghi Ninh Binh; cảnh được chủ dự án nhận ra
+ *    là Tràng An, nên copy chỉ đứng ở cấp quần thể, không đoán tên đền.
+ *  - ZDCPQDr4YHE: tiêu đề gốc ghi thẳng Trang An, Ninh Binh.
+ * Poster giờ cùng địa danh với video để reduced-motion cũng không kể sai.
  */
 const cinematicClips: Record<Language, CinematicClip[]> = {
   vi: [
     {
       src: "/videos/cinematic/ninh-binh-water.mp4",
-      poster: "/images/destinations/tam-coc.jpg",
-      eyebrow: "Tuyến 1 · Tràng An",
-      headline: "Hang Tối dài ba trăm hai mươi mét. Thuyền phải đi hết chừng ấy trong bóng.",
+      poster: "/images/destinations/hang-mua.png",
+      eyebrow: "Đỉnh Ngọa Long · Hang Múa",
+      headline: "486 bậc đá đưa lên đỉnh Ngọa Long, nơi cả thung lũng Tam Cốc mở ra dưới chân.",
     },
     {
       src: "/videos/cinematic/tam-coc-river.mp4",
-      poster: "/hero-ninh-binh.png",
-      eyebrow: "Sông Ngô Đồng · Tam Cốc",
-      headline: "Sông Ngô Đồng không vòng qua núi. Nó khoét thẳng, thành ba cái hang.",
+      poster: "/images/destinations/trang-an.jpg",
+      eyebrow: "Quần thể danh thắng Tràng An · UNESCO 2014",
+      headline: "Tràng An được UNESCO ghi danh theo cả tiêu chí văn hóa và thiên nhiên.",
     },
     {
       src: "/videos/cinematic/trang-an-heritage.mp4",
-      poster: "/images/destinations/bai-dinh.jpg",
-      eyebrow: "Cố đô Hoa Lư · 968–1010",
-      headline: "Ba trăm hecta, hai vòng thành, sáu vị vua. Rồi triều Lý dời đô, và Hoa Lư ở lại với núi.",
+      poster: "/images/destinations/intro-trang-an-rain.png",
+      eyebrow: "Tuyến 1 · Tràng An",
+      headline: "Chín hang nối Đền Trình, Đền Trần và Phủ Khống trên cùng một tuyến nước.",
     },
   ],
   en: [
     {
       src: "/videos/cinematic/ninh-binh-water.mp4",
-      poster: "/images/destinations/tam-coc.jpg",
-      eyebrow: "Route 1 · Tràng An",
-      headline: "Hang Tối is 320 metres long. The boat goes through all of it in the dark.",
+      poster: "/images/destinations/hang-mua.png",
+      eyebrow: "Ngọa Long peak · Hang Múa",
+      headline: "486 stone steps lead to Ngọa Long peak, with the whole Tam Cốc valley below.",
     },
     {
       src: "/videos/cinematic/tam-coc-river.mp4",
-      poster: "/hero-ninh-binh.png",
-      eyebrow: "The Ngô Đồng river · Tam Cốc",
-      headline: "The Ngô Đồng did not go around the mountain. It cut straight through, into three caves.",
+      poster: "/images/destinations/trang-an.jpg",
+      eyebrow: "Tràng An Landscape Complex · UNESCO 2014",
+      headline: "UNESCO inscribed Tràng An for both its cultural and natural values.",
     },
     {
       src: "/videos/cinematic/trang-an-heritage.mp4",
-      poster: "/images/destinations/bai-dinh.jpg",
-      eyebrow: "Hoa Lư, the old capital · 968–1010",
-      headline: "Three hundred hectares, two rings of wall, six kings. Then the Lý court left, and Hoa Lư stayed with the mountains.",
+      poster: "/images/destinations/intro-trang-an-rain.png",
+      eyebrow: "Route 1 · Tràng An",
+      headline: "Nine caves connect Đền Trình, Đền Trần and Phủ Khống along one water route.",
     },
   ],
 };
@@ -1233,35 +1242,32 @@ const ZIGZAG_FEATURED = 5;
 const routeCollections = [
   {
     id: "water-first",
-    image: "/images/destinations/intro-trang-an-rain.png",
     kicker: { en: "By water", vi: "Đi bằng nước" },
     title: {
-      en: "Nine caves at Tràng An, three at Tam Cốc, and your feet never touch the ground",
-      vi: "Chín hang ở Tràng An, ba hang ở Tam Cốc, cả ngày không đặt chân xuống đất",
+      en: "Nine caves at Tràng An. Three at Tam Cốc. Two journeys by water.",
+      vi: "Chín hang Tràng An. Ba hang Tam Cốc. Hai hành trình bằng nước.",
     },
     body: {
-      en: "Route 1 at Tràng An runs through nine caves and three shrines. Hang Tối alone is 320 metres of darkness, and Hang Nấu Rượu still carries the story of wine brewed for the king. At Tam Cốc it was the Ngô Đồng river itself that cut hang Cả, hang Hai and hang Ba clean through the limestone. Then Thung Nham, late, for the birds coming home.",
-      vi: "Tuyến 1 Tràng An đi qua chín hang và ba điểm tâm linh. Riêng Hang Tối là ba trăm hai mươi mét trong bóng, còn Hang Nấu Rượu tới giờ vẫn giữ tích nấu rượu tiến vua. Sang Tam Cốc thì chính sông Ngô Đồng đã khoét xuyên núi đá vôi thành hang Cả, hang Hai, hang Ba. Chiều muộn về Thung Nham đợi đàn chim.",
+      en: "Route 1 at Tràng An runs through nine caves and three shrines; Hang Tối alone is 320 metres long, while Hang Nấu Rượu carries the story of wine brewed for the king. Tam Cốc is a different route: the Ngô Đồng cut hang Cả, hang Hai and hang Ba through the limestone. Leave Thung Nham for late afternoon.",
+      vi: "Tuyến 1 Tràng An đi qua chín hang và ba điểm tâm linh; riêng Hang Tối dài 320 mét, còn Hang Nấu Rượu giữ tích nấu rượu tiến vua. Tam Cốc là một tuyến khác: sông Ngô Đồng xuyên núi thành hang Cả, hang Hai, hang Ba. Thung Nham dành cho cuối chiều.",
     },
     stops: ["trang_an", "tam_coc", "thung_nham"] as DestinationId[],
   },
   {
     id: "temple-scale",
-    image: "/images/destinations/editorial/bai-dinh-editorial.png",
-    kicker: { en: "Capital and pagoda", vi: "Cố đô và chùa lớn" },
+    kicker: { en: "From the 10th century", vi: "Từ thế kỷ X" },
     title: {
       en: "Six kings, three dynasties, and five hundred stone arhats",
       vi: "Sáu vị vua, ba triều đại, và năm trăm pho tượng đá",
     },
     body: {
-      en: "In 968 Đinh Bộ Lĩnh put down the twelve warlords, took the throne and made Hoa Lư the capital of Đại Cồ Việt: three hundred hectares of inner and outer citadel, walls set straight against the cliffs. Six kings of three dynasties ruled from here before the Lý court moved to Thăng Long. Bái Đính answers differently — the old pagoda founded by the monk Nguyễn Minh Không in 1136, and the new one's arhat corridor running almost three kilometres past five hundred figures carved from Ninh Vân bluestone.",
-      vi: "Năm 968, Đinh Bộ Lĩnh dẹp xong loạn mười hai sứ quân, lên ngôi và chọn Hoa Lư làm kinh đô Đại Cồ Việt: ba trăm hecta thành Nội và thành Ngoại, tường thành dựa thẳng vào vách núi. Sáu vị vua của ba triều đại nối nhau ở đây, tới khi triều Lý dời ra Thăng Long. Bái Đính thì trả lời theo cách khác — chùa cổ do quốc sư Nguyễn Minh Không lập năm 1136, còn hành lang La Hán của chùa mới dài gần ba cây số với năm trăm pho tượng tạc từ đá xanh Ninh Vân.",
+      en: "In 968 Đinh Bộ Lĩnh put down the twelve warlords, took the throne and made Hoa Lư the capital of Đại Cồ Việt: three hundred hectares of inner and outer citadel. Bái Đính answers in another age — the old pagoda founded by Nguyễn Minh Không in 1136, and the new one's arhat corridor running almost three kilometres past five hundred Ninh Vân stone figures. Tam Chúc carries the route north to Điện Tam Thế, where the 2019 Vesak celebrations were held.",
+      vi: "Năm 968, Đinh Bộ Lĩnh dẹp xong loạn mười hai sứ quân, lên ngôi và chọn Hoa Lư làm kinh đô Đại Cồ Việt: ba trăm hecta thành Nội và thành Ngoại. Bái Đính nối sang một thời khác — chùa cổ do quốc sư Nguyễn Minh Không lập năm 1136, còn hành lang La Hán của chùa mới dài gần ba cây số với năm trăm pho tượng đá Ninh Vân. Tam Chúc đưa tuyến lên phía bắc tới Điện Tam Thế, nơi diễn ra Đại lễ Vesak năm 2019.",
     },
     stops: ["bai_dinh", "hoa_lu_ancient_capital", "tam_chuc"] as DestinationId[],
   },
   {
     id: "quiet-west",
-    image: "/images/destinations/cuc-phuong.png",
     kicker: { en: "Westward", vi: "Ngả về phía tây" },
     title: {
       en: "Vietnam's first national park, and fewer than three hundred langurs left",
@@ -1275,7 +1281,6 @@ const routeCollections = [
   },
   {
     id: "lantern-night",
-    image: "/images/destinations/hoa-lu-old-town.jpg",
     kicker: { en: "Into the evening", vi: "Về chiều" },
     title: {
       en: "486 steps up Ngọa Long, two hundred down into Am Tiên",
@@ -1285,7 +1290,7 @@ const routeCollections = [
       en: "Hang Múa charges 486 stone steps along the flank of Ngọa Long and hands back the whole Tam Cốc valley. Động Am Tiên asks the opposite: two hundred steps down into a closed valley where the dowager empress Dương Vân Nga took vows at the end of her life, and where Đinh Tiên Hoàng once kept tigers to punish the condemned. Come down to Hoa Lư Old Town as the lanterns go up.",
       vi: "Hang Múa bắt trả bằng 486 bậc đá dọc sườn Ngọa Long, đổi lại là cả thung lũng Tam Cốc dưới chân. Động Am Tiên thì đòi ngược lại: hơn hai trăm bậc xuống một thung kín, nơi Thái hậu Dương Vân Nga về tu những năm cuối đời, và cũng là nơi Đinh Tiên Hoàng từng nuôi hổ báo để trị tội. Xuống tới Phố cổ Hoa Lư thì đèn lồng vừa lên.",
     },
-    stops: ["hang_mua", "hoa_lu_old_town", "am_tien"] as DestinationId[],
+    stops: ["hang_mua", "am_tien", "hoa_lu_old_town"] as DestinationId[],
   },
 ];
 
@@ -1952,19 +1957,22 @@ export default function NinhBinhLanding({
       <CinematicVideo clip={cinematicClips[lang][1]} eager eagerDelayMs={2200} />
 
       <DestinationIndex
-        items={destinations.slice(ZIGZAG_FEATURED).map((place) => ({
+        items={destinations.slice(ZIGZAG_FEATURED).map((place, index) => ({
           id: place.id,
+          ordinal: String(ZIGZAG_FEATURED + index + 1).padStart(2, "0"),
           name: place.name[lang],
           image: place.image,
           imagePosition: place.imagePosition,
           category: place.category[lang],
           duration: place.duration[lang],
+          tagline: place.tagline[lang],
         }))}
         copy={{
           sectionLabel: t.indexLabel as string,
           sectionTitle: t.indexTitle as string,
           sectionIntro: t.indexIntro as string,
           hint: t.indexHint as string,
+          openLabel: t.indexOpen as string,
         }}
         onSelect={(id) => openDetail(id as DestinationId)}
       />
@@ -2007,67 +2015,35 @@ export default function NinhBinhLanding({
           onClickCapture={handleRailClickCapture}
         >
           {routeCollections.map((route, index) => {
-            const firstStop = route.stops[0];
+            const routeStops = route.stops
+              .map((id) => destinations.find((destination) => destination.id === id))
+              .filter((destination): destination is Destination => Boolean(destination))
+              .map((destination) => ({
+                id: destination.id,
+                name: destination.name[lang],
+                image: destination.image,
+                imagePosition: destination.imagePosition,
+                category: destination.category[lang],
+                duration: destination.duration[lang],
+              }));
             return (
-              <article
+              <RouteShowcaseCard
                 key={route.id}
-                onClick={() => openDetail(firstStop)}
+                index={index}
+                kicker={route.kicker[lang]}
+                title={route.title[lang]}
+                body={route.body[lang]}
+                stops={routeStops}
+                copy={{
+                  exploreStop: t.exploreRouteStop as string,
+                  addRoute: t.addRoute as string,
+                  stopLabel: t.routeStopLabel as string,
+                }}
+                onExploreStop={(id) => openDetail(id as DestinationId)}
+                onAddRoute={() => addRoute(route.stops)}
                 onPointerMove={handleRouteCardPointerMove}
                 onPointerLeave={resetRouteCardTilt}
-                className="route-card group grid w-[88vw] shrink-0 cursor-pointer snap-center overflow-hidden rounded-[12px] bg-[#183F34] text-white shadow-2xl shadow-[#183F34]/16 sm:w-[720px] lg:w-[1040px] lg:grid-cols-[0.9fr_1.1fr]"
-              >
-                <div className="relative min-h-[270px] overflow-hidden sm:min-h-[360px] lg:min-h-[580px]">
-                  <Image
-                    src={route.image}
-                    alt={route.title[lang]}
-                    fill
-                    sizes="(min-width: 1024px) 470px, (min-width: 640px) 720px, 88vw"
-                    className="object-cover transition duration-700 group-hover:scale-[1.035]"
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.06),rgba(6,18,15,.28))]" />
-                  <span className="absolute right-5 top-5 text-xs font-extrabold tracking-[0.22em] text-white/88">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </div>
-
-                <div className="flex flex-col p-6 sm:p-8 lg:p-12">
-                  <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#A8CEC1]">{route.kicker[lang]}</p>
-                  <h3 className="font-display mt-5 max-w-xl text-4xl leading-[1.03] sm:text-5xl lg:text-6xl">{route.title[lang]}</h3>
-                  <p className="mt-6 max-w-xl text-[0.98rem] leading-7 text-white/76 sm:text-base sm:leading-8">{route.body[lang]}</p>
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {route.stops.map((id) => {
-                      const stop = destinations.find((destination) => destination.id === id);
-                      return stop ? (
-                        <span key={id} className="rounded-full border border-white/22 bg-white/8 px-3 py-1.5 text-xs font-bold text-white/86">
-                          {stop.name[lang]}
-                        </span>
-                      ) : null;
-                    })}
-                  </div>
-                  <div className="mt-auto flex flex-col gap-3 pt-8 sm:flex-row">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        openDetail(firstStop);
-                      }}
-                      className="rounded-full bg-[#FBFAF6] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#E7B96A]"
-                    >
-                      {t.viewRoute}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        addRoute(route.stops);
-                      }}
-                      className="rounded-full border border-white/35 px-5 py-3 font-semibold text-white transition hover:bg-white/12"
-                    >
-                      {t.addRoute}
-                    </button>
-                  </div>
-                </div>
-              </article>
+              />
             );
           })}
         </div>

@@ -96,6 +96,34 @@ test("cinematic panels use local MP4 without embedded player controls", async ({
     { controls: false, path: "/videos/cinematic/tam-coc-river.mp4" },
     { controls: false, path: "/videos/cinematic/trang-an-heritage.mp4" },
   ]);
+
+  await expect(panels.nth(0)).toContainText("Đỉnh Ngọa Long · Hang Múa");
+  await expect(panels.nth(1)).toContainText("Quần thể danh thắng Tràng An · UNESCO 2014");
+  await expect(panels.nth(2)).toContainText("Tuyến 1 · Tràng An");
+});
+
+test("route showcase changes image and label with the selected stop", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 4000 });
+
+  const routes = page.locator("#curated-routes [data-route-card]");
+  await expect(routes).toHaveCount(4);
+
+  const waterRoute = routes.nth(0);
+  await waterRoute.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(250);
+  await expect(waterRoute).toHaveAttribute("data-active-stop", "trang_an");
+  await waterRoute.getByRole("button", { name: /Tam Cốc/ }).click();
+  await expect(waterRoute).toHaveAttribute("data-active-stop", "tam_coc");
+  await expect(waterRoute.getByRole("img", { name: "Tam Cốc" })).toBeVisible();
+
+  const eveningRoute = routes.nth(3);
+  await eveningRoute.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(250);
+  await eveningRoute.getByRole("button", { name: /Phố cổ Hoa Lư/ }).click();
+  await expect(eveningRoute).toHaveAttribute("data-active-stop", "hoa_lu_old_town");
+  await expect(eveningRoute.getByRole("img", { name: "Phố cổ Hoa Lư" })).toBeVisible();
 });
 
 test("language switch updates immediately, persists and preserves source", async ({
@@ -113,7 +141,9 @@ test("language switch updates immediately, persists and preserves source", async
     }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "EN" }).click();
+  // `exact` tránh bắt nhầm nút "Open Next.js Dev Tools" của môi trường
+  // development, vốn cũng chứa chuỗi "en" khi Playwright so khớp mờ.
+  await page.getByRole("button", { name: "EN", exact: true }).click();
   await expect(
     page.getByRole("heading", {
       level: 1,

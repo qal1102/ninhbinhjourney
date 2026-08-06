@@ -1,15 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 export type IndexItem = {
   id: string;
+  ordinal: string;
   name: string;
   image: string;
   imagePosition: string;
   category: string;
   duration: string;
+  tagline: string;
 };
 
 export type IndexCopy = {
@@ -17,28 +19,17 @@ export type IndexCopy = {
   sectionTitle: string;
   sectionIntro: string;
   hint: string;
+  openLabel: string;
 };
 
-/** Kich thuoc tam anh bam con tro (desktop). */
-const PREVIEW_W = 300;
-const PREVIEW_H = 390;
-/** Do "li" cua chuyen dong bam theo: cang nho anh cang tre lai mem hon. */
-const FOLLOW_EASING = 0.14;
-
 /**
- * Danh muc diem den kieu tap chi: moi dong la mot ten lon, re chuot len
- * dong nao thi mot tam anh hien ra va BAM THEO con tro voi do tre mem.
+ * Danh mục hai mặt phẳng học từ split-screen editorial của MERSI:
+ * tên địa điểm cuộn ở trái, ảnh đang chọn bám khung ở phải và mở ra
+ * bằng clip-path. Ảnh luôn đứng yên ở một nơi có chủ đích, không còn
+ * bay theo con trỏ rồi che chính danh sách như bản cũ.
  *
- * Vi sao dung dang nay thay vi them 10 the zigzag nua:
- *  - 15 diem cung mot khuon zigzag lien tuc chiem 9.540px va doc rat deu
- *    deu; dang nay goi tron phan con lai trong ~1.400px ma KHONG cat bot
- *    diem nao.
- *  - No dao nguoc quan he: khach di TIM noi dung thay vi bi noi dung doi
- *    vao mat -- dung tinh than "curated, not listed" cua brief.
- *
- * MOBILE KHONG CO CON TRO. Duoi lg, component doi han sang dang khac:
- * moi dong co mot o anh vuong nho nam ben trai, hien san. Khong bao gio
- * de mobile thanh mot danh sach chu tro troi.
+ * Mobile không có hover nên giữ ảnh thu nhỏ ngay trong từng hàng. Chạm
+ * một lần vẫn mở chi tiết; không dựng tương tác hai-chạm chỉ để phô diễn.
  */
 export function DestinationIndex({
   items,
@@ -49,80 +40,10 @@ export function DestinationIndex({
   copy: IndexCopy;
   onSelect: (id: string) => void;
 }) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
-  /*
-   * Mac dinh la 0, KHONG phai null. Truoc do khi chua re chuot thi khong
-   * co anh nao, nen nua phai cua khoi nay trong tron suot gan 2.000px --
-   * nhin nhu trang lam do dang chu khong phai mot danh muc co y do. Da
-   * chup duoc va sua ngay 06/08.
-   * Gio luon co mot tam anh dang hien: no cung la loi moi de nguoi ta
-   * hieu ra rang re chuot len ten khac thi anh se doi.
-   */
   const [activeIndex, setActiveIndex] = useState(0);
-
-  // Vi tri chuot thuc va vi tri anh dang duoc ve -- anh duoi theo sau.
-  const pointer = useRef({ x: 0, y: 0 });
-  const drawn = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    // Chi chay tren thiet bi co con tro that. `hover: hover` loai bo dien
-    // thoai/tablet cam ung, noi ma "re chuot" khong ton tai.
-    const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!canHover) return;
-
-    const root = rootRef.current;
-    if (!root) return;
-
-    /*
-     * Cho anh "dau" o nua phai, ngang tam hang dau tien -- de luc chua ai
-     * cham chuot vao thi no van nam o mot cho hop ly, chu khong dinh o goc
-     * tren ben trai roi bay ra khi re chuot.
-     */
-    function park() {
-      const rect = root!.getBoundingClientRect();
-      pointer.current = { x: rect.width * 0.72, y: Math.min(rect.height * 0.28, 320) };
-      drawn.current = { ...pointer.current };
-    }
-    park();
-
-    function onMove(event: PointerEvent) {
-      const rect = root!.getBoundingClientRect();
-      pointer.current = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-    }
-    root.addEventListener("pointermove", onMove);
-    window.addEventListener("resize", park);
-
-    let frame = 0;
-    function tick() {
-      const node = previewRef.current;
-      if (node) {
-        // Giam chuyen dong: bam dinh vi tri chuot, khong co do tre mem.
-        const ease = reduced ? 1 : FOLLOW_EASING;
-        drawn.current.x += (pointer.current.x - drawn.current.x) * ease;
-        drawn.current.y += (pointer.current.y - drawn.current.y) * ease;
-        node.style.transform = `translate3d(${Math.round(drawn.current.x - PREVIEW_W / 2)}px, ${Math.round(
-          drawn.current.y - PREVIEW_H / 2,
-        )}px, 0)`;
-      }
-      frame = requestAnimationFrame(tick);
-    }
-    frame = requestAnimationFrame(tick);
-
-    return () => {
-      root.removeEventListener("pointermove", onMove);
-      window.removeEventListener("resize", park);
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-
   const active = items[activeIndex] ?? items[0] ?? null;
 
   return (
-    // `id` rieng, KHONG dung lai "all-destinations" cua DestinationZigzag:
-    // hai the cung mot id la HTML sai, va lam moi lien ket neo tro toi
-    // deu roi vao the dau tien mot cach ngau nhien.
     <section id="destination-index" className="bg-[#FBFAF6] px-5 py-20 sm:px-8 lg:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
@@ -131,94 +52,106 @@ export function DestinationIndex({
             {copy.sectionTitle}
           </h2>
           <p className="mt-5 text-lg leading-relaxed text-[#4A5751]">{copy.sectionIntro}</p>
-          {/* Chi goi y thao tac tren may co con tro -- tren dien thoai cau
-              nay vo nghia vi anh da hien san. */}
           <p className="mt-4 hidden text-sm text-[#6D756F] lg:block">{copy.hint}</p>
         </div>
 
-        {/*
-          KHONG xoa anh khi chuot roi khoi khoi: de nguyen tam cuoi cung
-          khach vua xem. Truoc do `onPointerLeave` dat lai ve null, nen chi
-          can dua chuot ra ngoai la ca nua phai trong tron tro lai.
-        */}
-        <div ref={rootRef} className="relative mt-12">
-          {/*
-            Tam anh bam con tro. `pointer-events-none` la bat buoc: neu no
-            an chuot thi chinh no se chan pointermove cua cac dong ben
-            duoi, va hieu ung tu dap chinh no.
-          */}
-          <div
-            ref={previewRef}
-            aria-hidden="true"
-            className="pointer-events-none absolute left-0 top-0 z-20 hidden lg:block"
-            style={{ width: PREVIEW_W, height: PREVIEW_H }}
-          >
-            <div
-              // Chinh tam anh dang bam con tro la diem XUAT PHAT tu nhien
-              // nhat cho hieu ung no ra khung chi tiet -- khach vua nhin
-              // vao no thi no lon dan len.
-              data-flip-src={active ? active.id : undefined}
-              className="relative h-full w-full overflow-hidden rounded-[10px] shadow-2xl shadow-[#183F34]/25 transition-opacity duration-300"
-              style={{ opacity: active ? 1 : 0 }}
+        <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(330px,.72fr)] xl:gap-20">
+          <ul className="border-b border-[#183F34]/14">
+            {items.map((item, index) => {
+              const selected = index === activeIndex;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => onSelect(item.id)}
+                    onPointerEnter={() => setActiveIndex(index)}
+                    onFocus={() => setActiveIndex(index)}
+                    className={`group grid w-full grid-cols-[3rem_4rem_1fr_auto] items-center gap-3 border-t border-[#183F34]/14 py-5 text-left transition-colors sm:grid-cols-[3.5rem_5rem_1fr_auto] sm:gap-5 sm:py-6 lg:grid-cols-[3.5rem_1fr_auto] lg:px-2 lg:py-7 ${
+                      selected ? "bg-[#183F34]/[0.045]" : "hover:bg-[#183F34]/[0.025]"
+                    }`}
+                  >
+                    <span className="text-[0.66rem] font-extrabold tracking-[0.2em] text-[#3F7568]">
+                      {item.ordinal}
+                    </span>
+
+                    <span
+                      data-flip-src={item.id}
+                      className="relative h-16 w-16 overflow-hidden rounded-[8px] bg-[#E8E4DA] sm:h-20 sm:w-20 lg:hidden"
+                    >
+                      <Image
+                        src={item.image}
+                        alt=""
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                        style={{ objectPosition: item.imagePosition }}
+                      />
+                    </span>
+
+                    <span className="min-w-0">
+                      <span
+                        className={`font-display block text-2xl leading-tight transition-colors sm:text-4xl lg:text-[2.7rem] ${
+                          selected ? "text-[#3F7568]" : "text-[#183F34] group-hover:text-[#3F7568]"
+                        }`}
+                      >
+                        {item.name}
+                      </span>
+                      <span className="mt-1.5 block text-[0.66rem] uppercase tracking-[0.18em] text-[#6D756F] sm:text-xs">
+                        {item.category} · {item.duration}
+                      </span>
+                    </span>
+
+                    <span
+                      aria-hidden="true"
+                      className={`shrink-0 text-xl transition-transform duration-300 ${
+                        selected
+                          ? "translate-x-1 text-[#3F7568]"
+                          : "text-[#183F34]/30 group-hover:translate-x-1 group-hover:text-[#3F7568]"
+                      }`}
+                    >
+                      →
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {active ? (
+            <button
+              type="button"
+              onClick={() => onSelect(active.id)}
+              aria-label={`${copy.openLabel}: ${active.name}`}
+              className="group sticky top-20 hidden h-[min(72vh,680px)] w-full overflow-hidden rounded-[12px] bg-[#183F34] text-left shadow-2xl shadow-[#183F34]/20 lg:block"
             >
-              {active ? (
+              <span
+                key={active.id}
+                data-flip-src={active.id}
+                className="destination-index-preview absolute inset-0"
+              >
                 <Image
                   src={active.image}
-                  alt=""
+                  alt={active.name}
                   fill
-                  sizes="300px"
-                  className="object-cover"
+                  sizes="(min-width: 1280px) 460px, 36vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.025]"
                   style={{ objectPosition: active.imagePosition }}
                 />
-              ) : null}
-            </div>
-          </div>
-
-          <ul className="relative z-10">
-            {items.map((item, index) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelect(item.id)}
-                  onPointerEnter={() => setActiveIndex(index)}
-                  onFocus={() => setActiveIndex(index)}
-                  className="group flex w-full items-center gap-4 border-t border-[#183F34]/12 py-5 text-left transition-colors last:border-b hover:bg-[#183F34]/[0.03] sm:gap-6 sm:py-6 lg:py-7"
-                >
-                  {/* Anh nho -- CHI tren mobile/tablet, thay cho anh bam
-                      con tro von khong ton tai o do. */}
-                  <span
-                    data-flip-src={item.id}
-                    className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[8px] bg-[#E8E4DA] sm:h-20 sm:w-20 lg:hidden"
-                  >
-                    <Image
-                      src={item.image}
-                      alt=""
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                      style={{ objectPosition: item.imagePosition }}
-                    />
-                  </span>
-
-                  <span className="min-w-0 flex-1">
-                    <span className="font-display block text-2xl leading-tight text-[#183F34] transition-colors group-hover:text-[#3F7568] sm:text-4xl lg:text-5xl">
-                      {item.name}
-                    </span>
-                    <span className="mt-1 block text-xs uppercase tracking-[0.2em] text-[#6D756F] sm:text-sm">
-                      {item.category} · {item.duration}
-                    </span>
-                  </span>
-
-                  <span
-                    aria-hidden="true"
-                    className="shrink-0 text-xl text-[#183F34]/30 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#3F7568]"
-                  >
-                    →
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+              </span>
+              <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.04),rgba(6,18,15,.14)_44%,rgba(6,18,15,.88))]" />
+              <span className="absolute left-6 top-6 text-[0.68rem] font-extrabold tracking-[0.24em] text-[#F4D49B]">
+                {active.ordinal}
+              </span>
+              <span className="absolute inset-x-0 bottom-0 p-7 text-white xl:p-9">
+                <span className="font-display block text-4xl leading-none xl:text-5xl">{active.name}</span>
+                <span className="mt-4 block max-w-sm text-sm leading-6 text-white/76">{active.tagline}</span>
+                <span className="mt-6 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-[#F4D49B]">
+                  {copy.openLabel} <span aria-hidden="true">↗</span>
+                </span>
+              </span>
+            </button>
+          ) : null}
         </div>
       </div>
     </section>

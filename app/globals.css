@@ -400,6 +400,16 @@ select {
   opacity: 1;
 }
 
+.route-stop-media {
+  animation: route-stop-reveal 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: center;
+}
+
+.destination-index-preview {
+  animation: destination-index-reveal 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: center;
+}
+
 .route-showcase {
   isolation: isolate;
   position: relative;
@@ -1066,6 +1076,28 @@ select {
   }
 }
 
+@keyframes route-stop-reveal {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: scale(1.045);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: scale(1);
+  }
+}
+
+@keyframes destination-index-reveal {
+  from {
+    clip-path: inset(100% 0 0 0);
+    transform: scale(1.035);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: scale(1);
+  }
+}
+
 @keyframes cinematic-prism-drift {
   from {
     opacity: 0.44;
@@ -1080,6 +1112,11 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .route-card {
     transform: none !important;
+  }
+
+  .route-stop-media,
+  .destination-index-preview {
+    animation: none !important;
   }
 
   .route-showcase::before,

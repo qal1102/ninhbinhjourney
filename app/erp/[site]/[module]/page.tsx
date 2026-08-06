@@ -7,6 +7,7 @@ import { getErpModule, getErpSite } from "@/domain/erp";
 import { accountCanAccessModule, getCurrentErpUser } from "@/lib/erp/demo-session";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { getAttendanceState } from "@/lib/erp/attendance-repository";
+import { listCapacityWorkspace } from "@/lib/erp/capacity-repository";
 import { getIncidentCases } from "@/lib/erp/incident-repository";
 import { getFieldReports } from "@/lib/erp/field-report-repository";
 import { getRecentGateScans, getTicketSalesSummary } from "@/lib/erp/gate-scan-repository";
@@ -38,7 +39,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   }
   const isTicketModule =
     moduleDefinition.id === "check-in-khach" || moduleDefinition.id === "ve-dat-cho";
-  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory] =
+  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory, capacityWorkspace] =
     await Promise.all([
     getAccessState(),
     getAttendanceState(),
@@ -74,6 +75,12 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
       moduleDefinition.id === "nhan-su"
         ? listStaffDirectory()
         : Promise.resolve([]),
+      moduleDefinition.id === "suc-chua"
+        ? listCapacityWorkspace(site.id).catch((error) => {
+            console.error("Capacity read failed", error);
+            return null;
+          })
+        : Promise.resolve(null),
     ]);
   const query = (await searchParams) ?? {};
   const requestedCamera = Array.isArray(query.camera) ? query.camera[0] : query.camera;
@@ -118,6 +125,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         projectWorkspace={projectWorkspace}
         shiftHandovers={shiftHandovers}
         staffDirectory={staffDirectory}
+        capacityWorkspace={capacityWorkspace}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

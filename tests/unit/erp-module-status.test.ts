@@ -10,12 +10,13 @@ const workspaceSource = readFileSync(
   "utf8",
 );
 
-// The ten modules that own a real workflow component. Written out rather than
+// The eleven modules that own a real workflow component. Written out rather than
 // derived, so that flipping a module to `live` without wiring one is a test
 // failure and not a silent claim.
 const MODULES_WITH_A_REAL_WORKFLOW = [
   "ve-dat-cho",
   "check-in-khach",
+  "suc-chua",
   "camera-ai",
   "bao-cao-hien-truong",
   "du-an-su-kien",
@@ -43,7 +44,7 @@ describe("ERP module status honesty (T3)", () => {
 
   it("makes every planned module state what data it still needs", () => {
     const planned = ERP_MODULES.filter((module) => module.status === "planned");
-    expect(planned.length).toBe(5);
+    expect(planned.length).toBe(4);
     for (const entry of planned) {
       expect(entry.plannedNeeds?.length, entry.id).toBeGreaterThan(0);
       // No branch may exist for a planned module, or it would render something

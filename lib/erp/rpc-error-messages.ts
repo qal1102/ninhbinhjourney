@@ -99,6 +99,14 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   ACCOUNTING_REVERSAL_NOT_BALANCED: "Bút toán đảo chưa cân.",
   ACCOUNTING_SOURCE_AMOUNT_INVALID:
     "Số tiền trên chứng từ gốc không hợp lệ.",
+  CAPACITY_THRESHOLD_NOT_FOUND:
+    "Không tìm thấy ngưỡng sức chứa cần cập nhật.",
+  CAPACITY_DIRECTOR_REQUIRED:
+    "Chỉ giám đốc mới được thay đổi giả định sức chứa.",
+  CAPACITY_INPUT_INVALID:
+    "Thông tin phương tiện, số chỗ, thời gian vòng hoặc nguồn chưa hợp lệ.",
+  CAPACITY_VERSION_CONFLICT:
+    "Ngưỡng sức chứa vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
 
   // --- Ngoại lệ và ngưỡng ---
   AP_EXCEPTION_BELOW_DIRECTOR_THRESHOLD:
@@ -131,6 +139,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   ACCOUNTING_JOURNAL_DELETE_NOT_ALLOWED: "Không được xóa bút toán.",
   ACCOUNTING_JOURNAL_IDENTITY_IMMUTABLE:
     "Không được đổi định danh của bút toán.",
+  CAPACITY_AUDIT_IMMUTABLE:
+    "Lịch sử cấu hình sức chứa chỉ ghi thêm, không sửa và không xoá.",
   ACCOUNTING_PERIOD_DELETE_NOT_ALLOWED: "Không được xóa kỳ kế toán.",
   ACCOUNTING_PERIOD_IDENTITY_IMMUTABLE:
     "Không được đổi định danh của kỳ kế toán.",

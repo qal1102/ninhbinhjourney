@@ -175,11 +175,7 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Theo dõi tải theo ca, tuyến và cảnh báo trước khi quá ngưỡng.",
     accent: "#9a6a20",
     employeeAssignable: true,
-    status: "planned",
-    plannedNeeds: [
-      "Ngưỡng sức chứa và cấu hình khung giờ của từng tuyến do khách cung cấp",
-      "Số liệu quét cổng theo thời gian thực (phụ thuộc T8)",
-    ],
+    status: "live",
   },
   {
     id: "camera-ai",

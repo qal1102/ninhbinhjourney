@@ -741,7 +741,7 @@ export function AccountingControlCenter({
             className="min-w-0 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-5"
           >
             <p className="text-xs text-[#6e7b75]">{label}</p>
-            <p className="mt-2 break-words text-2xl font-black text-[#203a30] sm:text-3xl">
+            <p className="mt-2 whitespace-nowrap text-[clamp(1rem,4.5vw,1.5rem)] font-black tracking-[-0.025em] text-[#203a30] sm:text-3xl">
               {value}
             </p>
             <p className="mt-2 text-xs text-[#849089]">{note}</p>

@@ -760,7 +760,7 @@ function AccountantDashboard({
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
               <p className="text-[11px] leading-4 text-white/50">{label}</p>
-              <p className="mt-2 break-words text-xl font-black sm:text-2xl">
+              <p className="mt-2 whitespace-nowrap text-[clamp(1rem,4.5vw,1.25rem)] font-black tracking-[-0.025em] sm:text-2xl">
                 {value}
               </p>
               <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">

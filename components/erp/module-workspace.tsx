@@ -3,6 +3,7 @@ import type { ErpModule, ErpSite } from "@/domain/erp";
 import { canViewRegionalFinance } from "@/domain/erp-role-policy";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import type { WorkdayRecord } from "@/domain/erp-workday";
+import type { CapacityWorkspaceData } from "@/domain/erp-capacity";
 import type {
   SupplierApInvoice,
   SupplierApSupplier,
@@ -26,6 +27,7 @@ import { AttendancePanel } from "./attendance-panel";
 import { ShiftHandoverPanel } from "./shift-handover-panel";
 import { StaffAccessManager } from "./staff-access-manager";
 import { CameraAiWorkspace } from "./camera-ai-workspace";
+import { CapacityWorkspace } from "./capacity-workspace";
 import { ProjectEventWorkspace } from "./project-event-workspace";
 import { FieldReportWorkspace } from "./field-report-workspace";
 import { TicketGuestWorkspace } from "./ticket-guest-workspace";
@@ -55,6 +57,7 @@ type Props = {
   projectWorkspace: ProjectWorkspace | null;
   shiftHandovers: readonly ShiftHandover[];
   staffDirectory: readonly ErpStaffDirectoryEntry[];
+  capacityWorkspace: CapacityWorkspaceData | null;
   initialCameraId?: string;
 };
 
@@ -298,8 +301,14 @@ export function ModuleWorkspace({
   projectWorkspace,
   shiftHandovers,
   staffDirectory,
+  capacityWorkspace,
   initialCameraId,
 }: Props) {
+  if (module.id === "suc-chua") {
+    return (
+      <CapacityWorkspace site={site} user={user} data={capacityWorkspace} />
+    );
+  }
   if (module.id === "su-co") {
     return (
       <IncidentWorkflowWorkspace site={site} user={user} cases={[...incidents]} />

@@ -98,14 +98,15 @@ Ranh giới này là cố ý: những thứ ở cột phải mà mở ra thì m�
 
 ## 3. Các module chức năng
 
-15 module. **10 có nghiệp vụ thật, 5 nói thẳng là chưa làm** — trong sản phẩm, 5 cái đó mang nhãn "Giai đoạn sau" ngay trên menu và ghi rõ còn thiếu dữ liệu gì, chứ không vẽ số cho đẹp.
+15 module. **11 có nghiệp vụ thật, 4 nói thẳng là chưa làm** — trong sản phẩm, 4 cái đó mang nhãn "Giai đoạn sau" ngay trên menu và ghi rõ còn thiếu dữ liệu gì, chứ không vẽ số cho đẹp.
 
-### Đang chạy được (10)
+### Đang chạy được (11)
 
 | Module | Làm gì |
 |---|---|
 | 🎫 **Vé & đặt chỗ** | Quản lý vé, suất, đặt chỗ |
 | 🚪 **Check-in khách** | Soát vé tại cổng: đối chiếu vé thật, trừ lượt, chống quét trùng, **ghi lại cả lượt bị từ chối**, tra cứu theo tên/SĐT/mã đặt chỗ |
+| 📊 **Sức chứa & luồng khách** | Ngưỡng theo giờ tại điểm nghẽn, tính từ phương tiện × số chỗ × 60 ÷ phút/vòng; hiện nguồn và phép tính, dùng lượt check-in T8 trong giờ như proxy thượng nguồn cho tới khi có số đo tại điểm nghẽn |
 | 📹 **Camera AI & hiện trường** | Theo dõi camera, tạo sự cố trực tiếp từ hình ảnh |
 | 📝 **Báo cáo hiện trường** | Nhân viên gửi báo cáo tại chỗ, quản lý xử lý |
 | 📅 **Dự án & sự kiện** | Gói việc, phụ thuộc, yêu cầu đổi phạm vi, nghiệm thu, quyết toán |
@@ -115,11 +116,10 @@ Ranh giới này là cố ý: những thứ ở cột phải mà mở ra thì m�
 | 🤝 **Đối tác & nhà cung ứng** | Công nợ NCC trọn vòng: ghi nhận nợ → hạch toán → đề nghị chi → duyệt chi → đã trả |
 | 💰 **Tài chính & đối soát** | Bút toán, kỳ kế toán, đối soát |
 
-### Giai đoạn sau (5)
+### Giai đoạn sau (4)
 
 | Module | Cần gì trước khi làm được |
 |---|---|
-| 📊 **Sức chứa & luồng khách** | Ngưỡng sức chứa từng tuyến/khung giờ. *Nền đã có: lượt quét cổng thật theo thời gian* |
 | 🚌 **Xe trung chuyển** | Danh sách phương tiện, tuyến, tài xế |
 | 🏗️ **Tài sản & nghiệm thu** | Danh mục tài sản, lịch bảo trì |
 | 📋 **SOP & diễn tập** | Bộ quy trình ứng phó và ngưỡng kích hoạt |

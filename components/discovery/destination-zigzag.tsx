@@ -147,6 +147,10 @@ export function DestinationZigzag({
                 className="zigzag-row grid items-center gap-8 lg:grid-cols-2 lg:gap-16"
               >
                 <div
+                  // `data-flip-src` cho phep trang chu tim dung tam anh
+                  // dang hien de lam diem XUAT PHAT cho hieu ung no ra
+                  // khung chi tiet -- khong phai luon prop qua nhieu lop.
+                  data-flip-src={item.id}
                   className={`zigzag-media relative aspect-[4/3] overflow-hidden rounded-[10px] bg-[#E8E4DA] ${
                     fromLeft ? "lg:order-1" : "lg:order-2"
                   }`}

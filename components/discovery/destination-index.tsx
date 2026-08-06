@@ -51,7 +51,15 @@ export function DestinationIndex({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  /*
+   * Mac dinh la 0, KHONG phai null. Truoc do khi chua re chuot thi khong
+   * co anh nao, nen nua phai cua khoi nay trong tron suot gan 2.000px --
+   * nhin nhu trang lam do dang chu khong phai mot danh muc co y do. Da
+   * chup duoc va sua ngay 06/08.
+   * Gio luon co mot tam anh dang hien: no cung la loi moi de nguoi ta
+   * hieu ra rang re chuot len ten khac thi anh se doi.
+   */
+  const [activeIndex, setActiveIndex] = useState(0);
 
   // Vi tri chuot thuc va vi tri anh dang duoc ve -- anh duoi theo sau.
   const pointer = useRef({ x: 0, y: 0 });
@@ -67,11 +75,24 @@ export function DestinationIndex({
     const root = rootRef.current;
     if (!root) return;
 
+    /*
+     * Cho anh "dau" o nua phai, ngang tam hang dau tien -- de luc chua ai
+     * cham chuot vao thi no van nam o mot cho hop ly, chu khong dinh o goc
+     * tren ben trai roi bay ra khi re chuot.
+     */
+    function park() {
+      const rect = root!.getBoundingClientRect();
+      pointer.current = { x: rect.width * 0.72, y: Math.min(rect.height * 0.28, 320) };
+      drawn.current = { ...pointer.current };
+    }
+    park();
+
     function onMove(event: PointerEvent) {
       const rect = root!.getBoundingClientRect();
       pointer.current = { x: event.clientX - rect.left, y: event.clientY - rect.top };
     }
     root.addEventListener("pointermove", onMove);
+    window.addEventListener("resize", park);
 
     let frame = 0;
     function tick() {
@@ -91,11 +112,12 @@ export function DestinationIndex({
 
     return () => {
       root.removeEventListener("pointermove", onMove);
+      window.removeEventListener("resize", park);
       cancelAnimationFrame(frame);
     };
   }, []);
 
-  const active = activeIndex === null ? null : items[activeIndex];
+  const active = items[activeIndex] ?? items[0] ?? null;
 
   return (
     // `id` rieng, KHONG dung lai "all-destinations" cua DestinationZigzag:
@@ -114,7 +136,12 @@ export function DestinationIndex({
           <p className="mt-4 hidden text-sm text-[#6D756F] lg:block">{copy.hint}</p>
         </div>
 
-        <div ref={rootRef} className="relative mt-12" onPointerLeave={() => setActiveIndex(null)}>
+        {/*
+          KHONG xoa anh khi chuot roi khoi khoi: de nguyen tam cuoi cung
+          khach vua xem. Truoc do `onPointerLeave` dat lai ve null, nen chi
+          can dua chuot ra ngoai la ca nua phai trong tron tro lai.
+        */}
+        <div ref={rootRef} className="relative mt-12">
           {/*
             Tam anh bam con tro. `pointer-events-none` la bat buoc: neu no
             an chuot thi chinh no se chan pointermove cua cac dong ben
@@ -127,6 +154,10 @@ export function DestinationIndex({
             style={{ width: PREVIEW_W, height: PREVIEW_H }}
           >
             <div
+              // Chinh tam anh dang bam con tro la diem XUAT PHAT tu nhien
+              // nhat cho hieu ung no ra khung chi tiet -- khach vua nhin
+              // vao no thi no lon dan len.
+              data-flip-src={active ? active.id : undefined}
               className="relative h-full w-full overflow-hidden rounded-[10px] shadow-2xl shadow-[#183F34]/25 transition-opacity duration-300"
               style={{ opacity: active ? 1 : 0 }}
             >
@@ -155,7 +186,10 @@ export function DestinationIndex({
                 >
                   {/* Anh nho -- CHI tren mobile/tablet, thay cho anh bam
                       con tro von khong ton tai o do. */}
-                  <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[8px] bg-[#E8E4DA] sm:h-20 sm:w-20 lg:hidden">
+                  <span
+                    data-flip-src={item.id}
+                    className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[8px] bg-[#E8E4DA] sm:h-20 sm:w-20 lg:hidden"
+                  >
                     <Image
                       src={item.image}
                       alt=""

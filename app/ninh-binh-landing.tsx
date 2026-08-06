@@ -2,9 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Reveal } from "@/components/shared/reveal";
 import { RevealHeading } from "@/components/shared/reveal-heading";
+import { findFlipStart, type FlipStart } from "@/components/shared/flip-image";
 import { useNinhBinhHour, type DayBand } from "@/components/shared/ninh-binh-hour";
 import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned-story";
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
@@ -1434,6 +1435,22 @@ export default function NinhBinhLanding({
   const modalOpen = Boolean(detailId || checkoutOpen);
   const ninhBinhHour = useNinhBinhHour();
 
+  /*
+   * Hieu ung "anh no ra": tam anh khach vua bam bay tu cho cu toi dung vi
+   * tri anh lon trong khung chi tiet, roi bien mat de lo anh that ben
+   * duoi. Lam bang mot BAN SAO `position: fixed` chu khong dich chuyen
+   * chinh the goc -- dich the goc se pha bo cuc cua hang zigzag va lam
+   * ScrollTrigger phai tinh lai toan bo.
+   *
+   * `flipStart` giu vi tri xuat phat; `heroRef` la dich den, do sau khi
+   * khung chi tiet da dung xong. Khi bat giam chuyen dong thi khong bao
+   * gio dat `flipStart`, nen khong co gi bay ca.
+   */
+  const [flipStart, setFlipStart] = useState<FlipStart | null>(null);
+  const [flipDone, setFlipDone] = useState(true);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const flipCloneRef = useRef<HTMLDivElement>(null);
+
   // Kéo chuột thật cho route-rail. Trước đó chỉ có CSS cursor:grab -- con
   // trỏ hứa hẹn kéo được nhưng không có xử lý nào chạy, mouse-drag không
   // làm gì cả (chỉ touch/trackpad mới cuộn ngang tự nhiên). Bấm-kéo bằng
@@ -1484,6 +1501,62 @@ export default function NinhBinhLanding({
     document.cookie = `ninh-binh-lang=${lang}; path=/; max-age=31536000; SameSite=Lax`;
     document.documentElement.lang = lang;
   }, [lang]);
+
+  /*
+   * Bay ban sao tu vi tri anh nguon toi dung o anh lon cua khung chi tiet.
+   *
+   * Dung `useLayoutEffect` chu khong phai `useEffect`: phai dat ban sao
+   * vao dung cho TRUOC khi trinh duyet ve khung dau tien, neu khong khach
+   * se thay no nhay mot cai o goc man hinh roi moi bay.
+   *
+   * Anh that trong khung chi tiet duoc giu mo (opacity 0) cho toi khi bay
+   * xong -- neu khong thi no da nam san o dich, va ban sao bay qua chi
+   * lam thua.
+   */
+  useLayoutEffect(() => {
+    if (!flipStart || flipDone) return;
+    const clone = flipCloneRef.current;
+    const hero = heroRef.current;
+    if (!clone || !hero) return;
+
+    const target = hero.getBoundingClientRect();
+    const animation = clone.animate(
+      [
+        {
+          top: `${flipStart.rect.top}px`,
+          left: `${flipStart.rect.left}px`,
+          width: `${flipStart.rect.width}px`,
+          height: `${flipStart.rect.height}px`,
+          borderRadius: flipStart.borderRadius,
+        },
+        {
+          top: `${target.top}px`,
+          left: `${target.left}px`,
+          width: `${target.width}px`,
+          height: `${target.height}px`,
+          borderRadius: "8px",
+        },
+      ],
+      { duration: 560, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" },
+    );
+
+    let cancelled = false;
+    function finish() {
+      if (!cancelled) setFlipDone(true);
+    }
+    animation.addEventListener("finish", finish);
+    // Luoi an toan: neu vi ly do nao do su kien `finish` khong bao gio ban
+    // (tab bi an, animation bi huy), van phai lo anh that ra chu khong de
+    // khung chi tiet trong khong.
+    const guard = window.setTimeout(finish, 900);
+
+    return () => {
+      cancelled = true;
+      animation.removeEventListener("finish", finish);
+      window.clearTimeout(guard);
+      animation.cancel();
+    };
+  }, [flipStart, flipDone]);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1551,6 +1624,12 @@ export default function NinhBinhLanding({
   }
 
   function openDetail(id: DestinationId) {
+    // Phai do vi tri anh nguon TRUOC khi khung chi tiet mo, vi luc do
+    // trang bi khoa cuon va bo cuc co the doi.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = reduced ? null : findFlipStart(id);
+    setFlipStart(start);
+    setFlipDone(!start);
     setFocusedDestinationId(id);
     setDetailId(id);
   }
@@ -1796,9 +1875,13 @@ export default function NinhBinhLanding({
       {/*
         `eager` CHI dat o clip dau: man intro khoa man hinh vai giay ngay
         dau trang, tan dung dung khoang do de trinh phat boot xong va cum
-        nut khoi dong cua YouTube kip tan truoc khi khach cuon toi. Hai
-        clip sau khong dat `eager` -- ba trinh phat nap cung luc qua nang
-        tren 4G; chung dung `rootMargin` rong (1400px) de boot som.
+        nut khoi dong cua YouTube kip tan truoc khi khach cuon toi.
+
+        CA BA clip deu `eager`, nhung RAI DEU trong khung intro (0s / 2,2s
+        / 4,2s) chu khong nap cung luc: nap dong thoi thi tren 4G ca ba
+        cung cham, va clip dau -- cai khach gap som nhat -- lai thiet nhat.
+        Rai deu thi toi luc intro tan (6,5s) ca ba da boot xong va cum nut
+        khoi dong cua YouTube da tan het.
       */}
       <CinematicVideo clip={cinematicClips[lang][0]} eager />
 
@@ -1901,7 +1984,7 @@ export default function NinhBinhLanding({
         isAdded={(id) => selectedIds.includes(id as DestinationId)}
       />
 
-      <CinematicVideo clip={cinematicClips[lang][1]} />
+      <CinematicVideo clip={cinematicClips[lang][1]} eager eagerDelayMs={2200} />
 
       <DestinationIndex
         items={destinations.slice(ZIGZAG_FEATURED).map((place) => ({
@@ -1938,7 +2021,7 @@ export default function NinhBinhLanding({
         }}
       />
 
-      <CinematicVideo clip={cinematicClips[lang][2]} />
+      <CinematicVideo clip={cinematicClips[lang][2]} eager eagerDelayMs={4200} />
 
       <section id="ai" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
@@ -2060,7 +2143,7 @@ export default function NinhBinhLanding({
             >
               {t.close}
             </button>
-            <div className="relative min-h-[320px] overflow-hidden sm:min-h-[440px]">
+            <div ref={heroRef} className="relative min-h-[320px] overflow-hidden sm:min-h-[440px]">
               <Image
                 src={detailDestination.image}
                 alt={detailDestination.name[lang]}
@@ -2068,7 +2151,12 @@ export default function NinhBinhLanding({
                 sizes="(min-width: 1280px) 1120px, 100vw"
                 quality={95}
                 className="object-cover"
-                style={{ objectPosition: detailDestination.imagePosition }}
+                style={{
+                  objectPosition: detailDestination.imagePosition,
+                  // Giu mo cho toi khi ban sao bay xong. Khong dung
+                  // `visibility` de trinh duyet van tai anh song song.
+                  opacity: flipDone ? 1 : 0,
+                }}
               />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(29,41,37,.1),rgba(29,41,37,.78))]" />
               <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8 lg:p-10">
@@ -2166,6 +2254,35 @@ export default function NinhBinhLanding({
               </div>
             </div>
           </article>
+        </div>
+      ) : null}
+
+      {/*
+        Ban sao bay. Nam TREN khung chi tiet (z 1300 > 1200) va khong bat
+        chuot, nen no chi la mot lop hinh anh thuan tuy -- bam xuyen qua
+        van dong duoc khung chi tiet nhu binh thuong.
+        Chi ton tai trong ~0,56 giay giua luc bam va luc anh that hien ra.
+      */}
+      {flipStart && !flipDone ? (
+        <div
+          ref={flipCloneRef}
+          aria-hidden="true"
+          className="pointer-events-none fixed z-[1300] overflow-hidden"
+          style={{
+            top: flipStart.rect.top,
+            left: flipStart.rect.left,
+            width: flipStart.rect.width,
+            height: flipStart.rect.height,
+            borderRadius: flipStart.borderRadius,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={flipStart.src}
+            alt=""
+            className="h-full w-full object-cover"
+            style={{ objectPosition: flipStart.objectPosition }}
+          />
         </div>
       ) : null}
 

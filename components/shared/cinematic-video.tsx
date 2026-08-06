@@ -48,21 +48,37 @@ export type CinematicClip = {
  * YouTube nap cung luc la qua nang tren 4G.
  */
 
-const REVEAL_DELAY_MS = 1400;
-/** Boot som hon mot man hinh ruoi -- thua thoi gian de cum nut tan. */
-const PRELOAD_MARGIN = "1400px 0px";
+/*
+ * Do lai 06/08 tren ban build that: tu luc gan iframe toi luc trinh phat
+ * ve xong khung dau va cum nut khoi dong tu tan mat LAU HON 1,4 giay.
+ * De 1400ms thi player lo ra dung luc cum nut con dang mo -- da chup
+ * duoc o video thu ba. 2600ms co du bien an toan.
+ */
+const REVEAL_DELAY_MS = 2600;
+/** Boot som hon hai man hinh -- thua thoi gian de cum nut tan. */
+const PRELOAD_MARGIN = "2000px 0px";
 
 export function CinematicVideo({
   clip,
   className = "",
   eager = false,
+  eagerDelayMs = 0,
 }: {
   clip: CinematicClip;
   className?: string;
+  /** Gan trinh phat ngay luc mount thay vi doi cuon toi gan. */
   eager?: boolean;
+  /**
+   * Hoan `eagerDelayMs` mili giay roi moi gan. Dung de RAI DEU ba trinh
+   * phat trong khung intro 6,5 giay thay vi nap ca ba cung mot luc --
+   * nap dong thoi thi tren 4G ca ba cung cham, va cai dau tien (cai khach
+   * gap som nhat) lai la cai bi thiet nhat.
+   */
+  eagerDelayMs?: number;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [mounted, setMounted] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -79,11 +95,15 @@ export function CinematicVideo({
   useEffect(() => {
     if (reduced || mounted) return;
     if (eager) {
-      // queueMicrotask thay vi goi setState thang trong than effect: goi
-      // thang gay cascading render (lint chan) -- cung cach da dung o
-      // components/commerce/booking-confirmation.tsx.
-      queueMicrotask(() => setMounted(true));
-      return;
+      // queueMicrotask (khi khong hoan) thay vi goi setState thang trong
+      // than effect: goi thang gay cascading render (lint chan) -- cung
+      // cach da dung o components/commerce/booking-confirmation.tsx.
+      if (eagerDelayMs <= 0) {
+        queueMicrotask(() => setMounted(true));
+        return;
+      }
+      const id = window.setTimeout(() => setMounted(true), eagerDelayMs);
+      return () => window.clearTimeout(id);
     }
     const wrap = wrapRef.current;
     if (!wrap) return;
@@ -98,7 +118,7 @@ export function CinematicVideo({
     );
     io.observe(wrap);
     return () => io.disconnect();
-  }, [eager, reduced, mounted]);
+  }, [eager, eagerDelayMs, reduced, mounted]);
 
   // Hien trinh phat sau khi no da co thoi gian ve xong khung dau va cum
   // nut khoi dong da tan.
@@ -132,19 +152,47 @@ export function CinematicVideo({
   }, [clip.src, clip.end, clip.start]);
 
   /*
-   * CANH BAO ve `end`: nhung YouTube o che do `loop=1&playlist=ID` BO QUA
-   * `end`. Da xac minh 05/08 -- chup tai t=21s/39s/54s ra ba canh khac
-   * han nhau, video chay tuot qua moc 30 giay chu khong lap doan 12->30.
-   * Van truyen `end` vi no van co tac dung o lan phat dau, nhung dung tin
-   * rang doan phat se dung 17-18 giay. Muon cat dung doan phai dung
-   * YouTube IFrame Player API (`onStateChange` + `seekTo`), them mot
-   * script -- chua lam, can quyet dinh cua chu du an.
+   * EP LAP DUNG DOAN DA CHON.
+   *
+   * Nhung YouTube o che do `loop=1&playlist=ID` BO QUA tham so `end`. Da
+   * do that: chup tai t=21s/39s/54s ra ba canh khac han nhau, video chay
+   * tuot qua moc 30 giay. Hau qua khong chi la "sai doan": ngay 06/08 da
+   * chup duoc tren mobile mot khung co WATERMARK/chu cua tac gia phu kin
+   * man hinh -- vi doan phat da troi ra ngoai vung 12-30 giay von duoc
+   * chon ky.
+   *
+   * Cach vá, khong can nap thu vien ngoai nao: bat `enablejsapi=1` roi
+   * dinh ky `postMessage` lenh `seekTo(start)` theo dung do dai doan. Neu
+   * vi ly do nao do postMessage khong an, video chi don gian chay tiep
+   * nhu truoc -- khong co gi vo.
    */
   const ytSrc = clip.youTubeId
     ? `https://www.youtube-nocookie.com/embed/${clip.youTubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${clip.youTubeId}` +
       `&start=${clip.start ?? 0}${clip.end ? `&end=${clip.end}` : ""}` +
-      `&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0`
+      `&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&enablejsapi=1`
     : "";
+
+  useEffect(() => {
+    if (!revealed || !clip.youTubeId || clip.end === undefined) return;
+    const frame = iframeRef.current;
+    if (!frame) return;
+
+    const start = clip.start ?? 0;
+    const segment = Math.max(clip.end - start, 4);
+
+    function rewind() {
+      frame?.contentWindow?.postMessage(
+        JSON.stringify({ event: "command", func: "seekTo", args: [start, true] }),
+        "*",
+      );
+    }
+
+    // Dong bo ngay mot lan khi trinh phat vua lo ra, roi cu moi do dai
+    // doan thi keo ve dau doan.
+    rewind();
+    const id = window.setInterval(rewind, segment * 1000);
+    return () => window.clearInterval(id);
+  }, [revealed, clip.youTubeId, clip.start, clip.end]);
 
   return (
     <section
@@ -180,6 +228,7 @@ export function CinematicVideo({
             />
           ) : clip.youTubeId ? (
             <iframe
+              ref={iframeRef}
               src={ytSrc}
               title={clip.headline}
               allow="autoplay; encrypted-media"

@@ -799,8 +799,15 @@ select {
  *
  * Cong thuc duoi doc la: "rong bang khung, nhung neu khung doc qua thi
  * rong theo chieu cao x 16/9". `max()` tu chon ve lon hon nen KHONG BAO
- * GIO ho mep, du 1440x900 hay 390x658. He so 1.2 la phan doi ra de day
- * thanh dieu khien va dong tieu de cua YouTube ra ngoai mep.
+ * GIO ho mep, du 1440x900 hay 390x658.
+ *
+ * HE SO 1.5 (khong phai 1.2): ngoai viec day thanh dieu khien va dong
+ * tieu de cua YouTube ra ngoai mep, con phai nuot not VIEN LETTERBOX cua
+ * chinh doan phim. Clip dien anh thuong quay rong hon 16:9, nen YouTube
+ * ke hai dai den tren/duoi BEN TRONG khung 16:9 cua no. Voi he so 1.2,
+ * hai dai do lot vao khung: da chup duoc mot dai den ~55px o dinh video
+ * thu ba ngay 06/08. Tinh cho nguon rong toi 2.39:1 thi can >= ~1.35;
+ * lay 1.5 cho co bien an toan.
  *
  * `cqw`/`cqh` do theo KHUNG CHUA (can `container-type: size` o cha) chu
  * khong theo khung nhin -- dung hon `vw`/`vh` vi khung nay cao 78vh tren
@@ -820,8 +827,8 @@ select {
   position: absolute;
   top: 50%;
   translate: -50% -50%;
-  width: max(120vw, calc(120vh * 16 / 9));
-  width: max(120cqw, calc(120cqh * 16 / 9));
+  width: max(150vw, calc(150vh * 16 / 9));
+  width: max(150cqw, calc(150cqh * 16 / 9));
 }
 
 /*

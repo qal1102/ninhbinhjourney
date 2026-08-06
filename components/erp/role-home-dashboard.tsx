@@ -51,6 +51,16 @@ function formatVnd(value: number) {
   }).format(value);
 }
 
+function formatCompactVnd(value: number) {
+  if (Math.abs(value) >= 1_000_000_000) {
+    return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(value / 1_000_000_000)} tỷ đ`;
+  }
+  if (Math.abs(value) >= 1_000_000) {
+    return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }).format(value / 1_000_000)} triệu đ`;
+  }
+  return formatVnd(value);
+}
+
 function formatDue(value: string) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return value;
@@ -740,6 +750,7 @@ function AccountantDashboard({
               isChief ? "Công nợ chờ kiểm tra" : "Công nợ cần xử lý",
               formatVnd(supplierApActionValue),
               `${supplierApToAct.length} hồ sơ nhà cung cấp`,
+              formatCompactVnd(supplierApActionValue),
             ],
             [
               isChief ? "Đã ghi sổ" : "Bút toán của tôi",
@@ -753,15 +764,17 @@ function AccountantDashboard({
               "Giá trị đã ghi sổ",
               formatVnd(postedValueVnd),
               `${differenceShiftClosures.length} ca lệch · ${pendingDirector.length} ngoại lệ đã chuyển cấp`,
+              formatCompactVnd(postedValueVnd),
             ],
-          ].map(([label, value, note]) => (
+          ].map(([label, value, note, mobileValue]) => (
             <article
               key={label}
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
               <p className="text-[11px] leading-4 text-white/50">{label}</p>
               <p className="mt-2 whitespace-nowrap text-[clamp(1rem,4.5vw,1.25rem)] font-black tracking-[-0.025em] sm:text-2xl">
-                {value}
+                <span className="sm:hidden">{mobileValue ?? value}</span>
+                <span className="hidden sm:inline">{value}</span>
               </p>
               <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">
                 {note}

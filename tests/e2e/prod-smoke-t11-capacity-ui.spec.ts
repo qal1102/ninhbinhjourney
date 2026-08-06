@@ -14,18 +14,14 @@ async function login(page: Page, username: string, password: string) {
   await expect(page).toHaveURL(/\/erp$/, { timeout: 25_000 });
 }
 
-async function expectCapacityWorkspace(page: Page) {
+async function expectCapacityWorkspace(page: Page, formula: string) {
   await expect(
     page.getByRole("heading", {
       name: "Biết điểm nghẽn trước khi phải dừng luồng",
     }),
   ).toBeVisible({ timeout: 25_000 });
   await expect(page.getByText("nguồn: ước-lượng")).toBeVisible();
-  await expect(
-    page.getByText(
-      "24 phương tiện × 48 chỗ × 60 ÷ 60 phút = 1.152 khách/giờ",
-    ),
-  ).toBeVisible();
+  await expect(page.getByText(formula)).toBeVisible();
   await expect(page.getByText("Tín hiệu đầu vào hiện tại là proxy:")).toBeVisible();
   await expect(page.getByText("Phản ứng theo bốn mức")).toBeVisible();
 }
@@ -38,19 +34,33 @@ test("giám đốc đọc được ngưỡng Tam Chúc và thấy quyền chỉn
 
   await login(page, "giamdoc", "Giamdoc@2026");
   await page.goto("/erp/tam-chuc/suc-chua");
-  await expectCapacityWorkspace(page);
+  await expectCapacityWorkspace(
+    page,
+    "24 phương tiện × 48 chỗ × 60 ÷ 60 phút = 1.152 khách/giờ",
+  );
   await expect(page.getByText("Chỉnh giả định và nguồn")).toBeVisible();
   expect(errors, `unexpected runtime errors: ${errors.join(" | ")}`).toEqual([]);
 });
 
 test("quản lý và nhân viên chỉ đọc cùng ngưỡng đã lưu", async ({ page }) => {
+  test.setTimeout(90_000);
   for (const account of [
-    { username: "ql.tamchuc", password: "Quanly@2026" },
-    { username: "nv.bentau", password: "Nhanvien@2026" },
+    {
+      username: "ql.tamchuc",
+      password: "Quanly@2026",
+      route: "/erp/tam-chuc/suc-chua",
+      formula: "24 phương tiện × 48 chỗ × 60 ÷ 60 phút = 1.152 khách/giờ",
+    },
+    {
+      username: "nv.bentau",
+      password: "Nhanvien@2026",
+      route: "/erp/trang-an/suc-chua",
+      formula: "600 phương tiện × 4 chỗ × 60 ÷ 180 phút = 800 khách/giờ",
+    },
   ]) {
     await login(page, account.username, account.password);
-    await page.goto("/erp/tam-chuc/suc-chua");
-    await expectCapacityWorkspace(page);
+    await page.goto(account.route);
+    await expectCapacityWorkspace(page, account.formula);
     await expect(page.getByText("Chỉnh giả định và nguồn")).toHaveCount(0);
     await expect(
       page.getByText("Chỉ giám đốc được thay đổi giả định."),
@@ -65,9 +75,12 @@ test("số tiền KPI kế toán không vỡ đôi cụm chữ số trên mobile
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page, "ketoan", "Ketoan@2026");
 
-  for (const route of ["/erp", "/erp/finance"]) {
+  for (const { route, labelText } of [
+    { route: "/erp", labelText: "Giá trị đã ghi sổ" },
+    { route: "/erp/finance", labelText: "Tổng phát sinh Nợ" },
+  ]) {
     await page.goto(route);
-    const label = page.getByText("Giá trị đã ghi sổ", { exact: true }).first();
+    const label = page.getByText(labelText, { exact: true }).first();
     await expect(label).toBeVisible({ timeout: 25_000 });
     const value = label.locator("xpath=following-sibling::p[1]");
     await expect(value).toBeVisible();

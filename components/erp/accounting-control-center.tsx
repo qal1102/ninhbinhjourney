@@ -45,6 +45,16 @@ function formatVnd(value: number) {
   }).format(value);
 }
 
+function formatCompactVnd(value: number) {
+  if (Math.abs(value) >= 1_000_000_000) {
+    return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(value / 1_000_000_000)} tỷ đ`;
+  }
+  if (Math.abs(value) >= 1_000_000) {
+    return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }).format(value / 1_000_000)} triệu đ`;
+  }
+  return formatVnd(value);
+}
+
 function formatDate(value?: string | null, includeTime = false) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("vi-VN", {
@@ -682,11 +692,16 @@ export function AccountingControlCenter({
   const reversalCount = posted.filter((journal) =>
     Boolean(journal.reversalOfJournalId),
   ).length;
-  const overviewMetrics: readonly (readonly [string, string, string])[] =
+  const overviewMetrics: readonly (readonly [string, string, string, string?])[] =
     user.role === "director"
       ? [
           ["Đã ghi sổ", String(posted.length), "bút toán có nguồn"],
-          ["Tổng phát sinh Nợ", formatVnd(postedTotal), "trên số đã ghi nhận"],
+          [
+            "Tổng phát sinh Nợ",
+            formatVnd(postedTotal),
+            "trên số đã ghi nhận",
+            formatCompactVnd(postedTotal),
+          ],
           ["Địa điểm có phát sinh", String(postedSiteCount), "địa điểm"],
           ["Bút toán đảo", String(reversalCount), "điều chỉnh đã ghi nhận"],
         ]
@@ -702,7 +717,12 @@ export function AccountingControlCenter({
           ],
           ["Bị trả bổ sung", String(returnedCount), "bút toán ca"],
           ["Đã ghi sổ", String(posted.length), "bút toán có nguồn"],
-          ["Tổng phát sinh Nợ", formatVnd(postedTotal), "trên số đã ghi nhận"],
+          [
+            "Tổng phát sinh Nợ",
+            formatVnd(postedTotal),
+            "trên số đã ghi nhận",
+            formatCompactVnd(postedTotal),
+          ],
         ];
   const roleTitle =
     user.role === "chief-accountant"
@@ -735,14 +755,15 @@ export function AccountingControlCenter({
       </header>
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {overviewMetrics.map(([label, value, note]) => (
+        {overviewMetrics.map(([label, value, note, mobileValue]) => (
           <article
             key={label}
             className="min-w-0 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-5"
           >
             <p className="text-xs text-[#6e7b75]">{label}</p>
             <p className="mt-2 whitespace-nowrap text-[clamp(1rem,4.5vw,1.5rem)] font-black tracking-[-0.025em] text-[#203a30] sm:text-3xl">
-              {value}
+              <span className="sm:hidden">{mobileValue ?? value}</span>
+              <span className="hidden sm:inline">{value}</span>
             </p>
             <p className="mt-2 text-xs text-[#849089]">{note}</p>
           </article>

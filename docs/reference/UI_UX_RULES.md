@@ -136,6 +136,25 @@ Bốn thứ phải có trong mỗi đoạn mô tả một địa điểm:
 
 Vẫn giữ nguyên toàn bộ danh sách cấm ở `#voice-rules` phía trên — đặc biệt là sáo ngữ ("bức tranh hoàn hảo", "chốn bồng lai tiên cảnh") mà chính trang tham chiếu cũng mắc. **Học phần gọi tên và con số, không học phần sáo ngữ.**
 
+**Đính chính một lập luận sai của chính tài liệu này (ghi lại để không ai lặp lại):** bản đầu của mục này có chê trang tham chiếu là "sáo ngữ" như một cách gỡ gạc. Chủ dự án bác thẳng, và đúng: *sáo ngữ của họ nằm trên nền dữ kiện thật, còn văn của ta thì rỗng không.* Một câu sáo nhưng có "cây thị 1000 năm tuổi tại Phủ Khống" vẫn hơn một câu sạch chữ mà không nói được gì. **Ưu tiên số một là dữ kiện; văn phong là thứ hai.**
+
+### Ba câu đã bị loại, giữ lại làm ví dụ phản diện
+
+| Bị loại | Vì sao |
+|---|---|
+| "Kinh đô cũ nằm giữa, hai ngôi chùa lớn kẹp hai đầu" | Tả hình học. "Kẹp hai đầu" nghe như mô tả một cái bánh mì. |
+| "Cả buổi sáng chỉ có tiếng mái chèo" | Không khí suông, không một thông tin nào. Đổi "Ninh Bình" thành "Hạ Long" vẫn đúng — tức là hỏng theo đúng phép thử ở `#voice-rules`. |
+| "Vua chọn nơi này vì núi che được. Rồi cháu con thấy chật, và dời đi." | Cố tỏ ra văn vẻ trên một dữ kiện chưa nắm chắc. Vừa rỗng vừa xấc. |
+
+Bản thay thế cho câu thứ ba, sau khi tra nguồn: *"Ba trăm hecta, hai vòng thành, sáu vị vua. Rồi triều Lý dời đô, và Hoa Lư ở lại với núi."* — cùng độ dài, nhưng ba con số và hai danh từ riêng.
+
+### Quy trình bắt buộc trước khi viết một dòng mô tả địa điểm
+
+1. **Tra nguồn trước, viết sau.** Không viết rồi mới đi tìm dữ kiện cho khớp.
+2. Ưu tiên nguồn: Wikipedia tiếng Việt → báo nhà nước (Nhân Dân, VietnamPlus, Báo Ninh Bình) → cổng thông tin tỉnh/xã → trang chính thức của khu di tích. Blog du lịch chỉ dùng để đối chiếu, không dùng làm nguồn duy nhất cho một con số.
+3. **Ghi dữ kiện + nguồn vào bảng "Kho dữ kiện đã tra nguồn" ở `REFERENCE_SITE_ANALYSIS.md`** trước khi đưa vào code.
+4. Con số nào không tra được thì **bỏ hẳn**, không viết ước lượng.
+
 ## Intro Rule (one-shot, do not touch lightly)
 
 - `introTop` / `introWords` (currently "Ninh Binh" / "Nature. Heritage. Wonder." and vi equivalent) are a locked, tested sequence — an e2e spec asserts the exact words and timing. This is **not** prose and the swap-test above does not apply to it.

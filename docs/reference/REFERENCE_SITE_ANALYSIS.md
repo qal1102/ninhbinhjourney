@@ -248,6 +248,22 @@ Sáu kỹ thuật rút ra, dùng được ngay:
 
 **Kết luận thẳng:** ta hơn hẳn về kỹ thuật tương tác và thẩm mỹ; họ hơn hẳn về **độ dày nội dung và độ cụ thể địa phương**, cộng với một luồng thương mại thật. Khoảng cách cần lấp không nằm ở hiệu ứng — nằm ở chữ.
 
+### Kho dữ kiện đã tra nguồn — 06/08
+
+**Mọi con số dưới đây đã tra nguồn thật trước khi đưa vào code. Dùng lại được ngay. Đừng thêm con số nào vào site mà chưa có mặt ở bảng này hoặc chưa tự tra nguồn.**
+
+| Nơi | Dữ kiện | Nguồn |
+|---|---|---|
+| **Cố đô Hoa Lư** | 968: Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lên ngôi, đặt quốc hiệu Đại Cồ Việt, đóng đô Hoa Lư · 300 ha, hai vòng thành Nội và Ngoại · 968–1009: sáu vua thuộc ba triều Đinh / Tiền Lê / Lý · 1010 Lý Thái Tổ dời đô Thăng Long · một trong bốn vùng lõi di sản Tràng An | Wikipedia tiếng Việt "Cố đô Hoa Lư"; cổng thông tin tỉnh Ninh Bình |
+| **Chùa Bái Đính** | Chùa cổ do quốc sư Nguyễn Minh Không (1059–1141) lập năm 1136 · chùa mới khởi công 2003, hơn 1.000 ha · hành lang La Hán 234 gian, dài gần 3 km, 500 tượng đá xanh nguyên khối Ninh Vân, cao 2,5 m, nặng ~4 tấn | Wikipedia tiếng Việt; Thanh Niên; Vietnam Airlines Travel Guide; cổng thông tin xã Gia Viễn |
+| **Tràng An tuyến 1** | 9 hang + 3 điểm tâm linh, ~3–4 giờ · Hang Tối dài 320 m, dài nhất tuyến · Hang Nấu Rượu gắn tích nấu rượu tiến vua · lộ trình: Đền Trình → Hang Địa Linh → Hang Tối → Hang Sáng → Hang Nấu Rượu → Đền Trần → Hang Ba Giọt → Hang Seo → Hang Sơn Dương → Phủ Khống → Chùa Báo Hiếu → Hang Khống → Hang Trần → Hang Quy Hậu | muave.disantrangan.vn (trang chính thức BQL); dulichvietnam.com.vn; Vietravel |
+| **Tam Cốc** | Ba hang Cả / Hai / Ba, do sông Ngô Đồng bào mòn xuyên núi đá vôi · Hang Cả dài ~127 m · thuyền ~2 giờ · mùa lúa chín giữa tháng 5 tới đầu tháng 6 | VnExpress Du lịch; Tổng cục Du lịch; MIA.vn |
+| **Hang Múa** | 486 bậc đá lên đỉnh núi Ngọa Long · leo 20–40 phút · nhìn xuống thấy Tam Cốc | travel.com.vn; sovaba.travel; visitninhbinh.com.vn |
+| **Động Am Tiên** | Cách Đông thành đền Vua Đinh ~400 m · hơn 200 bậc đá · Thái hậu Dương Vân Nga (hoàng hậu hai triều) về tu cuối đời, pháp danh Bảo Quang Hoàng Thái Hậu · Đinh Tiên Hoàng từng nuôi hổ báo tại đây để trị tội · dân quen gọi "Tuyệt Tịnh Cốc" | Báo Nhân Dân; Báo Dân Việt; Sở Tư pháp Ninh Bình |
+| **Nhà thờ đá Phát Diệm** | Quần thể ~22 ha · xây 1875–1899, nhà thờ lớn xong 1891 · linh mục Phêrô Trần Lục chủ trì · Phương Đình rộng 21 m, sâu 17 m, cao 25 m · nhà thờ Trái tim Đức Mẹ (nhà thờ đá) dựng 1883, dài 15,30 m rộng 8,50 m cao 6 m · toàn đá và gỗ theo dáng đình chùa Việt | Wikipedia tiếng Việt; VietnamPlus; Sở TT&TT Ninh Bình; Báo Ninh Bình |
+| **Cúc Phương** | Vườn quốc gia đầu tiên của Việt Nam, lập 1962 | đã tra ở đợt 04/08 (Wikipedia + Vietnam Airlines + Tổng cục Du lịch) |
+| **Vân Long** | Khu đất ngập nước duy nhất của Việt Nam trong Danh sách Xanh IUCN · khu Ramsar · thế giới còn chưa tới 300 voọc mông trắng, phần lớn sống ở đây | Mongabay 2021 (đã có trong `press` của `content/destinations.ts`) |
+
 ### Việc nên làm, xếp theo giá trị
 
 1. **Viết lại toàn bộ mô tả 15 điểm đến theo lối gọi tên.** Mỗi điểm phải có ít nhất một danh từ riêng và một con số/mốc lịch sử đã kiểm chứng. Đây là việc đáng giá nhất và chưa làm.

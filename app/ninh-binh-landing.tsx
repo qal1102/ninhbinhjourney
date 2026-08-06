@@ -2125,16 +2125,26 @@ export default function NinhBinhLanding({
         <p className="font-display text-lg text-[#183F34]">{t.footerNote}</p>
       </footer>
 
+      {/*
+        Tren dien thoai khoi chi tiet nay tung gan nhu TRAN VIEN: chi 16px
+        le hai ben va 24px tren duoi, goc bo 8px gan nhu khong thay -- mo
+        ra thi giong nhu vua chuyen sang mot trang khac chu khong phai mot
+        lop phu, va neu khong co nut Dong thi khach khong biet duong ra.
+        Sua 06/08 theo phan hoi truc tiep: chua le tren 64px de LUON nhin
+        thay lop nen mo phia tren (tin hieu "day la mot lop, cham ra ngoai
+        la dong"), bo goc 16px cho ro, va ha chieu cao toi thieu cua anh
+        tu 320px xuong 240px de anh khong chiem nua man hinh.
+      */}
       {detailDestination && detailFacts ? (
         <div
-          className="fixed inset-0 z-[1200] overflow-y-auto bg-[#1D2925]/82 px-4 py-6 backdrop-blur-md sm:py-10"
+          className="fixed inset-0 z-[1200] overflow-y-auto bg-[#1D2925]/82 px-4 pb-8 pt-16 backdrop-blur-md sm:py-10"
           role="dialog"
           aria-modal="true"
           aria-labelledby="destination-detail-title"
           onMouseDown={() => setDetailId(null)}
         >
           <article
-            className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[8px] bg-[#FBFAF6] shadow-2xl"
+            className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[16px] bg-[#FBFAF6] shadow-2xl sm:rounded-[8px]"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <button
@@ -2145,7 +2155,16 @@ export default function NinhBinhLanding({
             >
               {t.close}
             </button>
-            <div ref={heroRef} className="relative min-h-[320px] overflow-hidden sm:min-h-[440px]">
+            {/*
+              `min-h` khong quyet dinh chieu cao that: khoi chu ben duoi
+              duoc dinh vi tuyet doi, nen neu chu cao hon khung thi no
+              tran len va bi `overflow-hidden` CAT MAT dong dau. Da xay ra
+              that khi ha 320px xuong 240px: dong the loai bi cat, con
+              tieu de thi doi len dung cho nut Dong (chup duoc 06/08).
+              Nen: khung du cao, chu nho lai tren dien thoai, VA khoi chu
+              chua san le phai de khong bao gio dung vao nut Dong.
+            */}
+            <div ref={heroRef} className="relative min-h-[300px] overflow-hidden sm:min-h-[440px]">
               <Image
                 src={detailDestination.image}
                 alt={detailDestination.name[lang]}
@@ -2161,10 +2180,10 @@ export default function NinhBinhLanding({
                 }}
               />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(29,41,37,.1),rgba(29,41,37,.78))]" />
-              <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8 lg:p-10">
-                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#E7B96A]">{detailDestination.category[lang]} · {detailDestination.duration[lang]}</p>
-                <h2 id="destination-detail-title" className="font-display mt-3 max-w-4xl text-5xl leading-tight sm:text-7xl">{detailDestination.name[lang]}</h2>
-                <p className="mt-4 max-w-3xl text-lg leading-8 text-white/88">{detailDestination.description[lang]}</p>
+              <div className="absolute inset-x-0 bottom-0 p-5 pr-24 text-white sm:p-8 sm:pr-8 lg:p-10">
+                <p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-[#E7B96A] sm:text-xs">{detailDestination.category[lang]} · {detailDestination.duration[lang]}</p>
+                <h2 id="destination-detail-title" className="font-display mt-2 max-w-4xl text-3xl leading-tight sm:mt-3 sm:text-6xl lg:text-7xl">{detailDestination.name[lang]}</h2>
+                <p className="mt-3 max-w-3xl text-base leading-7 text-white/88 sm:mt-4 sm:text-lg sm:leading-8">{detailDestination.description[lang]}</p>
               </div>
             </div>
             <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:p-10">

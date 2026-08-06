@@ -832,6 +832,38 @@ select {
 }
 
 /*
+ * DAY TAM IFRAME RA NGOAI KHUNG TREN MAN HINH DOC (dien thoai/tablet).
+ *
+ * Van de: moi thu YouTube ve de len video -- nut play lon, cum
+ * `⏮ ⏸ ⏭`, vong tron dang tai -- deu nam DUNG TAM cua iframe. Nen phong
+ * to bao nhieu lan cung vo ich: tam thi van la tam. Cac cach da thu va
+ * deu khong dut diem: `controls=0` (khong go duoc lop phu), tre thoi
+ * diem lo trinh phat (chi giau duoc lan boot dau).
+ *
+ * Va quan trong nhat: tren DIEN THOAI THAT, chinh sach autoplay chat hon
+ * han Chromium gia lap. Khi trinh duyet tu choi tu phat, YouTube de mot
+ * nut play lon o giua VINH VIEN -- khong co tham so nao tat duoc, va
+ * khong mo phong duoc bang may de ban. Chu du an bao cao dung hien tuong
+ * nay ngay 06/08 trong khi may kiem thu van sach.
+ *
+ * Cach chac an, khong phu thuoc autoplay: DICH iframe sang trai du xa de
+ * DIEM TAM cua no roi han ra ngoai khung nhin, trong khi phan con lai van
+ * phu kin. Khung doc co rat nhieu phan doi ra nen lam duoc thoai mai --
+ * vd 390x658: iframe rong 1755px, dich -70% thi mep trai -1033, mep phai
+ * 721 (van > 390 nen KHONG ho), con tam roi ve -156, tuc ca cum nut nam
+ * ngoai man hinh.
+ *
+ * KHONG ap dung cho man hinh ngang: khung ngang gan ti le 16:9 nen phan
+ * doi ra it, day tam ra ngoai se lo mep. Chu du an cung xac nhan tren may
+ * de ban khong thay nut nao.
+ */
+@media (max-aspect-ratio: 1 / 1) {
+  .cinematic-frame iframe {
+    translate: -70% -50%;
+  }
+}
+
+/*
  * CHI DUOC ANIMATE `opacity` O DAY -- KHONG BAO GIO DUNG `transform`.
  *
  * `.page-enter` boc TOAN BO moi trang (app/layout.tsx). Mot animation co

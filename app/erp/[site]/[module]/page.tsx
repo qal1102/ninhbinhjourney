@@ -8,6 +8,7 @@ import { accountCanAccessModule, getCurrentErpUser } from "@/lib/erp/demo-sessio
 import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { getAttendanceState } from "@/lib/erp/attendance-repository";
 import { listCapacityWorkspace } from "@/lib/erp/capacity-repository";
+import { listSopWorkspace } from "@/lib/erp/sop-repository";
 import { getIncidentCases } from "@/lib/erp/incident-repository";
 import { getFieldReports } from "@/lib/erp/field-report-repository";
 import { getRecentGateScans, getTicketSalesSummary } from "@/lib/erp/gate-scan-repository";
@@ -39,7 +40,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   }
   const isTicketModule =
     moduleDefinition.id === "check-in-khach" || moduleDefinition.id === "ve-dat-cho";
-  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory, capacityWorkspace] =
+  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory, capacityWorkspace, sopWorkspace] =
     await Promise.all([
     getAccessState(),
     getAttendanceState(),
@@ -78,6 +79,12 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
       moduleDefinition.id === "suc-chua"
         ? listCapacityWorkspace(site.id).catch((error) => {
             console.error("Capacity read failed", error);
+            return null;
+          })
+        : Promise.resolve(null),
+      moduleDefinition.id === "sop-dien-tap"
+        ? listSopWorkspace(site.id).catch((error) => {
+            console.error("SOP read failed", error);
             return null;
           })
         : Promise.resolve(null),
@@ -126,6 +133,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         shiftHandovers={shiftHandovers}
         staffDirectory={staffDirectory}
         capacityWorkspace={capacityWorkspace}
+        sopWorkspace={sopWorkspace}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

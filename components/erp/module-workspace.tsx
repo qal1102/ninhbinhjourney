@@ -4,6 +4,7 @@ import { canViewRegionalFinance } from "@/domain/erp-role-policy";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import type { CapacityWorkspaceData } from "@/domain/erp-capacity";
+import type { SopWorkspaceData } from "@/domain/erp-sop";
 import type {
   SupplierApInvoice,
   SupplierApSupplier,
@@ -28,6 +29,7 @@ import { ShiftHandoverPanel } from "./shift-handover-panel";
 import { StaffAccessManager } from "./staff-access-manager";
 import { CameraAiWorkspace } from "./camera-ai-workspace";
 import { CapacityWorkspace } from "./capacity-workspace";
+import { SopWorkspace } from "./sop-workspace";
 import { ProjectEventWorkspace } from "./project-event-workspace";
 import { FieldReportWorkspace } from "./field-report-workspace";
 import { TicketGuestWorkspace } from "./ticket-guest-workspace";
@@ -58,6 +60,7 @@ type Props = {
   shiftHandovers: readonly ShiftHandover[];
   staffDirectory: readonly ErpStaffDirectoryEntry[];
   capacityWorkspace: CapacityWorkspaceData | null;
+  sopWorkspace: SopWorkspaceData | null;
   initialCameraId?: string;
 };
 
@@ -302,12 +305,16 @@ export function ModuleWorkspace({
   shiftHandovers,
   staffDirectory,
   capacityWorkspace,
+  sopWorkspace,
   initialCameraId,
 }: Props) {
   if (module.id === "suc-chua") {
     return (
       <CapacityWorkspace site={site} user={user} data={capacityWorkspace} />
     );
+  }
+  if (module.id === "sop-dien-tap") {
+    return <SopWorkspace site={site} user={user} data={sopWorkspace} />;
   }
   if (module.id === "su-co") {
     return (

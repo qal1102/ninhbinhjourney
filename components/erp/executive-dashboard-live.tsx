@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ErpSite } from "@/domain/erp";
 import type { AccountingJournal } from "@/domain/erp-accounting";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
+import type { SopPendingDecision } from "@/domain/erp-sop";
 import type { SupplierApInvoice } from "@/domain/erp-supplier-ap";
 import type { WorkdayRecord } from "@/domain/erp-workday";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
@@ -18,6 +19,7 @@ type Props = {
   supplierApInvoices: readonly SupplierApInvoice[];
   escalatedIncidents: readonly IncidentCase[];
   pendingProjectChangeRequests: readonly ProjectChangeRequestWithSite[];
+  pendingSopDecisions: readonly SopPendingDecision[];
 };
 
 const changeKindLabels: Record<ProjectChangeRequestWithSite["kind"], string> = {
@@ -43,12 +45,14 @@ function latestUpdatedAt(
   workdays: readonly WorkdayRecord[],
   journals: readonly AccountingJournal[],
   supplierApInvoices: readonly SupplierApInvoice[],
+  pendingSopDecisions: readonly SopPendingDecision[],
 ) {
   const values = [
     ...records.map((record) => record.updatedAt),
     ...workdays.map((record) => record.updatedAt),
     ...journals.map((journal) => journal.updatedAt),
     ...supplierApInvoices.map((invoice) => invoice.updatedAt),
+    ...pendingSopDecisions.map((assessment) => assessment.submittedAt),
   ]
     .map((value) => Date.parse(value))
     .filter(Number.isFinite);
@@ -71,6 +75,7 @@ export function ExecutiveDashboard({
   supplierApInvoices,
   escalatedIncidents,
   pendingProjectChangeRequests,
+  pendingSopDecisions,
 }: Props) {
   const siteShortNameById = new Map(
     sites.map((site) => [site.id, site.shortName]),
@@ -80,6 +85,7 @@ export function ExecutiveDashboard({
     ...workdays.map((record) => record.updatedAt),
     ...journals.map((journal) => journal.updatedAt),
     ...supplierApInvoices.map((invoice) => invoice.updatedAt),
+    ...pendingSopDecisions.map((assessment) => assessment.submittedAt),
   ].reduce((latest, value) => {
     const timestamp = Date.parse(value);
     return Number.isFinite(timestamp) && timestamp > latest
@@ -152,12 +158,14 @@ export function ExecutiveDashboard({
     pendingShiftCloseDecisions.length +
     pendingSupplierDecisions.length +
     escalatedIncidents.length +
-    pendingProjectChangeRequests.length;
+    pendingProjectChangeRequests.length +
+    pendingSopDecisions.length;
   const asOf = latestUpdatedAt(
     records,
     workdays,
     journals,
     supplierApInvoices,
+    pendingSopDecisions,
   );
 
   return (
@@ -256,6 +264,12 @@ export function ExecutiveDashboard({
                 </dt>{" "}
                 <dd className="inline">yêu cầu đổi phạm vi dự án</dd>
               </div>
+              <div>
+                <dt className="inline text-[#3f3524]">
+                  {pendingSopDecisions.length}
+                </dt>{" "}
+                <dd className="inline">cổng Go/No-Go</dd>
+              </div>
             </dl>
           </div>
           <Link
@@ -269,6 +283,40 @@ export function ExecutiveDashboard({
           <div className="mt-5 space-y-4">
             {pendingShiftCloseDecisions.length > 0 ? (
               <ShiftCloseDirectorQueue records={records} user={user} />
+            ) : null}
+            {pendingSopDecisions.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-black text-[#4c3c23]">
+                  Cổng mở cửa chờ quyết định
+                </p>
+                {pendingSopDecisions.slice(0, 4).map((assessment) => (
+                  <Link
+                    key={assessment.id}
+                    href={`/erp/${assessment.siteId}/sop-dien-tap`}
+                    className="grid gap-2 rounded-xl border border-[#e5d7bb] bg-white p-4 transition hover:border-[#c9a768] sm:grid-cols-[1fr_auto] sm:items-center"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-black text-[#403727]">
+                        {assessment.assessmentCode} ·{" "}
+                        {siteShortNameById.get(assessment.siteId) ?? assessment.siteId}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[#7b6d55]">
+                        {assessment.submittedByDisplayName} ·{" "}
+                        {assessment.criticalFailures} mục trọng yếu chưa đạt
+                      </p>
+                    </div>
+                    <span
+                      className={`w-fit shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        assessment.criticalFailures > 0
+                          ? "bg-[#ffe4de] text-[#934336]"
+                          : "bg-[#fff3d7] text-[#7a5923]"
+                      }`}
+                    >
+                      {assessment.criticalFailures > 0 ? "Không thể GO" : "Chờ quyết định"}
+                    </span>
+                  </Link>
+                ))}
+              </div>
             ) : null}
             {pendingSupplierDecisions.length > 0 ? (
               <div className="space-y-2">

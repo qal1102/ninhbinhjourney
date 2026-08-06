@@ -101,7 +101,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     managedSiteIds: ["trang-an"],
     // Tràng An runs the boat piers and the heaviest fixed infrastructure, so
     // this manager also holds assets/acceptance and the SOP drill book.
-    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "tai-san-bao-tri", "sop-dien-tap"],
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "tai-san-bao-tri"],
   },
   {
     id: "manager-tam-chuc",
@@ -114,7 +114,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     managedSiteIds: ["tam-chuc"],
     // Tam Chúc is the crowd-scale/festival site: SOP drills plus the shuttle
     // fleet that moves visitors between the gate and the temple complex.
-    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "sop-dien-tap", "xe-trung-chuyen"],
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "xe-trung-chuyen"],
   },
   {
     id: "manager-tam-coc",

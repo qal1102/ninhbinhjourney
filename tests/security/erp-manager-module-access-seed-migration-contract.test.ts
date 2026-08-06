@@ -69,10 +69,18 @@ describe("ERP manager module access seed migration 018 contract", () => {
     }
   });
 
-  it("seeds exactly the module list demo-data.ts gives each manager", () => {
+  it("pins the historical base before later additive grants", () => {
     for (const manager of listDemoSiteManagers()) {
-      expect([...seededModulesFor(manager.id)].sort()).toEqual(
-        [...manager.initialModuleIds].sort(),
+      const historical = seededModulesFor(manager.id);
+      const current = [...manager.initialModuleIds];
+      const currentSet = new Set<string>(current);
+      expect(historical.every((moduleId) => currentSet.has(moduleId))).toBe(true);
+      expect(
+        current.filter((moduleId) => !historical.includes(moduleId)),
+      ).toEqual(
+        current.includes("sop-dien-tap") && !historical.includes("sop-dien-tap")
+          ? ["sop-dien-tap"]
+          : [],
       );
     }
   });

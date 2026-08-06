@@ -22,9 +22,9 @@ export const ERP_ACCOUNTANT_MODULE_IDS: readonly ErpModuleId[] = [
  * `demo-session.ts` and the grant mechanism only ever applied to employees.
  *
  * Deliberately excluded here: `bao-cao` (regional forecasting belongs to the
- * director and accounting), plus `xe-trung-chuyen`, `tai-san-bao-tri` and
- * `sop-dien-tap`, which are granted per manager in `demo-data.ts` according to
- * what their site actually operates.
+ * director and accounting), plus `xe-trung-chuyen` and `tai-san-bao-tri`,
+ * which are granted per manager in `demo-data.ts` according to what their
+ * site actually operates. Daily Go/No-Go is a base manager duty at every site.
  */
 export const ERP_MANAGER_BASE_MODULE_IDS: readonly ErpModuleId[] = [
   "ve-dat-cho",
@@ -38,6 +38,7 @@ export const ERP_MANAGER_BASE_MODULE_IDS: readonly ErpModuleId[] = [
   "cham-cong",
   "doi-tac-nha-cung-ung",
   "tai-chinh-doi-soat",
+  "sop-dien-tap",
 ] as const;
 
 export type ErpCapability =

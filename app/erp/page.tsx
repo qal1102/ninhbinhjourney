@@ -10,6 +10,7 @@ import { listEscalatedIncidents } from "@/lib/erp/incident-repository";
 import { listPendingProjectChangeRequests } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
+import { listPendingSopDecisions } from "@/lib/erp/sop-repository";
 import { listWorkdays, vietnamDateKey } from "@/lib/erp/workday-repository";
 import {
   listWorkdayEmployeeOptions,
@@ -38,6 +39,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
     supplierAp,
     escalatedIncidents,
     pendingProjectChangeRequests,
+    pendingSopDecisions,
   ] = await Promise.all([
     getAccessState(),
     listShiftClosures({ siteIds: user.siteIds }),
@@ -57,6 +59,12 @@ export default async function ErpHomePage({ searchParams }: Props) {
     isDirector ? listEscalatedIncidents(user.siteIds) : Promise.resolve([]),
     isDirector
       ? listPendingProjectChangeRequests(user.siteIds)
+      : Promise.resolve([]),
+    isDirector
+      ? listPendingSopDecisions(user.siteIds).catch((error) => {
+          console.error("SOP decision queue read failed", error);
+          return [];
+        })
       : Promise.resolve([]),
   ]);
   const params = (await searchParams) ?? {};
@@ -88,6 +96,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
           supplierApInvoices={supplierAp.invoices}
           escalatedIncidents={escalatedIncidents}
           pendingProjectChangeRequests={pendingProjectChangeRequests}
+          pendingSopDecisions={pendingSopDecisions}
         />
       ) : (
         <RoleHomeDashboard

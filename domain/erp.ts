@@ -273,11 +273,7 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Quy trình theo ngưỡng, phân vai chỉ huy, lịch diễn tập và điều kiện mở cửa.",
     accent: "#8e573f",
     employeeAssignable: true,
-    status: "planned",
-    plannedNeeds: [
-      "Bộ SOP và ngưỡng kích hoạt từng quy trình",
-      "Lịch diễn tập và phân vai chỉ huy",
-    ],
+    status: "live",
   },
   {
     id: "tai-chinh-doi-soat",

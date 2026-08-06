@@ -107,6 +107,31 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Thông tin phương tiện, số chỗ, thời gian vòng hoặc nguồn chưa hợp lệ.",
   CAPACITY_VERSION_CONFLICT:
     "Ngưỡng sức chứa vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+  SOP_ASSESSMENT_INPUT_INVALID:
+    "Thông tin đánh giá mở cửa chưa hợp lệ hoặc không thuộc ngày vận hành hiện tại.",
+  SOP_MANAGER_ROLE_REQUIRED:
+    "Chỉ quản lý cơ sở được gửi checklist mở cửa.",
+  SOP_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
+  SOP_CHECKLIST_NOT_CONFIGURED:
+    "Cơ sở chưa có checklist mở cửa được cấu hình.",
+  SOP_CHECKLIST_RESULT_INVALID:
+    "Checklist phải trả lời đủ từng mục; mục không đạt hoặc không áp dụng phải có ghi chú.",
+  SOP_ASSESSMENT_ALREADY_SUBMITTED:
+    "Checklist đã được gửi và đang chờ giám đốc quyết định.",
+  SOP_ASSESSMENT_ALREADY_FINAL:
+    "Cổng mở cửa hôm nay đã có quyết định cuối cùng.",
+  SOP_DECISION_INPUT_INVALID: "Thông tin quyết định Go/No-Go chưa hợp lệ.",
+  SOP_ASSESSMENT_NOT_FOUND: "Không tìm thấy hồ sơ Go/No-Go này.",
+  SOP_DIRECTOR_ROLE_REQUIRED:
+    "Chỉ giám đốc được ra quyết định Go/No-Go.",
+  SOP_MAKER_CHECKER_SEPARATION_REQUIRED:
+    "Người gửi checklist và người quyết định phải là hai người khác nhau.",
+  SOP_ASSESSMENT_ALREADY_DECIDED:
+    "Hồ sơ Go/No-Go đã được quyết định trước đó.",
+  SOP_CRITICAL_ITEM_BLOCKS_GO:
+    "Không thể chọn GO khi còn hạng mục an toàn trọng yếu chưa đạt. Chọn NO-GO hoặc chấp nhận rủi ro bằng văn bản.",
+  SOP_RISK_ACCEPTANCE_INVALID:
+    "Chấp nhận rủi ro chỉ dùng khi có mục trọng yếu chưa đạt và phải ghi rõ trách nhiệm bằng văn bản.",
 
   // --- Ngoại lệ và ngưỡng ---
   AP_EXCEPTION_BELOW_DIRECTOR_THRESHOLD:
@@ -141,6 +166,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Không được đổi định danh của bút toán.",
   CAPACITY_AUDIT_IMMUTABLE:
     "Lịch sử cấu hình sức chứa chỉ ghi thêm, không sửa và không xoá.",
+  SOP_AUDIT_IMMUTABLE:
+    "Lịch sử Go/No-Go chỉ ghi thêm, không sửa và không xoá.",
   ACCOUNTING_PERIOD_DELETE_NOT_ALLOWED: "Không được xóa kỳ kế toán.",
   ACCOUNTING_PERIOD_IDENTITY_IMMUTABLE:
     "Không được đổi định danh của kỳ kế toán.",
@@ -295,6 +322,10 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Thao tác này đã được gửi với nội dung khác. Hãy tải lại và thử lại.",
   ACCOUNTING_IDEMPOTENCY_CONFLICT:
     "Thao tác này đã được gửi với nội dung khác. Hãy tải lại và thử lại.",
+  SOP_IDEMPOTENCY_CONFLICT:
+    "Thao tác Go/No-Go này đã được gửi với nội dung khác. Hãy tải lại trước khi thử lại.",
+  SOP_ASSESSMENT_VERSION_CONFLICT:
+    "Hồ sơ Go/No-Go vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
   ACCOUNTING_JOURNAL_VERSION_CONFLICT:
     "Bút toán vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
   ACCOUNTING_JOURNAL_VERSION_MUST_INCREMENT: "Phiên bản bút toán phải tăng.",

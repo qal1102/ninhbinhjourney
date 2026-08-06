@@ -98,9 +98,9 @@ Ranh giới này là cố ý: những thứ ở cột phải mà mở ra thì m�
 
 ## 3. Các module chức năng
 
-15 module. **11 có nghiệp vụ thật, 4 nói thẳng là chưa làm** — trong sản phẩm, 4 cái đó mang nhãn "Giai đoạn sau" ngay trên menu và ghi rõ còn thiếu dữ liệu gì, chứ không vẽ số cho đẹp.
+15 module. **12 có nghiệp vụ thật, 3 nói thẳng là chưa làm** — trong sản phẩm, 3 cái đó mang nhãn "Giai đoạn sau" ngay trên menu và ghi rõ còn thiếu dữ liệu gì, chứ không vẽ số cho đẹp.
 
-### Đang chạy được (11)
+### Đang chạy được (12)
 
 | Module | Làm gì |
 |---|---|
@@ -114,15 +114,15 @@ Ranh giới này là cố ý: những thứ ở cột phải mà mở ra thì m�
 | 👥 **Nhân sự & ca trực** | Phân ca, phân quyền nhân sự, **bàn giao ca có ký nhận hai người** (tiền mặt, sự cố còn mở, thiết bị) |
 | ⏱️ **Chấm công nhân viên** | Vào/ra ca, phiếu công việc, duyệt |
 | 🤝 **Đối tác & nhà cung ứng** | Công nợ NCC trọn vòng: ghi nhận nợ → hạch toán → đề nghị chi → duyệt chi → đã trả |
+| 📋 **SOP & diễn tập** | Cổng mở cửa hằng ngày: quản lý xác nhận từng mục, giám đốc quyết định GO/NO-GO; lỗi trọng yếu chặn GO ở cơ sở dữ liệu, ngoại lệ phải có văn bản chấp nhận rủi ro và nhật ký bất biến. Bộ mục hiện tại là tóm tắt demo có nguồn, **chưa phải SOP được tổ chức phê duyệt** |
 | 💰 **Tài chính & đối soát** | Bút toán, kỳ kế toán, đối soát |
 
-### Giai đoạn sau (4)
+### Giai đoạn sau (3)
 
 | Module | Cần gì trước khi làm được |
 |---|---|
 | 🚌 **Xe trung chuyển** | Danh sách phương tiện, tuyến, tài xế |
 | 🏗️ **Tài sản & nghiệm thu** | Danh mục tài sản, lịch bảo trì |
-| 📋 **SOP & diễn tập** | Bộ quy trình ứng phó và ngưỡng kích hoạt |
 | 📈 **Báo cáo & dự báo** | Đủ dữ liệu vận hành tích lũy |
 
 ### Màn hình quản trị
@@ -133,7 +133,7 @@ Ranh giới này là cố ý: những thứ ở cột phải mà mở ra thì m�
 
 ## 4. Bốn nguyên tắc xuyên suốt mọi module
 
-**① Người làm ≠ người duyệt.** Kế toán lập chứng từ thì kế toán trưởng duyệt. Quản lý không tự duyệt hồ sơ mình tạo. Người đề nghị chi tiền không phải người duyệt chi. Người bàn giao ca không phải người nhận ca. Điều này bị **cơ sở dữ liệu** ép, không phải chỉ giao diện — không có đường vòng nào.
+**① Người làm ≠ người duyệt.** Kế toán lập chứng từ thì kế toán trưởng duyệt. Quản lý gửi checklist mở cửa thì giám đốc quyết định. Người đề nghị chi tiền không phải người duyệt chi. Người bàn giao ca không phải người nhận ca. Điều này bị **cơ sở dữ liệu** ép, không phải chỉ giao diện — không có đường vòng nào.
 
 **② Nhật ký chỉ ghi thêm, không sửa, không xóa.** Ghi sai thì ghi bút toán điều chỉnh. Kể cả giám đốc cũng không xóa được một dòng lịch sử.
 
@@ -214,7 +214,7 @@ Câu hỏi thường gặp: *"Khi đưa vào dùng thật thì xóa hết dữ l
 | Loại | Ví dụ | Khi chạy thật |
 |---|---|---|
 | **① Cấu hình hệ thống** | 4 cơ sở, danh sách module, bộ vai trò, quy tắc hạch toán | **Giữ nguyên** — đây là phần mềm, không phải dữ liệu |
-| **② Danh mục thật** | Nhân sự, tài khoản, nhà cung cấp, loại vé và giá vé, ngưỡng sức chứa, bộ SOP | **Khách nhập trước ngày chạy** — không phải điền dần |
+| **② Danh mục thật** | Nhân sự, tài khoản, nhà cung cấp, loại vé và giá vé, ngưỡng sức chứa, bộ SOP đã phê duyệt | **Khách nhập trước ngày chạy** — không phải điền dần; 20 tóm tắt SOP hiện có chỉ là dữ liệu demo có nguồn |
 | **③ Dữ liệu mồi / tập dượt** | Nhân sự mẫu, vé mẫu, sự cố mẫu, hóa đơn mẫu | **Xóa sạch** |
 | **④ Dữ liệu vận hành** | Phát sinh sau ngày chạy thật | **Không bao giờ reset** |
 
@@ -234,7 +234,8 @@ Câu hỏi thường gặp: *"Khi đưa vào dùng thật thì xóa hết dữ l
 
 - **Chưa bán hàng trực tuyến.** Web du khách chưa có cổng thanh toán thật.
 - **Chưa có chế độ ngoại tuyến.** Mất mạng là không thao tác được.
-- **5 module ở mục 3 chưa có nghiệp vụ**, đang chờ dữ liệu từ khách.
+- **3 module ở mục 3 chưa có nghiệp vụ**, đang chờ dữ liệu từ khách.
+- **SOP tổ chức chính thức và lịch diễn tập chưa có.** Cổng Go/No-Go đã chạy, nhưng 20 mục hiện tại được ghi rõ là tóm tắt demo chưa phê duyệt; khách phải duyệt phiên bản, ngày hiệu lực và người chịu trách nhiệm trước khi vận hành thật.
 - **Đầu tiền mặt chưa khép kín** — công nợ nhà cung cấp đã trọn vòng, nhưng nộp quỹ → ngân hàng → đối chiếu sao kê thì chưa.
 
 Chi tiết trạng thái từng mục: `docs/HANDOFF.md`.

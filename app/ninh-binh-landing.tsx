@@ -142,7 +142,7 @@ const copy = {
     welcomePoint: "Ninh Binh welcome point",
     mapTitle: "Interactive tourism map",
     mapBody:
-      "Here the mountains never stand alone: rivers thread between the karsts, temples shelter under trees, an ancient capital rests inside a valley. Touch a point on the map, and let that place tell its own story.",
+      "All four core zones of the Tràng An heritage site fit inside this frame, along with the old capital at Hoa Lư and the stone cathedral at Phát Diệm out toward the coast. Touch a point and let that place tell its own story.",
     nearby: "Explore nearby",
     discover: "Discover",
     add: "Add to journey",
@@ -153,7 +153,7 @@ const copy = {
     signatureStories: "Signature route",
     hiddenGems: "The quiet corners few people know",
     hiddenGemsIntro:
-      "Emptier, slower places — where the sound of an oar in the water still carries further than voices.",
+      "Vân Long wetland, Am Tiên cave, Bích Động pagoda, Thái Vi temple. Quieter, and mostly missed by anyone giving Ninh Bình two days.",
     seeAllDestinations: "See all destinations",
     /*
      * `zigzag*` gio chi con dung cho VAI DIEM DAU (xem `ZIGZAG_FEATURED`).
@@ -168,7 +168,7 @@ const copy = {
     zigzagLabel: "Every destination",
     zigzagTitle: "Fifteen places, fifteen different rhythms.",
     zigzagIntro:
-      "Some are reached only by boat, when the paddle echoes off a sheer limestone wall. Some ask a few hundred stone steps of you, in full sun. And some ask only that you sit very still, and wait for the birds to come home at dusk.",
+      "Hang Múa asks for 486 stone steps. Tam Cốc asks for two hours in a boat, through the three caves the Ngô Đồng cut for itself. Vân Long asks for nothing at all, except that you sit still and stay quiet long enough for the langurs to come down.",
     zigzagCtaTitle: "Not sure where to begin?",
     zigzagCtaBody:
       "Fifteen places sit within one small region, yet each asks for a rhythm of its own. Tell us how many days you have, who travels with you and how unhurried you would like it to be — the arranging is ours to do.",
@@ -256,7 +256,7 @@ const copy = {
     welcomePoint: "Điểm chào đón Ninh Bình",
     mapTitle: "Bản đồ du lịch tương tác",
     mapBody:
-      "Ở đây núi không đứng một mình: sông luồn giữa đá, đền nép dưới cây, cố đô nằm gọn trong lòng thung. Chạm một điểm trên bản đồ, để nơi ấy tự kể chuyện của mình.",
+      "Bốn vùng lõi của di sản Tràng An nằm gọn trong khung hình này, cùng cố đô Hoa Lư và nhà thờ đá Phát Diệm ngoài phía biển. Chạm một điểm để nơi ấy tự kể chuyện của mình.",
     nearby: "Khám phá gần đây",
     discover: "Khám phá",
     add: "Thêm vào lịch trình",
@@ -267,7 +267,7 @@ const copy = {
     signatureStories: "Tuyến nổi bật",
     hiddenGems: "Những góc lặng ít người biết",
     hiddenGemsIntro:
-      "Chỗ vắng hơn, chậm hơn — nơi tiếng chèo khua nước còn nghe rõ hơn tiếng người.",
+      "Đầm Vân Long, động Am Tiên, chùa Bích Động, đền Thái Vi. Vắng hơn, và phần lớn khách đi Ninh Bình hai ngày sẽ không kịp tới.",
     seeAllDestinations: "Xem tất cả điểm đến",
     indexLabel: "Phần còn lại của bản đồ",
     indexTitle: "Mười nơi nữa, ít ai kịp đi hết.",
@@ -277,7 +277,7 @@ const copy = {
     zigzagLabel: "Toàn bộ điểm đến",
     zigzagTitle: "Mười lăm nơi, mười lăm nhịp thở khác nhau.",
     zigzagIntro:
-      "Có nơi chỉ đến được bằng thuyền, khi mái chèo khua vào vách đá dựng đứng. Nơi khác đổi lại bằng mấy trăm bậc đá giữa nắng. Lại có chỗ chẳng đòi gì, ngoài việc ngồi thật yên đợi đàn chim về lúc chiều buông.",
+      "Hang Múa đòi 486 bậc đá. Tam Cốc đòi hai tiếng ngồi thuyền qua ba cái hang sông Ngô Đồng khoét ra. Còn Vân Long thì chẳng đòi gì, ngoài việc ngồi thật yên và im lặng đủ lâu để đàn voọc chịu xuống.",
     zigzagCtaTitle: "Chưa biết nên bắt đầu từ đâu?",
     zigzagCtaBody:
       "Mười lăm nơi gói trong một vùng đất không rộng, mà mỗi nơi một nhịp riêng. Bạn cho chúng tôi biết mình có mấy ngày, đi với ai, muốn thong thả tới đâu — còn lại cứ để chúng tôi sắp.",
@@ -382,24 +382,24 @@ const cinematicClips: Record<Language, CinematicClip[]> = {
       start: 12,
       end: 30,
       poster: "/images/destinations/tam-coc.jpg",
-      eyebrow: "Sông nước Ninh Bình",
-      headline: "Người chèo đò ở đây chèo bằng chân, và đã chèo như thế cả đời.",
+      eyebrow: "Tuyến 1 · Tràng An",
+      headline: "Hang Tối dài ba trăm hai mươi mét. Thuyền phải đi hết chừng ấy trong bóng.",
     },
     {
       youTubeId: "0NHfpdPHFE4",
       start: 12,
       end: 29,
       poster: "/hero-ninh-binh.png",
-      eyebrow: "Giữa lòng thung",
-      headline: "Đá không chịu tránh, nên nước tự tìm lấy đường đi của mình.",
+      eyebrow: "Sông Ngô Đồng · Tam Cốc",
+      headline: "Sông Ngô Đồng không vòng qua núi. Nó khoét thẳng, thành ba cái hang.",
     },
     {
       youTubeId: "ZDCPQDr4YHE",
       start: 12,
       end: 30,
       poster: "/images/destinations/bai-dinh.jpg",
-      eyebrow: "Đất cố đô",
-      headline: "Vua chọn nơi này vì núi che được. Rồi cháu con thấy chật, và dời đi.",
+      eyebrow: "Cố đô Hoa Lư · 968–1010",
+      headline: "Ba trăm hecta, hai vòng thành, sáu vị vua. Rồi triều Lý dời đô, và Hoa Lư ở lại với núi.",
     },
   ],
   en: [
@@ -408,24 +408,24 @@ const cinematicClips: Record<Language, CinematicClip[]> = {
       start: 12,
       end: 30,
       poster: "/images/destinations/tam-coc.jpg",
-      eyebrow: "The waterways of Ninh Binh",
-      headline: "Seen from the water, the limestone stands far taller than it does from the bank.",
+      eyebrow: "Route 1 · Tràng An",
+      headline: "Hang Tối is 320 metres long. The boat goes through all of it in the dark.",
     },
     {
       youTubeId: "0NHfpdPHFE4",
       start: 12,
       end: 29,
       poster: "/hero-ninh-binh.png",
-      eyebrow: "Deep in the valley",
-      headline: "The limestone rises into walls, and the water simply slips between them.",
+      eyebrow: "The Ngô Đồng river · Tam Cốc",
+      headline: "The Ngô Đồng did not go around the mountain. It cut straight through, into three caves.",
     },
     {
       youTubeId: "ZDCPQDr4YHE",
       start: 12,
       end: 30,
       poster: "/images/destinations/bai-dinh.jpg",
-      eyebrow: "Land of the ancient capital",
-      headline: "A thousand years ago the capital of Dai Co Viet sat inside this ring of mountains.",
+      eyebrow: "Hoa Lư, the old capital · 968–1010",
+      headline: "Three hundred hectares, two rings of wall, six kings. Then the Lý court left, and Hoa Lư stayed with the mountains.",
     },
   ],
 };
@@ -449,9 +449,9 @@ const storyBeats: Record<Language, PinnedStoryBeat[]> = {
     {
       image: "/images/destinations/phat-diem.png",
       alt: "Stone and timber architecture at Phat Diem Cathedral",
-      eyebrow: "Phat Diem stone cathedral",
-      headline: "A Vietnamese communal-house roof, sitting on a Catholic cathedral.",
-      body: "People frame Ninh Bình as karst and river. Phát Diệm sits out toward the coast, built from stone and timber rather than concrete. Two architectural traditions meet here, and neither one gives way.",
+      eyebrow: "Phát Diệm stone cathedral · 1875–1899",
+      headline: "A Catholic cathedral, built to the shape of a Vietnamese village communal house.",
+      body: "Father Phêrô Trần Lục spent twenty-four years raising this twenty-two-hectare complex, finishing in 1899. The Phương Đình that stands at its centre is 21 metres across, 17 deep and 25 high — a bell tower carrying the exact silhouette of a village đình, and made of stone and timber rather than concrete.",
     },
   ],
   vi: [
@@ -472,9 +472,9 @@ const storyBeats: Record<Language, PinnedStoryBeat[]> = {
     {
       image: "/images/destinations/phat-diem.png",
       alt: "Kiến trúc đá và gỗ tại Nhà thờ đá Phát Diệm",
-      eyebrow: "Nhà thờ đá Phát Diệm",
-      headline: "Một mái đình Việt, đặt trên một nhà thờ Công giáo.",
-      body: "Người ta hay đóng khung Ninh Bình trong núi đá và sông nước. Phát Diệm nằm chếch về phía biển, dựng bằng đá và gỗ chứ không phải bê tông. Hai lối kiến trúc gặp nhau ở đây, và không bên nào phải nhường bên nào.",
+      eyebrow: "Nhà thờ đá Phát Diệm · 1875–1899",
+      headline: "Một nhà thờ Công giáo, dựng theo đúng dáng đình làng Việt.",
+      body: "Linh mục Phêrô Trần Lục mất hai mươi tư năm dựng quần thể hai mươi hai hecta này, tới năm 1899 mới xong. Phương Đình đứng giữa rộng 21 mét, sâu 17, cao 25 — một tháp chuông mang nguyên dáng đình làng, và làm bằng đá với gỗ chứ không phải bê tông.",
     },
   ],
 };
@@ -1228,19 +1228,21 @@ const paymentMethodsVi = ["Visa", "Mastercard", "JCB", "VietQR", "MoMo", "ZaloPa
 const ZIGZAG_FEATURED = 5;
 
 /*
- * VIET LAI TOAN BO 05/08. Ban cu bi chu du an che thang la "lon xon".
- * Doc lai thi dung: ba trong bon tieu de la DANH SACH DANH TU chong len
- * nhau ("Suong, thuyen va di san cham" / "Chua lon, co do, ho chua" /
- * "Bong rung va du lich tu te") -- chinh la loi dau tien trong danh sach
- * cam o UI_UX_RULES.md#voice-rules. Phan mo ta thi dinh tu noi bo ("duoc
- * bien tap") va cau chung chung ai cung viet duoc ("cho nguoi muon di
- * sau hon").
+ * VIET LAI LAN HAI, 06/08 -- lan nay theo luat "GOI TEN, DUNG TA" moi
+ * them vao UI_UX_RULES.md sau khi doi chieu voi muave.disantrangan.vn.
  *
- * Ban moi: moi tuyen mot cau co MOT y that, va phan mo ta chi dung du
- * kien da kiem chung san trong repo (Hoa Lu la kinh do Dai Co Viet toi
- * nam 1010, Cuc Phuong la vuon quoc gia dau tien cua Viet Nam -- ca hai
- * deu da tra nguon o dot 04/08, xem HANDOFF). Khong con danh sach danh
- * tu, khong con tu nghe nghiep.
+ * Ban truoc (05/08) van bi che thang, va che dung: "Kinh do cu nam giua,
+ * hai ngoi chua lon kep hai dau" la TA HINH HOC chu khong phai viet;
+ * "Ca buoi sang chi co tieng mai cheo" la khong khi suong, khong mang
+ * mot thong tin nao. Loi goc: dung DANH TU CHUNG (nui da voi, mat nuoc,
+ * mai cheo) trong khi trang doi thu dung DANH TU RIENG CO LICH SU DINH
+ * KEM (Phu Khong, Hang Dot, Duc Thanh Quy Minh Dai Vuong).
+ *
+ * Ban nay: moi tuyen deu co ten rieng + con so + moc lich su, TAT CA da
+ * tra nguon that ngay 06/08 (Wikipedia tieng Viet, bao Nhan Dan,
+ * VietnamPlus, cong thong tin tinh Ninh Binh, Vietnam Airlines Travel
+ * Guide). Nguon ghi trong REFERENCE_SITE_ANALYSIS.md. KHONG duoc them
+ * con so nao vao day ma chua tra nguon.
  */
 const routeCollections = [
   {
@@ -1248,12 +1250,12 @@ const routeCollections = [
     image: "/images/destinations/intro-trang-an-rain.png",
     kicker: { en: "By water", vi: "Đi bằng nước" },
     title: {
-      en: "A whole morning with nothing but an oar",
-      vi: "Cả buổi sáng chỉ có tiếng mái chèo",
+      en: "Nine caves at Tràng An, three at Tam Cốc, and your feet never touch the ground",
+      vi: "Chín hang ở Tràng An, ba hang ở Tam Cốc, cả ngày không đặt chân xuống đất",
     },
     body: {
-      en: "Tràng An before anyone has stirred the water, then Tam Cốc opening up between two walls of rock. Late afternoon at Thung Nham, sitting still while the birds come back.",
-      vi: "Tràng An lúc mặt nước chưa ai khuấy, rồi Tam Cốc mở ra giữa hai vách đá dựng. Chiều muộn về Thung Nham, ngồi thật yên đợi đàn chim kéo về.",
+      en: "Route 1 at Tràng An runs through nine caves and three shrines. Hang Tối alone is 320 metres of darkness, and Hang Nấu Rượu still carries the story of wine brewed for the king. At Tam Cốc it was the Ngô Đồng river itself that cut hang Cả, hang Hai and hang Ba clean through the limestone. Then Thung Nham, late, for the birds coming home.",
+      vi: "Tuyến 1 Tràng An đi qua chín hang và ba điểm tâm linh. Riêng Hang Tối là ba trăm hai mươi mét trong bóng, còn Hang Nấu Rượu tới giờ vẫn giữ tích nấu rượu tiến vua. Sang Tam Cốc thì chính sông Ngô Đồng đã khoét xuyên núi đá vôi thành hang Cả, hang Hai, hang Ba. Chiều muộn về Thung Nham đợi đàn chim.",
     },
     stops: ["trang_an", "tam_coc", "thung_nham"] as DestinationId[],
   },
@@ -1262,12 +1264,12 @@ const routeCollections = [
     image: "/images/destinations/editorial/bai-dinh-editorial.png",
     kicker: { en: "Capital and pagoda", vi: "Cố đô và chùa lớn" },
     title: {
-      en: "An old capital in the middle, a great pagoda at either end",
-      vi: "Kinh đô cũ nằm giữa, hai ngôi chùa lớn kẹp hai đầu",
+      en: "Six kings, three dynasties, and five hundred stone arhats",
+      vi: "Sáu vị vua, ba triều đại, và năm trăm pho tượng đá",
     },
     body: {
-      en: "Hoa Lư was the capital of Đại Cồ Việt until the court moved to Thăng Long and left this valley to the mountains. Bái Đính and Tam Chúc do the opposite: new, vast, and built so that you feel small.",
-      vi: "Hoa Lư từng là kinh đô Đại Cồ Việt, tới khi triều Lý dời ra Thăng Long và nơi này ở lại với núi. Bái Đính và Tam Chúc thì ngược hẳn: mới, rộng, và cố ý để người ta thấy mình bé lại.",
+      en: "In 968 Đinh Bộ Lĩnh put down the twelve warlords, took the throne and made Hoa Lư the capital of Đại Cồ Việt: three hundred hectares of inner and outer citadel, walls set straight against the cliffs. Six kings of three dynasties ruled from here before the Lý court moved to Thăng Long. Bái Đính answers differently — the old pagoda founded by the monk Nguyễn Minh Không in 1136, and the new one's arhat corridor running almost three kilometres past five hundred figures carved from Ninh Vân bluestone.",
+      vi: "Năm 968, Đinh Bộ Lĩnh dẹp xong loạn mười hai sứ quân, lên ngôi và chọn Hoa Lư làm kinh đô Đại Cồ Việt: ba trăm hecta thành Nội và thành Ngoại, tường thành dựa thẳng vào vách núi. Sáu vị vua của ba triều đại nối nhau ở đây, tới khi triều Lý dời ra Thăng Long. Bái Đính thì trả lời theo cách khác — chùa cổ do quốc sư Nguyễn Minh Không lập năm 1136, còn hành lang La Hán của chùa mới dài gần ba cây số với năm trăm pho tượng tạc từ đá xanh Ninh Vân.",
     },
     stops: ["bai_dinh", "hoa_lu_ancient_capital", "tam_chuc"] as DestinationId[],
   },
@@ -1276,12 +1278,12 @@ const routeCollections = [
     image: "/images/destinations/cuc-phuong.png",
     kicker: { en: "Westward", vi: "Ngả về phía tây" },
     title: {
-      en: "West, where the animals get the right of way",
-      vi: "Về phía tây, nơi con vật được ưu tiên hơn khách",
+      en: "Vietnam's first national park, and fewer than three hundred langurs left",
+      vi: "Vườn quốc gia đầu tiên của Việt Nam, và chưa tới ba trăm con voọc còn lại",
     },
     body: {
-      en: "Cúc Phương was Vietnam's first national park, and some of its trees stood here before there was a road in. Vân Long is quiet enough to hear a single oar. At the bear sanctuary, visitors come second.",
-      vi: "Cúc Phương là vườn quốc gia đầu tiên của Việt Nam, có những cây đứng đó từ trước khi có đường vào. Vân Long lặng tới mức nghe rõ một mái chèo. Còn ở khu bảo tồn gấu, khách là người đến sau.",
+      en: "Cúc Phương was declared in 1962, before Vietnam had a second national park to compare it with. Vân Long is the only wetland reserve in the country on the IUCN Green List, and most of the world's remaining Delacour's langurs live on those cliffs. At the bear sanctuary the order reverses: the animals were here first, and visitors keep to their side.",
+      vi: "Cúc Phương được lập năm 1962, khi Việt Nam còn chưa có vườn quốc gia thứ hai để mà so. Vân Long là khu đất ngập nước duy nhất của cả nước có tên trong Danh sách Xanh IUCN, và phần lớn số voọc mông trắng còn lại của thế giới sống trên đúng những vách núi ấy. Tới khu bảo tồn gấu thì thứ tự đảo lại: con vật ở đây trước, khách giữ phần mình.",
     },
     stops: ["cuc_phuong", "van_long", "bear_sanctuary"] as DestinationId[],
   },
@@ -1290,12 +1292,12 @@ const routeCollections = [
     image: "/images/destinations/hoa-lu-old-town.jpg",
     kicker: { en: "Into the evening", vi: "Về chiều" },
     title: {
-      en: "Climb for the height, come down for the light",
-      vi: "Trèo lên cho cao, rồi xuống cho chậm",
+      en: "486 steps up Ngọa Long, two hundred down into Am Tiên",
+      vi: "Bốn trăm tám mươi sáu bậc lên Ngọa Long, hai trăm bậc xuống Am Tiên",
     },
     body: {
-      en: "Hang Múa asks for a few hundred stone steps and hands back the whole Tam Cốc valley below. Then you come down, Hoa Lư Old Town lights its lanterns, and the day closes slower than it opened.",
-      vi: "Hang Múa bắt trả bằng mấy trăm bậc đá, đổi lại là cả vùng Tam Cốc mở ra dưới chân. Xuống núi thì Phố cổ Hoa Lư vừa lên đèn, và ngày khép lại chậm hơn lúc nó bắt đầu.",
+      en: "Hang Múa charges 486 stone steps along the flank of Ngọa Long and hands back the whole Tam Cốc valley. Động Am Tiên asks the opposite: two hundred steps down into a closed valley where the dowager empress Dương Vân Nga took vows at the end of her life, and where Đinh Tiên Hoàng once kept tigers to punish the condemned. Come down to Hoa Lư Old Town as the lanterns go up.",
+      vi: "Hang Múa bắt trả bằng 486 bậc đá dọc sườn Ngọa Long, đổi lại là cả thung lũng Tam Cốc dưới chân. Động Am Tiên thì đòi ngược lại: hơn hai trăm bậc xuống một thung kín, nơi Thái hậu Dương Vân Nga về tu những năm cuối đời, và cũng là nơi Đinh Tiên Hoàng từng nuôi hổ báo để trị tội. Xuống tới Phố cổ Hoa Lư thì đèn lồng vừa lên.",
     },
     stops: ["hang_mua", "hoa_lu_old_town", "am_tien"] as DestinationId[],
   },

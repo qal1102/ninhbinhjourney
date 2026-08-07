@@ -112,13 +112,36 @@ export function ErpMobileMenu({
                   </div>
                 </>
               ) : null}
-            </nav>
 
-            {roleSwitchEnabled ? (
-              <div className="border-t border-[#dce3de] p-4">
-                <RoleSwitchControl currentUserId={actingAsUserId} targets={roleSwitchTargets} />
-              </div>
-            ) : null}
+              {/*
+                Khối đổi vai trò phải nằm BÊN TRONG <nav> — vùng duy nhất
+                cuộn được (`overflow-y-auto`) của ngăn kéo.
+
+                Trước 07/08 nó là một khối riêng kẹp giữa </nav> và form
+                đăng xuất, tức nằm ở phần ĐÁY CỐ ĐỊNH. Ngăn kéo lại đặt
+                `overflow-hidden`, nên bảng chọn thả xuống tràn khỏi đáy
+                rồi bị cắt: đo thật trên production khổ 390×844 thì nút
+                "Xem thử" rơi xuống y=940, thò ra ngoài 96px — không nhìn
+                thấy, không chạm tới. Đó là lỗi "trên điện thoại không
+                switch được".
+
+                Nay: nằm trong vùng cuộn + `variant="inline"` (bảng chọn
+                đẩy nội dung xuống thay vì đè lên), nên dù danh sách tài
+                khoản dài bao nhiêu vẫn cuộn tới được.
+              */}
+              {roleSwitchEnabled ? (
+                <div className="mt-6 border-t border-[#dce3de] pt-4">
+                  <p className="px-2 pb-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#718078]">
+                    Xem thử theo vai trò
+                  </p>
+                  <RoleSwitchControl
+                    currentUserId={actingAsUserId}
+                    targets={roleSwitchTargets}
+                    variant="inline"
+                  />
+                </div>
+              ) : null}
+            </nav>
 
             <form action={logoutErpAction} className="border-t border-[#dce3de] p-4">
               <button type="submit" className="min-h-11 w-full rounded-xl border border-[#cfd9d3] bg-white text-sm font-black text-[#4d6057]">Đăng xuất</button>

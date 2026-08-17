@@ -46,6 +46,8 @@ Hai thứ, **không ngang nhau**:
 
 Nguyên tắc chọn việc: **việc nào làm buổi demo ERP thuyết phục hơn thì làm trước.**
 
+> ⚠️ **Đã bị điều chỉnh từ 17/08/2026.** Phiếu giao việc số 01 (`docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`) đảo ưu tiên: **lớp khách hàng Gói A đi trước**, với hai điều kiện cứng — không phá vỡ bất kỳ chức năng ERP nào đang chạy, và tái sử dụng tối đa phần lõi đã có (T8, T11a) thay vì xây nguồn dữ liệu thứ hai. Thứ tự ưu tiên gốc ở trên (và câu tương ứng ở `AGENTS.md`) **giữ lại làm lịch sử, không còn là luật hiện hành.** Buổi demo ERP đã diễn ra và chủ đầu tư đã dùng thử cả ERP lẫn web — mối quan tâm họ nêu là **năng lực thu và dùng dữ liệu khách du lịch**, xem `docs/plans/GOI_A_KE_HOACH.md` mục 4.
+
 ---
 
 ## 2. Hiện trạng — đã đổi những gì trong đợt vừa rồi
@@ -375,6 +377,10 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 
 **T0, T6b bước 1, T14 bước 1, T13 đã xong và đã xác minh trên production — xem mục 0.** Hàng dưới đây là phần chưa làm.
 
+> 🟦 **Việc đang mở, ưu tiên cao nhất từ 17/08/2026 — GÓI A (lớp khách hàng, thí điểm Tam Cốc).** Đề bài: `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Nhiệm vụ A0 (khảo sát + kế hoạch, **chưa được viết mã**) đã khảo sát xong phần mã nguồn, bản nháp ở `docs/plans/GOI_A_KE_HOACH.md` — **chưa đóng, chưa được duyệt, chưa được sang A1.** Còn thiếu hai đầu vào: (1) file `Bao_cao_tong_the_he_sinh_thai_so_du_lich_Ninh_Binh.docx` chủ dự án chưa copy vào `docs/reference/`; (2) nội dung góp ý và câu hỏi thật của chủ đầu tư sau buổi demo. Phiếu này **điều chỉnh ưu tiên ở mục 1 bên trên** — xem mục 5 của bản kế hoạch trước khi làm gì khác.
+>
+> Ba phát hiện của A0 đáng đọc ngay: (a) lớp khách hàng Gói A **đã được thiết kế sẵn và đang nằm chết** trong migration nền — T12 định xoá đúng đống đó, đã chặn ở hàng T12 dưới đây; (b) quyết định kỹ thuật đã chọn là **vé web ghi thẳng vào `erp_tickets`** (`channel = 'website'` đã có sẵn trong check constraint T8), lớp khách là bảng mới bọc quanh; (c) **web công khai hiện thu đúng 0 dữ liệu khách du lịch** — `/plan` dựng lịch trình xong thì vứt đi vì `app/api/journeys/route.ts` chỉ ghi khi có cookie demo room, mà `/demo/join` đã 404 từ T2.
+
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|
 | — | **T14b** | ✅ **Danh bạ nhân sự đọc từ registry** | `lib/erp/staff-directory.ts` là nguồn duy nhất cho cả hai màn hình. **Phần khó không nằm ở danh sách:** `startRoleSwitch`/`endRoleSwitch` và nhánh cookie của `getCurrentErpUser` đều tra qua `findDemoErpAccountById`, nên chỉ đổi danh sách thì tên hiện ra mà bấm "Xem thử" vẫn báo "Không tìm thấy tài khoản" — đã thêm `resolveSwitchIdentity` tra ở cả hai kho. Registry **không giữ hồ sơ đào tạo**: tài khoản còn hồ sơ mẫu giữ nguyên giới hạn `trainedModuleIds`, tài khoản mới được mọi module `employeeAssignable` và màn hình nói thẳng là chưa có hồ sơ đào tạo. 8 unit test + `prod-smoke-t14b-directory.spec.ts` (tự dọn dẹp) + 3 spec hồi quy — **8/8 xanh trên production**, đã xác minh bằng SQL rằng cả 8 tài khoản thử đều `suspended` |
@@ -384,7 +390,7 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 | — | **W5** | ✅ **Sửa định danh media + dựng lại route/index public** | **Đã lên production 07/08.** Ba cinematic đã ánh xạ lại bằng tiêu đề nguồn + frame thật; route đổi ảnh theo từng chặng; “Mười nơi nữa” thành split-screen sticky preview. Commit app `31419a4`, deployment `dpl_HU8nyRaynxFPgV7tRJy8kuMKrvgx`; smoke chi tiết ở mục 2.6 |
 | — | **T11** | ✅ **Sức chứa thật + SOP Go/No-Go đã deploy/smoke** | T11a có ngưỡng theo mô hình vật lý và proxy T8. T11b có workflow quản lý gửi → giám đốc quyết định, critical fail chặn GO, risk acceptance bằng văn bản, row lock/version/idempotency/audit. Migration `038`, round-trip `ROLLBACK`, deployment `dpl_EDmSydtVcUTkBEJFEPf6gXFqtJ6A` và smoke 4/4 đã xác minh production; không để lại dữ liệu thử. SOP tổ chức chính thức và lịch diễn tập vẫn chưa có, không nằm trong tuyên bố hoàn tất này |
 | 6 | **T6c** | **RLS thật thay cho service role + TypeScript** | Việc lớn nhất, dễ bỏ dở nhất, tách khỏi T6b có chủ đích. Viết lại 143 policy theo `erp_account_role_assignments`. Chỉ bắt đầu khi đủ thời gian đi hết |
-| 7 | **T12** | **Dọn ~20 bảng chết của `/ops`** | **Hoãn có lý do:** phải sau khi T6/T7 chạy thật trên production — **điều kiện này đã đạt (mục 0), làm được rồi** |
+| 7 | **T12** | **Dọn ~20 bảng chết của `/ops`** | ⛔ **DỪNG — đừng làm T12 lúc này.** Điều kiện cũ (T6/T7 chạy thật) đã đạt, nhưng khảo sát A0 ngày 17/08 phát hiện **~20 bảng "chết" đó chính là lớp khách hàng Gói A**: `capacity_slots`, `bookings`, `booking_lines`, `payment_intents`, `passes`, `redemptions`, `qr_sources`, `analytics_events`. Xoá trước khi Gói A thu hoạch xong thiết kế là mất trắng phần việc đã làm. Chi tiết ở `docs/plans/GOI_A_KE_HOACH.md` mục 1 |
 | 8 | **T16** | **Migration xoá dữ liệu mồi để nhập dữ liệu thật** | **Làm cuối cùng**, khi không còn gì nhét cứng (T14b + W4 xong — `demo-data.ts` chỉ hết vai trò hoàn toàn khi T14b dứt điểm luôn hai màn hình liệt kê còn lại). Xoá theo điều kiện hẹp (`id like 'INC-%'`, `metadata->>'seed' = 'true'`), **không truncate, không xoá theo khoảng thời gian**. Giữ nguyên cấu hình. Xem `SO_TAY_HE_THONG_VI.md` mục 7 |
 | — | **W1** | Dựng lại luồng QR pass **trên `erp_tickets`** (T8 đã tạo nền) | |
 | — | **W2** | Quyết định mô hình thanh toán thật | Quyết định kinh doanh |
@@ -416,6 +422,8 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 | File | Đọc khi |
 |---|---|
 | **`SO_TAY_HE_THONG_VI.md`** | **Cần hiểu hệ thống này là gì, có chức năng gì, vận hành theo nguyên tắc nào.** Viết cho cả khách hàng lẫn phiên làm việc sau. Mô tả *thiết kế*, không mô tả hiện trạng — hiện trạng chỉ nằm ở file này. Chứa đặc tả đầy đủ của T14 (hồ sơ) và T15 (nhật ký) |
+| **`PHIEU_GIAO_VIEC_01_GOI_A.md`** | **Bắt đầu bất kỳ nhiệm vụ A0–A6 nào.** Đề bài gốc của Gói A (lớp khách hàng, thí điểm Tam Cốc) do chủ dự án giao 17/08/2026, kèm 7 dòng nghiệm thu đợt và 3 tình huống bắt buộc dừng lại hỏi |
+| `CAC_DIEM_CAN_QUYET_DINH_TAM_COC.md` | Cần biết quyết định nào của chủ đầu tư đang chặn việc gì. 8 câu hỏi phía mình đã gửi, **chưa có câu trả lời**; điểm 2/6/8 chặn tiến độ trực tiếp |
 | `KE_HOACH_HOP_NHAT_TAI_KHOAN.md` | Bắt đầu T6b (đăng nhập Supabase Auth) |
 | `TIEU_CHI_NGHIEM_THU.md` | Cần biết định nghĩa "xong" của từng module |
 | `TAI_LIEU_KHACH_HANG_CUNG_CAP_VI.md` | Cần đối chiếu yêu cầu gốc của khách |

@@ -11,7 +11,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `docs/reference/` is consulted **only** when you start the specific task that needs it; `docs/HANDOFF.md` says which file maps to which task.
 - `docs/archive/` is historical evidence. Never conclude current state from it.
 - After finishing a task, update the state, defect and work-queue sections of `docs/HANDOFF.md`. **Do not create another status document** — a sprawl of 17 overlapping docs is exactly what this structure replaced.
-- Priority is fixed: the internal ERP comes first and must reach production quality; the visitor-facing web comes later. Do not trade ERP quality for web work.
+- ~~Priority is fixed: the internal ERP comes first and must reach production quality; the visitor-facing web comes later. Do not trade ERP quality for web work.~~ **Superseded on 17/08/2026** by work order 01 (`docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`): the visitor-facing layer (Gói A) now comes first, under two hard conditions — break no running ERP feature, and reuse the existing core (T8 tickets, T11a capacity) rather than building a second source of truth. ERP quality is still not tradeable; it is simply no longer the thing being extended.
 
 ## Ninh Binh Journey UI/UX
 

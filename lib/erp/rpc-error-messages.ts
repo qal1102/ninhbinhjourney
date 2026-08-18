@@ -381,6 +381,36 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CAPACITY_UNAVAILABLE: "Khung giờ này đã hết chỗ.",
   QUOTE_EXPIRED: "Báo giá đã hết hiệu lực. Hãy tạo lại báo giá mới.",
 
+  // --- Dữ liệu khách hàng (CUS-01) ---
+  CUSTOMER_EVENT_ID_REQUIRED:
+    "Event khách hàng thiếu mã event, mã ẩn danh hoặc mã phiên.",
+  CUSTOMER_EVENT_SCHEMA_UNSUPPORTED:
+    "Event khách hàng không thuộc phiên bản tracking contract đang hỗ trợ.",
+  CUSTOMER_EVENT_TIME_INVALID:
+    "Thời điểm event khách hàng quá cũ hoặc nằm trong tương lai.",
+  CUSTOMER_EVENT_PAYLOAD_INVALID:
+    "Payload event khách hàng sai định dạng hoặc vượt giới hạn kích thước.",
+  CUSTOMER_EVENT_PII_FORBIDDEN:
+    "Event analytics không được chứa email, số điện thoại, tên hoặc dữ liệu định danh trực tiếp.",
+  CUSTOMER_ANALYTICS_CONSENT_REQUIRED:
+    "Không được ghi hành vi khi khách chưa cho phép analytics theo chính sách hiện hành.",
+  CUSTOMER_SESSION_ID_COLLISION:
+    "Mã phiên khách hàng đã thuộc về một hồ sơ khác; không được tự ghép hai hồ sơ.",
+  CUSTOMER_EVENT_ID_COLLISION:
+    "Mã event đã được dùng cho một payload khác; hãy tạo mã mới thay vì ghi đè lịch sử.",
+  CUSTOMER_PROFILE_NOT_FOUND:
+    "Không tìm thấy hồ sơ khách hàng trong đơn vị hiện tại.",
+  CUSTOMER_IDENTITY_INPUT_INVALID:
+    "Định danh khách hàng phải được băm và mã hóa đúng hợp đồng trước khi lưu.",
+  CUSTOMER_IDENTITY_MERGE_REQUIRED:
+    "Số điện thoại hoặc email này đã thuộc hồ sơ khác; cần đi qua luồng hợp nhất có kiểm soát.",
+  CUSTOMER_CONSENT_INPUT_INVALID:
+    "Bản ghi consent thiếu purpose, trạng thái, kênh, phiên bản chính sách hoặc thời điểm hợp lệ.",
+  CUSTOMER_CONSENT_PII_FORBIDDEN:
+    "Bằng chứng consent không được chứa email, số điện thoại, tên hoặc nội dung tự do của khách.",
+  CUSTOMER_HISTORY_IMMUTABLE:
+    "Lịch sử định danh, consent và event khách hàng chỉ được ghi thêm, không sửa hoặc xóa trực tiếp.",
+
   // --- Đối soát tiền mặt (T10b) ---
   CASH_DEPOSIT_INPUT_INVALID: "Thông tin lượt nộp quỹ chưa hợp lệ.",
   CASH_ACCOUNTANT_ROLE_REQUIRED:

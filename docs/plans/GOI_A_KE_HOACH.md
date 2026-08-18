@@ -149,7 +149,7 @@ Mỗi event dùng `event_name` ổn định; thay đổi ý nghĩa phải tăng 
 | `contact_submitted` | khách chủ động gửi contact để nhận/lưu dịch vụ | Event chỉ giữ `customer_profile_id`, `purpose`; contact mã hoá/chuẩn hoá ở kho identity riêng |
 | `identity_linked` | server nối anonymous profile vào profile có danh | Ghi phương thức và lý do; không ghi giá trị contact raw |
 | `consent_updated` | đồng ý/rút lại từng purpose | Ghi `purpose`, `status`, `policy_version`, `channel`, thời điểm và evidence |
-| `marketing_message_outcome` | connector trả sent/delivered/open/click/bounce/unsubscribe | Chỉ được tạo khi có marketing consent hợp lệ tại thời điểm gửi |
+| `marketing_message_outcome` | connector trả sent/delivered/open/click/bounce/unsubscribe | Dùng `external_delivery_id`; chỉ được tạo khi có marketing consent hợp lệ tại thời điểm gửi |
 
 ### 4.4 Quy tắc đo “khách đứng ở đâu bao lâu”
 
@@ -256,21 +256,25 @@ Mỗi rule có `rule_version`, `reason_code`, thời hạn hiệu lực và ngư
 
 ---
 
-## 9. Các phase thi hành và gate
+## 9. Các phase thi hành, model khuyến nghị và gate
 
-| Phase | Mục tiêu | Đầu ra chính | Gate trước khi push |
-|---|---|---|---|
-| **CUS-00** | Khóa baseline, KPI, taxonomy, privacy và thứ tự | Tài liệu này + HANDOFF | diff sạch, dẫn chứng source/deploy, không tuyên bố code đã có |
-| **CUS-01** | Identity, consent và event backbone | migration + contract tests + server ingestion API | RLS; idempotency; PII không lọt event; consent tách biệt; migration rollback/transaction test |
-| **CUS-02** | Thu hành vi web | SDK first-party + section/dwell/scroll/click + source context | unit + Playwright; reduced motion không liên quan tracking; không double event; beacon/pagehide test |
-| **CUS-03** | Lưu intent `/plan` và Customer 360 ERP | anonymous journey persistence + timeline/profile view | ordinary visitor persist được; ERP RBAC; không cần contact; số có provenance |
-| **CUS-04** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | redirect/đổi đích/dedupe; source sống qua route; không open redirect |
-| **CUS-05** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | essential ≠ marketing; revoke test; masking/RBAC/audit |
-| **CUS-06** | Gói A booking trên lõi ERP | slot/order/hold/payment giả lập/issue T8 ticket | concurrency không oversell; T11a là nguồn công suất; không alter lõi ERP |
-| **CUS-07** | Recommendation + omnichannel adapters | rule engine, ERP action queue, connector contract | explainable; frequency cap; opt-out; idempotent outbound |
-| **CUS-08** | Offline gate + unified funnel + release | A3 scan offline, dashboard xuyên nguồn, full acceptance | sync không mất/trùng; dashboard reconciliation; full regression + production smoke |
+**Quy tắc bàn giao model:** trước khi bắt đầu mỗi phase, phải ghi model/mức reasoning khuyến nghị vào `docs/HANDOFF.md` và báo cho chủ dự án. Nếu phiên đang chạy không tự đổi model được, dừng ở ranh giới phase để chủ dự án đổi thủ công. Không đổi giữa chừng khi migration hoặc transaction test đang dở.
 
-Mỗi phase hoàn chỉnh phải: cập nhật `docs/HANDOFF.md`, commit riêng, push `main`, ghi SHA và cái chưa chứng minh. Với schema/RLS/migration hoặc release gate dùng reasoning cao; phần UI/test/doc thông thường dùng cấu hình tiết kiệm hơn.
+| Phase | Model khuyến nghị | Mục tiêu | Đầu ra chính | Gate trước khi push |
+|---|---|---|---|---|
+| **CUS-00** | **5.6 Terra / Medium** | Khóa baseline, KPI, taxonomy, privacy và thứ tự | Tài liệu này + HANDOFF | diff sạch, dẫn chứng source/deploy, không tuyên bố code đã có |
+| **CUS-01 — code hoàn tất 18/08** | **5.6 Sol / High** | Identity, consent và event backbone | migration + contract tests + server ingestion API | ✅ RLS/grant; idempotency; PII guard; consent tách biệt; PostgreSQL transaction test. Chưa apply Supabase production |
+| **CUS-02** | **5.6 Terra / High** | Thu hành vi web | SDK first-party + section/dwell/scroll/click + source context | unit + Playwright; reduced motion không liên quan tracking; không double event; beacon/pagehide test |
+| **CUS-03** | **5.6 Terra / High**; nâng **Sol / High** nếu chạm RLS | Lưu intent `/plan` và Customer 360 ERP | anonymous journey persistence + timeline/profile view | ordinary visitor persist được; ERP RBAC; không cần contact; số có provenance |
+| **CUS-04** | **5.6 Terra / High** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | redirect/đổi đích/dedupe; source sống qua route; không open redirect |
+| **CUS-05** | **5.6 Sol / High** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | essential ≠ marketing; revoke test; masking/RBAC/audit |
+| **CUS-06** | **5.6 Sol / High** | Gói A booking trên lõi ERP | slot/order/hold/payment giả lập/issue T8 ticket | concurrency không oversell; T11a là nguồn công suất; không alter lõi ERP |
+| **CUS-07** | **5.6 Terra / High**; nâng **Sol / High** cho outbound consent/security | Recommendation + omnichannel adapters | rule engine, ERP action queue, connector contract | explainable; frequency cap; opt-out; idempotent outbound |
+| **CUS-08** | **5.6 Sol / High** | Offline gate + unified funnel + release | A3 scan offline, dashboard xuyên nguồn, full acceptance | sync không mất/trùng; dashboard reconciliation; full regression + production smoke |
+
+**Luna chỉ dùng cho việc cơ học đã khóa contract** như đổi tên hàng loạt, dựng fixture, cập nhật copy hoặc bổ sung test lặp; không giao Luna tự quyết migration, RLS, identity merge, consent, concurrency, offline reconciliation hay release gate.
+
+Mỗi phase hoàn chỉnh phải: cập nhật `docs/HANDOFF.md`, commit riêng, push `main`, ghi SHA và cái chưa chứng minh. Khi chuyển phase phải báo lại model khuyến nghị trước khi viết code.
 
 ---
 
@@ -309,4 +313,27 @@ Gate cục bộ ngày 18/08/2026 trên source nền hiện hành:
 
 `npm ci` báo 7 advisory trong dependency tree (4 moderate, 3 high). CUS-00 không tự chạy `npm audit fix` vì nâng dependency nằm ngoài phase và phải được kiểm chứng riêng; advisory này không được coi là đã xử lý.
 
-Việc kế tiếp là **CUS-01 — migration identity/consent/event backbone**, sau đó CUS-02 mới gắn collector vào web. Thứ tự này quan trọng: nếu gắn click/dwell trước khi có schema, consent và idempotency thì chỉ tạo một đống log không thể tin cậy hoặc sử dụng an toàn.
+CUS-01 đã được thực hiện sau baseline này; việc kế tiếp là CUS-02 gắn collector vào web. Thứ tự đó quan trọng: nếu gắn click/dwell trước khi có schema, consent và idempotency thì chỉ tạo một đống log không thể tin cậy hoặc sử dụng an toàn.
+
+---
+
+## 12. Kết quả CUS-01 — code hoàn tất, chờ apply production
+
+Đã xây:
+
+- migration `202608180039_customer_data_backbone.sql` với 5 bảng production-shaped: profile ẩn danh, identity digest+ciphertext, consent history, session và event;
+- ba RPC chỉ `service_role`: ingest event, nối identity đã mã hóa, ghi consent;
+- event/session idempotency và collision guard; event/consent/identity history append-only;
+- PII guard đệ quy ở cả TypeScript và PostgreSQL; event properties/source dùng whitelist;
+- endpoint same-origin `/api/customer-events`, giới hạn 32 KiB, fail closed khi `CUSTOMER_DATA_INGESTION_ENABLED` chưa bằng `true`;
+- 22 bài targeted mới cho migration/domain/API và câu tiếng Việt cho toàn bộ mã từ chối mới.
+
+Bằng chứng 18/08/2026:
+
+- PostgreSQL 15 thật: migration apply sạch; transaction test trả lần đầu `inserted=true`, gửi lại cùng payload `false`; direct insert, PII và sửa history đều bị chặn; identity/consent round-trip pass; toàn bộ rollback, không để dữ liệu.
+- Hai lỗi chỉ lộ khi chạy PostgreSQL thật đã được bắt và sửa: không được schema-qualify SQL construct `greatest`, và output parameter `event_id` làm `on conflict (event_id)` mơ hồ.
+- `npm run typecheck`: pass; `npm run lint`: pass; Vitest 72 file/513 test pass, 1 file/1 test skip có chủ đích; `npm run build`: pass, có route `/api/customer-events`.
+
+**Chưa chứng minh:** migration 039 chưa apply/verify trên Supabase production; endpoint chưa bật và chưa có collector web, nên production chưa thu event khách. Đây là staged release có chủ đích, không phải customer analytics đã live.
+
+**Ranh giới model tiếp theo:** trước khi làm CUS-02, chuyển sang **5.6 Terra / High**. CUS-02 là instrumentation web và browser lifecycle; chỉ nâng lại Sol nếu phát sinh thay đổi schema/RLS ngoài contract CUS-01.

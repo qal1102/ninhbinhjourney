@@ -2,7 +2,7 @@
 
 > **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
 >
-> Cập nhật: **18/08/2026** — CUS-00/A0 đã khóa baseline, KPI, taxonomy hành vi, ranh giới consent/privacy và lộ trình customer data → marketing → bán dịch vụ. Gate cục bộ sạch: typecheck, lint, build; 491 test pass + 1 skip có chủ đích. Đây là phase tài liệu; chưa có collector hay Customer 360 production.
+> Cập nhật: **18/08/2026** — CUS-01 đã hoàn tất code/migration backbone và qua PostgreSQL transaction test + full local gate. Migration 039 chưa apply Supabase production, feature flag ingestion vẫn mặc định off; production chưa thu event khách.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -379,11 +379,13 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 
 **T0, T6b bước 1, T14 bước 1, T13 đã xong và đã xác minh trên production — xem mục 0.** Hàng dưới đây là phần chưa làm.
 
-> 🟦 **Việc đang mở, ưu tiên cao nhất từ 18/08/2026 — CUS-01: identity, consent và event backbone.** CUS-00/A0 đã **PASS phần baseline/kế hoạch**, được chốt theo phản hồi thật của chủ đầu tư và quyết định data-first của chủ dự án. Đầu ra ở `docs/plans/GOI_A_KE_HOACH.md`: KPI tree, tracking plan v1, quy tắc active dwell/scroll/click, event envelope, phân loại PII/consent, connector contract, recommendation guardrail và lộ trình CUS-01 → CUS-08.
+> ✅ **CUS-01 hoàn tất phần code ngày 18/08/2026:** migration `202608180039_customer_data_backbone.sql`, event contract, repository và `/api/customer-events`. PostgreSQL 15 thật đã apply migration sạch; transaction test chứng minh event lần đầu insert, gửi lại idempotent, collision/PII/direct write/history mutation bị chặn, identity digest+ciphertext và consent append-only ghi được; tất cả rollback sạch. Full gate: typecheck/lint/build pass, 72 file/513 test pass + 1 skip có chủ đích.
 >
-> Baseline không được quên: (a) T8 `erp_tickets` là chuẩn vé duy nhất; (b) T11a `erp_capacity_thresholds` là chuẩn công suất duy nhất; (c) `analytics_events` và lớp booking cũ gắn demo run, chưa phải customer data production; (d) `/plan` của khách thường trả `persisted: false`; (e) chưa có collector section/dwell/scroll/click. CUS-01 chỉ dựng schema/API với dữ liệu giả lập, chưa thu contact thật hay gửi marketing thật. Báo cáo chiến lược gốc vẫn thiếu nhưng không chặn backbone giả lập.
+> **Chưa live:** migration 039 chưa được apply/verify trên Supabase production; `CUSTOMER_DATA_INGESTION_ENABLED` chưa bật; chưa có browser collector. Push/deploy code ở trạng thái này không tự thu dữ liệu người thật và endpoint fail closed 503.
 >
-> **Gate CUS-00:** `typecheck` pass; `lint` pass; Vitest 69 file/491 test pass, 1 file/1 test skip có chủ đích; `build` pass. `npm ci` báo 7 advisory dependency (4 moderate, 3 high), chưa tự động sửa vì nằm ngoài phase. Production trước thay đổi docs đã kiểm tra `Ready`, `/`, `/erp`, `/api/health` đều HTTP 200; không chạy lại Supabase remote migration list do CLI chưa có trên máy này.
+> 🟦 **Việc kế tiếp — CUS-02: collector page/section/active dwell/scroll/click. Model khuyến nghị trước khi bắt đầu: `5.6 Terra / High`.** Lý do: phần lớn là browser lifecycle, batching/beacon và Playwright; contract dữ liệu đã khóa. Nâng lại `5.6 Sol / High` nếu buộc phải đổi migration/RLS/consent. Không giao Luna tự quyết instrumentation lifecycle; Luna chỉ bổ sung fixture/test lặp sau khi implementation chính đã khóa.
+>
+> Bảng model toàn bộ CUS-00→CUS-08 ở `docs/plans/GOI_A_KE_HOACH.md` mục 9. Mỗi lần chuyển phase phải báo chủ dự án trước để đổi model thủ công nếu phiên không tự đổi được.
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|

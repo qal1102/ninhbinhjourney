@@ -2,7 +2,7 @@
 
 > **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
 >
-> Cập nhật: **07/08/2026** — T11b Go/No-Go đã lên production, qua cổng local, smoke chỉ-đọc và kiểm tra trực quan mobile/desktop; T11 hoàn tất đúng phạm vi sức chứa + cổng mở cửa.
+> Cập nhật: **18/08/2026** — CUS-00/A0 đã khóa baseline, KPI, taxonomy hành vi, ranh giới consent/privacy và lộ trình customer data → marketing → bán dịch vụ. Gate cục bộ sạch: typecheck, lint, build; 491 test pass + 1 skip có chủ đích. Đây là phase tài liệu; chưa có collector hay Customer 360 production.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -47,6 +47,8 @@ Hai thứ, **không ngang nhau**:
 Nguyên tắc chọn việc: **việc nào làm buổi demo ERP thuyết phục hơn thì làm trước.**
 
 > ⚠️ **Đã bị điều chỉnh từ 17/08/2026.** Phiếu giao việc số 01 (`docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`) đảo ưu tiên: **lớp khách hàng Gói A đi trước**, với hai điều kiện cứng — không phá vỡ bất kỳ chức năng ERP nào đang chạy, và tái sử dụng tối đa phần lõi đã có (T8, T11a) thay vì xây nguồn dữ liệu thứ hai. Thứ tự ưu tiên gốc ở trên (và câu tương ứng ở `AGENTS.md`) **giữ lại làm lịch sử, không còn là luật hiện hành.** Buổi demo ERP đã diễn ra và chủ đầu tư đã dùng thử cả ERP lẫn web — mối quan tâm họ nêu là **năng lực thu và dùng dữ liệu khách du lịch**, xem `docs/plans/GOI_A_KE_HOACH.md` mục 4.
+
+> ✅ **Chốt tiếp ngày 18/08/2026:** chủ dự án duyệt hướng data-first: đo section/dwell/scroll/click, gom nguồn marketing, dựng Customer 360 và recommendation để bán dịch vụ. Thứ tự hiện hành là CUS-01 → CUS-08 trong kế hoạch Gói A; CUS-00 đã đóng. Chỉ dùng dữ liệu giả lập cho tới khi pháp nhân dữ liệu và consent được duyệt.
 
 ---
 
@@ -377,9 +379,11 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 
 **T0, T6b bước 1, T14 bước 1, T13 đã xong và đã xác minh trên production — xem mục 0.** Hàng dưới đây là phần chưa làm.
 
-> 🟦 **Việc đang mở, ưu tiên cao nhất từ 17/08/2026 — GÓI A (lớp khách hàng, thí điểm Tam Cốc).** Đề bài: `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Nhiệm vụ A0 (khảo sát + kế hoạch, **chưa được viết mã**) đã khảo sát xong phần mã nguồn, bản nháp ở `docs/plans/GOI_A_KE_HOACH.md` — **chưa đóng, chưa được duyệt, chưa được sang A1.** Còn thiếu hai đầu vào: (1) file `Bao_cao_tong_the_he_sinh_thai_so_du_lich_Ninh_Binh.docx` chủ dự án chưa copy vào `docs/reference/`; (2) nội dung góp ý và câu hỏi thật của chủ đầu tư sau buổi demo. Phiếu này **điều chỉnh ưu tiên ở mục 1 bên trên** — xem mục 5 của bản kế hoạch trước khi làm gì khác.
+> 🟦 **Việc đang mở, ưu tiên cao nhất từ 18/08/2026 — CUS-01: identity, consent và event backbone.** CUS-00/A0 đã **PASS phần baseline/kế hoạch**, được chốt theo phản hồi thật của chủ đầu tư và quyết định data-first của chủ dự án. Đầu ra ở `docs/plans/GOI_A_KE_HOACH.md`: KPI tree, tracking plan v1, quy tắc active dwell/scroll/click, event envelope, phân loại PII/consent, connector contract, recommendation guardrail và lộ trình CUS-01 → CUS-08.
 >
-> Ba phát hiện của A0 đáng đọc ngay: (a) lớp khách hàng Gói A **đã được thiết kế sẵn và đang nằm chết** trong migration nền — T12 định xoá đúng đống đó, đã chặn ở hàng T12 dưới đây; (b) quyết định kỹ thuật đã chọn là **vé web ghi thẳng vào `erp_tickets`** (`channel = 'website'` đã có sẵn trong check constraint T8), lớp khách là bảng mới bọc quanh; (c) **web công khai hiện thu đúng 0 dữ liệu khách du lịch** — `/plan` dựng lịch trình xong thì vứt đi vì `app/api/journeys/route.ts` chỉ ghi khi có cookie demo room, mà `/demo/join` đã 404 từ T2.
+> Baseline không được quên: (a) T8 `erp_tickets` là chuẩn vé duy nhất; (b) T11a `erp_capacity_thresholds` là chuẩn công suất duy nhất; (c) `analytics_events` và lớp booking cũ gắn demo run, chưa phải customer data production; (d) `/plan` của khách thường trả `persisted: false`; (e) chưa có collector section/dwell/scroll/click. CUS-01 chỉ dựng schema/API với dữ liệu giả lập, chưa thu contact thật hay gửi marketing thật. Báo cáo chiến lược gốc vẫn thiếu nhưng không chặn backbone giả lập.
+>
+> **Gate CUS-00:** `typecheck` pass; `lint` pass; Vitest 69 file/491 test pass, 1 file/1 test skip có chủ đích; `build` pass. `npm ci` báo 7 advisory dependency (4 moderate, 3 high), chưa tự động sửa vì nằm ngoài phase. Production trước thay đổi docs đã kiểm tra `Ready`, `/`, `/erp`, `/api/health` đều HTTP 200; không chạy lại Supabase remote migration list do CLI chưa có trên máy này.
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|

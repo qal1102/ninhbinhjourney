@@ -1,162 +1,312 @@
-# GÓI A — KHẢO SÁT VÀ KẾ HOẠCH (A0)
+# GÓI A — KẾ HOẠCH DỮ LIỆU KHÁCH HÀNG, MARKETING VÀ BÁN DỊCH VỤ
 
-> **Trạng thái: BẢN NHÁP, A0 CHƯA ĐÓNG.** Đề bài ở `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Hiện trạng hệ thống ở `docs/HANDOFF.md`.
-> Ghi ngày 17/08/2026, sau khi đọc HANDOFF, AGENTS.md, migration nền, migration T8/T11a và toàn bộ mã nguồn web công khai.
-> **Chưa được duyệt, chưa được sang A1.** Hai đầu vào còn thiếu ghi ở mục 7.
+> **Trạng thái: CUS-00/A0 ĐÃ ĐÓNG NGÀY 18/08/2026 — kế hoạch và hợp đồng đo lường đã được chủ dự án duyệt hướng ưu tiên.**
+> Đề bài gốc: `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Hiện trạng duy nhất: `docs/HANDOFF.md`.
+> Đây là kế hoạch thi hành, không phải tuyên bố các tính năng bên dưới đã có trên production.
 
-**Quy ước từ ngữ trong file này** — hai nghĩa hay bị lẫn:
+## 0. Quyết định của chủ dự án sau buổi review
 
-- **Chủ đầu tư** = phía đã ngồi test ERP + web, góp ý và đặt câu hỏi cho mình.
-- **Khách du lịch** = người sẽ vào web đặt vé.
+Chủ đầu tư không chỉ cần web đặt vé. Họ cần biết khách:
+
+- đến từ chiến dịch/kênh nào;
+- dừng ở section nào, bỏ qua phần nào, cuộn tới đâu;
+- bấm vào điểm đến, gói dịch vụ hoặc lời kêu gọi nào;
+- quan tâm gì, định đi khi nào, ngân sách và nhóm đi ra sao;
+- sau đó có thể được phục vụ hoặc bán thêm dịch vụ phù hợp;
+- dữ liệu marketing từ các kênh khác nhau có thể đổ về một hồ sơ và một phễu chung.
+
+Ngày 18/08/2026, chủ dự án duyệt **ưu tiên data-first** này và yêu cầu bắt đầu thực hiện. Nó là phần mở rộng có chủ đích so với phiếu Gói A ngày 17/08, thay thế yêu cầu “dừng hỏi lại” đối với riêng phạm vi customer data/marketing. Các ràng buộc chưa được dỡ bỏ:
+
+1. Chưa thu dữ liệu người thật hoặc gửi truyền thông thật khi pháp nhân xử lý dữ liệu chưa được chốt.
+2. Quyền phục vụ/gửi vé và quyền nhận marketing là hai consent độc lập.
+3. Không phá ERP đang chạy; không tạo nguồn vé hoặc nguồn công suất thứ hai.
+4. Mỗi phase chỉ được gọi là xong khi có bằng chứng, commit và push GitHub.
 
 ---
 
-## 1. Phát hiện lớn nhất: lớp khách hàng của Gói A đã được thiết kế sẵn, đang nằm chết
+## 1. Baseline đã kiểm tra
 
-Migration nền `202607240001_secure_shared_core.sql` đã chứa gần đủ mô hình dữ liệu Gói A yêu cầu. Toàn bộ đang bị cờ `NEXT_PUBLIC_LEGACY_OPS_ENABLED` khoá 404 từ đợt T2, và hàng việc **T12 đang xếp lịch xoá chúng đi**.
+### 1.1 Có rồi — phải tái sử dụng
 
-| Nhiệm vụ trong phiếu | Bảng đã có | Mã nguồn đã có |
+| Năng lực | Hiện trạng | Quyết định |
 |---|---|---|
-| A1 tồn kho khung giờ | `capacity_slots` | `app/api/capacity/` |
-| A1 đơn đặt chỗ | `bookings`, `booking_contacts`, `booking_lines` | `services/supabase/booking-service.ts` |
-| A2 thanh toán giả lập | `payment_intents`, `payment_events` | `services/adapters/sandbox-payment.ts` — đã có HMAC ký/verify, đã chừa sẵn `LivePaymentAdapter` |
-| A2 vé QR | `passes`, `pass_entitlements` | `app/pass/[token]/`, `app/checkout/`, `components/commerce/` |
-| A3 soát vé | `redemptions` | `app/api/check-in/inspect/`, `app/api/check-in/redeem/` |
-| A4 QR động đo nguồn | `qr_sources`, `campaigns` | — (chưa có route `/q/[mã]`) |
-| A5 phễu | `analytics_events` | chỉ `/ops/page.tsx` đọc, **không nơi nào ghi** |
+| Vé và check-in | `erp_tickets`, T8; có `channel = 'website'`, cổng đối chiếu và ghi lượt chấp nhận/từ chối | Dùng làm chuẩn vé duy nhất; web không tạo bảng vé cạnh tranh |
+| Sức chứa | `erp_capacity_thresholds`, T11a; công suất giờ tính từ phương tiện × ghế × vòng quay | Đọc làm nguồn công suất duy nhất; chỉ bổ sung lịch bán/khung giờ và phần tiêu thụ |
+| Đặt chỗ demo | `bookings`, `booking_contacts`, `booking_lines`, `payment_intents`, `passes`, `redemptions` | Chỉ khai thác thiết kế/logic phù hợp; không dùng nguyên trạng vì khóa vào `demo_run_id` và có chuẩn vé/công suất riêng |
+| Nguồn chiến dịch demo | `campaigns`, `qr_sources` | Có thể dùng làm tài liệu thiết kế; cần mô hình production không phụ thuộc demo run |
+| Nhật ký analytics demo | `analytics_events` | Không phải kho hành vi production: bắt buộc `demo_run_id`, chưa có collector web, chỉ có writer gián tiếp khi tạo booking sandbox |
+| Ý định hành trình | `/plan` tính được lịch trình và nhiều thuộc tính nhu cầu | Khách thường nhận `persisted: false`; phải tạo đường lưu ẩn danh có kiểm soát |
+| ERP đọc analytics | `/ops/page.tsx` đọc bảng demo | Đang bị ẩn bởi `NEXT_PUBLIC_LEGACY_OPS_ENABLED`; không dùng làm màn hình Customer 360 mới |
 
-### Nhưng không dùng lại nguyên trạng được — ba lỗi cấu trúc
+### 1.2 Chưa có — phải xây
 
-1. **Gắn chết vào phiên trình diễn.** `capacity_slots` và `passes` đều có `demo_run_id uuid not null references demo_runs(id) on delete cascade`. Xoá một demo run là bay sạch vé và đơn đặt chỗ. Đây là lý do gốc khiến cả lớp này chết: nó được dựng cho kịch bản trình diễn, không phải cho vận hành thật.
-2. **Nguồn công suất thứ hai.** `capacity_slots.capacity` là số nguyên nhập tự do, không dẫn xuất từ đâu. Phiếu cấm tuyệt đối điều này, và nó trùng đúng **bẫy #6** trong HANDOFF ("hai nguồn sự thật về cùng một thứ thì cả hai đều sai").
-3. **Chuẩn mã vé thứ hai.** `passes` không nối gì tới `erp_tickets` (T8). Vi phạm thẳng dòng nghiệm thu *"vé đặt trên web và vé phát tại quầy dùng cùng một chuẩn mã"*.
+- ID phiên ẩn danh ổn định, ID hành trình khách và cơ chế hợp nhất có kiểm soát.
+- Bộ ghi page view, section view, active dwell, scroll depth, CTA/service click và conversion.
+- Consent riêng cho vận hành dịch vụ, analytics và marketing; lịch sử thay đổi consent.
+- Customer 360/CRM trong ERP: nhu cầu, lịch sử tương tác, nguồn vào, đơn/vé và gợi ý hành động.
+- Phễu đa kênh và mô hình attribution có phiên bản.
+- Ingestion có idempotency cho QR, UTM, form/lead, quảng cáo và kênh đối tác.
+- Quy tắc retention, xóa/ẩn danh hóa và export dữ liệu theo chủ thể.
+- Cơ chế recommendation dựa trên rule minh bạch trước khi cân nhắc ML.
 
-Ngoài ra `passes.created_by` là `not null references auth.users(id)` — khách du lịch ẩn danh không điền được cột này.
+### 1.3 Bằng chứng hiện tại
 
----
-
-## 2. Quyết định kỹ thuật quan trọng nhất
-
-Phiếu bắt phải chọn và nêu lý do: **vé lớp khách dùng chung bảng `erp_tickets`, hay bảng mới có cầu nối?**
-
-### Chọn: dùng chung `erp_tickets` làm chuẩn vé duy nhất; lớp khách là bảng mới bọc quanh nó
-
-Cụ thể:
-
-- **Mỗi vé bán ra trên web ghi thành một dòng `erp_tickets`.** Bảng T8 đã có sẵn `channel text not null check (channel in ('quay-ve', 'website', 'doi-tac', 'moi'))` — đường cho web đã được chừa từ đầu, và chú thích đầu migration T8 nói thẳng: *"the visitor-facing QR flow (W1) is built on top of this, later."*
-- **Đơn hàng, giữ chỗ, hồ sơ khách du lịch, phiên thanh toán → bảng mới**, theo khuôn `erp_*` đã được kiểm chứng (RLS bật, khoá dòng, cột `version`, audit chỉ-thêm bất biến). Khung giờ của một vé nằm ở bảng đơn mới, **không** `alter table erp_tickets`.
-- **Tồn kho khung giờ suy ra từ `erp_capacity_thresholds`** (T11a), không có bảng công suất thứ hai — xem mục 3.
-
-### Lý do
-
-1. Nghiệm thu đợt yêu cầu vé web và vé quầy cùng một chuẩn mã. Hai bảng vé là hai chuẩn, không cách nào lách.
-2. A3 (soát vé mất mạng) dựng trên cổng đối chiếu T8, mà cổng đó đọc `erp_tickets`. Vé web không nằm trong đó thì A3 phải viết cổng thứ hai — nhân đôi cả logic chống quét trùng lẫn logic ghi lượt từ chối.
-3. Ràng buộc A1 *"không sửa bảng ERP hiện có ngoài việc đọc"* vẫn giữ được, nếu hiểu "sửa bảng" là **đổi lược đồ** (`alter table`) chứ không phải **ghi dòng** (`insert`). Đường ghi đi qua một RPC mới, `erp_tickets` không đổi một cột nào.
-4. Số vé bán trên `/erp` (T13, `getTicketSalesSummary()`) tự động có luôn vé web, không phải cộng tay hai nguồn.
-
-**Hệ quả cần chấp nhận:** `erp_tickets` không có cột giá. Doanh thu phải nằm ở bảng đơn mới, không nhét vào `erp_tickets` — giữ đúng quyết định T13 là bảng vé chỉ đếm vé, không quy ra tiền.
+- GitHub app đã kiểm tra ngày 18/08/2026 tại commit `854b8a28367c701c2d902753719a45a183895447` trước khi sửa kế hoạch này.
+- Production `https://ninhbinhjourney.vercel.app` trả HTTP 200 cho `/`, `/erp` và `/api/health`; deployment `dpl_Afhu2aUcxBbbKq5z1wxdzFitxNhT` ở trạng thái `Ready`.
+- Repo có 38 migration, cuối là `202608070038_erp_sop_go_no_go.sql`. Lần đối chiếu Supabase production gần nhất được ghi nhận là 07/08/2026 và khớp tới migration 038. CUS-00 chưa tái kiểm tra remote DB vì máy làm việc hiện tại chưa có Supabase CLI; không được suy diễn rằng remote hôm nay đã được kiểm lại.
 
 ---
 
-## 3. Tồn kho khung giờ — không được đẻ nguồn công suất thứ hai
+## 2. Kiến trúc mục tiêu: một dòng dữ liệu, nhiều cách sử dụng
 
-`erp_capacity_thresholds` (T11a) đã có sẵn công thức, PostgreSQL tự sinh:
-
+```text
+Web / QR / đặt vé / quầy / đối tác / chiến dịch
+                    │
+                    ▼
+        Ingestion + chuẩn hoá + chống trùng
+                    │
+          ┌─────────┴─────────┐
+          ▼                   ▼
+  Event timeline        Identity & consent
+  (hành vi)             (ẩn danh → tự nguyện)
+          └─────────┬─────────┘
+                    ▼
+           Customer 360 trong ERP
+          ┌─────────┼──────────┐
+          ▼         ▼          ▼
+        Phễu     Gợi ý       Phân khúc /
+      marketing  dịch vụ     kích hoạt kênh
 ```
-hourly_capacity = floor(vehicle_count × seats_per_vehicle × 60 ÷ round_trip_minutes)
-```
 
-Đúng nguyên tắc phiếu nêu: *"công suất bằng điểm nghẽn nhỏ nhất nhân hệ số an toàn"*.
+Các biên bắt buộc:
 
-**Hướng làm:** tồn kho một khung giờ = `hourly_capacity` của điểm nghẽn nhỏ nhất tại cơ sở đó × hệ số an toàn, trừ đi số chỗ đã giữ và đã bán trong khung. Bảng đơn mới **chỉ lưu phần đã tiêu thụ**, không bao giờ lưu bản sao của sức chứa. Đổi cấu hình sức chứa ở `/erp` là tồn kho web đổi theo ngay, không cần đồng bộ gì.
-
-**Cần lưu ý khi làm:** `erp_capacity_thresholds` là công suất **theo giờ cho một điểm nghẽn**, chưa có khái niệm khung giờ theo ngày, cũng chưa có giờ mở/đóng cửa. A1 phải bổ sung lịch khung giờ (giờ mở, giờ đóng, độ dài khung, ngày áp dụng) — đây là **phần xây mới thật sự**, không phải phần tái sử dụng.
+- Thu thập web đi qua endpoint server-side cùng domain; trình duyệt không ghi thẳng bảng.
+- Raw event là append-only; dữ liệu suy ra như segment, attribution và recommendation có `version` và tính lại được.
+- Event ẩn danh không chứa phone/email/tên trong `properties`.
+- Hợp nhất định danh chỉ qua giao dịch hoặc consent rõ ràng; không fingerprint thiết bị.
+- Connector ngoài hệ thống chỉ nhận đúng trường đã được phê duyệt, có audit và retry idempotent.
 
 ---
 
-## 4. Hiện trạng web công khai — và vì sao "thu data khách du lịch" đang bằng 0
+## 3. KPI tree — đo để ra quyết định bán và vận hành
 
-Phần này trả lời trực tiếp điều chủ đầu tư quan tâm nhất sau buổi demo: *năng lực thu và dùng dữ liệu khách du lịch*.
+### North star
 
-### 4.1 Đang chạy thật (chỉ đọc một chiều)
+**Số hành trình khách đủ tín hiệu để phục vụ phù hợp và tạo doanh thu được xác minh**, không phải tổng page view.
 
-| Trang | Làm được gì |
+### Các nhánh KPI
+
+| Mục tiêu | KPI chính | KPI chẩn đoán | Không được hiểu sai |
+|---|---|---|---|
+| Thu hút đúng khách | qualified journey/session theo source/campaign | landing engagement, active dwell, scroll depth | Nhiều view không đồng nghĩa nhiều khách chất lượng |
+| Hiểu nhu cầu | tỷ lệ session có intent/interest rõ | điểm đến xem lâu, service click, plan generated | Dwell chỉ là tín hiệu, không phải consent hay ý định mua chắc chắn |
+| Chuyển đổi | QR/open → plan → hold → payment → ticket → check-in | drop-off theo bước, khung giờ, thiết bị, nguồn | Không cộng số từ hai nguồn khác nhau nếu chưa dedupe |
+| Bán thêm | attach rate và doanh thu dịch vụ phụ trên booking | recommendation shown/clicked/accepted | Click gợi ý không phải doanh thu |
+| Giữ quan hệ | tỷ lệ khách tự nguyện để lại liên hệ và opt-in marketing | save/send itinerary, return visit, repeat booking | Liên hệ để nhận vé không tự động là opt-in marketing |
+| Hiệu quả marketing | verified revenue/conversion theo campaign/source | first-touch, last-touch, assisted touch | Attribution là mô hình có phiên bản, không phải sự thật tuyệt đối |
+| Chất lượng dữ liệu | event hợp lệ, trùng, muộn, mất source, identity merge lỗi | ingestion latency, dead-letter count | Dashboard không được che lỗi dữ liệu bằng số 0 |
+
+Baseline ban đầu là **“chưa đo được”**, không tự điền 0. Mỗi KPI chỉ có số sau khi event contract tương ứng được triển khai và kiểm chứng.
+
+---
+
+## 4. Tracking plan v1
+
+Mỗi event dùng `event_name` ổn định; thay đổi ý nghĩa phải tăng `schema_version`, không đổi nghĩa âm thầm.
+
+### 4.1 Acquisition và navigation
+
+| Event | Khi ghi | Thuộc tính bắt buộc | Dùng cho |
+|---|---|---|---|
+| `page_viewed` | route được render và tab đang visible | `page_path`, `page_type`, `referrer_class`, UTM đã chuẩn hoá | traffic, landing, source |
+| `qr_opened` | `/q/[code]` xác thực code và redirect | `qr_source_id`, `campaign_id`, `placement_id`, `destination_path` | offline-to-online, attribution |
+| `section_viewed` | section đạt ≥50% diện tích trong viewport trong ≥1 giây | `section_id`, `page_path`, `position`, `visible_ms` | nội dung đã thực sự thấy |
+| `section_engaged` | section có active dwell đạt ngưỡng | `section_id`, `active_ms`, `max_visible_ratio` | phần khách dừng lại |
+| `scroll_depth_reached` | lần đầu vượt 25/50/75/90% phần nội dung cuộn được | `depth_percent`, `page_path` | điểm rơi nội dung |
+| `content_clicked` | click card/link/nút không phải conversion | `element_id`, `content_id`, `content_type`, `section_id` | quan tâm nội dung |
+
+### 4.2 Intent, recommendation và commerce
+
+| Event | Khi ghi | Thuộc tính bắt buộc | Dùng cho |
+|---|---|---|---|
+| `destination_viewed` | mở chi tiết điểm đến | `destination_id`, `source_section_id` | interest profile |
+| `service_viewed` | mở chi tiết dịch vụ/gói | `service_id`, `category`, `price_band` | nhu cầu bán thêm |
+| `plan_started` | bắt đầu nhập yêu cầu lịch trình | `entry_point` | đầu phễu plan |
+| `plan_generated` | server tạo lịch trình thành công | `journey_intent_id`, nhóm tuổi/budget/pace đã phân lớp, không lưu prompt raw mặc định | hồ sơ nhu cầu ẩn danh |
+| `recommendation_shown` | rule engine thực sự render gợi ý | `recommendation_id`, `rule_version`, `service_id`, `reason_code`, `slot` | đo chất lượng gợi ý |
+| `recommendation_clicked` | khách bấm gợi ý | các ID ở event shown + `position` | CTR gợi ý |
+| `recommendation_accepted` | dịch vụ được thêm vào đơn | `recommendation_id`, `order_id`, `service_id`, `quantity` | attach rate thật |
+| `booking_started` | mở bước đặt chỗ | `site_id`, `service_id`, `visit_date` | commerce funnel |
+| `slot_hold_created` | server giữ chỗ thành công | `order_id`, `slot_id`, `expires_at`, `party_size` | tồn kho/phễu |
+| `payment_completed` | provider callback được xác thực | `order_id`, `payment_id`, `amount`, `currency`, `provider` | doanh thu xác minh |
+| `ticket_issued` | đã insert vé chuẩn T8 | `order_id`, `ticket_id`, `channel` | giao vé |
+| `ticket_checked_in` | cổng T8 chấp nhận | `ticket_id`, `site_id`, `scan_mode` | visit conversion |
+
+### 4.3 Identity và consent
+
+| Event | Khi ghi | Lưu ý |
+|---|---|---|
+| `contact_submitted` | khách chủ động gửi contact để nhận/lưu dịch vụ | Event chỉ giữ `customer_profile_id`, `purpose`; contact mã hoá/chuẩn hoá ở kho identity riêng |
+| `identity_linked` | server nối anonymous profile vào profile có danh | Ghi phương thức và lý do; không ghi giá trị contact raw |
+| `consent_updated` | đồng ý/rút lại từng purpose | Ghi `purpose`, `status`, `policy_version`, `channel`, thời điểm và evidence |
+| `marketing_message_outcome` | connector trả sent/delivered/open/click/bounce/unsubscribe | Chỉ được tạo khi có marketing consent hợp lệ tại thời điểm gửi |
+
+### 4.4 Quy tắc đo “khách đứng ở đâu bao lâu”
+
+- Dùng `IntersectionObserver`; section có `section_id` cố định, không lấy text làm ID.
+- Chỉ cộng thời gian khi tab visible, cửa sổ có focus và section đạt ít nhất 50% visible.
+- Tạm dừng sau 30 giây không có pointer/keyboard/scroll/touch; hoạt động trở lại thì cộng tiếp.
+- Flush khi section rời viewport, route đổi, tab ẩn hoặc `pagehide`; gửi bằng `sendBeacon` khi phù hợp.
+- Client gom delta, server dedupe bằng `event_id`; không bắn event mỗi giây.
+- `section_engaged` mặc định ở 5 giây active; ngưỡng là cấu hình có version.
+- Scroll depth chỉ ghi mốc lần đầu trong một page view; trang quá ngắn không tạo số liệu giả.
+- Không ghi raw tọa độ con trỏ, nội dung người dùng gõ, DOM snapshot hoặc session replay ở giai đoạn đầu.
+
+---
+
+## 5. Hợp đồng dữ liệu tối thiểu
+
+Mọi event có envelope:
+
+| Trường | Quy tắc |
 |---|---|
-| `/` | Trang chủ, 3 câu chuyện + 3 lối vào, đã rút từ 11.365px xuống 7.259px |
-| `/explore` | Bản đồ Leaflet + bộ lọc, danh mục đầy đủ điểm đến |
-| `/destination/[slug]` | Trang chi tiết từng điểm |
-| `/packages`, `/packages/[slug]` | Tuyến dựng sẵn |
-| `/plan` | Dựng lịch trình từ giọng nói hoặc chữ, có kiểm giờ mở cửa, sức đi bộ, ngân sách |
+| `event_id` | UUID do client/server sinh, unique để chống gửi lặp |
+| `event_name` / `schema_version` | tên semantic + phiên bản integer |
+| `occurred_at` / `received_at` | thời gian client và server để nhận diện event muộn |
+| `anonymous_id` | random first-party ID; xoay được; không fingerprint |
+| `session_id` / `page_view_id` | scope phiên và page view |
+| `customer_profile_id` | nullable; server resolve, client không tự tuyên bố |
+| `journey_id` / `order_id` / `ticket_id` | nullable, chỉ gắn khi quan hệ tồn tại thật |
+| `source_context` | UTM, QR, referrer, partner; chuẩn hoá và giữ first/last touch riêng |
+| `consent_snapshot` | version trạng thái consent áp dụng tại lúc event được nhận |
+| `properties` | JSON schema whitelist theo từng event; reject trường lạ nhạy cảm |
 
-Nội dung nằm cứng trong `content/destinations.ts` + `content/packages.ts` — đổi giá tour phải sửa code (đó là W4).
+Nguồn sự thật dự kiến:
 
-### 4.2 Có mã nguồn nhưng chết trên production
+- `customer_profiles`: profile ẩn danh/có danh, trạng thái hợp nhất.
+- `customer_identities`: phone/email đã chuẩn hoá, bảo vệ riêng.
+- `customer_consents`: lịch sử consent append-only theo purpose.
+- `customer_sessions`: phiên first-party và attribution đầu/cuối.
+- `customer_events`: timeline raw append-only, partition/retention sẵn sàng.
+- `customer_journeys`: liên kết plan, order, ticket và visit thành một hành trình.
+- `marketing_sources` / `marketing_campaigns` / `marketing_touchpoints`: chuẩn hoá nguồn đa kênh.
+- `customer_segments` / `customer_recommendations`: dữ liệu suy ra, luôn có rule/model version.
 
-- `/checkout` → in ra *"Online checkout is not configured"*, vì `config/experience.ts` chặn `sandboxPaymentEnabled` ở chế độ production.
-- `/api/quotes`, `/api/bookings` → ném `DEMO_ROOM_NOT_JOINED` nếu thiếu cookie `nbj-active-run`.
-- `/demo/join` — đường **duy nhất** cấp cookie đó — trả 404 sau cờ `NEXT_PUBLIC_LEGACY_OPS_ENABLED` (đợt T2).
-- `/pass/[token]`, `/booking/[code]` → không có đường nào sinh ra token/code, nên là ngõ cụt.
-
-### 4.3 Chỗ đau nhất
-
-`/plan` là nơi khách du lịch khai nhiều nhất về mình: đi với ai, mấy người, ngân sách bao nhiêu, nhịp đi thế nào, chịu đi bộ bao xa, định đi ngày nào. Nhưng `app/api/journeys/route.ts` chỉ ghi vào Supabase khi có cookie demo room:
-
-> *"A demo room is required only to PERSIST a journey. Ordinary visitors who never joined one still get a fully generated, validated itinerary back — it simply lives in the browser instead of Supabase."*
-
-Không có cookie → trả `persisted: false` và **vứt đi**. Mà production không cấp được cookie đó nữa.
-
-**Kết luận: mỗi lượt khách du lịch dùng `/plan`, hệ thống mất trắng một hồ sơ nhu cầu hoàn chỉnh.** Cộng thêm: `analytics_events` không nơi nào ghi, và toàn bộ web công khai không có một ô email hay số điện thoại nào.
-
-### 4.4 Ba việc rẻ nhất để biến năng lực này thành thứ nhìn thấy được
-
-Xếp theo tỉ lệ tác động / công sức, **chưa xếp vào A1–A6**, cần chủ dự án chốt có làm trước hay không:
-
-1. **Gỡ lệ thuộc demo room ở `/plan`.** Bảng `journey_intents` + `itineraries` đã có, RPC `save_generated_journey` đã có; vướng đúng ràng buộc `demo_run_id not null` → một migration hẹp. Sau đó mỗi lịch trình dựng ra là một bản ghi thật.
-2. **Một màn hình ERP đọc số đó ra** — hôm nay bao nhiêu lượt dựng lịch trình, điểm đến nào được chọn nhiều, ngân sách trung bình, ngày nào đang được nhắm đông. Data không ai nhìn thấy thì với chủ đầu tư nó không tồn tại (**bẫy #5**: xây nửa dưới rồi dừng thì nửa dưới đó không tồn tại với người dùng).
-3. **Ô "Gửi lịch trình này cho tôi", đúng một trường liên hệ** — chỗ khách du lịch từ ẩn danh thành có danh, đúng nguyên tắc "định danh tự nguyện và tăng dần".
-
-**Việc 1 và 2 không vướng pháp lý** vì không thu danh tính, chỉ là ý định ẩn danh. **Việc 3 thì vướng** — phiếu và điểm 6 của `CAC_DIEM_CAN_QUYET_DINH_TAM_COC.md` đều nói chưa thu dữ liệu khách thật khi chưa chốt pháp nhân xử lý dữ liệu. Đây là cái cớ tự nhiên nhất để hối chủ đầu tư trả lời điểm 6.
+Tên bảng cuối cùng được khóa ở CUS-01 sau khi viết migration contract. Không đổi hay `alter` bảng ERP hiện có trong CUS-01.
 
 ---
 
-## 5. Mâu thuẫn phát hiện được — phiếu §6 bắt dừng lại hỏi
+## 6. Phân loại dữ liệu, consent và retention
 
-| # | Mâu thuẫn | Đề xuất xử lý |
+| Lớp | Ví dụ | Xử lý |
 |---|---|---|
-| 1 | **Ưu tiên ngược nhau.** `HANDOFF.md` mục 1 và `AGENTS.md` dòng 14 đều ghi "ERP trước, web sau, không đánh đổi chất lượng ERP để làm web". Phiếu đảo lại. | Phiếu đã tự nhận là "điều chỉnh", nên đây là ghi đè có khai báo, không phải xung đột ngầm. Nhưng **phải sửa thẳng hai chỗ đó** ghi rõ "từ 17/08/2026 ưu tiên là Gói A", nếu không phiên sau kế thừa mâu thuẫn — đúng **bẫy #6** áp cho tài liệu. |
-| 2 | **T12 định xoá đúng thứ Gói A cần.** Hàng việc T12 là "dọn ~20 bảng chết của `/ops`", HANDOFF đã ghi "điều kiện đã đạt, làm được rồi". Đó chính là đống bảng ở mục 1. | **Hoãn T12** cho tới khi Gói A thu hoạch xong thiết kế. Ghi lý do vào HANDOFF mục 4. |
-| 3 | A1 yêu cầu "không sửa bảng ERP hiện có ngoài việc đọc", nhưng vé web phải nằm trong `erp_tickets`. | Đã xử lý ở mục 2: `insert` qua RPC mới, không `alter table`. Cần chủ dự án xác nhận cách hiểu này. |
+| Public/config | campaign code, service ID, section ID | Có thể dùng rộng trong analytics |
+| Pseudonymous behavior | anonymous ID, session, page/section/click | First-party; retention mặc định đề xuất 13 tháng; có cơ chế opt-out |
+| Service data | order, ticket, visit date, contact để gửi vé | Chỉ dùng để thực hiện giao dịch/chăm sóc liên quan; retention theo nghĩa vụ vận hành/kế toán được duyệt |
+| Marketing consent data | opt-in purpose/channel/policy evidence | Append-only; rút consent phải chặn activation tiếp theo |
+| Direct PII | phone, email, tên | Kho identity riêng; mã hoá/che log; RBAC; không nằm trong event properties |
+| Sensitive/free text | prompt raw, ghi chú sức khoẻ, trẻ em | Không thu mặc định; nếu nghiệp vụ bắt buộc phải có purpose và chính sách riêng |
+
+Ba consent không được gộp:
+
+1. `essential_service` — xử lý để dựng/lưu/gửi hành trình, vé hoặc đơn.
+2. `product_analytics` — đo hành vi first-party; cần cơ chế chính sách/opt-out theo quyết định pháp lý.
+3. `marketing_communications` — nhận quảng bá theo từng channel; mặc định off.
+
+`booking_contacts.consent_at` hiện có không được tái diễn giải thành marketing consent.
 
 ---
 
-## 6. Rủi ro
+## 7. Kết nối marketing đa kênh
 
-| Rủi ro | Mức | Ghi chú |
+### Thứ tự kết nối
+
+1. **Owned first-party:** UTM/referrer, QR động, form lưu/gửi lịch trình, booking/ticket/check-in.
+2. **Paid media:** import campaign/ad/adset và cost; click ID chỉ lưu khi được phép.
+3. **CRM/messaging:** outbound request + delivery/outcome + unsubscribe.
+4. **Đối tác/đại lý:** source/partner code và order referral.
+
+Mỗi connector phải có:
+
+- `external_event_id` hoặc idempotency key;
+- mapping version từ payload ngoài sang taxonomy nội bộ;
+- cursor/checkpoint, retry có backoff và dead-letter;
+- timestamp của nguồn và timestamp nhận;
+- audit ai cấu hình connector;
+- secret ở server, không xuất sang trình duyệt;
+- reconciliation report: nhận bao nhiêu, hợp lệ, trùng, lỗi, muộn.
+
+Không chọn nhà cung cấp CRM/CDP ở CUS-00. Customer 360 trong Postgres là nguồn trung tâm; HubSpot/PostHog/Meta/Google/Zalo hoặc hệ khác là adapter thay thế được, không được trở thành nơi duy nhất giữ lịch sử khách.
+
+---
+
+## 8. Recommendation cho marketing và bán dịch vụ
+
+Làm rule-based trước để giải thích được vì sao hệ thống gợi ý:
+
+| Tín hiệu | Gợi ý ví dụ | Guardrail |
 |---|---|---|
-| **T6c chưa làm — 143 policy RLS chưa bảo vệ `/erp`**, hệ thống chạy bằng service role + tự kiểm bằng TypeScript | 🔴 Cao | Với ERP nội bộ tạm chấp nhận được. Với lớp khách công khai, khách du lịch ẩn danh chạm thẳng vào bảng qua Supabase client — **đây là bề mặt đầu tiên khiến việc đó thành nguy hiểm thật.** Bảng lớp khách phải bật RLS đúng ngay từ A1, không đợi T6c. |
-| **Không có chế độ ngoại tuyến ở bất kỳ đâu** (HANDOFF mục 2.4) | 🔴 Cao | A3 là hạ tầng hoàn toàn mới: service worker + hàng đợi cục bộ + hoà giải khi đồng bộ. Đây là hạng mục nặng nhất Gói A, không phải "nối vào cái đã có". |
-| Khung giờ theo ngày chưa tồn tại trong T11a | 🟡 Vừa | Xem mục 3. |
-| `next build` cục bộ không bắt được lỗi `"use server"` export sai | 🟡 Vừa | **Bẫy #7 và #11**, đã sập hai lần. Mỗi lần thêm file action mới phải grep toàn repo. |
-| Bộ Playwright nuốt luôn spec `prod-smoke-*` nếu chạy không kèm đường dẫn | 🟡 Vừa | HANDOFF mục 2.7a. Luôn đặt `PLAYWRIGHT_BASE_URL` tường minh. |
-| Chưa chốt tên thương hiệu (điểm 5) | 🟢 Thấp | Phiếu đã xử lý: đọc tên từ biến cấu hình. |
+| Xem lâu điểm đến + ngân sách phù hợp | gói tuyến liên quan | cần `recommendation_shown` trước khi tính click |
+| Nhóm có trẻ em / pace chậm do khách tự chọn | dịch vụ ít di chuyển, khung giờ phù hợp | không suy diễn tuổi/sức khoẻ từ hành vi |
+| Khung giờ gần đầy | giờ thay thế hoặc dịch vụ chờ | đọc T11a, không bịa tồn kho |
+| Có vé nhưng chưa chọn dịch vụ phụ | add-on trước chuyến đi | chỉ gửi ngoài web khi có marketing consent |
+| Đã check-in | dịch vụ tại chỗ/hậu chuyến | giới hạn tần suất; không spam |
+
+Mỗi rule có `rule_version`, `reason_code`, thời hạn hiệu lực và người phê duyệt. ERP phải cho thấy “vì sao gợi ý”, số lần shown/clicked/accepted và doanh thu thật; không dùng nhãn “AI” nếu chỉ là rule.
 
 ---
 
-## 7. Hai đầu vào còn thiếu — A0 chưa đóng được
+## 9. Các phase thi hành và gate
 
-1. **`docs/reference/Bao_cao_tong_the_he_sinh_thai_so_du_lich_Ninh_Binh.docx` chưa có trong repo.** Phiếu ghi chủ dự án sẽ copy vào trước khi bắt đầu. Đây là yêu cầu nghiệp vụ gốc, A0 phải đối chiếu với nó trước khi kết luận phần "xây mới".
-2. **Chưa có nội dung góp ý và câu hỏi thật của chủ đầu tư sau buổi demo.** Cần: vài góp ý nhỏ đó là gì (ERP hay web, màn hình nào), và câu hỏi họ đặt ra nguyên văn. Cùng một mối quan tâm "data khách du lịch dùng được gì" nhưng ba cách hỏi dẫn tới ba việc khác nhau:
-   - Hỏi *"thu được những gì"* → việc 2 mục 4.4 (màn hình ERP đọc nhu cầu khách).
-   - Hỏi *"rồi bán thêm được gì"* → việc 3 mục 4.4 (phễu + liên hệ).
-   - Hỏi *"lấy ở đâu ra"* → A4 (`/q/[mã]` đo nguồn quét).
+| Phase | Mục tiêu | Đầu ra chính | Gate trước khi push |
+|---|---|---|---|
+| **CUS-00** | Khóa baseline, KPI, taxonomy, privacy và thứ tự | Tài liệu này + HANDOFF | diff sạch, dẫn chứng source/deploy, không tuyên bố code đã có |
+| **CUS-01** | Identity, consent và event backbone | migration + contract tests + server ingestion API | RLS; idempotency; PII không lọt event; consent tách biệt; migration rollback/transaction test |
+| **CUS-02** | Thu hành vi web | SDK first-party + section/dwell/scroll/click + source context | unit + Playwright; reduced motion không liên quan tracking; không double event; beacon/pagehide test |
+| **CUS-03** | Lưu intent `/plan` và Customer 360 ERP | anonymous journey persistence + timeline/profile view | ordinary visitor persist được; ERP RBAC; không cần contact; số có provenance |
+| **CUS-04** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | redirect/đổi đích/dedupe; source sống qua route; không open redirect |
+| **CUS-05** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | essential ≠ marketing; revoke test; masking/RBAC/audit |
+| **CUS-06** | Gói A booking trên lõi ERP | slot/order/hold/payment giả lập/issue T8 ticket | concurrency không oversell; T11a là nguồn công suất; không alter lõi ERP |
+| **CUS-07** | Recommendation + omnichannel adapters | rule engine, ERP action queue, connector contract | explainable; frequency cap; opt-out; idempotent outbound |
+| **CUS-08** | Offline gate + unified funnel + release | A3 scan offline, dashboard xuyên nguồn, full acceptance | sync không mất/trùng; dashboard reconciliation; full regression + production smoke |
+
+Mỗi phase hoàn chỉnh phải: cập nhật `docs/HANDOFF.md`, commit riêng, push `main`, ghi SHA và cái chưa chứng minh. Với schema/RLS/migration hoặc release gate dùng reasoning cao; phần UI/test/doc thông thường dùng cấu hình tiết kiệm hơn.
 
 ---
 
-## 8. Thứ tự làm đề xuất
+## 10. Definition of Ready cho CUS-01
 
-Chờ chủ dự án chốt giữa hai hướng:
+CUS-01 được phép bắt đầu vì các quyết định kỹ thuật sau đã khóa:
 
-- **Hướng A — bám phiếu.** A1 → A2 → A3 → A4 → A5 → A6.
-- **Hướng B — chen 4.4 lên trước.** Làm việc 1 + 2 của mục 4.4 (rẻ, vài ngày, có thứ chạy được để trả lời chủ đầu tư ngay), rồi mới vào A1.
+- Data-first/customer behavior/omnichannel là ưu tiên đã được chủ dự án duyệt.
+- T8 là chuẩn vé; T11a là chuẩn công suất; không tạo nguồn thứ hai.
+- Anonymous-first, progressive identity, không fingerprint.
+- Essential service và marketing consent tách riêng.
+- Event đi server-side, raw append-only, derived data có version.
+- CUS-01 chỉ tạo backbone và dữ liệu giả lập; chưa gửi/thu contact người thật.
 
-**Nghiêng về hướng B**, vì hai lý do: nó trả lời đúng câu chủ đầu tư đang hỏi bằng chức năng chạy được thay vì bằng lời hứa, và nó không đụng gì tới phạm vi A1–A6 nên không phải làm lại. Nhưng đây là **mở rộng ngoài phạm vi Gói A**, mà phiếu §6 cấm tự quyết — nên phải chủ dự án gật.
+Các đầu vào khách hàng còn thiếu **không chặn CUS-01/CUS-02 với dữ liệu giả lập**, nhưng chặn production có người thật:
+
+1. Pháp nhân kiểm soát/xử lý dữ liệu, nơi lưu trữ và thời hạn retention được duyệt.
+2. Chủ sở hữu vận hành, người được xem PII, SLA xử lý yêu cầu xóa/export.
+3. Nội dung/policy consent và kênh marketing được phép.
+4. Thẩm quyền bán vé, ngày vận hành, payment provider thật.
+5. Báo cáo chiến lược gốc chưa có trong repo để đối chiếu toàn văn.
+
+---
+
+## 11. Kết luận CUS-00
+
+**PASS cho baseline và thiết kế đo lường; chưa có tính năng customer analytics production nào được tuyên bố hoàn thành.**
+
+Gate cục bộ ngày 18/08/2026 trên source nền hiện hành:
+
+- `npm run typecheck`: pass.
+- `npm run lint`: pass.
+- `npm run test:run`: 69 file pass, 1 file skip; 491 test pass, 1 test skip có chủ đích.
+- `npm run build`: pass; Next.js dựng đủ 34/34 static page và hoàn tất route manifest.
+- `git diff --check`: pass.
+
+`npm ci` báo 7 advisory trong dependency tree (4 moderate, 3 high). CUS-00 không tự chạy `npm audit fix` vì nâng dependency nằm ngoài phase và phải được kiểm chứng riêng; advisory này không được coi là đã xử lý.
+
+Việc kế tiếp là **CUS-01 — migration identity/consent/event backbone**, sau đó CUS-02 mới gắn collector vào web. Thứ tự này quan trọng: nếu gắn click/dwell trước khi có schema, consent và idempotency thì chỉ tạo một đống log không thể tin cậy hoặc sử dụng an toàn.

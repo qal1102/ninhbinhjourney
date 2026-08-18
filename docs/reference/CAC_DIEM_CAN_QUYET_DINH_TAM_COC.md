@@ -3,6 +3,8 @@
 > **Nguồn:** bản PDF do chủ dự án soạn, gửi cho phía chủ đầu tư. Chép lại nguyên văn vào repo ngày 17/08/2026.
 > Đây là **8 câu hỏi phía mình hỏi ngược lại chủ đầu tư**, chưa có câu trả lời. Mỗi điểm đều kèm phương án đề xuất; nếu không có ý kiến khác, phía công nghệ triển khai theo phương án đề xuất.
 > Ba điểm **2, 6, 8** chặn tiến độ trực tiếp — xem `docs/plans/GOI_A_KE_HOACH.md` để biết chỗ nào trong kế hoạch bị chúng chặn.
+>
+> **Cập nhật phạm vi 18/08/2026:** chủ dự án đã chốt ưu tiên xây customer behavior data, Customer 360, recommendation và hợp nhất nguồn marketing. Quyết định này đủ để làm CUS-01/CUS-02 bằng dữ liệu giả lập; nó **không** thay câu trả lời của chủ đầu tư cho điểm 2, 6 và 8, nên vẫn chưa được thu contact người thật, gửi marketing thật hoặc mở bán thật.
 
 Phản hồi Báo cáo chiến lược tổng thể hệ sinh thái số du lịch Ninh Bình (tháng 8/2026)
 

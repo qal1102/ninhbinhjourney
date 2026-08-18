@@ -2,6 +2,8 @@
 
 > **Nguồn:** bản PDF do chủ dự án giao, chép lại nguyên văn vào repo ngày 17/08/2026 để mọi phiên làm việc sau đọc được mà không cần file ngoài.
 > Đây là **đề bài**, không phải hiện trạng. Hiện trạng nằm ở `docs/HANDOFF.md`. Kế hoạch thi hành nằm ở `docs/plans/GOI_A_KE_HOACH.md`.
+>
+> **Phụ lục quyết định 18/08/2026:** sau review, chủ dự án yêu cầu ưu tiên thêm thu hành vi khách (section/dwell/scroll/click), Customer 360, recommendation để bán dịch vụ và hợp nhất dữ liệu marketing đa kênh. Quyết định này chủ động mở rộng phần “ngoài phạm vi” CDP/marketing của bản phiếu gốc; chi tiết, giới hạn privacy và thứ tự CUS-00 → CUS-08 nằm trong kế hoạch thi hành. Nội dung gốc bên dưới được giữ nguyên làm bằng chứng đề bài ban đầu.
 
 Dự án Ninh Binh Journey — thí điểm Tam Cốc (tháng 8/2026)
 

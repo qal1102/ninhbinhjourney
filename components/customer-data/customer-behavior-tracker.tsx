@@ -148,6 +148,19 @@ export function CustomerBehaviorTracker() {
       referrer_class: sourceContext.referrer_class,
     });
 
+    if (
+      sourceContext.qr_source_id &&
+      sourceContext.campaign_id &&
+      sourceContext.placement_id
+    ) {
+      emit("qr_opened", {
+        qr_source_id: sourceContext.qr_source_id,
+        campaign_id: sourceContext.campaign_id,
+        placement_id: sourceContext.placement_id,
+        destination_path: pathname,
+      });
+    }
+
     let latestInteractionAt = Date.now();
     const states = new Map<HTMLElement, SectionState>();
     let observer: IntersectionObserver | null = null;

@@ -328,6 +328,7 @@ export function ErpMobileMenu({
                 <Link href="/erp" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl bg-white px-4 text-sm font-black text-[#294139]">Tổng quan <span>→</span></Link>
                 {role === "director" || role === "accountant" || role === "chief-accountant" ? <Link href="/erp/finance" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">{role === "director" ? "Tài chính toàn vùng" : role === "chief-accountant" ? "Kiểm soát & sổ cái" : "Đối soát & lập bút toán"} <span>→</span></Link> : null}
                 {role === "director" ? <Link href="/erp/khach-hang" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Khách hàng <span>→</span></Link> : null}
+                {role === "director" ? <Link href="/erp/marketing" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Marketing <span>→</span></Link> : null}
                 <Link href="/erp/nhat-ky" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Nhật ký <span>→</span></Link>
               </div>
 

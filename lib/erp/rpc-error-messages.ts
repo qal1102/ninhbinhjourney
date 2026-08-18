@@ -418,6 +418,20 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Hành trình chỉ được lưu tín hiệu đã cấu trúc, không chứa email, số điện thoại hay nội dung liên hệ trực tiếp.",
   CUSTOMER_JOURNEY_ID_COLLISION:
     "Mã hành trình đã được dùng cho nội dung khác; không được ghi đè lịch sử đã lưu.",
+  MARKETING_CAMPAIGN_ID_REQUIRED:
+    "Campaign marketing thiếu mã campaign hoặc người thực hiện hợp lệ.",
+  MARKETING_CAMPAIGN_INPUT_INVALID:
+    "Thông tin campaign marketing chưa đúng định dạng hoặc chứa dữ liệu không được phép.",
+  MARKETING_CAMPAIGN_NOT_FOUND:
+    "Không tìm thấy campaign marketing trong đơn vị hiện tại.",
+  MARKETING_QR_INPUT_INVALID:
+    "Thông tin QR marketing hoặc đường dẫn đích nội bộ chưa hợp lệ.",
+  MARKETING_QR_NOT_FOUND:
+    "Không tìm thấy mã QR marketing này.",
+  MARKETING_QR_VERSION_CONFLICT:
+    "Mã QR vừa được cập nhật. Hãy tải lại trước khi đổi đích.",
+  MARKETING_QR_NOT_ACTIVE:
+    "Mã QR hoặc campaign đang tạm dừng nên chưa thể chuyển hướng.",
 
   // --- Đối soát tiền mặt (T10b) ---
   CASH_DEPOSIT_INPUT_INVALID: "Thông tin lượt nộp quỹ chưa hợp lệ.",

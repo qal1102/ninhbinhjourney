@@ -98,4 +98,28 @@ test.describe("CUS-02 customer behavior collector", () => {
     });
     expect(JSON.stringify(events)).not.toContain("guest@example.com");
   });
+
+  test("records qr_opened only after consent and preserves the QR source contract", async ({ page }) => {
+    const events: Array<Record<string, unknown>> = [];
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        "nbj-customer-analytics-consent",
+        JSON.stringify({ product_analytics: "granted", policy_version: "analytics-e2e-v1" }),
+      );
+    });
+    await page.route("**/api/customer-events", async (route) => {
+      events.push(route.request().postDataJSON() as Record<string, unknown>);
+      await route.fulfill({ status: 202, contentType: "application/json", body: JSON.stringify({ accepted: true }) });
+    });
+
+    await page.goto(
+      "/plan?qr_source_id=TC-WHARF-01&campaign_id=TAMCOC-AUG&placement_id=TAMCOC-WHARF&utm_source=qr&utm_medium=offline&utm_campaign=TAMCOC-AUG",
+      { waitUntil: "domcontentloaded" },
+    );
+    await expect.poll(() => events.some((event) => event.event_name === "qr_opened")).toBe(true);
+    expect(events.find((event) => event.event_name === "qr_opened")).toMatchObject({
+      source_context: { qr_source_id: "TC-WHARF-01", campaign_id: "TAMCOC-AUG", placement_id: "TAMCOC-WHARF" },
+      properties: { qr_source_id: "TC-WHARF-01", campaign_id: "TAMCOC-AUG", placement_id: "TAMCOC-WHARF", destination_path: "/plan" },
+    });
+  });
 });

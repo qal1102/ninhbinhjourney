@@ -266,7 +266,7 @@ Mỗi rule có `rule_version`, `reason_code`, thời hạn hiệu lực và ngư
 | **CUS-01 — code hoàn tất 18/08** | **5.6 Sol / High** | Identity, consent và event backbone | migration + contract tests + server ingestion API | ✅ RLS/grant; idempotency; PII guard; consent tách biệt; PostgreSQL transaction test. Chưa apply Supabase production |
 | **CUS-02 — code hoàn tất 18/08** | **5.6 Terra / High** | Thu hành vi web | SDK first-party + section/dwell/scroll/click + source context | ✅ unit + Playwright desktop/mobile; consent gate; `sendBeacon` khi rời/trang điều hướng. Chưa bật production |
 | **CUS-03 — code hoàn tất 18/08** | **5.6 Terra / High**; nâng **Sol / High** nếu chạm RLS | Lưu intent `/plan` và Customer 360 ERP | anonymous journey persistence + timeline/profile view | ✅ migration 040 + RPC/idempotency/PII/RBAC; PostgreSQL 15 thật và full gate pass. Staged: 039/040/flags chưa bật production |
-| **CUS-04** | **5.6 Terra / High** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | redirect/đổi đích/dedupe; source sống qua route; không open redirect |
+| **CUS-04 — code hoàn tất 18/08** | **5.6 Terra / High** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | ✅ migration 041 + RLS/RPC/append-only scan/audit; PostgreSQL 15 thật; route/UI/test staged. Chưa apply/bật production |
 | **CUS-05** | **5.6 Sol / High** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | essential ≠ marketing; revoke test; masking/RBAC/audit |
 | **CUS-06** | **5.6 Sol / High** | Gói A booking trên lõi ERP | slot/order/hold/payment giả lập/issue T8 ticket | concurrency không oversell; T11a là nguồn công suất; không alter lõi ERP |
 | **CUS-07** | **5.6 Terra / High**; nâng **Sol / High** cho outbound consent/security | Recommendation + omnichannel adapters | rule engine, ERP action queue, connector contract | explainable; frequency cap; opt-out; idempotent outbound |
@@ -381,3 +381,21 @@ Bằng chứng 18/08/2026:
 - Full regression bắt một thiếu sót thật: 4 mã lỗi RPC CUS-03 chưa có câu tiếng Việt chung. Đã bổ sung vào `rpc-error-messages.ts` trước khi rerun gate.
 
 **Chưa live:** không apply migration 039/040 hay bật `CUSTOMER_DATA_INGESTION_ENABLED`, `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED`, `CUSTOMER_JOURNEY_PERSISTENCE_ENABLED` trên production. Do đó không có dữ liệu khách thật được thu hay hiện. CUS-04 tiếp tục bằng **5.6 Terra / High**; chỉ nâng **Sol / High** nếu cần sửa RLS/RPC/identity-consent contract đã khóa.
+
+---
+
+## 15. Kết quả CUS-04 — code hoàn tất, chưa bật production
+
+Đã xây:
+
+- migration `202608180041_marketing_dynamic_qr.sql`: campaign/source registry, scan tổng hợp append-only và audit append-only. Bốn bảng bật RLS; direct table write bị chặn, RPC chỉ `service_role`;
+- `/q/[code]` chỉ hoạt động khi `CUSTOMER_QR_ROUTING_ENABLED=true`; QR chỉ redirect tới path nội bộ đã kiểm tra. URL attribution dùng code công khai thay UUID, không nhận contact, IP, cookie hay referrer. Routing tắt trả 404, không resolve và không ghi scan;
+- `/erp/marketing` chỉ cho director: tạo campaign/QR, xem scan thực và đổi destination bằng optimistic version lock. Không có dữ liệu minh họa;
+- `CustomerBehaviorTracker` chỉ tạo `qr_opened` sau analytics consent hiện hữu và chỉ chứa code công khai + destination path.
+
+Bằng chứng 18/08/2026:
+
+- PostgreSQL 15 tạm apply sạch 039 + 040 + 041; tạo campaign/QR, resolve để ghi scan, đổi đích, stale version, external destination và direct `service_role` write đều được kiểm tra. Container đã xóa, không để dữ liệu.
+- Full `typecheck`, `lint`, `test:run` = 81 file/541 test pass + 1 skip có chủ đích; `build` 35/35 routes gồm `/q/[code]` và `/erp/marketing`; Playwright tracking desktop/mobile 6/6 pass.
+
+**Chưa live:** migration 039/040/041 chưa apply/verify Supabase production; `CUSTOMER_DATA_INGESTION_ENABLED`, `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED`, `CUSTOMER_JOURNEY_PERSISTENCE_ENABLED` và `CUSTOMER_QR_ROUTING_ENABLED` đều tắt. Máy hiện tại không có Supabase CLI hay linked-project metadata nên không được đoán đích apply. CUS-05 chuyển sang **5.6 Sol / High** để nối consent UI/history server-side và contact vault.

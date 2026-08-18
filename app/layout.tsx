@@ -7,6 +7,7 @@ import { PageTransition } from "@/components/shared/page-transition";
 import { ScrollProgress } from "@/components/shared/scroll-progress";
 import { ScrollType } from "@/components/shared/scroll-type";
 import { CustomerBehaviorTracker } from "@/components/customer-data/customer-behavior-tracker";
+import { CustomerConsentCenter } from "@/components/customer-data/customer-consent-center";
 
 export const metadata: Metadata = {
   title: "Ninh Bình Journey",
@@ -26,6 +27,9 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <CustomerBehaviorTracker />
         </Suspense>
+        {process.env.CUSTOMER_CONSENT_MANAGEMENT_ENABLED === "true" ? (
+          <CustomerConsentCenter />
+        ) : null}
         <PageTransition>{children}</PageTransition>
         {/*
           Lop hat phim + rua mau am, dat NGOAI <PageTransition> giong

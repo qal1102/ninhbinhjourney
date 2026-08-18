@@ -59,8 +59,10 @@ function localDateInDays(offsetDays: number) {
 
 export function PlanExperience({
   showDemoCommand,
+  identityCollectionEnabled,
 }: {
   showDemoCommand: boolean;
+  identityCollectionEnabled: boolean;
 }) {
   const [text, setText] = useState("");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
@@ -224,6 +226,7 @@ export function PlanExperience({
           intent={result.intent}
           persisted={result.persisted}
           savedAnonymously={result.persistence === "anonymous"}
+          identityCollectionEnabled={identityCollectionEnabled}
         />
       </div>
     );

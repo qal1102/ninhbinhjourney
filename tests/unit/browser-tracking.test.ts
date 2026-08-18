@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getVisitorPageType,
   parseCustomerAnalyticsConsent,
+  parseCustomerConsentPreferences,
   sourceContextFromBrowser,
 } from "@/lib/customer-data/browser-tracking";
 
@@ -57,5 +58,21 @@ describe("customer browser tracking contract", () => {
       ),
     ).toBeNull();
     expect(parseCustomerAnalyticsConsent("not-json")).toBeNull();
+  });
+
+  it("retains an explicit denial so the privacy center can avoid prompting again", () => {
+    expect(
+      parseCustomerConsentPreferences(
+        JSON.stringify({
+          product_analytics: "denied",
+          marketing_communications: "revoked",
+          policy_version: "staged-analytics-v1",
+          marketing_policy_version: "staged-marketing-v1",
+        }),
+      ),
+    ).toMatchObject({
+      product_analytics: "denied",
+      marketing_communications: "revoked",
+    });
   });
 });

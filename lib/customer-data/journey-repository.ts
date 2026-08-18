@@ -6,6 +6,7 @@ import type {
   CustomerJourneyItinerarySnapshot,
   CustomerJourneySource,
 } from "@/domain/customer-journey";
+import { auditCustomer360Access } from "@/lib/customer-data/identity-repository";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 
@@ -99,10 +100,19 @@ export type Customer360Journey = {
   intent: CustomerJourneyIntentSummary;
   itinerary: CustomerJourneyItinerarySnapshot;
   source: CustomerJourneySource;
+  profileStatus: "anonymous" | "identified" | "merged";
+  contactTypes: Array<"email" | "phone">;
+  consents: Record<string, { status: string; occurredAt: string }>;
+  segments: string[];
+  deliveryRequests: Array<{ channel: string; status: string; createdAt: string }>;
   events: Array<{ eventName: string; occurredAt: string; properties: Record<string, unknown> }>;
 };
 
-export async function listCustomer360Journeys(limit = 50): Promise<Customer360Journey[]> {
+export async function listCustomer360Journeys(
+  actorAccountId: string,
+  limit = 50,
+): Promise<Customer360Journey[]> {
+  await auditCustomer360Access(actorAccountId);
   const client = createAdminClient();
   const { data: journeys, error: journeyError } = await client
     .from("customer_journeys")
@@ -114,6 +124,34 @@ export async function listCustomer360Journeys(limit = 50): Promise<Customer360Jo
 
   const rows = (journeys ?? []) as Array<Record<string, unknown>>;
   const profileIds = [...new Set(rows.map((row) => String(row.profile_id)).filter(Boolean))];
+  const profileById = new Map<string, Record<string, unknown>>();
+  let profileFrontier = profileIds;
+  for (let depth = 0; depth < 8 && profileFrontier.length > 0; depth += 1) {
+    const { data: profiles, error: profileError } = await client
+      .from("customer_profiles")
+      .select("id, status, canonical_profile_id")
+      .eq("tenant_id", TENANT_ID)
+      .in("id", profileFrontier);
+    if (profileError) throw mapRepositoryError(profileError);
+    for (const profile of (profiles ?? []) as Array<Record<string, unknown>>) {
+      profileById.set(String(profile.id), profile);
+    }
+    profileFrontier = (profiles ?? [])
+      .map((profile) => String((profile as Record<string, unknown>).canonical_profile_id ?? ""))
+      .filter((id) => id && !profileById.has(id));
+  }
+  const canonicalFor = (profileId: string) => {
+    let current = profileId;
+    const seen = new Set<string>();
+    while (!seen.has(current)) {
+      seen.add(current);
+      const next = String(profileById.get(current)?.canonical_profile_id ?? "");
+      if (!next) return current;
+      current = next;
+    }
+    return profileId;
+  };
+  const canonicalProfileIds = [...new Set(profileIds.map(canonicalFor))];
   const eventsByProfile = new Map<string, Customer360Journey["events"]>();
   if (profileIds.length > 0) {
     const { data: events, error: eventError } = await client
@@ -138,8 +176,51 @@ export async function listCustomer360Journeys(limit = 50): Promise<Customer360Jo
     }
   }
 
+  const contactTypesByProfile = new Map<string, Customer360Journey["contactTypes"]>();
+  const consentsByProfile = new Map<string, Customer360Journey["consents"]>();
+  const segmentsByProfile = new Map<string, string[]>();
+  const deliveriesByProfile = new Map<string, Customer360Journey["deliveryRequests"]>();
+  if (canonicalProfileIds.length > 0) {
+    const [identityResult, consentResult, segmentResult, deliveryResult] = await Promise.all([
+      client.from("customer_identities").select("profile_id, identity_type").eq("tenant_id", TENANT_ID).in("profile_id", canonicalProfileIds),
+      client.from("customer_consents").select("profile_id, purpose, status, occurred_at, sequence_no").eq("tenant_id", TENANT_ID).in("profile_id", canonicalProfileIds).order("occurred_at", { ascending: false }).order("sequence_no", { ascending: false }),
+      client.from("customer_segments").select("profile_id, segment_key").eq("tenant_id", TENANT_ID).in("profile_id", canonicalProfileIds).eq("active", true),
+      client.from("customer_itinerary_delivery_requests").select("profile_id, delivery_channel, status, created_at").eq("tenant_id", TENANT_ID).in("profile_id", canonicalProfileIds).order("created_at", { ascending: false }),
+    ]);
+    const failed = [identityResult, consentResult, segmentResult, deliveryResult].find((result) => result.error);
+    if (failed?.error) throw mapRepositoryError(failed.error);
+    for (const row of (identityResult.data ?? []) as Array<Record<string, unknown>>) {
+      const profileId = String(row.profile_id);
+      const type = String(row.identity_type) as "email" | "phone";
+      const current = contactTypesByProfile.get(profileId) ?? [];
+      if ((type === "email" || type === "phone") && !current.includes(type)) current.push(type);
+      contactTypesByProfile.set(profileId, current);
+    }
+    for (const row of (consentResult.data ?? []) as Array<Record<string, unknown>>) {
+      const profileId = String(row.profile_id);
+      const purpose = String(row.purpose);
+      const current = consentsByProfile.get(profileId) ?? {};
+      if (!current[purpose]) current[purpose] = { status: String(row.status), occurredAt: String(row.occurred_at) };
+      consentsByProfile.set(profileId, current);
+    }
+    for (const row of (segmentResult.data ?? []) as Array<Record<string, unknown>>) {
+      const profileId = String(row.profile_id);
+      const current = segmentsByProfile.get(profileId) ?? [];
+      current.push(String(row.segment_key));
+      segmentsByProfile.set(profileId, current);
+    }
+    for (const row of (deliveryResult.data ?? []) as Array<Record<string, unknown>>) {
+      const profileId = String(row.profile_id);
+      const current = deliveriesByProfile.get(profileId) ?? [];
+      current.push({ channel: String(row.delivery_channel), status: String(row.status), createdAt: String(row.created_at) });
+      deliveriesByProfile.set(profileId, current.slice(0, 12));
+    }
+  }
+
   return rows.map((row) => {
     const profileId = String(row.profile_id);
+    const canonicalProfileId = canonicalFor(profileId);
+    const profile = profileById.get(canonicalProfileId);
     return {
       journeyId: String(row.id),
       profileId,
@@ -147,6 +228,11 @@ export async function listCustomer360Journeys(limit = 50): Promise<Customer360Jo
       intent: row.intent_summary as CustomerJourneyIntentSummary,
       itinerary: row.itinerary_snapshot as CustomerJourneyItinerarySnapshot,
       source: row.source_context as CustomerJourneySource,
+      profileStatus: String(profile?.status ?? "anonymous") as Customer360Journey["profileStatus"],
+      contactTypes: contactTypesByProfile.get(canonicalProfileId) ?? [],
+      consents: consentsByProfile.get(canonicalProfileId) ?? {},
+      segments: segmentsByProfile.get(canonicalProfileId) ?? [],
+      deliveryRequests: deliveriesByProfile.get(canonicalProfileId) ?? [],
       events: eventsByProfile.get(profileId) ?? [],
     };
   });

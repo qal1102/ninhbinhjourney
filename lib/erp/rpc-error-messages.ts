@@ -418,6 +418,20 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Hành trình chỉ được lưu tín hiệu đã cấu trúc, không chứa email, số điện thoại hay nội dung liên hệ trực tiếp.",
   CUSTOMER_JOURNEY_ID_COLLISION:
     "Mã hành trình đã được dùng cho nội dung khác; không được ghi đè lịch sử đã lưu.",
+  CUSTOMER_PREFERENCES_INPUT_INVALID:
+    "Lựa chọn quyền riêng tư thiếu mã khách ẩn danh, phiên bản chính sách hoặc trạng thái hợp lệ.",
+  CUSTOMER_CONTACT_INPUT_INVALID:
+    "Liên hệ khách hàng phải được chuẩn hóa, băm và mã hóa đúng hợp đồng trước khi lưu.",
+  CUSTOMER_CONTACT_ID_COLLISION:
+    "Mã gửi lại liên hệ đã được dùng cho một yêu cầu khác.",
+  CUSTOMER_JOURNEY_OWNERSHIP_REQUIRED:
+    "Hành trình không thuộc hồ sơ ẩn danh đang yêu cầu lưu liên hệ.",
+  CUSTOMER_CONTACT_RATE_LIMITED:
+    "Hành trình đã tạo quá nhiều yêu cầu nhận lại trong một giờ.",
+  CUSTOMER_IDENTITY_MERGE_REVIEW_REQUIRED:
+    "Hai hồ sơ đã có định danh riêng nên không được tự động hợp nhất; cần kiểm tra thủ công.",
+  CUSTOMER_360_DIRECTOR_REQUIRED:
+    "Chỉ giám đốc có vai trò đang hiệu lực mới được mở Customer 360.",
   MARKETING_CAMPAIGN_ID_REQUIRED:
     "Campaign marketing thiếu mã campaign hoặc người thực hiện hợp lệ.",
   MARKETING_CAMPAIGN_INPUT_INVALID:

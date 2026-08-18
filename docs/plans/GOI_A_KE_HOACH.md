@@ -399,3 +399,28 @@ Bằng chứng 18/08/2026:
 - Full `typecheck`, `lint`, `test:run` = 81 file/541 test pass + 1 skip có chủ đích; `build` 35/35 routes gồm `/q/[code]` và `/erp/marketing`; Playwright tracking desktop/mobile 6/6 pass.
 
 **Chưa live:** migration 039/040/041 chưa apply/verify Supabase production; `CUSTOMER_DATA_INGESTION_ENABLED`, `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED`, `CUSTOMER_JOURNEY_PERSISTENCE_ENABLED` và `CUSTOMER_QR_ROUTING_ENABLED` đều tắt. Máy hiện tại không có Supabase CLI hay linked-project metadata nên không được đoán đích apply. CUS-05 chuyển sang **5.6 Sol / High** để nối consent UI/history server-side và contact vault.
+
+---
+
+## 16. Kết quả CUS-05 — code hoàn tất, policy Xuân Trường ở trạng thái staged
+
+Đã xây:
+
+- migration `202608180042_customer_progressive_identity.sql`: thứ tự consent tất định bằng `sequence_no`, delivery request append-only, segment có phiên bản, audit identity/Customer 360 và các RPC chỉ `service_role`;
+- consent center server-side cho analytics và marketing độc lập; collector chỉ bắt đầu sau analytics grant, còn revoke marketing làm segment `marketing-reachable` mất hiệu lực ngay;
+- contact vault nhận đúng một email hoặc số điện thoại, chuẩn hóa rồi lưu HMAC digest + AES-256-GCM ciphertext; không có API/UI giải mã;
+- progressive identity nối anonymous journey với protected contact, chỉ auto-merge profile anonymous vào profile đã nhận diện có cùng digest; xung đột profile đã nhận diện phải review thủ công;
+- yêu cầu nhận hành trình chỉ ở trạng thái `staged`, không tuyên bố đã gửi email/SMS; marketing mặc định tắt và tách khỏi essential service;
+- `/erp/khach-hang` director-only hiển thị loại contact, consent, segment và delivery status; mỗi lần đọc được audit ở PostgreSQL;
+- `/quyen-rieng-tu` ghi Xuân Trường là pháp nhân vận hành/đơn vị kiểm soát dữ liệu của bản dự thảo, nêu thời hạn 13 tháng / 90 ngày sau ngày đi / tới revoke hoặc 24 tháng không tương tác, đồng thời nói rõ chưa phải policy pháp lý được duyệt để mở production.
+
+Bằng chứng 18/08/2026:
+
+- PostgreSQL 15 thật apply sạch 039 + 040 + 042; transaction test xác minh grant/revoke, protected contact, segment deactivation, delivery request và director audit gate; container đã xóa, không để dữ liệu;
+- full `typecheck`, `lint`, `test:run` = 85 file/558 test pass + 1 skip có chủ đích; `build` pass và tạo đủ route `/api/customer-consents`, `/api/customer-contact`, `/quyen-rieng-tu`;
+- Playwright CUS-05 desktop + Pixel 7 = 6/6; hồi quy CUS-02 tracker + CUS-03 planner = 12/12. Ảnh desktop/mobile reduced-motion đã kiểm trực tiếp, không có horizontal overflow;
+- PostgreSQL thật bắt hai lỗi contract trước commit: conflict target mơ hồ và nhiều consent cùng transaction có `now()` giống nhau. Đã sửa bằng named constraint và `sequence_no` identity để latest-state không phụ thuộc timestamp hòa.
+
+**Chưa live:** migration 039–042 và sáu cờ customer-data vẫn tắt trên production. Không bật cho tới khi linked Supabase project được xác minh, khóa mã hóa/HMAC production được cấp, ba policy version được đóng và Xuân Trường phê duyệt đầu mối + SLA cho yêu cầu xem/xuất/sửa/xóa dữ liệu. Việc nêu pháp nhân chưa đồng nghĩa policy đã được pháp chế phê duyệt.
+
+**Ranh giới model tiếp theo:** CUS-06 dùng **5.6 Sol / High** vì phải xử lý slot/order/hold/payment concurrency và nối T8/T11a trong lõi ERP. Chỉ hạ Terra cho phần UI/fixture sau khi contract giao dịch được khóa; không dùng Luna để quyết định schema, concurrency hay accounting boundary.

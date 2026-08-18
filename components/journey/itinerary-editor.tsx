@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { DESTINATIONS } from "@/content/destinations";
 import { rebuildItineraryWithSites } from "@/domain/journey";
 import type { Itinerary, JourneyIntent } from "@/domain/models";
+import { JourneyContactVault } from "./journey-contact-vault";
 
 const walkingLabel: Record<JourneyIntent["walkingTolerance"], string> = {
   low: "ít",
@@ -41,11 +42,13 @@ export function ItineraryEditor({
   intent,
   persisted = false,
   savedAnonymously = false,
+  identityCollectionEnabled = false,
 }: {
   initialItinerary: Itinerary;
   intent: JourneyIntent;
   persisted?: boolean;
   savedAnonymously?: boolean;
+  identityCollectionEnabled?: boolean;
 }) {
   const [itinerary, setItinerary] = useState(initialItinerary);
   const [message, setMessage] = useState("");
@@ -296,6 +299,10 @@ export function ItineraryEditor({
             Xử lý xung đột để tiếp tục
           </button>
         )}
+
+        {savedAnonymously && identityCollectionEnabled ? (
+          <JourneyContactVault journeyId={itinerary.id} />
+        ) : null}
       </div>
     </div>
   );

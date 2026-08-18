@@ -19,7 +19,7 @@ export default async function Customer360Page() {
   let journeys: Customer360Journey[] = [];
   if (isCustomerJourneyPersistenceEnabled()) {
     try {
-      journeys = await listCustomer360Journeys();
+      journeys = await listCustomer360Journeys(user.id);
       status = "ready";
     } catch (error) {
       console.error("Customer 360 read failed", error);

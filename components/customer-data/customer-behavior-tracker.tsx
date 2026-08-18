@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { CustomerEventName } from "@/domain/customer-events";
 import {
   CUSTOMER_ANALYTICS_CONSENT_STORAGE_KEY,
-  CUSTOMER_ANONYMOUS_ID_STORAGE_KEY,
+  CUSTOMER_CONSENT_CHANGED_EVENT,
   CUSTOMER_SESSION_ID_STORAGE_KEY,
+  getOrCreateCustomerAnonymousId,
   getVisitorPageType,
   isCustomerAnalyticsEnabled,
   parseCustomerAnalyticsConsent,
@@ -93,6 +94,13 @@ export function CustomerBehaviorTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
+  const [consentRevision, setConsentRevision] = useState(0);
+
+  useEffect(() => {
+    const onConsentChanged = () => setConsentRevision((current) => current + 1);
+    window.addEventListener(CUSTOMER_CONSENT_CHANGED_EVENT, onConsentChanged);
+    return () => window.removeEventListener(CUSTOMER_CONSENT_CHANGED_EVENT, onConsentChanged);
+  }, []);
 
   useEffect(() => {
     const pageType = getVisitorPageType(pathname);
@@ -106,7 +114,7 @@ export function CustomerBehaviorTracker() {
     let anonymousId: string;
     let sessionId: string;
     try {
-      anonymousId = storageId(window.localStorage, CUSTOMER_ANONYMOUS_ID_STORAGE_KEY);
+      anonymousId = getOrCreateCustomerAnonymousId(window.localStorage);
       sessionId = storageId(window.sessionStorage, CUSTOMER_SESSION_ID_STORAGE_KEY);
     } catch {
       // Private browsing/storage policy can block storage. Do not fall back to
@@ -125,6 +133,13 @@ export function CustomerBehaviorTracker() {
       properties: EventProperties,
       preferBeacon = false,
     ) => {
+      if (
+        !parseCustomerAnalyticsConsent(
+          window.localStorage.getItem(CUSTOMER_ANALYTICS_CONSENT_STORAGE_KEY),
+        )
+      ) {
+        return;
+      }
       emitWithBeacon(
         {
           event_id: createId(),
@@ -335,7 +350,7 @@ export function CustomerBehaviorTracker() {
       window.removeEventListener("focus", markInteraction);
       window.removeEventListener("pagehide", onPageHide);
     };
-  }, [pathname, search]);
+  }, [consentRevision, pathname, search]);
 
   return null;
 }

@@ -34,6 +34,26 @@ function anonymousLabel(profileId: string) {
   return `Khách ẩn danh · ${profileId.slice(0, 8).toUpperCase()}`;
 }
 
+function profileLabel(journey: Customer360Journey) {
+  if (journey.contactTypes.length === 0) return anonymousLabel(journey.profileId);
+  const labels = journey.contactTypes.map((type) =>
+    type === "email" ? "email đã bảo vệ" : "số điện thoại đã bảo vệ",
+  );
+  return `Khách đã chủ động để lại ${labels.join(" + ")}`;
+}
+
+const CONSENT_LABELS: Record<string, string> = {
+  essential_service: "Phục vụ hành trình",
+  product_analytics: "Phân tích trải nghiệm",
+  marketing_communications: "Thông tin giới thiệu",
+};
+
+const CONSENT_STATUS_LABELS: Record<string, string> = {
+  granted: "Đã đồng ý",
+  denied: "Không đồng ý",
+  revoked: "Đã rút lại",
+};
+
 export function Customer360Dashboard({
   status,
   journeys = [],
@@ -63,13 +83,13 @@ export function Customer360Dashboard({
     <div className="space-y-6" data-testid="customer-360-dashboard">
       <section className="rounded-3xl bg-[#173f34] p-6 text-white sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b9d5ca]">
-          Customer 360 · chỉ dữ liệu ẩn danh
+          Customer 360 · định danh tăng dần
         </p>
         <h1 className="font-display mt-3 text-4xl leading-tight sm:text-5xl">
           Hành trình khách đã chủ động tạo
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-6 text-[#d4e4de]">
-          Nguồn vào, sở thích, lịch trình và hành vi đã có consent được đặt cùng một dòng thời gian. Không hiển thị số điện thoại, email hay dữ liệu marketing chưa được cấp quyền.
+          Nguồn vào, sở thích, lịch trình, quyền sử dụng dữ liệu và liên hệ đã bảo vệ được đặt cùng một dòng thời gian. Màn hình không có đường giải mã email hay số điện thoại; mỗi lần mở đều ghi audit.
         </p>
       </section>
 
@@ -80,11 +100,11 @@ export function Customer360Dashboard({
           <p className="mt-2 text-xs text-[#849089]">nguồn: customer_journeys</p>
         </article>
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
-          <p className="text-xs text-[#6e7b75]">Hồ sơ ẩn danh</p>
+          <p className="text-xs text-[#6e7b75]">Hồ sơ có liên hệ bảo vệ</p>
           <p className="mt-2 text-3xl font-black text-[#203a30]">
-            {new Set(journeys.map((journey) => journey.profileId)).size}
+            {new Set(journeys.filter((journey) => journey.contactTypes.length > 0).map((journey) => journey.profileId)).size}
           </p>
-          <p className="mt-2 text-xs text-[#849089]">chưa suy diễn thành contact</p>
+          <p className="mt-2 text-xs text-[#849089]">chỉ hiện loại liên hệ, không hiện giá trị</p>
         </article>
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
           <p className="text-xs text-[#6e7b75]">Tín hiệu hành vi đã ghi</p>
@@ -112,7 +132,7 @@ export function Customer360Dashboard({
               <div className="flex flex-col gap-4 border-b border-[#e8eeea] pb-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">
-                    {anonymousLabel(journey.profileId)}
+                    {profileLabel(journey)}
                   </p>
                   <h2 className="mt-2 text-xl font-black text-[#203a30]">
                     {journey.intent.interests.length > 0
@@ -140,6 +160,26 @@ export function Customer360Dashboard({
                       </li>
                     ))}
                   </ol>
+                  <div className="mt-5">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#738078]">Quyền sử dụng dữ liệu</p>
+                    <ul className="mt-3 space-y-2 text-sm text-[#42574e]">
+                      {Object.entries(journey.consents).length === 0 ? (
+                        <li className="rounded-xl bg-[#f7f9f7] px-3 py-2">Chưa có lựa chọn được ghi ở máy chủ.</li>
+                      ) : Object.entries(journey.consents).map(([purpose, consent]) => (
+                        <li key={purpose} className="flex items-center justify-between gap-3 rounded-xl bg-[#f7f9f7] px-3 py-2">
+                          <span>{CONSENT_LABELS[purpose] ?? purpose}</span>
+                          <strong>{CONSENT_STATUS_LABELS[consent.status] ?? consent.status}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                    {journey.segments.length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {journey.segments.map((segment) => (
+                          <span key={segment} className="rounded-full bg-[#e7efe9] px-3 py-1 text-xs font-bold text-[#35594b]">{segment}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-[#738078]">Dòng thời gian</p>
@@ -152,6 +192,12 @@ export function Customer360Dashboard({
                       <li key={`${event.eventName}-${event.occurredAt}`} className="flex gap-3 rounded-xl bg-[#f7f9f7] px-3 py-2 text-sm text-[#42574e]">
                         <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#b58a35]" />
                         <span><strong>{EVENT_LABELS[event.eventName] ?? event.eventName}</strong> · {formatDate(event.occurredAt)}</span>
+                      </li>
+                    ))}
+                    {journey.deliveryRequests.map((request) => (
+                      <li key={`${request.channel}-${request.createdAt}`} className="flex gap-3 rounded-xl bg-[#fff8eb] px-3 py-2 text-sm text-[#5d5037]">
+                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#d58c35]" />
+                        <span><strong>Đã lưu yêu cầu nhận hành trình qua {request.channel === "sms" ? "SMS" : "email"}</strong> · {formatDate(request.createdAt)} · chưa gửi ra ngoài</span>
                       </li>
                     ))}
                   </ol>

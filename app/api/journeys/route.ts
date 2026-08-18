@@ -9,15 +9,16 @@ import { confirmJourneyIntent, generateItinerary, parseJourneyIntent } from "@/d
 import { DomainError, toSafeError } from "@/domain/errors";
 import { CreateJourneyRequestSchema } from "@/domain/schemas";
 import {
+  CUSTOMER_ANONYMOUS_COOKIE,
+  customerCookieHeader,
+} from "@/domain/customer-identity";
+import {
   createAnonymousCustomerJourney,
   CustomerJourneyRepositoryError,
   isCustomerJourneyPersistenceEnabled,
 } from "@/lib/customer-data/journey-repository";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database.generated";
-
-const CUSTOMER_JOURNEY_COOKIE = "nbj-customer-journey-anonymous-id";
-const CUSTOMER_JOURNEY_COOKIE_SECONDS = 60 * 60 * 24 * 30;
 
 function asJson(value: unknown): Json {
   return JSON.parse(JSON.stringify(value)) as Json;
@@ -144,7 +145,7 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies();
-    const existingAnonymousId = cookieStore.get(CUSTOMER_JOURNEY_COOKIE)?.value;
+    const existingAnonymousId = cookieStore.get(CUSTOMER_ANONYMOUS_COOKIE)?.value;
     const anonymousId =
       existingAnonymousId && /^[0-9a-f-]{36}$/i.test(existingAnonymousId)
         ? existingAnonymousId
@@ -163,7 +164,7 @@ export async function POST(request: Request) {
     );
     response.headers.append(
       "Set-Cookie",
-      `${CUSTOMER_JOURNEY_COOKIE}=${anonymousId}; Path=/; Max-Age=${CUSTOMER_JOURNEY_COOKIE_SECONDS}; SameSite=Lax; HttpOnly${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
+      customerCookieHeader(anonymousId),
     );
     return response;
   } catch (error) {

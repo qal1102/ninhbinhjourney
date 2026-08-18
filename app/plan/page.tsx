@@ -48,6 +48,9 @@ export default function PlanPage() {
         <div className="mt-10">
           <PlanExperience
             showDemoCommand={environment.config.voiceDemoFallbackEnabled}
+            identityCollectionEnabled={
+              process.env.CUSTOMER_IDENTITY_COLLECTION_ENABLED === "true"
+            }
           />
         </div>
       </section>

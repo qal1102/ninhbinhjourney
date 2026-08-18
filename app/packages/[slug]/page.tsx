@@ -28,7 +28,7 @@ export default async function PackageDetailPage({
     .filter((destination) => destination !== undefined);
 
   return (
-    <main className="min-h-screen bg-[#183f34] px-5 py-10 text-white sm:px-8 lg:py-16">
+    <main data-customer-section="package-detail" className="min-h-screen bg-[#183f34] px-5 py-10 text-white sm:px-8 lg:py-16">
       <div className="mx-auto max-w-6xl">
         <Link
           href={`/packages${journey ? `?journey=${journey}` : ""}`}
@@ -54,6 +54,9 @@ export default async function PackageDetailPage({
               {sites.map((site) => (
                 <Link
                   key={site.id}
+                  data-customer-track="package-destination"
+                  data-customer-content-id={site.id}
+                  data-customer-content-type="destination"
                   href={`/destination/${site.slug}?journey=${journey ?? ""}`}
                   className="rounded-2xl border border-white/15 bg-white/7 p-5"
                 >
@@ -85,6 +88,9 @@ export default async function PackageDetailPage({
                   dữ liệu thanh toán thật.
                 </p>
                 <Link
+                  data-customer-track="package-checkout"
+                  data-customer-content-id={item.id}
+                  data-customer-content-type="package"
                   href={`/checkout?package=${item.slug}${journey ? `&journey=${journey}` : ""}`}
                   className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#d58c35] px-6 font-extrabold"
                 >

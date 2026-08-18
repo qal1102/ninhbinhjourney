@@ -264,7 +264,7 @@ Mỗi rule có `rule_version`, `reason_code`, thời hạn hiệu lực và ngư
 |---|---|---|---|---|
 | **CUS-00** | **5.6 Terra / Medium** | Khóa baseline, KPI, taxonomy, privacy và thứ tự | Tài liệu này + HANDOFF | diff sạch, dẫn chứng source/deploy, không tuyên bố code đã có |
 | **CUS-01 — code hoàn tất 18/08** | **5.6 Sol / High** | Identity, consent và event backbone | migration + contract tests + server ingestion API | ✅ RLS/grant; idempotency; PII guard; consent tách biệt; PostgreSQL transaction test. Chưa apply Supabase production |
-| **CUS-02** | **5.6 Terra / High** | Thu hành vi web | SDK first-party + section/dwell/scroll/click + source context | unit + Playwright; reduced motion không liên quan tracking; không double event; beacon/pagehide test |
+| **CUS-02 — code hoàn tất 18/08** | **5.6 Terra / High** | Thu hành vi web | SDK first-party + section/dwell/scroll/click + source context | ✅ unit + Playwright desktop/mobile; consent gate; `sendBeacon` khi rời/trang điều hướng. Chưa bật production |
 | **CUS-03** | **5.6 Terra / High**; nâng **Sol / High** nếu chạm RLS | Lưu intent `/plan` và Customer 360 ERP | anonymous journey persistence + timeline/profile view | ordinary visitor persist được; ERP RBAC; không cần contact; số có provenance |
 | **CUS-04** | **5.6 Terra / High** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | redirect/đổi đích/dedupe; source sống qua route; không open redirect |
 | **CUS-05** | **5.6 Sol / High** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | essential ≠ marketing; revoke test; masking/RBAC/audit |
@@ -337,3 +337,27 @@ Bằng chứng 18/08/2026:
 **Chưa chứng minh:** migration 039 chưa apply/verify trên Supabase production; endpoint chưa bật và chưa có collector web, nên production chưa thu event khách. Đây là staged release có chủ đích, không phải customer analytics đã live.
 
 **Ranh giới model tiếp theo:** trước khi làm CUS-02, chuyển sang **5.6 Terra / High**. CUS-02 là instrumentation web và browser lifecycle; chỉ nâng lại Sol nếu phát sinh thay đổi schema/RLS ngoài contract CUS-01.
+
+---
+
+## 13. Kết quả CUS-02 — code hoàn tất, chưa bật production
+
+Đã xây:
+
+- `CustomerBehaviorTracker` ở root layout, chỉ xét các route khách công khai; ERP, `/ops` và route nội bộ bị loại từ đầu.
+- Ghi `page_viewed`, `section_viewed` (≥1 giây), `section_engaged` (≥5 giây active), mốc scroll 25/50/75/90 và `content_clicked` trên CTA có semantic ID.
+- Active dwell chỉ cộng khi section ≥50% visible, tab đang visible/focus và người dùng còn hoạt động trong 30 giây; không ghi raw pointer, form field, prompt, referrer URL hoặc session replay.
+- Attribution chỉ giữ whitelist UTM/QR/campaign/partner/click ID đã kiểm PII và `referrer_class`; `source` cũ được ánh xạ vào `utm_source` nếu an toàn.
+- Consent gate kép: public build flag `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED=true` **và** consent local có `product_analytics=granted`; thiếu một trong hai thì tracker không tạo ID và không gửi request.
+- CTA điều hướng gửi bằng `sendBeacon`; event còn lại dùng `fetch(..., keepalive: true)`. Mọi event vẫn đi qua API CUS-01 và idempotency server-side.
+
+Bằng chứng 18/08/2026:
+
+- Unit test cho route scope, attribution whitelist/PII và consent parser pass.
+- Playwright với build flag chỉ bật trong test, API intercept (không ghi Supabase): desktop + Pixel 7 đều pass hai case: không consent = 0 request; có consent = page/section/active dwell/scroll/CTA payload đúng.
+- Full gate: `typecheck`, `lint`, `build` pass; Vitest 73 file/517 test pass, 1 file/1 test skip có chủ đích. Static build vẫn dựng 35/35 page.
+- Hai lỗi browser/build thật đã bắt và sửa: tracker dùng `useSearchParams` phải ở `Suspense` riêng để không phá static destination page; CTA handler phải được đăng ký capture-phase trước navigation, và link dùng `sendBeacon` để event không bị hủy lúc đổi trang.
+
+**Chưa live:** cả `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED` lẫn `CUSTOMER_DATA_INGESTION_ENABLED` phải giữ tắt trên production. Consent đang là contract local để test collector; CUS-05 sẽ thay bằng consent UI + history server-side. CUS-01 migration 039 vẫn chưa apply/verify Supabase production.
+
+**Ranh giới model tiếp theo:** trước CUS-03, dùng **5.6 Terra / High**. CUS-03 lưu anonymous intent `/plan` và dựng Customer 360; nâng lại **Sol / High** nếu cần thay đổi migration/RLS hoặc hợp đồng identity/consent đã khóa.

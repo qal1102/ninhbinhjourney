@@ -2,7 +2,7 @@
 
 > **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
 >
-> Cập nhật: **18/08/2026** — CUS-01 đã hoàn tất code/migration backbone và qua PostgreSQL transaction test + full local gate. Migration 039 chưa apply Supabase production, feature flag ingestion vẫn mặc định off; production chưa thu event khách.
+> Cập nhật: **18/08/2026** — CUS-02 đã hoàn tất collector first-party và qua browser gate desktop/mobile + full local gate. Cả collector lẫn ingestion vẫn mặc định off; production chưa thu event khách.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -381,11 +381,13 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 
 > ✅ **CUS-01 hoàn tất phần code ngày 18/08/2026:** migration `202608180039_customer_data_backbone.sql`, event contract, repository và `/api/customer-events`. PostgreSQL 15 thật đã apply migration sạch; transaction test chứng minh event lần đầu insert, gửi lại idempotent, collision/PII/direct write/history mutation bị chặn, identity digest+ciphertext và consent append-only ghi được; tất cả rollback sạch. Full gate: typecheck/lint/build pass, 72 file/513 test pass + 1 skip có chủ đích.
 >
-> **Chưa live:** migration 039 chưa được apply/verify trên Supabase production; `CUSTOMER_DATA_INGESTION_ENABLED` chưa bật; chưa có browser collector. Push/deploy code ở trạng thái này không tự thu dữ liệu người thật và endpoint fail closed 503.
+> **CUS-01 chưa live:** migration 039 chưa được apply/verify trên Supabase production và `CUSTOMER_DATA_INGESTION_ENABLED` chưa bật. CUS-02 đã có browser collector ở ngay dưới, nhưng build flag cũng mặc định tắt; push/deploy hiện không tự thu dữ liệu người thật và endpoint vẫn fail closed 503.
 >
-> 🟦 **Việc kế tiếp — CUS-02: collector page/section/active dwell/scroll/click. Model khuyến nghị trước khi bắt đầu: `5.6 Terra / High`.** Lý do: phần lớn là browser lifecycle, batching/beacon và Playwright; contract dữ liệu đã khóa. Nâng lại `5.6 Sol / High` nếu buộc phải đổi migration/RLS/consent. Không giao Luna tự quyết instrumentation lifecycle; Luna chỉ bổ sung fixture/test lặp sau khi implementation chính đã khóa.
+> ✅ **CUS-02 hoàn tất phần code ngày 18/08/2026:** `CustomerBehaviorTracker` chỉ chạy trên surface khách công khai; page/section/active dwell/scroll/CTA có semantic event, source whitelist và PII guard; tracking chỉ chạy khi build flag **và** analytics consent đều có. Dwell yêu cầu 50% visible + tab active/focus; người dùng im lặng 30 giây thì dừng cộng. CTA điều hướng dùng `sendBeacon`, event thường dùng `fetch keepalive`. Playwright build riêng bật flag + intercept API (không chạm DB) pass desktop và Pixel 7: không consent = 0 request; có consent = đủ event đúng shape. Full gate: typecheck/lint/build pass, 73 file/517 test pass + 1 skip. Chưa bật production.
 >
-> Bảng model toàn bộ CUS-00→CUS-08 ở `docs/plans/GOI_A_KE_HOACH.md` mục 9. Mỗi lần chuyển phase phải báo chủ dự án trước để đổi model thủ công nếu phiên không tự đổi được.
+> 🟦 **Việc kế tiếp — CUS-03: lưu anonymous intent `/plan` và Customer 360 ERP. Model khuyến nghị trước khi bắt đầu: `5.6 Terra / High`; nâng `5.6 Sol / High` nếu phải đổi migration/RLS/identity-consent contract.** Mục tiêu: khách thường tạo plan được persist ẩn danh thay vì `persisted:false`, ERP đọc timeline/provenance mà không cần contact. Không bắt đầu collector/CRM mới bằng Luna; Luna chỉ dùng fixture/test lặp sau khi luồng chính đã khóa.
+>
+> **Chưa live:** migration 039 chưa apply/verify Supabase production; `CUSTOMER_DATA_INGESTION_ENABLED` và `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED` chưa bật. Consent hiện là contract local để kiểm collector; CUS-05 mới nối consent UI/history server-side. Bảng model toàn bộ CUS-00→CUS-08 ở `docs/plans/GOI_A_KE_HOACH.md` mục 9. Mỗi lần chuyển phase phải báo chủ dự án trước để đổi model thủ công nếu phiên không tự đổi được.
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|

@@ -203,6 +203,9 @@ export function PlanExperience({
     return (
       <div>
         <button
+          data-customer-track="planner-parse-intent"
+          data-customer-content-id="journey-intent"
+          data-customer-content-type="planner-action"
           type="button"
           onClick={() => setResult(null)}
           className="mb-6 min-h-11 rounded-full border border-[#183f34] px-4 text-sm font-bold"
@@ -414,6 +417,9 @@ export function PlanExperience({
               </p>
             ) : null}
             <button
+              data-customer-track="planner-generate"
+              data-customer-content-id="journey-itinerary"
+              data-customer-content-type="planner-action"
               type="button"
               onClick={confirmAndGenerate}
               disabled={pending || !visitDate || adults + children + seniors < 1}

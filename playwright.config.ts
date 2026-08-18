@@ -6,6 +6,8 @@ const baseURL = remoteBaseUrl ?? `http://127.0.0.1:${port}`;
 const erpPersistenceMode =
   process.env.ERP_PERSISTENCE_MODE ?? "demo-cookie";
 const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY?.trim();
+const customerAnalyticsEnabled =
+  process.env.NBJ_E2E_CUSTOMER_ANALYTICS === "1" ? "true" : "false";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -56,6 +58,7 @@ export default defineConfig({
           NEXT_PUBLIC_EXPERIENCE_MODE: "production",
           NEXT_PUBLIC_BRAND_CONCEPTS_ENABLED: "false",
           NEXT_PUBLIC_SITE_URL: `http://127.0.0.1:${port}`,
+          NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED: customerAnalyticsEnabled,
           ERP_PERSISTENCE_MODE: erpPersistenceMode,
           ERP_SHIFT_CLOSE_COOKIE_SECRET:
             "playwright-shift-close-cookie-secret-at-least-32-chars",

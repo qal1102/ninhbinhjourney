@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "@fontsource-variable/fraunces/full.css";
 import "@fontsource-variable/manrope/index.css";
 import "./globals.css";
 import { PageTransition } from "@/components/shared/page-transition";
 import { ScrollProgress } from "@/components/shared/scroll-progress";
 import { ScrollType } from "@/components/shared/scroll-type";
+import { CustomerBehaviorTracker } from "@/components/customer-data/customer-behavior-tracker";
 
 export const metadata: Metadata = {
   title: "Ninh Bình Journey",
@@ -21,6 +23,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ScrollProgress />
         <ScrollType />
+        <Suspense fallback={null}>
+          <CustomerBehaviorTracker />
+        </Suspense>
         <PageTransition>{children}</PageTransition>
         {/*
           Lop hat phim + rua mau am, dat NGOAI <PageTransition> giong

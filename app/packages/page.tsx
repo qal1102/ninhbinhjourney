@@ -19,7 +19,7 @@ export default async function PackagesPage({
   const flags = getExperiencePresentationFlags(readPublicEnvironment());
 
   return (
-    <main className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
+    <main data-customer-section="packages-catalog" className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
       <div className="mx-auto max-w-7xl">
         <Link href={journey ? `/journey/${journey}` : "/plan"} className="text-sm font-bold text-[#356957]">
           ← Quay lại hành trình
@@ -81,6 +81,9 @@ export default async function PackagesPage({
               </div>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link
+                  data-customer-track="package-detail"
+                  data-customer-content-id={item.id}
+                  data-customer-content-type="package"
                   href={`/packages/${item.slug}${journey ? `?journey=${journey}` : ""}`}
                   className="inline-flex min-h-11 items-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
                 >

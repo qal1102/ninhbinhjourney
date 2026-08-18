@@ -1759,7 +1759,7 @@ export default function NinhBinhLanding({
           </div>
         </div>
       ) : null}
-      <section className="relative min-h-screen overflow-hidden bg-[#183F34] text-[#FBFAF6]">
+      <section data-customer-section="home-hero" className="relative min-h-screen overflow-hidden bg-[#183F34] text-[#FBFAF6]">
         <Image
           src="/images/destinations/trang-an.jpg"
           alt={lang === "en" ? "Ninh Binh limestone landscape" : "Phong cảnh núi đá vôi Ninh Bình"}
@@ -1836,8 +1836,8 @@ export default function NinhBinhLanding({
             </p>
           ) : null}
           <div className="fade-up mt-9 flex flex-col gap-3 sm:flex-row">
-            <a href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
-            <a href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
+            <a data-customer-track="home-hero-plan" data-customer-content-id="journey-planner" data-customer-content-type="primary-cta" href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
+            <a data-customer-track="home-hero-explore" data-customer-content-id="explore-map" data-customer-content-type="secondary-cta" href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
           </div>
         </div>
       </section>
@@ -1857,7 +1857,7 @@ export default function NinhBinhLanding({
 
       <PinnedStory beats={storyBeats[lang]} />
 
-      <section id="map" className="px-5 py-16 sm:px-8 lg:py-24">
+      <section id="map" data-customer-section="home-map" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
           <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.youAreHere}</p>
@@ -1988,7 +1988,7 @@ export default function NinhBinhLanding({
         vao mot goc. Bo cuc moi tach anh va noi dung thanh hai mat phang;
         khong khoa chieu cao, nen chu duoc phep tho theo do dai that.
       */}
-      <section id="curated-routes" className="route-showcase overflow-hidden bg-[#F6F1E7] py-20 text-[#1D2925] sm:py-24 lg:py-28">
+      <section id="curated-routes" data-customer-section="home-curated-routes" className="route-showcase overflow-hidden bg-[#F6F1E7] py-20 text-[#1D2925] sm:py-24 lg:py-28">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <Reveal className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
@@ -2079,7 +2079,7 @@ export default function NinhBinhLanding({
 
       <CinematicVideo clip={cinematicClips[lang][2]} eager eagerDelayMs={4200} />
 
-      <section id="ai" className="px-5 py-16 sm:px-8 lg:py-24">
+      <section id="ai" data-customer-section="home-itinerary-brief" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.companionLabel}</p>
@@ -2118,7 +2118,7 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
-      <section id="itinerary" className="bg-[#F6F1E7] px-5 py-16 sm:px-8 lg:py-24">
+      <section id="itinerary" data-customer-section="home-itinerary-result" className="bg-[#F6F1E7] px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_.95fr]">
           <div>
             <Reveal>

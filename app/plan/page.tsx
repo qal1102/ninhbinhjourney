@@ -33,7 +33,7 @@ export default function PlanPage() {
           </Link>
         </div>
       </header>
-      <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
+      <section data-customer-section="planner-builder" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
           Lập hành trình
         </p>

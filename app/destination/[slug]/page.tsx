@@ -56,7 +56,7 @@ export default async function DestinationPage({
           </span>
         </div>
       </header>
-      <section className="relative min-h-[68vh] overflow-hidden bg-[#183f34]">
+      <section data-customer-section="destination-hero" className="relative min-h-[68vh] overflow-hidden bg-[#183f34]">
         <Image
           src={destination.image}
           alt={destination.imageAlt.vi}
@@ -84,7 +84,7 @@ export default async function DestinationPage({
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_0.58fr] lg:py-18">
+      <section data-customer-section="destination-story" className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_0.58fr] lg:py-18">
         <article>
           {fit ? (
             <div className="mb-8 rounded-2xl border border-[#b8cfbf] bg-[#edf3f0] p-5">
@@ -260,6 +260,9 @@ export default async function DestinationPage({
           </dl>
           <div className="mt-7 grid gap-3">
             <Link
+              data-customer-track="destination-add-to-plan"
+              data-customer-content-id={destination.id}
+              data-customer-content-type="destination"
               href={`/plan?add=${destination.id}`}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
@@ -285,7 +288,7 @@ export default async function DestinationPage({
         </aside>
       </section>
 
-      <section className="bg-[#183f34] px-5 py-12 text-white sm:px-8">
+      <section data-customer-section="destination-related" className="bg-[#183f34] px-5 py-12 text-white sm:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
             Gần đó & lựa chọn tiếp theo

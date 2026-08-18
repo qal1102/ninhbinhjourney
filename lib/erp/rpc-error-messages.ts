@@ -410,6 +410,14 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Bằng chứng consent không được chứa email, số điện thoại, tên hoặc nội dung tự do của khách.",
   CUSTOMER_HISTORY_IMMUTABLE:
     "Lịch sử định danh, consent và event khách hàng chỉ được ghi thêm, không sửa hoặc xóa trực tiếp.",
+  CUSTOMER_JOURNEY_ID_REQUIRED:
+    "Hành trình khách hàng thiếu mã hành trình hoặc mã ẩn danh hợp lệ.",
+  CUSTOMER_JOURNEY_PAYLOAD_INVALID:
+    "Bản tóm tắt hành trình không đúng cấu trúc hoặc vượt giới hạn lưu trữ.",
+  CUSTOMER_JOURNEY_PII_FORBIDDEN:
+    "Hành trình chỉ được lưu tín hiệu đã cấu trúc, không chứa email, số điện thoại hay nội dung liên hệ trực tiếp.",
+  CUSTOMER_JOURNEY_ID_COLLISION:
+    "Mã hành trình đã được dùng cho nội dung khác; không được ghi đè lịch sử đã lưu.",
 
   // --- Đối soát tiền mặt (T10b) ---
   CASH_DEPOSIT_INPUT_INVALID: "Thông tin lượt nộp quỹ chưa hợp lệ.",

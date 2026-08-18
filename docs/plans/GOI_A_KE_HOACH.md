@@ -265,7 +265,7 @@ Mỗi rule có `rule_version`, `reason_code`, thời hạn hiệu lực và ngư
 | **CUS-00** | **5.6 Terra / Medium** | Khóa baseline, KPI, taxonomy, privacy và thứ tự | Tài liệu này + HANDOFF | diff sạch, dẫn chứng source/deploy, không tuyên bố code đã có |
 | **CUS-01 — code hoàn tất 18/08** | **5.6 Sol / High** | Identity, consent và event backbone | migration + contract tests + server ingestion API | ✅ RLS/grant; idempotency; PII guard; consent tách biệt; PostgreSQL transaction test. Chưa apply Supabase production |
 | **CUS-02 — code hoàn tất 18/08** | **5.6 Terra / High** | Thu hành vi web | SDK first-party + section/dwell/scroll/click + source context | ✅ unit + Playwright desktop/mobile; consent gate; `sendBeacon` khi rời/trang điều hướng. Chưa bật production |
-| **CUS-03** | **5.6 Terra / High**; nâng **Sol / High** nếu chạm RLS | Lưu intent `/plan` và Customer 360 ERP | anonymous journey persistence + timeline/profile view | ordinary visitor persist được; ERP RBAC; không cần contact; số có provenance |
+| **CUS-03 — code hoàn tất 18/08** | **5.6 Terra / High**; nâng **Sol / High** nếu chạm RLS | Lưu intent `/plan` và Customer 360 ERP | anonymous journey persistence + timeline/profile view | ✅ migration 040 + RPC/idempotency/PII/RBAC; PostgreSQL 15 thật và full gate pass. Staged: 039/040/flags chưa bật production |
 | **CUS-04** | **5.6 Terra / High** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | redirect/đổi đích/dedupe; source sống qua route; không open redirect |
 | **CUS-05** | **5.6 Sol / High** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | essential ≠ marketing; revoke test; masking/RBAC/audit |
 | **CUS-06** | **5.6 Sol / High** | Gói A booking trên lõi ERP | slot/order/hold/payment giả lập/issue T8 ticket | concurrency không oversell; T11a là nguồn công suất; không alter lõi ERP |
@@ -361,3 +361,23 @@ Bằng chứng 18/08/2026:
 **Chưa live:** cả `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED` lẫn `CUSTOMER_DATA_INGESTION_ENABLED` phải giữ tắt trên production. Consent đang là contract local để test collector; CUS-05 sẽ thay bằng consent UI + history server-side. CUS-01 migration 039 vẫn chưa apply/verify Supabase production.
 
 **Ranh giới model tiếp theo:** trước CUS-03, dùng **5.6 Terra / High**. CUS-03 lưu anonymous intent `/plan` và dựng Customer 360; nâng lại **Sol / High** nếu cần thay đổi migration/RLS hoặc hợp đồng identity/consent đã khóa.
+
+---
+
+## 14. Kết quả CUS-03 — code hoàn tất, chưa bật production
+
+Đã xây:
+
+- migration `202608180040_customer_anonymous_journeys.sql`: `customer_journeys` append-only, liên kết `(profile_id, tenant_id)` với profile anonymous-first CUS-01; summary/source/itinerary đều bị PII guard và giới hạn kích thước;
+- RPC `customer_create_anonymous_journey` chỉ cho `service_role`, tạo/tái dùng anonymous profile, idempotent khi gửi lại đúng cùng journey ID và từ chối collision;
+- `/api/journeys` giữ nguyên demo room cũ; visitor thường chỉ được persist khi `CUSTOMER_JOURNEY_PERSISTENCE_ENABLED=true` **và** request same-origin. Chỉ gửi summary cấu trúc, itinerary snapshot và attribution whitelist — không gửi raw prompt, contact hay lý do tự do;
+- cookie `nbj-customer-journey-anonymous-id` HttpOnly/SameSite=Lax để các bản tạo tiếp theo nối cùng profile; CUS-03 cố ý chưa ghi đè bản gốc khi khách sửa browser, vì chưa có revision contract;
+- `/erp/khach-hang` và nav chỉ xuất hiện cho `director`; Customer 360 đọc từ `customer_journeys` + `customer_events`, nêu rõ khi kho tắt/rỗng thay vì hiển thị số minh họa.
+
+Bằng chứng 18/08/2026:
+
+- PostgreSQL 15 tạm với vai trò Supabase tương đương: apply lần lượt 039 + 040 sạch; RPC lần đầu `inserted=true`, cùng payload trả `false`; PII, update append-only và direct insert dưới `service_role` bị chặn. Container test đã xóa, không để dữ liệu.
+- Targeted domain/API/migration contract pass; full `typecheck`, `lint`, `test:run` = 76 file/528 test pass + 1 skip có chủ đích; `build` 35/35 routes, gồm `/erp/khach-hang`; Playwright `/plan` 6/6 pass trên desktop/mobile.
+- Full regression bắt một thiếu sót thật: 4 mã lỗi RPC CUS-03 chưa có câu tiếng Việt chung. Đã bổ sung vào `rpc-error-messages.ts` trước khi rerun gate.
+
+**Chưa live:** không apply migration 039/040 hay bật `CUSTOMER_DATA_INGESTION_ENABLED`, `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED`, `CUSTOMER_JOURNEY_PERSISTENCE_ENABLED` trên production. Do đó không có dữ liệu khách thật được thu hay hiện. CUS-04 tiếp tục bằng **5.6 Terra / High**; chỉ nâng **Sol / High** nếu cần sửa RLS/RPC/identity-consent contract đã khóa.

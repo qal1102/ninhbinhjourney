@@ -40,10 +40,12 @@ export function ItineraryEditor({
   initialItinerary,
   intent,
   persisted = false,
+  savedAnonymously = false,
 }: {
   initialItinerary: Itinerary;
   intent: JourneyIntent;
   persisted?: boolean;
+  savedAnonymously?: boolean;
 }) {
   const [itinerary, setItinerary] = useState(initialItinerary);
   const [message, setMessage] = useState("");
@@ -150,7 +152,9 @@ export function ItineraryEditor({
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
               {persisted
                 ? "Lịch trình đã xác nhận · đã lưu"
-                : "Lịch trình đã xác nhận · lưu trên máy bạn"}
+                : savedAnonymously
+                  ? "Bản gốc đã lưu ẩn danh · chỉnh sửa tiếp lưu trên máy bạn"
+                  : "Lịch trình đã xác nhận · lưu trên máy bạn"}
             </p>
             <h2 className="font-display mt-3 text-4xl text-[#183f34] sm:text-5xl">
               Một ngày theo nhịp nhẹ

@@ -103,6 +103,14 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             >
               Nhật ký
             </Link>
+            {user.role === "director" ? (
+              <Link
+                href="/erp/khach-hang"
+                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
+              >
+                Khách hàng
+              </Link>
+            ) : null}
             {systemAdmin ? (
               <Link
                 href="/erp/tai-khoan"

@@ -81,6 +81,7 @@ export function PlanExperience({
     intent: JourneyIntent;
     itinerary: Itinerary;
     persisted: boolean;
+    persistence: "browser" | "demo" | "anonymous";
   } | null>(null);
 
   function parseText() {
@@ -175,6 +176,7 @@ export function PlanExperience({
         intent?: JourneyIntent;
         itinerary?: Itinerary;
         persisted?: boolean;
+        persistence?: "browser" | "demo" | "anonymous";
         error?: { message: string };
       };
       if (!response.ok || !payload.intent || !payload.itinerary) {
@@ -185,7 +187,12 @@ export function PlanExperience({
       setResult({
         intent: payload.intent,
         itinerary: payload.itinerary,
-        persisted: payload.persisted === true,
+        // The legacy editor can persist subsequent edits only inside a demo
+        // room. CUS-03 still stores the confirmed anonymous original safely;
+        // later browser edits remain local until their dedicated revision
+        // contract exists, rather than silently mutating the saved record.
+        persisted: payload.persistence === "demo",
+        persistence: payload.persistence ?? "browser",
       });
       setMessage("");
     } catch (error) {
@@ -216,6 +223,7 @@ export function PlanExperience({
           initialItinerary={result.itinerary}
           intent={result.intent}
           persisted={result.persisted}
+          savedAnonymously={result.persistence === "anonymous"}
         />
       </div>
     );

@@ -2,7 +2,7 @@
 
 > **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
 >
-> Cập nhật: **18/08/2026** — CUS-02 đã hoàn tất collector first-party và qua browser gate desktop/mobile + full local gate. Cả collector lẫn ingestion vẫn mặc định off; production chưa thu event khách.
+> Cập nhật: **18/08/2026** — CUS-03 đã hoàn tất code staged: ordinary `/plan` có thể lưu bản gốc ẩn danh khi server flag bật, và Customer 360 chỉ cho giám đốc đọc provenance/timeline. CUS-01/02/03 vẫn mặc định off; production chưa thu hay hiển thị dữ liệu khách thật.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -385,9 +385,9 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 >
 > ✅ **CUS-02 hoàn tất phần code ngày 18/08/2026:** `CustomerBehaviorTracker` chỉ chạy trên surface khách công khai; page/section/active dwell/scroll/CTA có semantic event, source whitelist và PII guard; tracking chỉ chạy khi build flag **và** analytics consent đều có. Dwell yêu cầu 50% visible + tab active/focus; người dùng im lặng 30 giây thì dừng cộng. CTA điều hướng dùng `sendBeacon`, event thường dùng `fetch keepalive`. Playwright build riêng bật flag + intercept API (không chạm DB) pass desktop và Pixel 7: không consent = 0 request; có consent = đủ event đúng shape. Full gate: typecheck/lint/build pass, 73 file/517 test pass + 1 skip. Chưa bật production.
 >
-> 🟦 **Việc kế tiếp — CUS-03: lưu anonymous intent `/plan` và Customer 360 ERP. Model khuyến nghị trước khi bắt đầu: `5.6 Terra / High`; nâng `5.6 Sol / High` nếu phải đổi migration/RLS/identity-consent contract.** Mục tiêu: khách thường tạo plan được persist ẩn danh thay vì `persisted:false`, ERP đọc timeline/provenance mà không cần contact. Không bắt đầu collector/CRM mới bằng Luna; Luna chỉ dùng fixture/test lặp sau khi luồng chính đã khóa.
+> ✅ **CUS-03 hoàn tất phần code ngày 18/08/2026 bằng `5.6 Terra / High`:** migration `202608180040_customer_anonymous_journeys.sql` bổ sung bản ghi hành trình append-only, nối đúng `customer_profiles` anonymous-first của CUS-01, PII guard ở JSON và RPC `service_role` idempotent/collision-safe. Khi `CUSTOMER_JOURNEY_PERSISTENCE_ENABLED=true`, `/api/journeys` chỉ nhận same-origin, lưu **bản gốc đã cấu trúc** (không raw prompt/contact) rồi trả `persistence:"anonymous"` và cookie HttpOnly; các chỉnh sửa tiếp theo vẫn local cho tới khi có contract revision riêng. `/erp/khach-hang` là Customer 360 director-only, chỉ đọc nguồn vào, sở thích, lịch trình và event đã consent — không bịa số khi kho trống/không sẵn sàng. PostgreSQL 15 tạm đã apply 039+040 sạch; RPC lần đầu `inserted=true`, gửi lại `false`; PII, sửa lịch sử và direct `service_role` insert đều bị chặn, container bị xóa ngay sau test. Full gate: typecheck/lint, 76 file/528 test pass + 1 skip, build 35/35, Playwright planner desktop/mobile 6/6 pass.
 >
-> **Chưa live:** migration 039 chưa apply/verify Supabase production; `CUSTOMER_DATA_INGESTION_ENABLED` và `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED` chưa bật. Consent hiện là contract local để kiểm collector; CUS-05 mới nối consent UI/history server-side. Bảng model toàn bộ CUS-00→CUS-08 ở `docs/plans/GOI_A_KE_HOACH.md` mục 9. Mỗi lần chuyển phase phải báo chủ dự án trước để đổi model thủ công nếu phiên không tự đổi được.
+> **Chưa live:** migration 039/040 chưa apply/verify trên Supabase production; `CUSTOMER_DATA_INGESTION_ENABLED`, `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED` và `CUSTOMER_JOURNEY_PERSISTENCE_ENABLED` đều giữ tắt. Consent hiện là contract local để kiểm collector; CUS-05 mới nối consent UI/history server-side. **Ranh giới model kế tiếp: CUS-04 dùng `5.6 Terra / High`; chỉ chuyển `5.6 Sol / High` nếu phải sửa RLS/RPC/identity-consent contract đã khóa.** Luna chỉ dùng fixture/test lặp sau khi luồng chính khóa. Bảng model toàn bộ CUS-00→CUS-08 ở `docs/plans/GOI_A_KE_HOACH.md` mục 9.
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|

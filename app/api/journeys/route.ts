@@ -1,13 +1,33 @@
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
+import {
+  customerJourneyIntentSummary,
+  customerJourneyItinerarySnapshot,
+  customerJourneySourceFromRequest,
+} from "@/domain/customer-journey";
 import { confirmJourneyIntent, generateItinerary, parseJourneyIntent } from "@/domain/journey";
 import { DomainError, toSafeError } from "@/domain/errors";
 import { CreateJourneyRequestSchema } from "@/domain/schemas";
+import {
+  createAnonymousCustomerJourney,
+  CustomerJourneyRepositoryError,
+  isCustomerJourneyPersistenceEnabled,
+} from "@/lib/customer-data/journey-repository";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database.generated";
 
+const CUSTOMER_JOURNEY_COOKIE = "nbj-customer-journey-anonymous-id";
+const CUSTOMER_JOURNEY_COOKIE_SECONDS = 60 * 60 * 24 * 30;
+
 function asJson(value: unknown): Json {
   return JSON.parse(JSON.stringify(value)) as Json;
+}
+
+function isSameOriginBrowserRequest(request: Request) {
+  const origin = request.headers.get("origin");
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (!origin || origin !== new URL(request.url).origin) return false;
+  return !fetchSite || fetchSite === "same-origin";
 }
 
 export async function POST(request: Request) {
@@ -76,38 +96,99 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!supabase || !demoRunId) {
+    if (supabase && demoRunId) {
+      const { data, error } = await supabase.rpc("save_generated_journey", {
+        p_demo_run_id: demoRunId,
+        p_locale: input.locale,
+        p_raw_text: input.text,
+        p_structured_intent: asJson(intent),
+        p_itinerary: asJson(itinerary),
+      });
+      const saved = data?.[0];
+      if (error || !saved) {
+        throw error ?? new Error("Journey persistence failed.");
+      }
+
       return Response.json(
-        { intent, itinerary, persisted: false },
+        {
+          intent: { ...intent, id: saved.intent_id },
+          itinerary: {
+            ...itinerary,
+            id: saved.itinerary_id,
+            intentId: saved.intent_id,
+          },
+          persisted: true,
+          persistence: "demo",
+        },
+        { status: 201, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+
+    if (!isCustomerJourneyPersistenceEnabled()) {
+      return Response.json(
+        { intent, itinerary, persisted: false, persistence: "browser" },
         { status: 200, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    const { data, error } = await supabase.rpc("save_generated_journey", {
-      p_demo_run_id: demoRunId,
-      p_locale: input.locale,
-      p_raw_text: input.text,
-      p_structured_intent: asJson(intent),
-      p_itinerary: asJson(itinerary),
-    });
-    const saved = data?.[0];
-    if (error || !saved) {
-      throw error ?? new Error("Journey persistence failed.");
+    if (!isSameOriginBrowserRequest(request)) {
+      return Response.json(
+        {
+          error: {
+            code: "CUSTOMER_JOURNEY_ORIGIN_REJECTED",
+            message: "Chỉ nhận hành trình first-party từ cùng origin.",
+          },
+        },
+        { status: 403, headers: { "Cache-Control": "no-store" } },
+      );
     }
 
-    return Response.json(
-      {
-        intent: { ...intent, id: saved.intent_id },
-        itinerary: {
-          ...itinerary,
-          id: saved.itinerary_id,
-          intentId: saved.intent_id,
-        },
-        persisted: true,
-      },
+    const cookieStore = await cookies();
+    const existingAnonymousId = cookieStore.get(CUSTOMER_JOURNEY_COOKIE)?.value;
+    const anonymousId =
+      existingAnonymousId && /^[0-9a-f-]{36}$/i.test(existingAnonymousId)
+        ? existingAnonymousId
+        : randomUUID();
+    await createAnonymousCustomerJourney({
+      journeyId: itinerary.id,
+      anonymousId,
+      intentSummary: customerJourneyIntentSummary(intent),
+      itinerarySnapshot: customerJourneyItinerarySnapshot(itinerary),
+      sourceContext: customerJourneySourceFromRequest(request),
+    });
+
+    const response = Response.json(
+      { intent, itinerary, persisted: true, persistence: "anonymous" },
       { status: 201, headers: { "Cache-Control": "no-store" } },
     );
+    response.headers.append(
+      "Set-Cookie",
+      `${CUSTOMER_JOURNEY_COOKIE}=${anonymousId}; Path=/; Max-Age=${CUSTOMER_JOURNEY_COOKIE_SECONDS}; SameSite=Lax; HttpOnly${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
+    );
+    return response;
   } catch (error) {
+    if (error instanceof CustomerJourneyRepositoryError) {
+      return Response.json(
+        {
+          error: {
+            code:
+              error.code === "PII_FORBIDDEN"
+                ? "CUSTOMER_JOURNEY_PII_FORBIDDEN"
+                : "CUSTOMER_JOURNEY_PERSISTENCE_FAILED",
+            message: error.message,
+          },
+        },
+        {
+          status:
+            error.code === "PII_FORBIDDEN"
+              ? 400
+              : error.code === "ID_COLLISION"
+                ? 409
+                : 503,
+          headers: { "Cache-Control": "no-store" },
+        },
+      );
+    }
     const safeError = toSafeError(error);
     return Response.json(
       { error: safeError },

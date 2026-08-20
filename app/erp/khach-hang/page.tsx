@@ -8,6 +8,12 @@ import {
   listCustomer360Journeys,
   type Customer360Journey,
 } from "@/lib/customer-data/journey-repository";
+import {
+  isCustomerBookingEnabled,
+  listCustomer360BookingOrders,
+  type Customer360BookingOrder,
+} from "@/lib/customer-data/booking-repository";
+import { auditCustomer360Access } from "@/lib/customer-data/identity-repository";
 
 export default async function Customer360Page() {
   const user = await getCurrentErpUser();
@@ -17,9 +23,17 @@ export default async function Customer360Page() {
 
   let status: "disabled" | "unavailable" | "ready" = "disabled";
   let journeys: Customer360Journey[] = [];
-  if (isCustomerJourneyPersistenceEnabled()) {
+  let orders: Customer360BookingOrder[] = [];
+  const journeyEnabled = isCustomerJourneyPersistenceEnabled();
+  const bookingEnabled = isCustomerBookingEnabled();
+  if (journeyEnabled || bookingEnabled) {
     try {
-      journeys = await listCustomer360Journeys(user.id);
+      if (journeyEnabled) {
+        journeys = await listCustomer360Journeys(user.id);
+      } else {
+        await auditCustomer360Access(user.id);
+      }
+      if (bookingEnabled) orders = await listCustomer360BookingOrders();
       status = "ready";
     } catch (error) {
       console.error("Customer 360 read failed", error);
@@ -29,7 +43,7 @@ export default async function Customer360Page() {
 
   return (
     <ErpShell user={user}>
-      <Customer360Dashboard status={status} journeys={journeys} />
+      <Customer360Dashboard status={status} journeys={journeys} orders={orders} />
     </ErpShell>
   );
 }

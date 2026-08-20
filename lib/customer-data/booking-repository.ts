@@ -5,6 +5,7 @@ import type {
   CustomerBookingSlot,
   CustomerBookingTicket,
 } from "@/domain/customer-booking";
+import { PACKAGES } from "@/content/packages";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 
@@ -180,4 +181,94 @@ export async function confirmCustomerSimulatedBooking(input: {
     tickets: ticketsFromRow(row.tickets),
     duplicate: row.inserted !== true,
   };
+}
+
+export type Customer360BookingOrder = {
+  orderId: string;
+  profileId: string;
+  orderCode: string;
+  productName: string;
+  visitDate: string;
+  partySize: number;
+  totalVnd: number;
+  status: string;
+  paymentStatus: string | null;
+  createdAt: string;
+  tickets: Array<{ ticketCode: string; siteId: string; entriesAllowed: number; status: string }>;
+};
+
+export async function listCustomer360BookingOrders(limit = 100): Promise<Customer360BookingOrder[]> {
+  const client = createAdminClient();
+  const { data: orders, error: orderError } = await client
+    .from("customer_orders")
+    .select("id, profile_id, product_id, order_code, visit_date, party_size, total_vnd, status, created_at")
+    .eq("tenant_id", TENANT_ID)
+    .order("created_at", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 200));
+  if (orderError) throw mapRepositoryError(orderError);
+
+  const orderRows = (orders ?? []) as Array<Record<string, unknown>>;
+  const orderIds = orderRows.map((row) => String(row.id));
+  if (orderIds.length === 0) return [];
+
+  const [paymentResult, bridgeResult] = await Promise.all([
+    client.from("customer_payment_attempts").select("order_id, status").eq("tenant_id", TENANT_ID).in("order_id", orderIds),
+    client.from("customer_order_tickets").select("order_id, ticket_id, entries_allowed").eq("tenant_id", TENANT_ID).in("order_id", orderIds),
+  ]);
+  if (paymentResult.error) throw mapRepositoryError(paymentResult.error);
+  if (bridgeResult.error) throw mapRepositoryError(bridgeResult.error);
+
+  const paymentByOrder = new Map<string, string>();
+  for (const row of (paymentResult.data ?? []) as Array<Record<string, unknown>>) {
+    paymentByOrder.set(String(row.order_id), String(row.status));
+  }
+  const bridgesByOrder = new Map<string, Array<{ ticketId: string; entriesAllowed: number }>>();
+  const ticketIds: string[] = [];
+  for (const row of (bridgeResult.data ?? []) as Array<Record<string, unknown>>) {
+    const orderId = String(row.order_id);
+    const ticketId = String(row.ticket_id);
+    const current = bridgesByOrder.get(orderId) ?? [];
+    current.push({ ticketId, entriesAllowed: Number(row.entries_allowed) });
+    bridgesByOrder.set(orderId, current);
+    ticketIds.push(ticketId);
+  }
+
+  const ticketsById = new Map<string, Record<string, unknown>>();
+  if (ticketIds.length > 0) {
+    const { data: tickets, error: ticketError } = await client
+      .from("erp_tickets")
+      .select("id, ticket_code, site_id, status")
+      .eq("tenant_id", TENANT_ID)
+      .in("id", [...new Set(ticketIds)]);
+    if (ticketError) throw mapRepositoryError(ticketError);
+    for (const ticket of (tickets ?? []) as Array<Record<string, unknown>>) {
+      ticketsById.set(String(ticket.id), ticket);
+    }
+  }
+
+  return orderRows.map((row) => {
+    const orderId = String(row.id);
+    const product = PACKAGES.find((item) => item.id === String(row.product_id));
+    return {
+      orderId,
+      profileId: String(row.profile_id),
+      orderCode: String(row.order_code),
+      productName: product?.name ?? "Gói dịch vụ",
+      visitDate: String(row.visit_date),
+      partySize: Number(row.party_size),
+      totalVnd: Number(row.total_vnd),
+      status: String(row.status),
+      paymentStatus: paymentByOrder.get(orderId) ?? null,
+      createdAt: String(row.created_at),
+      tickets: (bridgesByOrder.get(orderId) ?? []).flatMap((bridge) => {
+        const ticket = ticketsById.get(bridge.ticketId);
+        return ticket ? [{
+          ticketCode: String(ticket.ticket_code),
+          siteId: String(ticket.site_id),
+          entriesAllowed: bridge.entriesAllowed,
+          status: String(ticket.status),
+        }] : [];
+      }),
+    };
+  });
 }

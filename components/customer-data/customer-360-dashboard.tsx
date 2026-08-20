@@ -1,4 +1,5 @@
 import type { Customer360Journey } from "@/lib/customer-data/journey-repository";
+import type { Customer360BookingOrder } from "@/lib/customer-data/booking-repository";
 
 const EVENT_LABELS: Record<string, string> = {
   page_viewed: "Mở trang",
@@ -64,9 +65,11 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 export function Customer360Dashboard({
   status,
   journeys = [],
+  orders = [],
 }: {
   status: "disabled" | "unavailable" | "ready";
   journeys?: readonly Customer360Journey[];
+  orders?: readonly Customer360BookingOrder[];
 }) {
   if (status !== "ready") {
     return (
@@ -79,7 +82,7 @@ export function Customer360Dashboard({
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-6 text-[#6b6250]">
           {status === "disabled"
-            ? "Màn hình chỉ mở sau khi migration lớp khách hàng được áp dụng và cờ lưu hành trình được bật. Hiện không có dữ liệu khách thật nào được thu từ màn hình này."
+            ? "Màn hình chỉ mở sau khi migration lớp khách hàng được áp dụng và ít nhất một cờ hành trình/booking được bật. Hiện không có dữ liệu khách thật nào được thu từ màn hình này."
             : "Kho hành trình đang chưa phản hồi. Không thay bằng số minh hoạ; hãy kiểm tra migration và cấu hình máy chủ trước khi dùng."}
         </p>
       </section>
@@ -109,7 +112,7 @@ export function Customer360Dashboard({
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
           <p className="text-xs text-[#6e7b75]">Đơn dịch vụ đã nối</p>
           <p className="mt-2 text-3xl font-black text-[#203a30]">
-            {journeys.reduce((total, journey) => total + journey.orders.length, 0)}
+            {orders.length}
           </p>
           <p className="mt-2 text-xs text-[#849089]">order + payment mô phỏng + vé T8</p>
         </article>
@@ -128,6 +131,33 @@ export function Customer360Dashboard({
           <p className="mt-2 text-xs text-[#849089]">nguồn: customer_events</p>
         </article>
       </section>
+
+      {orders.length > 0 ? (
+        <section className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Bán dịch vụ · toàn bộ profile có order</p>
+          <h2 className="mt-2 text-2xl font-black text-[#203a30]">Order, payment mô phỏng và vé T8</h2>
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {orders.map((order) => (
+              <article key={order.orderId} className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <strong>{order.productName}</strong>
+                    <p className="mt-1 text-xs">{order.orderCode} · profile {order.profileId.slice(0, 8).toUpperCase()}</p>
+                    <p className="mt-1 text-xs">{order.visitDate} · {order.partySize} khách · {formatDate(order.createdAt)}</p>
+                  </div>
+                  <span className="rounded-full bg-[#e7efe9] px-2.5 py-1 text-xs font-bold text-[#35594b]">{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>
+                </div>
+                <p className="mt-3 font-bold">{order.totalVnd.toLocaleString("vi-VN")} VND · {order.paymentStatus === "succeeded" ? "payment mô phỏng thành công" : "chưa có payment"}</p>
+                {order.tickets.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {order.tickets.map((ticket) => <code key={ticket.ticketCode} className="rounded-lg bg-[#173f34] px-2.5 py-1.5 text-xs font-bold text-[#e7c78d]">{ticket.ticketCode} · {ticket.entriesAllowed} lượt</code>)}
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {journeys.length === 0 ? (
         <section className="rounded-3xl border border-dashed border-[#b8c6bf] bg-white px-6 py-14 text-center">
@@ -194,27 +224,6 @@ export function Customer360Dashboard({
                       </div>
                     ) : null}
                   </div>
-                  {journey.orders.length > 0 ? (
-                    <div className="mt-5">
-                      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#738078]">Đơn dịch vụ và vé vận hành</p>
-                      <ul className="mt-3 space-y-3">
-                        {journey.orders.map((order) => (
-                          <li key={order.orderId} className="rounded-xl border border-[#dfe7e2] bg-[#f7f9f7] p-3 text-sm text-[#42574e]">
-                            <div className="flex flex-wrap items-start justify-between gap-2">
-                              <div><strong>{order.productName}</strong><p className="mt-1 text-xs">{order.orderCode} · {order.visitDate} · {order.partySize} khách</p></div>
-                              <span className="rounded-full bg-[#e7efe9] px-2.5 py-1 text-xs font-bold text-[#35594b]">{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>
-                            </div>
-                            <p className="mt-2 font-bold">{order.totalVnd.toLocaleString("vi-VN")} VND · {order.paymentStatus === "succeeded" ? "payment mô phỏng thành công" : "chưa có payment"}</p>
-                            {order.tickets.length > 0 ? (
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {order.tickets.map((ticket) => <code key={ticket.ticketCode} className="rounded-lg bg-[#173f34] px-2.5 py-1.5 text-xs font-bold text-[#e7c78d]">{ticket.ticketCode} · {ticket.entriesAllowed} lượt</code>)}
-                              </div>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
                 </div>
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-[#738078]">Dòng thời gian</p>

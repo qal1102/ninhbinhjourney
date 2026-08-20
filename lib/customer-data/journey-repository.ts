@@ -7,8 +7,6 @@ import type {
   CustomerJourneySource,
 } from "@/domain/customer-journey";
 import { auditCustomer360Access } from "@/lib/customer-data/identity-repository";
-import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
-import { PACKAGES } from "@/content/packages";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 
@@ -107,18 +105,6 @@ export type Customer360Journey = {
   consents: Record<string, { status: string; occurredAt: string }>;
   segments: string[];
   deliveryRequests: Array<{ channel: string; status: string; createdAt: string }>;
-  orders: Array<{
-    orderId: string;
-    orderCode: string;
-    productName: string;
-    visitDate: string;
-    partySize: number;
-    totalVnd: number;
-    status: string;
-    paymentStatus: string | null;
-    createdAt: string;
-    tickets: Array<{ ticketCode: string; siteId: string; entriesAllowed: number; status: string }>;
-  }>;
   events: Array<{ eventName: string; occurredAt: string; properties: Record<string, unknown> }>;
 };
 
@@ -194,7 +180,6 @@ export async function listCustomer360Journeys(
   const consentsByProfile = new Map<string, Customer360Journey["consents"]>();
   const segmentsByProfile = new Map<string, string[]>();
   const deliveriesByProfile = new Map<string, Customer360Journey["deliveryRequests"]>();
-  const ordersByProfile = new Map<string, Customer360Journey["orders"]>();
   if (canonicalProfileIds.length > 0) {
     const [identityResult, consentResult, segmentResult, deliveryResult] = await Promise.all([
       client.from("customer_identities").select("profile_id, identity_type").eq("tenant_id", TENANT_ID).in("profile_id", canonicalProfileIds),
@@ -232,82 +217,6 @@ export async function listCustomer360Journeys(
     }
   }
 
-  if (isCustomerBookingEnabled() && profileIds.length > 0) {
-    const commerceProfileIds = [...new Set([...profileIds, ...canonicalProfileIds])];
-    const { data: orders, error: orderError } = await client
-      .from("customer_orders")
-      .select("id, profile_id, product_id, order_code, visit_date, party_size, total_vnd, status, created_at")
-      .eq("tenant_id", TENANT_ID)
-      .in("profile_id", commerceProfileIds)
-      .order("created_at", { ascending: false });
-    if (orderError) throw mapRepositoryError(orderError);
-
-    const orderRows = (orders ?? []) as Array<Record<string, unknown>>;
-    const orderIds = orderRows.map((row) => String(row.id));
-    const paymentByOrder = new Map<string, string>();
-    const bridgesByOrder = new Map<string, Array<{ ticketId: string; entriesAllowed: number }>>();
-    const ticketsById = new Map<string, Record<string, unknown>>();
-    if (orderIds.length > 0) {
-      const [paymentResult, bridgeResult] = await Promise.all([
-        client.from("customer_payment_attempts").select("order_id, status").eq("tenant_id", TENANT_ID).in("order_id", orderIds),
-        client.from("customer_order_tickets").select("order_id, ticket_id, entries_allowed").eq("tenant_id", TENANT_ID).in("order_id", orderIds),
-      ]);
-      if (paymentResult.error) throw mapRepositoryError(paymentResult.error);
-      if (bridgeResult.error) throw mapRepositoryError(bridgeResult.error);
-      for (const row of (paymentResult.data ?? []) as Array<Record<string, unknown>>) {
-        paymentByOrder.set(String(row.order_id), String(row.status));
-      }
-      const ticketIds: string[] = [];
-      for (const row of (bridgeResult.data ?? []) as Array<Record<string, unknown>>) {
-        const orderId = String(row.order_id);
-        const ticketId = String(row.ticket_id);
-        const current = bridgesByOrder.get(orderId) ?? [];
-        current.push({ ticketId, entriesAllowed: Number(row.entries_allowed) });
-        bridgesByOrder.set(orderId, current);
-        ticketIds.push(ticketId);
-      }
-      if (ticketIds.length > 0) {
-        const { data: tickets, error: ticketError } = await client
-          .from("erp_tickets")
-          .select("id, ticket_code, site_id, status")
-          .eq("tenant_id", TENANT_ID)
-          .in("id", [...new Set(ticketIds)]);
-        if (ticketError) throw mapRepositoryError(ticketError);
-        for (const ticket of (tickets ?? []) as Array<Record<string, unknown>>) {
-          ticketsById.set(String(ticket.id), ticket);
-        }
-      }
-    }
-
-    for (const row of orderRows) {
-      const profileId = canonicalFor(String(row.profile_id));
-      const orderId = String(row.id);
-      const product = PACKAGES.find((item) => item.id === String(row.product_id));
-      const current = ordersByProfile.get(profileId) ?? [];
-      current.push({
-        orderId,
-        orderCode: String(row.order_code),
-        productName: product?.name ?? "Gói dịch vụ",
-        visitDate: String(row.visit_date),
-        partySize: Number(row.party_size),
-        totalVnd: Number(row.total_vnd),
-        status: String(row.status),
-        paymentStatus: paymentByOrder.get(orderId) ?? null,
-        createdAt: String(row.created_at),
-        tickets: (bridgesByOrder.get(orderId) ?? []).flatMap((bridge) => {
-          const ticket = ticketsById.get(bridge.ticketId);
-          return ticket ? [{
-            ticketCode: String(ticket.ticket_code),
-            siteId: String(ticket.site_id),
-            entriesAllowed: bridge.entriesAllowed,
-            status: String(ticket.status),
-          }] : [];
-        }),
-      });
-      ordersByProfile.set(profileId, current);
-    }
-  }
-
   return rows.map((row) => {
     const profileId = String(row.profile_id);
     const canonicalProfileId = canonicalFor(profileId);
@@ -324,7 +233,6 @@ export async function listCustomer360Journeys(
       consents: consentsByProfile.get(canonicalProfileId) ?? {},
       segments: segmentsByProfile.get(canonicalProfileId) ?? [],
       deliveryRequests: deliveriesByProfile.get(canonicalProfileId) ?? [],
-      orders: ordersByProfile.get(canonicalProfileId) ?? [],
       events: eventsByProfile.get(profileId) ?? [],
     };
   });

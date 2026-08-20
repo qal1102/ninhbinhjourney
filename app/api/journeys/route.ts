@@ -17,6 +17,10 @@ import {
   CustomerJourneyRepositoryError,
   isCustomerJourneyPersistenceEnabled,
 } from "@/lib/customer-data/journey-repository";
+import {
+  isCustomerRecommendationsEnabled,
+  refreshCustomerRecommendations,
+} from "@/lib/customer-data/recommendation-repository";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database.generated";
 
@@ -150,13 +154,22 @@ export async function POST(request: Request) {
       existingAnonymousId && /^[0-9a-f-]{36}$/i.test(existingAnonymousId)
         ? existingAnonymousId
         : randomUUID();
-    await createAnonymousCustomerJourney({
+    const savedJourney = await createAnonymousCustomerJourney({
       journeyId: itinerary.id,
       anonymousId,
       intentSummary: customerJourneyIntentSummary(intent),
       itinerarySnapshot: customerJourneyItinerarySnapshot(itinerary),
       sourceContext: customerJourneySourceFromRequest(request),
     });
+    // Recommendation generation is separate from journey persistence. A failed
+    // optional rule refresh must not make an already saved customer journey fail.
+    if (isCustomerRecommendationsEnabled()) {
+      try {
+        await refreshCustomerRecommendations(savedJourney.profileId);
+      } catch (error) {
+        console.error("Customer recommendation refresh failed", error);
+      }
+    }
 
     const response = Response.json(
       { intent, itinerary, persisted: true, persistence: "anonymous" },

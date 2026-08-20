@@ -1,5 +1,7 @@
 import type { Customer360Journey } from "@/lib/customer-data/journey-repository";
 import type { Customer360BookingOrder } from "@/lib/customer-data/booking-repository";
+import type { Customer360OutboundAction } from "@/lib/customer-data/recommendation-repository";
+import { RECOMMENDATION_REASON_LABELS, type CustomerRecommendation } from "@/domain/customer-recommendations";
 
 const EVENT_LABELS: Record<string, string> = {
   page_viewed: "Mở trang",
@@ -66,10 +68,14 @@ export function Customer360Dashboard({
   status,
   journeys = [],
   orders = [],
+  recommendations = [],
+  outboundActions = [],
 }: {
   status: "disabled" | "unavailable" | "ready";
   journeys?: readonly Customer360Journey[];
   orders?: readonly Customer360BookingOrder[];
+  recommendations?: readonly CustomerRecommendation[];
+  outboundActions?: readonly Customer360OutboundAction[];
 }) {
   if (status !== "ready") {
     return (
@@ -99,9 +105,46 @@ export function Customer360Dashboard({
           Hành trình khách đã chủ động tạo
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-6 text-[#d4e4de]">
-          Nguồn vào, sở thích, lịch trình, quyền sử dụng dữ liệu và liên hệ đã bảo vệ được đặt cùng một dòng thời gian. Màn hình không có đường giải mã email hay số điện thoại; mỗi lần mở đều ghi audit.
+          Nguồn vào, sở thích, lịch trình, quyền sử dụng dữ liệu và liên hệ đã bảo vệ được đặt cùng một dòng thời gian. Gợi ý chỉ dùng lựa chọn rõ ràng của khách, luôn hiện lý do và phiên bản rule. Màn hình không có đường giải mã email hay số điện thoại; mỗi lần mở đều ghi audit.
         </p>
       </section>
+
+      <section className="grid gap-3 sm:grid-cols-2">
+        <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
+          <p className="text-xs text-[#6e7b75]">Gợi ý có thể giải thích</p>
+          <p className="mt-2 text-3xl font-black text-[#203a30]">{recommendations.length}</p>
+          <p className="mt-2 text-xs text-[#849089]">rule version + reason code, không gọi là AI</p>
+        </article>
+        <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
+          <p className="text-xs text-[#6e7b75]">Hàng đợi outbound</p>
+          <p className="mt-2 text-3xl font-black text-[#203a30]">{outboundActions.length}</p>
+          <p className="mt-2 text-xs text-[#849089]">chỉ staged/suppressed mô phỏng, chưa gửi ra nhà cung cấp</p>
+        </article>
+      </section>
+
+      {recommendations.length > 0 || outboundActions.length > 0 ? (
+        <section className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Gợi ý & hành động marketing · kiểm soát được</p>
+          <h2 className="mt-2 text-2xl font-black text-[#203a30]">Lý do trước, gửi ra ngoài sau</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#66756e]">Không có email, số điện thoại hay nội dung liên hệ ở đây. Hành động sẽ bị suppress nếu chưa có consent marketing hiện hành, đã opt-out hoặc quá 2 lần/7 ngày/kênh.</p>
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {recommendations.map((recommendation) => (
+              <article key={recommendation.recommendationId} className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]">
+                <strong>{recommendation.productName}</strong>
+                <p className="mt-2">{RECOMMENDATION_REASON_LABELS[recommendation.reasonCode] ?? recommendation.reasonCode}</p>
+                <p className="mt-2 text-xs">profile {recommendation.profileId.slice(0, 8).toUpperCase()} · rule {recommendation.ruleVersion} · hết hạn {formatDate(recommendation.expiresAt)}</p>
+              </article>
+            ))}
+            {outboundActions.map((action) => (
+              <article key={action.actionId} className="rounded-2xl border border-[#eadcc4] bg-[#fff8eb] p-4 text-sm text-[#5d5037]">
+                <strong>Outbound {action.channel.toUpperCase()} · {action.status}</strong>
+                <p className="mt-2">{action.suppressionReason ? `Đã chặn: ${action.suppressionReason}` : "Đang ở hàng đợi mô phỏng; không có provider nào được gọi."}</p>
+                <p className="mt-2 text-xs">profile {action.profileId.slice(0, 8).toUpperCase()} · template {action.templateCode} · {formatDate(action.createdAt)}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">

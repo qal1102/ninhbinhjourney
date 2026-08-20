@@ -13,6 +13,12 @@ import {
   listCustomer360BookingOrders,
   type Customer360BookingOrder,
 } from "@/lib/customer-data/booking-repository";
+import {
+  isCustomerRecommendationsEnabled,
+  listCustomer360Recommendations,
+  type Customer360OutboundAction,
+} from "@/lib/customer-data/recommendation-repository";
+import type { CustomerRecommendation } from "@/domain/customer-recommendations";
 import { auditCustomer360Access } from "@/lib/customer-data/identity-repository";
 
 export default async function Customer360Page() {
@@ -24,9 +30,12 @@ export default async function Customer360Page() {
   let status: "disabled" | "unavailable" | "ready" = "disabled";
   let journeys: Customer360Journey[] = [];
   let orders: Customer360BookingOrder[] = [];
+  let recommendations: CustomerRecommendation[] = [];
+  let outboundActions: Customer360OutboundAction[] = [];
   const journeyEnabled = isCustomerJourneyPersistenceEnabled();
   const bookingEnabled = isCustomerBookingEnabled();
-  if (journeyEnabled || bookingEnabled) {
+  const recommendationsEnabled = isCustomerRecommendationsEnabled();
+  if (journeyEnabled || bookingEnabled || recommendationsEnabled) {
     try {
       if (journeyEnabled) {
         journeys = await listCustomer360Journeys(user.id);
@@ -34,6 +43,11 @@ export default async function Customer360Page() {
         await auditCustomer360Access(user.id);
       }
       if (bookingEnabled) orders = await listCustomer360BookingOrders();
+      if (recommendationsEnabled) {
+        const queue = await listCustomer360Recommendations();
+        recommendations = queue.recommendations;
+        outboundActions = queue.outboundActions;
+      }
       status = "ready";
     } catch (error) {
       console.error("Customer 360 read failed", error);
@@ -43,7 +57,7 @@ export default async function Customer360Page() {
 
   return (
     <ErpShell user={user}>
-      <Customer360Dashboard status={status} journeys={journeys} orders={orders} />
+      <Customer360Dashboard status={status} journeys={journeys} orders={orders} recommendations={recommendations} outboundActions={outboundActions} />
     </ErpShell>
   );
 }

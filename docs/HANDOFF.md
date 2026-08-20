@@ -2,11 +2,11 @@
 
 > **Thứ tự đọc hiện hành — không đọc tràn lan:**
 > 1. Đọc toàn bộ file này để biết hiện trạng thật.
-> 2. **CUS-06 đã đóng phần code; CUS-07 là phase kế tiếp nhưng chưa bắt đầu.** Trước khi làm CUS-07 chỉ đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9 và 18; đây là kế hoạch thi hành duy nhất.
+> 2. **CUS-07 đang hoàn tất kiểm chứng code staged.** Trước khi tiếp tục phase này chỉ đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9 và 18; đây là kế hoạch thi hành duy nhất.
 > 3. Khi chạm UI public mới đọc `docs/reference/UI_UX_RULES.md` + `REFERENCE_SITE_ANALYSIS.md`; khi chạm nghiệp vụ vé/ERP mới đối chiếu `SO_TAY_HE_THONG_VI.md` và migration T8/T11a trong code.
 > 4. Các file còn lại trong `docs/reference/` đang **tạm dừng/on-demand**, không phải hàng việc hiện tại. `docs/archive/` chỉ là lịch sử, tuyệt đối không dùng để kết luận trạng thái.
 >
-> Cập nhật: **20/08/2026** — CUS-06 đã hoàn tất code staged bằng `5.6 Sol / High`; CUS-01→06 vẫn mặc định off, production chưa thu dữ liệu khách hay mở booking mới. CUS-07 kế tiếp dùng `5.6 Terra / High`, chỉ nâng `Sol / High` khi chạm outbound consent/security.
+> Cập nhật: **20/08/2026** — CUS-06 đã hoàn tất code staged bằng `5.6 Sol / High`; CUS-01→06 vẫn mặc định off, production chưa thu dữ liệu khách hay mở booking mới. CUS-07 dùng `5.6 Terra / High` cho rules/UI/adapter; chỉ nâng `Sol / High` khi mở outbound thật, chạm secrets hoặc cơ chế consent/opt-out mới.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -408,6 +408,12 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 > PostgreSQL 17 cô lập đã apply core + T8 + T11a + 039/040/042/043 sạch. Transaction test xác minh hold/payment replay, payload collision, expiry không phát vé, direct write denial và cổng T8 đọc vé website đúng 3 lượt. Concurrency thật với ngưỡng 3 chỗ: hai package cùng gửi hold 2 khách thì đúng một thành công, một nhận `CUSTOMER_CAPACITY_UNAVAILABLE`; snapshot 3 chỉ reserved 2. Cluster tạm đã dừng và xóa. Full gate: typecheck/lint/build 40 route pass; 88 file/569 test pass + 1 skip; Playwright booking desktop/mobile 2/2 và public regression khi flag tắt 28/28.
 >
 > **CUS-06 chưa live:** migration 039–043 chưa apply/verify Supabase production và `CUSTOMER_BOOKING_ENABLED` mặc định tắt. Chưa có linked project/production key/policy approval nên không tự apply hoặc bật cờ. Lịch bán trong `customer_product_capacity_templates` vẫn là `catalog-staged`, phải được Xuân Trường duyệt trước khi mở bán thật. **Phase kế tiếp CUS-07 dùng `5.6 Terra / High`; nâng `5.6 Sol / High` trước khi triển khai outbound consent/security, không dùng Luna để quyết định connector hoặc opt-out contract.**
+
+> ✅ **CUS-07 hoàn tất phần code staged ngày 20/08/2026 bằng `5.6 Terra / High`:** migration `202608200044_customer_recommendations_outbound_queue.sql` tái dùng `customer_profiles`/consent/journey/order của CUS-01→06, không tạo contact list hay nguồn consent mới. Ba rule versioned chỉ đọc lựa chọn tường minh trong hành trình: nhóm có trẻ em, nhịp chậm/đi bộ thấp, và nhịp năng động + nhiếp ảnh. Recommendation luôn có `reason_code`, `rule_version`, hạn 30 ngày và không được gọi là AI. Customer 360 director-only hiển thị gói, lý do, phiên bản rule, cùng action queue không lộ email/số điện thoại. Khi `CUSTOMER_RECOMMENDATIONS_ENABLED=true`, lưu journey thành công mới refresh rule; lỗi refresh không làm hỏng journey đã lưu.
+>
+> Outbound là **queue mô phỏng**, không chứa contact/ciphertext, provider credential, sender identity, webhook hay code gửi Email/SMS/Zalo. RPC chỉ director gọi được, khóa advisory + idempotency key; identity phải đúng profile/kênh; consent marketing phải còn `granted`; không consent/đã revoke và quá 2 action/7 ngày/kênh đều thành `suppressed`. PostgreSQL 17 cô lập đã chạy migration và test runtime: no-consent → suppressed, grant → staged hai action, action thứ ba → suppressed. Một lỗi NULL-consent thật được bắt trong runtime test và vá fail-closed bằng `IS DISTINCT FROM 'granted'`. Test contract/unit CUS-07 pass; full gate/push ghi sau khi chạy xong.
+>
+> **CUS-07 chưa live:** migration 044 chưa apply/verify trên Supabase production và `CUSTOMER_RECOMMENDATIONS_ENABLED` mặc định tắt. Trước outbound thật phải có Xuân Trường duyệt policy/sender/provider, secrets server-only, retry/dead-letter/reconciliation và opt-out xuyên kênh; khi chạm phần đó bắt buộc chuyển `5.6 Sol / High`.
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|

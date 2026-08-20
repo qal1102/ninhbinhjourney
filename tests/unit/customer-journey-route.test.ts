@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),
   enabled: vi.fn(),
   create: vi.fn(),
+  recommendationsEnabled: vi.fn(),
+  refreshRecommendations: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
@@ -20,6 +22,10 @@ vi.mock("@/lib/customer-data/journey-repository", () => {
     createAnonymousCustomerJourney: mocks.create,
   };
 });
+vi.mock("@/lib/customer-data/recommendation-repository", () => ({
+  isCustomerRecommendationsEnabled: mocks.recommendationsEnabled,
+  refreshCustomerRecommendations: mocks.refreshRecommendations,
+}));
 
 import { POST } from "@/app/api/journeys/route";
 import { CustomerJourneyRepositoryError } from "@/lib/customer-data/journey-repository";
@@ -54,6 +60,7 @@ describe("POST /api/journeys CUS-03 persistence", () => {
     vi.clearAllMocks();
     mocks.cookies.mockResolvedValue({ get: vi.fn().mockReturnValue(undefined) });
     mocks.enabled.mockReturnValue(true);
+    mocks.recommendationsEnabled.mockReturnValue(false);
     mocks.create.mockResolvedValue({
       journeyId: "10000000-0000-4000-8000-000000000001",
       profileId: "10000000-0000-4000-8000-000000000002",

@@ -430,6 +430,18 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Đơn không còn ở trạng thái có thể xác nhận.",
   CUSTOMER_BOOKING_RATE_LIMITED:
     "Phiên khách đã tạo quá nhiều lượt giữ chỗ trong một giờ.",
+  CUSTOMER_RECOMMENDATION_TIME_INVALID:
+    "Thời điểm làm mới gợi ý không hợp lệ; chỉ nhận tín hiệu hành trình trong khoảng thời gian cho phép.",
+  CUSTOMER_RECOMMENDATION_UNAVAILABLE:
+    "Gợi ý này đã hết hạn, không thuộc hồ sơ khách hiện tại hoặc không còn đủ điều kiện để tạo hành động.",
+  CUSTOMER_OUTBOUND_DIRECTOR_REQUIRED:
+    "Chỉ giám đốc có vai trò đang hiệu lực mới được đưa gợi ý vào hàng đợi marketing.",
+  CUSTOMER_OUTBOUND_IDENTITY_REQUIRED:
+    "Hồ sơ chưa có loại liên hệ đã bảo vệ phù hợp với kênh này; không thể đưa hành động ra hàng đợi.",
+  CUSTOMER_OUTBOUND_INPUT_INVALID:
+    "Kênh, mã chống trùng, mẫu nội dung hoặc phiên bản chính sách của hành động marketing chưa hợp lệ.",
+  CUSTOMER_OUTBOUND_ID_COLLISION:
+    "Mã chống trùng này đã thuộc một hành động marketing khác; hãy tải lại thay vì ghi đè.",
   CUSTOMER_IDENTITY_INPUT_INVALID:
     "Định danh khách hàng phải được băm và mã hóa đúng hợp đồng trước khi lưu.",
   CUSTOMER_IDENTITY_MERGE_REQUIRED:

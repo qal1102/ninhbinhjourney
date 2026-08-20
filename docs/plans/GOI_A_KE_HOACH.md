@@ -1,6 +1,6 @@
 # GÓI A — KẾ HOẠCH DỮ LIỆU KHÁCH HÀNG, MARKETING VÀ BÁN DỊCH VỤ
 
-> **Trạng thái: CUS-00/A0 ĐÃ ĐÓNG NGÀY 18/08/2026 — kế hoạch và hợp đồng đo lường đã được chủ dự án duyệt hướng ưu tiên.**
+> **NEXT 20/08/2026: CUS-07 — recommendation + omnichannel adapters, dùng `5.6 Terra / High`; chưa bắt đầu.** CUS-00→CUS-06 đã hoàn tất phần code staged; chưa phase nào trong chuỗi customer-data được bật production.
 > Đề bài gốc: `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Hiện trạng duy nhất: `docs/HANDOFF.md`.
 > Đây là kế hoạch thi hành, không phải tuyên bố các tính năng bên dưới đã có trên production.
 
@@ -267,8 +267,8 @@ Mỗi rule có `rule_version`, `reason_code`, thời hạn hiệu lực và ngư
 | **CUS-02 — code hoàn tất 18/08** | **5.6 Terra / High** | Thu hành vi web | SDK first-party + section/dwell/scroll/click + source context | ✅ unit + Playwright desktop/mobile; consent gate; `sendBeacon` khi rời/trang điều hướng. Chưa bật production |
 | **CUS-03 — code hoàn tất 18/08** | **5.6 Terra / High**; nâng **Sol / High** nếu chạm RLS | Lưu intent `/plan` và Customer 360 ERP | anonymous journey persistence + timeline/profile view | ✅ migration 040 + RPC/idempotency/PII/RBAC; PostgreSQL 15 thật và full gate pass. Staged: 039/040/flags chưa bật production |
 | **CUS-04 — code hoàn tất 18/08** | **5.6 Terra / High** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | ✅ migration 041 + RLS/RPC/append-only scan/audit; PostgreSQL 15 thật; route/UI/test staged. Chưa apply/bật production |
-| **CUS-05** | **5.6 Sol / High** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | essential ≠ marketing; revoke test; masking/RBAC/audit |
-| **CUS-06** | **5.6 Sol / High** | Gói A booking trên lõi ERP | slot/order/hold/payment giả lập/issue T8 ticket | concurrency không oversell; T11a là nguồn công suất; không alter lõi ERP |
+| **CUS-05 — code hoàn tất 18/08** | **5.6 Sol / High** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | ✅ essential ≠ marketing; revoke; masking/RBAC/audit; staged, chưa bật production |
+| **CUS-06 — code hoàn tất 20/08** | **5.6 Sol / High** | Gói A booking trên lõi ERP | slot/order/hold/payment giả lập/issue T8 ticket | ✅ PostgreSQL concurrency không oversell; shared slot theo site+giờ; T11a là nguồn công suất; phát vé T8; không alter lõi ERP. Staged, chưa bật production |
 | **CUS-07** | **5.6 Terra / High**; nâng **Sol / High** cho outbound consent/security | Recommendation + omnichannel adapters | rule engine, ERP action queue, connector contract | explainable; frequency cap; opt-out; idempotent outbound |
 | **CUS-08** | **5.6 Sol / High** | Offline gate + unified funnel + release | A3 scan offline, dashboard xuyên nguồn, full acceptance | sync không mất/trùng; dashboard reconciliation; full regression + production smoke |
 
@@ -424,3 +424,50 @@ Bằng chứng 18/08/2026:
 **Chưa live:** migration 039–042 và sáu cờ customer-data vẫn tắt trên production. Không bật cho tới khi linked Supabase project được xác minh, khóa mã hóa/HMAC production được cấp, ba policy version được đóng và Xuân Trường phê duyệt đầu mối + SLA cho yêu cầu xem/xuất/sửa/xóa dữ liệu. Việc nêu pháp nhân chưa đồng nghĩa policy đã được pháp chế phê duyệt.
 
 **Ranh giới model tiếp theo:** CUS-06 dùng **5.6 Sol / High** vì phải xử lý slot/order/hold/payment concurrency và nối T8/T11a trong lõi ERP. Chỉ hạ Terra cho phần UI/fixture sau khi contract giao dịch được khóa; không dùng Luna để quyết định schema, concurrency hay accounting boundary.
+
+---
+
+## 17. Kết quả CUS-06 — booking Gói A trên lõi ERP
+
+### Nền bắt buộc tái sử dụng
+
+- `erp_capacity_thresholds` T11a là nguồn công suất. Slot bán chỉ được tạo từ `hourly_capacity`, threshold/version/source đang hiệu lực; không có form nhập một con số capacity song song.
+- `erp_tickets` T8 là vé duy nhất tại cổng. Sau payment mô phỏng thành công, CUS-06 insert vé `channel = 'website'` và giữ bảng bridge order → ticket; không tạo một pass/check-in engine cạnh tranh.
+- `customer_profiles`/cookie anonymous-first của CUS-01→05 là chủ thể đơn. Không ghi raw contact vào order, event hoặc ticket; hồ sơ đã có protected contact thì Customer 360 tự nối qua canonical profile.
+- `products` + `product_sites` của catalog hiện hữu được đọc làm sản phẩm/điểm phục vụ. `bookings`/`capacity_slots`/`payment_intents` cũ chỉ là thiết kế demo phụ thuộc `demo_run_id`, không được dùng làm kho production mới.
+
+### Contract đã xây
+
+1. Quote phải tạo **hold thật có hạn** dưới row lock, không chỉ đọc capacity rồi hứa chỗ. Mỗi retry cùng idempotency key trả đúng hold cũ; payload khác dùng cùng key phải bị từ chối.
+2. Sức chứa khả dụng = snapshot T11a trừ các hold chưa hết hạn và số khách đã xác nhận trong đúng site/khung giờ. Hai transaction cạnh tranh không được cùng lấy chỗ cuối.
+3. Một package chỉ giữ capacity tại các `product_sites` có threshold T11a. Điểm nội dung không có threshold vẫn nằm trong hành trình nhưng không được bịa là đã kiểm soát sức chứa.
+4. Payment CUS-06 chỉ có `simulation`; UI phải nói rõ không thu tiền, không nhận số thẻ/tài khoản. Callback/retry idempotent; hold hết hạn không được phát vé.
+5. Payment thành công tạo order/line/audit, chuyển hold thành `converted`, rồi phát một vé T8 cho mỗi site có capacity trong package. Vé nhóm dùng `entries_allowed = party_size`, không lưu raw contact/name vào T8.
+6. Mọi bảng CUS-06 bật RLS, direct write bị thu hồi; chỉ RPC `service_role` được ghi. Production flag mặc định tắt và migration chưa apply cho tới khi linked project được xác minh.
+
+### Gate trước khi gọi CUS-06 hoàn tất
+
+- PostgreSQL transaction test thật: idempotency, payload collision, hold expiry, payment replay và direct-write denial.
+- Concurrency test thật chứng minh hai hold tranh chỗ cuối chỉ một hold thành công; tổng active hold + confirmed không vượt snapshot T11a.
+- Ticket T8 được phát đúng site/party size và cổng T8 đọc được; không sửa schema/lifecycle của T8/T11a.
+- UI desktop/mobile nói đúng payment mô phỏng, không cần phòng demo và không thu raw PII.
+- Typecheck, lint, Vitest, build và Playwright luồng booking pass; cập nhật HANDOFF, commit phase riêng và push `main`.
+
+### Bằng chứng 20/08/2026
+
+- Migration 043 đã apply thật trên PostgreSQL 17 cô lập cùng core/T8/T11a/039/040/042. Hold và payment retry trả bản ghi cũ; collision bị từ chối; hold hết hạn không tạo payment/vé; role `anon` không direct-write được.
+- Shared slot khóa theo `(tenant_id, site_id, starts_at)`, không theo product. Bài race hai package cùng dùng Tràng An, threshold 3 và mỗi hold 2 khách cho kết quả một thành công + một `CUSTOMER_CAPACITY_UNAVAILABLE`; reserved cuối là 2/3.
+- Payment mô phỏng phát đúng vé T8 `channel='website'`, `product='group'`, `entries_allowed=party_size`; RPC cổng T8 đọc được vé. Không có `alter table` lên `erp_tickets` hoặc `erp_capacity_thresholds`.
+- Checkout anonymous-first không nhận raw contact/payment credential; Customer 360 đọc order/payment/vé theo canonical profile. Playwright desktop/mobile 2/2; public regression với flag mặc định tắt 28/28.
+- Typecheck, lint, 88 file/569 Vitest pass + 1 skip, production build 40 route pass. PostgreSQL cluster tạm đã dừng và xóa.
+
+**Chưa live:** 039–043 chưa apply/verify Supabase production; `CUSTOMER_BOOKING_ENABLED` mặc định tắt. Template giờ bán còn mang nhãn `catalog-staged` và cần Xuân Trường duyệt. Không mở flag trước linked-project verification, production secrets và policy approval.
+
+---
+
+## 18. CUS-07 queued — recommendation và omnichannel
+
+- Model mặc định: **5.6 Terra / High** cho rule explainable, UI và adapter contract. Chuyển **5.6 Sol / High trước khi** viết outbound consent enforcement, secret handling, retry/idempotency hoặc opt-out xuyên kênh.
+- Tái sử dụng Customer 360, consent/segment versioned và order/ticket CUS-06; không dựng profile, contact list hay marketing consent thứ hai.
+- Đầu ra tối thiểu: recommendation có reason code/rule version; ERP action queue; adapter interface cho kênh ngoài; frequency cap, opt-out, delivery outcome và idempotency.
+- Chưa gửi email/SMS/Zalo thật khi chưa có provider, credential, sender identity và phê duyệt policy của Xuân Trường. Fixture/test có thể mô phỏng adapter nhưng UI phải ghi rõ.

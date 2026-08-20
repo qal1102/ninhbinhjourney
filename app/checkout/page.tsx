@@ -2,7 +2,9 @@ import Link from "next/link";
 import { readPublicEnvironment } from "@/config/experience";
 import { getPackageBySlug } from "@/content/packages";
 import { CheckoutExperience } from "@/components/commerce/checkout-experience";
+import { CustomerBookingCheckout } from "@/components/commerce/customer-booking-checkout";
 import { SetupState } from "@/components/shared/setup-state";
+import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 
 export default async function CheckoutPage({
   searchParams,
@@ -10,10 +12,11 @@ export default async function CheckoutPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const environment = readPublicEnvironment();
+  const customerBookingEnabled = isCustomerBookingEnabled();
   if (environment.status === "missing") {
     return <SetupState environment={environment} surface="Sandbox checkout" />;
   }
-  if (!environment.config.sandboxPaymentEnabled) {
+  if (!environment.config.sandboxPaymentEnabled && !customerBookingEnabled) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#f4f0e7] p-5 text-[#151a17]">
         <section className="max-w-xl rounded-3xl border border-[#d7d5cd] bg-white p-8 text-center">
@@ -61,18 +64,22 @@ export default async function CheckoutPage({
           ← Chi tiết gói
         </Link>
         <p className="mt-9 text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-          Production-shaped sandbox lifecycle
+          {customerBookingEnabled ? "Gói A · giữ chỗ trên lõi ERP" : "Production-shaped sandbox lifecycle"}
         </p>
         <h1 className="font-display mt-4 text-5xl leading-[0.96] text-[#183f34] sm:text-7xl">
-          Xác nhận rõ ràng,
+          {customerBookingEnabled ? "Một chỗ đã giữ," : "Xác nhận rõ ràng,"}
           <br />
-          không có giao dịch thật.
+          không có khoản tiền bị thu.
         </h1>
         <div className="mt-10">
-          <CheckoutExperience
-            packageItem={packageItem}
-            itineraryId={itineraryId}
-          />
+          {customerBookingEnabled ? (
+            <CustomerBookingCheckout packageItem={packageItem} />
+          ) : (
+            <CheckoutExperience
+              packageItem={packageItem}
+              itineraryId={itineraryId}
+            />
+          )}
         </div>
       </div>
     </main>

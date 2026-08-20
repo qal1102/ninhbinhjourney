@@ -6,9 +6,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Read this first
 
-`docs/HANDOFF.md` is the single required document. Read it in full before making any change — it holds the current true state, the known defects, and the ranked work queue. Nothing else is required reading.
+Read `docs/HANDOFF.md` in full before making any change — it holds the current true state, known defects and ranked work queue. Then read the **active plan named at the top of HANDOFF**, but only the sections HANDOFF routes to for the current phase. No other document is required by default.
 
-- `docs/reference/` is consulted **only** when you start the specific task that needs it; `docs/HANDOFF.md` says which file maps to which task.
+- `docs/plans/` contains the active execution plan. At most one plan may be marked active at a time in `docs/HANDOFF.md`.
+- `docs/reference/` is consulted **only** when the active phase needs it; `docs/HANDOFF.md` says which file maps to which task.
 - `docs/archive/` is historical evidence. Never conclude current state from it.
 - After finishing a task, update the state, defect and work-queue sections of `docs/HANDOFF.md`. **Do not create another status document** — a sprawl of 17 overlapping docs is exactly what this structure replaced.
 - ~~Priority is fixed: the internal ERP comes first and must reach production quality; the visitor-facing web comes later. Do not trade ERP quality for web work.~~ **Superseded on 17/08/2026** by work order 01, then refined by the owner on **18/08/2026**: customer behavior data, Customer 360, omnichannel marketing attribution and service-selling signals come first. Follow `docs/plans/GOI_A_KE_HOACH.md` in CUS-00 → CUS-08 order. Break no running ERP feature, reuse T8 tickets and T11a capacity, keep service consent separate from marketing consent, and never build a second source of truth.

@@ -54,6 +54,13 @@ const CONSENT_STATUS_LABELS: Record<string, string> = {
   revoked: "Đã rút lại",
 };
 
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  holding: "Đang giữ chỗ",
+  confirmed: "Đã xác nhận",
+  expired: "Đã hết hạn",
+  cancelled: "Đã hủy",
+};
+
 export function Customer360Dashboard({
   status,
   journeys = [],
@@ -93,11 +100,18 @@ export function Customer360Dashboard({
         </p>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
           <p className="text-xs text-[#6e7b75]">Hành trình đã lưu</p>
           <p className="mt-2 text-3xl font-black text-[#203a30]">{journeys.length}</p>
           <p className="mt-2 text-xs text-[#849089]">nguồn: customer_journeys</p>
+        </article>
+        <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
+          <p className="text-xs text-[#6e7b75]">Đơn dịch vụ đã nối</p>
+          <p className="mt-2 text-3xl font-black text-[#203a30]">
+            {journeys.reduce((total, journey) => total + journey.orders.length, 0)}
+          </p>
+          <p className="mt-2 text-xs text-[#849089]">order + payment mô phỏng + vé T8</p>
         </article>
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
           <p className="text-xs text-[#6e7b75]">Hồ sơ có liên hệ bảo vệ</p>
@@ -180,6 +194,27 @@ export function Customer360Dashboard({
                       </div>
                     ) : null}
                   </div>
+                  {journey.orders.length > 0 ? (
+                    <div className="mt-5">
+                      <p className="text-xs font-black uppercase tracking-[0.14em] text-[#738078]">Đơn dịch vụ và vé vận hành</p>
+                      <ul className="mt-3 space-y-3">
+                        {journey.orders.map((order) => (
+                          <li key={order.orderId} className="rounded-xl border border-[#dfe7e2] bg-[#f7f9f7] p-3 text-sm text-[#42574e]">
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div><strong>{order.productName}</strong><p className="mt-1 text-xs">{order.orderCode} · {order.visitDate} · {order.partySize} khách</p></div>
+                              <span className="rounded-full bg-[#e7efe9] px-2.5 py-1 text-xs font-bold text-[#35594b]">{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>
+                            </div>
+                            <p className="mt-2 font-bold">{order.totalVnd.toLocaleString("vi-VN")} VND · {order.paymentStatus === "succeeded" ? "payment mô phỏng thành công" : "chưa có payment"}</p>
+                            {order.tickets.length > 0 ? (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {order.tickets.map((ticket) => <code key={ticket.ticketCode} className="rounded-lg bg-[#173f34] px-2.5 py-1.5 text-xs font-bold text-[#e7c78d]">{ticket.ticketCode} · {ticket.entriesAllowed} lượt</code>)}
+                              </div>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </div>
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-[#738078]">Dòng thời gian</p>

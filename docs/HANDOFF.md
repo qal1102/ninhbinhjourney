@@ -1,8 +1,12 @@
 # NINH BÌNH JOURNEY — BÀN GIAO
 
-> **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
+> **Thứ tự đọc hiện hành — không đọc tràn lan:**
+> 1. Đọc toàn bộ file này để biết hiện trạng thật.
+> 2. **CUS-06 đã đóng phần code; CUS-07 là phase kế tiếp nhưng chưa bắt đầu.** Trước khi làm CUS-07 chỉ đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9 và 18; đây là kế hoạch thi hành duy nhất.
+> 3. Khi chạm UI public mới đọc `docs/reference/UI_UX_RULES.md` + `REFERENCE_SITE_ANALYSIS.md`; khi chạm nghiệp vụ vé/ERP mới đối chiếu `SO_TAY_HE_THONG_VI.md` và migration T8/T11a trong code.
+> 4. Các file còn lại trong `docs/reference/` đang **tạm dừng/on-demand**, không phải hàng việc hiện tại. `docs/archive/` chỉ là lịch sử, tuyệt đối không dùng để kết luận trạng thái.
 >
-> Cập nhật: **18/08/2026** — CUS-05 đã hoàn tất code staged: consent server-side, progressive identity, contact vault bảo vệ, Customer 360/audit và policy draft cho Xuân Trường. CUS-01→05 vẫn mặc định off; production chưa thu hay hiển thị dữ liệu khách thật.
+> Cập nhật: **20/08/2026** — CUS-06 đã hoàn tất code staged bằng `5.6 Sol / High`; CUS-01→06 vẫn mặc định off, production chưa thu dữ liệu khách hay mở booking mới. CUS-07 kế tiếp dùng `5.6 Terra / High`, chỉ nâng `Sol / High` khi chạm outbound consent/security.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -398,6 +402,12 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 > PostgreSQL 15 thật đã apply 039+040+042 sạch; transaction test chứng minh grant → revoke không bị một lần lưu tùy chọn sau đó hồi thành `denied`, marketing revoke tắt segment, delivery request protected-contact ghi được và RBAC director hoạt động. Full gate: typecheck/lint/build pass; 85 file/558 test pass + 1 skip; Playwright CUS-05 desktop/mobile 6/6, hồi quy tracker + planner 12/12. Screenshot desktop/Pixel 7 với reduced motion đã kiểm trực tiếp, không tràn ngang. Hai lỗi DB thật đã bắt trước commit: `ON CONFLICT` mơ hồ và `now()` ổn định trong cả transaction làm latest consent hòa thời gian; migration dùng constraint đích rõ ràng + `sequence_no` identity để khóa thứ tự.
 >
 > **CUS-05 chưa live:** migration 039–042 chưa apply/verify Supabase production; sáu cờ `CUSTOMER_DATA_INGESTION_ENABLED`, `NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED`, `CUSTOMER_JOURNEY_PERSISTENCE_ENABLED`, `CUSTOMER_QR_ROUTING_ENABLED`, `CUSTOMER_CONSENT_MANAGEMENT_ENABLED`, `CUSTOMER_IDENTITY_COLLECTION_ENABLED` giữ tắt. Trước khi bật hai cờ CUS-05 phải có khóa production `CUSTOMER_CONTACT_ENCRYPTION_KEY_BASE64` (32 byte), `CUSTOMER_IDENTITY_HASH_KEY`, key version, ba policy version và đầu mối/SLA xử lý yêu cầu dữ liệu được Xuân Trường duyệt. Máy hiện tại vẫn không có Supabase CLI/linked-project metadata nên không đoán đích apply. **Ranh giới model kế tiếp: CUS-06 dùng `5.6 Sol / High`** vì đụng concurrency slot/hold/order/payment và lõi ERP; Terra chỉ dùng cho UI/fixture sau khi contract giao dịch khóa.
+>
+> ✅ **CUS-06 hoàn tất phần code ngày 20/08/2026 bằng `5.6 Sol / High`:** migration `202608200043_customer_booking_on_erp_core.sql` tạo order/line, hold 15 phút, shared slot theo site+giờ, payment mô phỏng, audit và bridge order→`erp_tickets`; không alter lõi T8/T11a. Slot đọc ngưỡng nhỏ nhất đang hiệu lực từ `erp_capacity_thresholds`, khóa row khi giữ chỗ và dùng chung giữa các package nên hai gói không có hai rổ công suất giả. RPC idempotent được advisory-lock trước side effect; anonymous profile/cookie là chủ thể, order/ticket không giữ raw contact. Checkout public chỉ xuất hiện khi `CUSTOMER_BOOKING_ENABLED=true`, không hỏi tên/email/điện thoại/thẻ, nói rõ không thu tiền; Customer 360 nối order/payment/vé T8 vào canonical profile.
+>
+> PostgreSQL 17 cô lập đã apply core + T8 + T11a + 039/040/042/043 sạch. Transaction test xác minh hold/payment replay, payload collision, expiry không phát vé, direct write denial và cổng T8 đọc vé website đúng 3 lượt. Concurrency thật với ngưỡng 3 chỗ: hai package cùng gửi hold 2 khách thì đúng một thành công, một nhận `CUSTOMER_CAPACITY_UNAVAILABLE`; snapshot 3 chỉ reserved 2. Cluster tạm đã dừng và xóa. Full gate: typecheck/lint/build 40 route pass; 88 file/569 test pass + 1 skip; Playwright booking desktop/mobile 2/2 và public regression khi flag tắt 28/28.
+>
+> **CUS-06 chưa live:** migration 039–043 chưa apply/verify Supabase production và `CUSTOMER_BOOKING_ENABLED` mặc định tắt. Chưa có linked project/production key/policy approval nên không tự apply hoặc bật cờ. Lịch bán trong `customer_product_capacity_templates` vẫn là `catalog-staged`, phải được Xuân Trường duyệt trước khi mở bán thật. **Phase kế tiếp CUS-07 dùng `5.6 Terra / High`; nâng `5.6 Sol / High` trước khi triển khai outbound consent/security, không dùng Luna để quyết định connector hoặc opt-out contract.**
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|

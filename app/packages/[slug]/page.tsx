@@ -6,6 +6,7 @@ import {
   getExperiencePresentationFlags,
   readPublicEnvironment,
 } from "@/config/experience";
+import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 
 export function generateStaticParams() {
   return PACKAGES.map((item) => ({ slug: item.slug }));
@@ -23,6 +24,8 @@ export default async function PackageDetailPage({
   const journeyValue = (await searchParams).journey;
   const journey = typeof journeyValue === "string" ? journeyValue : undefined;
   const flags = getExperiencePresentationFlags(readPublicEnvironment());
+  const customerBookingEnabled = isCustomerBookingEnabled();
+  const checkoutAvailable = flags.sandboxCheckout || customerBookingEnabled;
   const sites = item.siteIds
     .map((id) => DESTINATIONS.find((destination) => destination.id === id))
     .filter((destination) => destination !== undefined);
@@ -39,8 +42,10 @@ export default async function PackageDetailPage({
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_0.72fr]">
           <section>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
-              {flags.sandboxCheckout
-                ? `Dữ liệu minh họa · ${item.durationLabel}`
+              {customerBookingEnabled
+                ? `Giữ chỗ theo công suất ERP · ${item.durationLabel}`
+                : flags.sandboxCheckout
+                  ? `Dữ liệu minh họa · ${item.durationLabel}`
                 : `Bảng giá tham khảo · ${item.durationLabel}`}
             </p>
             <h1 className="font-display mt-4 text-6xl leading-[0.92] sm:text-8xl">
@@ -81,11 +86,11 @@ export default async function PackageDetailPage({
                 </li>
               ))}
             </ol>
-            {flags.sandboxCheckout ? (
+            {checkoutAvailable ? (
               <>
                 <p className="mt-6 text-xs leading-5 text-[#7a725f]">
-                  Sandbox Payment — no real charge. Không yêu cầu số thẻ hoặc
-                  dữ liệu thanh toán thật.
+                  Thanh toán mô phỏng — không thu tiền. Không yêu cầu số thẻ,
+                  tài khoản ngân hàng hoặc dữ liệu thanh toán thật.
                 </p>
                 <Link
                   data-customer-track="package-checkout"
@@ -94,7 +99,7 @@ export default async function PackageDetailPage({
                   href={`/checkout?package=${item.slug}${journey ? `&journey=${journey}` : ""}`}
                   className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#d58c35] px-6 font-extrabold"
                 >
-                  Tiếp tục checkout demo
+                  {customerBookingEnabled ? "Giữ chỗ 15 phút" : "Tiếp tục checkout demo"}
                 </Link>
               </>
             ) : (

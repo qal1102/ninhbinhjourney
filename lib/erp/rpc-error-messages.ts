@@ -400,6 +400,36 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Mã event đã được dùng cho một payload khác; hãy tạo mã mới thay vì ghi đè lịch sử.",
   CUSTOMER_PROFILE_NOT_FOUND:
     "Không tìm thấy hồ sơ khách hàng trong đơn vị hiện tại.",
+  CUSTOMER_BOOKING_INPUT_INVALID:
+    "Thông tin ngày đi, gói dịch vụ hoặc số khách chưa hợp lệ.",
+  CUSTOMER_PAYMENT_INPUT_INVALID:
+    "Yêu cầu xác nhận thanh toán mô phỏng chưa hợp lệ.",
+  CUSTOMER_PRODUCT_UNAVAILABLE:
+    "Gói dịch vụ này hiện chưa mở giữ chỗ.",
+  CUSTOMER_CAPACITY_SOURCE_MISSING:
+    "Gói dịch vụ chưa có nguồn sức chứa T11a cho khung giờ bán.",
+  CUSTOMER_CAPACITY_UNAVAILABLE:
+    "Khung giờ vừa hết chỗ cho số khách đã chọn.",
+  CUSTOMER_BOOKING_SLOT_PAUSED:
+    "Khung giờ đang tạm dừng nhận đặt chỗ.",
+  CUSTOMER_BOOKING_SLOT_PAST:
+    "Khung giờ đã qua hoặc quá gần giờ bắt đầu.",
+  CUSTOMER_BOOKING_HOLD_NOT_FOUND:
+    "Không tìm thấy lượt giữ chỗ này.",
+  CUSTOMER_BOOKING_HOLD_EXPIRED:
+    "Lượt giữ chỗ đã hết hạn; hãy giữ lại khung giờ mới.",
+  CUSTOMER_BOOKING_OWNERSHIP_REQUIRED:
+    "Lượt giữ chỗ không thuộc phiên khách hiện tại.",
+  CUSTOMER_BOOKING_ID_COLLISION:
+    "Mã giữ chỗ đã được dùng cho một yêu cầu khác.",
+  CUSTOMER_PAYMENT_ID_COLLISION:
+    "Mã xác nhận đã được dùng cho một payment mô phỏng khác.",
+  CUSTOMER_ORDER_ALREADY_CONFIRMED:
+    "Đơn này đã được xác nhận bằng một yêu cầu khác.",
+  CUSTOMER_ORDER_STATE_INVALID:
+    "Đơn không còn ở trạng thái có thể xác nhận.",
+  CUSTOMER_BOOKING_RATE_LIMITED:
+    "Phiên khách đã tạo quá nhiều lượt giữ chỗ trong một giờ.",
   CUSTOMER_IDENTITY_INPUT_INVALID:
     "Định danh khách hàng phải được băm và mã hóa đúng hợp đồng trước khi lưu.",
   CUSTOMER_IDENTITY_MERGE_REQUIRED:

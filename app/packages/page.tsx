@@ -4,6 +4,7 @@ import {
   getExperiencePresentationFlags,
   readPublicEnvironment,
 } from "@/config/experience";
+import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 
 export const metadata = {
   title: "Gói hành trình | Ninh Bình Journey",
@@ -17,6 +18,8 @@ export default async function PackagesPage({
   const journeyValue = (await searchParams).journey;
   const journey = typeof journeyValue === "string" ? journeyValue : undefined;
   const flags = getExperiencePresentationFlags(readPublicEnvironment());
+  const customerBookingEnabled = isCustomerBookingEnabled();
+  const checkoutAvailable = flags.sandboxCheckout || customerBookingEnabled;
 
   return (
     <main data-customer-section="packages-catalog" className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
@@ -25,8 +28,10 @@ export default async function PackagesPage({
           ← Quay lại hành trình
         </Link>
         <p className="mt-10 text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-          {flags.sandboxCheckout
-            ? "Dữ liệu minh họa · giữ chỗ mô phỏng, chưa thu tiền thật"
+          {customerBookingEnabled
+            ? "Giữ chỗ 15 phút theo công suất ERP · thanh toán mô phỏng"
+            : flags.sandboxCheckout
+              ? "Dữ liệu minh họa · giữ chỗ mô phỏng, chưa thu tiền thật"
             : "Bảng giá tham khảo · chưa mở đặt online"}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-5xl leading-[0.95] text-[#183f34] sm:text-7xl">
@@ -89,7 +94,7 @@ export default async function PackagesPage({
                 >
                   Xem chi tiết
                 </Link>
-                {flags.sandboxCheckout ? (
+                {checkoutAvailable ? (
                   <Link
                     href={`/checkout?package=${item.slug}${journey ? `&journey=${journey}` : ""}`}
                     className="inline-flex min-h-11 items-center rounded-full bg-[#183f34] px-5 font-bold text-white"

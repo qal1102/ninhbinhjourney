@@ -13,6 +13,8 @@ const customerAnalyticsEnabled =
     : "false";
 const customerIdentityEnabled =
   process.env.NBJ_E2E_CUSTOMER_IDENTITY === "1" ? "true" : "false";
+const customerBookingEnabled =
+  process.env.NBJ_E2E_CUSTOMER_BOOKING === "1" ? "true" : "false";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -66,6 +68,7 @@ export default defineConfig({
           NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED: customerAnalyticsEnabled,
           CUSTOMER_CONSENT_MANAGEMENT_ENABLED: customerIdentityEnabled,
           CUSTOMER_IDENTITY_COLLECTION_ENABLED: customerIdentityEnabled,
+          CUSTOMER_BOOKING_ENABLED: customerBookingEnabled,
           CUSTOMER_CONTACT_ENCRYPTION_KEY_BASE64:
             Buffer.alloc(32, 9).toString("base64"),
           CUSTOMER_IDENTITY_HASH_KEY:

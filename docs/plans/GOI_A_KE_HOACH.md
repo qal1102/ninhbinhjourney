@@ -515,17 +515,17 @@ Model: **5.6 Sol / High**. Không hạ Terra/Luna khi còn quyết định migra
 - Flag gate mã hóa thứ tự ingestion → journey/QR → consent/analytics/identity → booking → recommendation/funnel; offline gate bắt buộc ERP persistence + schema 045. Flag bật khi dependency/schema thiếu bị liệt kê là unsafe.
 - `release:assert-project` chặn local Vercel link khác `goldencard/ninhbinhjourney`; `release:preflight` bắt project guard chạy trước full verify.
 - Production smoke chỉ đọc bắt buộc URL + expectation tường minh; không được chạy thiếu `PLAYWRIGHT_BASE_URL` rồi suy nhầm local là production.
-- Local gate: typecheck/lint/build pass; 595 Vitest pass + 1 skip; Playwright A6 desktop/mobile 4/4 pass. Commit A6 `48d48b3` đã push/deploy; production smoke read-only với expectation `blocked` pass 1/1 và xác nhận gate trả `CHƯA ĐƯỢC BẬT PRODUCTION`.
+- Local gate: `release:preflight` pass trọn gói với đúng Vercel project; typecheck/lint/build pass; 595 Vitest pass + 1 skip; Playwright A6 desktop/mobile 4/4 pass. Commit A6 `48d48b3` đã push/deploy; production smoke read-only với expectation `blocked` pass 1/1 và xác nhận gate trả `CHƯA ĐƯỢC BẬT PRODUCTION`.
 
 ### Trạng thái đầu vào thật ngày 20/08
 
 - GitHub `app-origin/main` có CUS-08 và production đã thấy offline API route; không có bằng chứng migration 039–045 đã apply.
-- Worktree chưa có Supabase CLI/linked-project metadata. Vercel CLI auto-detect từng tạo nhầm project rỗng `codex-cus00-app-sync`; đã xóa link sai, chưa link thay bằng phỏng đoán.
+- Worktree chưa có Supabase CLI/linked-project metadata. Vercel CLI auto-detect từng tạo nhầm project rỗng `codex-cus00-app-sync`; đã xóa link sai, sau đó đối chiếu metadata checkout gốc và guard hiện pass đúng project `goldencard/ninhbinhjourney`.
 - Production health đang `experienceMode=client-demo`; policy/key/lịch bán/capacity/provider approval chưa được xác minh. Vì vậy verdict đúng hiện tại là **BLOCKED**, không phải lỗi của gate.
 
 ### Trình tự activation bắt buộc
 
-1. Link rõ project `goldencard/ninhbinhjourney`; chạy project guard và xác minh deployment source.
+1. ✅ Đã link rõ project `goldencard/ninhbinhjourney`, project guard pass và production route xác nhận deployment source từ commit A6.
 2. Xác minh linked Supabase production + backup/rollback; dry-run rồi apply tuần tự 039→045, không bỏ số.
 3. Probe `/erp/release` tới khi 7 phase schema xanh nhưng flags vẫn OFF.
 4. Cấu hình secrets/policy/version/lịch bán được Xuân Trường duyệt; chuyển experience mode production và redeploy.

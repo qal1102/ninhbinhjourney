@@ -1,6 +1,6 @@
 # GÓI A — KẾ HOẠCH DỮ LIỆU KHÁCH HÀNG, MARKETING VÀ BÁN DỊCH VỤ
 
-> **NEXT 20/08/2026: CUS-07 — recommendation + omnichannel adapters, dùng `5.6 Terra / High`; chưa bắt đầu.** CUS-00→CUS-06 đã hoàn tất phần code staged; chưa phase nào trong chuỗi customer-data được bật production.
+> **STATUS 20/08/2026: CUS-01→CUS-08 đã hoàn tất phần code staged; bước kế tiếp là chuẩn bị activation/acceptance production, không tự bật.** Chưa phase nào trong chuỗi customer-data được bật production; xem điều kiện ở mục 19 và hiện trạng duy nhất trong `docs/HANDOFF.md`.
 > Đề bài gốc: `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Hiện trạng duy nhất: `docs/HANDOFF.md`.
 > Đây là kế hoạch thi hành, không phải tuyên bố các tính năng bên dưới đã có trên production.
 
@@ -269,8 +269,8 @@ Mỗi rule có `rule_version`, `reason_code`, thời hạn hiệu lực và ngư
 | **CUS-04 — code hoàn tất 18/08** | **5.6 Terra / High** | QR động và attribution | `/q/[code]`, campaign/source admin, first/last touch | ✅ migration 041 + RLS/RPC/append-only scan/audit; PostgreSQL 15 thật; route/UI/test staged. Chưa apply/bật production |
 | **CUS-05 — code hoàn tất 18/08** | **5.6 Sol / High** | Progressive identity và CRM | lưu/gửi hành trình, contact vault, consent UI, segmentation | ✅ essential ≠ marketing; revoke; masking/RBAC/audit; staged, chưa bật production |
 | **CUS-06 — code hoàn tất 20/08** | **5.6 Sol / High** | Gói A booking trên lõi ERP | slot/order/hold/payment giả lập/issue T8 ticket | ✅ PostgreSQL concurrency không oversell; shared slot theo site+giờ; T11a là nguồn công suất; phát vé T8; không alter lõi ERP. Staged, chưa bật production |
-| **CUS-07** | **5.6 Terra / High**; nâng **Sol / High** cho outbound consent/security | Recommendation + omnichannel adapters | rule engine, ERP action queue, connector contract | explainable; frequency cap; opt-out; idempotent outbound |
-| **CUS-08** | **5.6 Sol / High** | Offline gate + unified funnel + release | A3 scan offline, dashboard xuyên nguồn, full acceptance | sync không mất/trùng; dashboard reconciliation; full regression + production smoke |
+| **CUS-07 — code hoàn tất 20/08** | **5.6 Terra / High**; nâng **Sol / High** cho outbound thật | Recommendation + omnichannel adapters | rule engine, ERP action queue, connector contract | ✅ explainable/versioned; consent fail-closed; frequency cap; idempotent queue mô phỏng. Chưa outbound/live |
+| **CUS-08 — code hoàn tất 20/08** | **5.6 Sol / High** | Offline gate + unified funnel + staged release | A3 scan offline, dashboard xuyên nguồn, full acceptance | ✅ PostgreSQL exactly-once/replay + Playwright offline + funnel fixture + full local gate. ⏸ Production apply/flags/smoke chờ đầu vào |
 
 **Luna chỉ dùng cho việc cơ học đã khóa contract** như đổi tên hàng loạt, dựng fixture, cập nhật copy hoặc bổ sung test lặp; không giao Luna tự quyết migration, RLS, identity merge, consent, concurrency, offline reconciliation hay release gate.
 
@@ -465,9 +465,39 @@ Bằng chứng 18/08/2026:
 
 ---
 
-## 18. CUS-07 queued — recommendation và omnichannel
+## 18. Kết quả CUS-07 — recommendation và omnichannel staged
 
-- Model mặc định: **5.6 Terra / High** cho rule explainable, UI và adapter contract. Chuyển **5.6 Sol / High trước khi** viết outbound consent enforcement, secret handling, retry/idempotency hoặc opt-out xuyên kênh.
+- Đã thực hiện bằng **5.6 Terra / High** cho rule explainable, UI và adapter contract. Phải chuyển **5.6 Sol / High trước khi** mở outbound thật, secret handling, provider retry/dead-letter hoặc opt-out xuyên kênh.
 - Tái sử dụng Customer 360, consent/segment versioned và order/ticket CUS-06; không dựng profile, contact list hay marketing consent thứ hai.
-- Đầu ra tối thiểu: recommendation có reason code/rule version; ERP action queue; adapter interface cho kênh ngoài; frequency cap, opt-out, delivery outcome và idempotency.
+- Đã có recommendation reason code/rule version, ERP action queue, adapter contract, frequency cap, consent fail-closed và idempotency. Queue chỉ staged/suppressed, không gửi thật.
 - Chưa gửi email/SMS/Zalo thật khi chưa có provider, credential, sender identity và phê duyệt policy của Xuân Trường. Fixture/test có thể mô phỏng adapter nhưng UI phải ghi rõ.
+
+---
+
+## 19. Kết quả CUS-08 — offline gate, unified funnel và ranh giới release
+
+### A3 — cổng offline trên cùng nguồn vé T8
+
+- `erp_prepare_offline_gate_manifest` chỉ trả SHA-256 ticket-code digest và số lượt còn lại cho đúng site/ca/thiết bị; không preload PII.
+- Browser giữ manifest + raw code cần sync trong IndexedDB cục bộ. Scan offline được ghi durable với UUID idempotency; quyết định local là tạm thời và tự sync tối đa 200 item khi mạng trở lại.
+- `erp_gate_scan_ticket_at` là decision helper dùng chung cho online và offline. Server khóa row `erp_tickets`, ghi refusal như accepted, chống collision và trả receipt local/server `matched` hoặc `diverged`.
+- Batch dùng advisory lock + batch UUID ổn định. Nếu server đã commit nhưng response mất, retry trả đúng receipt cũ; không tăng entry lần hai và client xóa được pending.
+
+### A5 — funnel không bịa số
+
+- `/erp/marketing` đọc campaign/QR scan, page event, journey source, hold, payment, order-ticket bridge, gate event, slot T11a và offline reconciliation hiện hữu.
+- Funnel hiển thị QR → page → hold → payment → check-in theo source/campaign; nguồn không khớp để riêng, không gán đoán.
+- Mỗi slot hiển thị capacity snapshot, `capacity_source_kind`, threshold version, reserved, sold và checked-in. Hold cũ đã converted vẫn tính sold cho slot, nhưng chỉ hold phát sinh trong cửa sổ mới tính vào funnel kỳ.
+
+### Gate đã chạy ngày 20/08/2026
+
+- `npm run typecheck`, `npm run lint`, full Vitest **589 pass + 1 skip**, `npm run build`: pass.
+- Playwright desktop A3: offline queue, reconnect auto-sync, lost response, stable retry và zero pending: **1/1 pass**.
+- PostgreSQL 17 thật: migration apply; manifest no-PII; exactly-once; batch replay trả đủ receipt; divergence/idempotency/append-only contract pass. Cluster test đã xóa.
+- Funnel repository fixture chứng minh số theo source và slot khớp input, gồm hold converted ngoài kỳ vẫn tính sold.
+
+### Chưa được phép gọi là live/A6 hoàn tất
+
+- Migration 039–045 chưa apply/verify trên linked Supabase production.
+- `ERP_OFFLINE_GATE_ENABLED`, `CUSTOMER_FUNNEL_DASHBOARD_ENABLED` và toàn bộ customer-data/booking/recommendation flags giữ tắt.
+- Chưa có production smoke A3/A5. Trước activation cần linked project, backup/rollback, secrets, policy/version Xuân Trường, lịch bán/capacity được duyệt và kế hoạch canary tại một cổng. Chỉ sau apply tuần tự + smoke + nghiệm thu người dùng mới đóng A6.

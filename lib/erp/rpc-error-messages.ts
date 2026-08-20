@@ -311,6 +311,18 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   FIELD_REPORT_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
   GATE_SCAN_CODE_INVALID: "Mã quét không hợp lệ.",
   GATE_SCAN_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
+  GATE_SCAN_IDEMPOTENCY_CONFLICT:
+    "Mã chống trùng của lượt quét đã được dùng cho nội dung khác; cần tải lại trước khi thử tiếp.",
+  GATE_OFFLINE_ACTOR_REQUIRED:
+    "Tài khoản chưa được phân quyền quét vé ngoại tuyến tại cơ sở này.",
+  GATE_OFFLINE_BATCH_INVALID:
+    "Lô đồng bộ ngoại tuyến thiếu thông tin hoặc vượt giới hạn cho phép.",
+  GATE_OFFLINE_BATCH_COLLISION:
+    "Mã lô ngoại tuyến đã được dùng cho một nội dung khác; hàng đợi vẫn được giữ trên máy.",
+  GATE_OFFLINE_MANIFEST_INVALID:
+    "Bộ vé ngoại tuyến không còn hiệu lực hoặc không khớp thiết bị và cơ sở.",
+  GATE_OFFLINE_ITEM_INVALID:
+    "Một lượt quét trong lô ngoại tuyến không đúng hợp đồng dữ liệu.",
   ROLE_SWITCH_ACTOR_INVALID: "Tài khoản không được phép đổi vai trò trình diễn.",
   ROLE_SWITCH_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
 

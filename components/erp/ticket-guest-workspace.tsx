@@ -12,6 +12,7 @@ import type {
   TicketSummary,
 } from "@/lib/erp/gate-scan-repository";
 import { ShiftCloseSiteWorkflow } from "./shift-close-workflow";
+import { OfflineGateConsole } from "./offline-gate-console";
 
 type Props = {
   site: ErpSite;
@@ -20,6 +21,7 @@ type Props = {
   shiftClosures: readonly ShiftCloseRecord[];
   gateScans: readonly GateScanEvent[];
   ticketSales: TicketSalesSummary | null;
+  offlineGateEnabled?: boolean;
 };
 type Period = "day" | "week" | "month" | "year";
 
@@ -40,7 +42,7 @@ function formatChange(percent: number | null) {
   return `${sign}${percent.toLocaleString("vi-VN")}% so với kỳ liền trước`;
 }
 
-export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScans, ticketSales }: Props) {
+export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScans, ticketSales, offlineGateEnabled = false }: Props) {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("day");
   const [scanCode, setScanCode] = useState("");
@@ -99,6 +101,7 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
 
   return (
     <div className="space-y-5">
+      {mode === "checkin" && offlineGateEnabled ? <OfflineGateConsole siteId={site.id} siteName={site.shortName} /> : null}
       {mode === "checkin" ? <section className="rounded-3xl bg-[#183f34] p-5 text-white sm:p-7"><p className="text-xs font-black uppercase tracking-[0.18em] text-[#acd1c3]">Cổng A · {site.shortName}</p><h2 className="mt-2 text-3xl font-black">Quét và ghi nhận QR</h2><form onSubmit={recordScan} className="mt-5 flex flex-col gap-2 sm:flex-row"><input value={scanCode} onChange={(event) => setScanCode(event.target.value)} required autoComplete="off" className="min-h-12 min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 font-mono text-white placeholder:text-white/40" placeholder="Đưa mã vào máy quét hoặc nhập mã QR" /><button type="submit" disabled={scanPending} className="min-h-12 rounded-xl bg-white px-5 font-black text-[#183f34] disabled:cursor-wait disabled:opacity-60">{scanPending ? "Đang ghi nhận..." : "Xác thực & ghi nhận"}</button></form>{scanMessage ? <p role={scanRefused ? "alert" : "status"} className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${scanRefused ? "bg-[#7d3226] text-[#ffd9d1]" : "bg-white/10"}`}>{scanMessage}</p> : null}<div className="mt-6 border-t border-white/15 pt-4">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Khách mất mã — tra theo tên hoặc số điện thoại</p>
           <form onSubmit={lookupGuest} className="mt-3 flex flex-col gap-2 sm:flex-row">

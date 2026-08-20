@@ -233,7 +233,7 @@ Câu hỏi thường gặp: *"Khi đưa vào dùng thật thì xóa hết dữ l
 Để khách không kỳ vọng nhầm, và để phiên làm việc sau không tưởng là đã xong:
 
 - **Chưa bán hàng trực tuyến.** Web du khách chưa có cổng thanh toán thật.
-- **Chưa có chế độ ngoại tuyến.** Mất mạng là không thao tác được.
+- **Production chưa có chế độ ngoại tuyến.** Code CUS-08 đã có preload vé tối thiểu, queue IndexedDB và đối soát lại với T8, nhưng migration/flag đang staged và chưa được phép bật; vì vậy vận hành live hiện tại mất mạng vẫn không quét được.
 - **3 module ở mục 3 chưa có nghiệp vụ**, đang chờ dữ liệu từ khách.
 - **SOP tổ chức chính thức và lịch diễn tập chưa có.** Cổng Go/No-Go đã chạy, nhưng 20 mục hiện tại được ghi rõ là tóm tắt demo chưa phê duyệt; khách phải duyệt phiên bản, ngày hiệu lực và người chịu trách nhiệm trước khi vận hành thật.
 - **Đầu tiền mặt chưa khép kín** — công nợ nhà cung cấp đã trọn vòng, nhưng nộp quỹ → ngân hàng → đối chiếu sao kê thì chưa.

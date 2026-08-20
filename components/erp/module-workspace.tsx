@@ -410,7 +410,7 @@ export function ModuleWorkspace({
     return <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} />;
   }
   if (module.id === "check-in-khach") {
-    return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} />;
+    return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} offlineGateEnabled={process.env.ERP_OFFLINE_GATE_ENABLED === "true"} />;
   }
   if (module.id === "doi-tac-nha-cung-ung") {
     return (

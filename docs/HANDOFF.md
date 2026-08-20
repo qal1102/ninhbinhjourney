@@ -2,11 +2,11 @@
 
 > **Thứ tự đọc hiện hành — không đọc tràn lan:**
 > 1. Đọc toàn bộ file này để biết hiện trạng thật.
-> 2. **CUS-07 đang hoàn tất kiểm chứng code staged.** Trước khi tiếp tục phase này chỉ đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9 và 18; đây là kế hoạch thi hành duy nhất.
+> 2. **CUS-08 đã hoàn tất code staged; chuỗi CUS-01→08 chưa được kích hoạt production.** Khi chuẩn bị release chỉ đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9, 18 và 19; không suy trạng thái live từ việc code đã có.
 > 3. Khi chạm UI public mới đọc `docs/reference/UI_UX_RULES.md` + `REFERENCE_SITE_ANALYSIS.md`; khi chạm nghiệp vụ vé/ERP mới đối chiếu `SO_TAY_HE_THONG_VI.md` và migration T8/T11a trong code.
 > 4. Các file còn lại trong `docs/reference/` đang **tạm dừng/on-demand**, không phải hàng việc hiện tại. `docs/archive/` chỉ là lịch sử, tuyệt đối không dùng để kết luận trạng thái.
 >
-> Cập nhật: **20/08/2026** — CUS-06 đã hoàn tất code staged bằng `5.6 Sol / High`; CUS-01→06 vẫn mặc định off, production chưa thu dữ liệu khách hay mở booking mới. CUS-07 dùng `5.6 Terra / High` cho rules/UI/adapter; chỉ nâng `Sol / High` khi mở outbound thật, chạm secrets hoặc cơ chế consent/opt-out mới.
+> Cập nhật: **20/08/2026** — CUS-01→08 đã hoàn tất phần code staged. CUS-08 dùng `5.6 Sol / High` cho offline reconciliation, migration và release gate; PostgreSQL 17, full Vitest/build và Playwright offline đều pass. Production vẫn chưa apply migration 039–045 và mọi flag customer/offline/funnel vẫn mặc định off.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -115,7 +115,7 @@ Ba module chưa làm **trước đây hiển thị dữ liệu bịa** — tên 
   - **Chưa kiểm chứng trên production** — migration 032 xếp hàng sau 031 ở mục 0.
   - ✅ **T14 bước 2 — xong, xem T14b ở mục 4.** `staff-access-manager.tsx` và `role-switch-control.tsx` giờ đọc `lib/erp/staff-directory.ts`, nguồn duy nhất cho cả hai màn hình — không còn liệt kê từ `DEMO_ERP_ACCOUNTS`. (Tài liệu này từng ghi "cố ý chưa làm" dù T14b đã xong — sửa lại 05/08, cùng bẫy #6 với T15 ở trên.)
 - ✅ **T15 — nhật ký tập trung toàn hệ thống, đã xác minh trên production 05/08.** Xem chi tiết ở mục 4. `/erp/nhat-ky` gộp 7 bảng nhật ký nghiệp vụ (kế toán, hoá đơn NCC, chốt ca, phiếu việc, dự án, phân quyền nhân sự, quản trị tài khoản) thành một dòng thời gian qua RPC `erp_audit_timeline`, mỗi dòng chụp cả tên/chức danh/khu vực **lẫn** mã tài khoản tại thời điểm thao tác, phạm vi nhìn tính ở máy chủ theo vai trò người xem (nhân viên thấy việc mình, quản lý thấy việc cơ sở mình, giám đốc thấy tất cả). Khối "Hoạt động" ở `/erp/ho-so/[accountId]` (T14) giờ chỉ còn là bộ lọc-theo-người của cùng nguồn này, không phải một nhật ký riêng.
-- **Không có chế độ ngoại tuyến** ở bất kỳ đâu.
+- **Production chưa có chế độ ngoại tuyến.** CUS-08 đã có console cổng offline + IndexedDB + batch reconciliation trong code staged, nhưng `ERP_OFFLINE_GATE_ENABLED` giữ tắt và migration 045 chưa apply production.
 
 ### 2.7 Dữ liệu còn nhét cứng trong mã nguồn — rà ngày 02/08
 
@@ -414,6 +414,14 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 > Outbound là **queue mô phỏng**, không chứa contact/ciphertext, provider credential, sender identity, webhook hay code gửi Email/SMS/Zalo. RPC chỉ director gọi được, khóa advisory + idempotency key; identity phải đúng profile/kênh; consent marketing phải còn `granted`; không consent/đã revoke và quá 2 action/7 ngày/kênh đều thành `suppressed`. PostgreSQL 17 cô lập đã chạy migration và test runtime: no-consent → suppressed, grant → staged hai action, action thứ ba → suppressed. Một lỗi NULL-consent thật được bắt trong runtime test và vá fail-closed bằng `IS DISTINCT FROM 'granted'`. Test contract/unit CUS-07 pass; full gate/push ghi sau khi chạy xong.
 >
 > **CUS-07 chưa live:** migration 044 chưa apply/verify trên Supabase production và `CUSTOMER_RECOMMENDATIONS_ENABLED` mặc định tắt. Trước outbound thật phải có Xuân Trường duyệt policy/sender/provider, secrets server-only, retry/dead-letter/reconciliation và opt-out xuyên kênh; khi chạm phần đó bắt buộc chuyển `5.6 Sol / High`.
+
+> ✅ **CUS-08 hoàn tất phần code staged ngày 20/08/2026 bằng `5.6 Sol / High`:** migration `202608200045_erp_offline_gate_sync.sql` tái dùng đúng `erp_tickets`/`erp_gate_scan_events` T8, preload cho ca chỉ bằng SHA-256 code digest + lượt còn lại, không đưa tên/số điện thoại/booking reference xuống thiết bị. IndexedDB giữ queue cục bộ; mỗi scan có idempotency key, batch ID ổn định và tự sync khi mạng trở lại. Phán quyết offline luôn ghi rõ là tạm thời; máy chủ T8 khóa ticket và quyết định cuối, lưu cả kết quả local/server cùng trạng thái `matched/diverged`. Ba bảng manifest/batch/item bật RLS, direct write bị thu hồi và receipt append-only.
+>
+> A5 `/erp/marketing` có funnel thật QR → page view → hold → payment → gate theo nguồn; bảng slot hiển thị capacity snapshot + source/version T11a, reserved/sold/checked-in, không dựng số minh họa. Attribution dùng QR source/campaign hiện hữu và journey source đã lưu; phần không gắn được nằm riêng ở bucket “chưa gắn nguồn”. Dashboard còn hiển thị số offline item đã sync và sai lệch cần xem. Cả A3/A5 đều fail-closed bằng `ERP_OFFLINE_GATE_ENABLED` và `CUSTOMER_FUNNEL_DASHBOARD_ENABLED`, mặc định tắt.
+>
+> **Bằng chứng CUS-08:** TypeScript/lint pass; full Vitest **94 file/589 test pass + 1 file/1 test skip**; production build pass và sinh đủ route API offline. Playwright desktop dựng production server với flag test: mất mạng, quét 2 lượt trên vé 1 entry, nối mạng tự sync, response đầu bị cắt vẫn giữ đủ queue, retry cùng batch ID về 0 pending — **1/1 pass**. PostgreSQL 17 cô lập apply migration 045 và runtime pass: manifest không PII; accepted=1/exhausted=1; replay batch trả đủ 2 receipt; ticket tăng đúng 1; event/item đúng 2; quyền bị thu hồi chặn replay; idempotency collision bị từ chối; receipt không update được. Cluster tạm đã dừng và xóa. Runtime gate đã bắt và sửa hai lỗi trước commit: helper tham chiếu biến receipt sai scope, còn batch replay từng trả `items=[]`.
+>
+> **CUS-08 chưa live / release production chưa hoàn tất:** chưa có linked Supabase target/secrets/policy approval nên không apply migration 039–045, không bật bất kỳ customer-data/booking/recommendation/offline/funnel flag nào và không có production smoke cho A3/A5. Bước tiếp theo không phải viết thêm feature: Xuân Trường phải chốt policy/version, lịch bán/capacity, provider nếu mở outbound, linked project + production secrets; sau đó mới apply theo thứ tự, bật flag theo canary, chạy production smoke/rollback checklist và nghiệm thu A6.
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|

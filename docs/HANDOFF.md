@@ -2,7 +2,7 @@
 
 > **Đây là tài liệu duy nhất bắt buộc đọc trước khi làm việc.** Mọi tài liệu khác trong `docs/reference/` chỉ đọc khi bắt đầu đúng đầu việc cần tới nó; `docs/archive/` là lịch sử, không dùng để kết luận hiện trạng.
 >
-> Cập nhật: **18/08/2026** — CUS-04 đã hoàn tất code staged: QR động `/q/[code]` có campaign/source registry, redirect nội bộ an toàn và attribution bằng mã công khai. CUS-01→04 vẫn mặc định off; production chưa thu hay hiển thị dữ liệu khách thật.
+> Cập nhật: **18/08/2026** — CUS-05 đã hoàn tất code staged: consent server-side, progressive identity, contact vault bảo vệ, Customer 360/audit và policy draft cho Xuân Trường. CUS-01→05 vẫn mặc định off; production chưa thu hay hiển thị dữ liệu khách thật.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 

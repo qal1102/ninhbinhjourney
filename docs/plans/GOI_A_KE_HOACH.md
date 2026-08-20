@@ -521,6 +521,7 @@ Model: **5.6 Sol / High**. Không hạ Terra/Luna khi còn quyết định migra
 
 - GitHub `app-origin/main` có CUS-08 và production đã thấy offline API route; không có bằng chứng migration 039–045 đã apply.
 - Worktree chưa có Supabase CLI/linked-project metadata. Vercel CLI auto-detect từng tạo nhầm project rỗng `codex-cus00-app-sync`; đã xóa link sai, sau đó đối chiếu metadata checkout gốc và guard hiện pass đúng project `goldencard/ninhbinhjourney`.
+- Vercel production đã có Supabase URL/publishable/server key, ERP persistence, site URL, experience mode và brand flag. Chưa có ba customer policy version, ba contact-protection key/version và toàn bộ customer/offline/funnel flags; inventory chỉ đọc tên biến, không pull giá trị secret. Các flag thiếu giữ OFF an toàn.
 - Production health đang `experienceMode=client-demo`; policy/key/lịch bán/capacity/provider approval chưa được xác minh. Vì vậy verdict đúng hiện tại là **BLOCKED**, không phải lỗi của gate.
 
 ### Trình tự activation bắt buộc

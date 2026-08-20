@@ -2,11 +2,11 @@
 
 > **Thứ tự đọc hiện hành — không đọc tràn lan:**
 > 1. Đọc toàn bộ file này để biết hiện trạng thật.
-> 2. **CUS-08 đã hoàn tất code staged; chuỗi CUS-01→08 chưa được kích hoạt production.** Khi chuẩn bị release chỉ đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9, 18 và 19; không suy trạng thái live từ việc code đã có.
+> 2. **A6 go-live readiness đang làm bằng `5.6 Sol / High`; CUS-01→08 vẫn chưa được kích hoạt production.** Chỉ đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9, 18, 19 và 20; không apply migration hay bật flag trước khi màn `/erp/release` và project-link guard cùng xanh.
 > 3. Khi chạm UI public mới đọc `docs/reference/UI_UX_RULES.md` + `REFERENCE_SITE_ANALYSIS.md`; khi chạm nghiệp vụ vé/ERP mới đối chiếu `SO_TAY_HE_THONG_VI.md` và migration T8/T11a trong code.
 > 4. Các file còn lại trong `docs/reference/` đang **tạm dừng/on-demand**, không phải hàng việc hiện tại. `docs/archive/` chỉ là lịch sử, tuyệt đối không dùng để kết luận trạng thái.
 >
-> Cập nhật: **20/08/2026** — CUS-01→08 đã hoàn tất phần code staged. CUS-08 dùng `5.6 Sol / High` cho offline reconciliation, migration và release gate; PostgreSQL 17, full Vitest/build và Playwright offline đều pass. Production vẫn chưa apply migration 039–045 và mọi flag customer/offline/funnel vẫn mặc định off.
+> Cập nhật: **20/08/2026** — CUS-01→08 đã hoàn tất code staged; A6 đang dựng activation gate chỉ đọc. Production đã tự deploy CUS-08 từ GitHub (offline API route tồn tại) nhưng migration 039–045/flags vẫn chưa bật. Worktree không có Supabase CLI/link; Vercel CLI từng tự tạo nhầm project rỗng `goldencard/codex-cus00-app-sync`, metadata đó đã bị xóa và mọi release command phải khóa đúng `goldencard/ninhbinhjourney`.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -422,6 +422,12 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 > **Bằng chứng CUS-08:** TypeScript/lint pass; full Vitest **94 file/589 test pass + 1 file/1 test skip**; production build pass và sinh đủ route API offline. Playwright desktop dựng production server với flag test: mất mạng, quét 2 lượt trên vé 1 entry, nối mạng tự sync, response đầu bị cắt vẫn giữ đủ queue, retry cùng batch ID về 0 pending — **1/1 pass**. PostgreSQL 17 cô lập apply migration 045 và runtime pass: manifest không PII; accepted=1/exhausted=1; replay batch trả đủ 2 receipt; ticket tăng đúng 1; event/item đúng 2; quyền bị thu hồi chặn replay; idempotency collision bị từ chối; receipt không update được. Cluster tạm đã dừng và xóa. Runtime gate đã bắt và sửa hai lỗi trước commit: helper tham chiếu biến receipt sai scope, còn batch replay từng trả `items=[]`.
 >
 > **CUS-08 chưa live / release production chưa hoàn tất:** chưa có linked Supabase target/secrets/policy approval nên không apply migration 039–045, không bật bất kỳ customer-data/booking/recommendation/offline/funnel flag nào và không có production smoke cho A3/A5. Bước tiếp theo không phải viết thêm feature: Xuân Trường phải chốt policy/version, lịch bán/capacity, provider nếu mở outbound, linked project + production secrets; sau đó mới apply theo thứ tự, bật flag theo canary, chạy production smoke/rollback checklist và nghiệm thu A6.
+
+> 🟡 **A6 go-live readiness bắt đầu ngày 20/08/2026 bằng `5.6 Sol / High`:** đã thêm `/erp/release` director-only, chỉ đọc và không lộ secret. Trang probe 29 data contract của migration 039–045 qua HEAD request service-role; kiểm đúng production project/origin, `NEXT_PUBLIC_EXPERIENCE_MODE=production`, Supabase config, ERP persistence, ba policy version không còn `draft/staged`, khóa AES/HMAC và key version. Mười feature flag được đối chiếu với schema + dependency; flag OFF là bình thường, nhưng flag ON sai thứ tự làm verdict fail-closed. Trang chỉ được phép báo “đủ điều kiện kỹ thuật để lập canary”, không thay thế phê duyệt policy/nghiệm thu người dùng.
+>
+> Guard cục bộ `npm run release:assert-project` chỉ pass khi `.vercel/project.json` đúng project `ninhbinhjourney` và goldencard org; `release:preflight` chạy guard này trước full verify. Audit thực tế đã bắt Vercel CLI auto-link nhầm project rỗng theo tên worktree; link nhầm đã xóa. Hiện guard **đỏ có chủ đích** vì worktree chưa link đúng project. Production baseline read-only: `/api/health` HTTP 200 nhưng `experienceMode=client-demo`, nên A6 vẫn phải BLOCKED; `/api/erp/offline-gate/manifests` trả 405 cho GET, chứng minh code CUS-08 đã được auto-deploy mà không tạo manifest.
+>
+> Bằng chứng hiện tại: full verify pass — typecheck/lint, **95 file/595 Vitest pass + 1 file/1 test skip**, production build có route `/erp/release`; unit A6 6/6. Playwright production-build cục bộ director + manager trên desktop/mobile **4/4 pass**, xác minh fail-closed, director-only và không render secret. Production smoke mới `prod-smoke-customer-release-readiness.spec.ts` là read-only, chỉ chạy khi cùng lệnh có `PLAYWRIGHT_BASE_URL=https://ninhbinhjourney.vercel.app`, `NBJ_A6_RELEASE_SMOKE=1` và kỳ vọng `blocked|canary-ready`. Chưa chạy production vì route A6 chưa push/deploy; push và smoke ghi sau commit batch này.
 
 | # | ID | Việc | Ghi chú |
 |---|---|---|---|

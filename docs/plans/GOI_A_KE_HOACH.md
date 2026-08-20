@@ -1,6 +1,6 @@
 # GÓI A — KẾ HOẠCH DỮ LIỆU KHÁCH HÀNG, MARKETING VÀ BÁN DỊCH VỤ
 
-> **STATUS 20/08/2026: CUS-01→CUS-08 đã hoàn tất phần code staged; bước kế tiếp là chuẩn bị activation/acceptance production, không tự bật.** Chưa phase nào trong chuỗi customer-data được bật production; xem điều kiện ở mục 19 và hiện trạng duy nhất trong `docs/HANDOFF.md`.
+> **STATUS 20/08/2026: CUS-01→CUS-08 đã hoàn tất code staged; A6 go-live readiness ở mục 20 đang thực hiện bằng `5.6 Sol / High`.** Chưa phase customer-data nào được bật production; activation gate phải fail-closed nếu project/schema/secrets/policy/flag dependency chưa khớp.
 > Đề bài gốc: `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Hiện trạng duy nhất: `docs/HANDOFF.md`.
 > Đây là kế hoạch thi hành, không phải tuyên bố các tính năng bên dưới đã có trên production.
 
@@ -501,3 +501,33 @@ Bằng chứng 18/08/2026:
 - Migration 039–045 chưa apply/verify trên linked Supabase production.
 - `ERP_OFFLINE_GATE_ENABLED`, `CUSTOMER_FUNNEL_DASHBOARD_ENABLED` và toàn bộ customer-data/booking/recommendation flags giữ tắt.
 - Chưa có production smoke A3/A5. Trước activation cần linked project, backup/rollback, secrets, policy/version Xuân Trường, lịch bán/capacity được duyệt và kế hoạch canary tại một cổng. Chỉ sau apply tuần tự + smoke + nghiệm thu người dùng mới đóng A6.
+
+---
+
+## 20. A6 go-live readiness — activation gate trước production
+
+Model: **5.6 Sol / High**. Không hạ Terra/Luna khi còn quyết định migration order, production identity, secrets, rollback hoặc canary.
+
+### Gate đã xây
+
+- `/erp/release` chỉ director mở được; chỉ đọc HEAD contract của 29 bảng thuộc migration 039–045, không tạo event/manifest/receipt và không hiển thị giá trị secret.
+- Environment gate kiểm đúng Vercel production project/origin, experience mode, Supabase public/server config, `ERP_PERSISTENCE_MODE=supabase`, ba policy version không còn draft/staged và contact protection key contract.
+- Flag gate mã hóa thứ tự ingestion → journey/QR → consent/analytics/identity → booking → recommendation/funnel; offline gate bắt buộc ERP persistence + schema 045. Flag bật khi dependency/schema thiếu bị liệt kê là unsafe.
+- `release:assert-project` chặn local Vercel link khác `goldencard/ninhbinhjourney`; `release:preflight` bắt project guard chạy trước full verify.
+- Production smoke chỉ đọc bắt buộc URL + expectation tường minh; không được chạy thiếu `PLAYWRIGHT_BASE_URL` rồi suy nhầm local là production.
+- Local gate: typecheck/lint/build pass; 595 Vitest pass + 1 skip; Playwright A6 desktop/mobile 4/4 pass. Production smoke chờ route được push/deploy.
+
+### Trạng thái đầu vào thật ngày 20/08
+
+- GitHub `app-origin/main` có CUS-08 và production đã thấy offline API route; không có bằng chứng migration 039–045 đã apply.
+- Worktree chưa có Supabase CLI/linked-project metadata. Vercel CLI auto-detect từng tạo nhầm project rỗng `codex-cus00-app-sync`; đã xóa link sai, chưa link thay bằng phỏng đoán.
+- Production health đang `experienceMode=client-demo`; policy/key/lịch bán/capacity/provider approval chưa được xác minh. Vì vậy verdict đúng hiện tại là **BLOCKED**, không phải lỗi của gate.
+
+### Trình tự activation bắt buộc
+
+1. Link rõ project `goldencard/ninhbinhjourney`; chạy project guard và xác minh deployment source.
+2. Xác minh linked Supabase production + backup/rollback; dry-run rồi apply tuần tự 039→045, không bỏ số.
+3. Probe `/erp/release` tới khi 7 phase schema xanh nhưng flags vẫn OFF.
+4. Cấu hình secrets/policy/version/lịch bán được Xuân Trường duyệt; chuyển experience mode production và redeploy.
+5. Bật canary theo dependency, một lớp mỗi lần; chạy smoke read-only trước, sau đó workflow có cleanup/rollback riêng.
+6. Canary offline tại một cổng/thiết bị; đối chiếu batch divergence trước khi mở rộng. Chỉ sau nghiệm thu người dùng mới đóng A6.

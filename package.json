@@ -13,7 +13,9 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:a11y": "playwright test tests/e2e/public-surfaces.spec.ts",
-    "verify": "npm run typecheck && npm run lint && npm run test:run && npm run build"
+    "verify": "npm run typecheck && npm run lint && npm run test:run && npm run build",
+    "release:assert-project": "node scripts/assert-vercel-project.mjs",
+    "release:preflight": "npm run release:assert-project && npm run verify"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.2.8",

@@ -515,7 +515,7 @@ Model: **5.6 Sol / High**. Không hạ Terra/Luna khi còn quyết định migra
 - Flag gate mã hóa thứ tự ingestion → journey/QR → consent/analytics/identity → booking → recommendation/funnel; offline gate bắt buộc ERP persistence + schema 045. Flag bật khi dependency/schema thiếu bị liệt kê là unsafe.
 - `release:assert-project` chặn local Vercel link khác `goldencard/ninhbinhjourney`; `release:preflight` bắt project guard chạy trước full verify.
 - Production smoke chỉ đọc bắt buộc URL + expectation tường minh; không được chạy thiếu `PLAYWRIGHT_BASE_URL` rồi suy nhầm local là production.
-- Local gate: typecheck/lint/build pass; 595 Vitest pass + 1 skip; Playwright A6 desktop/mobile 4/4 pass. Production smoke chờ route được push/deploy.
+- Local gate: typecheck/lint/build pass; 595 Vitest pass + 1 skip; Playwright A6 desktop/mobile 4/4 pass. Commit A6 `48d48b3` đã push/deploy; production smoke read-only với expectation `blocked` pass 1/1 và xác nhận gate trả `CHƯA ĐƯỢC BẬT PRODUCTION`.
 
 ### Trạng thái đầu vào thật ngày 20/08
 

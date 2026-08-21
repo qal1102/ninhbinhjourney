@@ -77,6 +77,31 @@ describe("A6 customer release readiness", () => {
     }
   });
 
+  it("keeps an empty-only rollback synchronized with every release table and function", () => {
+    const rollback = readFileSync(
+      resolve(process.cwd(), "scripts", "rollback-customer-release-039-045.sql"),
+      "utf8",
+    );
+    expect(rollback).toContain("begin;");
+    expect(rollback.trim().endsWith("commit;")).toBe(true);
+    expect(rollback).toContain("CUSTOMER_RELEASE_ROLLBACK_REFUSED_NONEMPTY");
+
+    for (const phase of CUSTOMER_RELEASE_PHASES) {
+      const sql = readFileSync(resolve(process.cwd(), "supabase", "migrations", phase.migration), "utf8");
+      for (const probe of phase.probes) {
+        expect(rollback, `rollback missing table ${probe.table}`).toContain(`public.${probe.table}`);
+      }
+      for (const match of sql.matchAll(/create or replace function public\.([a-zA-Z0-9_]+)/g)) {
+        expect(rollback, `rollback missing function ${match[1]}`).toMatch(
+          new RegExp(`('${match[1]}'|create or replace function public\\.${match[1]}\\b)`),
+        );
+      }
+    }
+    expect(rollback).toContain("create or replace function public.erp_gate_scan_ticket(");
+    expect(rollback).toContain("language plpgsql");
+    expect(rollback).not.toContain("'erp_gate_scan_ticket',");
+  });
+
   it("accepts approved production configuration without exposing secret values", () => {
     const checks = inspectCustomerReleaseEnvironment(process.env);
     expect(checks.every((check) => check.ready)).toBe(true);

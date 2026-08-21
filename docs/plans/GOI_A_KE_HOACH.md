@@ -1,6 +1,6 @@
 # GÓI A — KẾ HOẠCH DỮ LIỆU KHÁCH HÀNG, MARKETING VÀ BÁN DỊCH VỤ
 
-> **STATUS 20/08/2026: CUS-01→CUS-08 đã hoàn tất code staged; A6 go-live readiness ở mục 20 đang thực hiện bằng `5.6 Sol / High`.** Chưa phase customer-data nào được bật production; activation gate phải fail-closed nếu project/schema/secrets/policy/flag dependency chưa khớp.
+> **STATUS 21/08/2026: CUS-01→CUS-08 đã hoàn tất code staged; A6 go-live readiness ở mục 20 đang thực hiện bằng `5.6 Sol / High`.** Chưa phase customer-data nào được bật production; activation gate phải fail-closed nếu project/schema/secrets/policy/flag dependency chưa khớp.
 > Đề bài gốc: `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Hiện trạng duy nhất: `docs/HANDOFF.md`.
 > Đây là kế hoạch thi hành, không phải tuyên bố các tính năng bên dưới đã có trên production.
 
@@ -515,19 +515,21 @@ Model: **5.6 Sol / High**. Không hạ Terra/Luna khi còn quyết định migra
 - Flag gate mã hóa thứ tự ingestion → journey/QR → consent/analytics/identity → booking → recommendation/funnel; offline gate bắt buộc ERP persistence + schema 045. Flag bật khi dependency/schema thiếu bị liệt kê là unsafe.
 - `release:assert-project` chặn local Vercel link khác `goldencard/ninhbinhjourney`; `release:preflight` bắt project guard chạy trước full verify.
 - Production smoke chỉ đọc bắt buộc URL + expectation tường minh; không được chạy thiếu `PLAYWRIGHT_BASE_URL` rồi suy nhầm local là production.
-- Local gate: `release:preflight` pass trọn gói với đúng Vercel project; typecheck/lint/build pass; 595 Vitest pass + 1 skip; Playwright A6 desktop/mobile 4/4 pass. Commit A6 `48d48b3` đã push/deploy; production smoke read-only với expectation `blocked` pass 1/1 và xác nhận gate trả `CHƯA ĐƯỢC BẬT PRODUCTION`.
+- Local gate mới nhất 21/08: `release:preflight` pass trọn gói với đúng Vercel project; typecheck/lint/build pass; 95 file Vitest pass + 1 skip, 602 test pass + 1 skip. Playwright A6 desktop/mobile 4/4 pass. Commit A6 `48d48b3` đã push/deploy; production smoke read-only với expectation `blocked` pass 1/1 và xác nhận gate trả `CHƯA ĐƯỢC BẬT PRODUCTION`.
 
-### Trạng thái đầu vào thật ngày 20/08
+### Trạng thái đầu vào thật ngày 21/08
 
 - GitHub `app-origin/main` có CUS-08 và production đã thấy offline API route; không có bằng chứng migration 039–045 đã apply.
-- Worktree chưa có Supabase CLI/linked-project metadata. Vercel CLI auto-detect từng tạo nhầm project rỗng `codex-cus00-app-sync`; đã xóa link sai, sau đó đối chiếu metadata checkout gốc và guard hiện pass đúng project `goldencard/ninhbinhjourney`.
+- Worktree đã link đúng Supabase production `vzewjfcwhovsxslqfpjt` và Vercel `goldencard/ninhbinhjourney`. Remote-only `202608070039_erp_rls_identity_reads.sql` đã fetch về local để lịch sử khớp; 29 bảng customer hiện còn vắng mặt và dry-run `--include-all` chỉ liệt kê đúng 039→045.
+- Production không bật PITR và API không trả physical backup khả dụng. Rollback 039–045 empty-only đã được dựng, tự từ chối khi có dữ liệu thật và phục hồi function T8 bị migration 045 thay thế; contract tests pass nhưng chưa chạy DROP/CREATE rollback simulation trên production.
+- Audit bắt ba bảng đối soát tiền mặt RLS OFF/full quyền anon-authenticated. Hotfix `202608210046` đã applied: RLS ON, browser grants bị thu hồi, service-role read giữ nguyên; security advisor ERROR sạch và production finance smoke read-only pass 1/1. `db lint` còn hai lỗi function demo cũ + một warning cast, phải xử lý riêng trước khi gọi toàn bộ database baseline sạch.
 - Vercel production đã có Supabase URL/publishable/server key, ERP persistence, site URL, experience mode và brand flag. Chưa có ba customer policy version, ba contact-protection key/version và toàn bộ customer/offline/funnel flags; inventory chỉ đọc tên biến, không pull giá trị secret. Các flag thiếu giữ OFF an toàn.
 - Production health đang `experienceMode=client-demo`; policy/key/lịch bán/capacity/provider approval chưa được xác minh. Vì vậy verdict đúng hiện tại là **BLOCKED**, không phải lỗi của gate.
 
 ### Trình tự activation bắt buộc
 
 1. ✅ Đã link rõ project `goldencard/ninhbinhjourney`, project guard pass và production route xác nhận deployment source từ commit A6.
-2. Xác minh linked Supabase production + backup/rollback; dry-run rồi apply tuần tự 039→045, không bỏ số.
+2. 🟡 Đã link/xác minh production và dry-run đúng 039→045; project không có PITR/physical backup khả dụng, rollback empty-only mới qua contract test nên chưa apply customer migrations.
 3. Probe `/erp/release` tới khi 7 phase schema xanh nhưng flags vẫn OFF.
 4. Cấu hình secrets/policy/version/lịch bán được Xuân Trường duyệt; chuyển experience mode production và redeploy.
 5. Bật canary theo dependency, một lớp mỗi lần; chạy smoke read-only trước, sau đó workflow có cleanup/rollback riêng.

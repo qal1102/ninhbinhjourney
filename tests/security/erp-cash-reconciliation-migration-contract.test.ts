@@ -14,6 +14,7 @@ function readMigration(fileName: string) {
 
 const schema = readMigration("202608050034_erp_cash_reconciliation.sql");
 const rpc = readMigration("202608050035_erp_cash_reconciliation_rpc.sql");
+const rlsHotfix = readMigration("202608210046_erp_cash_reconciliation_rls.sql");
 const combined = `${schema} ${rpc}`;
 
 function functionBody(source: string, name: string) {
@@ -166,5 +167,29 @@ describe("ERP cash reconciliation migration 035 (RPC) contract", () => {
     }
     const definers = combined.match(/security definer\s*set search_path = ''/g) ?? [];
     expect(definers.length).toBeGreaterThanOrEqual(6);
+  });
+});
+
+describe("ERP cash reconciliation migration 046 (production RLS hotfix) contract", () => {
+  const financeTables = [
+    "erp_bank_statement_lines",
+    "erp_cash_deposits",
+    "erp_cash_deposit_shifts",
+  ];
+
+  it("applies atomically and enables RLS on every affected finance table", () => {
+    expect(rlsHotfix).toContain("begin;");
+    expect(rlsHotfix.endsWith("commit;")).toBe(true);
+    for (const table of financeTables) {
+      expect(rlsHotfix).toContain(
+        `alter table public.${table} enable row level security`,
+      );
+    }
+  });
+
+  it("removes browser-role CRUD and leaves only server-side reads", () => {
+    expect(rlsHotfix).toContain("from public, anon, authenticated, service_role");
+    expect(rlsHotfix).toContain("to service_role");
+    expect(rlsHotfix).not.toMatch(/grant (insert|update|delete|truncate|all)/);
   });
 });

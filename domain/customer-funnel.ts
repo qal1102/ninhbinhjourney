@@ -39,4 +39,10 @@ export type CustomerFunnelReport = {
     offlineSyncedItems: number;
     offlineDivergedItems: number;
   };
+  /** Nguồn nào chạm trần đọc: số trên màn hình là số bị cắt, không phải số đủ. */
+  truncation: {
+    capped: boolean;
+    rowLimit: number;
+    sources: string[];
+  };
 };

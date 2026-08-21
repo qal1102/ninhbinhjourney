@@ -24,6 +24,12 @@ export function CustomerFunnelDashboard({ report }: { report: CustomerFunnelRepo
       <h2 className="mt-2 text-3xl font-black text-[#203a30]">Từ QR marketing tới cổng soát vé</h2>
       <p className="mt-3 max-w-4xl text-sm leading-6 text-[#66756e]">Mỗi số đọc từ bảng nguồn ghi ngay dưới nó. Đây là số đếm sự kiện, không phải số người duy nhất; profile chưa gắn nguồn được để riêng thay vì phân bổ đoán.</p>
 
+      {report.truncation.capped ? (
+        <p className="mt-4 rounded-2xl border border-[#e3c07f] bg-[#fdf6e7] p-4 text-sm leading-6 text-[#7a5a1d]" data-testid="customer-funnel-truncated">
+          <strong>Số liệu bị cắt — đừng đọc như số đủ.</strong> Các nguồn sau chạm trần {report.truncation.rowLimit.toLocaleString("vi-VN")} dòng mỗi lần đọc nên phần cũ hơn đã bị bỏ lại: {report.truncation.sources.join(", ")}. Hãy thu hẹp cửa sổ ngày hoặc chuyển sang truy vấn tổng hợp trước khi báo cáo con số này.
+        </p>
+      ) : null}
+
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {stages.map(([label, value, source], index) => (
           <article key={label} className="rounded-2xl bg-[#f3f6f4] p-4">

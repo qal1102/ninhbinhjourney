@@ -34,8 +34,8 @@ describe("customer funnel reconciliation", () => {
     tables.set("customer_events", [{ profile_id: "profile-1", source_context: { qr_source_id: "source-1" }, occurred_at: "2026-08-19T01:01:00.000Z" }]);
     tables.set("customer_journeys", [{ profile_id: "profile-1", source_context: { qr_source_id: "source-1" }, created_at: "2026-08-19T01:02:00.000Z" }]);
     tables.set("customer_booking_holds", [
-      { id: "hold-current", profile_id: "profile-1", status: "active", created_at: "2026-08-19T01:03:00.000Z" },
-      { id: "hold-old-sold", profile_id: "profile-1", status: "converted", created_at: "2026-07-01T01:03:00.000Z" },
+      { id: "hold-current", profile_id: "profile-1", status: "active", expires_at: "2026-08-20T05:10:00.000Z", created_at: "2026-08-20T04:55:00.000Z" },
+      { id: "hold-old-sold", profile_id: "profile-1", status: "converted", expires_at: "2026-07-01T01:18:00.000Z", created_at: "2026-07-01T01:03:00.000Z" },
     ]);
     tables.set("customer_payment_attempts", [{ hold_id: "hold-current", status: "succeeded", occurred_at: "2026-08-19T01:04:00.000Z" }]);
     tables.set("customer_orders", [{ id: "order-1", profile_id: "profile-1", created_at: "2026-08-19T01:05:00.000Z" }]);
@@ -94,5 +94,53 @@ describe("customer funnel reconciliation", () => {
       offlineSyncedItems: 2,
       offlineDivergedItems: 1,
     });
+    expect(report.truncation).toEqual({ capped: false, rowLimit: 5000, sources: [] });
+  });
+
+  it("khong con dem hold da qua han la dang giu cho", async () => {
+    // Hết hạn ở migration 202608200043 là LƯỜI: status vẫn nằm ở 'active' cho tới
+    // khi chính hold đó bị chạm lại. RPC sức chứa vì thế xét thêm expires_at, và
+    // bảng phễu phải xét y hệt, nếu không hai bên nói khác nhau về cùng một ghế.
+    tables.set("customer_booking_holds", [
+      { id: "hold-current", profile_id: "profile-1", status: "active", expires_at: "2026-08-20T04:45:00.000Z", created_at: "2026-08-20T04:30:00.000Z" },
+      { id: "hold-old-sold", profile_id: "profile-1", status: "converted", expires_at: "2026-07-01T01:18:00.000Z", created_at: "2026-07-01T01:03:00.000Z" },
+    ]);
+
+    const report = await getCustomerFunnelReport(7);
+
+    // Chỗ của hold quá hạn (2 vé) trả lại cho slot; chỉ còn 3 vé đã bán.
+    expect(report.slots[0].reservedEntries).toBe(3);
+    expect(report.slots[0].soldEntries).toBe(3);
+    // Nó vẫn là một lần giữ chỗ đã xảy ra trong kỳ, nên phễu vẫn đếm.
+    expect(report.totals.holds).toBe(1);
+  });
+
+  it("van giu hold 'converted' du da qua moc het han tu lau", async () => {
+    const report = await getCustomerFunnelReport(7);
+
+    // hold-old-sold hết hạn từ tháng 7 nhưng đã 'converted' — ghế đã bán đứt.
+    expect(report.slots[0].soldEntries).toBe(3);
+  });
+
+  it("coi hold thieu moc het han la da het han, giong null > now() trong SQL", async () => {
+    tables.set("customer_booking_holds", [
+      { id: "hold-current", profile_id: "profile-1", status: "active", expires_at: null, created_at: "2026-08-20T04:55:00.000Z" },
+    ]);
+
+    const report = await getCustomerFunnelReport(7);
+
+    expect(report.slots[0].reservedEntries).toBe(0);
+  });
+
+  it("noi ro so lieu bi cat khi mot nguon cham tran doc", async () => {
+    tables.set("marketing_qr_scans", Array.from({ length: 5000 }, () => ({
+      qr_source_id: "source-1", occurred_at: "2026-08-19T01:00:00.000Z",
+    })));
+
+    const report = await getCustomerFunnelReport(7);
+
+    expect(report.truncation.capped).toBe(true);
+    expect(report.truncation.sources).toContain("marketing_qr_scans");
+    expect(report.truncation.rowLimit).toBe(5000);
   });
 });

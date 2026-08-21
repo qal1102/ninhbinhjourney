@@ -2,7 +2,7 @@
 
 > **Thứ tự đọc hiện hành — không đọc tràn lan:**
 > 1. Đọc toàn bộ file này để biết hiện trạng thật.
-> 2. **PUBLIC-SEASONAL-UX-02 đang hoàn thiện bằng `5.6 Terra / High`; không đổi schema/RLS.** Migration 039–045/048 đã ở production; chỉ đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9, 18, 19 và 20 khi đổi schema, flag hoặc policy tiếp.
+> 2. **PUBLIC-SEASONAL-UX-02 đã đóng bằng `5.6 Terra / High`; không đổi schema/RLS.** Lượt public-UX kế tiếp tiếp tục dùng Terra/High; chỉ chuyển Sol/High và đọc `docs/plans/GOI_A_KE_HOACH.md` mục 1.1, 4.2, 9, 18, 19, 20 khi đổi schema, flag hoặc policy.
 > 3. Khi chạm UI public mới đọc `docs/reference/UI_UX_RULES.md` + `REFERENCE_SITE_ANALYSIS.md`; khi chạm nghiệp vụ vé/ERP mới đối chiếu `SO_TAY_HE_THONG_VI.md` và migration T8/T11a trong code.
 > 4. Các file còn lại trong `docs/reference/` đang **tạm dừng/on-demand**, không phải hàng việc hiện tại. `docs/archive/` chỉ là lịch sử, tuyệt đối không dùng để kết luận trạng thái.
 >
@@ -10,7 +10,7 @@
 >
 > **MID-AUTUMN-COMMERCE-01 21/08/2026:** copy seasonal đã viết lại theo nhịp editorial Heritage, neo vào sông Ngô Đồng và ba hang Cả/Hai/Ba; mức giá đề xuất gồm Trăng Non 390.000, Trăng An 890.000, Nguyệt Viên 1.590.000 và Bàn Trăng 2.480.000 VND/hai khách. `048` đưa Bàn Trăng vào đúng `products` + capacity template CUS-06 lúc 19:00, không nhét hộp bánh vật lý vào luồng vé T8. Bàn Trăng 18–27/09 giữ chỗ 15 phút và thanh toán mô phỏng; box là seasonal offer hiển thị công khai. Năm visual nhãn hàng tiếp tục ghi rõ là **concept/đề xuất hợp tác độc lập**, không xác nhận partnership/tài trợ. Local `release:preflight` pass: 609 test + 1 skip, lint/typecheck/build 43 route sạch; còn chờ commit/deploy/smoke production.
 >
-> **PUBLIC-SEASONAL-UX-02 local-ready 21/08/2026:** khối Trung thu đã tách ảnh khỏi copy, chia thành 5 nhóm và 20 hoạt động; mỗi thẻ mở detail sheet có đường giữ chỗ, lập hành trình, gọi hoặc email Xuân Trường. Mười tám ảnh được chọn từ `Downloads/Mooncake` đã đổi PNG → WebP, tổng khoảng 3,1 MB thay vì đưa gần 80 MB ảnh gốc vào repo; hai ảnh đã nén nhưng không dùng cũng được loại trước commit. Consent public đã bỏ toàn bộ mã phase/thuật ngữ mã hóa khỏi bề mặt khách, còn lựa chọn ngắn “Để sau/Đồng ý”; trang quyền riêng tư vẫn giữ mục đích/thời hạn/quyền của khách bằng ngôn ngữ phổ thông. Local gate: typecheck/lint/build pass, Vitest 612 pass + 1 skip; Playwright seasonal desktop/mobile 2/2 và consent 1/1 pass. Còn commit/push/deploy + production smoke.
+> **PUBLIC-SEASONAL-UX-02 live 21/08/2026:** commit app `90e9c13` đã push `app-origin/main`; Vercel production `ninhbinhjourney-reka7t99g-goldencard.vercel.app` `Ready` sau 43 giây và alias chính đã nhận bản mới. Khối Trung thu tách ảnh khỏi copy, chia thành 5 nhóm/20 hoạt động; mỗi thẻ mở detail sheet có đường giữ chỗ, lập hành trình, gọi hoặc email Xuân Trường. Mười tám ảnh chọn từ `Downloads/Mooncake` đã đổi PNG → WebP, tổng khoảng 3,1 MB thay vì đưa gần 80 MB ảnh gốc vào repo; hai ảnh đã nén nhưng không dùng được loại trước commit. Consent public bỏ toàn bộ mã phase/thuật ngữ mã hóa khỏi bề mặt khách, còn lựa chọn ngắn “Để sau/Đồng ý”; trang quyền riêng tư giữ mục đích/thời hạn/quyền bằng ngôn ngữ phổ thông. Local gate: typecheck/lint/build pass, Vitest 612 pass + 1 skip. Production smoke alias chính: seasonal desktop/mobile 2/2, privacy+consent 2/2, axe+overflow desktop/mobile 2/2; `/api/health` trả `dataMode=supabase-shared`, `experienceMode=production`.
 >
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
@@ -18,7 +18,7 @@
 
 ## 0. ✅ T0 xong 02/08 — toàn bộ đợt T1–T14/T6b/T13 đã lên production, đã kiểm chứng thật
 
-> **Trạng thái public web mới nhất 21/08:** PUBLIC-SEASONAL-UX-02 đã qua local gate và visual review desktop/Pixel 7; chưa gọi là live cho tới khi commit/push/deploy và smoke production. Không có migration hay mutation dữ liệu trong phase này.
+> **Trạng thái public web mới nhất 21/08:** PUBLIC-SEASONAL-UX-02 đã live ở commit `90e9c13`, visual review desktop/Pixel 7 và production smoke 6/6 đều xanh. Không có migration hay mutation dữ liệu trong phase này.
 
 > **Trạng thái public web mới nhất 07/08:** W5 sửa sai địa danh trong 3 cinematic panel, dựng lại thẻ tuyến theo từng chặng và thay tương tác “Mười nơi nữa” **đã commit/push/deploy production**. Commit app `31419a4`, deployment app `dpl_HU8nyRaynxFPgV7tRJy8kuMKrvgx` (`Ready`) đã nhận alias `https://ninhbinhjourney.vercel.app`; smoke production ghi ở mục 2.6. Commit tài liệu sau đó có thể tạo thêm một deployment không đổi app.
 
@@ -392,7 +392,7 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 
 **T0, T6b bước 1, T14 bước 1, T13 đã xong và đã xác minh trên production — xem mục 0.** Hàng dưới đây là phần chưa làm.
 
-> 🟡 **PUBLIC-SEASONAL-UX-02:** code/media/local gate đã xong; còn commit → push `app-origin/main` → Vercel production → smoke campaign desktop/mobile, modal booking/contact, consent và overflow/a11y trên origin thật. Chỉ sau chuỗi này mới đổi trạng thái sang live.
+> ✅ **PUBLIC-SEASONAL-UX-02:** đã push/deploy/smoke production; không còn việc kỹ thuật bắt buộc trong phase. Khi có yêu cầu public-UX tiếp, bắt đầu bằng screenshot origin thật rồi khoanh đúng section, không quay lại sửa schema/flag của CUS-01→08 nếu không có yêu cầu mới.
 
 > ✅ **CUS-01 hoàn tất phần code ngày 18/08/2026:** migration `202608180039_customer_data_backbone.sql`, event contract, repository và `/api/customer-events`. PostgreSQL 15 thật đã apply migration sạch; transaction test chứng minh event lần đầu insert, gửi lại idempotent, collision/PII/direct write/history mutation bị chặn, identity digest+ciphertext và consent append-only ghi được; tất cả rollback sạch. Full gate: typecheck/lint/build pass, 72 file/513 test pass + 1 skip có chủ đích.
 >

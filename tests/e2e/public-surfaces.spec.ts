@@ -74,6 +74,28 @@ test("home does not repeat the intro slogan and presents routes after the destin
   await expect(page.locator("#curated-routes .route-progress-track")).toHaveCount(1);
 });
 
+test("Mid-Autumn campaign links the existing planner and marks brand work as concepts", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
+  // This assertion targets the seasonal block, not the separate 6.5-second
+  // opening sequence. Removing only that overlay keeps the test stable on a
+  // local dev server where reduced-motion CSS can arrive after hydration.
+  await page.getByTestId("opening-intro").evaluate((element) => element.remove());
+
+  const campaign = page.locator("#mid-autumn");
+  await campaign.scrollIntoViewIfNeeded();
+  await expect(campaign.getByRole("heading", { name: /Mid-Autumn season/i })).toBeVisible();
+  await expect(campaign.getByRole("link", { name: "Plan a Mid-Autumn escape" })).toHaveAttribute(
+    "href",
+    "/plan?lang=en&source=mid-autumn-2026",
+  );
+  await expect(campaign.locator("img")).toHaveCount(9);
+  await expect(campaign).toContainText("independent creative concepts");
+  await expect(campaign).toContainText("do not confirm a commercial partnership");
+});
+
 test("cinematic panels use local MP4 without embedded player controls", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });

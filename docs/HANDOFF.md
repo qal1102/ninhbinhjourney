@@ -8,6 +8,8 @@
 >
 > Cập nhật: **21/08/2026** — CUS-01→08 đã hoàn tất code staged; A6 đã link đúng Vercel và Supabase production `vzewjfcwhovsxslqfpjt`. Migration customer 039–045/flags vẫn chưa bật. Audit production đã phát hiện và vá khẩn cấp ba bảng đối soát tiền mặt bị RLS OFF/full quyền anon; migration `202608210046` đã applied, security advisor mức ERROR hiện sạch. Project không có PITR/physical backup khả dụng nên customer apply vẫn fail-closed cho tới khi rollback pre-activation được xác minh đủ.
 >
+> **MID-AUTUMN-UX-02 21/08/2026:** trang chủ có khối seasonal mới cho Trung thu: 20 ảnh WebP 1122×1402 (~4 MB tổng, bản PNG gốc vẫn ở Downloads) trong `public/images/campaigns/mid-autumn-2026/`; bộ quà/bánh và fine-dining chỉ dẫn vào planner/route hiện có với source `mid-autumn-2026`, không mở booking/checkout chưa được duyệt. Năm visual nhãn hàng được ghi rõ là **concept/đề xuất hợp tác độc lập**, không xác nhận partnership/tài trợ. Local desktop/mobile contract pass và full release preflight pass; phải commit/push/deploy trước khi gọi là đã hiện Production.
+>
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
 ---

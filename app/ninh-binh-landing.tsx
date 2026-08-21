@@ -11,6 +11,7 @@ import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
+import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 
@@ -1856,6 +1857,8 @@ export default function NinhBinhLanding({
       <CinematicVideo clip={cinematicClips[lang][0]} eager />
 
       <PinnedStory beats={storyBeats[lang]} />
+
+      <MidAutumnCampaign lang={lang} source={source} />
 
       <section id="map" data-customer-section="home-map" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">

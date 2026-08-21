@@ -59,6 +59,15 @@ export function getVisitorPageType(pathname: string) {
   return null;
 }
 
+export function isCustomerConsentSurface(pathname: string) {
+  return (
+    getVisitorPageType(pathname) !== null ||
+    pathname === "/checkout" ||
+    pathname === "/quyen-rieng-tu" ||
+    pathname.startsWith("/journey/")
+  );
+}
+
 export function sourceContextFromBrowser(
   search: URLSearchParams,
   referrer: string,

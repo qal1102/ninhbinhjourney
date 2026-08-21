@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   CUSTOMER_ANALYTICS_CONSENT_STORAGE_KEY,
   CUSTOMER_CONSENT_CHANGED_EVENT,
   getOrCreateCustomerAnonymousId,
+  isCustomerConsentSurface,
   parseCustomerConsentPreferences,
 } from "@/lib/customer-data/browser-tracking";
 
@@ -16,6 +18,7 @@ type ConsentResponse = {
 };
 
 export function CustomerConsentCenter() {
+  const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
   const [hasDecision, setHasDecision] = useState(false);
@@ -90,7 +93,7 @@ export function CustomerConsentCenter() {
     }
   }
 
-  if (!ready) return null;
+  if (!ready || !isCustomerConsentSurface(pathname)) return null;
 
   if (!hasDecision) {
     return (

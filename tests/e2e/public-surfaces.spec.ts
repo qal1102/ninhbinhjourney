@@ -77,23 +77,55 @@ test("home does not repeat the intro slogan and presents routes after the destin
 test("Mid-Autumn campaign publishes priced offers, a bookable dinner and clearly marked concepts", async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("nbj-customer-analytics-consent", JSON.stringify({
+      product_analytics: "denied",
+      marketing_communications: "denied",
+      policy_version: "xuan-truong-analytics-draft-v1",
+    }));
+  });
   await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
 
   const campaign = page.locator("#mid-autumn");
   await expect(campaign.getByRole("heading", { name: /Moonrise over the Ngo Dong River/i })).toBeVisible();
-  await expect(campaign.getByRole("link", { name: "Discover the Moon Table" })).toHaveAttribute(
-    "href",
-    "/packages/ban-trang-tam-coc-2026?lang=en&source=mid-autumn-2026",
-  );
+  await expect(campaign.getByRole("link", { name: "Explore by occasion" })).toHaveAttribute("href", "#seasonal-moon-gifts");
   await expect(campaign.getByRole("link", { name: "Plan a moonlit journey" })).toHaveAttribute(
     "href",
     "/plan?lang=en&source=mid-autumn-2026",
   );
   await expect(campaign).toContainText("VND 390,000");
   await expect(campaign).toContainText("VND 2,480,000 / table");
-  await expect(campaign.locator("img")).toHaveCount(10);
-  await expect(campaign).toContainText("independent creative concepts");
-  await expect(campaign).toContainText("do not confirm a commercial partnership");
+  await expect(campaign.locator("[data-seasonal-card]")).toHaveCount(20);
+  await expect(campaign.getByRole("heading", { name: "When the landscape becomes part of dinner." })).toBeVisible();
+  await expect(campaign.getByRole("heading", { name: "Heritage, seen in another light." })).toBeVisible();
+  await expect(campaign.getByRole("heading", { name: "Ninh Binh is an open invitation." })).toBeVisible();
+
+  const separatePlanes = await campaign.locator("[data-seasonal-card]").evaluateAll((cards) =>
+    cards.every((card) => {
+      const button = card.querySelector(":scope > button");
+      const media = button?.querySelector(":scope > [data-seasonal-card-media]");
+      const copy = button?.querySelector(":scope > [data-seasonal-card-copy]");
+      return Boolean(media && copy && media.parentElement === copy.parentElement);
+    }),
+  );
+  expect(separatePlanes).toBe(true);
+
+  await campaign.getByRole("button", { name: "Open details: Moon Table by the Ngo Dong" }).click();
+  const bookingDialog = page.getByRole("dialog");
+  await expect(bookingDialog.getByRole("heading", { name: "Moon Table by the Ngo Dong" })).toBeVisible();
+  await expect(bookingDialog.getByRole("link", { name: "View dates and hold a table" })).toHaveAttribute(
+    "href",
+    "/packages/ban-trang-tam-coc-2026?lang=en&source=mid-autumn-2026",
+  );
+  await page.keyboard.press("Escape");
+  await expect(bookingDialog).toHaveCount(0);
+
+  await campaign.getByRole("button", { name: "Open details: A fragrance of Ninh Binh" }).click();
+  const contactDialog = page.getByRole("dialog");
+  await expect(contactDialog.getByRole("link", { name: "Start a conversation" })).toHaveAttribute("href", /^mailto:xuantruong_nb@hn\.vnn\.vn/);
+  await expect(contactDialog.getByRole("link", { name: "Call the team" })).toHaveAttribute("href", "tel:+842293876930");
+  await expect(contactDialog).toContainText("independent creative proposal");
+  await expect(contactDialog).toContainText("does not announce an established commercial partnership");
 });
 
 test("cinematic panels use local MP4 without embedded player controls", async ({ page }) => {

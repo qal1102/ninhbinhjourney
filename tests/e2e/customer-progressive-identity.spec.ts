@@ -5,12 +5,12 @@ const enabled = process.env.NBJ_E2E_CUSTOMER_IDENTITY === "1";
 test.describe("CUS-05 progressive identity and consent", () => {
   test.skip(!enabled, "Run with NBJ_E2E_CUSTOMER_IDENTITY=1.");
 
-  test("keeps the active demo privacy notice readable and explicit", async ({ page }, testInfo) => {
+  test("keeps the public privacy notice readable and explicit", async ({ page }, testInfo) => {
     await page.goto("/quyen-rieng-tu", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("heading", { name: "Dữ liệu của bạn vẫn là lựa chọn của bạn." })).toBeVisible();
-    await expect(page.getByText("Xuân Trường là pháp nhân vận hành và đơn vị kiểm soát dữ liệu", { exact: false })).toBeVisible();
-    await expect(page.getByText("chưa phải thông báo pháp lý đã phê duyệt", { exact: false })).toBeVisible();
+    await expect(page.getByText("Xuân Trường vận hành Ninh Bình Journey và chịu trách nhiệm", { exact: false })).toBeVisible();
+    await expect(page.getByText("Dữ liệu được bảo vệ thế nào", { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
     if (process.env.NBJ_E2E_CAPTURE_VISUALS === "1") {
@@ -49,10 +49,10 @@ test.describe("CUS-05 progressive identity and consent", () => {
     });
 
     await page.goto("/plan", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Bạn chọn dữ liệu nào được dùng." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Giúp chúng tôi làm hành trình phù hợp hơn?" })).toBeVisible();
     await page.waitForTimeout(1200);
     expect(analyticsEvents).toHaveLength(0);
-    await page.getByRole("button", { name: "Cho phép phân tích" }).click();
+    await page.getByRole("button", { name: "Đồng ý" }).click();
     await expect(page.getByRole("button", { name: "Mở trung tâm quyền riêng tư" })).toBeVisible();
     await expect.poll(() => analyticsEvents.some((event) => event.event_name === "page_viewed")).toBe(true);
     expect(consentWrites[0]).toMatchObject({ product_analytics: true, marketing_communications: false });

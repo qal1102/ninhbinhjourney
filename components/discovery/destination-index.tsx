@@ -97,7 +97,7 @@ export function DestinationIndex({
                       >
                         {item.name}
                       </span>
-                      <span className="mt-1.5 block text-[0.66rem] uppercase tracking-[0.18em] text-[#6D756F] sm:text-xs">
+                      <span className="mt-1.5 block text-[0.66rem] uppercase tracking-[0.18em] text-[#5F6962] sm:text-xs">
                         {item.category} · {item.duration}
                       </span>
                     </span>

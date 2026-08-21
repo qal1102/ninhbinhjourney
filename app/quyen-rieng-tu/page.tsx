@@ -38,7 +38,7 @@ export default function PrivacyPage() {
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#56766a]">Thông báo xử lý dữ liệu · phiên bản 21.08.2026</p>
         <h1 className="font-display mt-4 max-w-4xl text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">Dữ liệu của bạn vẫn là lựa chọn của bạn.</h1>
         <p className="mt-6 max-w-3xl text-lg leading-8 text-[#596b63]">
-          Xuân Trường là pháp nhân vận hành và đơn vị kiểm soát dữ liệu của Ninh Bình Journey trong bản trình diễn này. Hệ thống chỉ ghi phân tích sau khi bạn đồng ý; quyền phục vụ hành trình và quyền nhận giới thiệu luôn được hỏi riêng.
+          Xuân Trường vận hành Ninh Bình Journey và chịu trách nhiệm với dữ liệu được gửi qua website. Chúng tôi chỉ ghi nhận cách website được sử dụng sau khi bạn đồng ý; việc phục vụ hành trình và việc gửi thông tin giới thiệu luôn là hai lựa chọn riêng.
         </p>
 
         <section className="mt-12 grid gap-4 lg:grid-cols-3">
@@ -53,12 +53,12 @@ export default function PrivacyPage() {
 
         <section className="mt-12 grid gap-8 rounded-[2rem] bg-[#183f34] p-6 text-white sm:p-9 lg:grid-cols-2">
           <div>
-            <h2 className="font-display text-3xl">Dữ liệu được giữ ở đâu</h2>
+            <h2 className="font-display text-3xl">Dữ liệu được bảo vệ thế nào</h2>
             <ul className="mt-5 space-y-3 text-sm leading-7 text-white/78">
-              <li>Hành vi ẩn danh dùng mã first-party ngẫu nhiên, không fingerprint thiết bị.</li>
-              <li>Email hoặc số điện thoại được chuẩn hóa, băm HMAC để chống trùng và mã hóa AES-GCM trước khi lưu.</li>
-              <li>Customer 360 chỉ hiện loại liên hệ đã bảo vệ; giao diện hiện tại không có đường giải mã giá trị gốc.</li>
-              <li>Lịch sử consent và audit chỉ ghi thêm, không sửa hoặc xóa trực tiếp.</li>
+              <li>Website dùng một mã ngẫu nhiên để phân biệt các phiên truy cập, không tạo dấu vân tay thiết bị.</li>
+              <li>Email và số điện thoại được bảo vệ trước khi lưu, đồng thời được tách khỏi dữ liệu hành vi.</li>
+              <li>Chỉ người có đúng vai trò vận hành mới được xem thông tin cần thiết để phục vụ yêu cầu của bạn.</li>
+              <li>Mọi thay đổi về lựa chọn quyền riêng tư đều được ghi lại để có thể kiểm tra khi cần.</li>
             </ul>
           </div>
           <div>
@@ -75,10 +75,10 @@ export default function PrivacyPage() {
         <section className="mt-12 max-w-3xl">
           <h2 className="font-display text-4xl text-[#183f34]">Bạn có thể đổi ý</h2>
           <p className="mt-4 leading-8 text-[#596b63]">
-            Nút “Quyền riêng tư” cho phép tắt analytics và rút quyền marketing ngay trên website. Trong giai đoạn trình diễn, yêu cầu xem, xuất, sửa, xóa hoặc hạn chế xử lý được tiếp nhận trực tiếp bởi đầu mối vận hành Xuân Trường; mã phiên first-party giúp đối chiếu đúng hồ sơ mà không cần công khai email hay số điện thoại.
+            Nút “Quyền riêng tư” cho phép bạn tắt phân tích trải nghiệm hoặc ngừng nhận gợi ý ngay trên website. Yêu cầu xem, xuất, sửa, xóa hoặc hạn chế xử lý dữ liệu được tiếp nhận trực tiếp bởi đầu mối vận hành Xuân Trường.
           </p>
           <p className="mt-4 rounded-2xl border border-[#d7c69e] bg-[#fff8e9] p-4 text-sm leading-6 text-[#695631]">
-            Bản trình diễn có thể lưu hành vi đã consent, hành trình, liên hệ đã mã hóa và lượt giữ chỗ. Thanh toán, email, SMS và Zalo vẫn là mô phỏng; không có khoản tiền hay thông điệp marketing nào được gửi ra nhà cung cấp.
+            Việc tắt các lựa chọn không cần thiết không ảnh hưởng đến khả năng xem nội dung, lập hành trình hoặc gửi yêu cầu đặt chỗ. Khi có giao dịch, chúng tôi sẽ thông báo rõ dữ liệu cần dùng trước khi bạn xác nhận.
           </p>
         </section>
       </article>

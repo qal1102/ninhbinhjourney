@@ -97,20 +97,22 @@ export function CustomerConsentCenter() {
 
   if (!hasDecision) {
     return (
-      <aside className="fixed inset-x-3 bottom-3 z-[1300] mx-auto max-w-3xl rounded-3xl border border-white/20 bg-[#183f34] p-5 text-white shadow-2xl sm:bottom-5 sm:p-6" aria-label="Lựa chọn quyền riêng tư">
-        <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#e7c78d]">Quyền riêng tư</p>
-        <h2 className="font-display mt-2 text-2xl">Bạn chọn dữ liệu nào được dùng.</h2>
-        <p className="mt-2 text-sm leading-6 text-white/75">
-          Dữ liệu cần thiết chỉ phục vụ hành trình bạn yêu cầu. Phân tích trải nghiệm là lựa chọn riêng; nhận thông tin giới thiệu luôn tắt cho tới khi bạn tự bật.
-        </p>
-        <Link href="/quyen-rieng-tu" className="mt-2 inline-block text-xs font-bold text-white/80 underline underline-offset-2">Xem thông báo xử lý dữ liệu của Xuân Trường</Link>
+      <aside className="fixed inset-x-3 bottom-3 z-[1300] mx-auto max-w-xl rounded-[22px] border border-white/18 bg-[#183f34]/95 p-4 text-white shadow-2xl backdrop-blur sm:bottom-5 sm:p-5" aria-label="Lựa chọn quyền riêng tư">
+        <div className="pr-2">
+          <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.2em] text-[#e7c78d]">Một lựa chọn nhỏ</p>
+          <h2 className="font-display mt-1 text-xl">Giúp chúng tôi làm hành trình phù hợp hơn?</h2>
+          <p className="mt-1.5 text-sm leading-5 text-white/72">
+            Nếu bạn đồng ý, chúng tôi sẽ ghi nhận cách website được sử dụng để cải thiện nội dung. Bạn có thể đổi ý bất cứ lúc nào.
+          </p>
+        </div>
         {message ? <p className="mt-3 text-sm text-[#ffd9d1]" role="alert">{message}</p> : null}
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:justify-end">
+          <Link href="/quyen-rieng-tu" className="mr-auto min-h-10 px-1 py-2.5 text-xs font-bold text-white/72 underline underline-offset-2">Tìm hiểu thêm</Link>
           <button type="button" disabled={pending} onClick={() => void save(false, false)} className="min-h-11 rounded-full border border-white/35 px-5 text-sm font-bold disabled:opacity-50">
-            Chỉ dùng phần cần thiết
+            Để sau
           </button>
           <button type="button" disabled={pending} onClick={() => void save(true, false)} className="min-h-11 rounded-full bg-[#e7c78d] px-5 text-sm font-extrabold text-[#183f34] disabled:opacity-50">
-            {pending ? "Đang lưu…" : "Cho phép phân tích"}
+            {pending ? "Đang lưu…" : "Đồng ý"}
           </button>
         </div>
       </aside>
@@ -119,8 +121,8 @@ export function CustomerConsentCenter() {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="fixed bottom-4 left-4 z-[1200] min-h-10 rounded-full border border-[#b9c5bf] bg-white/95 px-4 text-xs font-bold text-[#29463b] shadow-lg backdrop-blur" aria-label="Mở trung tâm quyền riêng tư">
-        Quyền riêng tư
+      <button type="button" onClick={() => setOpen(true)} className="fixed bottom-3 left-3 z-[1200] min-h-9 rounded-full border border-[#b9c5bf] bg-white/92 px-3 text-[0.68rem] font-bold text-[#29463b] shadow-md backdrop-blur" aria-label="Mở trung tâm quyền riêng tư">
+        Riêng tư
       </button>
       {open ? (
         <div className="fixed inset-0 z-[1400] grid place-items-center bg-[#0f1b17]/65 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
@@ -135,11 +137,11 @@ export function CustomerConsentCenter() {
             <div className="mt-6 space-y-3">
               <label className="flex gap-4 rounded-2xl border border-[#d8ded9] bg-white p-4">
                 <input type="checkbox" checked={analytics} onChange={(event) => setAnalytics(event.target.checked)} className="mt-1 h-5 w-5 accent-[#27634f]" />
-                <span><strong className="block">Phân tích trải nghiệm</strong><span className="mt-1 block text-sm leading-6 text-[#637068]">Đo trang, phần nội dung và thao tác đã khai báo; không thu nội dung bạn gõ hay liên hệ.</span></span>
+                <span><strong className="block">Giúp cải thiện trải nghiệm</strong><span className="mt-1 block text-sm leading-6 text-[#637068]">Cho biết nội dung nào hữu ích để chúng tôi sắp xếp website và gợi ý tốt hơn.</span></span>
               </label>
               <label className="flex gap-4 rounded-2xl border border-[#d8ded9] bg-white p-4">
                 <input type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} className="mt-1 h-5 w-5 accent-[#27634f]" />
-                <span><strong className="block">Thông tin giới thiệu</strong><span className="mt-1 block text-sm leading-6 text-[#637068]">Chỉ có hiệu lực khi bạn chủ động để lại liên hệ. CUS-05 chưa gửi email hoặc SMS thật.</span></span>
+                <span><strong className="block">Nhận gợi ý phù hợp</strong><span className="mt-1 block text-sm leading-6 text-[#637068]">Chỉ dùng khi bạn chủ động để lại liên hệ và bật lựa chọn này.</span></span>
               </label>
             </div>
             {message ? <p className="mt-4 rounded-xl bg-[#fff0ef] p-3 text-sm text-[#8f2f2c]" role="alert">{message}</p> : null}

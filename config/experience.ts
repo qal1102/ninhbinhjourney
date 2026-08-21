@@ -69,11 +69,11 @@ export type PublicEnvironment =
     };
 
 export function readPublicEnvironment(): PublicEnvironment {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const modeValue = process.env.NEXT_PUBLIC_EXPERIENCE_MODE;
-  const brandConceptsValue = process.env.NEXT_PUBLIC_BRAND_CONCEPTS_ENABLED;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+  const modeValue = process.env.NEXT_PUBLIC_EXPERIENCE_MODE?.trim();
+  const brandConceptsValue = process.env.NEXT_PUBLIC_BRAND_CONCEPTS_ENABLED?.trim();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
   const missing = [
     !supabaseUrl ? "NEXT_PUBLIC_SUPABASE_URL" : null,

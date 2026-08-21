@@ -98,4 +98,20 @@ describe("experience environment", () => {
       sandboxCheckout: false,
     });
   });
+
+  it("normalizes deployment-provider whitespace around public values", () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = " https://example.supabase.co\r\n";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = " publishable-key\r\n";
+    process.env.NEXT_PUBLIC_EXPERIENCE_MODE = " production\r\n";
+    process.env.NEXT_PUBLIC_BRAND_CONCEPTS_ENABLED = " false\r\n";
+    process.env.NEXT_PUBLIC_SITE_URL = " https://ninhbinhjourney.vercel.app\r\n";
+
+    const result = readPublicEnvironment();
+    expect(result.status).toBe("ready");
+    if (result.status === "ready") {
+      expect(result.config.mode).toBe("production");
+      expect(result.config.brandConceptsEnabled).toBe(false);
+      expect(result.siteUrl).toBe("https://ninhbinhjourney.vercel.app");
+    }
+  });
 });

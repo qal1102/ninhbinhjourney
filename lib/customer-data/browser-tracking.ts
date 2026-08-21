@@ -152,5 +152,5 @@ export function parseCustomerAnalyticsConsent(raw: string | null) {
 }
 
 export function isCustomerAnalyticsEnabled() {
-  return process.env.NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED === "true";
+  return process.env.NEXT_PUBLIC_CUSTOMER_ANALYTICS_ENABLED?.trim() === "true";
 }

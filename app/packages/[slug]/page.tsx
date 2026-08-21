@@ -21,8 +21,11 @@ export default async function PackageDetailPage({
 }) {
   const item = getPackageBySlug((await params).slug);
   if (!item) notFound();
-  const journeyValue = (await searchParams).journey;
+  const query = await searchParams;
+  const journeyValue = query.journey;
   const journey = typeof journeyValue === "string" ? journeyValue : undefined;
+  const source = typeof query.source === "string" ? query.source : undefined;
+  const lang = query.lang === "en" ? "en" : "vi";
   const flags = getExperiencePresentationFlags(readPublicEnvironment());
   const customerBookingEnabled = isCustomerBookingEnabled();
   const checkoutAvailable = flags.sandboxCheckout || customerBookingEnabled;
@@ -52,8 +55,7 @@ export default async function PackageDetailPage({
               {item.name}
             </h1>
             <p className="mt-6 max-w-xl text-xl leading-8 text-white/68">
-              Dành cho {item.audience.toLocaleLowerCase("vi-VN")}. Giá và lịch
-              là dữ liệu minh họa, được server tính lại trước khi xác nhận.
+              {item.editorialDescription ?? `Dành cho ${item.audience.toLocaleLowerCase("vi-VN")}. Giá và lịch là dữ liệu minh họa, được server tính lại trước khi xác nhận.`}
             </p>
             <div className="mt-9 grid gap-4 sm:grid-cols-2">
               {sites.map((site) => (
@@ -74,9 +76,11 @@ export default async function PackageDetailPage({
             </div>
           </section>
           <aside className="h-fit rounded-3xl bg-[#fbfaf6] p-6 text-[#151a17] sm:p-8">
-            <p className="text-sm text-[#59654b]">Demo price / adult</p>
+            <p className="text-sm text-[#59654b]">
+              {item.priceLabel ? "Giá giới thiệu mùa 2026" : "Giá minh họa / người lớn"}
+            </p>
             <p className="font-display mt-2 text-4xl text-[#183f34]">
-              {item.demoPriceVnd.toLocaleString("vi-VN")} VND
+              {item.priceLabel ?? `${item.demoPriceVnd.toLocaleString("vi-VN")} VND`}
             </p>
             <h2 className="mt-7 font-bold">Lịch minh họa</h2>
             <ol className="mt-3 space-y-3">
@@ -96,10 +100,10 @@ export default async function PackageDetailPage({
                   data-customer-track="package-checkout"
                   data-customer-content-id={item.id}
                   data-customer-content-type="package"
-                  href={`/checkout?package=${item.slug}${journey ? `&journey=${journey}` : ""}`}
+                  href={`/checkout?package=${item.slug}&lang=${lang}${journey ? `&journey=${journey}` : ""}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
                   className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#d58c35] px-6 font-extrabold"
                 >
-                  {customerBookingEnabled ? "Giữ chỗ 15 phút" : "Tiếp tục checkout demo"}
+                  {customerBookingEnabled ? "Giữ chỗ 15 phút" : "Tiếp tục bản trình diễn"}
                 </Link>
               </>
             ) : (

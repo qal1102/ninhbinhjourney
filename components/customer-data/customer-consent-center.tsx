@@ -100,7 +100,7 @@ export function CustomerConsentCenter() {
         <p className="mt-2 text-sm leading-6 text-white/75">
           Dữ liệu cần thiết chỉ phục vụ hành trình bạn yêu cầu. Phân tích trải nghiệm là lựa chọn riêng; nhận thông tin giới thiệu luôn tắt cho tới khi bạn tự bật.
         </p>
-        <Link href="/quyen-rieng-tu" className="mt-2 inline-block text-xs font-bold text-white/80 underline underline-offset-2">Xem dự thảo chính sách dữ liệu của Xuân Trường</Link>
+        <Link href="/quyen-rieng-tu" className="mt-2 inline-block text-xs font-bold text-white/80 underline underline-offset-2">Xem thông báo xử lý dữ liệu của Xuân Trường</Link>
         {message ? <p className="mt-3 text-sm text-[#ffd9d1]" role="alert">{message}</p> : null}
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
           <button type="button" disabled={pending} onClick={() => void save(false, false)} className="min-h-11 rounded-full border border-white/35 px-5 text-sm font-bold disabled:opacity-50">
@@ -140,7 +140,7 @@ export function CustomerConsentCenter() {
               </label>
             </div>
             {message ? <p className="mt-4 rounded-xl bg-[#fff0ef] p-3 text-sm text-[#8f2f2c]" role="alert">{message}</p> : null}
-            <Link href="/quyen-rieng-tu" className="mt-4 inline-block text-xs font-bold text-[#456257] underline underline-offset-2">Xem dự thảo chính sách dữ liệu</Link>
+            <Link href="/quyen-rieng-tu" className="mt-4 inline-block text-xs font-bold text-[#456257] underline underline-offset-2">Xem thông báo xử lý dữ liệu</Link>
             <button type="button" disabled={pending} onClick={() => void save(analytics, marketing)} className="mt-6 min-h-12 w-full rounded-full bg-[#183f34] px-5 font-extrabold text-white disabled:opacity-50">
               {pending ? "Đang lưu…" : "Lưu lựa chọn"}
             </button>

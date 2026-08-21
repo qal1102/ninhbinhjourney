@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Quyền riêng tư | Ninh Bình Journey",
-  description: "Dự thảo cách Xuân Trường xử lý dữ liệu khách trên Ninh Bình Journey.",
+  description: "Cách Xuân Trường xử lý dữ liệu khách trên Ninh Bình Journey.",
 };
 
 const purposes = [
@@ -35,10 +35,10 @@ export default function PrivacyPage() {
       </header>
 
       <article className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
-        <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#56766a]">Dự thảo vận hành · phiên bản 18.08.2026</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#56766a]">Thông báo xử lý dữ liệu · phiên bản 21.08.2026</p>
         <h1 className="font-display mt-4 max-w-4xl text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">Dữ liệu của bạn vẫn là lựa chọn của bạn.</h1>
         <p className="mt-6 max-w-3xl text-lg leading-8 text-[#596b63]">
-          Pháp nhân vận hành được xác định cho bản dự thảo này là Xuân Trường, đồng thời là đơn vị kiểm soát dữ liệu của Ninh Bình Journey. Bản này mô tả cách hệ thống đang được xây và thử nghiệm; chưa phải thông báo pháp lý đã phê duyệt để mở thu dữ liệu người thật.
+          Xuân Trường là pháp nhân vận hành và đơn vị kiểm soát dữ liệu của Ninh Bình Journey trong bản trình diễn này. Hệ thống chỉ ghi phân tích sau khi bạn đồng ý; quyền phục vụ hành trình và quyền nhận giới thiệu luôn được hỏi riêng.
         </p>
 
         <section className="mt-12 grid gap-4 lg:grid-cols-3">
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             </ul>
           </div>
           <div>
-            <h2 className="font-display text-3xl">Thời hạn dự kiến</h2>
+            <h2 className="font-display text-3xl">Thời hạn lưu giữ</h2>
             <ul className="mt-5 space-y-3 text-sm leading-7 text-white/78">
               <li>Event hành vi ẩn danh: tối đa 13 tháng.</li>
               <li>Yêu cầu nhận lại hành trình và liên hệ phục vụ: 90 ngày sau ngày đi dự kiến, trừ khi phát sinh giao dịch cần thời hạn khác.</li>
@@ -75,10 +75,10 @@ export default function PrivacyPage() {
         <section className="mt-12 max-w-3xl">
           <h2 className="font-display text-4xl text-[#183f34]">Bạn có thể đổi ý</h2>
           <p className="mt-4 leading-8 text-[#596b63]">
-            Nút “Quyền riêng tư” cho phép tắt analytics và rút quyền marketing. Yêu cầu xem, xuất, sửa, xóa hoặc hạn chế xử lý sẽ được bổ sung kênh tiếp nhận chính thức trước khi bật production; Xuân Trường phải duyệt đầu mối phụ trách và thời hạn phản hồi trước mốc đó.
+            Nút “Quyền riêng tư” cho phép tắt analytics và rút quyền marketing ngay trên website. Trong giai đoạn trình diễn, yêu cầu xem, xuất, sửa, xóa hoặc hạn chế xử lý được tiếp nhận trực tiếp bởi đầu mối vận hành Xuân Trường; mã phiên first-party giúp đối chiếu đúng hồ sơ mà không cần công khai email hay số điện thoại.
           </p>
           <p className="mt-4 rounded-2xl border border-[#d7c69e] bg-[#fff8e9] p-4 text-sm leading-6 text-[#695631]">
-            Hiện hệ thống vẫn ở chế độ staged: các migration customer-data và cờ thu dữ liệu production chưa bật, không có email hoặc SMS marketing thật được gửi từ phần này.
+            Bản trình diễn có thể lưu hành vi đã consent, hành trình, liên hệ đã mã hóa và lượt giữ chỗ. Thanh toán, email, SMS và Zalo vẫn là mô phỏng; không có khoản tiền hay thông điệp marketing nào được gửi ra nhà cung cấp.
           </p>
         </section>
       </article>

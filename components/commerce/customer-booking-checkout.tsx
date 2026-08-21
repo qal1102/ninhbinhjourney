@@ -66,8 +66,8 @@ export function CustomerBookingCheckout({
 }: {
   packageItem: PackageCatalogItem;
 }) {
-  const [partySize, setPartySize] = useState(2);
-  const [visitDate, setVisitDate] = useState(() => localIsoDate(1));
+  const [partySize, setPartySize] = useState(packageItem.fixedPartySize ?? 2);
+  const [visitDate, setVisitDate] = useState(() => packageItem.bookingStartDate ?? localIsoDate(1));
   const [hold, setHold] = useState<HoldResult | null>(null);
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
@@ -170,8 +170,8 @@ export function CustomerBookingCheckout({
                 aria-label="Ngày trải nghiệm"
                 type="date"
                 value={visitDate}
-                min={localIsoDate(1)}
-                max={localIsoDate(90)}
+                min={packageItem.bookingStartDate ?? localIsoDate(1)}
+                max={packageItem.bookingEndDate ?? localIsoDate(90)}
                 onChange={(event) => {
                   setVisitDate(event.target.value);
                   invalidateHold();
@@ -180,19 +180,21 @@ export function CustomerBookingCheckout({
               />
             </label>
             <label className="text-sm font-bold text-[#27362f]">
-              Số khách
+              {packageItem.fixedPartySize ? "Sản phẩm" : "Số khách"}
               <input
-                aria-label="Số khách"
-                type="number"
-                min={1}
-                max={20}
+                aria-label={packageItem.fixedPartySize ? "Sản phẩm cố định hai khách" : "Số khách"}
+                type={packageItem.fixedPartySize ? "text" : "number"}
+                min={packageItem.fixedPartySize ? undefined : 1}
+                max={packageItem.fixedPartySize ? undefined : 20}
                 value={partySize}
                 onChange={(event) => {
                   setPartySize(Number(event.target.value));
                   invalidateHold();
                 }}
-                className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal"
+                disabled={Boolean(packageItem.fixedPartySize)}
+                className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal disabled:bg-[#f1efe8]"
               />
+              {packageItem.fixedPartySize ? <span className="mt-2 block text-xs font-normal text-[#6b786f]">Bàn cố định cho hai khách</span> : null}
             </label>
           </div>
 
@@ -238,7 +240,7 @@ export function CustomerBookingCheckout({
         <h2 className="font-display mt-3 text-4xl leading-tight">{packageItem.name}</h2>
         <p className="mt-3 leading-7 text-white/65">{packageItem.durationLabel} · {packageItem.audience}</p>
         <dl className="mt-7 space-y-4 border-y border-white/15 py-5 text-sm">
-          <div className="flex justify-between gap-4"><dt className="text-white/55">Đơn giá mô phỏng</dt><dd>{packageItem.demoPriceVnd.toLocaleString("vi-VN")} VND</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/55">Đơn giá mỗi khách</dt><dd>{packageItem.demoPriceVnd.toLocaleString("vi-VN")} VND</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-white/55">Số khách</dt><dd>{partySize}</dd></div>
           <div className="flex justify-between gap-4 text-lg font-bold"><dt>Tổng</dt><dd className="text-[#e7c78d]">{(hold?.amount.total_vnd ?? packageItem.demoPriceVnd * Math.max(0, partySize)).toLocaleString("vi-VN")} VND</dd></div>
         </dl>

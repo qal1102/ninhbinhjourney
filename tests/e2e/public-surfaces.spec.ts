@@ -74,18 +74,24 @@ test("home does not repeat the intro slogan and presents routes after the destin
   await expect(page.locator("#curated-routes .route-progress-track")).toHaveCount(1);
 });
 
-test("Mid-Autumn campaign links the existing planner and marks brand work as concepts", async ({
+test("Mid-Autumn campaign publishes priced offers, a bookable dinner and clearly marked concepts", async ({
   page,
 }) => {
   await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
 
   const campaign = page.locator("#mid-autumn");
-  await expect(campaign.getByRole("heading", { name: /Mid-Autumn season/i })).toBeVisible();
-  await expect(campaign.getByRole("link", { name: "Plan a Mid-Autumn escape" })).toHaveAttribute(
+  await expect(campaign.getByRole("heading", { name: /Moonrise over the Ngo Dong River/i })).toBeVisible();
+  await expect(campaign.getByRole("link", { name: "Discover the Moon Table" })).toHaveAttribute(
+    "href",
+    "/packages/ban-trang-tam-coc-2026?lang=en&source=mid-autumn-2026",
+  );
+  await expect(campaign.getByRole("link", { name: "Plan a moonlit journey" })).toHaveAttribute(
     "href",
     "/plan?lang=en&source=mid-autumn-2026",
   );
-  await expect(campaign.locator("img")).toHaveCount(9);
+  await expect(campaign).toContainText("VND 390,000");
+  await expect(campaign).toContainText("VND 2,480,000 / table");
+  await expect(campaign.locator("img")).toHaveCount(10);
   await expect(campaign).toContainText("independent creative concepts");
   await expect(campaign).toContainText("do not confirm a commercial partnership");
 });

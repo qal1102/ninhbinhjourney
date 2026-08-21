@@ -1,6 +1,6 @@
 # GÓI A — KẾ HOẠCH DỮ LIỆU KHÁCH HÀNG, MARKETING VÀ BÁN DỊCH VỤ
 
-> **STATUS 21/08/2026: CUS-01→CUS-08 đã hoàn tất code staged; A6 go-live readiness ở mục 20 đang thực hiện bằng `5.6 Sol / High`.** Chưa phase customer-data nào được bật production; activation gate phải fail-closed nếu project/schema/secrets/policy/flag dependency chưa khớp.
+> **STATUS 21/08/2026: CUS-01→CUS-08 và migration seasonal 048 đã apply Supabase production; A6 activation đang thực hiện bằng `5.6 Sol / High`.** Policy/key/10 flag đã cấu hình trên Vercel nhưng chỉ được gọi là live sau deployment và production smoke; outbound vẫn không có provider và không gửi thật.
 > Đề bài gốc: `docs/reference/PHIEU_GIAO_VIEC_01_GOI_A.md`. Hiện trạng duy nhất: `docs/HANDOFF.md`.
 > Đây là kế hoạch thi hành, không phải tuyên bố các tính năng bên dưới đã có trên production.
 
@@ -534,3 +534,11 @@ Model: **5.6 Sol / High**. Không hạ Terra/Luna khi còn quyết định migra
 4. Cấu hình secrets/policy/version/lịch bán được Xuân Trường duyệt; chuyển experience mode production và redeploy.
 5. Bật canary theo dependency, một lớp mỗi lần; chạy smoke read-only trước, sau đó workflow có cleanup/rollback riêng.
 6. Canary offline tại một cổng/thiết bị; đối chiếu batch divergence trước khi mở rộng. Chỉ sau nghiệm thu người dùng mới đóng A6.
+
+### Activation theo quyết định chủ dự án ngày 21/08/2026
+
+- Chủ dự án yêu cầu ưu tiên một sản phẩm khách nhìn thấy và tự giao Xuân Trường làm pháp nhân vận hành/policy cho bản trình diễn; model giữ **5.6 Sol / High** vì có migration, secret và production activation.
+- Mặt bằng giá 2026 được neo vào collection khách sạn trong nước; line-up demo khóa ở 390.000 / 890.000 / 1.590.000 VND cho ba hộp, và 2.480.000 VND cho Bàn Trăng hai khách.
+- 039→045 + `202608210048_mid_autumn_commerce_demo.sql` đã apply production, lịch sử local/remote khớp tới 048, đủ 29 bảng và lint DB sạch. `048` chỉ thêm sản phẩm dịch vụ Bàn Trăng vào nguồn catalog/T11a; hộp bánh không sinh vé T8 giả.
+- Vercel đã cấu hình experience mode production, ba policy version, AES/HMAC key/version và đủ 10 flag. Cấu hình chờ deployment/smoke; không ghi giá trị secret vào tài liệu.
+- Supabase project không có PITR/physical backup. Hai lần logical dump qua CLI thất bại vì Docker không chạy và file zero-byte không được coi là backup. Sau khi có event/order thật, rollback empty-only phải bị từ chối; mọi rollback tiếp theo phải là forward migration bảo toàn dữ liệu.

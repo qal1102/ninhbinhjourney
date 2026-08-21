@@ -6,30 +6,45 @@ type Language = "en" | "vi";
 
 const copy = {
   vi: {
-    eyebrow: "Mùa trăng tại Ninh Bình",
-    title: "Một mùa Trung thu để mang về — và ở lại lâu hơn.",
-    body: "Từ hộp bánh dành cho người thân đến một bàn tối bên hồ, Xuân Trường mở ra một cách mới để chạm vào Ninh Bình trong mùa trăng.",
-    collectionLabel: "Seasonal collection",
-    collectionTitle: "Bộ quà Xuân Trường",
-    collectionBody: "Một đề xuất quà tặng lấy cảm hứng từ đá vôi, sen và ánh trăng của vùng Tràng An.",
-    planningCta: "Lên hành trình Trung thu",
-    routesCta: "Xem các hành trình sẵn có",
-    servicesLabel: "Dịch vụ trong mùa",
+    eyebrow: "Rằm tháng Tám · 25.09.2026",
+    title: "Trăng lên trên dòng Ngô Đồng.",
+    body: "Khi chuyến thuyền qua Hang Cả, Hang Hai, Hang Ba khép lại, mùa trăng bắt đầu theo một nhịp khác: một hộp bánh mang về, một bàn tối cho hai người, một buổi Ninh Bình còn lưu lại sau ngày đi.",
+    collectionLabel: "Bộ quà mùa trăng 2026",
+    collectionTitle: "Nguyệt Viên",
+    collectionBody: "Ba cỡ hộp, từ một lời thăm hỏi nhỏ đến món quà dành cho gia đình và đối tác. Mức giá được đặt giữa phân khúc quà tặng địa phương và bộ sưu tập khách sạn năm sao.",
+    planningCta: "Xem Bàn Trăng",
+    routesCta: "Lên hành trình mùa trăng",
+    servicesLabel: "Bốn lựa chọn cho mùa đoàn viên",
     services: [
       {
-        title: "Bộ quà mang về",
-        body: "Mooncake collection là điểm khởi đầu cho một lời chào mùa trăng tại Xuân Trường.",
+        kicker: "Hai bánh · hộp gọn",
+        title: "Trăng Non",
+        body: "Một món quà vừa đủ để mang theo sau chuyến Tam Cốc, dành cho người thân hoặc một lời cảm ơn giản dị.",
+        price: "390.000 VND",
         image: "/images/campaigns/mid-autumn-2026/mooncake/mooncake-collection-01.webp",
       },
       {
-        title: "Bàn tối dưới trăng",
-        body: "Fine-dining và mâm bánh được đặt vào một buổi tối riêng tư, chậm rãi hơn nhịp tham quan ban ngày.",
-        image: "/images/campaigns/mid-autumn-2026/mooncake/romantic-dining-set.webp",
+        kicker: "Bốn bánh · trà tuyển chọn",
+        title: "Trăng An",
+        body: "Cỡ quà cân bằng cho gia đình và đối tác; đủ đầy mà không biến một lời chúc thành món quà phô trương.",
+        price: "890.000 VND",
+        image: "/images/campaigns/mid-autumn-2026/mooncake/mooncake-collection-05.webp",
       },
       {
-        title: "Một điểm hẹn cho gia đình",
-        body: "Gợi ý kết hợp hành trình di sản ban ngày với khoảnh khắc sum vầy khi đèn lên.",
+        kicker: "Sáu bánh · trà · hộp lưu niệm",
+        title: "Nguyệt Viên",
+        body: "Bộ quà chủ đạo của mùa 2026, dành cho những cuộc gặp cần một dấu ấn trang trọng hơn.",
+        price: "1.590.000 VND",
         image: "/images/campaigns/mid-autumn-2026/mooncake/mooncake-collection-09.webp",
+      },
+      {
+        kicker: "19:00–21:30 · hai khách",
+        title: "Bàn Trăng bên Ngô Đồng",
+        body: "Một bàn tối theo mùa, trà và bánh dùng tại chỗ, rồi khép lại bằng hộp Trăng Non mang về. Giữ chỗ thật trên ERP; thanh toán vẫn là mô phỏng.",
+        price: "2.480.000 VND / bàn",
+        image: "/images/campaigns/mid-autumn-2026/mooncake/romantic-dining-set.webp",
+        href: "/packages/ban-trang-tam-coc-2026?source=mid-autumn-2026",
+        cta: "Xem lịch và giữ bàn",
       },
     ],
     conceptEyebrow: "Collaboration concepts",
@@ -39,30 +54,45 @@ const copy = {
     conceptNotice: "Các visual dưới đây là concept/đề xuất sáng tạo độc lập, không xác nhận quan hệ hợp tác hoặc tài trợ với các nhãn hàng được nêu.",
   },
   en: {
-    eyebrow: "Mid-Autumn in Ninh Binh",
-    title: "A Mid-Autumn season to take home — and linger in.",
-    body: "From a mooncake gift for someone close to a dinner beside the water, Xuan Truong opens a new way to encounter Ninh Binh under the full moon.",
-    collectionLabel: "Seasonal collection",
-    collectionTitle: "The Xuan Truong collection",
-    collectionBody: "A gift proposal shaped by limestone, lotus and the moonlight of Trang An.",
-    planningCta: "Plan a Mid-Autumn escape",
-    routesCta: "View ready-made routes",
-    servicesLabel: "In-season experiences",
+    eyebrow: "The eighth lunar full moon · 25 September 2026",
+    title: "Moonrise over the Ngo Dong River.",
+    body: "Once the boat has passed Hang Ca, Hang Hai and Hang Ba, the evening finds another rhythm: a mooncake box to take home, a table for two, and a little of Ninh Binh that lingers beyond the journey.",
+    collectionLabel: "Mid-Autumn collection 2026",
+    collectionTitle: "Nguyet Vien",
+    collectionBody: "Three gift formats, from a thoughtful gesture to a family or corporate presentation. The pricing sits between a regional premium gift and a five-star hotel collection.",
+    planningCta: "Discover the Moon Table",
+    routesCta: "Plan a moonlit journey",
+    servicesLabel: "Four ways to mark the full moon",
     services: [
       {
-        title: "A gift to take home",
-        body: "The mooncake collection becomes the opening gesture of a Mid-Autumn stay at Xuan Truong.",
+        kicker: "Two cakes · compact box",
+        title: "Trang Non",
+        body: "A gift light enough to carry home from Tam Coc, made for family or a quiet word of thanks.",
+        price: "VND 390,000",
         image: "/images/campaigns/mid-autumn-2026/mooncake/mooncake-collection-01.webp",
       },
       {
-        title: "Dinner under the moon",
-        body: "Fine dining and mooncakes are placed within a private evening that moves more slowly than the day route.",
-        image: "/images/campaigns/mid-autumn-2026/mooncake/romantic-dining-set.webp",
+        kicker: "Four cakes · selected tea",
+        title: "Trang An",
+        body: "A balanced presentation for family and partners: generous, composed, and never needlessly grand.",
+        price: "VND 890,000",
+        image: "/images/campaigns/mid-autumn-2026/mooncake/mooncake-collection-05.webp",
       },
       {
-        title: "A family rendezvous",
-        body: "A suggestion to pair a heritage day with a gathering once the lanterns come on.",
+        kicker: "Six cakes · tea · keepsake box",
+        title: "Nguyet Vien",
+        body: "The signature 2026 gift, intended for family gatherings and meetings that call for a more formal gesture.",
+        price: "VND 1,590,000",
         image: "/images/campaigns/mid-autumn-2026/mooncake/mooncake-collection-09.webp",
+      },
+      {
+        kicker: "7:00–9:30 pm · two guests",
+        title: "Moon Table by the Ngo Dong",
+        body: "A seasonal table, tea and mooncake at dinner, followed by a Trang Non box to take home. Capacity is held in the ERP; payment remains a simulation.",
+        price: "VND 2,480,000 / table",
+        image: "/images/campaigns/mid-autumn-2026/mooncake/romantic-dining-set.webp",
+        href: "/packages/ban-trang-tam-coc-2026?source=mid-autumn-2026",
+        cta: "View dates and hold a table",
       },
     ],
     conceptEyebrow: "Collaboration concepts",
@@ -84,6 +114,7 @@ const brandConcepts = [
 export function MidAutumnCampaign({ lang, source }: { lang: Language; source: string }) {
   const t = copy[lang];
   const planHref = `/plan?lang=${lang}&source=${encodeURIComponent(source || "mid-autumn-2026")}`;
+  const dinnerHref = `/packages/ban-trang-tam-coc-2026?lang=${lang}&source=mid-autumn-2026`;
 
   return (
     <section id="mid-autumn" data-customer-section="home-mid-autumn" className="overflow-hidden bg-[#17231f] py-16 text-[#FBFAF6] sm:py-24 lg:py-28">
@@ -94,10 +125,10 @@ export function MidAutumnCampaign({ lang, source }: { lang: Language; source: st
             <RevealHeading as="h2" text={t.title as string} className="font-display mt-5 max-w-2xl text-5xl leading-[0.96] sm:text-7xl" />
             <p className="mt-6 max-w-xl text-lg leading-8 text-white/72">{t.body as string}</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a data-customer-track="mid-autumn-plan" data-customer-content-id="mid-autumn-seasonal-plan" data-customer-content-type="primary-cta" href={planHref} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] transition hover:bg-[#f0c87c]">
+              <a data-customer-track="mid-autumn-dinner" data-customer-content-id="ban-trang-tam-coc-2026" data-customer-content-type="service" href={dinnerHref} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] transition hover:bg-[#f0c87c]">
                 {t.planningCta as string}
               </a>
-              <a data-customer-track="mid-autumn-routes" data-customer-content-id="mid-autumn-routes" data-customer-content-type="secondary-cta" href="#curated-routes" className="rounded-full border border-white/30 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/10">
+              <a data-customer-track="mid-autumn-plan" data-customer-content-id="mid-autumn-seasonal-plan" data-customer-content-type="secondary-cta" href={planHref} className="rounded-full border border-white/30 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/10">
                 {t.routesCta as string}
               </a>
             </div>
@@ -118,16 +149,23 @@ export function MidAutumnCampaign({ lang, source }: { lang: Language; source: st
           <Reveal>
             <p className="text-xs font-extrabold uppercase tracking-[0.28em] text-[#A8CEC1]">{t.servicesLabel as string}</p>
           </Reveal>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {(t.services as Array<{ title: string; body: string; image: string }>).map((service, index) => (
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {(t.services as Array<{ kicker: string; title: string; body: string; price: string; image: string; href?: string; cta?: string }>).map((service, index) => (
               <Reveal key={service.title} delayMs={index * 90}>
-                <article className="group overflow-hidden rounded-[12px] border border-white/10 bg-white/[0.045]">
+                <article className="group h-full overflow-hidden rounded-[12px] border border-white/10 bg-white/[0.045]">
                   <div className="relative aspect-[4/5] overflow-hidden">
                     <Image src={service.image} alt={service.title} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-[1.035]" />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_36%,rgba(8,17,13,.84))]" />
                     <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                      <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.2em] text-[#E7B96A]">{service.kicker}</p>
                       <p className="font-display text-3xl leading-none">{service.title}</p>
                       <p className="mt-3 text-sm leading-6 text-white/72">{service.body}</p>
+                      <p className="mt-4 font-semibold text-[#F1D39D]">{service.price}</p>
+                      {service.href && service.cta ? (
+                        <a data-customer-track="mid-autumn-offer" data-customer-content-id="ban-trang-tam-coc-2026" data-customer-content-type="service" href={dinnerHref} className="mt-4 inline-flex border-b border-[#E7B96A] pb-1 text-sm font-bold text-white">
+                          {service.cta} →
+                        </a>
+                      ) : null}
                     </div>
                   </div>
                 </article>

@@ -103,7 +103,7 @@ export function JourneyContactVault({ journeyId }: { journeyId: string }) {
           <span><strong className="block text-[#29463b]">Tôi muốn nhận thông tin giới thiệu phù hợp</strong>Mặc định tắt. Có thể rút lại ở nút “Quyền riêng tư” bất cứ lúc nào.</span>
         </label>
         <p className="text-xs leading-5 text-[#687970]">
-          Khi lưu, bạn đồng ý Xuân Trường xử lý liên hệ để giữ yêu cầu hành trình này. Xem <Link href="/quyen-rieng-tu" className="font-bold underline underline-offset-2">dự thảo chính sách dữ liệu</Link>.
+          Khi lưu, bạn đồng ý Xuân Trường xử lý liên hệ để giữ yêu cầu hành trình này. Xem <Link href="/quyen-rieng-tu" className="font-bold underline underline-offset-2">thông báo xử lý dữ liệu</Link>.
         </p>
         <button type="submit" disabled={pending || saved || contact.trim().length < 6} className="min-h-12 w-full rounded-full bg-[#183f34] px-5 font-extrabold text-white disabled:opacity-50">
           {pending ? "Đang bảo vệ và lưu…" : saved ? "Đã lưu yêu cầu" : "Lưu cách nhận hành trình"}

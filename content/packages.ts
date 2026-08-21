@@ -15,6 +15,12 @@ export type PackageCatalogItem = {
   inclusions: readonly string[];
   exclusions: readonly string[];
   schedule: readonly string[];
+  campaign?: "mid-autumn-2026";
+  editorialDescription?: string;
+  priceLabel?: string;
+  bookingStartDate?: string;
+  bookingEndDate?: string;
+  fixedPartySize?: number;
 };
 
 export const PACE_LABEL: Record<PackageCatalogItem["pace"], string> = {
@@ -119,6 +125,42 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     ],
     exclusions: ["Thiết bị nhiếp ảnh", "Người chụp ảnh", "Lưu trú"],
     schedule: ["14:00 · Tam Cốc – Bích Động", "18:00 · Phố cổ Hoa Lư"],
+  },
+  {
+    id: "40000000-0000-4000-8000-000000000005",
+    regionId: CORE_IDS.regionId,
+    slug: "ban-trang-tam-coc-2026",
+    name: "Bàn Trăng bên Ngô Đồng",
+    audience: "Hai người muốn khép ngày Tam Cốc bằng một bàn tối riêng",
+    durationLabel: "19:00–21:30 · mùa trăng 2026",
+    durationMinutes: 150,
+    pace: "relaxed",
+    demoPriceVnd: 1_240_000,
+    ledgerType: "service-commerce",
+    siteIds: ["10000000-0000-4000-8000-000000000005"],
+    inclusions: [
+      "Thực đơn thử nghiệm theo mùa cho hai khách",
+      "Trà và một phần bánh Trung thu dùng tại bàn",
+      "Một hộp Trăng Non hai bánh mang về",
+      "Giữ chỗ 15 phút trên công suất ERP",
+    ],
+    exclusions: [
+      "Đồ uống gọi thêm",
+      "Di chuyển và lưu trú",
+      "Thanh toán thật trong bản trình diễn",
+    ],
+    schedule: [
+      "19:00 · đón khách tại không gian trải nghiệm Tam Cốc",
+      "19:15 · thực đơn theo mùa",
+      "20:45 · trà, bánh và hộp quà mang về",
+    ],
+    campaign: "mid-autumn-2026",
+    editorialDescription:
+      "Ba hang Cả, Hai, Ba nằm lại sau lưng khi thuyền rời sông Ngô Đồng. Buổi tối bắt đầu bằng một bàn ăn cho hai người, khép lại bằng trà và hộp bánh mang về.",
+    priceLabel: "2.480.000 VND · bàn hai khách",
+    bookingStartDate: "2026-09-18",
+    bookingEndDate: "2026-09-27",
+    fixedPartySize: 2,
   },
 ] as const;
 

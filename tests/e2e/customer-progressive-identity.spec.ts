@@ -5,16 +5,16 @@ const enabled = process.env.NBJ_E2E_CUSTOMER_IDENTITY === "1";
 test.describe("CUS-05 progressive identity and consent", () => {
   test.skip(!enabled, "Run with NBJ_E2E_CUSTOMER_IDENTITY=1.");
 
-  test("keeps the staged privacy notice readable and explicit", async ({ page }, testInfo) => {
+  test("keeps the active demo privacy notice readable and explicit", async ({ page }, testInfo) => {
     await page.goto("/quyen-rieng-tu", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("heading", { name: "Dữ liệu của bạn vẫn là lựa chọn của bạn." })).toBeVisible();
-    await expect(page.getByText("Pháp nhân vận hành được xác định cho bản dự thảo này là Xuân Trường", { exact: false })).toBeVisible();
+    await expect(page.getByText("Xuân Trường là pháp nhân vận hành và đơn vị kiểm soát dữ liệu", { exact: false })).toBeVisible();
     await expect(page.getByText("chưa phải thông báo pháp lý đã phê duyệt", { exact: false })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
     if (process.env.NBJ_E2E_CAPTURE_VISUALS === "1") {
-      await testInfo.attach("cus05-privacy-draft", {
+      await testInfo.attach("cus05-privacy-notice", {
         body: await page.screenshot({ fullPage: true }),
         contentType: "image/png",
       });

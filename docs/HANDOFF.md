@@ -28,6 +28,8 @@
 
 > **Trạng thái public web mới nhất 26/08 (thay trạng thái ngay trên):** PUBLIC-LUXURY-WOW-04 live ở commit `115057e`; Hermès là finale cuối trang, năm chương đã có thứ tự/nhịp rõ và copy VI đã viết lại. Deployment `dpl_4LcryrNmCr99rjpa44VaxowP6Sop` Ready trên alias chính; production smoke campaign + axe/overflow desktop/mobile 10/10.
 
+> **Trạng thái public web mới nhất 26/08 (thay trạng thái ngay trên):** PUBLIC-LUXURY-SYSTEM-05 live ở commit ứng dụng `c86b2bd` + hotfix tương phản `6099ab0`. Khu Trung thu nay có 7 chương/31 lựa chọn: năm nhóm dịch vụ dùng năm layout riêng, campaign archive 8 thương hiệu dùng đủ 12 ảnh mới và Hermès vẫn là finale cuối cùng. Deployment `dpl_EVGMMz3crRgL6v1zDvVDXBnuiVcA` Ready trên alias chính; production smoke campaign + axe/overflow bốn route desktop/mobile đạt 10/10.
+
 > **Trạng thái public web mới nhất 07/08:** W5 sửa sai địa danh trong 3 cinematic panel, dựng lại thẻ tuyến theo từng chặng và thay tương tác “Mười nơi nữa” **đã commit/push/deploy production**. Commit app `31419a4`, deployment app `dpl_HU8nyRaynxFPgV7tRJy8kuMKrvgx` (`Ready`) đã nhận alias `https://ninhbinhjourney.vercel.app`; smoke production ghi ở mục 2.6. Commit tài liệu sau đó có thể tạo thêm một deployment không đổi app.
 
 > **Trạng thái ERP mới nhất 07/08:** T11b ở commit `58e8802`, đã push `main` và deploy production `dpl_EDmSydtVcUTkBEJFEPf6gXFqtJ6A` (`READY`, alias `https://ninhbinhjourney.vercel.app`). Migration `202608070038_erp_sop_go_no_go.sql` khớp local/remote. 20/20 checklist seed đều mang nhãn `demo-unapproved`, đúng 5 mục/cơ sở; 4 quản lý đều có quyền SOP; 4 bảng bật RLS; 2 RPC là `security definer`. Round-trip trong transaction xác minh submit → chặn GO khi lỗi trọng yếu → chấp nhận rủi ro có văn bản, sau đó `ROLLBACK`. Smoke production chỉ-đọc **4/4 pass** trên mobile + desktop cho quản lý/giám đốc; xem ảnh production cũng không thấy tràn ngang hay vỡ phân cấp. Query cuối vẫn **0 assessment / 0 result / 0 audit**, không để lại dữ liệu thử.
@@ -109,6 +111,7 @@ Ba module chưa làm **trước đây hiển thị dữ liệu bịa** — tên 
 | **PUBLIC-SEASONAL-UX-02** | Trung thu thành 5 nhóm/20 lựa chọn; ảnh và copy tách plane; mọi thẻ có detail + booking/planner/tel/email; consent public viết lại gọn | 18 WebP mới ~3,1 MB; không đổi DB/RLS/flag |
 | **PUBLIC-LUXURY-EDITORIAL-03** | Tách Brand Atelier thành chương lookbook 5 brand, masonry bất đối xứng desktop/ảnh dọc full-width mobile, index brand và detail sheet liên hệ | 6 nhóm/23 lựa chọn; dùng 5 WebP có sẵn; không đổi ERP/DB/RLS/flag |
 | **PUBLIC-LUXURY-WOW-04** | Sắp lại năm brand thành 5 chương, Hermès làm finale cognac; sticky index/progress, tonal crossfade, mask reveal, SVG Ngô Đồng, copy VI mới và modal focus trap | App `d7fdf00` + contrast hotfix `115057e`; production 10/10; không đổi ERP/DB/RLS/flag |
+| **PUBLIC-LUXURY-SYSTEM-05** | Thay split hero và pill navigation bằng editorial spread + mục lục; quà/catalog, bàn tối/feature, đêm diễn/stories, dịp riêng/mosaic, kết nối/index; thêm archive 8 brand có stage, filmstrip, phím mũi tên và Hermès wide-screen finale | 12 PNG nguồn 23.366.039 byte → 12 WebP 1.390.858 byte (giảm 94%, giữ 1672×941); 7 nhóm/31 lựa chọn; app `c86b2bd` + contrast hotfix `6099ab0`; không đổi ERP/DB/RLS/flag |
 
 **Về "vai trò trưởng ca" trong T9 — làm khác đề bài, có lý do:** không thêm vai trò toàn cục thứ sáu. Ngoài đời trưởng ca là *nhiệm vụ của một ca tại một vị trí*, không phải chức danh giữ mãi — cùng một nhân viên sáng nay chỉ huy cổng, mai làm ở bến. Đưa vào registry là biến nó thành vĩnh viễn và sai. Ở đây, trưởng ca = người được ghi tên trên phiếu bàn giao, và RPC kiểm đúng cái tên đó.
 
@@ -389,6 +392,8 @@ PUBLIC-LUXURY-EDITORIAL-03 không chạm dữ liệu hay phân quyền. Lượt 
 
 PUBLIC-LUXURY-WOW-04 không chạm dữ liệu hay phân quyền. Production smoke đầu tiên đạt 9/10 nhưng axe mobile bắt bốn kicker nhỏ chỉ đạt 3,58:1 trên nền linen; đã đổi cả năm accent sang cặp màu tối thiểu 5,18:1 theo tính toán WCAG, tăng contrast index/credit Hermès, build lại rồi push hotfix `115057e`. Local và production sau hotfix cùng đạt 10/10 campaign + axe/overflow desktop/mobile. Audit cũng bắt modal cũ để focus lọt xuống card sau backdrop; focus trap/restore đã có test tự động.
 
+PUBLIC-LUXURY-SYSTEM-05 không chạm dữ liệu hay phân quyền. Local production-build đã qua typecheck/lint, build 43 route, Vitest 612 pass + 1 skip và toàn bộ `public-surfaces` 30/30 desktop/mobile. Production smoke đầu tiên đạt 9/10; axe desktop bắt kicker 8,64px của mục index đang chọn chỉ đạt 3,43:1 trên nền vàng. Đã bỏ alpha chữ, build lại và push hotfix `6099ab0`; deployment `dpl_EVGMMz3crRgL6v1zDvVDXBnuiVcA` sau hotfix đạt 10/10 campaign + axe/overflow bốn route desktop/mobile. Modal gallery vẫn giữ nút đóng là focus đầu tiên, trap/restore và Escape đều có kiểm thử.
+
 **3/4 quản lý cơ sở từng không dùng được module Đối tác & NCC trên production.** Đã hết — xem mục 0.
 
 RPC `erp_ap_submit_supplier_invoice` chặn bằng `erp_account_has_active_role(...)`, tra `erp_account_registry`. V12 (01/08) tách một quản lý vùng thành bốn quản lý cơ sở trong mã nguồn nhưng không cập nhật registry.
@@ -411,6 +416,8 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 > ✅ **PUBLIC-LUXURY-EDITORIAL-03 (`5.6 Terra / High`):** đã commit/push/deploy/smoke production; không còn việc kỹ thuật bắt buộc trong phase. Không mở lại ERP/CUS khi yêu cầu tiếp theo vẫn là tinh chỉnh web công khai.
 >
 > ✅ **PUBLIC-LUXURY-WOW-04 (`5.6 Terra / High`):** đã commit/push/deploy/smoke production; Hermès là chapter 05/finale cuối cùng và không còn card nào dưới nó. Không còn việc kỹ thuật bắt buộc trong phase; lần public-UX tiếp theo bắt đầu từ screenshot production mới, không quay lại ERP/CUS nếu chủ dự án vẫn chỉ yêu cầu chỉnh web ngoài.
+
+> ✅ **PUBLIC-LUXURY-SYSTEM-05 (`5.6 Terra / High`):** đã commit/push/deploy/smoke production; 12 ảnh mới đã vào archive theo 8 brand, năm nhóm dịch vụ có năm layout riêng và Hermès vẫn kết trang. Không còn việc kỹ thuật bắt buộc trong phase; nếu mở phase public tiếp theo phải bắt đầu từ ảnh chụp alias Production hiện tại, không quay lại card rail cũ và không mở ERP/CUS ngoài yêu cầu.
 
 > ✅ **CUS-01 hoàn tất phần code ngày 18/08/2026:** migration `202608180039_customer_data_backbone.sql`, event contract, repository và `/api/customer-events`. PostgreSQL 15 thật đã apply migration sạch; transaction test chứng minh event lần đầu insert, gửi lại idempotent, collision/PII/direct write/history mutation bị chặn, identity digest+ciphertext và consent append-only ghi được; tất cả rollback sạch. Full gate: typecheck/lint/build pass, 72 file/513 test pass + 1 skip có chủ đích.
 >

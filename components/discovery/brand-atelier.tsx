@@ -11,11 +11,11 @@ import type {
 type AtelierTone = NonNullable<SeasonalExperience["atelierTone"]>;
 
 const themes: Record<AtelierTone, { surface: string; ink: string; accent: string }> = {
-  linen: { surface: "#EEE9DF", ink: "#24231F", accent: "#8B765D" },
-  pearl: { surface: "#F2EEE7", ink: "#171715", accent: "#8B6E5A" },
-  sage: { surface: "#DFE1D6", ink: "#30362C", accent: "#6B735D" },
-  forest: { surface: "#D4D9CA", ink: "#1F382A", accent: "#50684B" },
-  cognac: { surface: "#9A4324", ink: "#FFF7EC", accent: "#E8B276" },
+  linen: { surface: "#EEE9DF", ink: "#24231F", accent: "#6B543C" },
+  pearl: { surface: "#F2EEE7", ink: "#171715", accent: "#6C5144" },
+  sage: { surface: "#DFE1D6", ink: "#30362C", accent: "#4D5946" },
+  forest: { surface: "#D4D9CA", ink: "#1F382A", accent: "#3F583F" },
+  cognac: { surface: "#9A4324", ink: "#FFF7EC", accent: "#FFE0B5" },
 };
 
 const chapterLayout = [
@@ -140,9 +140,9 @@ export function BrandAtelier({
                   }}
                   href={`#atelier-${item.id}`}
                   aria-current={selected ? "step" : undefined}
-                  className={`group/index shrink-0 text-[0.62rem] font-extrabold uppercase tracking-[0.2em] transition-opacity ${selected ? "opacity-100" : "opacity-45 hover:opacity-80"}`}
+                  className={`group/index shrink-0 text-[0.62rem] font-extrabold uppercase tracking-[0.2em] transition-opacity ${selected ? "opacity-100" : "opacity-80 hover:opacity-100"}`}
                 >
-                  <span className="mr-2 font-medium opacity-60">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="mr-2 font-medium">{String(index + 1).padStart(2, "0")}</span>
                   {brand}
                 </a>
               );
@@ -207,7 +207,7 @@ export function BrandAtelier({
                   </div>
 
                   <div data-seasonal-card-copy className="relative z-10 lg:col-span-4 lg:col-start-9 lg:self-end lg:pb-16">
-                    <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.25em] text-[#F4C28D]">{item.kicker}</p>
+                    <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.25em] text-[#FFE0B5]">{item.kicker}</p>
                     <p className="font-display mt-5 text-6xl leading-[0.82] sm:text-7xl lg:text-[6.4rem]">{brand}</p>
                     <h4 className="font-display mt-5 max-w-md text-3xl leading-none sm:text-4xl">{story}</h4>
                     <p className="mt-6 max-w-md text-base leading-8 text-white/76">{item.body}</p>
@@ -215,7 +215,7 @@ export function BrandAtelier({
                       {item.editorialAction ?? copy.actions[item.action]}
                       <span aria-hidden="true" className="text-xl transition-transform duration-500 group-hover/finale:translate-x-2">→</span>
                     </span>
-                    <p className="mt-10 max-w-sm text-[0.62rem] uppercase leading-5 tracking-[0.16em] text-white/48">{copy.editorialNotice}</p>
+                    <p className="mt-10 max-w-sm text-[0.62rem] uppercase leading-5 tracking-[0.16em] text-white/80">{copy.editorialNotice}</p>
                   </div>
                 </button>
               </article>

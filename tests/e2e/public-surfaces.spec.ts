@@ -74,7 +74,7 @@ test("home does not repeat the intro slogan and presents routes after the destin
   await expect(page.locator("#curated-routes .route-progress-track")).toHaveCount(1);
 });
 
-test("Mid-Autumn campaign publishes priced offers, a bookable dinner and clearly marked concepts", async ({
+test("Mid-Autumn campaign publishes offers and a five-chapter luxury atelier with a Hermès finale", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -99,16 +99,27 @@ test("Mid-Autumn campaign publishes priced offers, a bookable dinner and clearly
   await expect(campaign.getByRole("heading", { name: "When the landscape becomes part of dinner." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Heritage, seen in another light." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Ninh Binh is an open invitation." })).toBeVisible();
-  await expect(campaign.getByRole("heading", { name: "Five conversations yet to begin." })).toBeVisible();
+  await expect(campaign.getByRole("heading", { name: "Five houses, one heritage landscape." })).toBeVisible();
 
   const atelier = campaign.locator("#seasonal-brand-atelier");
   await expect(atelier.locator("[data-seasonal-card]")).toHaveCount(5);
+  const atelierOrder = await atelier.locator("[data-atelier-chapter]").evaluateAll((chapters) =>
+    chapters.map((chapter) => chapter.getAttribute("data-atelier-chapter")),
+  );
+  expect(atelierOrder).toEqual([
+    "celine-concept",
+    "chanel-concept",
+    "prada-concept",
+    "bottega-veneta-concept",
+    "hermes-concept",
+  ]);
+  await expect(atelier.locator("[data-atelier-finale='true']")).toHaveAttribute("data-seasonal-card", "hermes-concept");
   for (const title of [
-    "Bottega Veneta · The Green Passage",
-    "Celine · Quiet Horizons",
-    "Chanel · Grace in Bloom",
-    "Hermès · Crafted by the River",
-    "Prada · Modern Calm",
+    "Celine · A study in stillness",
+    "Chanel · Flowers against ancient stone",
+    "Prada · A sharper kind of calm",
+    "Bottega Veneta · Beauty in the making",
+    "Hermès · Far away, then home",
   ]) {
     await expect(atelier.getByRole("button", { name: `Open details: ${title}` })).toBeVisible();
   }
@@ -133,13 +144,18 @@ test("Mid-Autumn campaign publishes priced offers, a bookable dinner and clearly
   await page.keyboard.press("Escape");
   await expect(bookingDialog).toHaveCount(0);
 
-  await campaign.getByRole("button", { name: "Open details: Chanel · Grace in Bloom" }).click();
+  await campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" }).click();
   const contactDialog = page.getByRole("dialog");
-  await expect(contactDialog.getByRole("heading", { name: "Chanel · Grace in Bloom" })).toBeVisible();
+  await expect(contactDialog.getByRole("heading", { name: "Hermès · Far away, then home" })).toBeVisible();
+  await expect(contactDialog.getByRole("button", { name: "Close" })).toBeFocused();
   await expect(contactDialog.getByRole("link", { name: "Start a conversation" })).toHaveAttribute("href", /^mailto:xuantruong_nb@hn\.vnn\.vn/);
   await expect(contactDialog.getByRole("link", { name: "Call the team" })).toHaveAttribute("href", "tel:+842293876930");
-  await expect(contactDialog).toContainText("independent creative proposal");
-  await expect(contactDialog).toContainText("does not announce an established commercial partnership");
+  await expect(contactDialog).toContainText("independent editorial series for brand outreach");
+  await page.keyboard.press("Shift+Tab");
+  await expect(contactDialog.getByRole("link", { name: "Send an email" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(contactDialog).toHaveCount(0);
+  await expect(campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" })).toBeFocused();
 });
 
 test("cinematic panels use local MP4 without embedded player controls", async ({ page }) => {

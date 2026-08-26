@@ -304,6 +304,65 @@ select {
 }
 
 /*
+ * Brand Atelier: the motion follows the editorial hierarchy. Images open like
+ * a printed gatefold, copy settles a beat later, and the final river line moves
+ * almost imperceptibly. Content remains complete without hover or animation.
+ */
+.atelier-media {
+  clip-path: inset(4.5% 0 4.5% 0);
+  transition:
+    clip-path 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.atelier-image {
+  filter: saturate(0.92) contrast(1.01);
+  transform: scale(1.045);
+  transition:
+    filter 1100ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+[data-atelier-chapter][data-in-view="true"] .atelier-media {
+  clip-path: inset(0);
+}
+
+[data-atelier-chapter][data-in-view="true"] .atelier-image {
+  filter: saturate(1) contrast(1);
+  transform: scale(1);
+}
+
+[data-atelier-chapter] [data-seasonal-card-copy] {
+  opacity: 0.72;
+  transform: translateY(18px);
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-atelier-chapter][data-in-view="true"] [data-seasonal-card-copy] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+[data-atelier-chapter] button:hover .atelier-image,
+[data-atelier-chapter] button:focus-visible .atelier-image {
+  filter: saturate(1.04) contrast(1.015);
+  transform: scale(1.018);
+}
+
+.atelier-river-line path:first-child {
+  animation: atelier-river-drift 18s linear infinite;
+}
+
+@keyframes atelier-river-drift {
+  to {
+    stroke-dashoffset: -180;
+  }
+}
+
+/*
  * Mask reveal theo tu (components/shared/reveal-heading.tsx). Mask ngoai
  * cat het phan chua troi len; lop trong dich tu duoi len 0.
  *
@@ -786,6 +845,25 @@ select {
 
   .reveal-word-inner {
     transform: none;
+  }
+
+  .atelier-media {
+    clip-path: none;
+    transition: none;
+  }
+
+  .atelier-image,
+  [data-atelier-chapter] button:hover .atelier-image,
+  [data-atelier-chapter] button:focus-visible .atelier-image,
+  [data-atelier-chapter] [data-seasonal-card-copy] {
+    filter: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .atelier-river-line path:first-child {
+    animation: none;
   }
 }
 

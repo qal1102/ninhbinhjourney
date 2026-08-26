@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { BrandAtelier } from "@/components/discovery/brand-atelier";
 
 export type SeasonalAction = "booking" | "contact" | "gift" | "planning";
 
@@ -15,6 +16,10 @@ export type SeasonalExperience = {
   action: SeasonalAction;
   href?: string;
   concept?: boolean;
+  editorial?: boolean;
+  editorialAction?: string;
+  atelierTone?: "linen" | "pearl" | "sage" | "forest" | "cognac";
+  atelierFinale?: boolean;
 };
 
 export type SeasonalGroup = {
@@ -27,7 +32,7 @@ export type SeasonalGroup = {
   items: SeasonalExperience[];
 };
 
-type BrowserCopy = {
+export type BrowserCopy = {
   explore: string;
   openDetail: string;
   close: string;
@@ -38,6 +43,9 @@ type BrowserCopy = {
   contactNote: string;
   conceptLabel: string;
   conceptNotice: string;
+  editorialLabel: string;
+  editorialNotice: string;
+  atelierNavigation: string;
 };
 
 const contact = {
@@ -58,20 +66,52 @@ export function SeasonalExperienceBrowser({
   source: string;
 }) {
   const [active, setActive] = useState<SeasonalExperience | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  function openExperience(item: SeasonalExperience) {
+    triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setActive(item);
+  }
+
+  const closeExperience = useCallback(() => {
+    setActive(null);
+    window.requestAnimationFrame(() => triggerRef.current?.focus());
+  }, []);
 
   useEffect(() => {
     if (!active) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    window.requestAnimationFrame(() => closeButtonRef.current?.focus());
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActive(null);
+      if (event.key === "Escape") closeExperience();
+      if (event.key !== "Tab") return;
+
+      const dialog = closeButtonRef.current?.closest('[role="dialog"]');
+      if (!dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [active]);
+  }, [active, closeExperience]);
 
   const planHref = `/plan?lang=${lang}&source=${encodeURIComponent(source)}`;
 
@@ -103,91 +143,41 @@ export function SeasonalExperienceBrowser({
       <div className="mt-16 space-y-20 sm:mt-20 sm:space-y-24">
         {groups.map((group, groupIndex) => {
           const isAtelier = group.layout === "atelier";
-          const atelierPositions = [
-            "lg:col-span-7",
-            "lg:col-span-5 lg:mt-40",
-            "lg:col-span-5 lg:mt-16",
-            "lg:col-span-7",
-            "lg:col-span-6 lg:col-start-4",
-          ];
+
+          if (isAtelier) {
+            return (
+              <BrandAtelier
+                key={group.id}
+                group={group}
+                groupIndex={groupIndex}
+                copy={copy}
+                onOpen={openExperience}
+              />
+            );
+          }
 
           return (
             <section
               key={group.id}
               id={`seasonal-${group.id}`}
               aria-labelledby={`seasonal-${group.id}-title`}
-              className={isAtelier
-                ? "-mx-5 scroll-mt-24 bg-[#EEE8DC] px-5 py-12 text-[#183F34] sm:-mx-8 sm:px-8 sm:py-16 lg:rounded-[28px] lg:px-12 lg:py-20"
-                : "scroll-mt-24 border-t border-white/12 pt-10"}
+              className="scroll-mt-24 border-t border-white/12 pt-10"
             >
               <div className="grid gap-4 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
                 <div>
-                  <p className={`text-xs font-extrabold uppercase tracking-[0.26em] ${isAtelier ? "text-[#77501D]" : "text-[#E7B96A]"}`}>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.26em] text-[#E7B96A]">
                     {String(groupIndex + 1).padStart(2, "0")} · {group.eyebrow}
                   </p>
                   <h3 id={`seasonal-${group.id}-title`} className="font-display mt-3 max-w-2xl text-4xl leading-none sm:text-5xl lg:text-6xl">
                     {group.title}
                   </h3>
                 </div>
-                <p className={`max-w-2xl text-base leading-7 lg:justify-self-end ${isAtelier ? "text-[#5F6A63]" : "text-white/66"}`}>
+                <p className="max-w-2xl text-base leading-7 text-white/66 lg:justify-self-end">
                   {group.body}
                 </p>
               </div>
 
-              {isAtelier ? (
-                <>
-                  <div className="mt-9 flex gap-6 overflow-x-auto border-y border-[#183F34]/16 py-3 text-[0.64rem] font-extrabold uppercase tracking-[0.18em] text-[#52635B] sm:justify-between">
-                    {group.items.map((item, index) => (
-                      <a key={item.id} href={`#atelier-${item.id}`} className="shrink-0 transition hover:text-[#9B6A24]">
-                        {String(index + 1).padStart(2, "0")} {item.title.split(" · ")[0]}
-                      </a>
-                    ))}
-                  </div>
-                  <div className="mt-12 grid gap-y-16 lg:grid-cols-12 lg:gap-x-8 lg:gap-y-28">
-                    {group.items.map((item, index) => (
-                      <article
-                        key={item.id}
-                        id={`atelier-${item.id}`}
-                        data-seasonal-card={item.id}
-                        className={`group scroll-mt-32 ${atelierPositions[index] ?? "lg:col-span-6"}`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setActive(item)}
-                          className="block w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9B6A24]"
-                          aria-label={`${copy.openDetail}: ${item.title}`}
-                        >
-                          <div data-seasonal-card-media className="relative aspect-[4/5] overflow-hidden bg-[#D8D0C1] shadow-[0_28px_70px_rgba(62,49,27,.16)]">
-                            <Image
-                              src={item.image}
-                              alt={item.title}
-                              fill
-                              sizes="(min-width: 1024px) 52vw, 100vw"
-                              className="object-cover transition duration-1000 ease-out group-hover:scale-[1.018]"
-                            />
-                            <span className="absolute left-4 top-4 border border-white/45 bg-[#F7F3E9]/88 px-3 py-1.5 text-[0.58rem] font-extrabold uppercase tracking-[0.18em] text-[#183F34] backdrop-blur sm:left-5 sm:top-5">
-                              {copy.conceptLabel} · {String(index + 1).padStart(2, "0")}
-                            </span>
-                          </div>
-                          <div data-seasonal-card-copy className="grid gap-4 border-b border-[#183F34]/18 py-5 sm:grid-cols-[1fr_auto] sm:items-end">
-                            <div>
-                              <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.2em] text-[#77501D]">{item.kicker}</p>
-                              <h4 className="font-display mt-2 text-3xl leading-none text-[#183F34] sm:text-4xl">{item.title}</h4>
-                              <p className="mt-3 max-w-xl text-sm leading-6 text-[#53605A]">{item.body}</p>
-                            </div>
-                            <span className="inline-flex items-center gap-3 text-sm font-extrabold text-[#183F34]">
-                              {copy.actions[item.action]}
-                              <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-full border border-[#183F34]/28 transition group-hover:border-[#183F34] group-hover:bg-[#183F34] group-hover:text-white">↗</span>
-                            </span>
-                          </div>
-                        </button>
-                      </article>
-                    ))}
-                  </div>
-                  <p className="mt-14 max-w-3xl border-t border-[#183F34]/16 pt-5 text-xs leading-6 text-[#53605A]">{copy.conceptNotice}</p>
-                </>
-              ) : (
-                <div className="mt-7 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-5 sm:gap-5">
+              <div className="mt-7 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-5 sm:gap-5">
                   {group.items.map((item) => (
                     <article
                       key={item.id}
@@ -196,7 +186,7 @@ export function SeasonalExperienceBrowser({
                     >
                       <button
                         type="button"
-                        onClick={() => setActive(item)}
+                          onClick={() => openExperience(item)}
                         className="block h-full w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#E7B96A]"
                         aria-label={`${copy.openDetail}: ${item.title}`}
                       >
@@ -231,8 +221,7 @@ export function SeasonalExperienceBrowser({
                       </button>
                     </article>
                   ))}
-                </div>
-              )}
+              </div>
             </section>
           );
         })}
@@ -243,7 +232,7 @@ export function SeasonalExperienceBrowser({
           className="fixed inset-0 z-[1600] grid place-items-end bg-[#07110d]/72 p-0 backdrop-blur-sm sm:place-items-center sm:p-5"
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setActive(null);
+            if (event.target === event.currentTarget) closeExperience();
           }}
         >
           <section
@@ -260,7 +249,8 @@ export function SeasonalExperienceBrowser({
               <div className="relative flex flex-col p-6 sm:p-9 lg:p-10">
                 <button
                   type="button"
-                  onClick={() => setActive(null)}
+                  ref={closeButtonRef}
+                  onClick={closeExperience}
                   className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full border border-[#bcc8c1] bg-[#F7F3E9]/92 text-xl"
                   aria-label={copy.close}
                 >
@@ -270,7 +260,7 @@ export function SeasonalExperienceBrowser({
                 <h3 id="seasonal-dialog-title" className="font-display mt-4 pr-10 text-4xl leading-none sm:text-5xl">{active.title}</h3>
                 <p className="mt-6 text-base leading-8 text-[#5c6c64]">{active.body}</p>
                 {active.price ? <p className="mt-6 text-xl font-bold text-[#9B6A24]">{copy.fromPrice} {active.price}</p> : null}
-                {active.concept ? <p className="mt-5 rounded-2xl bg-[#EEE7D8] p-4 text-xs leading-6 text-[#6a604c]">{copy.conceptNotice}</p> : null}
+                {active.editorial ? <p className="mt-6 border-l border-[#A66B3D] pl-4 text-xs uppercase leading-6 tracking-[0.12em] text-[#796B58]">{copy.editorialNotice}</p> : active.concept ? <p className="mt-5 rounded-2xl bg-[#EEE7D8] p-4 text-xs leading-6 text-[#6a604c]">{copy.conceptNotice}</p> : null}
 
                 <div className="mt-8 space-y-3 lg:mt-auto lg:pt-10">
                   <a

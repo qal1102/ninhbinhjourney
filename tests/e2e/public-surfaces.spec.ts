@@ -74,9 +74,10 @@ test("home does not repeat the intro slogan and presents routes after the destin
   await expect(page.locator("#curated-routes .route-progress-track")).toHaveCount(1);
 });
 
-test("Mid-Autumn campaign publishes offers and a five-chapter luxury atelier with a Hermès finale", async ({
+test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive and a Hermès finale", async ({
   page,
 }) => {
+  test.slow();
   await page.addInitScript(() => {
     localStorage.setItem("nbj-customer-analytics-consent", JSON.stringify({
       product_analytics: "denied",
@@ -95,11 +96,27 @@ test("Mid-Autumn campaign publishes offers and a five-chapter luxury atelier wit
   );
   await expect(campaign).toContainText("VND 390,000");
   await expect(campaign).toContainText("VND 2,480,000 / table");
-  await expect(campaign.locator("[data-seasonal-card]")).toHaveCount(23);
+  await expect(campaign.locator("[data-seasonal-card]")).toHaveCount(31);
   await expect(campaign.getByRole("heading", { name: "When the landscape becomes part of dinner." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Heritage, seen in another light." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Ninh Binh is an open invitation." })).toBeVisible();
+  await expect(campaign.getByRole("heading", { name: "When a house finds a landscape of its own." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Five houses, one heritage landscape." })).toBeVisible();
+
+  const serviceLayouts = await campaign.locator("[data-seasonal-layout]").evaluateAll((layouts) =>
+    layouts.map((layout) => layout.getAttribute("data-seasonal-layout")),
+  );
+  expect(serviceLayouts).toEqual(["catalog", "feature", "stories", "mosaic", "index"]);
+
+  const archive = campaign.locator("#seasonal-luxury-campaign-archive");
+  await expect(archive.locator("[data-seasonal-card]")).toHaveCount(8);
+  await expect(archive.getByRole("button", { name: "Select story: Hermès · The river keeps the final light" })).toBeVisible();
+  await archive.getByRole("button", { name: "Select story: Dior · A lotus note through limestone country" }).click();
+  const diorStage = archive.locator("[data-luxury-stage]");
+  await expect(diorStage).toHaveAccessibleName("Open details: Dior · A lotus note through limestone country");
+  expect(await diorStage.locator("img").getAttribute("src")).toContain("dior-lotus-beauty");
+  await archive.getByRole("button", { name: "Campaign frames 2: Dior · A lotus note through limestone country" }).click();
+  expect(await diorStage.locator("img").getAttribute("src")).toContain("dior-lotus-atelier");
 
   const atelier = campaign.locator("#seasonal-brand-atelier");
   await expect(atelier.locator("[data-seasonal-card]")).toHaveCount(5);
@@ -114,6 +131,7 @@ test("Mid-Autumn campaign publishes offers and a five-chapter luxury atelier wit
     "hermes-concept",
   ]);
   await expect(atelier.locator("[data-atelier-finale='true']")).toHaveAttribute("data-seasonal-card", "hermes-concept");
+  expect(await atelier.locator("[data-atelier-finale='true'] img").first().getAttribute("src")).toContain("hermes-on-the-river");
   for (const title of [
     "Celine · A study in stillness",
     "Chanel · Flowers against ancient stone",

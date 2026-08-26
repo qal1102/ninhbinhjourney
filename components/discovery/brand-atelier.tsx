@@ -179,43 +179,48 @@ export function BrandAtelier({
                 data-atelier-chapter={item.id}
                 data-atelier-finale="true"
                 data-in-view={isCurrent ? "true" : "false"}
-                className="relative left-1/2 min-h-[108svh] w-screen -translate-x-1/2 scroll-mt-28 bg-[#93401F] text-[#FFF7EC] lg:min-h-[124svh]"
+                className="relative left-1/2 w-screen -translate-x-1/2 scroll-mt-28 bg-[#93401F] text-[#FFF7EC]"
               >
                 <button
                   type="button"
                   onClick={() => onOpen(item)}
                   aria-label={`${copy.openDetail}: ${item.title}`}
-                  className="group/finale relative mx-auto grid min-h-[100svh] w-full max-w-7xl gap-10 overflow-hidden px-5 py-16 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#F4C28D] sm:px-8 lg:sticky lg:top-0 lg:grid-cols-12 lg:items-center lg:py-12"
+                  className="group/finale relative mx-auto grid w-full overflow-hidden text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#F4C28D] lg:grid-cols-12"
                 >
                   <svg aria-hidden="true" viewBox="0 0 1200 680" className="atelier-river-line pointer-events-none absolute inset-0 h-full w-full opacity-25" preserveAspectRatio="none">
                     <path d="M-100 560C154 338 328 652 535 430C720 230 846 489 1012 286C1112 164 1218 190 1320 92" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="8 10" />
                     <path d="M-80 610C176 398 346 691 559 475C756 275 870 538 1042 334C1137 222 1248 230 1340 142" fill="none" stroke="currentColor" strokeWidth="0.45" />
                   </svg>
-                  <span aria-hidden="true" className="pointer-events-none absolute -right-8 top-[8%] font-display text-[38vw] leading-none text-white/[0.035] lg:right-[2%] lg:text-[20rem]">05</span>
+                  <span aria-hidden="true" className="pointer-events-none absolute -right-8 bottom-[4%] z-10 font-display text-[38vw] leading-none text-white/[0.04] lg:right-[2%] lg:text-[20rem]">05</span>
 
-                  <div data-seasonal-card-media className="atelier-media relative z-10 aspect-[4/5] overflow-hidden bg-[#78351f] shadow-[0_36px_100px_rgba(45,14,4,.42)] lg:col-span-7 lg:col-start-1 lg:max-h-[82svh]">
+                  <div data-seasonal-card-media className="atelier-media relative z-10 aspect-[4/5] overflow-hidden bg-[#78351f] shadow-[0_36px_100px_rgba(45,14,4,.42)] sm:aspect-[16/10] lg:col-span-12 lg:aspect-[16/8.2]">
                     <Image
                       src={item.image}
                       alt={item.title}
                       fill
-                      sizes="(min-width: 1024px) 58vw, 100vw"
-                      className="atelier-image object-cover"
+                      sizes="100vw"
+                      className="atelier-image object-cover object-center"
                     />
-                    <span className="absolute bottom-5 left-5 border-l border-white/50 pl-3 text-[0.58rem] font-extrabold uppercase tracking-[0.24em] text-white/82 sm:bottom-7 sm:left-7">
+                    <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#4c1b0b]/38 via-transparent to-transparent" />
+                    <span className="absolute bottom-5 left-5 border-l border-white/50 pl-3 text-[0.58rem] font-extrabold uppercase tracking-[0.24em] text-white/82 sm:bottom-7 sm:left-8">
                       Ninh Bình · 2026
                     </span>
                   </div>
 
-                  <div data-seasonal-card-copy className="relative z-10 lg:col-span-4 lg:col-start-9 lg:self-end lg:pb-16">
-                    <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.25em] text-[#FFE0B5]">{item.kicker}</p>
-                    <p className="font-display mt-5 text-6xl leading-[0.82] sm:text-7xl lg:text-[6.4rem]">{brand}</p>
-                    <h4 className="font-display mt-5 max-w-md text-3xl leading-none sm:text-4xl">{story}</h4>
-                    <p className="mt-6 max-w-md text-base leading-8 text-white/76">{item.body}</p>
-                    <span className="mt-8 inline-flex items-center gap-4 border-b border-white/45 pb-2 text-sm font-extrabold">
-                      {item.editorialAction ?? copy.actions[item.action]}
-                      <span aria-hidden="true" className="text-xl transition-transform duration-500 group-hover/finale:translate-x-2">→</span>
-                    </span>
-                    <p className="mt-10 max-w-sm text-[0.62rem] uppercase leading-5 tracking-[0.16em] text-white/80">{copy.editorialNotice}</p>
+                  <div data-seasonal-card-copy className="relative z-10 grid gap-8 px-5 py-12 sm:px-8 sm:py-16 lg:col-span-12 lg:grid-cols-12 lg:items-end lg:px-[max(2rem,calc((100vw-80rem)/2))] lg:py-20">
+                    <div className="lg:col-span-7">
+                      <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.25em] text-[#FFE0B5]">{item.kicker}</p>
+                      <p className="font-display mt-5 text-6xl leading-[0.82] sm:text-8xl lg:text-[8.5rem]">{brand}</p>
+                      <h4 className="font-display mt-6 max-w-2xl text-3xl leading-none sm:text-5xl">{story}</h4>
+                    </div>
+                    <div className="lg:col-span-4 lg:col-start-9">
+                      <p className="max-w-md text-base leading-8 text-white/76">{item.body}</p>
+                      <span className="mt-8 inline-flex items-center gap-4 border-b border-white/45 pb-2 text-sm font-extrabold">
+                        {item.editorialAction ?? copy.actions[item.action]}
+                        <span aria-hidden="true" className="text-xl transition-transform duration-500 group-hover/finale:translate-x-2">→</span>
+                      </span>
+                      <p className="mt-10 max-w-sm text-[0.62rem] uppercase leading-5 tracking-[0.16em] text-white/80">{copy.editorialNotice}</p>
+                    </div>
                   </div>
                 </button>
               </article>

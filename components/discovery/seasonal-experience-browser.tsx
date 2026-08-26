@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandAtelier } from "@/components/discovery/brand-atelier";
+import { LuxuryCampaignArchive } from "@/components/discovery/luxury-campaign-archive";
+import { SeasonalEditorialGroup } from "@/components/discovery/seasonal-editorial-group";
 
 export type SeasonalAction = "booking" | "contact" | "gift" | "planning";
 
@@ -18,6 +20,7 @@ export type SeasonalExperience = {
   concept?: boolean;
   editorial?: boolean;
   editorialAction?: string;
+  gallery?: string[];
   atelierTone?: "linen" | "pearl" | "sage" | "forest" | "cognac";
   atelierFinale?: boolean;
 };
@@ -28,7 +31,7 @@ export type SeasonalGroup = {
   title: string;
   body: string;
   ratio: "landscape" | "portrait";
-  layout?: "atelier" | "rail";
+  layout?: "atelier" | "archive" | "catalog" | "feature" | "stories" | "mosaic" | "index" | "rail";
   items: SeasonalExperience[];
 };
 
@@ -46,6 +49,11 @@ export type BrowserCopy = {
   editorialLabel: string;
   editorialNotice: string;
   atelierNavigation: string;
+  archiveNavigation: string;
+  selectStory: string;
+  previousStory: string;
+  nextStory: string;
+  galleryLabel: string;
 };
 
 const contact = {
@@ -66,13 +74,20 @@ export function SeasonalExperienceBrowser({
   source: string;
 }) {
   const [active, setActive] = useState<SeasonalExperience | null>(null);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
   function openExperience(item: SeasonalExperience) {
     triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setActiveMediaIndex(0);
     setActive(item);
   }
+
+  const activeMedia = useMemo(
+    () => active ? Array.from(new Set([active.image, ...(active.gallery ?? [])])) : [],
+    [active],
+  );
 
   const closeExperience = useCallback(() => {
     setActive(null);
@@ -128,23 +143,28 @@ export function SeasonalExperienceBrowser({
 
   return (
     <>
-      <nav aria-label={copy.explore} className="mt-14 flex gap-2 overflow-x-auto pb-2 sm:mt-16">
-        {groups.map((group) => (
-          <a
-            key={group.id}
-            href={`#seasonal-${group.id}`}
-            className="shrink-0 rounded-full border border-white/18 bg-white/[0.055] px-4 py-2 text-xs font-bold text-white/80 transition hover:border-[#E7B96A]/70 hover:text-white"
-          >
-            {group.eyebrow}
-          </a>
-        ))}
+      <nav aria-label={copy.explore} className="mt-14 border-y border-white/14 sm:mt-20">
+        <ol className="flex overflow-x-auto [scrollbar-width:none] lg:grid lg:grid-cols-7">
+          {groups.map((group, index) => (
+            <li key={group.id} className="shrink-0 border-r border-white/12 first:border-l lg:first:border-l-0">
+              <a
+                href={`#seasonal-${group.id}`}
+                className="group flex min-h-[6.75rem] w-[11.5rem] flex-col justify-between px-4 py-4 text-white/66 transition hover:bg-white/[0.045] hover:text-white sm:w-[13rem] lg:w-auto"
+              >
+                <span className="text-[0.54rem] font-bold tracking-[0.2em] text-[#E7B96A]">{String(index + 1).padStart(2, "0")}</span>
+                <span className="flex items-end justify-between gap-3 text-[0.65rem] font-extrabold uppercase leading-4 tracking-[0.14em]">
+                  {group.eyebrow}
+                  <span aria-hidden="true" className="text-base transition-transform duration-500 group-hover:translate-x-1">↘</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
       </nav>
 
-      <div className="mt-16 space-y-20 sm:mt-20 sm:space-y-24">
+      <div className="mt-20 space-y-24 sm:mt-24 sm:space-y-32 lg:space-y-40">
         {groups.map((group, groupIndex) => {
-          const isAtelier = group.layout === "atelier";
-
-          if (isAtelier) {
+          if (group.layout === "atelier") {
             return (
               <BrandAtelier
                 key={group.id}
@@ -156,74 +176,19 @@ export function SeasonalExperienceBrowser({
             );
           }
 
-          return (
-            <section
-              key={group.id}
-              id={`seasonal-${group.id}`}
-              aria-labelledby={`seasonal-${group.id}-title`}
-              className="scroll-mt-24 border-t border-white/12 pt-10"
-            >
-              <div className="grid gap-4 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
-                <div>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.26em] text-[#E7B96A]">
-                    {String(groupIndex + 1).padStart(2, "0")} · {group.eyebrow}
-                  </p>
-                  <h3 id={`seasonal-${group.id}-title`} className="font-display mt-3 max-w-2xl text-4xl leading-none sm:text-5xl lg:text-6xl">
-                    {group.title}
-                  </h3>
-                </div>
-                <p className="max-w-2xl text-base leading-7 text-white/66 lg:justify-self-end">
-                  {group.body}
-                </p>
-              </div>
+          if (group.layout === "archive") {
+            return (
+              <LuxuryCampaignArchive
+                key={group.id}
+                group={group}
+                groupIndex={groupIndex}
+                copy={copy}
+                onOpen={openExperience}
+              />
+            );
+          }
 
-              <div className="mt-7 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-5 sm:gap-5">
-                  {group.items.map((item) => (
-                    <article
-                      key={item.id}
-                      data-seasonal-card={item.id}
-                      className="group w-[84vw] max-w-[410px] shrink-0 snap-start overflow-hidden rounded-[18px] border border-white/12 bg-[#20342d] shadow-[0_20px_55px_rgba(5,15,11,.18)] sm:w-[380px]"
-                    >
-                      <button
-                        type="button"
-                          onClick={() => openExperience(item)}
-                        className="block h-full w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#E7B96A]"
-                        aria-label={`${copy.openDetail}: ${item.title}`}
-                      >
-                        <div
-                          data-seasonal-card-media
-                          className={`relative overflow-hidden bg-[#2a4037] ${group.ratio === "portrait" ? "aspect-[4/5]" : "aspect-[16/10]"}`}
-                        >
-                          <Image
-                            src={item.image}
-                            alt={item.title}
-                            fill
-                            sizes="(min-width: 640px) 380px, 84vw"
-                            className="object-cover transition duration-700 group-hover:scale-[1.025]"
-                          />
-                          {item.concept ? (
-                            <span className="absolute left-4 top-4 rounded-full border border-white/30 bg-[#14251f]/78 px-3 py-1 text-[0.62rem] font-extrabold uppercase tracking-[0.16em] text-white backdrop-blur">
-                              {copy.conceptLabel}
-                            </span>
-                          ) : null}
-                        </div>
-                        <div data-seasonal-card-copy className="flex min-h-[245px] flex-col p-5 sm:p-6">
-                          <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.2em] text-[#E7B96A]">{item.kicker}</p>
-                          <h4 className="font-display mt-2 text-3xl leading-none text-white">{item.title}</h4>
-                          <p className="mt-4 line-clamp-3 text-sm leading-6 text-white/68">{item.body}</p>
-                          <div className="mt-auto flex items-end justify-between gap-4 pt-5">
-                            <p className="font-semibold text-[#F1D39D]">
-                              {item.price ? `${copy.fromPrice} ${item.price}` : copy.actions[item.action]}
-                            </p>
-                            <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/24 text-lg text-white transition group-hover:border-[#E7B96A] group-hover:bg-[#E7B96A] group-hover:text-[#17352c]">↗</span>
-                          </div>
-                        </div>
-                      </button>
-                    </article>
-                  ))}
-              </div>
-            </section>
-          );
+          return <SeasonalEditorialGroup key={group.id} group={group} groupIndex={groupIndex} copy={copy} onOpen={openExperience} />;
         })}
       </div>
 
@@ -239,23 +204,41 @@ export function SeasonalExperienceBrowser({
             role="dialog"
             aria-modal="true"
             aria-labelledby="seasonal-dialog-title"
-            className="max-h-[94vh] w-full overflow-y-auto rounded-t-[26px] bg-[#F7F3E9] text-[#183F34] shadow-2xl sm:max-w-5xl sm:rounded-[26px]"
+            className="relative max-h-[94vh] w-full overflow-y-auto rounded-t-[26px] bg-[#F7F3E9] text-[#183F34] shadow-2xl sm:max-w-5xl sm:rounded-[26px]"
             onMouseDown={(event) => event.stopPropagation()}
           >
+            <button
+              type="button"
+              ref={closeButtonRef}
+              onClick={closeExperience}
+              className="absolute right-5 top-5 z-20 grid h-11 w-11 place-items-center rounded-full border border-[#bcc8c1] bg-[#F7F3E9]/92 text-xl shadow-sm backdrop-blur"
+              aria-label={copy.close}
+            >
+              ×
+            </button>
             <div className="grid lg:grid-cols-[1.08fr_.92fr]">
-              <div className="relative min-h-[310px] overflow-hidden bg-[#d8dfda] sm:min-h-[470px] lg:min-h-[620px] lg:rounded-l-[26px]">
-                <Image src={active.image} alt={active.title} fill sizes="(min-width: 1024px) 54vw, 100vw" className="object-cover" priority />
+              <div className="flex min-h-[310px] flex-col overflow-hidden bg-[#1a241f] sm:min-h-[470px] lg:min-h-[620px] lg:rounded-l-[26px]">
+                <div className="relative min-h-[310px] flex-1 sm:min-h-[470px]">
+                  <Image key={activeMedia[activeMediaIndex]} src={activeMedia[activeMediaIndex] ?? active.image} alt={active.title} fill sizes="(min-width: 1024px) 54vw, 100vw" className="seasonal-dialog-image object-cover" priority />
+                </div>
+                {activeMedia.length > 1 ? (
+                  <div role="group" aria-label={copy.galleryLabel} className="grid grid-cols-3 gap-2 border-t border-white/12 bg-[#111a16] p-3">
+                    {activeMedia.map((image, index) => (
+                      <button
+                        key={image}
+                        type="button"
+                        aria-label={`${copy.galleryLabel} ${index + 1}: ${active.title}`}
+                        aria-pressed={index === activeMediaIndex}
+                        onClick={() => setActiveMediaIndex(index)}
+                        className={`relative aspect-[16/7] overflow-hidden border transition ${index === activeMediaIndex ? "border-[#E7B96A]" : "border-white/15 opacity-60 hover:opacity-100"}`}
+                      >
+                        <Image src={image} alt="" fill sizes="18vw" className="object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <div className="relative flex flex-col p-6 sm:p-9 lg:p-10">
-                <button
-                  type="button"
-                  ref={closeButtonRef}
-                  onClick={closeExperience}
-                  className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full border border-[#bcc8c1] bg-[#F7F3E9]/92 text-xl"
-                  aria-label={copy.close}
-                >
-                  ×
-                </button>
                 <p className="pr-14 text-[0.66rem] font-extrabold uppercase tracking-[0.22em] text-[#6b7f75]">{active.kicker}</p>
                 <h3 id="seasonal-dialog-title" className="font-display mt-4 pr-10 text-4xl leading-none sm:text-5xl">{active.title}</h3>
                 <p className="mt-6 text-base leading-8 text-[#5c6c64]">{active.body}</p>

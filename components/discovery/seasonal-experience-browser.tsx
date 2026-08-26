@@ -23,6 +23,7 @@ export type SeasonalGroup = {
   title: string;
   body: string;
   ratio: "landscape" | "portrait";
+  layout?: "atelier" | "rail";
   items: SeasonalExperience[];
 };
 
@@ -100,74 +101,141 @@ export function SeasonalExperienceBrowser({
       </nav>
 
       <div className="mt-16 space-y-20 sm:mt-20 sm:space-y-24">
-        {groups.map((group, groupIndex) => (
-          <section
-            key={group.id}
-            id={`seasonal-${group.id}`}
-            aria-labelledby={`seasonal-${group.id}-title`}
-            className="scroll-mt-24 border-t border-white/12 pt-10"
-          >
-            <div className="grid gap-4 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
-              <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.26em] text-[#E7B96A]">
-                  {String(groupIndex + 1).padStart(2, "0")} · {group.eyebrow}
-                </p>
-                <h3 id={`seasonal-${group.id}-title`} className="font-display mt-3 max-w-2xl text-4xl leading-none sm:text-5xl">
-                  {group.title}
-                </h3>
-              </div>
-              <p className="max-w-2xl text-base leading-7 text-white/66 lg:justify-self-end">
-                {group.body}
-              </p>
-            </div>
+        {groups.map((group, groupIndex) => {
+          const isAtelier = group.layout === "atelier";
+          const atelierPositions = [
+            "lg:col-span-7",
+            "lg:col-span-5 lg:mt-40",
+            "lg:col-span-5 lg:mt-16",
+            "lg:col-span-7",
+            "lg:col-span-6 lg:col-start-4",
+          ];
 
-            <div className="mt-7 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-5 sm:gap-5">
-              {group.items.map((item) => (
-                <article
-                  key={item.id}
-                  data-seasonal-card={item.id}
-                  className="group w-[84vw] max-w-[410px] shrink-0 snap-start overflow-hidden rounded-[18px] border border-white/12 bg-[#20342d] shadow-[0_20px_55px_rgba(5,15,11,.18)] sm:w-[380px]"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setActive(item)}
-                    className="block h-full w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#E7B96A]"
-                    aria-label={`${copy.openDetail}: ${item.title}`}
-                  >
-                    <div
-                      data-seasonal-card-media
-                      className={`relative overflow-hidden bg-[#2a4037] ${group.ratio === "portrait" ? "aspect-[4/5]" : "aspect-[16/10]"}`}
+          return (
+            <section
+              key={group.id}
+              id={`seasonal-${group.id}`}
+              aria-labelledby={`seasonal-${group.id}-title`}
+              className={isAtelier
+                ? "-mx-5 scroll-mt-24 bg-[#EEE8DC] px-5 py-12 text-[#183F34] sm:-mx-8 sm:px-8 sm:py-16 lg:rounded-[28px] lg:px-12 lg:py-20"
+                : "scroll-mt-24 border-t border-white/12 pt-10"}
+            >
+              <div className="grid gap-4 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+                <div>
+                  <p className={`text-xs font-extrabold uppercase tracking-[0.26em] ${isAtelier ? "text-[#77501D]" : "text-[#E7B96A]"}`}>
+                    {String(groupIndex + 1).padStart(2, "0")} · {group.eyebrow}
+                  </p>
+                  <h3 id={`seasonal-${group.id}-title`} className="font-display mt-3 max-w-2xl text-4xl leading-none sm:text-5xl lg:text-6xl">
+                    {group.title}
+                  </h3>
+                </div>
+                <p className={`max-w-2xl text-base leading-7 lg:justify-self-end ${isAtelier ? "text-[#5F6A63]" : "text-white/66"}`}>
+                  {group.body}
+                </p>
+              </div>
+
+              {isAtelier ? (
+                <>
+                  <div className="mt-9 flex gap-6 overflow-x-auto border-y border-[#183F34]/16 py-3 text-[0.64rem] font-extrabold uppercase tracking-[0.18em] text-[#52635B] sm:justify-between">
+                    {group.items.map((item, index) => (
+                      <a key={item.id} href={`#atelier-${item.id}`} className="shrink-0 transition hover:text-[#9B6A24]">
+                        {String(index + 1).padStart(2, "0")} {item.title.split(" · ")[0]}
+                      </a>
+                    ))}
+                  </div>
+                  <div className="mt-12 grid gap-y-16 lg:grid-cols-12 lg:gap-x-8 lg:gap-y-28">
+                    {group.items.map((item, index) => (
+                      <article
+                        key={item.id}
+                        id={`atelier-${item.id}`}
+                        data-seasonal-card={item.id}
+                        className={`group scroll-mt-32 ${atelierPositions[index] ?? "lg:col-span-6"}`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setActive(item)}
+                          className="block w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9B6A24]"
+                          aria-label={`${copy.openDetail}: ${item.title}`}
+                        >
+                          <div data-seasonal-card-media className="relative aspect-[4/5] overflow-hidden bg-[#D8D0C1] shadow-[0_28px_70px_rgba(62,49,27,.16)]">
+                            <Image
+                              src={item.image}
+                              alt={item.title}
+                              fill
+                              sizes="(min-width: 1024px) 52vw, 100vw"
+                              className="object-cover transition duration-1000 ease-out group-hover:scale-[1.018]"
+                            />
+                            <span className="absolute left-4 top-4 border border-white/45 bg-[#F7F3E9]/88 px-3 py-1.5 text-[0.58rem] font-extrabold uppercase tracking-[0.18em] text-[#183F34] backdrop-blur sm:left-5 sm:top-5">
+                              {copy.conceptLabel} · {String(index + 1).padStart(2, "0")}
+                            </span>
+                          </div>
+                          <div data-seasonal-card-copy className="grid gap-4 border-b border-[#183F34]/18 py-5 sm:grid-cols-[1fr_auto] sm:items-end">
+                            <div>
+                              <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.2em] text-[#77501D]">{item.kicker}</p>
+                              <h4 className="font-display mt-2 text-3xl leading-none text-[#183F34] sm:text-4xl">{item.title}</h4>
+                              <p className="mt-3 max-w-xl text-sm leading-6 text-[#53605A]">{item.body}</p>
+                            </div>
+                            <span className="inline-flex items-center gap-3 text-sm font-extrabold text-[#183F34]">
+                              {copy.actions[item.action]}
+                              <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-full border border-[#183F34]/28 transition group-hover:border-[#183F34] group-hover:bg-[#183F34] group-hover:text-white">↗</span>
+                            </span>
+                          </div>
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                  <p className="mt-14 max-w-3xl border-t border-[#183F34]/16 pt-5 text-xs leading-6 text-[#53605A]">{copy.conceptNotice}</p>
+                </>
+              ) : (
+                <div className="mt-7 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-5 sm:gap-5">
+                  {group.items.map((item) => (
+                    <article
+                      key={item.id}
+                      data-seasonal-card={item.id}
+                      className="group w-[84vw] max-w-[410px] shrink-0 snap-start overflow-hidden rounded-[18px] border border-white/12 bg-[#20342d] shadow-[0_20px_55px_rgba(5,15,11,.18)] sm:w-[380px]"
                     >
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        fill
-                        sizes="(min-width: 640px) 380px, 84vw"
-                        className="object-cover transition duration-700 group-hover:scale-[1.025]"
-                      />
-                      {item.concept ? (
-                        <span className="absolute left-4 top-4 rounded-full border border-white/30 bg-[#14251f]/78 px-3 py-1 text-[0.62rem] font-extrabold uppercase tracking-[0.16em] text-white backdrop-blur">
-                          {copy.conceptLabel}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div data-seasonal-card-copy className="flex min-h-[245px] flex-col p-5 sm:p-6">
-                      <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.2em] text-[#E7B96A]">{item.kicker}</p>
-                      <h4 className="font-display mt-2 text-3xl leading-none text-white">{item.title}</h4>
-                      <p className="mt-4 line-clamp-3 text-sm leading-6 text-white/68">{item.body}</p>
-                      <div className="mt-auto flex items-end justify-between gap-4 pt-5">
-                        <p className="font-semibold text-[#F1D39D]">
-                          {item.price ? `${copy.fromPrice} ${item.price}` : copy.actions[item.action]}
-                        </p>
-                        <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/24 text-lg text-white transition group-hover:border-[#E7B96A] group-hover:bg-[#E7B96A] group-hover:text-[#17352c]">↗</span>
-                      </div>
-                    </div>
-                  </button>
-                </article>
-              ))}
-            </div>
-          </section>
-        ))}
+                      <button
+                        type="button"
+                        onClick={() => setActive(item)}
+                        className="block h-full w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#E7B96A]"
+                        aria-label={`${copy.openDetail}: ${item.title}`}
+                      >
+                        <div
+                          data-seasonal-card-media
+                          className={`relative overflow-hidden bg-[#2a4037] ${group.ratio === "portrait" ? "aspect-[4/5]" : "aspect-[16/10]"}`}
+                        >
+                          <Image
+                            src={item.image}
+                            alt={item.title}
+                            fill
+                            sizes="(min-width: 640px) 380px, 84vw"
+                            className="object-cover transition duration-700 group-hover:scale-[1.025]"
+                          />
+                          {item.concept ? (
+                            <span className="absolute left-4 top-4 rounded-full border border-white/30 bg-[#14251f]/78 px-3 py-1 text-[0.62rem] font-extrabold uppercase tracking-[0.16em] text-white backdrop-blur">
+                              {copy.conceptLabel}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div data-seasonal-card-copy className="flex min-h-[245px] flex-col p-5 sm:p-6">
+                          <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.2em] text-[#E7B96A]">{item.kicker}</p>
+                          <h4 className="font-display mt-2 text-3xl leading-none text-white">{item.title}</h4>
+                          <p className="mt-4 line-clamp-3 text-sm leading-6 text-white/68">{item.body}</p>
+                          <div className="mt-auto flex items-end justify-between gap-4 pt-5">
+                            <p className="font-semibold text-[#F1D39D]">
+                              {item.price ? `${copy.fromPrice} ${item.price}` : copy.actions[item.action]}
+                            </p>
+                            <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/24 text-lg text-white transition group-hover:border-[#E7B96A] group-hover:bg-[#E7B96A] group-hover:text-[#17352c]">↗</span>
+                          </div>
+                        </div>
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          );
+        })}
       </div>
 
       {active ? (

@@ -12,6 +12,8 @@
 >
 > **PUBLIC-SEASONAL-UX-02 live 21/08/2026:** commit app `90e9c13` đã push `app-origin/main`; Vercel production `ninhbinhjourney-reka7t99g-goldencard.vercel.app` `Ready` sau 43 giây và alias chính đã nhận bản mới. Khối Trung thu tách ảnh khỏi copy, chia thành 5 nhóm/20 hoạt động; mỗi thẻ mở detail sheet có đường giữ chỗ, lập hành trình, gọi hoặc email Xuân Trường. Mười tám ảnh chọn từ `Downloads/Mooncake` đã đổi PNG → WebP, tổng khoảng 3,1 MB thay vì đưa gần 80 MB ảnh gốc vào repo; hai ảnh đã nén nhưng không dùng được loại trước commit. Consent public bỏ toàn bộ mã phase/thuật ngữ mã hóa khỏi bề mặt khách, còn lựa chọn ngắn “Để sau/Đồng ý”; trang quyền riêng tư giữ mục đích/thời hạn/quyền bằng ngôn ngữ phổ thông. Local gate: typecheck/lint/build pass, Vitest 612 pass + 1 skip. Production smoke alias chính: seasonal desktop/mobile 2/2, privacy+consent 2/2, axe+overflow desktop/mobile 2/2; `/api/health` trả `dataMode=supabase-shared`, `experienceMode=production`.
 >
+> **PUBLIC-LUXURY-EDITORIAL-03 staged 26/08/2026 bằng `5.6 Terra / High`:** phạm vi chỉ là web công khai, không sửa ERP/schema/RLS/feature flag. Năm visual Bottega Veneta, Celine, Chanel, Hermès và Prada đã được đưa hết vào một chương `Brand Atelier` riêng, bố cục ảnh dọc 4:5 bất đối xứng như lookbook; ảnh, chữ và CTA nằm ở ba nhịp rõ nên không còn overlay che sản phẩm. Mỗi concept mở detail sheet có ảnh lớn, disclaimer đề xuất độc lập và đường email/gọi Xuân Trường. Tổng seasonal thành 6 nhóm/23 lựa chọn. Không tạo thêm ảnh AI và không đưa ảnh gốc mới vào repo; tái dùng đúng năm WebP đã tối ưu. Local: typecheck/lint/build 43 route sạch, Vitest 612 pass + 1 skip, campaign desktop/mobile 2/2 và campaign + axe/overflow bốn route 10/10; ảnh chụp desktop/mobile/modal đã soi trực tiếp. Còn chờ commit, deploy và production smoke.
+>
 > Muốn hiểu **hệ thống này làm gì và theo nguyên tắc nào** (để nắm dự án, hoặc để đưa cho khách): đọc `docs/reference/SO_TAY_HE_THONG_VI.md`. File đang đọc chỉ nói **hiện trạng**.
 
 ---
@@ -19,6 +21,8 @@
 ## 0. ✅ T0 xong 02/08 — toàn bộ đợt T1–T14/T6b/T13 đã lên production, đã kiểm chứng thật
 
 > **Trạng thái public web mới nhất 21/08:** PUBLIC-SEASONAL-UX-02 đã live ở commit `90e9c13`, visual review desktop/Pixel 7 và production smoke 6/6 đều xanh. Không có migration hay mutation dữ liệu trong phase này.
+
+> **Trạng thái public web mới nhất 26/08:** PUBLIC-LUXURY-EDITORIAL-03 đã hoàn tất code + visual review cục bộ, đủ năm brand concept và không chạm ERP/data. Chưa gọi là live cho tới khi commit, Vercel Ready và smoke alias chính ở bước ship kế tiếp.
 
 > **Trạng thái public web mới nhất 07/08:** W5 sửa sai địa danh trong 3 cinematic panel, dựng lại thẻ tuyến theo từng chặng và thay tương tác “Mười nơi nữa” **đã commit/push/deploy production**. Commit app `31419a4`, deployment app `dpl_HU8nyRaynxFPgV7tRJy8kuMKrvgx` (`Ready`) đã nhận alias `https://ninhbinhjourney.vercel.app`; smoke production ghi ở mục 2.6. Commit tài liệu sau đó có thể tạo thêm một deployment không đổi app.
 
@@ -99,6 +103,7 @@ Ba module chưa làm **trước đây hiển thị dữ liệu bịa** — tên 
 | **T10** | **Nửa NCC**: `posted → payment-requested → paid`, người đề nghị ≠ người duyệt chi | Nửa tiền mặt chưa làm — mục 4 |
 | **W3** | Tam Chúc lên web, khai đúng là thuộc Hà Nam thay vì kéo vào trong ranh giới bản đồ | |
 | **PUBLIC-SEASONAL-UX-02** | Trung thu thành 5 nhóm/20 lựa chọn; ảnh và copy tách plane; mọi thẻ có detail + booking/planner/tel/email; consent public viết lại gọn | 18 WebP mới ~3,1 MB; không đổi DB/RLS/flag |
+| **PUBLIC-LUXURY-EDITORIAL-03** | Tách Brand Atelier thành chương lookbook 5 brand, masonry bất đối xứng desktop/ảnh dọc full-width mobile, index brand và detail sheet liên hệ | 6 nhóm/23 lựa chọn; dùng 5 WebP có sẵn; không đổi ERP/DB/RLS/flag |
 
 **Về "vai trò trưởng ca" trong T9 — làm khác đề bài, có lý do:** không thêm vai trò toàn cục thứ sáu. Ngoài đời trưởng ca là *nhiệm vụ của một ca tại một vị trí*, không phải chức danh giữ mãi — cùng một nhân viên sáng nay chỉ huy cổng, mai làm ở bến. Đưa vào registry là biến nó thành vĩnh viễn và sai. Ở đây, trưởng ca = người được ghi tên trên phiếu bàn giao, và RPC kiểm đúng cái tên đó.
 
@@ -375,6 +380,8 @@ Chi tiết quan sát/kỹ thuật của từng reference vẫn nằm ở `docs/r
 
 PUBLIC-SEASONAL-UX-02 không phát hiện lỗi dữ liệu hay phân quyền mới. Local a11y audit phát hiện một nhãn metadata cũ ở `destination-index` chỉ đạt contrast 4,21:1; đã đổi sang màu đậm hơn và axe home desktop/mobile sau build cuối pass 2/2, không còn serious/critical violation hoặc tràn ngang.
 
+PUBLIC-LUXURY-EDITORIAL-03 không chạm dữ liệu hay phân quyền. Lượt axe đầu bắt màu nâu/xám mới của Brand Atelier chỉ đạt 3,84–4,31:1 trên nền kem ở mobile; đã đậm màu chữ, chạy lại campaign + axe/overflow desktop/mobile và đạt 10/10, không còn serious/critical violation hay tràn ngang.
+
 **3/4 quản lý cơ sở từng không dùng được module Đối tác & NCC trên production.** Đã hết — xem mục 0.
 
 RPC `erp_ap_submit_supplier_invoice` chặn bằng `erp_account_has_active_role(...)`, tra `erp_account_registry`. V12 (01/08) tách một quản lý vùng thành bốn quản lý cơ sở trong mã nguồn nhưng không cập nhật registry.
@@ -393,6 +400,8 @@ Vá bằng migration `025` (thêm 3 quản lý, thu hẹp `manager-trang-an` v�
 **T0, T6b bước 1, T14 bước 1, T13 đã xong và đã xác minh trên production — xem mục 0.** Hàng dưới đây là phần chưa làm.
 
 > ✅ **PUBLIC-SEASONAL-UX-02:** đã push/deploy/smoke production; không còn việc kỹ thuật bắt buộc trong phase. Khi có yêu cầu public-UX tiếp, bắt đầu bằng screenshot origin thật rồi khoanh đúng section, không quay lại sửa schema/flag của CUS-01→08 nếu không có yêu cầu mới.
+>
+> 🟡 **PUBLIC-LUXURY-EDITORIAL-03 (`5.6 Terra / High`):** code và visual gate cục bộ đã xong; bước còn lại chỉ là commit/push, đợi Vercel production Ready và smoke alias chính. Không mở lại ERP/CUS trong phase này.
 
 > ✅ **CUS-01 hoàn tất phần code ngày 18/08/2026:** migration `202608180039_customer_data_backbone.sql`, event contract, repository và `/api/customer-events`. PostgreSQL 15 thật đã apply migration sạch; transaction test chứng minh event lần đầu insert, gửi lại idempotent, collision/PII/direct write/history mutation bị chặn, identity digest+ciphertext và consent append-only ghi được; tất cả rollback sạch. Full gate: typecheck/lint/build pass, 72 file/513 test pass + 1 skip có chủ đích.
 >

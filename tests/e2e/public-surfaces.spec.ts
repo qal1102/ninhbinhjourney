@@ -95,10 +95,23 @@ test("Mid-Autumn campaign publishes priced offers, a bookable dinner and clearly
   );
   await expect(campaign).toContainText("VND 390,000");
   await expect(campaign).toContainText("VND 2,480,000 / table");
-  await expect(campaign.locator("[data-seasonal-card]")).toHaveCount(20);
+  await expect(campaign.locator("[data-seasonal-card]")).toHaveCount(23);
   await expect(campaign.getByRole("heading", { name: "When the landscape becomes part of dinner." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Heritage, seen in another light." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Ninh Binh is an open invitation." })).toBeVisible();
+  await expect(campaign.getByRole("heading", { name: "Five conversations yet to begin." })).toBeVisible();
+
+  const atelier = campaign.locator("#seasonal-brand-atelier");
+  await expect(atelier.locator("[data-seasonal-card]")).toHaveCount(5);
+  for (const title of [
+    "Bottega Veneta · The Green Passage",
+    "Celine · Quiet Horizons",
+    "Chanel · Grace in Bloom",
+    "Hermès · Crafted by the River",
+    "Prada · Modern Calm",
+  ]) {
+    await expect(atelier.getByRole("button", { name: `Open details: ${title}` })).toBeVisible();
+  }
 
   const separatePlanes = await campaign.locator("[data-seasonal-card]").evaluateAll((cards) =>
     cards.every((card) => {
@@ -120,8 +133,9 @@ test("Mid-Autumn campaign publishes priced offers, a bookable dinner and clearly
   await page.keyboard.press("Escape");
   await expect(bookingDialog).toHaveCount(0);
 
-  await campaign.getByRole("button", { name: "Open details: A fragrance of Ninh Binh" }).click();
+  await campaign.getByRole("button", { name: "Open details: Chanel · Grace in Bloom" }).click();
   const contactDialog = page.getByRole("dialog");
+  await expect(contactDialog.getByRole("heading", { name: "Chanel · Grace in Bloom" })).toBeVisible();
   await expect(contactDialog.getByRole("link", { name: "Start a conversation" })).toHaveAttribute("href", /^mailto:xuantruong_nb@hn\.vnn\.vn/);
   await expect(contactDialog.getByRole("link", { name: "Call the team" })).toHaveAttribute("href", "tel:+842293876930");
   await expect(contactDialog).toContainText("independent creative proposal");

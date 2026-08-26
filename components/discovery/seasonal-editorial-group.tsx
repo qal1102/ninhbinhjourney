@@ -250,7 +250,7 @@ function IndexLayout({ group, copy, onOpen }: Omit<GroupProps, "groupIndex">) {
                   <Image src={item.image} alt="" fill sizes="52px" className="object-cover" />
                 </div>
                 <div data-seasonal-card-copy>
-                  <p className={`text-[0.54rem] font-extrabold uppercase tracking-[0.18em] ${selected ? "text-[#17352c]/65" : "text-[#E7B96A]"}`}>{String(index + 1).padStart(2, "0")} · {item.kicker}</p>
+                  <p className={`text-[0.54rem] font-extrabold uppercase tracking-[0.18em] ${selected ? "text-[#17352c]" : "text-[#E7B96A]"}`}>{String(index + 1).padStart(2, "0")} · {item.kicker}</p>
                   <h4 className="font-display mt-1 text-2xl leading-none">{item.title}</h4>
                 </div>
                 <span aria-hidden="true" className="text-xl transition-transform group-hover:translate-x-1">→</span>

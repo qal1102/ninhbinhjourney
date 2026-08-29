@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_ACCOUNTANT_PASSWORD, ERP_CHIEF_ACCOUNTANT_PASSWORD, ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Read-only production smoke for the AP-NCC batch just deployed.
 // Does NOT click any mutating action (approve/reject/post) - only verifies
@@ -24,7 +25,7 @@ async function logout(page: Page) {
 test("accountant sees the live supplier AP control center on production", async ({
   page,
 }, testInfo) => {
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
   await expect(
     page.getByRole("heading", { name: /Đối tác|Công nợ|Nhà cung cấp/ }).first(),
@@ -42,7 +43,7 @@ test("accountant sees the live supplier AP control center on production", async 
 test("chief accountant sees the AP inbox on production", async ({
   page,
 }, testInfo) => {
-  await login(page, "ketoantruong", "Ketoantruong@2026");
+  await login(page, "ketoantruong", ERP_CHIEF_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
   await expect(page.getByText("AP-TA-202607-024", { exact: true })).toBeVisible({
     timeout: 15_000,
@@ -57,7 +58,7 @@ test("chief accountant sees the AP inbox on production", async ({
 test("director sees the supplier payables summary on production", async ({
   page,
 }, testInfo) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath("prod-director-home.png"),
@@ -77,7 +78,7 @@ test("director sees the supplier payables summary on production", async ({
 test("manager sees the supplier AP control center at site level on production", async ({
   page,
 }, testInfo) => {
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/doi-tac-nha-cung-ung");
   await expect(page.getByText("AP-TA-202607-024", { exact: true })).toBeVisible({
     timeout: 15_000,
@@ -105,10 +106,10 @@ test("manager sees the supplier AP control center at site level on production", 
 // number to put back. Seeing the posting-rule refusal means the manager passed
 // the gate; seeing the role refusal means they did not.
 const SITE_MANAGERS: ReadonlyArray<[string, string, string]> = [
-  ["trang-an", "ql.vanhanh", "Quanly@2026"],
-  ["tam-chuc", "ql.tamchuc", "Quanly@2026"],
-  ["tam-coc", "ql.tamcoc", "Quanly@2026"],
-  ["bai-dinh", "ql.baidinh", "Quanly@2026"],
+  ["trang-an", "ql.vanhanh", ERP_MANAGER_PASSWORD],
+  ["tam-chuc", "ql.tamchuc", ERP_MANAGER_PASSWORD],
+  ["tam-coc", "ql.tamcoc", ERP_MANAGER_PASSWORD],
+  ["bai-dinh", "ql.baidinh", ERP_MANAGER_PASSWORD],
 ];
 
 for (const [siteId, username, password] of SITE_MANAGERS) {

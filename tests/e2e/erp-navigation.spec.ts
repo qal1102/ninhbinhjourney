@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 async function loginAsDirector(page: import("@playwright/test").Page) {
   await page.goto("/erp/login");
   await page.getByLabel("Tên đăng nhập").fill("giamdoc");
-  await page.getByLabel("Mật khẩu").fill("Giamdoc@2026");
+  await page.getByLabel("Mật khẩu").fill(ERP_DIRECTOR_PASSWORD);
   await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
   await expect(page).toHaveURL(/\/erp$/);
 }
@@ -75,6 +76,10 @@ test("desktop ERP navigation fits, opens one group and supports the keyboard", a
 
   await booking.click();
   await expect(booking.locator("xpath=..")).toHaveAttribute("open", "");
-  await page.getByRole("heading", { name: "Tràng An" }).click();
+  // `exact: true` là bắt buộc: từ ERP-UX-01, tiêu đề khối nghiệp vụ là "Công
+  // việc tại Tràng An" cho **mọi** vai (trước đây vai giám đốc thấy một tiêu
+  // đề khác hẳn, nên khớp lỏng tình cờ vẫn trúng đúng một phần tử). Ở đây chỉ
+  // cần bấm ra ngoài thanh điều hướng, nên nhắm thẳng h1 tên cơ sở.
+  await page.getByRole("heading", { name: "Tràng An", exact: true }).click();
   await expect(booking.locator("xpath=..")).not.toHaveAttribute("open", "");
 });

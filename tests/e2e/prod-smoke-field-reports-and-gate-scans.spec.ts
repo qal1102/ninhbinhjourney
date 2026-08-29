@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for two more decorative-action fixes:
 // field-report-workspace.tsx ("Gửi báo cáo") used to only build an object
@@ -34,7 +35,7 @@ test("a field report an employee submits, photo included, is visible to the dire
   const employeeContext = await browser.newContext();
   const employeePage = await employeeContext.newPage();
   try {
-    await login(employeePage, "nv.trangan", "Nhanvien@2026");
+    await login(employeePage, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
     await employeePage.goto("/erp/trang-an/bao-cao-hien-truong");
 
     const form = employeePage.locator("form").filter({ hasText: "Ghi nhận ảnh hiện trường" });
@@ -62,7 +63,7 @@ test("a field report an employee submits, photo included, is visible to the dire
   const directorContext = await browser.newContext();
   const directorPage = await directorContext.newPage();
   try {
-    await login(directorPage, "giamdoc", "Giamdoc@2026");
+    await login(directorPage, "giamdoc", ERP_DIRECTOR_PASSWORD);
     await directorPage.goto("/erp/trang-an/bao-cao-hien-truong");
 
     const card = directorPage.getByRole("button", { name: new RegExp(uniqueTask) });
@@ -97,7 +98,7 @@ test("a refused QR scan is still real server state the manager sees in a complet
   const employeeContext = await browser.newContext();
   const employeePage = await employeeContext.newPage();
   try {
-    await login(employeePage, "nv.trangan", "Nhanvien@2026");
+    await login(employeePage, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
     await employeePage.goto("/erp/trang-an/check-in-khach");
     await employeePage
       .getByPlaceholder("Đưa mã vào máy quét hoặc nhập mã QR")
@@ -116,7 +117,7 @@ test("a refused QR scan is still real server state the manager sees in a complet
   const managerContext = await browser.newContext();
   const managerPage = await managerContext.newPage();
   try {
-    await login(managerPage, "ql.vanhanh", "Quanly@2026");
+    await login(managerPage, "ql.vanhanh", ERP_MANAGER_PASSWORD);
     await managerPage.goto("/erp/trang-an/check-in-khach");
     await expect(
       managerPage.getByText(uniqueCode, { exact: true }),

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for the "Dự án & sự kiện" module built from
 // scratch (it previously had zero actions of any kind, not even a fake
@@ -30,7 +31,7 @@ test("nhân viên bắt đầu xử lý một gói việc, quản lý ở phiên
   const employeeContext = await browser.newContext();
   const employeePage = await employeeContext.newPage();
   try {
-    await login(employeePage, "nv.trangan", "Nhanvien@2026");
+    await login(employeePage, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
     await employeePage.goto("/erp/trang-an/du-an-su-kien");
 
     const card = employeePage.locator("details").filter({ hasText: "EV-TA-041" });
@@ -56,7 +57,7 @@ test("nhân viên bắt đầu xử lý một gói việc, quản lý ở phiên
   const managerContext = await browser.newContext();
   const managerPage = await managerContext.newPage();
   try {
-    await login(managerPage, "ql.vanhanh", "Quanly@2026");
+    await login(managerPage, "ql.vanhanh", ERP_MANAGER_PASSWORD);
     await managerPage.goto("/erp/trang-an/du-an-su-kien");
     const card = managerPage.locator("details").filter({ hasText: "EV-TA-041" });
     await expect(card).toBeVisible({ timeout: 15_000 });
@@ -89,7 +90,7 @@ test("quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở p
     const context = await browser.newContext();
     const page = await context.newPage();
     try {
-      await login(page, "ql.vanhanh", "Quanly@2026");
+      await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
       await page.goto("/erp/trang-an/du-an-su-kien");
       const form = page.locator("form").filter({ has: page.locator('select[name="kind"]') });
       await form.locator('select[name="kind"]').selectOption("budget");
@@ -105,7 +106,7 @@ test("quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở p
   const managerContext = await browser.newContext();
   const managerPage = await managerContext.newPage();
   try {
-    await login(managerPage, "ql.vanhanh", "Quanly@2026");
+    await login(managerPage, "ql.vanhanh", ERP_MANAGER_PASSWORD);
     await managerPage.goto("/erp/trang-an/du-an-su-kien");
 
     const budgetCard = managerPage.locator("article").filter({ hasText: "Ngân sách" }).first();
@@ -131,7 +132,7 @@ test("quản lý gửi yêu cầu đổi ngân sách, giám đốc duyệt ở p
   const directorContext = await browser.newContext();
   const directorPage = await directorContext.newPage();
   try {
-    await login(directorPage, "giamdoc", "Giamdoc@2026");
+    await login(directorPage, "giamdoc", ERP_DIRECTOR_PASSWORD);
     await directorPage.goto("/erp/trang-an/du-an-su-kien");
 
     const item = directorPage.locator("li").filter({ hasText: uniqueSummary });

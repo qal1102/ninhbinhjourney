@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 async function login(page: Page, username: string, password: string) {
   await page.goto("/erp/login");
@@ -38,7 +39,7 @@ test("employee workday runs across separate employee and manager sessions with G
   const employeePage = await employeeContext.newPage();
 
   try {
-    await login(managerPage, "ql.trangan", "Quanly@2026");
+    await login(managerPage, "ql.trangan", ERP_MANAGER_PASSWORD);
     const existingRecord = await managerRecord(managerPage);
     if (
       (await existingRecord.count()) > 0 &&
@@ -54,7 +55,7 @@ test("employee workday runs across separate employee and manager sessions with G
       await managerPage
         .getByRole("button", { name: "Đóng bản đồ" })
         .click();
-      await login(employeePage, "nv.bentau", "Nhanvien@2026");
+      await login(employeePage, "nv.bentau", ERP_EMPLOYEE_PASSWORD);
       await expect(
         employeePage.getByText(/Đã được Lê Hoàng Nam xác nhận/),
       ).toBeVisible();
@@ -78,7 +79,7 @@ test("employee workday runs across separate employee and manager sessions with G
     await assignment.getByRole("button", { name: "Giao việc" }).click();
     await expect(managerPage.getByRole("status")).toContainText("Đã giao");
 
-    await login(employeePage, "nv.bentau", "Nhanvien@2026");
+    await login(employeePage, "nv.bentau", ERP_EMPLOYEE_PASSWORD);
     await expect(
       employeePage.getByRole("heading", {
         name: "Điều phối hàng chờ và phân thuyền",
@@ -168,7 +169,7 @@ test("employee workday fits a phone viewport without horizontal scrolling", asyn
     testInfo.project.name !== "mobile-chromium",
     "This assertion targets the phone layout.",
   );
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
   await expect(
     page.getByRole("list", { name: "Tiến trình công việc" }),
   ).toBeVisible();

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 // T14b — danh bạ nhân sự đọc từ registry.
 //
@@ -39,7 +40,7 @@ test("một người chỉ có trong registry hiện ra ở phân quyền module
   const accountId = `qa-t14b-${stamp}`;
   const displayName = `QA T14b ${stamp}`;
 
-  await loginLegacy(page, "giamdoc", "Giamdoc@2026");
+  await loginLegacy(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/tai-khoan");
 
   // 1. Tạo tài khoản — chưa từng tồn tại trong mã nguồn.

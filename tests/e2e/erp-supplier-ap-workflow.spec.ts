@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_ACCOUNTANT_PASSWORD, ERP_CHIEF_ACCOUNTANT_PASSWORD, ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 const REMOTE_ACTION_TIMEOUT = 20_000;
 
@@ -36,7 +37,7 @@ function invoiceCard(page: Page, caseCode: string) {
 test("manager handoff persists and accountant prepares the liability journal", async ({
   page,
 }) => {
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/doi-tac-nha-cung-ung");
 
   // Bài test cũ giả định `AP-TA-202607-024` đã ở trạng thái "Sẵn sàng hạch
@@ -65,7 +66,7 @@ test("manager handoff persists and accountant prepares the liability journal", a
   await expectNoHorizontalOverflow(page);
 
   await logout(page);
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
 
   const accountantCard = invoiceCard(page, "AP-TA-202607-024");
@@ -83,7 +84,7 @@ test("manager handoff persists and accountant prepares the liability journal", a
 test("director exception decision flows back through accountant to a posted liability", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/finance");
 
   const directorCard = invoiceCard(page, "AP-TC-202607-027");
@@ -97,7 +98,7 @@ test("director exception decision flows back through accountant to a posted liab
   await expectNoHorizontalOverflow(page);
 
   await logout(page);
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
 
   const accountantCard = invoiceCard(page, "AP-TC-202607-027");
@@ -111,7 +112,7 @@ test("director exception decision flows back through accountant to a posted liab
   });
 
   await logout(page);
-  await login(page, "ketoantruong", "Ketoantruong@2026");
+  await login(page, "ketoantruong", ERP_CHIEF_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
 
   const checkerCard = invoiceCard(page, "AP-TC-202607-027");

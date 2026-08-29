@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_ACCOUNTANT_PASSWORD, ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // T11a — production smoke is deliberately read-only. It proves that the
 // deployed server can read the new Supabase schema and that each role sees the
@@ -32,7 +33,7 @@ test("giám đốc đọc được ngưỡng Tam Chúc và thấy quyền chỉn
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/tam-chuc/suc-chua");
   await expectCapacityWorkspace(
     page,
@@ -47,13 +48,13 @@ test("quản lý và nhân viên chỉ đọc cùng ngưỡng đã lưu", async 
   for (const account of [
     {
       username: "ql.tamchuc",
-      password: "Quanly@2026",
+      password: ERP_MANAGER_PASSWORD,
       route: "/erp/tam-chuc/suc-chua",
       formula: "24 phương tiện × 48 chỗ × 60 ÷ 60 phút = 1.152 khách/giờ",
     },
     {
       username: "nv.bentau",
-      password: "Nhanvien@2026",
+      password: ERP_EMPLOYEE_PASSWORD,
       route: "/erp/trang-an/suc-chua",
       formula: "600 phương tiện × 4 chỗ × 60 ÷ 180 phút = 800 khách/giờ",
     },
@@ -73,7 +74,7 @@ test("số tiền KPI kế toán không vỡ đôi cụm chữ số trên mobile
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
 
   for (const { route, labelText } of [
     { route: "/erp", labelText: "Giá trị đã ghi sổ" },

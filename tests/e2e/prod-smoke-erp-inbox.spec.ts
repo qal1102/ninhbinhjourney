@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for V5 (docs/archive/DANH_GIA_2026_07_08.md
 // muc 7 dot 2, L7 + UX#2): the notification bell used to show exactly one
@@ -28,7 +29,7 @@ async function login(page: Page, username: string, password: string) {
 test("director: the bell's escalated-incident count matches the dashboard's own count", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
   const dashboardStat = page.locator("dl div", { hasText: "sự cố đã chuyển cấp" });
   await expect(dashboardStat).toBeVisible();
@@ -55,7 +56,7 @@ test("director: the bell's escalated-incident count matches the dashboard's own 
 test("employee: the bell opens and shows either real categorized work or an honest empty state", async ({
   page,
 }) => {
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
 
   const bell = page.locator('summary[aria-label="Mở trung tâm thông báo"]');
   await bell.click();

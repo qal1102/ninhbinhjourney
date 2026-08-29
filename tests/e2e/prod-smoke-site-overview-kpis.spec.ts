@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for V1/L1/L2 in docs/archive/DANH_GIA_2026_07_08.md.
 // Before this fix, ERP_SITES[].snapshot on domain/erp.ts fanned out hard-coded
@@ -30,10 +31,10 @@ async function logout(page: Page) {
 // no longer owns all four sites); logging in per site also doubles as a
 // live check that a manager cannot reach a site they were not assigned.
 const SITE_MANAGERS: Record<string, [string, string]> = {
-  "trang-an": ["ql.vanhanh", "Quanly@2026"],
-  "tam-chuc": ["ql.tamchuc", "Quanly@2026"],
-  "tam-coc": ["ql.tamcoc", "Quanly@2026"],
-  "bai-dinh": ["ql.baidinh", "Quanly@2026"],
+  "trang-an": ["ql.vanhanh", ERP_MANAGER_PASSWORD],
+  "tam-chuc": ["ql.tamchuc", ERP_MANAGER_PASSWORD],
+  "tam-coc": ["ql.tamcoc", ERP_MANAGER_PASSWORD],
+  "bai-dinh": ["ql.baidinh", ERP_MANAGER_PASSWORD],
 };
 
 test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với module Sự cố, không còn mâu thuẫn", async ({
@@ -98,7 +99,7 @@ test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với
 test("quản lý Tam Chúc không vào được dữ liệu Tràng An và ngược lại", async ({
   page,
 }) => {
-  await login(page, "ql.tamchuc", "Quanly@2026");
+  await login(page, "ql.tamchuc", ERP_MANAGER_PASSWORD);
   await expect(page.locator('a[href^="/erp/trang-an/"]')).toHaveCount(0);
   await expect(page.locator('a[href^="/erp/tam-coc/"]')).toHaveCount(0);
   await expect(page.locator('a[href^="/erp/bai-dinh/"]')).toHaveCount(0);
@@ -108,7 +109,7 @@ test("quản lý Tam Chúc không vào được dữ liệu Tràng An và ngư�
   await expect(page.locator('p[role="alert"]')).toContainText("chưa được phân công");
 
   await logout(page);
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/tam-chuc");
   await expect(page).toHaveURL(/\/erp\?denied=site/);
 });
@@ -116,7 +117,7 @@ test("quản lý Tam Chúc không vào được dữ liệu Tràng An và ngư�
 test("hai KPI chưa có nguồn dữ liệu thật nói thẳng thay vì bịa số", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an");
 
   await expect(page.getByText("Khách dự kiến")).toBeVisible();
@@ -127,7 +128,7 @@ test("hai KPI chưa có nguồn dữ liệu thật nói thẳng thay vì bịa s
 test("nhân sự trong ca và lượt check-in hôm nay là số đếm thật, không phải hằng số cố định", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
   const readOnShift = async (siteId: string) => {
     await page.goto(`/erp/${siteId}`);

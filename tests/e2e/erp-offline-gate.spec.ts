@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 async function login(page: import("@playwright/test").Page) {
   await page.goto("/erp/login");
   await page.getByLabel("Tên đăng nhập").fill("giamdoc");
-  await page.getByLabel("Mật khẩu").fill("Giamdoc@2026");
+  await page.getByLabel("Mật khẩu").fill(ERP_DIRECTOR_PASSWORD);
   await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
   await expect(page).toHaveURL(/\/erp$/);
 }

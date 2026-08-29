@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for the director-home decision inbox fix (V2 in
 // docs/archive/DANH_GIA_2026_07_08.md). Before this fix,
@@ -26,7 +27,7 @@ async function login(page: Page, username: string, password: string) {
 test("giám đốc thấy sự cố đã chuyển cấp trong hộp thư quyết định, không phải chỉ ở module Sự cố", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
   const inbox = page.getByText("Cần giám đốc quyết định").locator("..");
   await expect(inbox).toBeVisible();
@@ -57,7 +58,7 @@ test("quản lý gửi yêu cầu đổi phạm vi dự án, giám đốc thấy
   try {
     // Bái Đính now has its own manager (V12); the regional ql.vanhanh
     // account no longer reaches other sites.
-    await login(managerPage, "ql.baidinh", "Quanly@2026");
+    await login(managerPage, "ql.baidinh", ERP_MANAGER_PASSWORD);
     await managerPage.goto("/erp/bai-dinh/du-an-su-kien");
 
     const form = managerPage
@@ -91,7 +92,7 @@ test("quản lý gửi yêu cầu đổi phạm vi dự án, giám đốc thấy
   const directorContext = await browser.newContext();
   const directorPage = await directorContext.newPage();
   try {
-    await login(directorPage, "giamdoc", "Giamdoc@2026");
+    await login(directorPage, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
     const card = directorPage.locator("a").filter({ hasText: uniqueSummary });
     await expect(card).toBeVisible({ timeout: 15_000 });

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Camera AI — kịch bản mô phỏng (T17, docs/HANDOFF.md).
 //
@@ -28,7 +29,7 @@ async function readCameraCounts(page: Page) {
 }
 
 test("màn hình camera tự khai báo là mô phỏng và không hứa số đo", async ({ page }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an/camera-ai");
 
   await expect(page.getByText("Kịch bản mô phỏng").first()).toBeVisible();
@@ -42,7 +43,7 @@ test("màn hình camera tự khai báo là mô phỏng và không hứa số đo
 test("số người giữ nguyên khi tải lại trang trong cùng khung thời gian", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an/camera-ai");
   const first = await readCameraCounts(page);
   expect(first.length).toBeGreaterThan(0);
@@ -56,7 +57,7 @@ test("kịch bản sự kiện chỉ chạy cho giám đốc", async ({ page }) 
   test.setTimeout(60_000);
 
   // Quản lý: không có sự kiện dựng sẵn nào, và màn hình nói rõ vì sao.
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/camera-ai");
   await expect(
     page.getByText(/Kịch bản mô phỏng chỉ chạy trên tài khoản giám đốc/),
@@ -66,7 +67,7 @@ test("kịch bản sự kiện chỉ chạy cho giám đốc", async ({ page }) 
   await page.context().clearCookies();
 
   // Giám đốc: đúng một sự kiện xuất hiện sau ~12 giây, và bộ đếm dừng ở 2.
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an/camera-ai");
   await expect(page.getByText("0/2 sự kiện · dừng sau khi đủ")).toBeVisible();
   await expect(page.getByText("1/2 sự kiện · dừng sau khi đủ")).toBeVisible({
@@ -80,7 +81,7 @@ test("kịch bản sự kiện chỉ chạy cho giám đốc", async ({ page }) 
 test("không còn nút tạo sự cố từ camera", async ({ page }) => {
   // Số mô phỏng không được phép trở thành hồ sơ sự cố thật. Đây là lỗi đã
   // từng có và bị khoá lại; spec này giữ cho nó không quay về.
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an/camera-ai");
   await expect(page.getByRole("button", { name: /tạo sự cố|báo sự cố/i })).toHaveCount(0);
 });

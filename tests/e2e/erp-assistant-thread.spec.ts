@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 // Trợ lý điều hành — luồng hội thoại (kiểu tin nhắn thoại).
 //
@@ -27,7 +28,7 @@ async function openAssistant(page: Page) {
 test("lệnh mở màn hình được ghi lại thành hội thoại và còn đó sau khi chuyển trang", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await openAssistant(page);
 
   await page.getByPlaceholder("Ví dụ: Mở tài chính tổng hợp").fill("Mở camera Tam Chúc");
@@ -47,7 +48,7 @@ test("lệnh mở màn hình được ghi lại thành hội thoại và còn đ
 });
 
 test("câu hỏi số liệu trả lời trong hội thoại thay vì chuyển trang", async ({ page }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await openAssistant(page);
 
   await page.getByRole("button", { name: "Hôm nay doanh thu bao nhiêu?" }).click();
@@ -62,7 +63,7 @@ test("câu hỏi số liệu trả lời trong hội thoại thay vì chuyển t
 });
 
 test("xoá hội thoại dọn sạch luồng", async ({ page }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await openAssistant(page);
 
   await page.getByPlaceholder("Ví dụ: Mở tài chính tổng hợp").fill("Cơ sở nào đang quá tải?");

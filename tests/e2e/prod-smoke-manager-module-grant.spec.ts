@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for V14 in docs/archive/DANH_GIA_2026_07_08.md
 // (L13). Before V14 `demo-session.ts` handed every manager all 15 modules
@@ -21,7 +22,7 @@ async function login(page: Page, username: string, password: string) {
 test("quản lý bị chặn đúng ở module không được giao, và vẫn vào được module được giao", async ({
   page,
 }) => {
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
 
   // Granted: this manager runs Tràng An's incidents and its drill book.
   await page.goto("/erp/trang-an/su-co");
@@ -41,7 +42,7 @@ test("hai quản lý có bộ quyền khác nhau — không còn ai cũng thấy
 }) => {
   // Tam Cốc's manager has the shuttle but not the drill book; Tràng An's
   // manager is the other way round. Same role, different grant.
-  await login(page, "ql.tamcoc", "Quanly@2026");
+  await login(page, "ql.tamcoc", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/tam-coc/xe-trung-chuyen");
   await expect(page).toHaveURL(/\/erp\/tam-coc\/xe-trung-chuyen$/);
   await page.goto("/erp/tam-coc/sop-dien-tap");
@@ -51,7 +52,7 @@ test("hai quản lý có bộ quyền khác nhau — không còn ai cũng thấy
 test("giám đốc vẫn xem được toàn bộ, và là người duy nhất thấy ô cấp quyền cho quản lý", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
   // Director scope is deliberately unchanged by V14.
   await page.goto("/erp/trang-an/bao-cao");
@@ -72,7 +73,7 @@ test("giám đốc vẫn xem được toàn bộ, và là người duy nhất th
 test("quản lý không thấy ô cấp quyền cấp quản lý trên chính màn hình nhân sự của mình", async ({
   page,
 }) => {
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/nhan-su");
   // The employee assignment panel is still theirs to use...
   await expect(page.getByRole("heading", { name: /Đội ngũ/ })).toBeVisible();

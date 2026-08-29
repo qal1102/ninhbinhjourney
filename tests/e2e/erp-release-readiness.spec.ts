@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 async function login(page: Page, username: string, password: string) {
   await page.goto("/erp/login");
@@ -9,7 +10,7 @@ async function login(page: Page, username: string, password: string) {
 }
 
 test("A6 fails closed and exposes no secret values when release inputs are absent", async ({ page }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/release");
   await expect(page.getByRole("heading", { name: "Sẵn sàng phát hành dữ liệu khách hàng" })).toBeVisible();
   await expect(page.getByTestId("release-verdict")).toHaveText("CHƯA ĐƯỢC BẬT PRODUCTION");
@@ -19,7 +20,7 @@ test("A6 fails closed and exposes no secret values when release inputs are absen
 });
 
 test("A6 release gate is director-only", async ({ page }) => {
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/release");
   await expect(page).toHaveURL(/\/erp\?denied=release$/);
   await expect(page.getByTestId("customer-release-readiness")).toHaveCount(0);

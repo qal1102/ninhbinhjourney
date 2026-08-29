@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 const enabled = process.env.NBJ_A6_RELEASE_SMOKE === "1";
 const expectation = process.env.NBJ_A6_RELEASE_EXPECTATION;
@@ -19,7 +20,7 @@ test.describe("A6 production readiness smoke", () => {
   test("director reads the real release verdict without mutating production", async ({ page }) => {
     await page.goto("/erp/login");
     await page.getByLabel("Tên đăng nhập").fill("giamdoc");
-    await page.getByLabel("Mật khẩu").fill("Giamdoc@2026");
+    await page.getByLabel("Mật khẩu").fill(ERP_DIRECTOR_PASSWORD);
     await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
     await expect(page).toHaveURL(/\/erp$/);
     await page.goto("/erp/release");

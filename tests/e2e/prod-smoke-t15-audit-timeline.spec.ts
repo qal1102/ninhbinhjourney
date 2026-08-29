@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // T15 — nhật ký tập trung, xác minh trên production thật.
 //
@@ -34,7 +35,7 @@ test("giám đốc thấy nhật ký toàn hệ thống, kèm số nhân sự th
   page,
 }, testInfo) => {
   test.setTimeout(90_000);
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/nhat-ky");
 
   await expect(page.getByRole("heading", { name: "Nhật ký hệ thống" })).toBeVisible();
@@ -58,7 +59,7 @@ test("nhân viên chỉ thấy thao tác của chính mình, kể cả khi tự 
   page,
 }) => {
   test.setTimeout(90_000);
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
 
   // Tự đòi xem một cơ sở khác qua tham số địa chỉ — lọc ở giao diện thì mở được,
   // chặn ở máy chủ thì không.
@@ -84,14 +85,14 @@ test("quản lý thấy việc của người khác trong cơ sở mình, nhưng
 }) => {
   test.setTimeout(90_000);
 
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/nhat-ky");
   await expect(actorNames(page).first()).toBeVisible({ timeout: 20_000 });
   const directorRows = await actorNames(page).count();
   await logout(page);
 
   await page.context().clearCookies();
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/nhat-ky");
   await expect(
     page.getByText(/Việc do người của cơ sở bạn làm/),
@@ -110,7 +111,7 @@ test("quản lý thấy việc của người khác trong cơ sở mình, nhưng
 
 test("tìm theo tên lọc đúng, và bấm vào tên mở hồ sơ người đó", async ({ page }) => {
   test.setTimeout(90_000);
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/nhat-ky");
   await expect(actorNames(page).first()).toBeVisible({ timeout: 20_000 });
 

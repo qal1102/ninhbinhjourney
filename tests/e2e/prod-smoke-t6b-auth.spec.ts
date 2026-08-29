@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 // Production smoke for T6b (Supabase Auth login, per-person credentials,
 // forced first password change). Provisions its own throwaway registry
@@ -33,7 +34,7 @@ test("a director-created account signs in through Supabase Auth, is forced to ch
   const email = `t6b-check-${stamp}@ninhbinhjourney.test`;
   const displayName = "QA T6b Check";
 
-  await loginLegacy(page, "giamdoc", "Giamdoc@2026");
+  await loginLegacy(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/tai-khoan");
 
   // 1. Create the throwaway account.
@@ -128,7 +129,7 @@ test("a director-created account signs in through Supabase Auth, is forced to ch
   // RPC for a registry account by design (see AGENTS.md), and the account
   // screen's status toggle only offers active/suspended, so suspended is
   // the terminal state this spec leaves behind.
-  await loginLegacy(page, "giamdoc", "Giamdoc@2026");
+  await loginLegacy(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/tai-khoan");
   const cleanupCard = page
     .locator("article")

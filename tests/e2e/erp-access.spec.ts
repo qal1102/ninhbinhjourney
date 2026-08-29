@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { ERP_ACCOUNTANT_PASSWORD, ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD, ERP_SEASONAL_PASSWORD } from "./support/erp-credentials";
 
 async function login(page: import("@playwright/test").Page, username: string, password: string) {
   await page.goto("/erp/login");
@@ -21,7 +22,7 @@ async function logout(page: import("@playwright/test").Page) {
 test("director sees each operating site as a separate branch", async ({ page }, testInfo) => {
   await page.goto("/erp");
   await expect(page).toHaveURL(/\/erp\/login/);
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
   // T13 đã xoá bộ số bịa từng đứng ở đầu màn hình này ("11.450 khách dự kiến ·
   // 1,84 tỷ doanh thu", "Khách dự kiến cả ngày", "Chi phí ghi nhận") cùng với
@@ -69,7 +70,7 @@ test("bảng tài chính hợp nhất bịa số đã bị gỡ, không quay l�
   // nguồn, và T13 đã xoá cả `executive-finance-overview.tsx` lẫn
   // `finance-dashboard.tsx`. Chủ thể của bài test không còn tồn tại, nên giữ
   // nguyên là để một bài đỏ vĩnh viễn. Đổi thành hàng rào cho chính T13.
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await expect(page.getByRole("heading", { name: "Tài chính hợp nhất" })).toHaveCount(0);
   await expect(page.getByText("38,6 tỷ")).toHaveCount(0);
   await expect(page.getByText("13,6 tỷ")).toHaveCount(0);
@@ -83,7 +84,7 @@ test("bảng tài chính hợp nhất bịa số đã bị gỡ, không quay l�
 });
 
 test("director opens an AI camera view and cannot turn a simulated number into an incident", async ({ page }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/tam-chuc/camera-ai");
 
   await expect(page.getByRole("heading", { level: 1, name: "Camera AI & hiện trường" })).toBeVisible();
@@ -103,7 +104,7 @@ test("director opens an AI camera view and cannot turn a simulated number into a
 });
 
 test("director can track an event project with budget, deadline and urgent work", async ({ page }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an/du-an-su-kien");
   await expect(page.getByRole("heading", { level: 1, name: "Dự án & sự kiện" })).toBeVisible();
   await expect(page.getByText("Lễ hội Tràng An 2026")).toBeVisible();
@@ -121,7 +122,7 @@ test("employee is blocked from another site and can check attendance by GPS", as
 }) => {
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: 20.25245, longitude: 105.91755 });
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
 
   // Khoanh trong `main`: menu di động dựng bằng portal và ẩn trên desktop, mà
   // link đầu tiên theo thứ tự DOM lại nằm trong đó — `.first()` toàn trang bắt
@@ -143,7 +144,7 @@ test("employee is blocked from another site and can check attendance by GPS", as
 });
 
 test("accountant works from a real source-to-ledger queue without field-control actions", async ({ page }, testInfo) => {
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
 
   await expect(page.getByText("Bàn làm việc kế toán", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: "Phạm Thu Trang" })).toBeVisible();
@@ -201,7 +202,7 @@ test("accountant works from a real source-to-ledger queue without field-control 
 });
 
 test("seasonal employee gets expiring trained-only access and manager can see the boundary", async ({ page }) => {
-  await login(page, "tv.trangan", "Thoivu@2026");
+  await login(page, "tv.trangan", ERP_SEASONAL_PASSWORD);
   await expect(page.getByText("Nhân viên thời vụ · Tràng An", { exact: true })).toBeVisible();
   await expect(page.getByText(/Quyền làm việc có hiệu lực đến 31\/08\/2026/)).toBeVisible();
   await expect(page.getByText("08:00–12:00", { exact: true })).toBeVisible();
@@ -212,7 +213,7 @@ test("seasonal employee gets expiring trained-only access and manager can see th
   await expect(page).toHaveURL(/\/erp\?denied=site/);
 
   await logout(page);
-  await login(page, "ql.trangan", "Quanly@2026");
+  await login(page, "ql.trangan", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/nhan-su");
   const seasonalRecord = page.locator("details").filter({ hasText: "tv.trangan" });
   await expect(seasonalRecord.getByText("Thời vụ", { exact: true })).toBeVisible();
@@ -239,7 +240,7 @@ test("ERP exposes an installable manifest and service worker", async ({ request 
 
 test("mobile director can use the hamburger, finance drill-down and voice command", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile navigation check");
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
@@ -275,7 +276,7 @@ test("mobile director can use the hamburger, finance drill-down and voice comman
 
 test("mobile site menu groups work by operating function", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile navigation check");
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/bai-dinh");
   await page.getByRole("button", { name: "Mở menu" }).click();
 
@@ -290,7 +291,7 @@ test("mobile site menu groups work by operating function", async ({ page }, test
 
 test("mobile voice recognition opens the requested event project", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile voice pipeline check");
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.evaluate(() => {
     class MockRecognition {
       lang = "";
@@ -320,7 +321,7 @@ test("mobile voice recognition opens the requested event project", async ({ page
 test("manager grants a module and the employee receives it on the next login", async ({
   page,
 }, testInfo) => {
-  await login(page, "ql.trangan", "Quanly@2026");
+  await login(page, "ql.trangan", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/ve-dat-cho");
   await expect(page.getByRole("heading", { name: "Hôm nay" })).toBeVisible();
   const managerShiftQueue = page.getByRole("region", { name: "Quy trình chốt ca vé" });
@@ -341,14 +342,14 @@ test("manager grants a module and the employee receives it on the next login", a
   }
   await page.getByRole("button", { name: "Đăng xuất" }).click();
   await expect(page).toHaveURL(/\/erp\/login/);
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
   await page.goto("/erp/trang-an/ve-dat-cho");
   await expect(page.getByRole("heading", { level: 1, name: "Vé & đặt chỗ" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Gửi chốt vé và tiền thu" })).toBeVisible();
 });
 
 test("employee submits an image-backed field report with accounting trace", async ({ page }) => {
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
   await page.goto("/erp/trang-an/bao-cao-hien-truong");
 
   await expect(page.getByRole("heading", { level: 1, name: "Báo cáo hiện trường" })).toBeVisible();
@@ -369,7 +370,7 @@ test("employee submits an image-backed field report with accounting trace", asyn
 });
 
 test("manager can record QR, inspect comparisons and review an employee shift", async ({ page }) => {
-  await login(page, "ql.trangan", "Quanly@2026");
+  await login(page, "ql.trangan", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/check-in-khach");
   // Bài này trước đây khẳng định gõ `QR-TEST-2026-001` là "Đã ghi nhận" — tức
   // là khẳng định đúng cái lỗi T8 đã vá: gõ mã bất kỳ cũng ghi nhận một khách.
@@ -412,7 +413,7 @@ test("ticket shift follows employee to manager and accounting without duplicate 
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: 20.25245, longitude: 105.91755 });
 
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
   await page.goto("/erp/trang-an/cham-cong");
   await page.getByRole("button", { name: "Xác nhận ra ca bằng GPS" }).click();
   await expect(page.getByRole("status")).toContainText("Đã ghi nhận ra ca");
@@ -439,7 +440,7 @@ test("ticket shift follows employee to manager and accounting without duplicate 
   expect(shiftCode).toBeTruthy();
 
   await logout(page);
-  await login(page, "ql.trangan", "Quanly@2026");
+  await login(page, "ql.trangan", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/ve-dat-cho");
   const managerShift = page.locator("details").filter({ hasText: shiftCode! });
   await managerShift.locator("summary").click();
@@ -452,7 +453,7 @@ test("ticket shift follows employee to manager and accounting without duplicate 
   await expect(managerShift).toContainText("Chờ kế toán");
 
   await logout(page);
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
   const accountingShift = page.locator("details").filter({ hasText: shiftCode! });
   await accountingShift.locator("summary").click();
@@ -484,7 +485,7 @@ test("ticket shift follows employee to manager and accounting without duplicate 
   await expect(accountingShift).toHaveCount(0);
 
   await logout(page);
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   const directorShift = page.locator("details").filter({ hasText: shiftCode! });
   await directorShift.locator("summary").click();
   await directorShift
@@ -496,7 +497,7 @@ test("ticket shift follows employee to manager and accounting without duplicate 
   await expect(directorShift).toHaveCount(0);
 
   await logout(page);
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
   // Giám đốc duyệt xong thì ca quay lại kế toán ở "Hàng lập bút toán". Bài test
   // cũ tìm một `details` với ô "Số bút toán" và nút "Đối soát xong & liên kết
@@ -531,7 +532,7 @@ test("manager return goes back to the employee before the same shift can continu
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: 20.25245, longitude: 105.91755 });
 
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
   await page.goto("/erp/trang-an/cham-cong");
   await page.getByRole("button", { name: "Xác nhận ra ca bằng GPS" }).click();
   await expect(page.getByRole("status")).toContainText("Đã ghi nhận ra ca");
@@ -554,7 +555,7 @@ test("manager return goes back to the employee before the same shift can continu
   expect(shiftCode).toBeTruthy();
 
   await logout(page);
-  await login(page, "ql.trangan", "Quanly@2026");
+  await login(page, "ql.trangan", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/ve-dat-cho");
   const managerShift = page.locator("details").filter({ hasText: shiftCode! });
   await managerShift.locator("summary").click();
@@ -567,7 +568,7 @@ test("manager return goes back to the employee before the same shift can continu
   await expect(managerShift).toContainText("Quản lý trả lại");
 
   await logout(page);
-  await login(page, "nv.trangan", "Nhanvien@2026");
+  await login(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
   await page.goto("/erp/trang-an/ve-dat-cho");
   const employeeShift = page.locator("details").filter({ hasText: shiftCode! });
   await employeeShift.locator("summary").click();
@@ -580,7 +581,7 @@ test("manager return goes back to the employee before the same shift can continu
   await expect(employeeShift).toContainText("đã bổ sung và gửi lại quản lý xác nhận");
 
   await logout(page);
-  await login(page, "ql.trangan", "Quanly@2026");
+  await login(page, "ql.trangan", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/ve-dat-cho");
   const returnedShift = page.locator("details").filter({ hasText: shiftCode! });
   await expect(returnedShift).toContainText("Chờ quản lý");
@@ -614,7 +615,7 @@ test("Supabase shares one ticket shift across employee, manager and accounting c
 
   try {
     const employeePage = await employeeContext.newPage();
-    await login(employeePage, "nv.trangan", "Nhanvien@2026");
+    await login(employeePage, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
     await employeePage.goto("/erp/trang-an/cham-cong");
     await employeePage.getByRole("button", { name: "Xác nhận ra ca bằng GPS" }).click();
     await expect(employeePage.getByRole("status")).toContainText("Đã ghi nhận ra ca");
@@ -642,7 +643,7 @@ test("Supabase shares one ticket shift across employee, manager and accounting c
     expect(shiftCode).toBeTruthy();
 
     const managerPage = await managerContext.newPage();
-    await login(managerPage, "ql.trangan", "Quanly@2026");
+    await login(managerPage, "ql.trangan", ERP_MANAGER_PASSWORD);
     await managerPage.goto("/erp/trang-an/ve-dat-cho");
     const managerShift = managerPage.locator("details").filter({ hasText: shiftCode! });
     await managerShift.locator("summary").click();
@@ -655,7 +656,7 @@ test("Supabase shares one ticket shift across employee, manager and accounting c
     await expect(managerShift).toContainText("Chờ kế toán");
 
     const accountingPage = await accountingContext.newPage();
-    await login(accountingPage, "ketoan", "Ketoan@2026");
+    await login(accountingPage, "ketoan", ERP_ACCOUNTANT_PASSWORD);
     await accountingPage.goto("/erp/finance");
     const accountingShift = accountingPage.locator("details").filter({ hasText: shiftCode! });
     await accountingShift.locator("summary").click();
@@ -711,7 +712,7 @@ test("Supabase enforces return, stale-version and director exception across four
 
   try {
     const employeePage = await employeeContext.newPage();
-    await login(employeePage, "nv.trangan", "Nhanvien@2026");
+    await login(employeePage, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
     await employeePage.goto("/erp/trang-an/cham-cong");
     await employeePage.getByRole("button", { name: "Xác nhận ra ca bằng GPS" }).click();
     await expect(employeePage.getByRole("status")).toContainText("Đã ghi nhận ra ca");
@@ -745,8 +746,8 @@ test("Supabase enforces return, stale-version and director exception across four
 
     const managerPage = await managerContext.newPage();
     const staleManagerPage = await staleManagerContext.newPage();
-    await login(managerPage, "ql.trangan", "Quanly@2026");
-    await login(staleManagerPage, "ql.trangan", "Quanly@2026");
+    await login(managerPage, "ql.trangan", ERP_MANAGER_PASSWORD);
+    await login(staleManagerPage, "ql.trangan", ERP_MANAGER_PASSWORD);
     await managerPage.goto("/erp/trang-an/ve-dat-cho");
     await staleManagerPage.goto("/erp/trang-an/ve-dat-cho");
     const managerShift = managerPage.locator("details").filter({ hasText: shiftCode! });
@@ -799,7 +800,7 @@ test("Supabase enforces return, stale-version and director exception across four
     await expect(resubmittedManagerShift).toContainText("Chờ kế toán");
 
     const accountingPage = await accountingContext.newPage();
-    await login(accountingPage, "ketoan", "Ketoan@2026");
+    await login(accountingPage, "ketoan", ERP_ACCOUNTANT_PASSWORD);
     await accountingPage.goto("/erp/finance");
     const accountingShift = accountingPage.locator("details").filter({ hasText: shiftCode! });
     await accountingShift.locator("summary").click();
@@ -822,7 +823,7 @@ test("Supabase enforces return, stale-version and director exception across four
     await expect(accountingShift).toContainText("Đang chờ quyết định ngoại lệ của giám đốc");
 
     const directorPage = await directorContext.newPage();
-    await login(directorPage, "giamdoc", "Giamdoc@2026");
+    await login(directorPage, "giamdoc", ERP_DIRECTOR_PASSWORD);
     const directorShift = directorPage.locator("details").filter({ hasText: shiftCode! });
     await directorShift.locator("summary").click();
     await directorShift
@@ -866,7 +867,7 @@ test("Supabase enforces return, stale-version and director exception across four
 test("manager completes source evidence before an invoice reaches accounting", async ({
   page,
 }) => {
-  await login(page, "ql.trangan", "Quanly@2026");
+  await login(page, "ql.trangan", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/trang-an/doi-tac-nha-cung-ung");
 
   await expect(
@@ -898,7 +899,7 @@ test("manager completes source evidence before an invoice reaches accounting", a
 });
 
 test("director drills into staff progress, results and revenue evidence", async ({ page }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an/nhan-su");
 
   const performance = page.locator("details").filter({ hasText: "Đối soát đoàn TA-018" });
@@ -910,7 +911,7 @@ test("director drills into staff progress, results and revenue evidence", async 
 
 test("mobile ERP workspaces stay vertical without horizontal overflow", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile workspace audit");
-  await login(page, "ql.trangan", "Quanly@2026");
+  await login(page, "ql.trangan", ERP_MANAGER_PASSWORD);
 
   for (const moduleId of ["bao-cao-hien-truong", "check-in-khach", "doi-tac-nha-cung-ung", "nhan-su"]) {
     await page.goto(`/erp/trang-an/${moduleId}`);

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for V15 (docs/archive/DANH_GIA_2026_07_08.md
 // muc 10.2 L8): an incident past its SLA must escalate on its own.
@@ -28,7 +29,7 @@ async function login(page: Page, username: string, password: string) {
 test("sự cố quá hạn được hệ thống tự chuyển cấp, có lý do và ghi rõ ai làm", async ({
   page,
 }) => {
-  await login(page, "ql.tamchuc", "Quanly@2026");
+  await login(page, "ql.tamchuc", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/tam-chuc/su-co");
 
   const card = page.locator("details").filter({ hasText: "INC-TC-069" }).first();
@@ -50,7 +51,7 @@ test("sự cố quá hạn được hệ thống tự chuyển cấp, có lý do
 test("chuyển cấp tự động đi thẳng vào hộp thư quyết định của giám đốc", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
   // The director's incident view is escalated-only by design, so anything
   // the clock escalated has to surface here without a human forwarding it.
@@ -71,7 +72,7 @@ test("chạy lại mỗi phút không nhân bản dòng nhật ký của cùng m
   // escalated must never collect a second "Chuyển cấp tự động" entry --
   // otherwise a day of cron runs would bury the real history under 1440
   // identical lines.
-  await login(page, "ql.tamchuc", "Quanly@2026");
+  await login(page, "ql.tamchuc", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/tam-chuc/su-co");
 
   const card = page.locator("details").filter({ hasText: "INC-TC-069" }).first();

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_ACCOUNTANT_PASSWORD, ERP_CHIEF_ACCOUNTANT_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 /**
  * T10b — round-trip THẬT trên production: tự dựng một ca chốt riêng (đánh
@@ -20,10 +21,10 @@ const SITE_ID = "trang-an";
 const TRANG_AN_COORDS = { latitude: 20.25245, longitude: 105.91755 };
 const MARKER = `QA-T10B-RT-${Date.now()}`;
 
-const EMPLOYEE = { username: "nv.trangan", password: "Nhanvien@2026" };
-const MANAGER = { username: "ql.vanhanh", password: "Quanly@2026" };
-const ACCOUNTANT = { username: "ketoan", password: "Ketoan@2026" };
-const CHIEF_ACCOUNTANT = { username: "ketoantruong", password: "Ketoantruong@2026" };
+const EMPLOYEE = { username: "nv.trangan", password: ERP_EMPLOYEE_PASSWORD };
+const MANAGER = { username: "ql.vanhanh", password: ERP_MANAGER_PASSWORD };
+const ACCOUNTANT = { username: "ketoan", password: ERP_ACCOUNTANT_PASSWORD };
+const CHIEF_ACCOUNTANT = { username: "ketoantruong", password: ERP_CHIEF_ACCOUNTANT_PASSWORD };
 
 async function login(page: Page, username: string, password: string) {
   await page.goto("/erp/login");

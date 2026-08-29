@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_ACCOUNTANT_PASSWORD, ERP_CHIEF_ACCOUNTANT_PASSWORD } from "./support/erp-credentials";
 
 async function login(page: Page, username: string, password: string) {
   await page.goto("/erp/login");
@@ -30,7 +31,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 test("accountant prepares and chief accountant independently posts a real journal", async ({
   page,
 }) => {
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
 
   await expect(
@@ -58,7 +59,7 @@ test("accountant prepares and chief accountant independently posts a real journa
   await expectNoHorizontalOverflow(page);
 
   await logout(page);
-  await login(page, "ketoantruong", "Ketoantruong@2026");
+  await login(page, "ketoantruong", ERP_CHIEF_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
 
   await expect(

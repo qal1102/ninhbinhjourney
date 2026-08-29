@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Read-only production gate: forms are inspected but never submitted, so no
 // fake opening assessment or director decision reaches the real database.
@@ -26,7 +27,7 @@ async function expectUnapprovedSopLibrary(page: Page) {
 }
 
 test("quản lý thấy checklist thật nhưng smoke không ghi dữ liệu", async ({ page }) => {
-  await login(page, "ql.tamchuc", "Quanly@2026");
+  await login(page, "ql.tamchuc", ERP_MANAGER_PASSWORD);
   await page.goto("/erp/tam-chuc/sop-dien-tap");
   await expectUnapprovedSopLibrary(page);
   await expect(
@@ -37,7 +38,7 @@ test("quản lý thấy checklist thật nhưng smoke không ghi dữ liệu", a
 test("giám đốc đọc cổng và inbox mà smoke không ghi dữ liệu", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/tam-chuc/sop-dien-tap");
   await expectUnapprovedSopLibrary(page);
   await expect(

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for the staff-access-manager.tsx /
 // attendance-panel.tsx Supabase fix: a change made by one account, in one
@@ -41,7 +42,7 @@ test("revoking an employee's module in one session denies it for that employee i
 }) => {
   const managerContext = await browser.newContext();
   const managerPage = await managerContext.newPage();
-  await login(managerPage, "ql.vanhanh", "Quanly@2026");
+  await login(managerPage, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await managerPage.goto("/erp/trang-an/nhan-su");
 
   const card = employeeCard(managerPage);
@@ -61,7 +62,7 @@ test("revoking an employee's module in one session denies it for that employee i
     const employeeContext = await browser.newContext();
     const employeePage = await employeeContext.newPage();
     try {
-      await login(employeePage, "nv.trangan", "Nhanvien@2026");
+      await login(employeePage, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
       await employeePage.goto("/erp/trang-an/su-co");
       await expect(employeePage).toHaveURL(/\/erp\/trang-an\?denied=module/, {
         timeout: 15_000,

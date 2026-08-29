@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 async function loginAsManager(page: import("@playwright/test").Page) {
   await page.goto("/erp/login");
   await page.getByLabel("Tên đăng nhập").fill("ql.trangan");
-  await page.getByLabel("Mật khẩu").fill("Quanly@2026");
+  await page.getByLabel("Mật khẩu").fill(ERP_MANAGER_PASSWORD);
   await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
   await expect(page).toHaveURL(/\/erp$/);
 }

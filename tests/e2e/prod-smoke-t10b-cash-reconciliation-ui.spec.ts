@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_ACCOUNTANT_PASSWORD } from "./support/erp-credentials";
 
 /**
  * T10b — xác minh chỉ-đọc trên production rằng khối "Đối soát tiền mặt" thật
@@ -23,7 +24,7 @@ test("kế toán thấy khối đối soát tiền mặt trên /erp/finance, kh�
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await login(page, "ketoan", "Ketoan@2026");
+  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
   await page.goto("/erp/finance");
 
   await expect(

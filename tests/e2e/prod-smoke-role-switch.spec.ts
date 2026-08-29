@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ERP_DIRECTOR_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for V3 in docs/archive/DANH_GIA_2026_07_08.md.
 // This is a REAL session swap, not a UI role flag: it must be true that
@@ -16,14 +17,14 @@ async function login(page: Page, username: string, password: string) {
 }
 
 test("chỉ giám đốc mới thấy nút 'Xem theo vai trò'", async ({ page }) => {
-  await login(page, "ql.vanhanh", "Quanly@2026");
+  await login(page, "ql.vanhanh", ERP_MANAGER_PASSWORD);
   await expect(page.getByText("Xem theo vai trò")).toHaveCount(0);
 });
 
 test("giám đốc chuyển sang xem như nhân viên: bị chặn đúng như nhân viên thật, có băng thông báo, quay lại được", async ({
   page,
 }) => {
-  await login(page, "giamdoc", "Giamdoc@2026");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
   // Director can reach every site before switching.
   await page.goto("/erp/tam-chuc");

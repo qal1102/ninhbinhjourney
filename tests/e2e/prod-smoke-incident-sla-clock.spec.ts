@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
 
 // Production verification for V13 (docs/archive/DANH_GIA_2026_07_08.md
 // muc 10.2 / muc 24): elapsed_minutes on erp_incidents used to be a frozen
@@ -21,7 +22,7 @@ test("open sự cố is shown genuinely overdue, đã đóng sự cố shows a f
 }) => {
   await page.goto("/erp/login");
   await page.getByLabel("Tên đăng nhập").fill("ql.vanhanh");
-  await page.getByLabel("Mật khẩu").fill("Quanly@2026");
+  await page.getByLabel("Mật khẩu").fill(ERP_MANAGER_PASSWORD);
   await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
   await expect(page).toHaveURL(/\/erp$/);
 

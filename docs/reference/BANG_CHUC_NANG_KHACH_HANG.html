@@ -1,0 +1,829 @@
+<title>Sổ Chức Năng Ninh Bình Journey</title>
+<!--
+  Bản tài liệu dành cho chủ dự án. Xuất bản dưới dạng trang web (Artifact).
+
+  Quy tắc khi thêm chức năng mới:
+  1. Thêm một thẻ vào đúng nhóm, kèm câu "Vì sao có" — đó mới là phần đáng đọc.
+  2. Thêm một mốc vào dòng thời gian, dùng NGÀY THẬT lấy từ lịch sử dự án.
+  3. Nhãn trạng thái phải trung thực. Chưa chạy thật thì đừng gắn "Đang chạy thật".
+  4. Không ghi tên người ngoài hai người ở phần cuối trang. Không ghi thông tin nhạy cảm.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --rung: #183f34;
+    --rung-nhat: #2c5a4a;
+    --vang: #a8762c;
+    --vang-nen: #f6efe1;
+    --muc: #16211d;
+    --nen: #f3f5f2;
+    --giay: #ffffff;
+    --da: #6f7d76;
+    --vien: #dbe2dc;
+    --xanh-ok: #1f6b4d;
+    --xanh-ok-nen: #e6f1eb;
+
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --rung: #9ec7b4;
+      --rung-nhat: #7fae99;
+      --vang: #d8ab68;
+      --vang-nen: #2a2114;
+      --muc: #e6ece8;
+      --nen: #0f1613;
+      --giay: #16201c;
+      --da: #93a19a;
+      --vien: #26332d;
+      --xanh-ok: #79c7a2;
+      --xanh-ok-nen: #14261e;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --rung: #9ec7b4;
+    --rung-nhat: #7fae99;
+    --vang: #d8ab68;
+    --vang-nen: #2a2114;
+    --muc: #e6ece8;
+    --nen: #0f1613;
+    --giay: #16201c;
+    --da: #93a19a;
+    --vien: #26332d;
+    --xanh-ok: #79c7a2;
+    --xanh-ok-nen: #14261e;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--nen);
+    color: var(--muc);
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .khung {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- Đầu trang ---------- */
+
+  .dau-trang {
+    padding: 88px 0 56px;
+    border-bottom: 1px solid var(--vien);
+  }
+
+  .nhan {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--vang);
+    margin: 0 0 20px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(38px, 6vw, 62px);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+    color: var(--rung);
+  }
+
+  .dan-de {
+    max-width: 62ch;
+    margin: 24px 0 0;
+    font-size: 18px;
+    line-height: 1.72;
+    color: var(--da);
+  }
+
+  /* ---------- Số liệu ---------- */
+
+  .so-lieu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+    gap: 1px;
+    margin: 56px 0 0;
+    background: var(--vien);
+    border: 1px solid var(--vien);
+  }
+
+  .o-so {
+    background: var(--giay);
+    padding: 24px 22px;
+  }
+
+  .o-so b {
+    display: block;
+    font-family: var(--serif);
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--rung);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .o-so span {
+    display: block;
+    margin-top: 8px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--da);
+  }
+
+  /* ---------- Khối chung ---------- */
+
+  section { padding: 72px 0; }
+  section + section { border-top: 1px solid var(--vien); }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(26px, 3.4vw, 34px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--muc);
+    text-wrap: balance;
+  }
+
+  .mo-ta-muc {
+    max-width: 62ch;
+    margin: 14px 0 0;
+    color: var(--da);
+    font-size: 15.5px;
+  }
+
+  h3 {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--vang);
+    margin: 48px 0 18px;
+  }
+
+  /* ---------- Dòng thời gian ---------- */
+
+  .thoi-gian {
+    margin: 40px 0 0;
+    padding: 0 0 0 30px;
+    border-left: 2px solid var(--vien);
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .moc { position: relative; }
+
+  .moc::before {
+    content: "";
+    position: absolute;
+    left: -37px;
+    top: 8px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--nen);
+    border: 2px solid var(--vang);
+  }
+
+  .moc.dam::before { background: var(--vang); }
+
+  .ngay {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--vang);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .moc h4 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 4px 0 6px;
+    color: var(--muc);
+  }
+
+  .moc p {
+    margin: 0;
+    max-width: 68ch;
+    color: var(--da);
+    font-size: 15px;
+  }
+
+  /* ---------- Thẻ chức năng ---------- */
+
+  .luoi {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(316px, 1fr));
+    gap: 18px;
+    margin-top: 20px;
+  }
+
+  .the {
+    background: var(--giay);
+    border: 1px solid var(--vien);
+    padding: 24px 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .the-dau {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .the h4 {
+    font-family: var(--serif);
+    font-size: 19.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0;
+    color: var(--muc);
+  }
+
+  .the p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.68;
+    color: var(--da);
+  }
+
+  .vi-sao {
+    border-top: 1px solid var(--vien);
+    padding-top: 12px;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--muc);
+  }
+
+  .vi-sao b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--vang);
+    margin-bottom: 6px;
+  }
+
+  /* ---------- Nhãn trạng thái ---------- */
+
+  .chip {
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .chip.that { background: var(--xanh-ok-nen); color: var(--xanh-ok); }
+  .chip.sau { background: transparent; color: var(--da); border: 1px solid var(--vien); }
+  .chip.sap { background: var(--vang-nen); color: var(--vang); }
+
+  /* ---------- Nguyên tắc ---------- */
+
+  .nguyen-tac {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 34px;
+    margin-top: 34px;
+  }
+
+  .nguyen-tac div p {
+    margin: 8px 0 0;
+    color: var(--da);
+    font-size: 15px;
+  }
+
+  .nguyen-tac div h4 {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--rung);
+  }
+
+  /* ---------- Chân trang ---------- */
+
+  .chan-trang {
+    border-top: 1px solid var(--vien);
+    padding: 44px 0 72px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .chan-trang dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 6px 20px;
+    font-size: 14.5px;
+  }
+
+  .chan-trang dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--da);
+    align-self: center;
+  }
+
+  .chan-trang dd { margin: 0; font-weight: 500; }
+
+  .ghi-chu {
+    max-width: 46ch;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--da);
+  }
+
+  @media (max-width: 640px) {
+    .dau-trang { padding: 56px 0 40px; }
+    section { padding: 52px 0; }
+  }
+</style>
+
+<div class="khung">
+
+  <header class="dau-trang">
+    <p class="nhan">Sổ chức năng · cập nhật 29 · 08 · 2026</p>
+    <h1>Ninh Bình Journey</h1>
+    <p class="dan-de">
+      Tài liệu này ghi lại từng chức năng đã dựng, và quan trọng hơn là <em>vì sao</em> nó
+      được dựng. Mỗi mục đều có nhãn trạng thái trung thực: cái gì đang chạy thật với dữ
+      liệu thật, cái gì mới là dự định. Thêm chức năng mới thì ghi tiếp vào đây.
+    </p>
+
+    <div class="so-lieu">
+      <div class="o-so"><b>45</b><span>ngày kể từ dòng mã đầu tiên</span></div>
+      <div class="o-so"><b>12</b><span>phân hệ có nghiệp vụ thật</span></div>
+      <div class="o-so"><b>4</b><span>khu du lịch vận hành tách biệt</span></div>
+      <div class="o-so"><b>3</b><span>phân hệ nói thẳng là chưa làm</span></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>Hệ thống gồm hai nửa</h2>
+    <p class="mo-ta-muc">
+      Một nửa dành cho người trong doanh nghiệp, một nửa dành cho khách. Hai nửa dùng chung
+      một kho dữ liệu, nên con số khách nhìn thấy và con số quản lý nhìn thấy luôn là một.
+    </p>
+
+    <div class="luoi">
+      <article class="the">
+        <div class="the-dau">
+          <h4>Phần điều hành nội bộ</h4>
+          <span class="chip that">Đang chạy thật</span>
+        </div>
+        <p>
+          Nơi giám đốc, quản lý cơ sở, kế toán và nhân viên hiện trường làm việc hằng ngày.
+          Bốn khu du lịch được quản như bốn đơn vị tách biệt: quản lý nơi này không đọc được
+          dữ liệu nơi kia, hóa đơn ghi đúng cơ sở phát sinh, mọi con số trên báo cáo đều truy
+          ngược được về một cơ sở cụ thể.
+        </p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau">
+          <h4>Phần dành cho khách</h4>
+          <span class="chip that">Đang chạy thật</span>
+        </div>
+        <p>
+          Trang du khách tra cứu điểm đến, dựng lịch trình, và đặt chỗ. Chỗ khách giữ được
+          trừ thẳng vào sức chứa thật của cơ sở — không phải một con số tượng trưng rồi đối
+          chiếu sau.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Đã đi qua những mốc nào</h2>
+    <p class="mo-ta-muc">
+      Ngày lấy từ chính lịch sử dự án, không phải ngày ước chừng.
+    </p>
+
+    <div class="thoi-gian">
+      <div class="moc dam">
+        <p class="ngay">16 · 07 · 2026</p>
+        <h4>Khởi động</h4>
+        <p>Dựng bộ khung đầu tiên của trang du khách và phần điều hành.</p>
+      </div>
+
+      <div class="moc">
+        <p class="ngay">29 · 07 · 2026</p>
+        <h4>Kế toán có người lập và người duyệt</h4>
+        <p>
+          Một người lập chứng từ, một người khác duyệt. Hệ thống chặn ngay từ tầng dữ liệu
+          nếu hai người đó là một — không dựa vào việc nhắc nhau.
+        </p>
+      </div>
+
+      <div class="moc">
+        <p class="ngay">31 · 07 · 2026</p>
+        <h4>Công nợ nhà cung cấp và báo cáo hiện trường</h4>
+        <p>
+          Vòng đời hóa đơn nhà cung cấp chạy trên máy chủ thật. Ảnh báo cáo hiện trường và
+          lượt quét mã ở cổng được lưu lại thay vì chỉ hiện lên rồi mất.
+        </p>
+      </div>
+
+      <div class="moc">
+        <p class="ngay">01 · 08 · 2026</p>
+        <h4>Sự cố, dự án và sự kiện</h4>
+        <p>
+          Phân hệ sự cố có đồng hồ đếm hạn xử lý chạy thật. Phân hệ dự án và sự kiện dựng
+          mới hoàn toàn. Bản đồ trang trí trên trang du khách được thay bằng bản đồ thật.
+        </p>
+      </div>
+
+      <div class="moc dam">
+        <p class="ngay">02 · 08 · 2026</p>
+        <h4>Vé, cổng vào, bàn giao ca và đăng nhập từng người</h4>
+        <p>
+          Cổng kiểm tra một tấm vé có thật thay vì đếm thao tác gõ. Ca trực bàn giao trên
+          hồ sơ có chữ ký hai bên. Mỗi người một tài khoản riêng. Cùng ngày, toàn bộ số liệu
+          bịa còn sót trong ba phân hệ chưa làm được gỡ sạch và thay bằng lời nói thẳng.
+        </p>
+      </div>
+
+      <div class="moc">
+        <p class="ngay">03 · 08 · 2026</p>
+        <h4>Nhật ký tập trung</h4>
+        <p>Ai làm gì, ở khu vực nào, lúc nào — gom về một chỗ tra được.</p>
+      </div>
+
+      <div class="moc">
+        <p class="ngay">05 · 08 · 2026</p>
+        <h4>Đối soát tiền mặt</h4>
+        <p>
+          Nộp quỹ, đối chiếu sao kê ngân hàng, và xử lý phần lệch — lệch bao nhiêu, ai giải
+          trình, hạn bao lâu.
+        </p>
+      </div>
+
+      <div class="moc dam">
+        <p class="ngay">07 · 08 · 2026</p>
+        <h4>Sức chứa theo giờ và cổng an toàn trước sự kiện</h4>
+        <p>
+          Mỗi cơ sở có một trần sức chứa tính từ năng lực vật lý thật. Trước mỗi sự kiện,
+          quản lý phải xác nhận đủ từng mục thì giám đốc mới được quyết cho chạy hay dừng.
+        </p>
+      </div>
+
+      <div class="moc">
+        <p class="ngay">18 · 08 · 2026</p>
+        <h4>Hành trình khách và mã QR theo nguồn</h4>
+        <p>
+          Bắt đầu ghi lại hành trình khách một cách ẩn danh, và biết được khách đến từ kênh
+          quảng bá nào.
+        </p>
+      </div>
+
+      <div class="moc dam">
+        <p class="ngay">20 · 08 · 2026</p>
+        <h4>Khách đặt chỗ trực tiếp vào kho công suất</h4>
+        <p>
+          Đây là mốc nối hai nửa hệ thống lại: chỗ khách giữ trên web trừ thẳng vào sức chứa
+          mà quản lý nhìn thấy trong phần điều hành.
+        </p>
+      </div>
+
+      <div class="moc">
+        <p class="ngay">21 · 08 · 2026</p>
+        <h4>Trải nghiệm theo mùa</h4>
+        <p>Gói dịch vụ riêng cho mùa trăng, mở bán trên trang du khách.</p>
+      </div>
+
+      <div class="moc">
+        <p class="ngay">26 · 08 · 2026</p>
+        <h4>Mỗi vai một mạch dẫn rõ ràng</h4>
+        <p>
+          Phần điều hành trước đây mở ra là một rừng con số. Nay mỗi vai đăng nhập vào thấy
+          ngay <em>việc cần làm trước tiên</em> — một việc, một nút.
+        </p>
+      </div>
+
+      <div class="moc dam">
+        <p class="ngay">29 · 08 · 2026</p>
+        <h4>Nhiều điểm nghẽn, nhiều khung giờ</h4>
+        <p>
+          Sức chứa tính theo nhiều loại điểm nghẽn cùng lúc và lấy chỗ chật nhất. Một gói bán
+          được nhiều giờ khởi hành, khách tự chọn giờ và thấy số chỗ còn lại từng khung.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Chức năng đang chạy thật</h2>
+    <p class="mo-ta-muc">
+      Mười hai phân hệ dưới đây có nghiệp vụ thật, dữ liệu lưu trên máy chủ, và đã được kiểm
+      chứng trên môi trường đang phục vụ.
+    </p>
+
+    <h3>Đón khách và kiểm soát vào cửa</h3>
+    <div class="luoi">
+      <article class="the">
+        <div class="the-dau"><h4>Vé và đặt chỗ</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Phát vé, tra vé, và theo dõi vé đã dùng bao nhiêu lượt.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Không có vé thật thì mọi con số phía sau đều là ước đoán — doanh thu, lượng khách, sức chứa đều mất gốc.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Check-in khách tại cổng</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Quét mã, đối chiếu vé, ghi lại kết quả. Cả lượt bị từ chối cũng được ghi kèm lý do.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Một cái cổng chỉ ghi lượt thành công thì không trả lời được câu hỏi đầu tiên sau một ngày tệ ở lối vào: hôm nay bao nhiêu người bị từ chối, và vì sao.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Cổng hoạt động khi mất mạng</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Nạp trước danh sách vé cho ca trực, quét được cả khi rớt sóng, nối lại thì đồng bộ.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Cổng vào không được phép dừng vì mạng yếu. Khách đã đến nơi rồi.</p>
+      </article>
+    </div>
+
+    <h3>Sức chứa và luồng khách</h3>
+    <div class="luoi">
+      <article class="the">
+        <div class="the-dau"><h4>Sức chứa theo giờ</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>
+          Trần sức chứa tính từ năng lực vật lý thật — số phương tiện, số chỗ, thời gian một
+          vòng — kèm hệ số an toàn. Tính nhiều loại điểm nghẽn cùng lúc và lấy chỗ chật nhất.
+        </p>
+        <p class="vi-sao"><b>Vì sao có</b>Bến thuyền, bãi đỗ và khu vực chờ nghẽn theo những cách khác nhau. Nhồi cả ba vào một công thức là bịa số.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Bốn mức phản ứng khi đông</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Mỗi mức có việc phải làm, người chịu trách nhiệm, và hạn xử lý riêng.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Biết đang đông mà không ai được giao việc thì thông tin đó vô dụng.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Khách chọn giờ khởi hành</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>
+          Một gói bán nhiều giờ khởi hành. Khách thấy số chỗ còn lại từng giờ và tự chọn giờ
+          vắng. Chuyến nhiều chặng giữ đủ mọi chặng, không giữ nửa vời.
+        </p>
+        <p class="vi-sao"><b>Vì sao có</b>Khách tự né giờ đông là cách giảm hàng chờ rẻ nhất và dễ chịu nhất cho cả hai bên.</p>
+      </article>
+    </div>
+
+    <h3>Vận hành hằng ngày</h3>
+    <div class="luoi">
+      <article class="the">
+        <div class="the-dau"><h4>Sự cố có đồng hồ đếm hạn</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Sự cố quá hạn tự leo thang lên cấp trên, không chờ ai nhớ ra.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Việc gấp bị quên là chuyện thường ngày. Đồng hồ thì không quên.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Báo cáo hiện trường</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Nhân viên gửi ảnh và tình hình ngay tại chỗ, gắn đúng khu vực.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Người thấy vấn đề đầu tiên là người đứng ở đó, không phải người ngồi văn phòng.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Nhân sự, ca trực và chấm công</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Hồ sơ nhân sự, phân quyền theo từng người, và bàn giao ca có chữ ký hai bên.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Bàn giao ca miệng là chỗ mất tiền và mất trách nhiệm nhiều nhất trong một ngày vận hành.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Cổng an toàn trước sự kiện</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>
+          Quản lý xác nhận đủ từng mục kiểm tra, giám đốc — phải là người khác — mới quyết
+          cho chạy, dừng, hay chấp nhận rủi ro bằng văn bản.
+        </p>
+        <p class="vi-sao"><b>Vì sao có</b>Quyết định cho chạy một sự kiện đông người cần một chữ ký có tên, không phải một cái gật đầu.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Dự án và sự kiện</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Theo dõi tiến độ, ngân sách và các đề nghị thay đổi cần giám đốc duyệt.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Thay đổi giữa chừng là nơi ngân sách trôi đi mà không ai để ý.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Camera AI</h4><span class="chip sau">Kịch bản mô phỏng</span></div>
+        <p>Chạy theo kịch bản khai báo rõ ràng, chưa cắm vào camera thật.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Chưa có camera thì nói thẳng là mô phỏng. Trước đây phần này từng sinh ra số đếm người bịa và ghi thành sự cố thật — đã gỡ bỏ.</p>
+      </article>
+    </div>
+
+    <h3>Tiền và đối tác</h3>
+    <div class="luoi">
+      <article class="the">
+        <div class="the-dau"><h4>Người lập tách khỏi người duyệt</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Hệ thống chặn ngay từ tầng dữ liệu nếu người lập và người duyệt là một.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Đây là nguyên tắc kế toán cơ bản nhất. Chặn bằng quy định thì có ngày lách; chặn bằng cơ sở dữ liệu thì không.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Công nợ nhà cung cấp</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Từ lúc nhận hóa đơn tới lúc ghi nhận đã trả tiền.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Trả rồi mà không ghi thì tháng sau trả lần nữa.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Đối soát tiền mặt</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Nộp quỹ, khớp sao kê ngân hàng, phần lệch có người giải trình và có hạn.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Tiền mặt lệch một chút mỗi ngày, sau một quý thành một khoản không ai giải thích nổi.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Nhật ký tập trung</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Ai làm gì, ở đâu, lúc nào — một chỗ tra được.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Khi có chuyện, câu hỏi đầu tiên luôn là "ai vừa động vào cái này".</p>
+      </article>
+    </div>
+
+    <h3>Dành cho khách</h3>
+    <div class="luoi">
+      <article class="the">
+        <div class="the-dau"><h4>Trang điểm đến và lịch trình</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Khách nói mong muốn bằng lời thường, hệ thống dựng lịch trình gợi ý trên bản đồ thật.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Phần lớn khách chưa biết mình muốn gì cụ thể, chỉ biết mình có mấy ngày và đi với ai.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Đặt chỗ nối vào sức chứa thật</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Giữ chỗ mười lăm phút, hết hạn thì trả lại kho. Hai người tranh cùng một chỗ thì đúng một người thắng.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Bán vượt sức chứa là lỗi khách nhìn thấy ngay tại cổng, và không sửa được bằng lời xin lỗi.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Trải nghiệm theo mùa</h4><span class="chip that">Đang chạy thật</span></div>
+        <p>Gói riêng cho từng mùa, mở và đóng theo lịch.</p>
+        <p class="vi-sao"><b>Vì sao có</b>Ninh Bình mỗi mùa một khác. Bán một gói giống nhau quanh năm là bỏ phí điều đó.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Nói thẳng là chưa làm</h2>
+    <p class="mo-ta-muc">
+      Ba phân hệ này trước đây hiển thị dữ liệu bịa — tên tài xế, phiếu việc, số tệp đính kèm.
+      Đã gỡ sạch. Giờ mỗi phân hệ nói rõ sẽ làm gì và cần dữ liệu gì trước.
+    </p>
+    <div class="luoi">
+      <article class="the">
+        <div class="the-dau"><h4>Xe trung chuyển</h4><span class="chip sau">Giai đoạn sau</span></div>
+        <p class="vi-sao"><b>Cần gì trước</b>Danh sách phương tiện và lịch chạy thật.</p>
+      </article>
+      <article class="the">
+        <div class="the-dau"><h4>Tài sản và bảo trì</h4><span class="chip sau">Giai đoạn sau</span></div>
+        <p class="vi-sao"><b>Cần gì trước</b>Sổ tài sản và lịch bảo trì thật.</p>
+      </article>
+      <article class="the">
+        <div class="the-dau"><h4>Báo cáo và dự báo</h4><span class="chip sau">Giai đoạn sau</span></div>
+        <p class="vi-sao"><b>Cần gì trước</b>Đủ dữ liệu vận hành thật để dự báo có nghĩa. Dự báo trên dữ liệu mỏng là đoán mò có đồ thị.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Đang chuẩn bị</h2>
+    <p class="mo-ta-muc">
+      Sáu hướng chốt trong buổi trao đổi ngày 29 tháng 8. Chưa bắt đầu dựng — ghi ở đây để
+      theo dõi, không phải để tính là đã có.
+    </p>
+    <div class="luoi">
+      <article class="the">
+        <div class="the-dau"><h4>Căn cước hành trình</h4><span class="chip sap">Đang chuẩn bị</span></div>
+        <p>
+          Mỗi khách một mã riêng, ghi lại những nơi họ đã đi qua. Phần khách nhìn thấy là một
+          tấm bản đồ Ninh Bình của riêng họ, sáng dần theo từng nơi đã tới.
+        </p>
+        <p class="vi-sao"><b>Vì sao làm</b>Hệ thống đã ghi lại những lượt vào cổng này từ lâu, chỉ chưa có gì mở ra cho khách xem. Trả lại cho khách thì nó thành món quà, không phải chuyện thu thập.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Biết trước mấy giờ hết chỗ</h4><span class="chip sap">Đang chuẩn bị</span></div>
+        <p>
+          Từ tốc độ giữ chỗ thật, ước lượng giờ chạm trần và gợi ý nơi còn trống gần đó cho
+          quản lý điều hướng.
+        </p>
+        <p class="vi-sao"><b>Vì sao làm</b>Báo lúc đã đầy thì chỉ còn kịp xin lỗi. Báo trước ba tiếng thì còn kịp làm gì đó.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Hai loại đồng ý tách bạch</h4><span class="chip sap">Đang chuẩn bị</span></div>
+        <p>
+          Đồng ý để phục vụ chuyến đi là một chuyện; đồng ý nhận tin nhắn gợi ý là chuyện
+          khác. Hai thứ được hỏi và lưu riêng.
+        </p>
+        <p class="vi-sao"><b>Vì sao làm</b>Gộp hai thứ vào một ô tick là chỗ dễ mất lòng tin nhất, và cũng là chỗ luật nhìn vào đầu tiên.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Đánh giá từ người thật sự đã tới</h4><span class="chip sap">Đang chuẩn bị</span></div>
+        <p>
+          Chỉ mã đã đặt chân tới nơi mới được đánh giá. Bản đồ toàn tỉnh hiện cả nơi đang được
+          ưa chuộng lẫn nơi hay mà ít người biết.
+        </p>
+        <p class="vi-sao"><b>Vì sao làm</b>Đây là thứ bản đồ đại chúng không làm được. Biết ai thật sự đã qua cổng thì phần lớn đánh giá rác tự rụng.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Khách cần chăm sóc riêng</h4><span class="chip sap">Đang chuẩn bị</span></div>
+        <p>
+          Trẻ nhỏ, người cao tuổi, người khuyết tật — khách tự khai. Tin báo trước cho phòng
+          điều hành để đọc xuống bộ đàm cho anh em ở cổng.
+        </p>
+        <p class="vi-sao"><b>Vì sao làm</b>Nhân viên hiện trường không cầm điện thoại trong giờ làm. Gửi vào máy họ là thiết kế cho người ngồi bàn giấy.</p>
+      </article>
+
+      <article class="the">
+        <div class="the-dau"><h4>Trợ lý lịch trình luôn hiện</h4><span class="chip sap">Đang chuẩn bị</span></div>
+        <p>Ô trò chuyện để khách nói mong muốn, hiện thường trực thay vì nằm khuất.</p>
+        <p class="vi-sao"><b>Vì sao làm</b>Chức năng này đã có sẵn nhưng ít người tìm thấy. Đặt đúng chỗ còn hiệu quả hơn dựng thêm cái mới.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Bốn nguyên tắc không đổi</h2>
+    <div class="nguyen-tac">
+      <div>
+        <h4>Không có số bịa</h4>
+        <p>
+          Chưa có dữ liệu thì màn hình nói thẳng là chưa có, không hiện một con số cho đẹp.
+          Một con số bịa trông y hệt một con số thật, và đó là lý do nó nguy hiểm.
+        </p>
+      </div>
+      <div>
+        <h4>Mọi con số truy được về gốc</h4>
+        <p>
+          Mỗi con số trên báo cáo đều lần ngược được về một cơ sở, một ca trực, một chứng từ
+          cụ thể. Không có con số nào không ai giải thích được.
+        </p>
+      </div>
+      <div>
+        <h4>Mỗi bước để lại một hệ thống chạy được</h4>
+        <p>
+          Không có giai đoạn nào mà hệ thống nằm dở dang. Làm tới đâu, phần đã làm chạy được
+          tới đó.
+        </p>
+      </div>
+      <div>
+        <h4>Nói rõ cái gì đã kiểm chứng</h4>
+        <p>
+          Mỗi chức năng đều ghi rõ đã kiểm được đến đâu và <em>chưa</em> chứng minh được điều
+          gì. Im lặng về phần chưa chắc chắn là cách nhanh nhất để mất lòng tin.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="chan-trang">
+    <dl>
+      <dt>Chủ dự án</dt><dd>a Đạt</dd>
+      <dt>Người thực hiện</dt><dd>Quang Anh</dd>
+      <dt>Cập nhật</dt><dd>29 · 08 · 2026</dd>
+    </dl>
+    <p class="ghi-chu">
+      Tài liệu này được ghi tiếp mỗi khi có chức năng mới: một thẻ trong đúng nhóm, một mốc
+      trên dòng thời gian, và nhãn trạng thái đúng với thực tế tại thời điểm ghi.
+    </p>
+  </footer>
+
+</div>

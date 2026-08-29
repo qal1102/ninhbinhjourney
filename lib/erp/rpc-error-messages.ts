@@ -428,6 +428,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Khung giờ đang tạm dừng nhận đặt chỗ.",
   CUSTOMER_BOOKING_SLOT_PAST:
     "Khung giờ đã qua hoặc quá gần giờ bắt đầu.",
+  CUSTOMER_BOOKING_SLOT_NOT_OFFERED:
+    "Khung giờ này không nằm trong lịch bán của gói dịch vụ.",
   CUSTOMER_BOOKING_HOLD_NOT_FOUND:
     "Không tìm thấy lượt giữ chỗ này.",
   CUSTOMER_BOOKING_HOLD_EXPIRED:

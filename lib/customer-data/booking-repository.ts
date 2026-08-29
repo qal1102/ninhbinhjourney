@@ -21,6 +21,7 @@ export class CustomerBookingRepositoryError extends Error {
       | "CAPACITY_UNAVAILABLE"
       | "SLOT_PAUSED"
       | "SLOT_PAST"
+      | "SLOT_NOT_OFFERED"
       | "HOLD_NOT_FOUND"
       | "HOLD_EXPIRED"
       | "OWNERSHIP_REQUIRED"
@@ -72,6 +73,7 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_CAPACITY_UNAVAILABLE", "CAPACITY_UNAVAILABLE", "Khung giờ vừa hết chỗ cho số khách đã chọn."],
     ["CUSTOMER_BOOKING_SLOT_PAUSED", "SLOT_PAUSED", "Khung giờ đang tạm dừng nhận đặt chỗ."],
     ["CUSTOMER_BOOKING_SLOT_PAST", "SLOT_PAST", "Khung giờ này đã qua hoặc quá gần giờ bắt đầu."],
+    ["CUSTOMER_BOOKING_SLOT_NOT_OFFERED", "SLOT_NOT_OFFERED", "Khung giờ này không nằm trong lịch bán của gói."],
     ["CUSTOMER_BOOKING_HOLD_NOT_FOUND", "HOLD_NOT_FOUND", "Không tìm thấy lượt giữ chỗ này."],
     ["CUSTOMER_BOOKING_HOLD_EXPIRED", "HOLD_EXPIRED", "Lượt giữ chỗ đã hết hạn; hãy giữ lại khung giờ mới."],
     ["CUSTOMER_BOOKING_OWNERSHIP_REQUIRED", "OWNERSHIP_REQUIRED", "Lượt giữ chỗ không thuộc phiên khách hiện tại."],

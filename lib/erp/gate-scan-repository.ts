@@ -52,6 +52,10 @@ export type GateScanResult =
   | "wrong-site"
   | "wrong-day"
   | "exhausted"
+  // TC-06: dung ma cua chinh nguoi nay, dung ve, nhung ho da vao roi. Co y
+  // tach khoi "het luot": ve doan van con thua luot trong khi nguoi nay thi
+  // khong, va bao nham se day nhan vien di tim mot van de khong ton tai.
+  | "already-entered"
   | "void"
   | "legacy-uncheckable";
 
@@ -62,9 +66,17 @@ export const GATE_SCAN_RESULT_LABELS: Readonly<Record<GateScanResult, string>> =
     "wrong-site": "Vé của cơ sở khác",
     "wrong-day": "Vé không dùng cho hôm nay",
     exhausted: "Vé đã dùng hết lượt",
+    "already-entered": "Khách này đã vào rồi",
     void: "Vé đã bị huỷ",
     "legacy-uncheckable": "Lượt quét cũ, chưa đối chiếu được vé",
   });
+
+export type GroupMemberSummary = {
+  memberIndex: number;
+  guestGroup: "adult" | "child";
+  /** Rỗng là bình thường: phần lớn khách không bao giờ tự khai tên. */
+  displayName: string;
+};
 
 export type TicketSummary = {
   ticketCode: string;
@@ -86,6 +98,8 @@ export type GateScanDecision = {
   /** True when an idempotency key matched an earlier scan; nobody was admitted twice. */
   replayed: boolean;
   ticket: TicketSummary | null;
+  /** TC-06: có giá trị khi mã vừa quét là mã riêng của một người trong đoàn. */
+  member: GroupMemberSummary | null;
 };
 
 export type ValidateGateScanInput = RecordGateScanInput & {
@@ -330,6 +344,18 @@ function ticketFromRow(value: unknown): TicketSummary | null {
   };
 }
 
+function memberFromRow(value: unknown): GroupMemberSummary | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const nhom = String(row.guest_group);
+  if (nhom !== "adult" && nhom !== "child") return null;
+  return {
+    memberIndex: Number(row.member_index ?? 0),
+    guestGroup: nhom,
+    displayName: String(row.display_name ?? ""),
+  };
+}
+
 async function validateInSupabase(
   input: ValidateGateScanInput,
 ): Promise<GateScanDecision> {
@@ -355,6 +381,7 @@ async function validateInSupabase(
     scannedAt: String(data.scanned_at ?? new Date().toISOString()),
     replayed: Boolean(data.replayed),
     ticket: ticketFromRow(data.ticket),
+    member: memberFromRow(data.member),
   };
 }
 
@@ -375,6 +402,7 @@ async function validateInCookie(
     scannedAt: event.scannedAt,
     replayed: false,
     ticket: null,
+    member: null,
   };
 }
 

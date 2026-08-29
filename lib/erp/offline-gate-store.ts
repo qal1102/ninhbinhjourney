@@ -47,8 +47,29 @@ export async function saveOfflineGateState(state: OfflineGateDeviceState) {
   db.close();
 }
 
+/**
+ * TC-06 — một mã QR duy nhất phải làm được cả hai việc.
+ *
+ * Máy quét ở cổng đọc nó để cho khách vào; điện thoại của chính khách quét nó
+ * để mở trang tự ghi tên. Muốn điện thoại mở được thì mã QR phải chứa một địa
+ * chỉ web — và lúc đó máy quét ở cổng gõ **nguyên cả địa chỉ** vào ô quét.
+ *
+ * Cắt lấy đoạn cuối để hai đường cùng về một mã. Mã vé và mã thành viên đều
+ * không bao giờ chứa dấu `/`, nên luật này không đụng tới một mã hợp lệ nào.
+ *
+ * **Phải khớp từng ký tự với luật cùng tên trong `erp_gate_scan_ticket_at`**
+ * (migration `202608300054`). Lệch nhau một dấu là mã QR chạy được lúc có mạng
+ * và trượt lúc mất mạng — kiểu hỏng im lặng mà người đứng ở cổng không đoán ra.
+ */
+export function normalizeScannedCode(raw: string) {
+  const trimmed = raw.trim().toUpperCase();
+  if (!trimmed.includes("/")) return trimmed;
+  const withoutQuery = trimmed.split("?")[0].split("#")[0].replace(/\/+$/, "");
+  return withoutQuery.slice(withoutQuery.lastIndexOf("/") + 1).trim();
+}
+
 export async function digestTicketCode(code: string) {
-  const bytes = new TextEncoder().encode(code.trim().toUpperCase());
+  const bytes = new TextEncoder().encode(normalizeScannedCode(code));
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
 }

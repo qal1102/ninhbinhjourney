@@ -430,6 +430,16 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Khung giờ đã qua hoặc quá gần giờ bắt đầu.",
   CUSTOMER_BOOKING_SLOT_NOT_OFFERED:
     "Khung giờ này không nằm trong lịch bán của gói dịch vụ.",
+  GROUP_INPUT_INVALID:
+    "Thông tin trưởng đoàn chưa hợp lệ.",
+  GROUP_ORDER_NOT_FOUND:
+    "Không tìm thấy đơn đặt chỗ này.",
+  GROUP_ORDER_NOT_CONFIRMED:
+    "Đơn chưa xác nhận nên chưa có vé để chia mã cho từng người.",
+  GROUP_OWNERSHIP_REQUIRED:
+    "Đơn này không thuộc phiên khách hiện tại.",
+  GROUP_MEMBER_NOT_FOUND:
+    "Không tìm thấy mã khách này trong đoàn nào.",
   CUSTOMER_BOOKING_PARTY_MIX_INVALID:
     "Số người lớn cộng số trẻ em phải đúng bằng tổng số khách, và mỗi đoàn cần ít nhất một người lớn.",
   CUSTOMER_BOOKING_HOLD_NOT_FOUND:

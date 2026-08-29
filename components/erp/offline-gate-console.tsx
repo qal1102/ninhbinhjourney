@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { OfflineGateDeviceState, OfflineGateQueueItem } from "@/domain/offline-gate";
 import {
   digestTicketCode,
+  normalizeScannedCode,
   loadOfflineGateState,
   saveOfflineGateState,
   stateWithManifest,
@@ -94,7 +95,8 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
       setRefused(true);
       return;
     }
-    const normalized = code.trim().toUpperCase();
+    // TC-06: cat dia chi web ra khoi ma quet duoc, dung mot luat voi may chu.
+    const normalized = normalizeScannedCode(code);
     if (normalized.length < 6 || normalized.length > 60) {
       setMessage("Mã QR không hợp lệ.");
       setRefused(true);

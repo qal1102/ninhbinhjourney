@@ -1,9 +1,57 @@
 "use client";
 
+import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import type { PackageCatalogItem } from "@/content/packages";
 import type { CustomerProductTimeSlot } from "@/domain/customer-booking";
+import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import { getOrCreateCustomerAnonymousId } from "@/lib/customer-data/browser-tracking";
+
+type VisitorGroupApiResponse =
+  | { accepted: true; group: VisitorGroupStatus }
+  | { accepted: false; error?: { message?: string } };
+
+// Mã QR riêng của đúng một người trong đoàn, và nó phải làm được **hai việc**.
+//
+// Điện thoại của chính khách quét nó để mở trang tự ghi tên — nên nội dung phải
+// là một địa chỉ web. Máy quét ở cổng cũng đọc chính mã này, và nó sẽ gõ nguyên
+// cả địa chỉ vào ô quét; máy chủ cắt lấy đoạn cuối để hai đường cùng về một mã
+// (`normalizeScannedCode` trong `lib/erp/offline-gate-store.ts`, và luật cùng
+// tên trong `erp_gate_scan_ticket_at`). Đổi đường dẫn ở đây thì phải đổi cả hai
+// chỗ kia, nếu không mã QR vẫn mở được trang mà **không vào được cổng**.
+//
+// Cách vẽ lấy nguyên của `pass-experience.tsx`, dùng lại gói `qrcode` đã có
+// trong dự án, không phát minh thêm cách khác.
+function MemberQrCode({ memberCode }: { memberCode: string }) {
+  const [qrDataUrl, setQrDataUrl] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void QRCode.toDataURL(`${window.location.origin}/doan/${memberCode}`, {
+      width: 168,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#151A17", light: "#F4F0E7" },
+    }).then((url) => {
+      if (active) setQrDataUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [memberCode]);
+
+  if (!qrDataUrl) {
+    return <div className="grid size-16 shrink-0 place-items-center rounded-xl bg-[#f4f0e7] text-[10px] text-[#6b786f]">Đang tạo…</div>;
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={qrDataUrl}
+      alt={`Mã QR để tự khai tên, mã thành viên ${memberCode}`}
+      className="size-16 shrink-0 rounded-xl bg-[#f4f0e7]"
+    />
+  );
+}
 
 type HoldResult = {
   order: { id: string; code: string };
@@ -115,6 +163,15 @@ export function CustomerBookingCheckout({
   const [message, setMessage] = useState("");
   const holdRequestId = useRef(crypto.randomUUID());
   const paymentRequestId = useRef(crypto.randomUUID());
+
+  // TC-06 — khách đoàn: trưởng đoàn khai tối thiểu tên mình sau khi vé đã
+  // phát; không bắt buộc, và bỏ qua không ảnh hưởng gì tới việc vào cổng.
+  const [leaderName, setLeaderName] = useState("");
+  const [leaderPhone, setLeaderPhone] = useState("");
+  const [group, setGroup] = useState<VisitorGroupStatus | null>(null);
+  const [groupPending, setGroupPending] = useState(false);
+  const [groupRefreshing, setGroupRefreshing] = useState(false);
+  const [groupMessage, setGroupMessage] = useState("");
 
   useEffect(() => {
     if (!hold) return;
@@ -272,6 +329,59 @@ export function CustomerBookingCheckout({
       setMessage(error instanceof Error ? error.message : "Không thể xác nhận đặt chỗ lúc này.");
     } finally {
       setPending(null);
+    }
+  }
+
+  async function createVisitorGroup(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!confirmation || groupPending) return;
+    setGroupPending(true);
+    setGroupMessage("");
+    try {
+      const anonymousId = getOrCreateCustomerAnonymousId(window.localStorage);
+      const response = await fetch("/api/customer-visitor-groups", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: confirmation.order.id,
+          anonymous_id: anonymousId,
+          leader_name: leaderName.trim(),
+          leader_phone: leaderPhone.trim(),
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as VisitorGroupApiResponse | null;
+      if (!response.ok || !payload?.accepted) {
+        setGroupMessage(
+          (payload && !payload.accepted && payload.error?.message)
+            || "Chưa tạo được mã đoàn, mời bạn thử lại.",
+        );
+        return;
+      }
+      setGroup(payload.group);
+    } catch {
+      setGroupMessage("Chưa tạo được mã đoàn, mời bạn thử lại.");
+    } finally {
+      setGroupPending(false);
+    }
+  }
+
+  async function refreshVisitorGroup() {
+    if (!group || groupRefreshing) return;
+    setGroupRefreshing(true);
+    try {
+      const response = await fetch(
+        `/api/customer-visitor-groups?group_code=${encodeURIComponent(group.groupCode)}`,
+        { credentials: "same-origin" },
+      );
+      const payload = (await response.json().catch(() => null)) as VisitorGroupApiResponse | null;
+      if (response.ok && payload?.accepted) {
+        setGroup(payload.group);
+      }
+    } catch {
+      // Giữ nguyên danh sách đang hiện, không xoá dữ liệu chỉ vì một lần tải lại lỗi.
+    } finally {
+      setGroupRefreshing(false);
     }
   }
 
@@ -470,6 +580,82 @@ export function CustomerBookingCheckout({
                 </li>
               ))}
             </ul>
+
+            <div className="mt-8 border-t border-white/15 pt-6">
+              {!group ? (
+                <>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Nếu bạn đi theo đoàn</p>
+                  <p className="mt-2 text-sm leading-6 text-white/70">
+                    Mời trưởng đoàn ghi tên vào đây, mỗi người trong đoàn sẽ có một mã riêng để tự quét vào cổng. Không ghi cũng không sao — cả đoàn vẫn vào bằng đúng những tấm vé bên trên.
+                  </p>
+                  <form onSubmit={createVisitorGroup} className="mt-4 space-y-3">
+                    <label className="block text-xs font-bold text-white/70">
+                      Tên trưởng đoàn
+                      <input
+                        required
+                        value={leaderName}
+                        onChange={(event) => setLeaderName(event.target.value)}
+                        placeholder="Ví dụ: Nguyễn Văn A"
+                        className="mt-1 min-h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 font-normal text-white placeholder:text-white/40"
+                      />
+                    </label>
+                    <label className="block text-xs font-bold text-white/70">
+                      Số điện thoại (không bắt buộc)
+                      <input
+                        type="tel"
+                        value={leaderPhone}
+                        onChange={(event) => setLeaderPhone(event.target.value)}
+                        placeholder="Để trống nếu bạn muốn"
+                        className="mt-1 min-h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 font-normal text-white placeholder:text-white/40"
+                      />
+                    </label>
+                    {groupMessage ? <p role="alert" className="text-sm text-[#f4b8a4]">{groupMessage}</p> : null}
+                    <button
+                      type="submit"
+                      disabled={groupPending}
+                      className="min-h-12 w-full rounded-full bg-white/15 px-6 font-extrabold text-white transition-colors hover:bg-white/25 disabled:opacity-50"
+                    >
+                      {groupPending ? "Đang tạo mã đoàn…" : "Tạo mã cho cả đoàn"}
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Mã đoàn của bạn</p>
+                  <p className="font-display mt-2 text-3xl text-[#e7c78d]">{group.groupCode}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/70">
+                    Trưởng đoàn gửi mã này cho cả đoàn. Mỗi người quét mã riêng để ghi tên mình vào chuyến đi — không quét vẫn vào cổng bình thường như mọi khách khác.
+                  </p>
+                  <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {group.members.map((member) => {
+                      const hasEntered = member.entries.length > 0;
+                      return (
+                        <li key={member.memberCode} className="flex gap-3 rounded-2xl bg-white/8 p-4">
+                          <MemberQrCode memberCode={member.memberCode} />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-bold text-white/90">{member.displayName || "Chưa ghi tên"}</p>
+                            <p className="mt-1 text-xs text-white/55">
+                              {member.guestGroup === "child" ? "Dưới 1m3" : "Từ 1m3 trở lên"}
+                            </p>
+                            <p className={`mt-2 text-xs font-bold ${hasEntered ? "text-[#9ee6b8]" : "text-white/45"}`}>
+                              {hasEntered ? "Đã vào cổng" : "Chưa vào cổng"}
+                            </p>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={refreshVisitorGroup}
+                    disabled={groupRefreshing}
+                    className="mt-4 text-xs font-bold text-white/60 underline decoration-white/30 underline-offset-4 hover:text-white/85 disabled:opacity-50"
+                  >
+                    {groupRefreshing ? "Đang cập nhật…" : "Cập nhật trạng thái cả đoàn"}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ) : !hold ? (
           <>

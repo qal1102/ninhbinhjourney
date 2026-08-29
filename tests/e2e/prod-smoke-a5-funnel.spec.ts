@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
+import { expect, test } from "@playwright/test";
+import { loginAsDirector } from "./support/erp-login";
 
 /**
  * A5 — bảng phễu QR → cổng soát vé, kiểm trên production, CHỈ ĐỌC.
@@ -17,14 +17,6 @@ import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
  */
 
 const enabled = process.env.NBJ_A5_FUNNEL_SMOKE === "1";
-
-async function loginAsDirector(page: Page) {
-  await page.goto("/erp/login");
-  await page.getByLabel(/Email hoặc tên đăng nhập|Tên đăng nhập/).fill("giamdoc");
-  await page.getByLabel("Mật khẩu").fill(ERP_DIRECTOR_PASSWORD);
-  await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
-  await expect(page).toHaveURL(/\/erp$/, { timeout: 25_000 });
-}
 
 test.describe("A5 production funnel dashboard smoke", () => {
   test.skip(

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
+import { loginAsDirector } from "./support/erp-login";
 import { endRoleSwitch, switchToAccount } from "./support/erp-role-switch";
 
 // T11a — smoke production cố ý CHỈ ĐỌC màn hình sức chứa: chứng minh máy chủ
@@ -12,16 +12,6 @@ import { endRoleSwitch, switchToAccount } from "./support/erp-role-switch";
 
 const TAM_CHUC_FORMULA = "24 phương tiện × 48 chỗ × 60 ÷ 60 phút = 1.152 khách/giờ";
 const TRANG_AN_FORMULA = "600 phương tiện × 4 chỗ × 60 ÷ 180 phút = 800 khách/giờ";
-
-async function loginAsDirector(page: Page) {
-  await page.goto("/erp/login");
-  await page
-    .getByLabel(/Email hoặc tên đăng nhập|Tên đăng nhập/)
-    .fill("giamdoc");
-  await page.getByLabel("Mật khẩu").fill(ERP_DIRECTOR_PASSWORD);
-  await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
-  await expect(page).toHaveURL(/\/erp$/, { timeout: 25_000 });
-}
 
 async function expectCapacityWorkspace(page: Page, formula: string) {
   await expect(

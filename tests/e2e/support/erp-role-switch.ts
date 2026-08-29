@@ -94,8 +94,16 @@ export async function switchToAccount(
   ).toBeVisible({ timeout: 25_000 });
 
   const banner = switchBanner(page);
+  const arrived = banner.filter({ hasText: expectedBannerText });
   await clickUntil(
     async () => {
+      // Đã sang tới nơi thì TUYỆT ĐỐI không bấm lại. Bấm lần hai lúc phiên đã
+      // là tài khoản đích khiến `startRoleSwitch` ném "Đang xem đúng tài khoản
+      // này rồi", và trang production đổ về màn "Dữ liệu chưa thể đồng bộ."
+      // Đúng lỗi đã làm bài quản lý đỏ trên production 29/08 — do chính vòng
+      // thử lại này gây ra, không phải do sản phẩm.
+      if ((await arrived.count()) > 0) return;
+
       // Mở lại bảng chọn nếu cú bấm trước rơi vào khoảng trống. `<details>` và
       // `<select>` là HTML thuần nên chúng luôn ăn, kể cả trước lúc React gắn
       // xong; chỉ nút gửi biểu mẫu mới là chỗ mất cú bấm.
@@ -107,7 +115,9 @@ export async function switchToAccount(
       await submit.click();
     },
     async () => {
-      await expect(banner).toContainText(expectedBannerText, { timeout: 5_000 });
+      // Rộng tay hơn hẳn khoảng cách giữa hai lần thử: production đi qua Vercel
+      // và Supabase, chậm hơn máy cục bộ, và bấm nhầm lần hai thì đắt.
+      await expect(banner).toContainText(expectedBannerText, { timeout: 12_000 });
     },
     `chuyển vai sang ${targetAccountId}`,
   );
@@ -116,17 +126,29 @@ export async function switchToAccount(
 /** Trả phiên về giám đốc. Gọi ở cuối mọi bài có chuyển vai. */
 export async function endRoleSwitch(page: Page) {
   const banner = switchBanner(page);
+  let attempt = 0;
   await clickUntil(
     async () => {
-      // Đã về giám đốc rồi thì không còn nút để bấm — để phép kiểm bên dưới
-      // kết luận, đừng làm đỏ vì không tìm thấy nút.
+      attempt += 1;
+      // Đây là nút DUY NHẤT không bấm lại được: phiên đã về giám đốc rồi mà
+      // bấm nữa thì `endRoleSwitch` ném "Không đang xem theo vai trò khác" và
+      // trang đổ về màn "Dữ liệu chưa thể đồng bộ.". Nên trước mỗi lần bấm
+      // lại, tải lại trang đã — nó cho biết trạng thái THẬT trên máy chủ mà
+      // không gửi thêm gì. Băng thông báo còn sau khi tải lại thì mới là cú
+      // bấm bị mất thật.
+      if (attempt > 1) await page.reload();
       const back = banner.getByRole("button", { name: "Quay lại giám đốc" });
       if ((await back.count()) > 0) await back.click();
     },
     async () => {
-      await expect(banner).toHaveCount(0, { timeout: 5_000 });
+      await expect(banner).toHaveCount(0, { timeout: 12_000 });
     },
     "quay lại giám đốc",
   );
-  await expect(page).toHaveURL(/\/erp$/);
+  // Tải lại từ máy chủ rồi mới kết luận. Băng thông báo biến mất trên trang
+  // đang mở mới chỉ là giao diện; vắng mặt sau một lượt tải mới chứng minh
+  // phiên đăng nhập thật sự đã về giám đốc. Không so URL: nếu vòng trên có
+  // tải lại thì địa chỉ là trang cũ, và phép so đó sẽ đỏ vì một lý do sai.
+  await page.goto("/erp");
+  await expect(switchBanner(page)).toHaveCount(0);
 }

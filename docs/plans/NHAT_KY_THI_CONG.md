@@ -81,6 +81,38 @@ Xong một nhiệm vụ TC thì thêm một mục theo đúng khuôn dưới đ�
 
 ## Nhật ký
 
+## TC-02 lượt 2 — Màn hình khách chọn khung giờ
+**Ngày:** 29/08/2026 · **Model:** Sonnet 5 · **Commit:** *(chưa commit — chủ dự án tự soát rồi commit)* · **Trạng thái:** ✅ xong phần giao diện, **chưa chạy trên production**
+
+### Đã làm
+- `domain/customer-booking.ts`: `CustomerBookingHoldRequestSchema` thêm `slot_starts_at` **bắt buộc** (không còn đường nào lặng lẽ rơi về "giữ mọi khung" từ mặt khách); thêm `CustomerBookingSlotsQuerySchema` cho route đọc mới; thêm kiểu `CustomerProductSlotRow`/`CustomerProductTimeSlot` và hàm thuần `mergeProductSlotRows()` — gộp các hàng khung giờ thô (mỗi hàng một cơ sở) theo đúng `startsAt`, lấy **số nhỏ nhất** làm số chỗ còn lại (đúng điểm nghẽn thật khi giữ đồng thời nhiều cơ sở) và nguồn **yếu nhất** (ước lượng > số liệu doanh nghiệp > đã đo) làm nguồn hiển thị.
+- `lib/customer-data/booking-repository.ts`: thêm `listCustomerProductSlots()` gọi RPC chỉ đọc `customer_list_product_slots` (đã có sẵn từ lượt 1); `createCustomerBookingHold()` nhận thêm `slotStartsAt` bắt buộc, truyền xuống `p_slot_starts_at`.
+- `app/api/customer-booking-slots/route.ts` (mới) — GET, cùng khuôn với route POST đang có: gác cờ `CUSTOMER_BOOKING_ENABLED`, validate query bằng Zod, dịch lỗi qua `CustomerBookingRepositoryError`, `Cache-Control: no-store`. Không cookie, không ghi, không khoá.
+- `app/api/customer-booking-holds/route.ts`: truyền `slot_starts_at` xuống repository; thêm `SLOT_NOT_OFFERED`/`SLOT_PAST` vào nhóm lỗi trả **409** (khung vừa mất hiệu lực kể từ lúc tải trang, không phải input sai cú pháp).
+- `components/commerce/customer-booking-checkout.tsx`: thêm bước **giờ** giữa ngày và số khách — đổi ngày thì tải lại khung giờ; mỗi khung hiện giờ bắt đầu (định dạng theo múi `Asia/Ho_Chi_Minh`, không lệ thuộc múi giờ trình duyệt khách) và số chỗ còn lại; khung `paused`/hết chỗ bị khoá và tự nói rõ lý do bằng chữ (không chỉ bằng màu); nút "Giữ chỗ 15 phút" khoá cho tới khi chọn đúng một khung còn đặt được và số khách không vượt số chỗ còn lại của khung đó.
+
+### Đã kiểm chứng thật
+- Cục bộ: `npx tsc --noEmit` sạch; `npm run lint` sạch; `npm run build` sạch (44 route, có `/api/customer-booking-slots` mới).
+- `npx vitest run tests/unit tests/security`: **539 pass** (528 cũ + 11 bài mới), 0 fail, 0 skip mới phát sinh.
+- Bài mới: `tests/unit/customer-booking-slot-merge.test.ts` (6 bài, hàm `mergeProductSlotRows` thuần) — gộp đúng theo `startsAt`; hai khung giờ khác nhau **không ăn vào nhau**; một cơ sở hết chỗ hoặc `paused` thì cả khung không đặt được dù cơ sở kia còn nhiều; sắp xếp đúng thứ tự thời gian; mảng rỗng trả mảng rỗng. `tests/unit/customer-booking.test.ts` + `tests/unit/customer-booking-routes.test.ts` mở rộng cho schema mới và route GET (gộp nhiều cơ sở, input sai bị chặn ở 400, cờ tắt trả 503).
+- Playwright cục bộ, **không có `PLAYWRIGHT_BASE_URL`** (chạy trên `npm run build && npm run start` cục bộ, `NBJ_E2E_CUSTOMER_BOOKING=1`), toàn bộ `tests/e2e/customer-booking.spec.ts` mock cả ba route qua `page.route` nên **không gọi Supabase thật**: **4/4 pass** trên `desktop-chromium` lẫn `mobile-chromium` — luồng chọn giờ rồi giữ chỗ rồi xác nhận; luồng khung `full`/`paused` bị khoá đúng và tự giải thích lý do.
+- Đã tự chụp ảnh thật ở khổ 390px (script tạm, đã xoá sau khi soi) để xác nhận **không tràn ngang** — ba bước ngày → giờ → số khách xếp dọc gọn, khung giờ xếp lưới 2 cột.
+
+### KHÔNG chứng minh được điều gì
+- **Chưa chạy bất kỳ thứ gì trên production.** RPC `customer_list_product_slots` và tham số `p_slot_starts_at` đã có trên production từ lượt 1 (migration `202608290050`), nhưng route GET mới và luồng chọn giờ trên giao diện **chưa được gọi thật lần nào** ngoài máy cục bộ với dữ liệu giả lập.
+- **Chưa đo tranh chấp đồng thời qua giao diện.** Lượt 1 đã chứng minh RPC tự khoá đúng ở tầng PostgreSQL; lượt 2 không thêm test tranh chấp mới ở tầng UI/route vì không có gì để khoá thêm — route GET chỉ đọc, và route POST giữ nguyên cơ chế khoá của lượt 1.
+- **Chưa kiểm bằng mắt trên thiết bị thật**, chỉ có ảnh chụp Playwright cục bộ (Chromium desktop giả lập + Pixel 7 giả lập).
+- **Chưa có ai bấm thật với dữ liệu lịch bán đa cơ sở thật** — test dùng dữ liệu giả lập hai `siteIds` cho một `startsAt`; hành vi gộp đúng theo hợp đồng RPC nhưng chưa có gói thật nào trên production có hai cơ sở cùng bán một khung giờ để đối chiếu.
+
+### Lỗi thật bắt được khi làm
+- Không có lỗi runtime nào lộ ra khi chạy thật (build + Playwright cục bộ đều xanh ngay từ lượt đầu). Chỗ cân nhắc kỹ nhất khi viết, không phải lỗi: `slot_starts_at` chọn **bắt buộc** thay vì tuỳ chọn ở tầng API — nếu để tuỳ chọn, một client cũ (hoặc một lỗi giao diện âm thầm bỏ sót bước chọn giờ) sẽ lặng lẽ rơi về hành vi cũ của RPC ("giữ mọi khung đang bật"), đúng loại lỗi im lặng mà lượt 1 vừa vá xong ở tầng dấu vân tay yêu cầu.
+
+### Để lại cho phiên sau
+- **Smoke production cho luồng chọn giờ** — cần bật `CUSTOMER_BOOKING_ENABLED` thật và chạy read-only trước (gọi GET `/api/customer-booking-slots` với một `product_id` thật, không giữ chỗ) trước khi tin route mới chạy đúng trên dữ liệu production.
+- TC-03 (người lớn/trẻ em + bundle nhiều tài nguyên) là bước kế tiếp theo bảng phân công — không đụng gì đã khoá ở đây.
+
+---
+
 ## TC-01 — Công suất nhiều điểm nghẽn + hệ số an toàn
 **Ngày:** 26/08/2026 · **Model:** Opus 5 / High · **Commit:** `0b76f13` · **Trạng thái:** ✅ đã áp production và đã deploy — **chưa có ai bấm thật trên giao diện**
 

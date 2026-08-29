@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   enabled: vi.fn(),
   createHold: vi.fn(),
   confirm: vi.fn(),
+  listSlots: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
@@ -17,19 +18,23 @@ vi.mock("@/lib/customer-data/booking-repository", () => {
     isCustomerBookingEnabled: mocks.enabled,
     createCustomerBookingHold: mocks.createHold,
     confirmCustomerSimulatedBooking: mocks.confirm,
+    listCustomerProductSlots: mocks.listSlots,
   };
 });
 
 import { POST as createHold } from "@/app/api/customer-booking-holds/route";
 import { POST as confirmBooking } from "@/app/api/customer-booking-confirmations/route";
+import { GET as listSlots } from "@/app/api/customer-booking-slots/route";
 
 const anonymousId = "20000000-0000-4000-8000-000000000001";
+const slotStartsAt = "2026-08-22T02:00:00.000Z";
 const holdBody = {
   request_id: "10000000-0000-4000-8000-000000000001",
   anonymous_id: anonymousId,
   product_id: "40000000-0000-4000-8000-000000000001",
   visit_date: "2026-08-21",
   party_size: 2,
+  slot_starts_at: slotStartsAt,
 };
 
 function request(path: string, body: unknown, origin = "https://ninhbinhjourney.test") {
@@ -42,6 +47,10 @@ function request(path: string, body: unknown, origin = "https://ninhbinhjourney.
     },
     body: JSON.stringify(body),
   });
+}
+
+function getRequest(path: string) {
+  return new Request(`https://ninhbinhjourney.test${path}`, { method: "GET" });
 }
 
 describe("CUS-06 booking routes", () => {
@@ -69,6 +78,19 @@ describe("CUS-06 booking routes", () => {
       tickets: [{ ticketCode: "WEB-ABCDEF123456", entriesAllowed: 2 }],
       duplicate: false,
     });
+    mocks.listSlots.mockResolvedValue([
+      {
+        siteId: "10000000-0000-4000-8000-000000000001",
+        localStartTime: "09:00:00",
+        startsAt: slotStartsAt,
+        endsAt: "2026-08-22T04:00:00.000Z",
+        effectiveCapacity: 40,
+        reserved: 10,
+        remaining: 30,
+        capacitySourceKind: "estimate",
+        slotStatus: "open",
+      },
+    ]);
   });
 
   it("fails closed and rejects cross-origin writes", async () => {
@@ -88,7 +110,16 @@ describe("CUS-06 booking routes", () => {
       requestId: holdBody.request_id,
       anonymousId,
       partySize: 2,
+      slotStartsAt,
     }));
+  });
+
+  it("TC-02: rejects a hold with no chosen time slot", async () => {
+    const { slot_starts_at: _omitted, ...bodyWithoutSlot } = holdBody;
+    void _omitted;
+    const response = await createHold(request("/api/customer-booking-holds", bodyWithoutSlot));
+    expect(response.status).toBe(400);
+    expect(mocks.createHold).not.toHaveBeenCalled();
   });
 
   it("uses the established cookie instead of allowing a body identity swap", async () => {
@@ -111,5 +142,61 @@ describe("CUS-06 booking routes", () => {
       tickets: [{ ticketCode: "WEB-ABCDEF123456", entriesAllowed: 2 }],
     });
     expect(mocks.confirm).toHaveBeenCalledWith(expect.objectContaining({ anonymousId }));
+  });
+
+  it("TC-02: lists and merges slots across sites of the same package", async () => {
+    mocks.listSlots.mockResolvedValue([
+      {
+        siteId: "10000000-0000-4000-8000-000000000001",
+        localStartTime: "09:00:00",
+        startsAt: slotStartsAt,
+        endsAt: "2026-08-22T04:00:00.000Z",
+        effectiveCapacity: 40,
+        reserved: 10,
+        remaining: 30,
+        capacitySourceKind: "estimate",
+        slotStatus: "open",
+      },
+      {
+        siteId: "10000000-0000-4000-8000-000000000002",
+        localStartTime: "09:00:00",
+        startsAt: slotStartsAt,
+        endsAt: "2026-08-22T04:00:00.000Z",
+        effectiveCapacity: 40,
+        reserved: 35,
+        remaining: 5,
+        capacitySourceKind: "measured",
+        slotStatus: "open",
+      },
+    ]);
+    const response = await listSlots(getRequest(
+      "/api/customer-booking-slots?product_id=40000000-0000-4000-8000-000000000001&visit_date=2026-08-22",
+    ));
+    expect(response.status).toBe(200);
+    const payload = await response.json();
+    expect(payload.slots).toEqual([
+      expect.objectContaining({
+        startsAt: slotStartsAt,
+        remaining: 5,
+        capacitySourceKind: "estimate",
+        bookable: true,
+        siteIds: [
+          "10000000-0000-4000-8000-000000000001",
+          "10000000-0000-4000-8000-000000000002",
+        ],
+      }),
+    ]);
+  });
+
+  it("TC-02: fails closed on bad slot query input and disabled flag", async () => {
+    const badInput = await listSlots(getRequest("/api/customer-booking-slots?product_id=not-a-uuid&visit_date=2026-08-22"));
+    expect(badInput.status).toBe(400);
+    expect(mocks.listSlots).not.toHaveBeenCalled();
+
+    mocks.enabled.mockReturnValue(false);
+    const disabled = await listSlots(getRequest(
+      "/api/customer-booking-slots?product_id=40000000-0000-4000-8000-000000000001&visit_date=2026-08-22",
+    ));
+    expect(disabled.status).toBe(503);
   });
 });

@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type {
   CustomerBookingSlot,
   CustomerBookingTicket,
+  CustomerProductSlotRow,
 } from "@/domain/customer-booking";
 import { PACKAGES } from "@/content/packages";
 
@@ -113,6 +114,29 @@ function slotsFromRow(value: unknown): CustomerBookingSlot[] {
   });
 }
 
+function slotRowsFromRpc(value: unknown): CustomerProductSlotRow[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const source = String(row.capacity_source_kind);
+    const status = String(row.slot_status);
+    if (source !== "estimate" && source !== "customer" && source !== "measured") return [];
+    if (status !== "open" && status !== "paused") return [];
+    return [{
+      siteId: String(row.site_id),
+      localStartTime: String(row.local_start_time),
+      startsAt: String(row.starts_at),
+      endsAt: String(row.ends_at),
+      effectiveCapacity: Number(row.effective_capacity),
+      reserved: Number(row.reserved),
+      remaining: Number(row.remaining),
+      capacitySourceKind: source,
+      slotStatus: status,
+    }];
+  });
+}
+
 function ticketsFromRow(value: unknown): CustomerBookingTicket[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
@@ -129,12 +153,30 @@ function ticketsFromRow(value: unknown): CustomerBookingTicket[] {
   });
 }
 
+/**
+ * TC-02 — danh sách khung giờ của một sản phẩm trong một ngày, kèm số chỗ còn
+ * lại. Chỉ đọc: gọi bao nhiêu lần cũng không tạo hay khoá một hàng nào.
+ */
+export async function listCustomerProductSlots(input: {
+  productId: string;
+  visitDate: string;
+}): Promise<CustomerProductSlotRow[]> {
+  const { data, error } = await createAdminClient().rpc("customer_list_product_slots", {
+    p_tenant_id: TENANT_ID,
+    p_product_id: input.productId,
+    p_visit_date: input.visitDate,
+  });
+  if (error) throw mapRepositoryError(error);
+  return slotRowsFromRpc(data);
+}
+
 export async function createCustomerBookingHold(input: {
   requestId: string;
   anonymousId: string;
   productId: string;
   visitDate: string;
   partySize: number;
+  slotStartsAt: string;
 }) {
   const { data, error } = await createAdminClient().rpc("customer_create_booking_hold", {
     p_tenant_id: TENANT_ID,
@@ -144,6 +186,7 @@ export async function createCustomerBookingHold(input: {
     p_visit_date: input.visitDate,
     p_party_size: input.partySize,
     p_occurred_at: new Date().toISOString(),
+    p_slot_starts_at: input.slotStartsAt,
   });
   const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : undefined;
   if (error || !row) throw mapRepositoryError(error);

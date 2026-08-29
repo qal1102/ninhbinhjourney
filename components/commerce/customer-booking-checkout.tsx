@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { PackageCatalogItem } from "@/content/packages";
+import type { CustomerProductTimeSlot } from "@/domain/customer-booking";
 import { getOrCreateCustomerAnonymousId } from "@/lib/customer-data/browser-tracking";
 
 type HoldResult = {
@@ -51,6 +52,18 @@ function formatCountdown(seconds: number) {
   return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
 }
 
+function formatSlotTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+}
+
+type SlotsApiResponse =
+  | { accepted: true; slots: CustomerProductTimeSlot[] }
+  | { accepted: false; error?: { message?: string } };
+
 async function responsePayload(response: Response) {
   const payload = await response.json().catch(() => null) as
     | { error?: { message?: string } }
@@ -68,6 +81,10 @@ export function CustomerBookingCheckout({
 }) {
   const [partySize, setPartySize] = useState(packageItem.fixedPartySize ?? 2);
   const [visitDate, setVisitDate] = useState(() => packageItem.bookingStartDate ?? localIsoDate(1));
+  const [slots, setSlots] = useState<CustomerProductTimeSlot[] | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(true);
+  const [slotsError, setSlotsError] = useState("");
+  const [selectedSlotStartsAt, setSelectedSlotStartsAt] = useState<string | null>(null);
   const [hold, setHold] = useState<HoldResult | null>(null);
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
@@ -86,6 +103,48 @@ export function CustomerBookingCheckout({
     return () => window.clearInterval(timer);
   }, [hold]);
 
+  // Bước 1 → 2: đổi ngày thì tải lại khung giờ còn mở, và bỏ khung đang chọn —
+  // một khung giờ hợp lệ ở ngày cũ chưa chắc còn đúng ở ngày mới.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSlots() {
+      setSlotsLoading(true);
+      setSlotsError("");
+      setSelectedSlotStartsAt(null);
+      try {
+        const response = await fetch(
+          `/api/customer-booking-slots?product_id=${encodeURIComponent(packageItem.id)}&visit_date=${encodeURIComponent(visitDate)}`,
+          { credentials: "same-origin" },
+        );
+        const payload = (await response.json().catch(() => null)) as SlotsApiResponse | null;
+        if (cancelled) return;
+        if (!response.ok || !payload?.accepted) {
+          setSlots(null);
+          setSlotsError(
+            (payload && !payload.accepted && payload.error?.message)
+              || "Chưa lấy được khung giờ còn trống, mời bạn thử lại.",
+          );
+          return;
+        }
+        setSlots(payload.slots);
+      } catch {
+        if (!cancelled) {
+          setSlots(null);
+          setSlotsError("Chưa lấy được khung giờ còn trống, mời bạn thử lại.");
+        }
+      } finally {
+        if (!cancelled) setSlotsLoading(false);
+      }
+    }
+    void loadSlots();
+    return () => {
+      cancelled = true;
+    };
+  }, [packageItem.id, visitDate]);
+
+  const selectedSlot = slots?.find((slot) => slot.startsAt === selectedSlotStartsAt) ?? null;
+  const partySizeExceedsSlot = Boolean(selectedSlot && partySize > selectedSlot.remaining);
+
   function invalidateHold() {
     setHold(null);
     setConfirmation(null);
@@ -94,7 +153,16 @@ export function CustomerBookingCheckout({
     paymentRequestId.current = crypto.randomUUID();
   }
 
+  function selectSlot(startsAt: string) {
+    setSelectedSlotStartsAt(startsAt);
+    invalidateHold();
+  }
+
   async function createHold() {
+    if (!selectedSlotStartsAt) {
+      setMessage("Mời bạn chọn một khung giờ trước khi giữ chỗ.");
+      return;
+    }
     setPending("hold");
     setMessage("");
     try {
@@ -109,6 +177,7 @@ export function CustomerBookingCheckout({
           product_id: packageItem.id,
           visit_date: visitDate,
           party_size: partySize,
+          slot_starts_at: selectedSlotStartsAt,
         }),
       });
       const payload = await responsePayload(response) as HoldResult;
@@ -163,40 +232,87 @@ export function CustomerBookingCheckout({
         </div>
 
         <div className="p-6 sm:p-8">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <label className="text-sm font-bold text-[#27362f]">
-              Ngày trải nghiệm
-              <input
-                aria-label="Ngày trải nghiệm"
-                type="date"
-                value={visitDate}
-                min={packageItem.bookingStartDate ?? localIsoDate(1)}
-                max={packageItem.bookingEndDate ?? localIsoDate(90)}
-                onChange={(event) => {
-                  setVisitDate(event.target.value);
-                  invalidateHold();
-                }}
-                className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal"
-              />
-            </label>
-            <label className="text-sm font-bold text-[#27362f]">
-              {packageItem.fixedPartySize ? "Sản phẩm" : "Số khách"}
-              <input
-                aria-label={packageItem.fixedPartySize ? "Sản phẩm cố định hai khách" : "Số khách"}
-                type={packageItem.fixedPartySize ? "text" : "number"}
-                min={packageItem.fixedPartySize ? undefined : 1}
-                max={packageItem.fixedPartySize ? undefined : 20}
-                value={partySize}
-                onChange={(event) => {
-                  setPartySize(Number(event.target.value));
-                  invalidateHold();
-                }}
-                disabled={Boolean(packageItem.fixedPartySize)}
-                className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal disabled:bg-[#f1efe8]"
-              />
-              {packageItem.fixedPartySize ? <span className="mt-2 block text-xs font-normal text-[#6b786f]">Bàn cố định cho hai khách</span> : null}
-            </label>
+          <label className="block max-w-xs text-sm font-bold text-[#27362f]">
+            Ngày trải nghiệm
+            <input
+              aria-label="Ngày trải nghiệm"
+              type="date"
+              value={visitDate}
+              min={packageItem.bookingStartDate ?? localIsoDate(1)}
+              max={packageItem.bookingEndDate ?? localIsoDate(90)}
+              onChange={(event) => {
+                setVisitDate(event.target.value);
+                invalidateHold();
+              }}
+              className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal"
+            />
+          </label>
+
+          <div className="mt-7">
+            <p className="text-sm font-bold text-[#27362f]">Khung giờ</p>
+            {slotsLoading ? (
+              <p className="mt-3 text-sm text-[#6b786f]">Đang tải khung giờ còn trống…</p>
+            ) : slotsError ? (
+              <p role="alert" className="mt-3 text-sm text-[#9a3b2f]">{slotsError}</p>
+            ) : !slots || slots.length === 0 ? (
+              <p className="mt-3 text-sm text-[#6b786f]">Ngày này chưa mở khung giờ nào, mời bạn chọn ngày khác.</p>
+            ) : (
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {slots.map((slot) => {
+                  const selected = slot.startsAt === selectedSlotStartsAt;
+                  const timeLabel = formatSlotTime(slot.startsAt);
+                  const statusLabel = slot.blockedReason === "paused"
+                    ? "Đang tạm dừng nhận khách"
+                    : slot.blockedReason === "full"
+                      ? "Đã hết chỗ"
+                      : `Còn ${slot.remaining} chỗ`;
+                  return (
+                    <button
+                      key={slot.startsAt}
+                      type="button"
+                      aria-pressed={selected}
+                      aria-label={`Khung ${timeLabel}, ${statusLabel.toLowerCase()}`}
+                      disabled={!slot.bookable}
+                      onClick={() => selectSlot(slot.startsAt)}
+                      className={`min-h-[4.25rem] rounded-2xl border px-3 py-2 text-left transition-colors ${
+                        selected
+                          ? "border-[#183f34] bg-[#183f34] text-white"
+                          : slot.bookable
+                            ? "border-[#bec7bf] bg-white text-[#27362f] hover:border-[#183f34]"
+                            : "cursor-not-allowed border-[#e5e1d8] bg-[#f1efe8] text-[#9aa39a]"
+                      }`}
+                    >
+                      <span className="block text-lg font-extrabold">{timeLabel}</span>
+                      <span className="mt-1 block text-xs font-normal">{statusLabel}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
+          <label className="mt-7 block max-w-xs text-sm font-bold text-[#27362f]">
+            {packageItem.fixedPartySize ? "Sản phẩm" : "Số khách"}
+            <input
+              aria-label={packageItem.fixedPartySize ? "Sản phẩm cố định hai khách" : "Số khách"}
+              type={packageItem.fixedPartySize ? "text" : "number"}
+              min={packageItem.fixedPartySize ? undefined : 1}
+              max={packageItem.fixedPartySize ? undefined : 20}
+              value={partySize}
+              onChange={(event) => {
+                setPartySize(Number(event.target.value));
+                invalidateHold();
+              }}
+              disabled={Boolean(packageItem.fixedPartySize)}
+              className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal disabled:bg-[#f1efe8]"
+            />
+            {packageItem.fixedPartySize ? <span className="mt-2 block text-xs font-normal text-[#6b786f]">Bàn cố định cho hai khách</span> : null}
+            {partySizeExceedsSlot ? (
+              <span className="mt-2 block text-xs font-normal text-[#9a3b2f]">
+                Khung giờ này còn {selectedSlot?.remaining} chỗ, ít hơn số khách bạn chọn. Mời bạn giảm số khách hoặc chọn khung khác.
+              </span>
+            ) : null}
+          </label>
 
           <div className="mt-7 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
             <p className="font-extrabold">Thanh toán mô phỏng — không thu tiền</p>
@@ -262,7 +378,15 @@ export function CustomerBookingCheckout({
           <button
             type="button"
             onClick={createHold}
-            disabled={pending !== null || partySize < 1 || partySize > 20 || !visitDate}
+            disabled={
+              pending !== null
+              || partySize < 1
+              || partySize > 20
+              || !visitDate
+              || !selectedSlot
+              || !selectedSlot.bookable
+              || partySizeExceedsSlot
+            }
             className="mt-7 min-h-12 w-full rounded-full bg-[#f4f0e7] px-6 font-extrabold text-[#183f34] disabled:opacity-50"
           >
             {pending === "hold" ? "Đang khóa chỗ…" : "Giữ chỗ 15 phút"}

@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       productId: input.product_id,
       visitDate: input.visit_date,
       partySize: input.party_size,
+      slotStartsAt: input.slot_starts_at,
     });
     const response = Response.json(
       {
@@ -62,7 +63,10 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     const repositoryError = error instanceof CustomerBookingRepositoryError ? error : null;
-    const status = repositoryError?.code === "CAPACITY_UNAVAILABLE" || repositoryError?.code === "SLOT_PAUSED"
+    const status = repositoryError?.code === "CAPACITY_UNAVAILABLE"
+      || repositoryError?.code === "SLOT_PAUSED"
+      || repositoryError?.code === "SLOT_NOT_OFFERED"
+      || repositoryError?.code === "SLOT_PAST"
       ? 409
       : repositoryError?.code === "PROFILE_NOT_FOUND" || repositoryError?.code === "ID_COLLISION"
         ? 409

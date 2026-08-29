@@ -65,10 +65,10 @@ if (isRemote) {
   if (missing.length > 0) {
     console.warn(
       [
-        `[erp-credentials] Đang chạy với ${baseUrl} nhưng thiếu ${missing.length} biến mật khẩu:`,
+        `[erp-credentials] Chạy với ${baseUrl} mà chưa truyền ${missing.length} biến mật khẩu:`,
         ...missing.map((name) => `  - ${name}`),
-        "Spec nào đăng nhập bằng các vai này sẽ dừng ở /erp/login?error=invalid.",
-        "Đó là thiếu mật khẩu, KHÔNG phải lỗi sản phẩm.",
+        "Không phải spec nào cũng cần chúng. Nhưng spec nào ĐĂNG NHẬP bằng các vai này",
+        "sẽ dừng ở /erp/login?error=invalid — đó là thiếu mật khẩu, KHÔNG phải lỗi sản phẩm.",
       ].join("\n"),
     );
   }

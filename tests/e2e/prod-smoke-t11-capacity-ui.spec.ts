@@ -1,16 +1,24 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ERP_ACCOUNTANT_PASSWORD, ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } from "./support/erp-credentials";
+import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
+import { endRoleSwitch, switchToAccount } from "./support/erp-role-switch";
 
-// T11a — production smoke is deliberately read-only. It proves that the
-// deployed server can read the new Supabase schema and that each role sees the
-// same sourced threshold without leaving operational records behind.
+// T11a — smoke production cố ý CHỈ ĐỌC màn hình sức chứa: chứng minh máy chủ
+// đã triển khai đọc được lược đồ Supabase mới và mỗi vai thấy đúng cùng một
+// ngưỡng đã lưu, không để lại bản ghi vận hành nào.
+//
+// Chỉ đăng nhập MỘT lần, bằng giám đốc, rồi chuyển vai ngay trong phiên —
+// đúng cách chủ dự án dùng thật, và cũng là cách để cả bộ smoke chỉ cần một
+// mật khẩu. Lý do đầy đủ nằm ở `support/erp-role-switch.ts`.
 
-async function login(page: Page, username: string, password: string) {
+const TAM_CHUC_FORMULA = "24 phương tiện × 48 chỗ × 60 ÷ 60 phút = 1.152 khách/giờ";
+const TRANG_AN_FORMULA = "600 phương tiện × 4 chỗ × 60 ÷ 180 phút = 800 khách/giờ";
+
+async function loginAsDirector(page: Page) {
   await page.goto("/erp/login");
   await page
     .getByLabel(/Email hoặc tên đăng nhập|Tên đăng nhập/)
-    .fill(username);
-  await page.getByLabel("Mật khẩu").fill(password);
+    .fill("giamdoc");
+  await page.getByLabel("Mật khẩu").fill(ERP_DIRECTOR_PASSWORD);
   await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
   await expect(page).toHaveURL(/\/erp$/, { timeout: 25_000 });
 }
@@ -33,48 +41,53 @@ test("giám đốc đọc được ngưỡng Tam Chúc và thấy quyền chỉn
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+  await loginAsDirector(page);
   await page.goto("/erp/tam-chuc/suc-chua");
-  await expectCapacityWorkspace(
-    page,
-    "24 phương tiện × 48 chỗ × 60 ÷ 60 phút = 1.152 khách/giờ",
-  );
+  await expectCapacityWorkspace(page, TAM_CHUC_FORMULA);
   await expect(page.getByText("Chỉnh giả định và nguồn")).toBeVisible();
   expect(errors, `unexpected runtime errors: ${errors.join(" | ")}`).toEqual([]);
 });
 
 test("quản lý và nhân viên chỉ đọc cùng ngưỡng đã lưu", async ({ page }) => {
   test.setTimeout(90_000);
+  await loginAsDirector(page);
+
+  // Chuyển thẳng vai này sang vai kia, không quay về giám đốc ở giữa — chính
+  // là bước nhảy T4 cho phép, và cũng là thao tác chủ dự án làm nhiều nhất.
   for (const account of [
     {
-      username: "ql.tamchuc",
-      password: ERP_MANAGER_PASSWORD,
+      accountId: "manager-tam-chuc",
+      bannerName: "Trần Đức Long",
       route: "/erp/tam-chuc/suc-chua",
-      formula: "24 phương tiện × 48 chỗ × 60 ÷ 60 phút = 1.152 khách/giờ",
+      formula: TAM_CHUC_FORMULA,
     },
     {
-      username: "nv.bentau",
-      password: ERP_EMPLOYEE_PASSWORD,
+      accountId: "employee-trang-an-02",
+      bannerName: "Bùi Quốc Huy",
       route: "/erp/trang-an/suc-chua",
-      formula: "600 phương tiện × 4 chỗ × 60 ÷ 180 phút = 800 khách/giờ",
+      formula: TRANG_AN_FORMULA,
     },
   ]) {
-    await login(page, account.username, account.password);
+    await switchToAccount(page, account.accountId, account.bannerName);
     await page.goto(account.route);
     await expectCapacityWorkspace(page, account.formula);
+    // Quyền bị thu hẹp thật: ô chỉnh giả định biến mất, và màn hình nói rõ vì sao.
     await expect(page.getByText("Chỉnh giả định và nguồn")).toHaveCount(0);
     await expect(
       page.getByText("Chỉ giám đốc được thay đổi giả định."),
     ).toBeVisible();
-    await page.context().clearCookies();
   }
+
+  // Không bỏ lại phiên nào đang treo ở vai khác.
+  await endRoleSwitch(page);
 });
 
 test("số tiền KPI kế toán không vỡ đôi cụm chữ số trên mobile", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await login(page, "ketoan", ERP_ACCOUNTANT_PASSWORD);
+  await loginAsDirector(page);
+  await switchToAccount(page, "accountant-001", "Phạm Thu Trang");
 
   for (const { route, labelText } of [
     { route: "/erp", labelText: "Giá trị đã ghi sổ" },
@@ -96,4 +109,6 @@ test("số tiền KPI kế toán không vỡ đôi cụm chữ số trên mobile
       `${route} currency KPI overflows at 390px`,
     ).toBeLessThanOrEqual(dimensions.clientWidth);
   }
+
+  await endRoleSwitch(page);
 });

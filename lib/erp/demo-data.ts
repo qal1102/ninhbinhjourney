@@ -16,6 +16,46 @@ export type DemoWorkforceProfile = {
   trainedModuleIds: ErpModuleId[];
 };
 
+/**
+ * Cửa sổ quyền của nhân viên thời vụ, tự trượt theo lịch.
+ *
+ * Trước đây đây là hai mốc cứng (20/07/2026 → 31/08/2026). Hệ quả: từ
+ * 01/09/2026 tài khoản `tv.trangan` **tự khoá vĩnh viễn**, màn hình thời vụ
+ * không còn xem được, và bài `erp-access.spec.ts` đỏ vì lý do lịch chứ không
+ * phải vì sản phẩm. Hạn quyền hết hiệu lực là **tính năng thật** đang chạy —
+ * cái sai là dữ liệu trình diễn neo vào một ngày rồi chết cứng ở đó.
+ *
+ * Cửa sổ giờ chạy từ đầu tháng trước tới hết tháng sau, nên hợp đồng mùa vụ
+ * lúc nào cũng đang có hiệu lực và lúc nào cũng có ngày kết thúc để chỉ cho
+ * khách xem. Lượng tử theo tháng chứ không theo ngày: hai tiến trình khởi
+ * động khác ngày trong cùng tháng vẫn ra đúng một kết quả.
+ */
+function vietnamDateString(year: number, monthIndex: number, day: number, time: string) {
+  const month = String(monthIndex + 1).padStart(2, "0");
+  return `${year}-${month}-${String(day).padStart(2, "0")}T${time}+07:00`;
+}
+
+export function seasonalAccessWindow(now: Date = new Date()) {
+  // Quy về giờ Việt Nam trước khi lấy tháng: máy chủ chạy UTC, và cuối tháng
+  // thì hai múi giờ lệch nhau đúng một tháng.
+  const vietnam = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  const year = vietnam.getUTCFullYear();
+  const month = vietnam.getUTCMonth();
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  // Ngày 0 của tháng kế tiếp nữa = ngày cuối của tháng sau.
+  const end = new Date(Date.UTC(year, month + 2, 0));
+  return {
+    accessStartsAt: vietnamDateString(
+      start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), "00:00:00",
+    ),
+    accessEndsAt: vietnamDateString(
+      end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate(), "23:59:59",
+    ),
+  };
+}
+
+const SEASONAL_ACCESS = seasonalAccessWindow();
+
 export type DemoErpAccount = {
   id: string;
   username: string;
@@ -193,8 +233,8 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     initialModuleIds: ["check-in-khach", "bao-cao-hien-truong", "su-co", "cham-cong"],
     workforceProfile: {
       employmentType: "seasonal",
-      accessStartsAt: "2026-07-20T00:00:00+07:00",
-      accessEndsAt: "2026-08-31T23:59:59+07:00",
+      accessStartsAt: SEASONAL_ACCESS.accessStartsAt,
+      accessEndsAt: SEASONAL_ACCESS.accessEndsAt,
       supervisorId: "manager-trang-an",
       primaryStation: "Cổng A · Làn khách đoàn",
       shiftLabel: "08:00–12:00",

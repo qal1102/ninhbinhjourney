@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { ERP_ACCOUNTANT_PASSWORD, ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD, ERP_SEASONAL_PASSWORD } from "./support/erp-credentials";
+import { seasonalAccessWindow } from "@/lib/erp/demo-data";
 
 async function login(page: import("@playwright/test").Page, username: string, password: string) {
   await page.goto("/erp/login");
@@ -204,7 +205,19 @@ test("accountant works from a real source-to-ledger queue without field-control 
 test("seasonal employee gets expiring trained-only access and manager can see the boundary", async ({ page }) => {
   await login(page, "tv.trangan", ERP_SEASONAL_PASSWORD);
   await expect(page.getByText("Nhân viên thời vụ · Tràng An", { exact: true })).toBeVisible();
-  await expect(page.getByText(/Quyền làm việc có hiệu lực đến 31\/08\/2026/)).toBeVisible();
+  // Không chép cứng ngày. Trước đây bài này khẳng định "31/08/2026", đúng mốc
+  // tài khoản thời vụ hết hạn — nên từ 01/09/2026 nó đỏ vì lý do lịch chứ
+  // không vì sản phẩm (ERP-SMOKE-02). Cửa sổ quyền nay tự trượt, và bài đọc
+  // ngày từ chính nguồn sinh ra nó.
+  const hanQuyen = new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(new Date(seasonalAccessWindow().accessEndsAt));
+  await expect(
+    page.getByText(`Quyền làm việc có hiệu lực đến ${hanQuyen}`),
+  ).toBeVisible();
   await expect(page.getByText("08:00–12:00", { exact: true })).toBeVisible();
   await expect(page.locator('a[href="/erp/trang-an/check-in-khach"]').first()).toBeVisible();
   await expect(page.locator('a[href="/erp/trang-an/ve-dat-cho"]')).toHaveCount(0);

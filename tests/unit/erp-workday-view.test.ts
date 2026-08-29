@@ -17,6 +17,7 @@ import {
   listWorkdayEmployeeOptions,
   listWorkdaysForUser,
 } from "@/lib/erp/workday-view";
+import { seasonalAccessWindow } from "@/lib/erp/demo-data";
 
 const employeeUser: CurrentErpUser = {
   id: "employee-trang-an-01",
@@ -67,7 +68,13 @@ describe("ERP workday scoped views", () => {
 
   it("omits employees whose employment expired or whose site access was revoked", () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-09-01T03:00:00.000Z"));
+    // Một ngày sau khi cửa sổ quyền mùa vụ khép lại — tính từ chính cửa sổ đó,
+    // không chép cứng ngày. Trước đây dòng này là "2026-09-01", đúng hôm hợp
+    // đồng mùa vụ hết hạn theo mốc seed; cửa sổ nay tự trượt nên một ngày cố
+    // định sẽ rơi vào trong cửa sổ và bài mất hẳn ý nghĩa (ERP-SMOKE-02).
+    vi.setSystemTime(
+      new Date(Date.parse(seasonalAccessWindow().accessEndsAt) + 24 * 60 * 60 * 1000),
+    );
     const access: ErpAccessState = {
       version: 1,
       employees: {

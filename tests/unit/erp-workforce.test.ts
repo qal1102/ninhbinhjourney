@@ -8,6 +8,7 @@ import {
   getGrantableModuleIds,
   isDemoErpAccountActive,
   listDemoSiteManagers,
+  seasonalAccessWindow,
 } from "@/lib/erp/demo-data";
 
 describe("ERP workforce assignments", () => {
@@ -15,8 +16,14 @@ describe("ERP workforce assignments", () => {
     const seasonal = findDemoErpAccountByUsername("tv.trangan");
     expect(seasonal?.role).toBe("employee");
     expect(seasonal?.workforceProfile?.employmentType).toBe("seasonal");
-    expect(isDemoErpAccountActive(seasonal!, Date.parse("2026-07-28T10:00:00+07:00"))).toBe(true);
-    expect(isDemoErpAccountActive(seasonal!, Date.parse("2026-09-01T00:00:00+07:00"))).toBe(false);
+    // Đo theo chính cửa sổ quyền, không theo ngày chép cứng. Trước đây hai
+    // dòng này là 28/07/2026 và 01/09/2026 — hai mốc seed cũ — nên khi cửa sổ
+    // chuyển sang tự trượt thì chúng mất nghĩa (ERP-SMOKE-02).
+    const { accessStartsAt, accessEndsAt } = seasonalAccessWindow();
+    const motNgay = 24 * 60 * 60 * 1000;
+    expect(isDemoErpAccountActive(seasonal!, Date.parse(accessStartsAt) + motNgay)).toBe(true);
+    expect(isDemoErpAccountActive(seasonal!, Date.parse(accessEndsAt) + motNgay)).toBe(false);
+    expect(isDemoErpAccountActive(seasonal!, Date.parse(accessStartsAt) - motNgay)).toBe(false);
 
     const allowed = getEmployeeAssignableModuleIds(seasonal!);
     expect(allowed).toEqual(expect.arrayContaining(["check-in-khach", "bao-cao-hien-truong", "su-co", "cham-cong"]));

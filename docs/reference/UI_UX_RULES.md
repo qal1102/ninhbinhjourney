@@ -2,6 +2,8 @@
 
 This file is the standing design brief for Codex work on the Ninh Binh Journey site. Use it before changing visible UI.
 
+**Phạm vi:** mọi mục cho tới *Voice Rules / Intro Rule / Pre-Ship Audit (web công khai)* viết cho **web du khách**. Giao diện **ERP nội bộ** có mục riêng ở cuối file — *ERP Rules (giao diện nội bộ)* — thêm ngày 25/08/2026. Đọc đúng mục cho bề mặt mình đang sửa.
+
 ## Reference Stack
 
 - shadcn/ui: component composition, spacing, forms, sheets, dialogs, buttons.
@@ -92,7 +94,13 @@ Five patterns to ban:
 - Internal/technical/product jargon leaking into user-facing text (see incident below).
 - Em-dash fragments used to replace periods throughout a paragraph.
 
-**Known incident, 03/08:** a UI section titled literally "Three ways in. Pick one." / "Ba lối vào. Chọn một." shipped as an instructional list-style header — it read like a bot menu, not an invitation. Fixed by keeping the three-card layout (it solves a real navigation problem) and rewriting only the header using the đính-chính-định-kiến pattern: "No two journeys start the same way." / "Không ai bắt đầu một chuyến đi giống ai." Lesson: a UI pattern can be structurally right and still fail on voice — check the header text specifically, not just whether the section exists.
+**Known incident, 03/08 — và kết cục 04/08.** A UI section titled literally "Three ways in. Pick one." / "Ba lối vào. Chọn một." shipped as an instructional list-style header — it read like a bot menu, not an invitation. Bản vá đợt đầu chỉ viết lại tiêu đề theo lối đính-chính-định-kiến ("No two journeys start the same way." / "Không ai bắt đầu một chuyến đi giống ai.") và **giữ lại khung ba thẻ**, với lý do "nó giải quyết một vấn đề điều hướng có thật".
+
+**Ngày hôm sau khung ba thẻ cũng bị loại.** Chủ dự án chê lần hai — *"3 cái đường là cái gì"* — và khối bị gỡ hẳn khỏi trang chủ (`HANDOFF.md` mục 2.6, đợt tám 04/08). Đã kiểm lại 25/08: không còn chuỗi nào trong `app/`, `components/`, `content/`.
+
+Hai bài học, đừng gộp làm một:
+- Một pattern có thể **đúng cấu trúc mà vẫn sai giọng** — kiểm riêng phần tiêu đề, không chỉ kiểm khối có tồn tại hay không.
+- Và một pattern có thể **sai từ gốc dù đã sửa giọng**. "Thẻ điều hướng đánh số để chỉ đường vào" đã bị loại ở dự án này. Xem thêm luật ERP bên dưới trước khi định dựng lại thứ tương tự ở bất kỳ bề mặt nào.
 
 ## Yêu cầu chủ dự án — ghi lại 05–06/08, còn hiệu lực
 
@@ -161,7 +169,43 @@ Bản thay thế cho câu thứ ba, sau khi tra nguồn: *"Ba trăm hecta, hai v
 - Must render exactly once per page load (on mount), never re-triggered by click/scroll elsewhere on the page.
 - Do not duplicate the same words a second time anywhere in the static hero below the intro overlay — if a kicker line above the H1 already shows them, do not also render them in a second band/grid further down. **Fixed 03/08, commit `3311280`:** a second 3-column band below the subtitle repeated the same four words right after the kicker line; removed, kicker line kept. If this resurfaces, remove the second occurrence, not the first.
 
-## Pre-Ship Audit
+## ERP Rules (giao diện nội bộ) — thêm 25/08/2026
+
+Mọi mục phía trên file này viết cho **web du khách**. Cho tới 25/08/2026 dự án **không có một dòng luật giao diện nào cho ERP** — trong khi `HANDOFF.md` mục 1 đặt ERP ở mức "phải đạt production-ready". Mục này lấp chỗ trống đó.
+
+Nguồn: đợt soi ERP bằng ảnh chụp thật ngày 25/08 (giám đốc + nhân viên, desktop 1440 + Pixel 7, reduced-motion). Bối cảnh sản phẩm: chủ dự án dùng thử 03/08 và nhận xét *"sử dụng xong cảm thấy không hiểu gì hết, mọi thứ lung tung mặc dù cũng nhiều thứ đấy"*.
+
+**Không mâu thuẫn với `SO_TAY_HE_THONG_VI.md` mục 4.** Bốn nguyên tắc ở đó — nhất là ③ "số nào hiện lên cũng phải có nguồn" — đứng trên mọi luật hình thức dưới đây.
+
+### Khuôn gốc: một màn hình trả lời "giờ tôi làm gì", không phải "có bao nhiêu"
+
+Khuôn chuẩn **đã có sẵn trong sản phẩm** — trang nhân viên (`/erp` với vai `employee`): danh tính + ca làm → đúng một việc được giao → thanh tiến trình 5 bước (Nhận việc → Vào ca → Trong ca → Bàn giao → Xác nhận) → **một** nút chính. Đó là mạch dẫn mà các vai khác đang thiếu. Khi dựng màn hình cho vai mới, dùng lại khuôn này trước khi nghĩ ra khuôn khác.
+
+### Luật
+
+- **Mỗi màn hình có đúng một hành động chính.** Nếu không xác định được hành động đó là gì thì màn hình chưa xong.
+- **Một khái niệm chỉ có một tên.** Tên module lấy theo `SO_TAY_HE_THONG_VI.md` mục 3 — đó là bộ chuẩn. Không dựng bộ phân loại thứ hai trong thanh nav rồi bắt người dùng tự dịch qua lại.
+- **Cấm lưới thẻ điều hướng đánh số kiểu "chọn một lối vào".** Đã bị chủ dự án loại hai lần trên web (xem Known incident 03–04/08 ở trên). Đánh số hứa một trình tự; các module song song thì **không đánh số**. Có trình tự thật thì phải là stepper có trạng thái, không phải lưới thẻ tĩnh.
+- **Màu phải mã hoá một thứ gì đó, hoặc không dùng màu.** Nhiều badge nhiều màu không mang nghĩa chỉ tạo nhiễu.
+- **Không đếm một bản ghi thành nhiều KPI.** Bốn ô cùng bằng 1 vì cùng trỏ tới một hồ sơ là một dòng danh sách, không phải bốn chỉ số.
+- **Ô "chưa có nguồn dữ liệu" ở lại, nhưng không cùng trọng số.** Nguyên tắc ③ bắt phải nói thẳng khi chưa đo được — **không được ẩn đi**. Nhưng ô rỗng không được cùng cỡ chữ, cùng khung, cùng vị trí với con số thật; số cần người đọc phải nổi lên trước.
+- **Đồng hồ đếm ngược phải đi kèm nút bấm.** Hiện "Còn 1 phút" mà không có hành động nào trên thẻ là tạo áp lực không lối thoát.
+- **Không lớp nổi nào được che nội dung.** Nút nổi (FAB trợ lý) phải nhường chỗ, kể cả khi menu mobile đang mở.
+- **Mobile: một tầng cuộn.** Không menu-trong-menu-trong-trang. Menu phải cho thấy đủ các đích chính mà không cuộn lồng.
+- **Trang chủ của mọi vai phải có đường vào công việc.** Không được để một vai đăng nhập xong chỉ thấy bảng số mà không có lối tới module.
+
+### Pre-Ship Audit (ERP)
+
+Trước khi tuyên bố xong một thay đổi giao diện ERP:
+
+- Đăng nhập bằng **ít nhất hai vai** khác cấp (ví dụ `giamdoc` + `nv.trangan`), chụp ảnh full-page **desktop + Pixel 7 + reduced-motion**. Luật "test xanh không phải bằng chứng" ở mục *Yêu cầu chủ dự án* áp dụng đầy đủ ở đây.
+- Với mỗi ảnh, tự trả lời: hành động chính của màn hình này là gì? Nếu không chỉ ra được, chưa xong.
+- Kiểm không có lớp nổi che nội dung ở cả hai khổ màn hình.
+- Kiểm không có ô KPI nào là lát cắt trùng của cùng một bản ghi.
+- Kiểm tên module trên nav khớp `SO_TAY_HE_THONG_VI.md` mục 3.
+- Chạy `npm run lint` và `npm run build`.
+
+## Pre-Ship Audit (web công khai)
 
 Before finishing visible UI work:
 

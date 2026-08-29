@@ -31,21 +31,49 @@ function Read-PlainSecret([string]$prompt) {
   }
 }
 
-# Hoi hai lan va doi chieu. O nhap an khong hien ky tu nao, nen mot phim lech
-# la mot luot chay 40 giay do voi thong bao "Ten dang nhap hoac mat khau khong
-# dung" -- trong y het he thong hong. Da xay ra that ngay 26/08.
-$first  = Read-PlainSecret "Mat khau tai khoan giamdoc tren production"
-$second = Read-PlainSecret "Nhap lai de xac nhan"
+# Bon vai, khong phai mot.
+#
+# Bo smoke nay dang nhap bang bon tai khoan khac nhau: A6/A3/A5 va bai dau cua
+# T11a dung `giamdoc`, con hai bai con lai cua T11a dung `quan ly`, `nhan vien`
+# va `ke toan`. Ngay 22/08 production dat CA SAU bien ERP_DEMO_*_PASSWORD, nen
+# bat ky vai nao khong duoc truyen se roi ve chuoi mac dinh va dang nhap that
+# bai voi `?error=invalid`.
+#
+# Ban dau script nay chi hoi mat khau giam doc, va ket qua dung nhu vay: 8 bai
+# xanh, 4 bai do -- va 4 bai do trong nhu loi giao dien trong khi that ra la
+# thieu mat khau. Cung mot cai bay da lam chet toan bo smoke suot 4 ngay.
+#
+# O nhap an khong hien ky tu nao, nen script in so ky tu tung vai va hoi xac
+# nhan mot lan cho ca bon, thay vi bat go lai tung cai.
+$roles = @(
+  @{ Env = "ERP_DEMO_DIRECTOR_PASSWORD";   Label = "giamdoc (giam doc)" },
+  @{ Env = "ERP_DEMO_MANAGER_PASSWORD";    Label = "ql.* (quan ly co so)" },
+  @{ Env = "ERP_DEMO_EMPLOYEE_PASSWORD";   Label = "nv.* (nhan vien)" },
+  @{ Env = "ERP_DEMO_ACCOUNTANT_PASSWORD"; Label = "ketoan (ke toan)" }
+)
 
-if ([string]::IsNullOrWhiteSpace($first)) {
-  throw "Chua nhap mat khau."
-}
-if ($first -cne $second) {
-  throw "Hai lan nhap khong khop. Chay lai script va go lai."
+$entered = @{}
+foreach ($role in $roles) {
+  $value = Read-PlainSecret ("Mat khau {0}" -f $role.Label)
+  if ([string]::IsNullOrWhiteSpace($value)) {
+    throw ("Chua nhap mat khau cho {0}. Ca bon vai deu can thiet." -f $role.Label)
+  }
+  $entered[$role.Env] = $value
 }
 
-Write-Host ("Da nhan mat khau: {0} ky tu." -f $first.Length)
-$env:ERP_DEMO_DIRECTOR_PASSWORD = $first
+Write-Host ""
+Write-Host "Da nhan (so ky tu, khong hien noi dung):"
+foreach ($role in $roles) {
+  Write-Host ("  {0,-22} {1} ky tu" -f $role.Label, $entered[$role.Env].Length)
+}
+$confirm = Read-Host "Dung chua? (y de chay, phim khac de huy)"
+if ($confirm -ne "y") {
+  throw "Da huy. Chay lai script va nhap lai."
+}
+
+foreach ($role in $roles) {
+  Set-Item -Path ("env:" + $role.Env) -Value $entered[$role.Env]
+}
 
 # PLAYWRIGHT_BASE_URL phai dat tuong minh. Thieu no thi Playwright tu dung
 # server cuc bo va test nham moi truong -- loi nay da tung tao ra mot bao cao
@@ -67,9 +95,10 @@ try {
 } finally {
   # Xoa ngay, ke ca khi test do. PLAYWRIGHT_BASE_URL con sot lai la nguy hiem
   # nhat: lan sau chay test cuc bo se am tham ban vao production.
-  $first  = $null
-  $second = $null
-  $env:ERP_DEMO_DIRECTOR_PASSWORD = $null
+  $entered = $null
+  foreach ($role in $roles) {
+    Set-Item -Path ("env:" + $role.Env) -Value $null
+  }
   $env:PLAYWRIGHT_BASE_URL        = $null
   $env:NBJ_A6_RELEASE_SMOKE       = $null
   $env:NBJ_A6_RELEASE_EXPECTATION = $null

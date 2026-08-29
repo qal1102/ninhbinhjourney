@@ -82,7 +82,7 @@ Xong một nhiệm vụ TC thì thêm một mục theo đúng khuôn dưới đ�
 ## Nhật ký
 
 ## TC-01 — Công suất nhiều điểm nghẽn + hệ số an toàn
-**Ngày:** 26/08/2026 · **Model:** Opus 5 / High · **Commit:** `<sha>` · **Trạng thái:** 🟡 mã xong, **migration CHƯA áp production, mã CHƯA deploy**
+**Ngày:** 26/08/2026 · **Model:** Opus 5 / High · **Commit:** `0b76f13` · **Trạng thái:** ✅ đã áp production và đã deploy — **chưa có ai bấm thật trên giao diện**
 
 ### Đã làm
 - Migration `202608260049_erp_capacity_multi_bottleneck.sql`: nới `bottleneck_kind` từ 3 lên 9 giá trị; thêm `capacity_model`, `static_capacity`, `safety_factor`, và cột sinh `effective_capacity`; ràng buộc chéo *tĩnh thì bắt buộc có số chỗ*; nới `check` trên `erp_capacity_audit_events.action`.
@@ -107,12 +107,18 @@ Xong một nhiệm vụ TC thì thêm một mục theo đúng khuôn dưới đ�
   | Lời gọi 10 tham số cũ | vẫn chạy, không đổi mô hình/hệ số |
 
 - Cục bộ: `typecheck` sạch, `lint` sạch, `test:run` **630 pass + 1 skip**, `build` sạch. Bài kiểm hợp đồng mới 13/13.
+- **Đã áp thật lên production** (`supabase db push --linked`, chủ dự án cho phép tường minh sau khi cổng an toàn chặn lần đầu). Đo lại ngay sau khi áp, **thứ tự bắt buộc migration trước → mã sau** đã giữ đúng:
+  - Bất biến giữ nguyên trên dữ liệu thật: **4/4 hàng có `effective_capacity = hourly_capacity`**, tất cả `round-trip`, hệ số `1.000`. Không một con số nào dịch chuyển.
+  - `pg_proc` chỉ còn **đúng hai** hàm ngưỡng — `erp_capacity_create_threshold` (15 tham số) và `erp_capacity_update_threshold` (13 tham số). Bản 10 tham số cũ đã biến mất, **không sót hàm chồng**.
+  - `supabase migration list --linked` khớp local/remote tới **049**.
+  - Migration **không tạo một hàng dữ liệu nào**: vẫn 4 ngưỡng, 4 nhật ký, 0 hàng tĩnh, 0 hàng đổi hệ số — đúng QĐ-02.
+- Deploy Vercel `ninhbinhjourney-5uyvgd5mb` **Ready sau 53 giây**; `/api/health` trả `experienceMode=production`, `dataMode=supabase-shared`.
 
 ### KHÔNG chứng minh được điều gì
-- **Migration CHƯA được áp lên production.** Mọi thứ ở trên chạy rồi rollback, nên schema production **vẫn nguyên trạng 048**.
-- **Mã nguồn CHƯA deploy, và cố ý không đẩy.** Màn hình T11a mới `select` `capacity_model`/`effective_capacity`; deploy trước khi áp migration là làm gãy màn hình sức chứa trên production. Thứ tự bắt buộc: **migration trước, mã sau**.
-- **Chưa có ai bấm thật trên giao diện.** Form thêm điểm nghẽn mới chỉ qua typecheck/lint/build, chưa chạy Playwright và chưa chụp ảnh.
-- **Chưa chứng minh MIN đúng trên production** — phép đo MIN chạy trên dữ liệu do chính lượt thử tạo ra rồi rollback.
+- **Chưa có ai bấm thật trên giao diện.** Form thêm điểm nghẽn và ô hệ số an toàn mới chỉ qua typecheck/lint/build; **chưa chạy Playwright trên production, chưa chụp ảnh**. Chúng chạy được hay không vẫn là một câu chưa trả lời.
+- **Chưa chứng minh MIN đúng trên production với dữ liệu thật** — phép đo MIN chạy trên hai ngưỡng do chính lượt thử tạo ra rồi rollback. Production hiện vẫn **một ngưỡng mỗi cơ sở**, nên MIN vẫn đang chạy trên tập một phần tử cho tới khi có người nhập thêm điểm nghẽn qua T11a.
+- **Chưa kiểm `prod-smoke-t11-capacity-ui.spec.ts` sau khi đổi bố cục.** Nội dung chuỗi công thức được giữ nguyên nên nhiều khả năng vẫn khớp, nhưng "nhiều khả năng" không phải bằng chứng.
+- **Hệ số an toàn chưa được ai dùng.** Nó tồn tại, bị chặn đúng khoảng, và đường bán vé đã đọc nó — nhưng chưa có ngưỡng nào đặt khác 1.000, nên tác dụng thật của nó chưa từng được quan sát.
 
 ### Lỗi thật bắt được khi làm
 1. **`erp_capacity_audit_events.action` có `check` chỉ nhận `'threshold.seeded'` và `'threshold.updated'`.** RPC tạo ngưỡng ghi `'threshold.created'` nên **cả lời gọi thất bại**. Đọc SQL không thấy vì lỗi nằm ở một bảng khác bảng đang sửa; chỉ lộ ra ở lượt chạy thật. Đúng lý do ràng buộc #4 tồn tại.
@@ -122,9 +128,15 @@ Xong một nhiệm vụ TC thì thêm một mục theo đúng khuôn dưới đ�
 5. **Ngưỡng tĩnh vẫn mang một `hourly_capacity` vô nghĩa** (ví dụ 1), vì ba cột vòng quay là NOT NULL. Không sửa được ở schema mà không đổi ý nghĩa `hourly_capacity` — điều bị cấm. Đã xử ở tầng hiển thị: mô hình tĩnh **không in** công thức vòng quay.
 
 ### Để lại cho phiên sau
-- **Chặn cứng:** `npx supabase db push --linked` bị cổng an toàn của Claude Code từ chối. Em **không** dùng `db query --file` để áp cùng nội dung đó vì như vậy là lách đúng ý định vừa chặn. Cần chủ dự án tự chạy, hoặc cấp quyền.
-- Sau khi áp migration: đẩy mã, deploy, rồi mới chạy smoke T11a.
-- Kiểm lại `prod-smoke-t11-capacity-ui.spec.ts` sau khi deploy — màn hình đã đổi bố cục.
+- **Việc còn lại duy nhất của TC-01: chạy smoke production.** Cần mật khẩu giám đốc, chỉ chủ dự án có:
+
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File d:\ninhbinh\scripts\run-prod-smoke.ps1
+  ```
+
+  Script nay chạy bốn spec: A6, A3, A5 và **T11a**. Nếu T11a đỏ, đọc kỹ trước khi sửa: nội dung chuỗi công thức được giữ nguyên có chủ đích, nên đỏ ở đó là tín hiệu thật.
+- **Ngưỡng tĩnh mang một `hourly_capacity` vô nghĩa** (ví dụ 1), vì ba cột vòng quay là NOT NULL và không sửa được nếu không đổi ý nghĩa `hourly_capacity` — điều bị cấm. Đã che ở tầng hiển thị. Nếu sau này thấy con số đó lọt ra màn hình nào khác thì đó là lỗi cần vá, không phải dữ liệu sai.
+- **MIN vẫn đang chạy trên tập một phần tử trên production.** Nới ràng buộc và thêm RPC tạo mới chỉ mở đường; phải có người nhập các điểm nghẽn thật qua T11a thì con số bán ra mới phản ánh hiện trường. Đúng QĐ-02: không seed bằng migration.
 
 ---
 
@@ -216,7 +228,7 @@ Bảy trong tám nguyên nhân ghi ở `ERP-UX-01` đã được xử lý.
 - **Cách chạy lại bộ smoke này** — cần `ERP_DEMO_DIRECTOR_PASSWORD` thật, chỉ chủ dự án có. **Không** `vercel env pull` (ghi secret xuống đĩa). Đường dễ nhất, tự hỏi mật khẩu, tự xoá biến sau khi chạy kể cả khi đỏ:
 
   ```powershell
-  powershell -ExecutionPolicy Bypass -File d:\ninhbinh\scripts\run-prod-smoke-tc00.ps1
+  powershell -ExecutionPolicy Bypass -File d:\ninhbinh\scripts\run-prod-smoke.ps1
   ```
 
   Bản Bash tương đương, nếu chạy tay:

@@ -1,12 +1,13 @@
-# Chạy ba smoke production của TC-00: A6 (verdict phát hành), A3 (cổng ngoại
-# tuyến), A5 (bảng phễu). Cả ba đều CHỈ ĐỌC, không ghi gì vào production.
+# Chạy bộ smoke production đợt TC: A6 (verdict phát hành), A3 (cổng ngoại
+# tuyến), A5 (bảng phễu) và T11a (sức chứa, TC-01). Tất cả đều CHỈ ĐỌC:
+# không spec nào gửi form hay tạo bản ghi trên production.
 #
 # Script tự hỏi mật khẩu bằng Read-Host -AsSecureString, nên mật khẩu KHÔNG
 # hiện trên màn hình, KHÔNG vào lịch sử lệnh, KHÔNG được ghi xuống đĩa. Biến
 # môi trường chỉ sống trong tiến trình này và mất khi script kết thúc.
 #
 # Cách chạy, từ bất kỳ thư mục nào:
-#   powershell -ExecutionPolicy Bypass -File d:\ninhbinh\scripts\run-prod-smoke-tc00.ps1
+#   powershell -ExecutionPolicy Bypass -File d:\ninhbinh\scripts\run-prod-smoke.ps1
 
 $ErrorActionPreference = "Stop"
 
@@ -60,6 +61,7 @@ try {
     tests/e2e/prod-smoke-customer-release-readiness.spec.ts `
     tests/e2e/prod-smoke-a3-offline-gate.spec.ts `
     tests/e2e/prod-smoke-a5-funnel.spec.ts `
+    tests/e2e/prod-smoke-t11-capacity-ui.spec.ts `
     --reporter=list
   $code = $LASTEXITCODE
 } finally {

@@ -8,6 +8,7 @@ import {
   type CapacityWorkspaceData,
 } from "@/domain/erp-capacity";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { CapacityThresholdCreate } from "./capacity-threshold-create";
 import { CapacityThresholdEditor } from "./capacity-threshold-editor";
 
 const LEVEL_LABEL: Record<CapacityAlertLevel, string> = {
@@ -105,8 +106,8 @@ export function CapacityWorkspace({
 
   const primaryCapacity = data.thresholds.reduce(
     (smallest, threshold) =>
-      smallest === null || threshold.hourlyCapacity < smallest
-        ? threshold.hourlyCapacity
+      smallest === null || threshold.effectiveCapacity < smallest
+        ? threshold.effectiveCapacity
         : smallest,
     null as number | null,
   );
@@ -157,6 +158,10 @@ export function CapacityWorkspace({
         hạ tầng đo sẵn sàng.
       </aside>
 
+      {user.role === "director" ? (
+        <CapacityThresholdCreate siteId={site.id} />
+      ) : null}
+
       {data.thresholds.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-[#b8c6bf] bg-white px-5 py-10 text-center text-sm text-[#75817b]">
           Cơ sở chưa có ngưỡng sức chứa được cấu hình.
@@ -166,7 +171,7 @@ export function CapacityWorkspace({
           {data.thresholds.map((threshold) => {
             const loadPercent = capacityLoadPercent(
               data.acceptedEntriesThisHour,
-              threshold.hourlyCapacity,
+              threshold.effectiveCapacity,
             );
             const activeLevel = capacityAlertLevel(loadPercent, threshold);
             const activeStyle = LEVEL_STYLE[activeLevel];
@@ -210,11 +215,31 @@ export function CapacityWorkspace({
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-[#718078]">
                     Công thức vật lý · theo giờ
                   </p>
+                  {/* TC-01: hiện đúng công thức của mô hình đang chọn. Ngưỡng
+                      tĩnh vẫn mang ba ô vòng quay vì cột dưới cơ sở dữ liệu là
+                      NOT NULL, nhưng in chúng ra là in một phép tính không mô
+                      tả gì — đúng loại số trông như đã đo mà không đo gì cả. */}
                   <p className="mt-2 text-lg font-black leading-7 text-[#24473a] sm:text-xl">
-                    {threshold.vehicleCount.toLocaleString("vi-VN")} phương tiện ×{" "}
-                    {threshold.seatsPerVehicle.toLocaleString("vi-VN")} chỗ × 60 ÷{" "}
-                    {threshold.roundTripMinutes.toLocaleString("vi-VN")} phút ={" "}
-                    {threshold.hourlyCapacity.toLocaleString("vi-VN")} khách/giờ
+                    {threshold.capacityModel === "static" ? (
+                      <>
+                        Sức chứa tĩnh{" "}
+                        {(threshold.staticCapacity ?? 0).toLocaleString("vi-VN")} chỗ
+                      </>
+                    ) : (
+                      <>
+                        {threshold.vehicleCount.toLocaleString("vi-VN")} phương tiện ×{" "}
+                        {threshold.seatsPerVehicle.toLocaleString("vi-VN")} chỗ × 60 ÷{" "}
+                        {threshold.roundTripMinutes.toLocaleString("vi-VN")} phút ={" "}
+                        {threshold.hourlyCapacity.toLocaleString("vi-VN")} khách/giờ
+                      </>
+                    )}
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-[#3c6353]">
+                    × hệ số an toàn {threshold.safetyFactor.toLocaleString("vi-VN")} ={" "}
+                    <span className="text-[#1d4c3c]">
+                      {threshold.effectiveCapacity.toLocaleString("vi-VN")} khách/giờ
+                    </span>{" "}
+                    — đây là con số dùng để bán vé và để cảnh báo quá tải.
                   </p>
                   <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#e1e9e5]">
                     <div

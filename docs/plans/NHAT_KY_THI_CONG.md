@@ -81,6 +81,53 @@ Xong một nhiệm vụ TC thì thêm một mục theo đúng khuôn dưới đ�
 
 ## Nhật ký
 
+## TC-01 — Công suất nhiều điểm nghẽn + hệ số an toàn
+**Ngày:** 26/08/2026 · **Model:** Opus 5 / High · **Commit:** `<sha>` · **Trạng thái:** 🟡 mã xong, **migration CHƯA áp production, mã CHƯA deploy**
+
+### Đã làm
+- Migration `202608260049_erp_capacity_multi_bottleneck.sql`: nới `bottleneck_kind` từ 3 lên 9 giá trị; thêm `capacity_model`, `static_capacity`, `safety_factor`, và cột sinh `effective_capacity`; ràng buộc chéo *tĩnh thì bắt buộc có số chỗ*; nới `check` trên `erp_capacity_audit_events.action`.
+- RPC `erp_capacity_update_threshold` nhận thêm ba tham số, **đều có mặc định NULL nghĩa là giữ nguyên**, và bản 10 tham số cũ bị `drop` tường minh — `create or replace` khớp theo kiểu tham số nên không drop thì hai bản hàm cùng tồn tại.
+- **RPC mới `erp_capacity_create_threshold`.**
+- `customer_create_booking_hold` chuyển sang đọc `effective_capacity` — **4 chỗ**, không phải 2 như phiếu giao việc ghi.
+- Tầng ứng dụng: `CapacityModel`/`CapacityBottleneckKind`, `calculateEffectiveCapacity`, repository đọc/ghi cột mới, hành động máy chủ tạo ngưỡng, màn hình T11a có form thêm điểm nghẽn và hiện đúng công thức theo mô hình.
+
+### Đã kiểm chứng thật
+- **Chạy trọn migration trên PostgreSQL 17 thật** (production, trong một transaction, kết thúc bằng `rollback`), kèm 9 phép đo — tất cả đạt:
+
+  | Phép đo | Kết quả |
+  |---|---|
+  | Bất biến 4 hàng đang chạy | `effective = hourly`, 4/4 |
+  | Ngưỡng tĩnh 250 chỗ | `effective = 250` |
+  | Hệ số 0,8 trên 40 chỗ/giờ | `effective = 32` |
+  | MIN qua nhiều mô hình | chọn đúng 32 trong {300, 250, 32} |
+  | Tĩnh thiếu số chỗ | chặn `22023` |
+  | Hệ số > 1 | chặn `22023` |
+  | Nhân viên tạo ngưỡng | chặn `42501` |
+  | Trùng mã ngưỡng | chặn `23505` |
+  | Lời gọi 10 tham số cũ | vẫn chạy, không đổi mô hình/hệ số |
+
+- Cục bộ: `typecheck` sạch, `lint` sạch, `test:run` **630 pass + 1 skip**, `build` sạch. Bài kiểm hợp đồng mới 13/13.
+
+### KHÔNG chứng minh được điều gì
+- **Migration CHƯA được áp lên production.** Mọi thứ ở trên chạy rồi rollback, nên schema production **vẫn nguyên trạng 048**.
+- **Mã nguồn CHƯA deploy, và cố ý không đẩy.** Màn hình T11a mới `select` `capacity_model`/`effective_capacity`; deploy trước khi áp migration là làm gãy màn hình sức chứa trên production. Thứ tự bắt buộc: **migration trước, mã sau**.
+- **Chưa có ai bấm thật trên giao diện.** Form thêm điểm nghẽn mới chỉ qua typecheck/lint/build, chưa chạy Playwright và chưa chụp ảnh.
+- **Chưa chứng minh MIN đúng trên production** — phép đo MIN chạy trên dữ liệu do chính lượt thử tạo ra rồi rollback.
+
+### Lỗi thật bắt được khi làm
+1. **`erp_capacity_audit_events.action` có `check` chỉ nhận `'threshold.seeded'` và `'threshold.updated'`.** RPC tạo ngưỡng ghi `'threshold.created'` nên **cả lời gọi thất bại**. Đọc SQL không thấy vì lỗi nằm ở một bảng khác bảng đang sửa; chỉ lộ ra ở lượt chạy thật. Đúng lý do ràng buộc #4 tồn tại.
+2. **Phiếu giao việc ghi thiếu.** Nó nói đổi `hourly_capacity` ở "dòng 413 và 434". Thực tế có **bốn** chỗ — còn hai chỗ nữa ở nhánh làm mới ảnh chụp khi ngưỡng đổi phiên bản. Tìm ra nhờ `grep` rồi `diff`, không chép tay.
+3. **Sản phẩm không hề có đường tạo ngưỡng.** Chỉ có RPC sửa, nên mỗi cơ sở đúng một ngưỡng và "MIN của mọi điểm nghẽn" chạy trên tập một phần tử — đúng kỹ thuật, vô nghĩa nghiệp vụ. Nới `bottleneck_kind` mà không có hàm tạo thì hoàn toàn vô ích. Đây là phần phiếu giao việc không lường trước.
+4. **Thiếu câu tiếng Việt cho mã lỗi mới** `CAPACITY_THRESHOLD_CODE_TAKEN` — bị chính bài kiểm `erp-rpc-error-messages` của dự án bắt. Hàng rào hoạt động đúng.
+5. **Ngưỡng tĩnh vẫn mang một `hourly_capacity` vô nghĩa** (ví dụ 1), vì ba cột vòng quay là NOT NULL. Không sửa được ở schema mà không đổi ý nghĩa `hourly_capacity` — điều bị cấm. Đã xử ở tầng hiển thị: mô hình tĩnh **không in** công thức vòng quay.
+
+### Để lại cho phiên sau
+- **Chặn cứng:** `npx supabase db push --linked` bị cổng an toàn của Claude Code từ chối. Em **không** dùng `db query --file` để áp cùng nội dung đó vì như vậy là lách đúng ý định vừa chặn. Cần chủ dự án tự chạy, hoặc cấp quyền.
+- Sau khi áp migration: đẩy mã, deploy, rồi mới chạy smoke T11a.
+- Kiểm lại `prod-smoke-t11-capacity-ui.spec.ts` sau khi deploy — màn hình đã đổi bố cục.
+
+---
+
 ## TC-04 — ERP-UX-01: mạch dẫn theo vai
 **Ngày:** 26/08/2026 · **Model:** Opus 5 / High *(phiếu giao việc ghi Sonnet 5; chạy bằng model cao hơn không vi phạm — luật chỉ cấm hạ xuống Haiku)* · **Commit:** `<sha>` · **Trạng thái:** ✅ xong
 

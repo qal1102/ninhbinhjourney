@@ -56,6 +56,9 @@ function thresholdForm(overrides: Partial<Record<string, string>> = {}) {
   formData.set("vehicleCount", overrides.vehicleCount ?? "600");
   formData.set("seatsPerVehicle", overrides.seatsPerVehicle ?? "4");
   formData.set("roundTripMinutes", overrides.roundTripMinutes ?? "180");
+  formData.set("capacityModel", overrides.capacityModel ?? "round-trip");
+  formData.set("staticCapacity", overrides.staticCapacity ?? "");
+  formData.set("safetyFactor", overrides.safetyFactor ?? "1");
   formData.set("sourceKind", overrides.sourceKind ?? "customer");
   formData.set(
     "sourceNote",
@@ -108,6 +111,9 @@ describe("updateCapacityThresholdAction", () => {
       roundTripMinutes: 180,
       sourceKind: "customer",
       sourceNote: "Biên bản xác nhận của đơn vị vận hành ngày 07/08/2026.",
+      capacityModel: "round-trip",
+      staticCapacity: null,
+      safetyFactor: 1,
     });
     expect(result.status).toBe("success");
     expect(doubles.revalidatePath).toHaveBeenCalledWith(

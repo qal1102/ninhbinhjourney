@@ -3,9 +3,12 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { ErpSiteId } from "@/domain/erp";
 import {
+  calculateEffectiveCapacity,
   calculateHourlyCapacity,
   type CapacityAlertLevel,
   type CapacityAuditEvent,
+  type CapacityBottleneckKind,
+  type CapacityModel,
   type CapacityResponseRule,
   type CapacitySourceKind,
   type CapacityThreshold,
@@ -79,6 +82,11 @@ function repositoryError(operation: string, error: unknown) {
   if (message.includes("CAPACITY_THRESHOLD_NOT_FOUND")) {
     return new CapacityRepositoryError("Không tìm thấy ngưỡng cần cập nhật.");
   }
+  if (message.includes("CAPACITY_THRESHOLD_CODE_TAKEN")) {
+    return new CapacityRepositoryError(
+      "Mã điểm nghẽn này đã được dùng. Chọn một mã khác.",
+    );
+  }
   if (message.includes("CAPACITY_INPUT_INVALID")) {
     return new CapacityRepositoryError("Giả định sức chứa chưa đúng định dạng.");
   }
@@ -122,6 +130,30 @@ function thresholdFromRow(
       `Phép tính sức chứa của ${String(row.threshold_code)} không khớp dữ liệu nguồn.`,
     );
   }
+  const capacityModel = String(row.capacity_model) as CapacityModel;
+  const staticCapacity =
+    row.static_capacity === null || row.static_capacity === undefined
+      ? null
+      : Number(row.static_capacity);
+  const safetyFactor = Number(row.safety_factor);
+  const storedEffective = Number(row.effective_capacity);
+  // Cùng một hàng rào với `hourly_capacity` ở trên: nếu con số cột sinh của
+  // PostgreSQL và phép tính ở đây lệch nhau thì màn hình đang nói một đằng còn
+  // đường bán vé chạy một nẻo. Dừng hẳn thay vì hiện một con số không ai bảo
+  // đảm được.
+  const calculatedEffective = calculateEffectiveCapacity({
+    capacityModel,
+    vehicleCount,
+    seatsPerVehicle,
+    roundTripMinutes,
+    staticCapacity,
+    safetyFactor,
+  });
+  if (!Number.isFinite(storedEffective) || storedEffective !== calculatedEffective) {
+    throw new CapacityRepositoryError(
+      `Sức chứa hiệu dụng của ${String(row.threshold_code)} không khớp dữ liệu nguồn.`,
+    );
+  }
   return {
     id: String(row.id),
     siteId,
@@ -130,10 +162,14 @@ function thresholdFromRow(
     bottleneckKind: String(
       row.bottleneck_kind,
     ) as CapacityThreshold["bottleneckKind"],
+    capacityModel,
     vehicleCount,
     seatsPerVehicle,
     roundTripMinutes,
+    staticCapacity,
+    safetyFactor,
     hourlyCapacity: stored,
+    effectiveCapacity: storedEffective,
     watchPercent: Number(row.watch_percent),
     restrictPercent: Number(row.restrict_percent),
     stopPercent: Number(row.stop_percent),
@@ -162,7 +198,7 @@ function auditFromRow(row: Record<string, unknown>): CapacityAuditEvent {
 }
 
 const THRESHOLD_COLUMNS =
-  "id, site_id, threshold_code, bottleneck_name, bottleneck_kind, vehicle_count, seats_per_vehicle, round_trip_minutes, hourly_capacity, watch_percent, restrict_percent, stop_percent, source_kind, source_note, effective_from, version, updated_by_display_name, updated_at";
+  "id, site_id, threshold_code, bottleneck_name, bottleneck_kind, vehicle_count, seats_per_vehicle, round_trip_minutes, capacity_model, static_capacity, safety_factor, hourly_capacity, effective_capacity, watch_percent, restrict_percent, stop_percent, source_kind, source_note, effective_from, version, updated_by_display_name, updated_at";
 
 export async function listCapacityWorkspace(
   siteId: ErpSiteId,
@@ -281,6 +317,9 @@ export async function updateCapacityThreshold(input: {
   roundTripMinutes: number;
   sourceKind: CapacitySourceKind;
   sourceNote: string;
+  capacityModel: CapacityModel;
+  staticCapacity: number | null;
+  safetyFactor: number;
 }): Promise<void> {
   if (readMode() !== "supabase") {
     throw new CapacityRepositoryError(
@@ -299,8 +338,61 @@ export async function updateCapacityThreshold(input: {
     p_round_trip_minutes: input.roundTripMinutes,
     p_source_kind: input.sourceKind,
     p_source_note: input.sourceNote,
+    p_capacity_model: input.capacityModel,
+    p_static_capacity: input.staticCapacity,
+    p_safety_factor: input.safetyFactor,
   });
   if (result.error) {
     throw repositoryError("cập nhật giả định", result.error);
+  }
+}
+
+/**
+ * TC-01. Trước migration `202608260049` sản phẩm **không có đường nào tạo
+ * ngưỡng** — chỉ sửa được bốn hàng seed, mỗi cơ sở một hàng. Nghĩa là "MIN của
+ * mọi điểm nghẽn" luôn chạy trên một tập một phần tử: đúng về kỹ thuật, vô
+ * nghĩa về nghiệp vụ.
+ */
+export async function createCapacityThreshold(input: {
+  siteId: ErpSiteId;
+  actorAccountId: string;
+  actorDisplayName: string;
+  thresholdCode: string;
+  bottleneckName: string;
+  bottleneckKind: CapacityBottleneckKind;
+  capacityModel: CapacityModel;
+  vehicleCount: number;
+  seatsPerVehicle: number;
+  roundTripMinutes: number;
+  staticCapacity: number | null;
+  safetyFactor: number;
+  sourceKind: CapacitySourceKind;
+  sourceNote: string;
+}): Promise<void> {
+  if (readMode() !== "supabase") {
+    throw new CapacityRepositoryError(
+      "Chế độ demo cục bộ không lưu ngưỡng sức chứa. Bật ERP_PERSISTENCE_MODE=supabase.",
+    );
+  }
+  const client = createAdminClient();
+  const result = await client.rpc("erp_capacity_create_threshold", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_actor_account_id: input.actorAccountId,
+    p_actor_display_name: input.actorDisplayName,
+    p_threshold_code: input.thresholdCode,
+    p_bottleneck_name: input.bottleneckName,
+    p_bottleneck_kind: input.bottleneckKind,
+    p_capacity_model: input.capacityModel,
+    p_vehicle_count: input.vehicleCount,
+    p_seats_per_vehicle: input.seatsPerVehicle,
+    p_round_trip_minutes: input.roundTripMinutes,
+    p_static_capacity: input.staticCapacity,
+    p_safety_factor: input.safetyFactor,
+    p_source_kind: input.sourceKind,
+    p_source_note: input.sourceNote,
+  });
+  if (result.error) {
+    throw repositoryError("thêm điểm nghẽn", result.error);
   }
 }

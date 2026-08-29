@@ -107,6 +107,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Thông tin phương tiện, số chỗ, thời gian vòng hoặc nguồn chưa hợp lệ.",
   CAPACITY_VERSION_CONFLICT:
     "Ngưỡng sức chứa vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+  CAPACITY_THRESHOLD_CODE_TAKEN:
+    "Mã điểm nghẽn này đã có tại cơ sở. Hãy chọn một mã khác.",
   SOP_ASSESSMENT_INPUT_INVALID:
     "Thông tin đánh giá mở cửa chưa hợp lệ hoặc không thuộc ngày vận hành hiện tại.",
   SOP_MANAGER_ROLE_REQUIRED:

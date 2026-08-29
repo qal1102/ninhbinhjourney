@@ -265,3 +265,123 @@ Chi tiết trạng thái từng mục: `docs/HANDOFF.md`.
 | `docs/reference/TAI_LIEU_KHACH_HANG_CUNG_CAP_VI.md` | Yêu cầu gốc từ khách |
 | `docs/reference/DATA_SOURCES.md` | Dữ liệu nào khách phải cung cấp |
 | `AGENTS.md` | Quy tắc làm việc trong dự án |
+
+---
+
+## 12. Căn cước hành trình — giải thích không dùng chữ kỹ thuật
+
+> Ghi lại buổi trao đổi ngày **29/08/2026** giữa chủ dự án và phiên làm việc. Viết cho người không rành kỹ thuật đọc. Phần việc chia nhỏ nằm ở `docs/plans/PHAN_GIAO_VIEC_TAM_COC.md` mục 3b.
+>
+> ⚠️ **Toàn bộ mục này là dự định, chưa có dòng nào chạy thật.** Trừ những chỗ ghi rõ "đã có".
+
+### 12.1 Ý tưởng gốc, nói bằng một câu
+
+Mỗi khách có một tấm **căn cước hành trình** — như một cuốn hộ chiếu ghi những nơi họ đã đi qua ở Ninh Bình. Khách mở ra xem được, mang về được. Còn về phía mình, đó là cách biết dịch vụ nào đang phục vụ tốt và chỗ nào cần chăm thêm.
+
+### 12.2 Điều bất ngờ: hệ thống đã ghi rồi, chỉ chưa ai mở ra xem
+
+Đây là phần đáng nói nhất của buổi trao đổi.
+
+Mỗi lần nhân viên soát vé ở cổng, hệ thống **đã ghi lại** ai vừa vào, nơi nào, lúc mấy giờ, vé loại gì. Kể cả lượt bị từ chối cũng ghi — vì một cái cổng chỉ ghi lượt thành công thì không trả lời được câu hỏi đầu tiên sau một ngày tệ ở lối vào: *hôm nay bao nhiêu người bị đuổi về, và vì sao*.
+
+Nghĩa là **dữ liệu đang chảy vào một cái kho mà chưa ai mở cửa**. Việc phải làm không phải xây mới, mà là đọc lên và trình bày cho ra hình hài. Nhẹ hơn nhiều so với tưởng tượng ban đầu.
+
+### 12.3 Mỗi người một mã, không phải mỗi đoàn một mã
+
+Đoàn mười người thì mười mã, có liên kết với nhau thành một đoàn. Không gộp thành một mã đại diện.
+
+Lý do đơn giản: người thứ bảy trong đoàn cũng là một khách thật, có sở thích riêng, và có thể quay lại một mình vào năm sau. Gộp chung là mất họ.
+
+Tên khách đi kèm mã, để nhân viên biết mình đang giúp ai — chứ không phải nhìn vào một dãy số.
+
+### 12.4 Giấy tờ tuỳ thân — chỗ phải cẩn thận nhất
+
+Luật lưu trú yêu cầu ghi đúng danh tính khách, nên phần này không tránh được. Nguyên tắc:
+
+- Lưu **ít nhất có thể**, khoá kín, để riêng một chỗ.
+- Quầy vé chụp lại làm căn cứ thì được, nhưng **phải có hạn xoá**. Số ngày cụ thể còn chờ chủ dự án chốt.
+- Giấy tờ **không được lẫn** vào phần gợi ý hay đánh giá. Hai thứ đó không cần biết số hộ chiếu của ai.
+
+### 12.5 Hai loại đồng ý, và vì sao phải tách
+
+Đây là chỗ dễ hiểu nhầm nhất, nên nói rõ.
+
+**Đồng ý phục vụ** — khách mua vé, mình ghi lại họ đã vào cổng nào bằng chính tấm vé đó. Cái này **không cần hỏi**, và hỏi thì vô duyên. Khách trả tiền mua dịch vụ, việc ghi nhận để phục vụ chính chuyến đi đó là chuyện đương nhiên.
+
+**Đồng ý tiếp thị** — gửi thông báo, gửi gợi ý, gửi thư. Cái này **là chuyện khác**, và luật Việt Nam (Nghị định 13/2023) coi nó khác.
+
+Chủ dự án đề nghị tích sẵn ô đồng ý cho nhanh. Nhưng luật quy định sự đồng ý phải là **hành động khẳng định** — im lặng hoặc không thao tác không tính là đồng ý. Ô tích sẵn vì thế không có giá trị: khi có khiếu nại, mình không chứng minh được khách đã đồng ý.
+
+Cách làm được mà vẫn cao tỉ lệ: một dòng duy nhất lúc đặt chỗ, **nói thẳng khách được gì** — *"Cho phép chúng tôi nhắn khi có khung giờ đẹp hoặc chỗ vắng gần bạn."* Ô để trống, khách tự tick. Người ta tick khi thấy có lợi cho mình, không phải khi bị tick hộ.
+
+### 12.6 Nói với khách bằng chữ của khách
+
+Không dùng *"soát vé"*, *"quét mã"*, *"điểm chạm"* — đó là chữ của cái máy ở cổng.
+
+Nói: **"những nơi bạn đã đi qua"**.
+
+### 12.7 Tấm bản đồ sáng dần
+
+Phần khách nhìn thấy là một tấm bản đồ Ninh Bình của riêng họ. Đi tới đâu, chỗ đó sáng lên. Chỗ chưa tới còn mờ.
+
+Nó làm được ba việc cùng lúc: là món quà mang về, là lời mời quay lại cho đủ, và **tự giải thích hệ thống đang ghi cái gì** mà không cần một dòng chính sách nào. Khách nhìn tấm bản đồ là hiểu ngay.
+
+### 12.8 Biết trước mấy giờ hết chỗ
+
+Hôm nay hệ thống chỉ biết *"đã đầy"*. Lúc đó thì muộn rồi — khách đã tới nơi, đã xếp hàng, rồi bị đuổi về.
+
+Điều mình đã có đủ để làm tốt hơn: trần sức chứa từng giờ, số chỗ đã giữ, và giờ giấc của từng lượt giữ. Ba thứ đó đủ để tính ra **tốc độ lấp đầy**, và từ đó đoán mấy giờ chạm trần.
+
+Quản lý cần đúng một câu, không cần bảng biểu:
+
+> *"Tràng An giữ chỗ nhanh gấp đôi hôm qua, khoảng 14 giờ là kín. Vân Long còn trống hơn nửa."*
+
+Báo trước ba tiếng thì còn kịp làm gì đó. Báo lúc đã đầy thì chỉ còn kịp xin lỗi.
+
+### 12.9 Một cái bẫy đã nhìn thấy trước
+
+Ý ban đầu là: chỗ nào nhiều khách tới thì đẩy lên cho nhiều người thấy hơn.
+
+Nghe hợp lý, nhưng làm vậy thì **hệ thống tự cắn đuôi mình**. Chỗ đông càng được đẩy, càng đông thêm, tới lúc chạm trần thì chính hệ thống vừa đẩy khách tới đó lại phải quay ra chặn họ lại. Còn những nơi hay mà vắng thì vĩnh viễn không ngoi lên được, dù đang trống chỗ.
+
+Nên thứ để xếp hạng không phải *"nơi nhiều người tới nhất"* mà là **"nơi hợp với người này nhất, trong số những nơi còn chỗ lúc này"**. Dấu chân vẫn dùng — nhưng để đo *hợp hay không hợp*, không phải đo *nổi tiếng hay không*.
+
+Khi nghĩ như vậy thì sức chứa hết là cái phanh gấp, nó thành một tín hiệu chạy thường xuyên trong gợi ý.
+
+### 12.10 Đánh giá: mở, nhưng không để bị phá
+
+Ba nguyên tắc chốt trong buổi trao đổi:
+
+**Chỉ ai thật sự đã tới mới được đánh giá.** Đây là thứ bản đồ đại chúng không làm được, còn mình thì làm được — hệ thống biết ai đã qua cổng. Riêng điều này đã làm phần lớn đánh giá rác tự rụng, không cần xoá tay.
+
+**Xoá được, nhưng có hạn mức theo vai.** Quản trị hệ thống xoá hàng loạt khi gặp đợt phá hoại. Bộ phận chăm sóc khách hàng chỉ xoá được chừng mười tới hai mươi lượt — không được xoá sạch. Mỗi lượt xoá đều ghi lại ai xoá và vì sao.
+
+**Không xoá đến mức toàn năm sao.** Một bảng điểm toàn năm sao trông giả, và khách nhận ra rất nhanh. Giữ lại các đánh giá hai ba sao thật — nó làm cả bảng đáng tin hơn.
+
+Còn một ranh giới không được vượt: **chủ sạp không được tự xoá đánh giá xấu của chính mình.** Cho phép điều đó thì toàn bộ điểm số thành vô nghĩa.
+
+### 12.11 Chuyện thu âm — đã thử và đã khép lại
+
+Có ý tưởng: nghe khách nói chuyện qua micro trình duyệt để đoán họ đang muốn gì, rồi gợi ý chỗ ăn.
+
+**Không làm được.** Trình duyệt không cho trang web bật micro âm thầm — bắt buộc hiện hộp xin phép, và trong lúc thu thì tab hiện chấm đỏ, máy cũng báo. Không có đường vòng. Kết quả thực tế sẽ là: khách thấy trang du lịch xin bật micro, và họ đóng tab.
+
+Nhưng thứ mình muốn thì lấy được bằng đường khác, và đường đó **đã có sẵn**: ô cho khách nói mong muốn bằng lời thường, cộng với việc khách xem gói nào lâu, xem rồi không đặt, và vừa qua cổng nơi nào lúc mấy giờ.
+
+Khách vừa rời Tràng An lúc 11 giờ trưa thì không cần nghe lén cũng biết họ sắp đi ăn. Suy từ việc họ **đã làm** còn chính xác hơn suy từ việc họ vô tình nói ra.
+
+### 12.12 Khách cần chăm sóc riêng
+
+Trẻ nhỏ, người cao tuổi, người khuyết tật — khách tự khai, mình không đoán.
+
+Điều đáng nói là **đường báo tin**. Nhiều nhân viên hiện trường không dùng điện thoại trong giờ làm, nên gửi thông báo vào máy họ là thiết kế cho người ngồi bàn giấy chứ không phải cho người đứng cổng.
+
+Cách hợp thực tế hơn: tin đi tới **tổng đài hoặc phòng điều hành**, người ở đó đọc lên bộ đàm cho anh em ở dưới.
+
+### 12.13 Hai nơi không bán vé
+
+**Cố đô Hoa Lư** và **Phố cổ Hoa Lư** không bán vé, nên không có gì để giữ chỗ và **không cần đo lượng khách** ở đó.
+
+Chúng đóng vai khác trong hệ thống: là **nơi để gợi ý và dẫn khách tới**, rồi khách mua thứ khác ở đó. Khu vực còn có hàng quán do người khác thuê và vận hành, nên mình không cầm toàn bộ — quản một khu vực khác hẳn quản một hai sạp hàng.
+
+Có một lần đã hiểu ngược điều này: bản ghi trước xếp hai nơi đó vào "món nợ, cần dựng ngưỡng sức chứa". Sai. Dựng ngưỡng cho nơi không bán vé là **bịa ra một điểm nghẽn không tồn tại** — đúng thứ dự án cấm.

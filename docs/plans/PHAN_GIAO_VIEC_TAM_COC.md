@@ -336,6 +336,168 @@ Kết quả quyết định luôn số phận **T12** — đang bị đánh dấ
 
 ---
 
+---
+
+## 3b. Đợt hai — chốt trong buổi trao đổi 29/08/2026
+
+Sáu nhiệm vụ dưới đây sinh ra từ một buổi bàn với chủ dự án, không phải từ khảo sát kỹ thuật. Chúng **chưa được xếp thứ tự trong đợt TC hiện tại** — làm sau TC-03, hoặc chen vào khi chủ dự án đổi ưu tiên.
+
+**Một sợi chỉ xuyên suốt cả sáu:** mỗi khách một mã định danh, mọi thứ khác treo vào đó. Đừng làm từng cái rời rạc.
+
+---
+
+### TC-09 — Đồng ý phục vụ và đồng ý tiếp thị
+
+| | |
+|---|---|
+| **Model** | **Opus 5 / High** cho tầng chặn, **Sonnet 5** cho giao diện |
+| **Vì sao tách hai** | Chặn ở tầng dữ liệu là chuyện đúng/sai; ô tick là chuyện trình bày. |
+| **Tiên quyết** | Không. Bảng `customer_consents` đã có sẵn. |
+
+**Phải làm**
+
+1. Hai loại đồng ý tách bạch, bảng đã có: **phục vụ** (ghi lại chuyến đi của chính khách để phục vụ chuyến đó) và **tiếp thị** (gửi gợi ý, thông báo, thư).
+2. Tầng chặn nằm ở **repository, không ở giao diện**: mọi đường gửi ra ngoài (`customer_outbound_actions`) phải đọc đồng ý tiếp thị trước khi xếp hàng. Không đồng ý thì không có hàng nào được tạo — chứ không phải tạo rồi lọc lúc gửi.
+3. Ghi lại **thời điểm và cách khách đồng ý**, để về sau trả lời được câu "vì sao người này nhận được thư".
+
+**⛔ Điểm chủ dự án phải quyết — chưa làm cho tới khi có câu trả lời**
+
+Chủ dự án đề nghị **tích sẵn ô đồng ý** lúc khách đăng ký. Nghị định 13/2023/NĐ-CP quy định sự đồng ý phải là hành động khẳng định; **im lặng hoặc không thao tác không được coi là đồng ý**. Ô tích sẵn cho phần **tiếp thị** vì thế không có giá trị pháp lý — và khi có khiếu nại thì bằng chứng "khách đã đồng ý" cũng không đứng vững.
+
+Phần **phục vụ** thì khác hẳn: khách trả tiền mua dịch vụ, việc ghi lại họ đã vào cổng nào bằng vé của chính họ là **thực hiện hợp đồng**. Không cần hỏi, và không nên hỏi.
+
+Đề xuất thay thế, giữ được tỉ lệ đồng ý cao mà không tích sẵn: một dòng duy nhất lúc đặt chỗ, nói thẳng khách được gì — *"Cho phép chúng tôi nhắn khi có khung giờ đẹp hoặc chỗ vắng gần bạn."* Ô để trống, khách tự tick.
+
+**Cấm:** gửi bất cứ thứ gì ra ngoài khi chưa có đồng ý tiếp thị, kể cả "chỉ một lần".
+
+**Xong khi:** có bài kiểm chứng minh không đồng ý thì **không một hàng nào** vào `customer_outbound_actions`; và rút lại đồng ý thì mọi hàng đang chờ bị dừng.
+
+---
+
+### TC-10 — Căn cước hành trình: mỗi người một mã
+
+| | |
+|---|---|
+| **Model** | **Opus 5 / High** |
+| **Vì sao** | Nối một chuỗi đã tồn tại nhưng chưa ai đọc, và chạm vào dữ liệu định danh có luật điều chỉnh. |
+| **Tiên quyết** | TC-09 (phần phục vụ). |
+
+**Vốn đã có — không xây lại**
+
+Chuỗi từ cổng về khách **đã thông suốt**, chỉ chưa có gì đọc nó lên:
+
+```
+erp_gate_scan_events.ticket_id → erp_tickets → customer_order_tickets
+  → customer_orders.profile_id → customer_profiles / customer_identities
+```
+
+`customer_journeys`, `customer_events`, `customer_segments` đều đã có, kèm ràng buộc `customer_json_contains_pii` khoá cứng ở tầng cơ sở dữ liệu.
+
+**Phải làm**
+
+1. **Mỗi người một mã, không phải mỗi đoàn một mã.** Chủ dự án chốt như vậy. Đoàn mười người là mười mã có liên kết đoàn, không phải một mã đại diện.
+2. Tên khách đi kèm mã, để nhân viên biết mình đang giúp ai.
+3. Đọc chuỗi trên thành **hộ chiếu chuyến đi**: đã qua những đâu, ngày nào, gói nào.
+4. Phần khách nhìn thấy là **một tấm bản đồ Ninh Bình của riêng họ**, sáng dần theo nơi đã đi qua; nơi chưa tới còn mờ. Vừa là quà, vừa là lời mời quay lại, và nó tự giải thích hệ thống đang ghi gì mà không cần một dòng chính sách nào.
+5. Chữ dùng với khách: **"những nơi bạn đã đi qua"**. Không dùng "soát vé", "quét mã", "điểm chạm" — đó là chữ của cái cổng, không phải chữ nói với khách.
+
+**Giấy tờ tuỳ thân — ranh giới cứng**
+
+Luật lưu trú yêu cầu ghi đúng danh tính khách. Vì thế:
+
+- Lưu **tối thiểu**, niêm phong bằng mã hoá (`customer_identities` đã có sẵn khoá), **không** để lẫn vào các bảng hành trình.
+- Quầy vé có thể chụp lại làm căn cứ, nhưng **phải có hạn xoá** — cần chủ dự án chốt số ngày.
+- Không một trường giấy tờ nào được chảy sang bảng gợi ý, phân khúc hay đánh giá.
+
+**Cấm:** suy diễn tuổi từ hành vi (`GOI_A_KE_HOACH.md` mục 8). Số người lớn / trẻ em lấy từ chính lúc mua vé (TC-03), không đoán.
+
+**Để sau, đã bàn nhưng chưa xếp:** ảnh khoảnh khắc chụp tại điểm check-in gắn vào hộ chiếu chuyến đi, gửi về email hoặc số điện thoại khách đã đăng ký.
+
+---
+
+### TC-11 — Dự báo giờ chạm trần và gợi ý điều hướng
+
+| | |
+|---|---|
+| **Model** | **Opus 5 / High** |
+| **Vì sao** | Dự báo sai làm quản lý điều khách sai; sai lặng lẽ còn tệ hơn không có. |
+| **Tiên quyết** | TC-02 (đã xong). |
+
+**Vốn đã có:** trần sức chứa từng giờ, số chỗ đã giữ, dấu thời gian từng lượt giữ — đủ để tính tốc độ lấp đầy và suy ra giờ chạm trần. Ngưỡng đã có bốn mức phản ứng kèm người chịu trách nhiệm và hạn xử lý.
+
+**Cái đang thiếu:** bảng gợi ý **chưa đọc một dòng nào** về sức chứa.
+
+**Phải làm**
+
+1. Tính giờ dự kiến chạm trần từ tốc độ giữ chỗ thật. **Không đủ dữ liệu thì nói thẳng là chưa đoán được** — không bịa một con số cho có.
+2. Nối sức chứa vào `customer_recommendations` như một tín hiệu **thường trực**, không phải cái phanh gấp lúc gần đầy.
+3. **Không xếp hạng theo lượng khách.** Xếp theo *hợp với người này* và *còn chỗ lúc này*. Xếp theo lượt ghé là đẩy người về đúng chỗ đang đông, rồi chính hệ thống vừa đẩy họ tới lại phải quay ra chặn.
+
+**Giao diện — quản lý và giám đốc**
+
+Một câu tiếng Việt, một con số, một nút. Ví dụ: *"Tràng An giữ chỗ nhanh gấp đôi hôm qua, khoảng 14 giờ là kín. Vân Long còn trống hơn nửa."*
+
+**Cấm:** hiện phần trăm tải, tên ngưỡng, phiên bản ngưỡng cho người vận hành. Đó là bẫy ERP-UX-01 đã sập một lần.
+
+**Xong khi:** dự báo đối chiếu được với số thật của một ngày đã qua, và sai số được ghi ra chứ không giấu.
+
+---
+
+### TC-12 — Hệ sinh thái đánh giá cả tỉnh
+
+| | |
+|---|---|
+| **Model** | **Sonnet 5**, riêng luật chống spam là **Opus 5 / High** |
+| **Tiên quyết** | TC-10. |
+
+**Phải làm**
+
+1. **Chỉ mã đã đặt chân tới mới được đánh giá.** Đây là lợi thế bản đồ đại chúng không có: hệ thống biết ai thật sự đã qua cổng. Đánh giá có dấu chân nặng ký hơn hẳn, nên phần lớn spam tự rụng mà không cần xoá tay.
+2. Bản đồ toàn tỉnh: nơi đang được ưa chuộng, và **nơi hay mà ít người biết** — mục thứ hai mới tạo ra giá trị mới.
+3. **Quyền xoá có hạn mức, theo vai:**
+   - Quản trị hệ thống: xoá hàng loạt, dùng cho đợt spam.
+   - Quản lý chăm sóc khách hàng / marketing: **hạn mức nhỏ, 10–20 lượt**, không được xoá sạch.
+   - Mọi lượt xoá ghi lại ai xoá và vì sao.
+4. **Không được xoá đến mức toàn 5 sao.** Chủ dự án nói đúng: bảng điểm toàn năm sao trông giả. Giữ lại các đánh giá 2–3 sao thật.
+
+**Cấm:** để chủ sạp tự xoá đánh giá xấu của chính mình. Làm vậy thì điểm số vô nghĩa, và khách nhận ra rất nhanh.
+
+---
+
+### TC-13 — Chăm sóc đặc biệt và báo xuống ca trực
+
+| | |
+|---|---|
+| **Model** | **Sonnet 5** |
+| **Tiên quyết** | TC-03. |
+
+**Phải làm**
+
+1. Đánh dấu nhu cầu cần chăm sóc riêng: trẻ nhỏ, người cao tuổi, người khuyết tật. **Khách tự khai**, không suy diễn.
+2. Báo trước cho ca trực: hôm nay có những khách nào cần để ý.
+3. **Đường báo phải hợp với cách người ta làm việc thật.** Nhiều nhân viên hiện trường không dùng điện thoại trong giờ. Vì thế thông báo đi tới **tổng đài hoặc phòng điều hành**, người ở đó đọc lên bộ đàm. Gửi thẳng vào điện thoại nhân viên là thiết kế cho người ngồi bàn giấy.
+
+---
+
+### TC-14 — Trợ lý lập lịch trình luôn hiện
+
+| | |
+|---|---|
+| **Model** | **Sonnet 5** |
+| **Tiên quyết** | TC-11, để gợi ý biết chỗ nào còn trống. |
+
+Ô cho khách nói mong muốn bằng lời thường **đã có** và đã lưu thành `intent` (sở thích, nhịp, thời lượng, ngày đi). Việc còn lại là cho nó hiện thường trực chứ không nằm khuất.
+
+**Về thu âm trình duyệt — đã khép lại 29/08:** trình duyệt **không cho** trang web bật micro âm thầm. Bắt buộc hiện hộp xin phép, và trong lúc thu thì tab hiện chấm đỏ, hệ điều hành cũng báo. Không có đường vòng. Chủ dự án đã chốt bỏ hướng này, dùng tín hiệu sẵn có: khách xem gói nào lâu, xem rồi không đặt, vừa qua cổng nào lúc mấy giờ. Khách rời Tràng An lúc 11 giờ trưa thì không cần nghe lén cũng biết họ sắp đi ăn.
+
+---
+
+### Hai điều đã chốt, áp cho cả sáu nhiệm vụ
+
+**Cố đô Hoa Lư và Phố cổ Hoa Lư không quản sức chứa.** Hai nơi này không bán vé. Chúng là **đích để gợi ý và để dẫn khách tới mua thứ khác**, không phải tài sản cần đo tải. Ở đó còn có hàng quán do người khác thuê và vận hành, nên mình không cầm toàn bộ — quản một khu vực khác hẳn quản một hai sạp hàng. Đừng dựng ngưỡng T11a cho chúng: không bán vé thì không có gì để giữ chỗ, dựng ra là bịa một điểm nghẽn không tồn tại.
+
+**Không xếp hạng theo độ nổi tiếng.** Ghi lại một lần cho khỏi quên vì sao: xếp theo lượt ghé thì nơi đông càng đông, nơi vắng vĩnh viễn không ngoi lên được dù đang trống chỗ — và tới lúc nơi đông chạm trần thì chính hệ thống vừa đẩy khách tới đó phải quay ra chặn họ lại.
+
 ## 4. Bảng tra nhanh
 
 | ID | Việc | Model | Tiên quyết | Đụng schema |
@@ -349,6 +511,12 @@ Kết quả quyết định luôn số phận **T12** — đang bị đánh dấ
 | TC-06 | Khách đoàn | Opus 5 / High | TC-03 | **Có** |
 | TC-07 | Khảo sát bảng `/ops` | Sonnet 5 | **không** | Không |
 | TC-08 | T6c RLS thật | Opus 5 / High | TC-00→06 | Policy |
+| TC-09 | Đồng ý phục vụ / tiếp thị | Opus 5 / High → Sonnet 5 | **không** | Không |
+| TC-10 | Căn cước hành trình mỗi người một mã | Opus 5 / High | TC-09 | **Có** |
+| TC-11 | Dự báo giờ chạm trần + điều hướng | Opus 5 / High | TC-02 | **Có** |
+| TC-12 | Hệ sinh thái đánh giá cả tỉnh | Sonnet 5 (luật spam: Opus) | TC-10 | **Có** |
+| TC-13 | Chăm sóc đặc biệt, báo xuống ca trực | Sonnet 5 | TC-03 | **Có** |
+| TC-14 | Trợ lý lập lịch trình luôn hiện | Sonnet 5 | TC-11 | Không |
 
 **Haiku 4.5 dùng ở đâu:** bổ sung mã lỗi vào `rpc-error-messages.ts` sau khi RPC đã khóa; dựng fixture cho test đã có hợp đồng; chạy lượt chụp ảnh theo checklist ERP; định dạng lại tài liệu. **Không giao Haiku một nhiệm vụ TC nguyên vẹn nào.**
 

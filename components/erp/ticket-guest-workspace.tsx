@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { lookupTicketsAction, recordGateScanAction } from "@/app/erp/actions";
+import QRCode from "qrcode";
+import {
+  listTodayTicketsAction,
+  lookupTicketsAction,
+  recordGateScanAction,
+  refreshDemoTicketsAction,
+} from "@/app/erp/actions";
 import type { ErpSite } from "@/domain/erp";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
@@ -13,6 +19,18 @@ import type {
 } from "@/lib/erp/gate-scan-repository";
 import { ShiftCloseSiteWorkflow } from "./shift-close-workflow";
 import { OfflineGateConsole } from "./offline-gate-console";
+
+/**
+ * Trình duyệt chưa đưa BarcodeDetector vào kiểu DOM có sẵn, nên khai báo tối
+ * thiểu ở đây — giống cách components/ops/check-in-console.tsx đã làm — để
+ * dùng API thật của Chrome trên Android mà không cần thêm gói nào.
+ */
+type BarcodeDetectorLike = {
+  detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
+};
+type BarcodeDetectorConstructor = new (input?: {
+  formats?: string[];
+}) => BarcodeDetectorLike;
 
 type Props = {
   site: ErpSite;
@@ -36,6 +54,20 @@ const EMPTY_TICKET_SALES: TicketSalesSummary = {
   recentSales: [],
 };
 
+/**
+ * Nhãn hiển thị cho từng loại vé trong danh sách "quét thử được hôm nay".
+ * Mirror thủ công PRODUCT_LABELS trong lib/erp/gate-scan-repository.ts vì
+ * hằng số đó không export — đây chỉ là chữ hiển thị, sai thì hiện mã gốc
+ * chứ không ảnh hưởng nghiệp vụ.
+ */
+const TICKET_PRODUCT_LABELS: Readonly<Record<string, string>> = Object.freeze({
+  adult: "Vé người lớn",
+  child: "Vé trẻ em",
+  combo: "Combo vé + thuyền/xe",
+  group: "Vé đoàn",
+  guest: "Vé khách mời",
+});
+
 function formatChange(percent: number | null) {
   if (percent === null) return "Chưa đủ dữ liệu kỳ trước để so sánh";
   const sign = percent > 0 ? "+" : "";
@@ -53,8 +85,158 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   const [lookupResults, setLookupResults] = useState<TicketSummary[]>([]);
   const [lookupPending, setLookupPending] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
+  const [todayTickets, setTodayTickets] = useState<TicketSummary[]>([]);
+  const [todayTicketsMessage, setTodayTicketsMessage] = useState("");
+  const [todayTicketsPending, setTodayTicketsPending] = useState(false);
+  const [refreshPending, setRefreshPending] = useState(false);
+  const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
+  const [cameraSupported, setCameraSupported] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraMessage, setCameraMessage] = useState("");
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const scanIntervalRef = useRef<number | null>(null);
+  const isDirector = user.role === "director";
   const sales = ticketSales ?? EMPTY_TICKET_SALES;
   const selected = sales.periods.find((item) => item.period === period) ?? sales.periods[0];
+
+  const loadTodayTickets = useCallback(async () => {
+    setTodayTicketsPending(true);
+    try {
+      const result = await listTodayTicketsAction({ siteId: site.id });
+      setTodayTickets(result.tickets);
+      setTodayTicketsMessage(result.message);
+    } finally {
+      setTodayTicketsPending(false);
+    }
+  }, [site.id]);
+
+  useEffect(() => {
+    if (mode !== "checkin") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- tải danh sách vé ngay khi mở màn hình soát vé
+    void loadTodayTickets();
+  }, [mode, loadTodayTickets]);
+
+  // Vẽ QR thật cho từng mã vé còn hiệu lực hôm nay, cùng cách pass-experience.tsx
+  // đang vẽ QR cho vé khách — không thêm gói đọc/vẽ mã nào khác.
+  useEffect(() => {
+    if (todayTickets.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- danh sách vé vừa rỗng thì dọn QR cũ theo
+      setQrDataUrls({});
+      return;
+    }
+    let active = true;
+    void Promise.all(
+      todayTickets.map(async (ticket) => {
+        const url = await QRCode.toDataURL(ticket.ticketCode, {
+          width: 160,
+          margin: 1,
+          errorCorrectionLevel: "M",
+          color: { dark: "#183f34", light: "#ffffff" },
+        });
+        return [ticket.ticketCode, url] as const;
+      }),
+    ).then((pairs) => {
+      if (active) setQrDataUrls(Object.fromEntries(pairs));
+    });
+    return () => {
+      active = false;
+    };
+  }, [todayTickets]);
+
+  async function handleRefreshDemoTickets() {
+    setRefreshPending(true);
+    try {
+      const result = await refreshDemoTicketsAction();
+      if (result.ok) {
+        await loadTodayTickets();
+      } else {
+        setTodayTicketsMessage(result.message);
+      }
+    } finally {
+      setRefreshPending(false);
+    }
+  }
+
+  useEffect(() => {
+    const detectorAvailable =
+      typeof window !== "undefined" &&
+      Boolean(
+        (window as typeof window & { BarcodeDetector?: BarcodeDetectorConstructor })
+          .BarcodeDetector,
+      );
+    const mediaAvailable =
+      typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ trình duyệt mới biết máy có hỗ trợ camera hay không
+    setCameraSupported(detectorAvailable && mediaAvailable);
+  }, []);
+
+  async function startCameraScan() {
+    setCameraMessage("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setCameraOpen(true);
+    } catch {
+      setCameraMessage("Bạn chưa cho phép dùng camera. Mời bạn gõ mã vào ô bên dưới.");
+      setCameraOpen(false);
+    }
+  }
+
+  function stopCameraScan() {
+    if (scanIntervalRef.current !== null) {
+      window.clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setCameraOpen(false);
+  }
+
+  // Vòng quét chạy khi camera mở: đọc liên tục cho tới khi thấy mã hoặc bị đóng.
+  useEffect(() => {
+    if (!cameraOpen) return;
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!video || !stream) return;
+    video.srcObject = stream;
+    void video.play().catch(() => {});
+    const Detector = (
+      window as typeof window & { BarcodeDetector?: BarcodeDetectorConstructor }
+    ).BarcodeDetector;
+    if (!Detector) return;
+    const detector = new Detector({ formats: ["qr_code"] });
+    let cancelled = false;
+    const timer = window.setInterval(async () => {
+      if (cancelled || !videoRef.current) return;
+      try {
+        const found = await detector.detect(videoRef.current);
+        const raw = found[0]?.rawValue?.trim();
+        if (raw) {
+          setScanCode(raw.toUpperCase());
+          stopCameraScan();
+        }
+      } catch {
+        // Đọc thoáng qua bị lỗi (khung mờ, chưa lấy nét) thì bỏ qua, vòng quét vẫn tiếp tục.
+      }
+    }, 350);
+    scanIntervalRef.current = timer;
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [cameraOpen]);
+
+  // Tắt hẳn camera khi rời trang hoặc component gỡ khỏi cây, đừng để đèn camera sáng mãi.
+  useEffect(() => {
+    return () => {
+      if (scanIntervalRef.current !== null) window.clearInterval(scanIntervalRef.current);
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
 async function recordScan(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,7 +284,77 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
   return (
     <div className="space-y-5">
       {mode === "checkin" && offlineGateEnabled ? <OfflineGateConsole siteId={site.id} siteName={site.shortName} /> : null}
-      {mode === "checkin" ? <section className="rounded-3xl bg-[#183f34] p-5 text-white sm:p-7"><p className="text-xs font-black uppercase tracking-[0.18em] text-[#acd1c3]">Cổng A · {site.shortName}</p><h2 className="mt-2 text-3xl font-black">Quét và ghi nhận QR</h2><form onSubmit={recordScan} className="mt-5 flex flex-col gap-2 sm:flex-row"><input value={scanCode} onChange={(event) => setScanCode(event.target.value)} required autoComplete="off" className="min-h-12 min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 font-mono text-white placeholder:text-white/40" placeholder="Đưa mã vào máy quét hoặc nhập mã QR" /><button type="submit" disabled={scanPending} className="min-h-12 rounded-xl bg-white px-5 font-black text-[#183f34] disabled:cursor-wait disabled:opacity-60">{scanPending ? "Đang ghi nhận..." : "Xác thực & ghi nhận"}</button></form>{scanMessage ? <p role={scanRefused ? "alert" : "status"} className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${scanRefused ? "bg-[#7d3226] text-[#ffd9d1]" : "bg-white/10"}`}>{scanMessage}</p> : null}<div className="mt-6 border-t border-white/15 pt-4">
+      {mode === "checkin" ? (
+        <section className="rounded-3xl bg-[#183f34] p-5 text-white sm:p-7">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#acd1c3]">Cổng A · {site.shortName}</p>
+          <h2 className="mt-2 text-3xl font-black">Quét và ghi nhận QR</h2>
+          <form onSubmit={recordScan} className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} required autoComplete="off" className="min-h-12 min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 font-mono text-white placeholder:text-white/40" placeholder="Đưa mã vào máy quét hoặc nhập mã QR" />
+            <button type="submit" disabled={scanPending} className="min-h-12 rounded-xl bg-white px-5 font-black text-[#183f34] disabled:cursor-wait disabled:opacity-60">{scanPending ? "Đang ghi nhận..." : "Xác thực & ghi nhận"}</button>
+            {cameraSupported ? (
+              <button
+                type="button"
+                onClick={() => (cameraOpen ? stopCameraScan() : startCameraScan())}
+                className="min-h-12 rounded-xl border border-white/25 px-5 font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34]"
+              >
+                {cameraOpen ? "Đóng camera" : "Quét bằng camera"}
+              </button>
+            ) : null}
+          </form>
+          {cameraOpen ? (
+            <div className="mt-3 overflow-hidden rounded-xl bg-black">
+              <video ref={videoRef} muted playsInline className="aspect-video w-full object-cover" />
+              <p className="bg-black/60 px-3 py-2 text-xs text-white/80">Mời bạn đưa mã QR vào giữa khung hình, máy tự đọc ạ.</p>
+            </div>
+          ) : null}
+          {cameraMessage ? <p role="status" className="mt-2 text-xs text-white/70">{cameraMessage}</p> : null}
+          {scanMessage ? <p role={scanRefused ? "alert" : "status"} className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${scanRefused ? "bg-[#7d3226] text-[#ffd9d1]" : "bg-white/10"}`}>{scanMessage}</p> : null}
+          <div className="mt-6 border-t border-white/15 pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Vé quét thử được hôm nay</p>
+              {isDirector ? (
+                <button
+                  type="button"
+                  onClick={handleRefreshDemoTickets}
+                  disabled={refreshPending}
+                  className="min-h-9 rounded-lg border border-white/25 px-3 text-xs font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34] disabled:cursor-wait disabled:opacity-60"
+                >
+                  {refreshPending ? "Đang làm mới…" : "Làm mới vé mẫu"}
+                </button>
+              ) : null}
+            </div>
+            {todayTicketsPending ? (
+              <p className="mt-3 text-xs text-white/70">Đang tải danh sách vé…</p>
+            ) : todayTickets.length === 0 ? (
+              <p className="mt-3 text-xs text-white/70">
+                {todayTicketsMessage || "Hôm nay chưa có vé nào còn hiệu lực tại cơ sở này."}{" "}
+                {isDirector ? "Mời bạn bấm nút làm mới vé mẫu ở trên." : "Mời bạn nhờ giám đốc bấm nút làm mới vé mẫu."}
+              </p>
+            ) : (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {todayTickets.map((ticket) => (
+                  <button
+                    key={ticket.ticketCode}
+                    type="button"
+                    onClick={() => setScanCode(ticket.ticketCode)}
+                    className="flex items-center gap-3 rounded-xl bg-white/95 p-3 text-left text-[#183f34] outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34]"
+                  >
+                    {qrDataUrls[ticket.ticketCode] ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- QR is a generated data URL, not an optimizable asset
+                      <img src={qrDataUrls[ticket.ticketCode]} alt={`Mã QR của vé ${ticket.ticketCode}`} className="h-16 w-16 shrink-0 rounded-md" />
+                    ) : (
+                      <span className="grid h-16 w-16 shrink-0 place-items-center rounded-md bg-[#eef3f0] text-[10px] text-[#7b8881]">Đang tạo QR…</span>
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate font-mono text-sm font-black">{ticket.ticketCode}</span>
+                      <span className="mt-1 block text-xs text-[#5c6f67]">{TICKET_PRODUCT_LABELS[ticket.product] ?? ticket.product} · còn {ticket.entriesAllowed - ticket.entriesUsed} lượt</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="mt-6 border-t border-white/15 pt-4">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Khách mất mã — tra theo tên hoặc số điện thoại</p>
           <form onSubmit={lookupGuest} className="mt-3 flex flex-col gap-2 sm:flex-row">
             <input value={lookupQuery} onChange={(event) => setLookupQuery(event.target.value)} autoComplete="off" className="min-h-11 min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 text-white placeholder:text-white/40" placeholder="Mã vé, tên khách, số điện thoại hoặc mã đặt chỗ" />
@@ -110,7 +362,8 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
           </form>
           {lookupMessage ? <p role="status" className="mt-2 text-xs text-white/70">{lookupMessage}</p> : null}
           {lookupResults.length > 0 ? <ul className="mt-3 space-y-2">{lookupResults.map((ticket) => <li key={ticket.ticketCode} className="rounded-lg bg-white/7 px-3 py-2 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-mono font-bold">{ticket.ticketCode}</span><button type="button" onClick={() => setScanCode(ticket.ticketCode)} className="rounded-md bg-white px-2 py-1 font-black text-[#183f34]">Đưa vào ô quét</button></div><p className="mt-1 text-white/70">{ticket.guestName || "Không có tên"} · {ticket.guestPhone || "Không có SĐT"} · {ticket.entriesUsed}/{ticket.entriesAllowed} lượt · hiệu lực {ticket.validOn}</p></li>)}</ul> : null}
-        </div>{gateScans.length > 0 ? <div className="mt-5 border-t border-white/15 pt-4"><p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Quét gần nhất · toàn cơ sở</p><ul className="mt-3 space-y-2">{gateScans.map((scan) => <li key={scan.id} className="flex items-center justify-between gap-3 rounded-lg bg-white/7 px-3 py-2 text-xs"><span className="font-mono font-bold">{scan.code}</span><span className="text-white/70">{scan.scannedByName} · {new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(scan.scannedAt))}</span></li>)}</ul></div> : null}</section> : null}
+        </div>{gateScans.length > 0 ? <div className="mt-5 border-t border-white/15 pt-4"><p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Quét gần nhất · toàn cơ sở</p><ul className="mt-3 space-y-2">{gateScans.map((scan) => <li key={scan.id} className="flex items-center justify-between gap-3 rounded-lg bg-white/7 px-3 py-2 text-xs"><span className="font-mono font-bold">{scan.code}</span><span className="text-white/70">{scan.scannedByName} · {new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(scan.scannedAt))}</span></li>)}</ul></div> : null}</section>
+      ) : null}
 
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

@@ -600,6 +600,55 @@ export async function validateGateScan(
   return validateInCookie(input);
 }
 
+/**
+ * Vé còn quét được ở cơ sở này, hôm nay.
+ *
+ * Có hàm này vì một lý do rất cụ thể: chủ dự án mở ERP để thử soát vé và
+ * không có gì để quét — production chỉ có 8 vé mẫu, tất cả đã quá hạn bốn
+ * tuần. Ô tra cứu thì đòi gõ trước ít nhất ba ký tự, mà không ai biết gõ gì.
+ *
+ * Danh sách này trả lời đúng câu "giờ tôi quét cái gì".
+ */
+export async function listScannableTicketsToday(siteId: ErpSiteId): Promise<TicketSummary[]> {
+  if (readMode() !== "supabase") return [];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
+  const result = await createAdminClient()
+    .from("erp_tickets")
+    .select(
+      "ticket_code, product, guest_name, guest_phone, booking_reference, channel, valid_on, entries_allowed, entries_used, status",
+    )
+    .eq("tenant_id", TENANT_ID)
+    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId])
+    .eq("valid_on", today)
+    .in("status", ["issued", "partially-used"])
+    .order("ticket_code")
+    .limit(20);
+  if (result.error) throw repositoryError("đọc vé còn hiệu lực hôm nay", result.error);
+  return (result.data ?? [])
+    .map((row) => ticketFromRow(row))
+    .flatMap((ticket) => (ticket ? [ticket] : []));
+}
+
+/**
+ * Kéo 8 vé mẫu về hôm nay để còn thử được cổng.
+ *
+ * Chỉ chạm đúng những mã có dạng `TA-2026-000101`. Vé bán qua web mang mã
+ * `WEB-` cộng 12 ký tự nên không bao giờ khớp — hàng rào nằm ở PostgreSQL,
+ * không ở đây.
+ */
+export async function refreshDemoTickets(actorAccountId: string): Promise<{ validOn: string; ticketCodes: string[] }> {
+  const { data, error } = await createAdminClient().rpc("erp_refresh_demo_tickets", {
+    p_tenant_id: TENANT_ID,
+    p_actor_account_id: actorAccountId,
+  });
+  if (error) throw repositoryError("làm mới vé mẫu", error);
+  const row = (data ?? {}) as Record<string, unknown>;
+  return {
+    validOn: String(row.valid_on ?? ""),
+    ticketCodes: Array.isArray(row.ticket_codes) ? row.ticket_codes.map(String) : [],
+  };
+}
+
 export async function searchTickets(
   siteId: ErpSiteId,
   query: string,

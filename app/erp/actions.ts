@@ -54,6 +54,8 @@ import {
 import {
   GATE_SCAN_RESULT_LABELS,
   GateScanRepositoryError,
+  listScannableTicketsToday,
+  refreshDemoTickets,
   searchTickets,
   validateGateScan,
   type GateScanDecision,
@@ -743,5 +745,86 @@ export async function lookupTicketsAction(input: {
       return { tickets: [], message: error.message };
     }
     return { tickets: [], message: "Chưa tra cứu được vé. Hãy thử lại." };
+  }
+}
+
+/**
+ * Vé còn quét được ở cơ sở này, hôm nay.
+ *
+ * Ô tra cứu bên cạnh đòi gõ trước ba ký tự, mà người mới mở màn hình thì
+ * không biết gõ gì. Đây là câu trả lời cho "giờ tôi quét cái gì".
+ */
+export async function listTodayTicketsAction(input: {
+  siteId: string;
+}): Promise<TicketLookupResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { tickets: [], message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) {
+    return { tickets: [], message: "Cơ sở không hợp lệ." };
+  }
+  const siteId: ErpSiteId = input.siteId;
+  if (
+    !accountCanAccessSite(user, siteId) ||
+    !accountCanAccessModule(user, siteId, "check-in-khach")
+  ) {
+    return {
+      tickets: [],
+      message: "Bạn không được phân công check-in tại cơ sở này.",
+    };
+  }
+  try {
+    const tickets = await listScannableTicketsToday(siteId);
+    return {
+      tickets,
+      message: tickets.length
+        ? `Có ${tickets.length} vé còn quét được hôm nay.`
+        : "Hôm nay chưa có vé nào còn hiệu lực tại cơ sở này.",
+    };
+  } catch (error) {
+    if (error instanceof GateScanRepositoryError) {
+      return { tickets: [], message: error.message };
+    }
+    return { tickets: [], message: "Chưa đọc được danh sách vé. Hãy thử lại." };
+  }
+}
+
+/**
+ * Kéo vé mẫu về hôm nay.
+ *
+ * Tám tấm vé mẫu neo cứng vào ngày seed, nên sau ngày đó không ai thử được
+ * cổng nữa: quét tấm nào cũng ra "vé không dùng cho hôm nay". Nút này kéo
+ * chúng về hôm nay và trả lại lượt vào đã dùng.
+ *
+ * Chỉ giám đốc bấm được, và PostgreSQL chặn cứng phạm vi: chỉ những mã dạng
+ * `TA-2026-000101` mới bị chạm, vé khách thật mua qua web thì không.
+ */
+export async function refreshDemoTicketsAction(): Promise<{
+  ok: boolean;
+  message: string;
+  ticketCodes: string[];
+}> {
+  const user = await getCurrentErpUser();
+  if (!user) {
+    return { ok: false, message: "Phiên đăng nhập đã hết hạn.", ticketCodes: [] };
+  }
+  try {
+    const result = await refreshDemoTickets(user.id);
+    const ngay = new Date(`${result.validOn}T00:00:00`).toLocaleDateString("vi-VN");
+    return {
+      ok: true,
+      message: result.ticketCodes.length
+        ? `Đã kéo ${result.ticketCodes.length} vé mẫu về ngày ${ngay}. Mời bạn quét thử.`
+        : "Không có vé mẫu nào để kéo về hôm nay.",
+      ticketCodes: result.ticketCodes,
+    };
+  } catch (error) {
+    if (error instanceof GateScanRepositoryError) {
+      return { ok: false, message: error.message, ticketCodes: [] };
+    }
+    return {
+      ok: false,
+      message: "Chỉ giám đốc mới làm mới được vé mẫu.",
+      ticketCodes: [],
+    };
   }
 }

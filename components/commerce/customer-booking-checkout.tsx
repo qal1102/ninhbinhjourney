@@ -53,6 +53,43 @@ function MemberQrCode({ memberCode }: { memberCode: string }) {
   );
 }
 
+// Mã QR của vé chứa đúng mã vé trần (ví dụ `WEB-A1B2C3D4E5F6`), khác hẳn
+// `MemberQrCode` ở trên vốn chứa một địa chỉ web. Máy quét ở cổng đọc thẳng
+// nội dung QR rồi đối chiếu với mã vé — nhét thêm đường dẫn vào đây là vé
+// không quét được nữa.
+//
+// Cách vẽ giữ nguyên `MemberQrCode`, dùng lại gói `qrcode` đã có trong dự án.
+function TicketQrCode({ ticketCode }: { ticketCode: string }) {
+  const [qrDataUrl, setQrDataUrl] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void QRCode.toDataURL(ticketCode, {
+      width: 168,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#151A17", light: "#F4F0E7" },
+    }).then((url) => {
+      if (active) setQrDataUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [ticketCode]);
+
+  if (!qrDataUrl) {
+    return <div className="grid size-16 shrink-0 place-items-center rounded-xl bg-[#f4f0e7] text-[10px] text-[#6b786f]">Đang tạo…</div>;
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={qrDataUrl}
+      alt={`Mã QR để quét ở cổng, mã vé ${ticketCode}`}
+      className="size-16 shrink-0 rounded-xl bg-[#f4f0e7]"
+    />
+  );
+}
+
 type HoldResult = {
   order: { id: string; code: string };
   hold: { id: string; status: string; expires_at: string };
@@ -558,6 +595,7 @@ export function CustomerBookingCheckout({
           <div className="mt-6" data-testid="customer-booking-confirmed">
             <p className="rounded-2xl bg-[#dceadd] p-4 font-bold text-[#183f34]">Đã xác nhận · {confirmation.order.code}</p>
             <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Vé của bạn</p>
+            <p className="mt-1 text-sm leading-6 text-white/70">Tới cổng, bạn đưa mã cho nhân viên quét là vào được ngay ạ.</p>
             <ul className="mt-3 space-y-3">
               {Array.from(
                 confirmation.tickets.reduce((bySite, ticket) => {
@@ -569,11 +607,14 @@ export function CustomerBookingCheckout({
               ).map(([siteId, ticketsForSite]) => (
                 <li key={siteId} className="rounded-2xl border border-white/15 bg-white/8 p-4">
                   <p className="text-sm font-bold text-white/85">{formatGuestGroupSummary(ticketsForSite)}</p>
-                  <ul className="mt-3 space-y-2 border-t border-white/10 pt-3">
+                  <ul className="mt-3 space-y-3 border-t border-white/10 pt-3">
                     {ticketsForSite.map((ticket) => (
-                      <li key={ticket.ticketId}>
-                        <code className="text-lg font-extrabold tracking-[0.08em] text-[#e7c78d]">{ticket.ticketCode}</code>
-                        <p className="mt-1 text-sm text-white/62">{ticket.entriesAllowed} lượt vào · hiệu lực {new Date(`${ticket.validOn}T00:00:00`).toLocaleDateString("vi-VN")}</p>
+                      <li key={ticket.ticketId} className="flex items-center gap-3">
+                        <TicketQrCode ticketCode={ticket.ticketCode} />
+                        <div className="min-w-0">
+                          <code className="text-lg font-extrabold tracking-[0.08em] text-[#e7c78d]">{ticket.ticketCode}</code>
+                          <p className="mt-1 text-sm text-white/62">{ticket.entriesAllowed} lượt vào · hiệu lực {new Date(`${ticket.validOn}T00:00:00`).toLocaleDateString("vi-VN")}</p>
+                        </div>
                       </li>
                     ))}
                   </ul>

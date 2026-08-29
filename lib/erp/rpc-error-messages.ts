@@ -430,6 +430,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Khung giờ đã qua hoặc quá gần giờ bắt đầu.",
   CUSTOMER_BOOKING_SLOT_NOT_OFFERED:
     "Khung giờ này không nằm trong lịch bán của gói dịch vụ.",
+  DEMO_TICKET_REFRESH_DIRECTOR_ONLY:
+    "Chỉ giám đốc mới làm mới được vé mẫu.",
   GROUP_INPUT_INVALID:
     "Thông tin trưởng đoàn chưa hợp lệ.",
   GROUP_ORDER_NOT_FOUND:

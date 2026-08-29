@@ -49,6 +49,9 @@ export type CustomerBookingTicket = {
 // TC-02 — một hàng thô từ `customer_list_product_slots`, đúng một cơ sở.
 export type CustomerProductSlotRow = {
   siteId: string;
+  // Giờ khởi hành của cả chuyến. Mọi chặng của cùng một chuyến chung một giá
+  // trị; `startsAt` bên dưới mới là giờ riêng của từng chặng.
+  departureStartsAt: string;
   localStartTime: string;
   startsAt: string;
   endsAt: string;
@@ -94,11 +97,11 @@ export function mergeProductSlotRows(
 ): CustomerProductTimeSlot[] {
   const byStartsAt = new Map<string, CustomerProductSlotRow[]>();
   for (const row of rows) {
-    const bucket = byStartsAt.get(row.startsAt);
+    const bucket = byStartsAt.get(row.departureStartsAt);
     if (bucket) {
       bucket.push(row);
     } else {
-      byStartsAt.set(row.startsAt, [row]);
+      byStartsAt.set(row.departureStartsAt, [row]);
     }
   }
   return [...byStartsAt.entries()]

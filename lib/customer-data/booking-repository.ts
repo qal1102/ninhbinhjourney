@@ -125,6 +125,7 @@ function slotRowsFromRpc(value: unknown): CustomerProductSlotRow[] {
     if (status !== "open" && status !== "paused") return [];
     return [{
       siteId: String(row.site_id),
+      departureStartsAt: String(row.departure_starts_at),
       localStartTime: String(row.local_start_time),
       startsAt: String(row.starts_at),
       endsAt: String(row.ends_at),

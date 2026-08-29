@@ -81,6 +81,7 @@ describe("CUS-06 booking routes", () => {
     mocks.listSlots.mockResolvedValue([
       {
         siteId: "10000000-0000-4000-8000-000000000001",
+        departureStartsAt: slotStartsAt,
         localStartTime: "09:00:00",
         startsAt: slotStartsAt,
         endsAt: "2026-08-22T04:00:00.000Z",
@@ -148,6 +149,7 @@ describe("CUS-06 booking routes", () => {
     mocks.listSlots.mockResolvedValue([
       {
         siteId: "10000000-0000-4000-8000-000000000001",
+        departureStartsAt: slotStartsAt,
         localStartTime: "09:00:00",
         startsAt: slotStartsAt,
         endsAt: "2026-08-22T04:00:00.000Z",
@@ -159,6 +161,7 @@ describe("CUS-06 booking routes", () => {
       },
       {
         siteId: "10000000-0000-4000-8000-000000000002",
+        departureStartsAt: slotStartsAt,
         localStartTime: "09:00:00",
         startsAt: slotStartsAt,
         endsAt: "2026-08-22T04:00:00.000Z",

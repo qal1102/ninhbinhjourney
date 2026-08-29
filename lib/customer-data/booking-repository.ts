@@ -23,6 +23,7 @@ export class CustomerBookingRepositoryError extends Error {
       | "SLOT_PAUSED"
       | "SLOT_PAST"
       | "SLOT_NOT_OFFERED"
+      | "PARTY_MIX_INVALID"
       | "HOLD_NOT_FOUND"
       | "HOLD_EXPIRED"
       | "OWNERSHIP_REQUIRED"
@@ -75,6 +76,7 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_BOOKING_SLOT_PAUSED", "SLOT_PAUSED", "Khung giờ đang tạm dừng nhận đặt chỗ."],
     ["CUSTOMER_BOOKING_SLOT_PAST", "SLOT_PAST", "Khung giờ này đã qua hoặc quá gần giờ bắt đầu."],
     ["CUSTOMER_BOOKING_SLOT_NOT_OFFERED", "SLOT_NOT_OFFERED", "Khung giờ này không nằm trong lịch bán của gói."],
+    ["CUSTOMER_BOOKING_PARTY_MIX_INVALID", "PARTY_MIX_INVALID", "Số người lớn cộng số trẻ em phải đúng bằng tổng số khách, và phải có ít nhất một người lớn."],
     ["CUSTOMER_BOOKING_HOLD_NOT_FOUND", "HOLD_NOT_FOUND", "Không tìm thấy lượt giữ chỗ này."],
     ["CUSTOMER_BOOKING_HOLD_EXPIRED", "HOLD_EXPIRED", "Lượt giữ chỗ đã hết hạn; hãy giữ lại khung giờ mới."],
     ["CUSTOMER_BOOKING_OWNERSHIP_REQUIRED", "OWNERSHIP_REQUIRED", "Lượt giữ chỗ không thuộc phiên khách hiện tại."],
@@ -138,6 +140,11 @@ function slotRowsFromRpc(value: unknown): CustomerProductSlotRow[] {
   });
 }
 
+function guestGroupFrom(value: unknown): CustomerBookingTicket["guestGroup"] {
+  const raw = String(value);
+  return raw === "adult" || raw === "child" ? raw : "group";
+}
+
 function ticketsFromRow(value: unknown): CustomerBookingTicket[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
@@ -149,6 +156,7 @@ function ticketsFromRow(value: unknown): CustomerBookingTicket[] {
       siteId: String(row.site_id),
       validOn: String(row.valid_on),
       entriesAllowed: Number(row.entries_allowed),
+      guestGroup: guestGroupFrom(row.guest_group),
       status: String(row.status) as CustomerBookingTicket["status"],
     }];
   });
@@ -177,6 +185,9 @@ export async function createCustomerBookingHold(input: {
   productId: string;
   visitDate: string;
   partySize: number;
+  // TC-03 — bỏ trống thì máy chủ tính mọi khách là người lớn, đúng như trước.
+  adults?: number;
+  children?: number;
   slotStartsAt: string;
 }) {
   const { data, error } = await createAdminClient().rpc("customer_create_booking_hold", {
@@ -188,6 +199,8 @@ export async function createCustomerBookingHold(input: {
     p_party_size: input.partySize,
     p_occurred_at: new Date().toISOString(),
     p_slot_starts_at: input.slotStartsAt,
+    p_adults: input.adults ?? null,
+    p_children: input.children ?? null,
   });
   const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : undefined;
   if (error || !row) throw mapRepositoryError(error);

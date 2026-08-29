@@ -28,9 +28,28 @@ type ConfirmationResult = {
     siteId: string;
     validOn: string;
     entriesAllowed: number;
+    guestGroup: "adult" | "child" | "group";
     status: string;
   }>;
 };
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+// Nói theo cách khách hiểu, không theo cách bảng dữ liệu gọi. "child" ở đây
+// nghĩa hẹp là trẻ dưới 1m3 — nhóm không mất vé. Vé cũ phát trước TC-03 gộp cả
+// đoàn vào một tấm, vẫn ghi đúng số khách chứ không gọi nhầm thành vé thường.
+function formatGuestGroupSummary(tickets: ConfirmationResult["tickets"]) {
+  const adultTicket = tickets.find((ticket) => ticket.guestGroup === "adult");
+  const childTicket = tickets.find((ticket) => ticket.guestGroup === "child");
+  const groupTicket = tickets.find((ticket) => ticket.guestGroup === "group");
+  const parts: string[] = [];
+  if (adultTicket) parts.push(`${adultTicket.entriesAllowed} vé`);
+  if (childTicket) parts.push(`${childTicket.entriesAllowed} trẻ dưới 1m3 (không mất vé)`);
+  if (groupTicket) parts.push(`${groupTicket.entriesAllowed} khách`);
+  return parts.join(" · ");
+}
 
 const SOURCE_LABEL = {
   estimate: "Ước tính vận hành T11a",
@@ -79,7 +98,11 @@ export function CustomerBookingCheckout({
 }: {
   packageItem: PackageCatalogItem;
 }) {
-  const [partySize, setPartySize] = useState(packageItem.fixedPartySize ?? 2);
+  // Mặc định: gói cố định tổng khách thì mọi chỗ tính là người lớn cho tới
+  // khi khách tự đổi tỉ lệ; gói thường mặc định hai người lớn như trước đây.
+  const [adults, setAdults] = useState(() => (packageItem.fixedPartySize ? Math.max(1, packageItem.fixedPartySize) : 2));
+  const [children, setChildren] = useState(0);
+  const partySize = adults + children;
   const [visitDate, setVisitDate] = useState(() => packageItem.bookingStartDate ?? localIsoDate(1));
   const [slots, setSlots] = useState<CustomerProductTimeSlot[] | null>(null);
   const [slotsLoading, setSlotsLoading] = useState(true);
@@ -144,6 +167,40 @@ export function CustomerBookingCheckout({
 
   const selectedSlot = slots?.find((slot) => slot.startsAt === selectedSlotStartsAt) ?? null;
   const partySizeExceedsSlot = Boolean(selectedSlot && partySize > selectedSlot.remaining);
+  const partySizeInvalid = adults < 1 || partySize < 1 || partySize > 20;
+
+  // Bàn Trăng khoá tổng số chỗ: đổi được bao nhiêu khách có vé, bao nhiêu trẻ
+  // dưới 1m3, nhưng tổng luôn đúng bằng fixedPartySize. Sản phẩm khác thì hai ô
+  // độc lập, chỉ ràng buộc tối thiểu một khách có vé và tổng không vượt quá 20.
+  function updateAdults(rawValue: number) {
+    if (!Number.isFinite(rawValue)) return;
+    const nextAdults = clamp(Math.trunc(rawValue), 1, 20);
+    if (packageItem.fixedPartySize) {
+      const total = packageItem.fixedPartySize;
+      const boundedAdults = clamp(nextAdults, 1, total);
+      setAdults(boundedAdults);
+      setChildren(total - boundedAdults);
+    } else {
+      setAdults(nextAdults);
+      setChildren((previousChildren) => clamp(previousChildren, 0, Math.max(0, 20 - nextAdults)));
+    }
+    invalidateHold();
+  }
+
+  function updateChildren(rawValue: number) {
+    if (!Number.isFinite(rawValue)) return;
+    const nextChildren = clamp(Math.trunc(rawValue), 0, 19);
+    if (packageItem.fixedPartySize) {
+      const total = packageItem.fixedPartySize;
+      const boundedChildren = clamp(nextChildren, 0, Math.max(0, total - 1));
+      setChildren(boundedChildren);
+      setAdults(total - boundedChildren);
+    } else {
+      setChildren(nextChildren);
+      setAdults((previousAdults) => clamp(previousAdults, 1, Math.max(1, 20 - nextChildren)));
+    }
+    invalidateHold();
+  }
 
   function invalidateHold() {
     setHold(null);
@@ -177,6 +234,8 @@ export function CustomerBookingCheckout({
           product_id: packageItem.id,
           visit_date: visitDate,
           party_size: partySize,
+          adults,
+          children,
           slot_starts_at: selectedSlotStartsAt,
         }),
       });
@@ -291,28 +350,49 @@ export function CustomerBookingCheckout({
             )}
           </div>
 
-          <label className="mt-7 block max-w-xs text-sm font-bold text-[#27362f]">
-            {packageItem.fixedPartySize ? "Sản phẩm" : "Số khách"}
-            <input
-              aria-label={packageItem.fixedPartySize ? "Sản phẩm cố định hai khách" : "Số khách"}
-              type={packageItem.fixedPartySize ? "text" : "number"}
-              min={packageItem.fixedPartySize ? undefined : 1}
-              max={packageItem.fixedPartySize ? undefined : 20}
-              value={partySize}
-              onChange={(event) => {
-                setPartySize(Number(event.target.value));
-                invalidateHold();
-              }}
-              disabled={Boolean(packageItem.fixedPartySize)}
-              className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal disabled:bg-[#f1efe8]"
-            />
-            {packageItem.fixedPartySize ? <span className="mt-2 block text-xs font-normal text-[#6b786f]">Bàn cố định cho hai khách</span> : null}
+          <div className="mt-7 max-w-xs">
+            <p className="text-sm font-bold text-[#27362f]">Số khách</p>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <label className="block text-xs font-bold text-[#59654b]">
+                Từ 1m3 trở lên
+                <input
+                  aria-label="Số khách cao từ 1m3 trở lên"
+                  type="number"
+                  min={1}
+                  max={packageItem.fixedPartySize ?? 20}
+                  value={adults}
+                  onChange={(event) => updateAdults(Number(event.target.value))}
+                  className="mt-1 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal text-[#27362f]"
+                />
+              </label>
+              <label className="block text-xs font-bold text-[#59654b]">
+                Dưới 1m3
+                <input
+                  aria-label="Số trẻ cao dưới 1m3"
+                  type="number"
+                  min={0}
+                  max={packageItem.fixedPartySize ? Math.max(0, packageItem.fixedPartySize - 1) : 19}
+                  value={children}
+                  onChange={(event) => updateChildren(Number(event.target.value))}
+                  className="mt-1 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal text-[#27362f]"
+                />
+              </label>
+            </div>
+            {packageItem.fixedPartySize ? (
+              <span className="mt-2 block text-xs font-normal text-[#6b786f]">
+                Bàn đã đặt sẵn cho {packageItem.fixedPartySize} khách. Trẻ dưới 1m3 không mất vé, và tổng số chỗ vẫn giữ nguyên ạ.
+              </span>
+            ) : (
+              <span className="mt-2 block text-xs font-normal text-[#6b786f]">
+                Trẻ dưới 1m3 không mất vé, nhưng vẫn được giữ một chỗ trên thuyền. Mỗi lượt đặt tối đa 20 khách.
+              </span>
+            )}
             {partySizeExceedsSlot ? (
               <span className="mt-2 block text-xs font-normal text-[#9a3b2f]">
                 Khung giờ này còn {selectedSlot?.remaining} chỗ, ít hơn số khách bạn chọn. Mời bạn giảm số khách hoặc chọn khung khác.
               </span>
             ) : null}
-          </label>
+          </div>
 
           <div className="mt-7 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
             <p className="font-extrabold">Thanh toán mô phỏng — không thu tiền</p>
@@ -356,41 +436,64 @@ export function CustomerBookingCheckout({
         <h2 className="font-display mt-3 text-4xl leading-tight">{packageItem.name}</h2>
         <p className="mt-3 leading-7 text-white/65">{packageItem.durationLabel} · {packageItem.audience}</p>
         <dl className="mt-7 space-y-4 border-y border-white/15 py-5 text-sm">
-          <div className="flex justify-between gap-4"><dt className="text-white/55">Đơn giá mỗi khách</dt><dd>{packageItem.demoPriceVnd.toLocaleString("vi-VN")} VND</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-white/55">Số khách</dt><dd>{partySize}</dd></div>
-          <div className="flex justify-between gap-4 text-lg font-bold"><dt>Tổng</dt><dd className="text-[#e7c78d]">{(hold?.amount.total_vnd ?? packageItem.demoPriceVnd * Math.max(0, partySize)).toLocaleString("vi-VN")} VND</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/55">Đơn giá mỗi vé</dt><dd>{packageItem.demoPriceVnd.toLocaleString("vi-VN")} VND</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/55">Số vé</dt><dd>{adults}</dd></div>
+          {children > 0 ? (
+            <div className="flex justify-between gap-4"><dt className="text-white/55">Trẻ dưới 1m3</dt><dd>{children} · không mất vé</dd></div>
+          ) : null}
+          <div className="flex justify-between gap-4 text-lg font-bold"><dt>Tổng</dt><dd className="text-[#e7c78d]">{(hold?.amount.total_vnd ?? packageItem.demoPriceVnd * Math.max(0, adults)).toLocaleString("vi-VN")} VND</dd></div>
         </dl>
 
         {confirmation ? (
           <div className="mt-6" data-testid="customer-booking-confirmed">
             <p className="rounded-2xl bg-[#dceadd] p-4 font-bold text-[#183f34]">Đã xác nhận · {confirmation.order.code}</p>
-            <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Vé T8 đã phát hành</p>
+            <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Vé của bạn</p>
             <ul className="mt-3 space-y-3">
-              {confirmation.tickets.map((ticket) => (
-                <li key={ticket.ticketId} className="rounded-2xl border border-white/15 bg-white/8 p-4">
-                  <code className="text-lg font-extrabold tracking-[0.08em] text-[#e7c78d]">{ticket.ticketCode}</code>
-                  <p className="mt-2 text-sm text-white/62">{ticket.entriesAllowed} lượt vào · hiệu lực {new Date(`${ticket.validOn}T00:00:00`).toLocaleDateString("vi-VN")}</p>
+              {Array.from(
+                confirmation.tickets.reduce((bySite, ticket) => {
+                  const forSite = bySite.get(ticket.siteId) ?? [];
+                  forSite.push(ticket);
+                  bySite.set(ticket.siteId, forSite);
+                  return bySite;
+                }, new Map<string, ConfirmationResult["tickets"]>()),
+              ).map(([siteId, ticketsForSite]) => (
+                <li key={siteId} className="rounded-2xl border border-white/15 bg-white/8 p-4">
+                  <p className="text-sm font-bold text-white/85">{formatGuestGroupSummary(ticketsForSite)}</p>
+                  <ul className="mt-3 space-y-2 border-t border-white/10 pt-3">
+                    {ticketsForSite.map((ticket) => (
+                      <li key={ticket.ticketId}>
+                        <code className="text-lg font-extrabold tracking-[0.08em] text-[#e7c78d]">{ticket.ticketCode}</code>
+                        <p className="mt-1 text-sm text-white/62">{ticket.entriesAllowed} lượt vào · hiệu lực {new Date(`${ticket.validOn}T00:00:00`).toLocaleDateString("vi-VN")}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </li>
               ))}
             </ul>
           </div>
         ) : !hold ? (
-          <button
-            type="button"
-            onClick={createHold}
-            disabled={
-              pending !== null
-              || partySize < 1
-              || partySize > 20
-              || !visitDate
-              || !selectedSlot
-              || !selectedSlot.bookable
-              || partySizeExceedsSlot
-            }
-            className="mt-7 min-h-12 w-full rounded-full bg-[#f4f0e7] px-6 font-extrabold text-[#183f34] disabled:opacity-50"
-          >
-            {pending === "hold" ? "Đang khóa chỗ…" : "Giữ chỗ 15 phút"}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={createHold}
+              // `partySizeInvalid` hiện không thể xảy ra: hai hàm `updateAdults`
+              // và `updateChildren` đã kẹp số ngay lúc khách gõ. Giữ lại làm
+              // lưới an toàn cho ngày ai đó nới chỗ kẹp ấy ra — nhưng không kèm
+              // câu cảnh báo, vì một câu không bao giờ hiện ra chỉ làm người đọc
+              // mã tin rằng nó đã được thử.
+              disabled={
+                pending !== null
+                || partySizeInvalid
+                || !visitDate
+                || !selectedSlot
+                || !selectedSlot.bookable
+                || partySizeExceedsSlot
+              }
+              className="mt-7 min-h-12 w-full rounded-full bg-[#f4f0e7] px-6 font-extrabold text-[#183f34] disabled:opacity-50"
+            >
+              {pending === "hold" ? "Đang khóa chỗ…" : "Giữ chỗ 15 phút"}
+            </button>
+          </>
         ) : (
           <button
             type="button"

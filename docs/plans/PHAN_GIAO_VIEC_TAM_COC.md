@@ -245,7 +245,11 @@ Migration mới `2026xxxx0049_erp_capacity_multi_bottleneck.sql`:
 
 1. `CustomerBookingHoldRequestSchema` (`domain/customer-booking.ts`) thêm `adults` và `children`; giữ `party_size` là tổng để không phá hợp đồng slot.
 2. Order và line lưu tách hai nhóm; phát vé T8 đúng `product='adult'` / `'child'` — **giá trị này đã tồn tại sẵn** trong `erp_tickets`, không cần migration T8.
-3. Bundle: một hold giữ chỗ tại **mọi** tài nguyên có ngưỡng trong package, trong **cùng một transaction**. Khóa theo thứ tự `slot_id` tăng dần để tránh deadlock — mẫu đã có ở `202608200043` dòng 632 và 661.
+
+   > **Giá vé — chủ dự án chốt 29/08/2026:** trẻ **dưới 1m3 không mua vé**, từ 1m3 trở lên tính giá thường. Vì thế `child` có nghĩa hẹp và cố định là *khách dưới 1m3*, **không phải "trẻ em" theo tuổi**: một em mười hai tuổi cao 1m4 vẫn là một vé thường. Chữ dùng với khách phải là **"Từ 1m3 trở lên" / "Dưới 1m3"**, không phải "người lớn / trẻ em" — gọi sai thì phụ huynh chọn nhầm và mình thu thiếu tiền mà không ai biết. **Miễn phí không có nghĩa là không chiếm chỗ:** sức chứa vẫn trừ theo tổng đầu người, và vé của em bé vẫn phát ra để còn đếm được ở cổng. Quy tắc này áp cho cả **TC-06** (khách đoàn) và **TC-10** (căn cước hành trình) — đừng định nghĩa lại ở đó.
+3. Bundle: một hold giữ chỗ tại **mọi** tài nguyên có ngưỡng trong package, trong **cùng một transaction**, và mọi hàm khóa các hàng khung giờ theo **cùng một chiều** để tránh deadlock.
+
+   > **Đính chính 29/08/2026 — bản đầu ghi "khóa theo thứ tự `slot_id` tăng dần", điều đó không làm được.** Lúc `customer_create_booking_hold` bắt đầu thì hàng khung giờ **chưa tồn tại** — chính hàm ấy tạo ra chúng — nên chưa có `slot_id` nào để mà sắp. Khóa thật sự dùng là **`(giờ bắt đầu, cơ sở)`**: biết trước, lại đúng là khóa duy nhất của `customer_booking_slots`. Vì vậy `customer_confirm_simulated_booking` đã đổi sang thứ tự đó (`202608290053`), chứ không phải hàm giữ chỗ đổi sang `slot_id`.
 4. Thiếu bất kỳ thành phần nào → **toàn bộ hold thất bại**, không giữ một phần.
 
 **Cấm:** suy diễn tuổi từ hành vi (`GOI_A_KE_HOACH.md` mục 8 guardrail); giữ chỗ một phần rồi hứa phần còn lại.

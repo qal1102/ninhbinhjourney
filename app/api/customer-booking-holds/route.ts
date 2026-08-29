@@ -46,6 +46,8 @@ export async function POST(request: Request) {
       productId: input.product_id,
       visitDate: input.visit_date,
       partySize: input.party_size,
+      adults: input.adults,
+      children: input.children,
       slotStartsAt: input.slot_starts_at,
     });
     const response = Response.json(

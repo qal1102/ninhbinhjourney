@@ -430,6 +430,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Khung giờ đã qua hoặc quá gần giờ bắt đầu.",
   CUSTOMER_BOOKING_SLOT_NOT_OFFERED:
     "Khung giờ này không nằm trong lịch bán của gói dịch vụ.",
+  CUSTOMER_BOOKING_PARTY_MIX_INVALID:
+    "Số người lớn cộng số trẻ em phải đúng bằng tổng số khách, và mỗi đoàn cần ít nhất một người lớn.",
   CUSTOMER_BOOKING_HOLD_NOT_FOUND:
     "Không tìm thấy lượt giữ chỗ này.",
   CUSTOMER_BOOKING_HOLD_EXPIRED:

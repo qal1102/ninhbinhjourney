@@ -7,11 +7,30 @@ export const CustomerBookingHoldRequestSchema = z
     product_id: z.string().uuid(),
     visit_date: z.iso.date(),
     party_size: z.number().int().min(1).max(20),
+    // TC-03: hai nhóm tuổi, `party_size` vẫn là tổng.
+    //
+    // Để trống được, và đó là chủ ý: một tab mở từ trước lúc triển khai vẫn
+    // đặt được, mọi khách tính là người lớn — đúng bằng hành vi cũ. Bắt buộc
+    // sẽ đổi lỗi ấy thành một màn hình đỏ mà khách không hiểu vì sao.
+    adults: z.number().int().min(1).max(20).optional(),
+    children: z.number().int().min(0).max(19).optional(),
     // TC-02: khách phải chọn đúng một khung giờ trước khi giữ chỗ — không còn
     // đường nào lặng lẽ rơi về "giữ mọi khung đang bật" từ mặt khách nữa.
     slot_starts_at: z.iso.datetime(),
   })
-  .strict();
+  .strict()
+  .refine((value) => (value.adults === undefined) === (value.children === undefined), {
+    message: "Khai số người lớn thì phải khai luôn số trẻ em, và ngược lại.",
+    path: ["children"],
+  })
+  .refine(
+    (value) =>
+      value.adults === undefined || value.adults + (value.children ?? 0) === value.party_size,
+    {
+      message: "Số người lớn cộng số trẻ em phải đúng bằng tổng số khách.",
+      path: ["party_size"],
+    },
+  );
 
 export const CustomerBookingConfirmationRequestSchema = z
   .object({
@@ -43,6 +62,10 @@ export type CustomerBookingTicket = {
   siteId: string;
   validOn: string;
   entriesAllowed: number;
+  // TC-03: vé nói rõ mình là vé nhóm nào. `group` là các vé phát trước TC-03,
+  // hồi hệ thống còn gộp cả đoàn vào một tấm — giữ đúng tên cũ của chúng thay
+  // vì đọc lại thành "người lớn".
+  guestGroup: "adult" | "child" | "group";
   status: "issued" | "partially-used" | "used" | "void";
 };
 

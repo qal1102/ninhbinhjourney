@@ -168,22 +168,108 @@ export function ExecutiveDashboard({
     pendingSopDecisions,
   );
 
+  // ERP-UX-01. Chủ dự án dùng thử và nói "không hiểu gì hết, mọi thứ lung
+  // tung". Một nguyên nhân đo được: giám đốc đăng nhập xong chỉ thấy bảng số,
+  // không có câu trả lời cho "giờ tôi làm gì trước".
+  //
+  // Trang nhân viên đã giải đúng bài này từ lâu: danh tính + ca → **đúng một**
+  // việc → một nút chính. Khối dưới đây mang khuôn đó sang vai giám đốc.
+  //
+  // Thứ tự ưu tiên bên dưới là theo mức chặn nghiệp vụ, không phải theo thời
+  // gian tạo: cổng Go/No-Go chặn việc mở cửa cả cơ sở trong ngày nên đứng
+  // trước; kế đến là sự cố đã quá SLA. Không có gì chờ thì nói thẳng là không
+  // có, tuyệt đối không dựng một việc giả cho màn hình đỡ trống.
+  const overdueIncident = escalatedIncidents.find(
+    (incident) => incident.elapsedMinutes >= incident.slaMinutes,
+  );
+  const nextAction: {
+    kind: string;
+    title: string;
+    detail: string;
+    href: string;
+    cta: string;
+  } | null = (() => {
+    const sopDecision = pendingSopDecisions[0];
+    if (sopDecision) {
+      return {
+        kind: "Cổng mở cửa Go/No-Go",
+        title: `${siteShortNameById.get(sopDecision.siteId) ?? sopDecision.siteId} đang chờ bạn quyết định mở cửa`,
+        detail: `Hồ sơ ${sopDecision.assessmentCode}. Chưa có quyết định thì cơ sở chưa được mở cửa.`,
+        href: `/erp/${sopDecision.siteId}/sop-dien-tap`,
+        cta: "Xem hồ sơ và quyết định",
+      };
+    }
+    if (overdueIncident) {
+      return {
+        kind: "Sự cố đã quá SLA",
+        title: overdueIncident.title,
+        detail: `${siteShortNameById.get(overdueIncident.siteId) ?? overdueIncident.siteId} · ${overdueIncident.area} · đã quá hạn ${overdueIncident.elapsedMinutes - overdueIncident.slaMinutes} phút.`,
+        href: `/erp/${overdueIncident.siteId}/su-co`,
+        cta: "Mở hồ sơ sự cố",
+      };
+    }
+    const incident = escalatedIncidents[0];
+    if (incident) {
+      return {
+        kind: "Sự cố đã chuyển cấp",
+        title: incident.title,
+        detail: `${siteShortNameById.get(incident.siteId) ?? incident.siteId} · ${incident.area} · còn ${incident.slaMinutes - incident.elapsedMinutes} phút trước hạn.`,
+        href: `/erp/${incident.siteId}/su-co`,
+        cta: "Mở hồ sơ sự cố",
+      };
+    }
+    if (pendingShiftCloseDecisions.length > 0) {
+      return {
+        kind: "Ngoại lệ chốt ca",
+        title: `${pendingShiftCloseDecisions.length} hồ sơ chốt ca chờ bạn duyệt ngoại lệ`,
+        detail: "Ca chưa được duyệt thì tiền mặt chưa khớp sổ.",
+        href: "/erp/finance",
+        cta: "Mở sổ đối soát",
+      };
+    }
+    const invoice = pendingSupplierDecisions[0];
+    if (invoice) {
+      return {
+        kind: "Hóa đơn nhà cung cấp",
+        title: `${invoice.supplier.name} vượt hồ sơ nguồn`,
+        detail: `HĐ ${invoice.invoiceSeries}/${invoice.invoiceNumber} · ${formatVnd(invoice.totalVnd)}.`,
+        href: `/erp/${invoice.siteId}/doi-tac-nha-cung-ung`,
+        cta: "Xem hóa đơn",
+      };
+    }
+    const request = pendingProjectChangeRequests[0];
+    if (request) {
+      return {
+        kind: changeKindLabels[request.kind],
+        title: request.summary,
+        detail: `${siteShortNameById.get(request.siteId) ?? request.siteId} · chờ bạn duyệt thay đổi.`,
+        href: `/erp/${request.siteId}/du-an-su-kien`,
+        cta: "Xem yêu cầu",
+      };
+    }
+    return null;
+  })();
+
   return (
     <div className="min-w-0 space-y-5">
       <section className="min-w-0 overflow-hidden rounded-3xl bg-[#173f34] p-5 text-white sm:p-8">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+          {/* ERP-UX-01: tiêu đề trang từng là một phép tính ("3 ca · 12 phiếu
+              công việc"). Trang nhân viên mở đầu bằng **tên người đang đăng
+              nhập** rồi mới tới số — vào là biết mình là ai, đang ở đâu. Vai
+              giám đốc nay theo cùng khuôn đó; các con số cũ chuyển xuống hàng
+              ô bên dưới, không mất đi. */}
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#b6d5ca]">
               Toàn vùng · {sites.length} cơ sở
               {latestBusinessDate ? ` · hồ sơ ca ${latestBusinessDate}` : ""}
             </p>
             <h1 className="mt-2 break-words text-3xl font-black leading-tight tracking-[-0.035em] sm:text-5xl">
-              {currentShiftRecords.length} ca ·{" "}
-              {workdays.length.toLocaleString("vi-VN")} phiếu công việc
+              {user.name}
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/65">
-              {directorDecisionCount} hồ sơ cần quyết định ·{" "}
-              {postedSupplierAp.length} hóa đơn nhà cung cấp đã ghi nhận
+              {user.jobTitle} · {currentShiftRecords.length} ca ·{" "}
+              {workdays.length.toLocaleString("vi-VN")} phiếu công việc
             </p>
           </div>
           <p className="shrink-0 text-xs font-bold text-[#c3ded4]">
@@ -226,6 +312,56 @@ export function ExecutiveDashboard({
                 {note}
               </p>
             </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Một màn hình, một hành động chính. Nếu không chỉ ra được hành động
+          đó là gì thì màn hình chưa xong — luật ERP. */}
+      <section className="rounded-2xl border border-[#cfdcd5] bg-white p-5 shadow-sm sm:p-6">
+        <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
+          Việc cần làm trước tiên
+        </p>
+        {nextAction ? (
+          <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-[#87642b]">{nextAction.kind}</p>
+              <h2 className="mt-1 break-words text-2xl font-black text-[#20342c]">
+                {nextAction.title}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[#697770]">
+                {nextAction.detail}
+              </p>
+            </div>
+            <Link
+              href={nextAction.href}
+              className="inline-flex min-h-12 w-fit shrink-0 items-center rounded-xl bg-[#183f34] px-5 text-sm font-black text-white transition hover:bg-[#12332a]"
+            >
+              {nextAction.cta} →
+            </Link>
+          </div>
+        ) : (
+          <p className="mt-3 text-sm leading-6 text-[#697770]">
+            Không có hồ sơ nào chờ bạn quyết định. Chọn một cơ sở bên dưới để
+            xem việc đang chạy tại đó.
+          </p>
+        )}
+
+        {/* Luật ERP: "Trang chủ của mọi vai phải có đường vào công việc."
+            Trước đây giám đốc đăng nhập xong không có một liên kết nào tới
+            module — thanh nghiệp vụ chỉ hiện sau khi đã vào một cơ sở. Đây là
+            dải chuyển cơ sở, cố ý **không** phải lưới thẻ đánh số kiểu "chọn
+            một lối vào": khuôn đó đã bị chủ dự án loại hai lần. */}
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#e7ece9] pt-4">
+          <span className="text-xs font-bold text-[#7a8781]">Vào cơ sở:</span>
+          {sites.map((site) => (
+            <Link
+              key={site.id}
+              href={`/erp/${site.id}`}
+              className="inline-flex min-h-10 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+            >
+              {site.shortName}
+            </Link>
           ))}
         </div>
       </section>
@@ -373,16 +509,25 @@ export function ExecutiveDashboard({
                           : ""}
                       </p>
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
-                        incident.elapsedMinutes >= incident.slaMinutes
-                          ? "bg-[#ffe4de] text-[#934336]"
-                          : "bg-[#f3e6c8] text-[#7a5923]"
-                      }`}
-                    >
-                      {incident.elapsedMinutes >= incident.slaMinutes
-                        ? "Quá SLA"
-                        : `Còn ${incident.slaMinutes - incident.elapsedMinutes} phút`}
+                    {/* ERP-UX-01: đồng hồ đếm ngược trước đây đứng một mình.
+                        Thẻ vốn đã là liên kết, nhưng không có gì nói ra điều
+                        đó — người đọc thấy "Còn 1 phút" mà không thấy lối
+                        thoát. Luật ERP: đếm ngược phải đi kèm nút bấm. */}
+                    <span className="flex shrink-0 items-center gap-2">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                          incident.elapsedMinutes >= incident.slaMinutes
+                            ? "bg-[#ffe4de] text-[#934336]"
+                            : "bg-[#f3e6c8] text-[#7a5923]"
+                        }`}
+                      >
+                        {incident.elapsedMinutes >= incident.slaMinutes
+                          ? "Quá SLA"
+                          : `Còn ${incident.slaMinutes - incident.elapsedMinutes} phút`}
+                      </span>
+                      <span className="whitespace-nowrap text-xs font-black text-[#76551f]">
+                        Xử lý →
+                      </span>
                     </span>
                   </Link>
                 ))}

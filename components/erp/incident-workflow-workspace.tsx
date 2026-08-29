@@ -161,31 +161,46 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
           </span>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[
-            ["Đang xử lý", String(activeCount), "Theo đúng phạm vi của bạn"],
-            ["Mức P1 / P2", String(urgentCount), "Ưu tiên an toàn trước"],
-            ["Sát hoặc quá SLA", String(slaRiskCount), "Cần phản hồi ngay"],
-            [
-              user.role === "director" ? "Cần quyết định" : "Đã đóng gần nhất",
-              user.role === "director"
-                ? String(visibleCases.filter((item) => item.escalated).length)
-                : String(
-                    visibleCases.filter((item) => item.status === "closed")
-                      .length,
-                  ),
-              user.role === "director"
-                ? "Đã được quản lý xác minh"
-                : "Có đủ nhật ký và bằng chứng",
-            ],
-          ].map(([label, value, note]) => (
-            <article key={label} className="rounded-xl bg-[#f3f6f4] p-4">
-              <p className="text-xs leading-5 text-[#718078]">{label}</p>
-              <p className="mt-1 text-2xl font-black text-[#253c33]">{value}</p>
-              <p className="mt-1 text-xs leading-5 text-[#7b8881]">{note}</p>
-            </article>
-          ))}
-        </div>
+        {/* ERP-UX-01: khi chỉ có đúng một hồ sơ đang mở, bốn ô này đều bằng 1
+            — cùng một sự cố bị đếm bốn lần dưới bốn cái nhãn, cộng thêm huy
+            hiệu "1 hồ sơ đang mở" ở trên là năm con số 1 cho một bản ghi.
+            Luật ERP: "Không đếm một bản ghi thành nhiều KPI." Bảng tóm tắt chỉ
+            có nghĩa khi có một tập để tóm tắt; dưới ngưỡng đó thì nói thẳng
+            bằng một câu. Không ẩn số liệu — số thật vẫn nằm nguyên ở danh sách
+            ngay bên dưới. */}
+        {activeCount > 1 ? (
+          <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[
+              ["Đang xử lý", String(activeCount), "Theo đúng phạm vi của bạn"],
+              ["Mức P1 / P2", String(urgentCount), "Ưu tiên an toàn trước"],
+              ["Sát hoặc quá SLA", String(slaRiskCount), "Cần phản hồi ngay"],
+              [
+                user.role === "director" ? "Cần quyết định" : "Đã đóng gần nhất",
+                user.role === "director"
+                  ? String(visibleCases.filter((item) => item.escalated).length)
+                  : String(
+                      visibleCases.filter((item) => item.status === "closed")
+                        .length,
+                    ),
+                user.role === "director"
+                  ? "Đã được quản lý xác minh"
+                  : "Có đủ nhật ký và bằng chứng",
+              ],
+            ].map(([label, value, note]) => (
+              <article key={label} className="rounded-xl bg-[#f3f6f4] p-4">
+                <p className="text-xs leading-5 text-[#718078]">{label}</p>
+                <p className="mt-1 text-2xl font-black text-[#253c33]">{value}</p>
+                <p className="mt-1 text-xs leading-5 text-[#7b8881]">{note}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-5 rounded-xl bg-[#f3f6f4] p-4 text-sm leading-6 text-[#4f625a]">
+            {activeCount === 0
+              ? "Không có hồ sơ nào đang mở trong phạm vi của bạn."
+              : `Đang có đúng một hồ sơ mở${urgentCount > 0 ? ", ở mức P1 hoặc P2" : ""}${slaRiskCount > 0 ? ", đã sát hoặc quá SLA" : ""}. Chi tiết ngay bên dưới.`}
+          </p>
+        )}
       </section>
 
       {message ? (

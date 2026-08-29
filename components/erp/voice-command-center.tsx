@@ -586,14 +586,25 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
   return (
     <>
+      {/* ERP-UX-01: nút này từng là một nút nổi `fixed bottom-4 right-4`, và
+          nó che nội dung ở **mọi** khổ màn hình — ảnh chụp thật bắt được nó
+          nằm đè lên thẻ chốt ca, giấu mất nút thao tác bên phải. Nó còn để
+          `z-[1000]`, cao hơn cả lớp phủ của menu mobile (`z-[110]`), nên mở
+          menu ra nó vẫn nổi lên trên.
+
+          Hạ z-index chỉ chữa được nửa sau. Cách đúng là **đưa hẳn ra khỏi
+          vùng nội dung**: giờ đây nó là một nút bình thường trên thanh đầu
+          trang, nằm cùng hàng với Nhật ký / Khách hàng / Marketing. Không còn
+          lớp nổi nào đè lên nội dung nữa. Bảng trợ lý khi mở vẫn là portal
+          `z-[1100]` — lúc đó nó là hộp thoại, che nội dung là đúng vai trò. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mở trợ lý điều hành"
-        className="fixed bottom-4 right-4 z-[1000] flex min-h-14 items-center gap-2 rounded-full border border-white/70 bg-[#183f34] p-1.5 pr-1.5 text-white shadow-2xl shadow-[#173f34]/30 transition hover:-translate-y-0.5 sm:bottom-5 sm:right-5 sm:pr-4"
+        className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-[#183f34] px-2 text-sm font-black text-white transition hover:bg-[#12332a] sm:px-3"
       >
-        <Image src="/brand/ninh-binh-mark.png" alt="" width={44} height={44} className="h-11 w-11 rounded-full object-cover" />
-        <span className="hidden text-sm font-black sm:block">Trợ lý điều hành</span>
+        <Image src="/brand/ninh-binh-mark.png" alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
+        <span className="hidden xl:block">Trợ lý</span>
       </button>
 
       {open && typeof document !== "undefined" ? createPortal(

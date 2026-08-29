@@ -93,6 +93,9 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ErpAppControls role={user.role} />
+            {/* ERP-UX-01: trợ lý nay đứng trên thanh đầu trang thay vì nổi đè
+                lên nội dung. Xem chú thích trong `voice-command-center.tsx`. */}
+            <VoiceCommandCenter role={user.role} siteIds={user.siteIds} currentSiteId={site?.id} />
             {/* T15: mọi vai trò đều vào được — phạm vi nhìn do máy chủ cắt,
                 nên nhân viên vào chỉ thấy việc của chính mình. Giấu lối vào
                 với một số người sẽ khiến nhật ký trông như đặc quyền, trong
@@ -177,7 +180,6 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
       <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8">
         {children}
       </main>
-      <VoiceCommandCenter role={user.role} siteIds={user.siteIds} currentSiteId={site?.id} />
     </div>
   );
 }

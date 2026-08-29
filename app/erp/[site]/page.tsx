@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ERP_MODULES, getErpSite } from "@/domain/erp";
+import { groupVisibleErpModules } from "@/domain/erp-navigation";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { countEmployeesOnShift } from "@/lib/erp/attendance-repository";
 import {
@@ -42,9 +43,12 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
   const denied = Array.isArray(query.denied) ? query.denied[0] : query.denied;
   const moduleIds = user.moduleIdsBySite[site.id] ?? [];
   const modules = ERP_MODULES.filter((module) => moduleIds.includes(module.id));
-  const directorPriority = new Set(["tai-chinh-doi-soat", "camera-ai", "bao-cao-hien-truong", "du-an-su-kien", "bao-cao", "suc-chua", "su-co", "sop-dien-tap"]);
-  const primaryModules = user.role === "director" ? modules.filter((module) => directorPriority.has(module.id)) : modules;
-  const secondaryModules = user.role === "director" ? modules.filter((module) => !directorPriority.has(module.id)) : [];
+  // ERP-UX-01: trước đây trang này chia thẻ theo một danh sách "ưu tiên giám
+  // đốc" nhét cứng tại chỗ, rồi gắn tiêu đề "Tài chính, rủi ro và dự án" lên
+  // một nhóm có cả sức chứa lẫn camera — tiêu đề không khớp nội dung bên dưới.
+  // Nay gom theo đúng bộ nhóm mà thanh điều hướng đang dùng
+  // (`ERP_MODULE_GROUPS`), nên người dùng chỉ phải học **một** cách sắp xếp.
+  const groups = groupVisibleErpModules(modules);
 
   return (
     <ErpShell user={user} site={site}>
@@ -55,13 +59,23 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#b9ddcf]">Tổng quan trong ngày</p>
           <h1 className="font-display mt-3 text-5xl sm:text-7xl">{site.shortName}</h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-white/70">{site.summary}</p>
+          {/* ERP-UX-01 + nguyên tắc ③: ô chưa đo được **ở lại**, không được ẩn
+              cho gọn. Nhưng nó không còn cùng trọng số với số thật — viền mờ
+              hơn, chữ nhỏ hơn — để con số có nguồn nổi lên trước. */}
           <div className="mt-7 grid max-w-4xl grid-cols-2 gap-3 sm:grid-cols-5">
             {kpis.map((kpi) => (
-              <div key={kpi.label} className="rounded-xl border border-white/12 bg-black/10 p-3 backdrop-blur-sm">
-                <p className="text-[11px] text-white/48">{kpi.label}</p>
-                <p className="mt-1 text-xl font-black">{kpi.value}</p>
+              <div
+                key={kpi.label}
+                className={
+                  kpi.noSource
+                    ? "rounded-xl border border-dashed border-white/12 p-3"
+                    : "rounded-xl border border-white/20 bg-black/15 p-3 backdrop-blur-sm"
+                }
+              >
+                <p className={kpi.noSource ? "text-[11px] text-white/35" : "text-[11px] text-white/60"}>{kpi.label}</p>
+                <p className={kpi.noSource ? "mt-1 text-base font-bold text-white/45" : "mt-1 text-2xl font-black"}>{kpi.value}</p>
                 {kpi.noSource ? (
-                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white/40">Chưa có nguồn dữ liệu</p>
+                  <p className="mt-1 text-[10px] leading-4 text-white/35">Chưa có nguồn dữ liệu</p>
                 ) : null}
               </div>
             ))}
@@ -78,59 +92,54 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
       <section className="mt-8">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#477565]">{user.role === "director" ? "Nghiệp vụ ưu tiên" : user.role === "accountant" ? "Hồ sơ nguồn" : "Nghiệp vụ"}</p>
-            <h2 className="font-display mt-2 text-3xl text-[#183f34] sm:text-4xl">{user.role === "director" ? "Tài chính, rủi ro và dự án" : user.role === "accountant" ? `Chứng từ phát sinh tại ${site.shortName}` : `Công việc tại ${site.shortName}`}</h2>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#477565]">Nghiệp vụ được mở cho bạn</p>
+            <h2 className="font-display mt-2 text-3xl text-[#183f34] sm:text-4xl">Công việc tại {site.shortName}</h2>
           </div>
           <Link href="/erp" className="text-sm font-bold text-[#5e7068] hover:text-[#183f34]">← Đổi cơ sở</Link>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {primaryModules.map((module, index) => (
-            <Link
-              href={`/erp/${site.id}/${module.id}`}
-              key={module.id}
-              className="group rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#a8bbb2] hover:shadow-lg hover:shadow-[#24483c]/8"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <span className="grid h-11 w-11 place-items-center rounded-xl text-sm font-black text-white" style={{ backgroundColor: module.accent }}>
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                {/* T3: a module with no workflow behind it says so before it
-                    is opened, not after. */}
-                {module.status === "planned" ? (
-                  <span className="rounded-full bg-[#f6ecd8] px-3 py-1 text-[11px] font-black text-[#8a6b27]">
-                    Giai đoạn sau
-                  </span>
-                ) : (
-                  <span className="text-xl text-[#91a098] transition group-hover:translate-x-1 group-hover:text-[#286655]">→</span>
-                )}
-              </div>
-              <h3 className="mt-5 text-lg font-black text-[#24372f]">{module.name}</h3>
-              <p className="mt-2 min-h-12 text-sm leading-6 text-[#697770]">{module.description}</p>
-            </Link>
-          ))}
-        </div>
 
-        {secondaryModules.length ? (
-          <details className="mt-5 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-5">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-black text-[#34473f]">
-              <span>Toàn bộ nghiệp vụ tại {site.shortName}</span>
-              <span className="text-sm text-[#74827b]">{secondaryModules.length} mục khác +</span>
-            </summary>
-            <div className="mt-4 grid gap-3 border-t border-[#e4e9e6] pt-4 sm:grid-cols-2 xl:grid-cols-3">
-              {secondaryModules.map((module, index) => (
-                <Link key={module.id} href={`/erp/${site.id}/${module.id}`} className="flex items-center gap-3 rounded-xl border border-[#e0e6e2] p-4 transition hover:border-[#a8bbb2] hover:bg-[#f8faf8]">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-black text-white" style={{ backgroundColor: module.accent }}>{String(index + 1).padStart(2, "0")}</span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-[#2f4239]">{module.name}</p>
-                    <p className="mt-1 truncate text-xs text-[#7a8781]">
-                      {module.status === "planned" ? "Giai đoạn sau · chưa có nghiệp vụ" : module.description}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+        {/* ERP-UX-01: bỏ hẳn số thứ tự 01–08 và ô màu trên mỗi thẻ. Đánh số
+            hứa một trình tự không có thật — các nghiệp vụ này chạy song song,
+            không ai làm "01 rồi mới tới 02". Màu thì trước đây mỗi module một
+            sắc, không mã hoá điều gì cả. Luật ERP: có trình tự thật thì dùng
+            stepper có trạng thái; màu phải mã hoá được thứ gì đó, không thì
+            đừng dùng. Thứ duy nhất còn giữ màu là nhãn "Giai đoạn sau", vì nó
+            mã hoá đúng một điều: mở ra chưa có nghiệp vụ. */}
+        <div className="mt-6 space-y-7">
+          {groups.map((group) => (
+            <div key={group.id}>
+              <h3 className="text-xs font-black uppercase tracking-[0.16em] text-[#6d7e76]">{group.name}</h3>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {group.modules.map((module) => (
+                  <Link
+                    href={`/erp/${site.id}/${module.id}`}
+                    key={module.id}
+                    className="group rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#a8bbb2] hover:shadow-lg hover:shadow-[#24483c]/8"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <h4 className="text-lg font-black text-[#24372f]">{module.name}</h4>
+                      {/* T3: một module chưa có nghiệp vụ phải nói trước khi
+                          người dùng mở ra, không phải sau. */}
+                      {module.status === "planned" ? (
+                        <span className="shrink-0 rounded-full bg-[#f6ecd8] px-3 py-1 text-[11px] font-black text-[#8a6b27]">
+                          Giai đoạn sau
+                        </span>
+                      ) : (
+                        <span className="shrink-0 text-xl text-[#91a098] transition group-hover:translate-x-1 group-hover:text-[#286655]">→</span>
+                      )}
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-[#697770]">{module.description}</p>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </details>
-        ) : null}
+          ))}
+          {groups.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-[#c7d2cc] p-6 text-sm leading-6 text-[#748079]">
+              Bạn chưa được mở nghiệp vụ nào tại {site.shortName}. Giám đốc cấp quyền tại màn hình Quản lý tài khoản.
+            </p>
+          ) : null}
+        </div>
       </section>
     </ErpShell>
   );

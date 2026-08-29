@@ -502,6 +502,186 @@ Một câu tiếng Việt, một con số, một nút. Ví dụ: *"Tràng An gi�
 
 **Không xếp hạng theo độ nổi tiếng.** Ghi lại một lần cho khỏi quên vì sao: xếp theo lượt ghé thì nơi đông càng đông, nơi vắng vĩnh viễn không ngoi lên được dù đang trống chỗ — và tới lúc nơi đông chạm trần thì chính hệ thống vừa đẩy khách tới đó phải quay ra chặn họ lại.
 
+## 3c. Đợt ba — chốt trong buổi trao đổi 30/08/2026
+
+Sinh ra từ chính lúc chủ dự án dùng thử TC-06 và hỏi lại. Bảy nhiệm vụ, **một sợi chỉ chung: mã QR chỉ chứa một mã, còn nhìn thấy gì thì tuỳ ai quét.**
+
+---
+
+### Nguyên tắc nền, áp cho cả bảy — mã QR không chứa dữ liệu
+
+Chủ dự án hỏi: *"cứ 1 cái ID của khách như thế thì QR nó đã zip lại gần hết nội dung của khách rồi."* Đúng ý, nhưng phải làm **ngược lại**: QR chỉ mang **một mã**, không mang nội dung.
+
+Hai lý do, lý do thứ hai nặng hơn:
+
+1. Một mã QR chỉ nhét được khoảng hai tới ba nghìn ký tự — không đủ cho một hành trình.
+2. **Ai chụp được cái QR là có toàn bộ dữ liệu.** Một tấm ảnh đăng lên mạng là xong. Dữ liệu nằm trong QR thì không có cách nào thu hồi.
+
+Cách đạt đúng điều chủ dự án muốn:
+
+| Ai quét | Nhìn thấy gì |
+|---|---|
+| Chính khách | Hộ chiếu chuyến đi — bản đồ Ninh Bình sáng dần theo nơi đã qua |
+| Nhân viên cổng | Đúng ba dòng: hợp lệ, người thứ mấy trong đoàn, có cần để ý không |
+| Quản lý | Thêm trạng thái cả đoàn, ai đã vào ai chưa |
+
+Cùng một mã, ba màn hình. Cách này khiến hệ thống **ghi ít dữ liệu đi**, không nhiều thêm: một dòng cho mỗi người, mọi thứ còn lại suy ra từ nhật ký quét vốn đã có.
+
+**Khoảnh khắc đáng làm nhất:** khách giơ điện thoại ở cổng, cổng cho vào, và cùng lúc đó màn hình của họ sáng thêm một điểm trên bản đồ. Một lần quét, hai việc, không tốn thêm dữ liệu nào.
+
+### Câu hỏi "làm sao biết ai là ai" — trả lời một lần cho khỏi hỏi lại
+
+Chủ dự án hỏi: *"vd 1 cái điện thoại cũ vậy scan mã cũng biết được à?"*
+
+**Danh tính nằm ở mã, không nằm ở thiết bị.** Điện thoại cũ, điện thoại mượn, máy quét cầm tay — đều đọc ra cùng một mã và hệ thống xử lý y hệt nhau. Đây là thiết kế có chủ ý: nếu danh tính phụ thuộc thiết bị thì một cái điện thoại hết pin là khách không vào được.
+
+Hệ quả phải nói ra: **ai cầm mã thì được đối xử như người đó** — đúng như một tấm vé giấy. Đưa mã cho người khác là chuyển chỗ cho người đó, và **không gian lận được số chỗ** vì cả đoàn tiêu chung một hạn mức. Đây là tiện ích, không phải lỗ hổng — xem TC-20.
+
+---
+
+### TC-15 — Đoàn thật: xe 32 chỗ, trưởng đoàn làm gốc
+
+| | |
+|---|---|
+| **Model** | **Opus 5 / High** |
+| **Tiên quyết** | TC-06 (đã lên production 30/08). |
+| **Vì sao** | Nới trần số người chạm vào ràng buộc của bảng đơn hàng, và luồng điền hộ chạm vào dữ liệu cá nhân của người thứ ba. |
+
+**Vốn đã có sau TC-06 — không xây lại:** mã đoàn, mã riêng từng người, mã mang sẵn nhóm chiều cao, trạng thái ai đã vào đâu, và **mỗi người ghi hành trình của riêng mình**. Chủ dự án nói *"hôm nay có người mệt ở nhà thì họ sẽ không sang đến những địa điểm mà những người còn lại đi"* — điều này **đã đúng sẵn**: ai không quét thì mục `entries` của người đó rỗng.
+
+**Phải làm**
+
+1. **Nới trần 20 người.** Một xe 32 chỗ không lọt qua `customer_orders.party_size between 1 and 20`. Đây là **quyết định kinh doanh chủ dự án đã ra** khi nói "xe 32 người", nên nới — nhưng nới có số trần mới rõ ràng, đừng bỏ trần.
+2. **Nhãn đoàn đọc được bằng mắt.** Chủ dự án nói *"đoàn tới từ Hà Nội ID bao nhiêu"*, nên ngoài mã máy còn cần một nhãn người đặt: nơi xuất phát, tên đoàn.
+3. **Hai đường điền thông tin, trưởng đoàn chọn:**
+   - Trưởng đoàn điền hộ cả đoàn.
+   - Gửi link, mỗi người tự điền — đường này đã có từ TC-06 (`/doan/[ma]`).
+4. **Trưởng đoàn làm gốc lịch trình.** Đã đúng sẵn: cả đoàn treo vào một đơn, một giờ khởi hành. Đi đâu thì cả đoàn đi đó.
+
+**⛔ Điểm phải cân nhắc — điền hộ là điền dữ liệu của người khác**
+
+Trưởng đoàn điền tên 31 người còn lại nghĩa là **một người khai dữ liệu cá nhân của 31 người chưa được hỏi**. Đề xuất giảm rủi ro mà vẫn tiện: trường bắt buộc chỉ là **tên gọi**; những gì nhạy hơn để trống và người đó tự bổ sung qua link của mình.
+
+**Về tuổi:** thay vì hỏi tuổi thật, hỏi thứ mình thật sự cần cho vận hành — *"có cần hỗ trợ gì không: đi cùng trẻ nhỏ / người cao tuổi / khó đi lại"*. Được đúng giá trị vận hành mà thu ít dữ liệu hơn hẳn, và nối thẳng vào TC-13.
+
+**Cấm:** bắt cả 32 người điền mới cho vào cổng. Ai chưa điền vẫn đi tham quan bình thường — nguyên tắc cứng của TC-06, không được nới.
+
+---
+
+### TC-16 — Quét bằng camera điện thoại nhân viên
+
+| | |
+|---|---|
+| **Model** | **Sonnet 5** |
+| **Tiên quyết** | Không. |
+
+Chủ dự án: *"dùng đth cho nhân viên scan bằng app = account của nhân viên đã được gán công việc kiểm soát cổng A-B-C-D... không cần phải máy scan qua lằng nhằng."*
+
+**Vốn đã có — ba phần tư việc:** `erp_gate_actor_can_scan` đã kiểm đúng tài khoản ấy có quyền ở đúng cơ sở ấy; mỗi lượt quét **đã ghi ai quét, tên gì, lúc nào**; và bản quét ngoại tuyến đã chạy — mất mạng vẫn quét, có mạng lại thì đồng bộ và đối soát.
+
+**Thiếu đúng một thứ: cái camera.** Màn hình hiện chỉ có ô gõ tay.
+
+**Phải làm:** mở camera trong trình duyệt, đọc mã, đổ vào đúng ô quét đang có. Android Chrome đọc được bằng thứ có sẵn của trình duyệt; iPhone cần thêm một thư viện đọc mã — **nói rõ trước khi thêm phụ thuộc**, đừng tự thêm.
+
+**Cấm:** dựng một đường quét thứ hai. Camera chỉ là cách **nhập liệu** mới cho đúng luồng đã có, không phải một luồng song song.
+
+---
+
+### TC-17 — Giấy tờ tuỳ thân: mở đường sẵn, khoá cửa lại
+
+| | |
+|---|---|
+| **Model** | **Opus 5 / High** |
+| **Tiên quyết** | TC-15. |
+
+Chủ dự án: *"cần có 1 cái attachfile nếu cần thiết... tránh việc sau này nhà nước ra quy định phải lấy thông tin khách hàng lưu trú."* Chuẩn bị trước là đúng — luật lưu trú có yêu cầu cơ sở lưu trú ghi nhận danh tính khách và thông báo lưu trú. **Chi tiết pháp lý phải hỏi luật sư, đừng suy từ tài liệu này.**
+
+**Phải làm — năm rào, thiếu một cái là không làm**
+
+1. Kho **riêng, mã hoá**, không đứng chung bảng với hành trình. `customer_identities` đã có sẵn khoá.
+2. **Không một trường nào** chảy sang bảng gợi ý, phân khúc hay đánh giá.
+3. Mỗi lần thu ghi lại **vì sao thu** — sau này có người hỏi thì trả lời được.
+4. **Hạn xoá bắt buộc.** ⛔ Số ngày là chủ dự án chốt, không phải mã nguồn tự đặt.
+5. Chỉ thu **khi có lý do**, không thu mặc định cho mọi đoàn.
+
+**Cấm:** để ảnh giấy tờ đi qua bất kỳ đường nào khách khác đọc được; đưa vào QR; đính vào hộ chiếu chuyến đi.
+
+---
+
+### TC-18 — Đoàn mua tại quầy
+
+| | |
+|---|---|
+| **Model** | **Sonnet 5** |
+| **Tiên quyết** | TC-15. |
+
+Chủ dự án: *"nhân viên bán vé tại quầy có thể đăng kí vé qua account của họ và bán luôn tại đó... nó làm ra 1 cái phiếu đoàn xong đưa QR cho khách, khách scan vậy là xong, vẫn là logic đoàn trưởng."*
+
+**Việc phải làm gọn hơn tưởng:** hiện đoàn chỉ treo được vào đơn đặt trên web. Cho quầy thì cho phép treo mã đoàn vào **tấm vé quầy vừa bán**, và tài khoản người bán đã có sẵn để ghi lại ai tạo. Toàn bộ phần còn lại — mã riêng từng người, trạng thái ai đã vào — dùng lại nguyên của TC-06.
+
+---
+
+### TC-19 — Đoàn còn thiếu người
+
+| | |
+|---|---|
+| **Model** | **Sonnet 5** |
+| **Tiên quyết** | TC-15. |
+
+Tám người mà mới sáu người qua cổng sau mười lăm phút — báo cho trưởng đoàn. **Không ghi thêm một dòng dữ liệu nào**: đếm trên nhật ký quét vốn đã có.
+
+Với hướng dẫn viên thì đây là thứ dùng hàng ngày, và nó là lý do thật để họ muốn cả đoàn kích hoạt mã — thuyết phục hơn mọi lời mời.
+
+**Cấm:** báo về điện thoại từng nhân viên hiện trường (bẫy đã ghi ở TC-13). Trưởng đoàn thì báo thẳng được, vì họ đang cầm điện thoại.
+
+---
+
+### TC-20 — Mã chuyển tay được, nói ra thành một tiện ích
+
+| | |
+|---|---|
+| **Model** | **Haiku 4.5** (chỉ là chữ và một màn hình nhỏ) |
+| **Tiên quyết** | TC-15. |
+
+Một người bận không đi, đưa mã cho người khác — hệ thống vẫn đếm đúng một chỗ, vì cả đoàn tiêu chung một hạn mức. **Điều này đã đúng sẵn theo thiết kế TC-06.**
+
+Việc còn lại chỉ là **nói ra**: đây là tiện ích có chủ đích, không phải chuyện tình cờ. Không nói thì đến lúc có người làm vậy, đội vận hành lại tưởng là lỗ hổng và đi vá một thứ đang đúng.
+
+---
+
+### TC-21 — Đối soát cuối ca tự động
+
+| | |
+|---|---|
+| **Model** | **Sonnet 5** |
+| **Tiên quyết** | TC-16. |
+
+Mỗi lượt quét đã ghi cổng nào, ai quét, lúc nào. Ghép với ca trực là ra bảng đối soát cuối ca — **không ai phải ngồi cộng tay**, và không phải ghi thêm dữ liệu nào.
+
+---
+
+### Hệ thống chịu được bao nhiêu — đo thật, ngày 30/08/2026
+
+Chủ dự án hỏi: *"liệu là sẽ có quá nhiều dữ liệu ghi không? hệ thống sẽ chịu tải được bao nhiêu."* Số thật, đọc thẳng từ production:
+
+| | |
+|---|---|
+| Toàn bộ cơ sở dữ liệu hiện tại | **31 MB** |
+| Bảng nặng nhất | **192 kB** |
+
+Ước lượng cho vận hành thật:
+
+- Một dòng nhật ký quét ≈ **300 byte**.
+- Một đoàn 32 người đi 4 điểm = 128 dòng ≈ **38 kB**.
+- **100 đoàn như vậy mỗi ngày** = 3,8 MB/ngày ≈ **1,4 GB/năm**.
+
+Nghĩa là một năm vận hành nặng thêm khoảng 1,4 GB vào một cơ sở dữ liệu đang 31 MB. Các gói Supabase trả phí bắt đầu từ 8 GB và nới lên được. **Dung lượng không phải chỗ nghẽn.**
+
+**Chỗ nghẽn thật là cách viết truy vấn.** Một nhật ký chỉ ghi thêm, có chỉ mục đúng, vẫn nhanh ở hàng trăm triệu dòng; một báo cáo viết ẩu quét cả bảng thì chậm từ vài triệu dòng. Nguyên tắc: **không bao giờ quét cả nhật ký để trả lời một câu hỏi.**
+
+
+---
+
 ## 4. Bảng tra nhanh
 
 | ID | Việc | Model | Tiên quyết | Đụng schema |
@@ -521,6 +701,13 @@ Một câu tiếng Việt, một con số, một nút. Ví dụ: *"Tràng An gi�
 | TC-12 | Hệ sinh thái đánh giá cả tỉnh | Sonnet 5 (luật spam: Opus) | TC-10 | **Có** |
 | TC-13 | Chăm sóc đặc biệt, báo xuống ca trực | Sonnet 5 | TC-03 | **Có** |
 | TC-14 | Trợ lý lập lịch trình luôn hiện | Sonnet 5 | TC-11 | Không |
+| TC-15 | Đoàn thật: xe 32 chỗ, trưởng đoàn làm gốc | Opus 5 / High | TC-06 | **Có** |
+| TC-16 | Quét bằng camera điện thoại nhân viên | Sonnet 5 | **không** | Không |
+| TC-17 | Giấy tờ tuỳ thân niêm phong | Opus 5 / High | TC-15 | **Có** |
+| TC-18 | Đoàn mua tại quầy | Sonnet 5 | TC-15 | **Có** |
+| TC-19 | Đoàn còn thiếu người | Sonnet 5 | TC-15 | Không |
+| TC-20 | Mã chuyển tay được | Haiku 4.5 | TC-15 | Không |
+| TC-21 | Đối soát cuối ca tự động | Sonnet 5 | TC-16 | Không |
 
 **Haiku 4.5 dùng ở đâu:** bổ sung mã lỗi vào `rpc-error-messages.ts` sau khi RPC đã khóa; dựng fixture cho test đã có hợp đồng; chạy lượt chụp ảnh theo checklist ERP; định dạng lại tài liệu. **Không giao Haiku một nhiệm vụ TC nguyên vẹn nào.**
 

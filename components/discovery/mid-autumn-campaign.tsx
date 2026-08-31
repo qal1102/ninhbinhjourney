@@ -600,7 +600,13 @@ export function MidAutumnCampaign({ lang, source }: { lang: Language; source: st
 
         <Reveal delayMs={120} className="grid min-h-[660px] grid-rows-[1fr_auto] bg-[#24362f] lg:min-h-0">
           <div className="relative min-h-[480px] overflow-hidden lg:min-h-0">
-            <Image src="/images/campaigns/mid-autumn-2026/experiences/mooncake-editorial-hero.webp" alt={t.collectionTitle} fill priority sizes="(min-width: 1024px) 62vw, 100vw" className="object-cover object-[center_42%]" />
+            {/*
+              WEB-PERF-01 (31/08): bỏ `priority` -- khối Trung Thu này nằm
+              sau hero, băng video mở đầu và PinnedStory, tức đã dưới ít
+              nhất hai màn hình đầu. Đặt priority ở đây tranh băng thông
+              tải trang với đúng những ảnh/video thật sự cần tải ngay.
+            */}
+            <Image src="/images/campaigns/mid-autumn-2026/experiences/mooncake-editorial-hero.webp" alt={t.collectionTitle} fill sizes="(min-width: 1024px) 62vw, 100vw" className="object-cover object-[center_42%]" />
             <span aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-white/10" />
             <span aria-hidden="true" className="absolute right-5 top-5 font-display text-7xl leading-none text-white/78 mix-blend-difference sm:right-8 sm:top-7 sm:text-8xl">2026</span>
           </div>

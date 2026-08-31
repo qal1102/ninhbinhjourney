@@ -442,6 +442,22 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Đơn này không thuộc phiên khách hiện tại.",
   GROUP_MEMBER_NOT_FOUND:
     "Không tìm thấy mã khách này trong đoàn nào.",
+
+  // TC-22 — dat cho truoc, tra tien tai diem.
+  CUSTOMER_PAYMENT_MODE_INVALID:
+    "Cách trả tiền gửi lên chưa hợp lệ.",
+  CUSTOMER_PAYMENT_CONTACT_REQUIRED:
+    "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc.",
+  CUSTOMER_PAYMENT_UNPAID_LIMIT:
+    "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp giúp em ạ.",
+  PAYMENT_COLLECT_INPUT_INVALID:
+    "Thời điểm thu tiền gửi lên chưa hợp lệ.",
+  PAYMENT_COLLECT_ACTOR_REQUIRED:
+    "Bạn chưa được phân công gác cổng này nên chưa thu tiền ở đây được.",
+  PAYMENT_COLLECT_TICKET_NOT_FOUND:
+    "Không tìm thấy tấm vé mang mã này.",
+  PAYMENT_COLLECT_NOTHING_DUE:
+    "Vé này không có khoản nào phải thu tại điểm.",
   CUSTOMER_BOOKING_PARTY_MIX_INVALID:
     "Số người lớn cộng số trẻ em phải đúng bằng tổng số khách, và mỗi đoàn cần ít nhất một người lớn.",
   CUSTOMER_BOOKING_HOLD_NOT_FOUND:

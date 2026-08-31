@@ -23,6 +23,26 @@ function markerIcon(active: boolean, order: number) {
   });
 }
 
+function InvalidateOnResize() {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    // /explore keeps this MapContainer mounted at all times and only toggles a
+    // `hidden` class on its wrapper when the visitor switches to "Danh sách" on
+    // mobile. Leaflet does not notice a container going display:none -> block on
+    // its own, so without this the map comes back with cut-off/misaligned tiles
+    // after the visitor flips back to "Bản đồ".
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+
+  return null;
+}
+
 function FitToDestinations({
   destinations,
 }: {
@@ -87,10 +107,11 @@ export default function ExploreMap({
       scrollWheelZoom={false}
       zoom={10}
     >
+      <InvalidateOnResize />
       <FitToDestinations destinations={destinations} />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {destinations.map((destination) => (
         <Marker

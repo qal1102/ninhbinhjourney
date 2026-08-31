@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Reveal } from "@/components/shared/reveal";
 import { RevealHeading } from "@/components/shared/reveal-heading";
 import { findFlipStart, type FlipStart } from "@/components/shared/flip-image";
@@ -399,68 +399,36 @@ const copy = {
  */
 
 /*
- * Ba bang video dien anh chay nen. Nguon do chu du an chon, da cat san
- * thanh MP4 khong audio de demo khong con iframe/nut play YouTube.
+ * WEB-PERF-01 (31/08): trang chủ từng chạy BA băng video nền (13,4 MB
+ * tổng cộng, cả ba `eager`), theo đúng yêu cầu chủ dự án chỉ giữ lại
+ * video đầu tiên. Hai video còn lại (`tam-coc-river.mp4`,
+ * `trang-an-heritage.mp4`) đã bị bỏ khỏi trang và xoá khỏi `public/` --
+ * không còn chỗ nào khác trong mã nguồn dùng tới. Băng còn lại vẫn giữ
+ * đúng cách boot: `eager` để tận dụng khung intro khoá màn hình vài giây
+ * đầu trang, không cần rải `eagerDelayMs` nữa vì chỉ còn một trình phát.
  *
- * Video Qe1LqAOY9C0 da bi BO vi co watermark cua tac gia dong tren
- * khung hinh: de nguyen thi vuong mat, ma cat di thi thanh xoa dau ten
- * nguoi quay. Ba video con lai duoc cat tu cac nguon OA4lO9rrk4Q /
- * 0NHfpdPHFE4 / ZDCPQDr4YHE.
+ * Nguồn do chủ dự án chọn, đã cắt sẵn thành MP4 không audio để demo
+ * không còn iframe/nút play YouTube. Cắt đúng 12-30 giây, H.264 1280px,
+ * `faststart`, không audio -- file đã cắt sẵn nên loop chính xác mà
+ * không cần `start`/`end` hay postMessage tua lại.
  *
- * Cat dung 12-30 / 12-29 / 12-30 giay, H.264 1280px, `faststart`, khong
- * audio. File da cat san nen loop chinh xac ma khong can `start`/`end`
- * hay postMessage tua lai.
- */
-/*
  * Mapping được rà lại 07/08 từ tiêu đề nguồn gốc + frame thật + phản hồi
- * trực tiếp của chủ dự án. Tên file cũ KHÔNG được coi là địa danh:
- *  - OA4lO9rrk4Q: tiêu đề gốc ghi Hang Mua Peak and Tam Coc.
- *  - 0NHfpdPHFE4: tiêu đề chỉ ghi Ninh Binh; cảnh được chủ dự án nhận ra
- *    là Tràng An, nên copy chỉ đứng ở cấp quần thể, không đoán tên đền.
- *  - ZDCPQDr4YHE: tiêu đề gốc ghi thẳng Trang An, Ninh Binh.
- * Poster giờ cùng địa danh với video để reduced-motion cũng không kể sai.
+ * trực tiếp của chủ dự án: nguồn OA4lO9rrk4Q ghi tiêu đề gốc Hang Mua
+ * Peak and Tam Coc.
  */
-const cinematicClips: Record<Language, CinematicClip[]> = {
-  vi: [
-    {
-      src: "/videos/cinematic/ninh-binh-water.mp4",
-      poster: "/images/destinations/hang-mua.png",
-      eyebrow: "Đỉnh Ngọa Long · Hang Múa",
-      headline: "486 bậc đá đưa lên đỉnh Ngọa Long, nơi cả thung lũng Tam Cốc mở ra dưới chân.",
-    },
-    {
-      src: "/videos/cinematic/tam-coc-river.mp4",
-      poster: "/images/destinations/trang-an.jpg",
-      eyebrow: "Quần thể danh thắng Tràng An · UNESCO 2014",
-      headline: "Tràng An được UNESCO ghi danh theo cả tiêu chí văn hóa và thiên nhiên.",
-    },
-    {
-      src: "/videos/cinematic/trang-an-heritage.mp4",
-      poster: "/images/destinations/intro-trang-an-rain.png",
-      eyebrow: "Tuyến 1 · Tràng An",
-      headline: "Chín hang nối Đền Trình, Đền Trần và Phủ Khống trên cùng một tuyến nước.",
-    },
-  ],
-  en: [
-    {
-      src: "/videos/cinematic/ninh-binh-water.mp4",
-      poster: "/images/destinations/hang-mua.png",
-      eyebrow: "Ngọa Long peak · Hang Múa",
-      headline: "486 stone steps lead to Ngọa Long peak, with the whole Tam Cốc valley below.",
-    },
-    {
-      src: "/videos/cinematic/tam-coc-river.mp4",
-      poster: "/images/destinations/trang-an.jpg",
-      eyebrow: "Tràng An Landscape Complex · UNESCO 2014",
-      headline: "UNESCO inscribed Tràng An for both its cultural and natural values.",
-    },
-    {
-      src: "/videos/cinematic/trang-an-heritage.mp4",
-      poster: "/images/destinations/intro-trang-an-rain.png",
-      eyebrow: "Route 1 · Tràng An",
-      headline: "Nine caves connect Đền Trình, Đền Trần and Phủ Khống along one water route.",
-    },
-  ],
+const cinematicClip: Record<Language, CinematicClip> = {
+  vi: {
+    src: "/videos/cinematic/ninh-binh-water.mp4",
+    poster: "/images/destinations/hang-mua.png",
+    eyebrow: "Đỉnh Ngọa Long · Hang Múa",
+    headline: "486 bậc đá đưa lên đỉnh Ngọa Long, nơi cả thung lũng Tam Cốc mở ra dưới chân.",
+  },
+  en: {
+    src: "/videos/cinematic/ninh-binh-water.mp4",
+    poster: "/images/destinations/hang-mua.png",
+    eyebrow: "Ngọa Long peak · Hang Múa",
+    headline: "486 stone steps lead to Ngọa Long peak, with the whole Tam Cốc valley below.",
+  },
 };
 
 const storyBeats: Record<Language, PinnedStoryBeat[]> = {
@@ -1446,6 +1414,47 @@ function createRoute(duration: string, selected: string[]) {
   return baseStops;
 }
 
+/*
+ * WEB-PERF-01 (31/08): man mo dau tung chay lai o MOI lan dung lai
+ * component -- F5 hay bam "quay lai" deu mat vi state chi song trong bo
+ * nho React, khong nho gi qua lan dung. Chu du an muon dung dung MOT lan
+ * cho moi luot vao tham: F5 va quay lai van phai nho, nhung mo tab/cua so
+ * moi thi duoc chay lai -- day dung nghia la `sessionStorage`, khong phai
+ * `localStorage` (song vinh vien) cung khong phai cookie (di kem request).
+ *
+ * `useSyncExternalStore` (khong phai `useState` + doc trong `useEffect`)
+ * de tranh hydration mismatch: may chu dung HTML khong co
+ * `sessionStorage` nen luon phai "chua xem", con trinh duyet co the da
+ * xem tu truoc. Ham snapshot may chu (tham so thu ba) luon tra `false`
+ * de khop voi lan dung dau tien, sau do React tu doi sang gia tri that
+ * cua trinh duyet ngay khi commit -- khong can goi `setState` trong than
+ * `useEffect` (luat lint `react-hooks/set-state-in-effect` cam dieu do).
+ */
+const INTRO_SESSION_KEY = "nbj-intro-played";
+
+function subscribeIntroPlayedNoop() {
+  return () => {};
+}
+
+function hasIntroPlayedThisSession() {
+  try {
+    return window.sessionStorage.getItem(INTRO_SESSION_KEY) === "1";
+  } catch {
+    // Riêng tư (Safari ITP chặn, chế độ ẩn danh nghiêm ngặt) hoặc quota
+    // đầy: coi như chưa xem -- thà intro chạy lại còn hơn một lỗi chặn
+    // cả trang vì đụng `sessionStorage`.
+    return false;
+  }
+}
+
+function markIntroPlayed() {
+  try {
+    window.sessionStorage.setItem(INTRO_SESSION_KEY, "1");
+  } catch {
+    // Xem chú thích trong `hasIntroPlayedThisSession` -- im lặng bỏ qua.
+  }
+}
+
 export default function NinhBinhLanding({
   initialLang,
   source,
@@ -1463,6 +1472,12 @@ export default function NinhBinhLanding({
   const [detailId, setDetailId] = useState<DestinationId | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [introVisible, setIntroVisible] = useState(true);
+  const introAlreadyPlayed = useSyncExternalStore(
+    subscribeIntroPlayedNoop,
+    hasIntroPlayedThisSession,
+    () => false,
+  );
+  const showIntro = introVisible && !introAlreadyPlayed;
   const modalOpen = Boolean(detailId || checkoutOpen);
   const ninhBinhHour = useNinhBinhHour();
 
@@ -1510,6 +1525,35 @@ export default function NinhBinhLanding({
       window.cancelAnimationFrame(frame);
     };
   }, []);
+
+  /*
+   * WEB-PERF-01 (31/08): `TourismMap` đã tách chunk bằng `next/dynamic`
+   * (`ssr: false`) từ trước, nhưng vẫn được yêu cầu tải NGAY khi trang
+   * dựng xong dù khối bản đồ nằm sau cả hero, video mở đầu, PinnedStory
+   * và khối Trung Thu -- tức khách phải cuộn qua vài màn hình mới tới.
+   * Hoãn việc gắn `TourismMap` (và do đó việc tải chunk Leaflet) tới khi
+   * khối bản đồ sắp vào khung nhìn, cùng kỹ thuật `IntersectionObserver`
+   * đã dùng cho video ở `components/shared/cinematic-video.tsx`.
+   */
+  const mapWrapRef = useRef<HTMLDivElement>(null);
+  const [mapNearViewport, setMapNearViewport] = useState(false);
+
+  useEffect(() => {
+    if (mapNearViewport) return;
+    const wrap = mapWrapRef.current;
+    if (!wrap) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setMapNearViewport(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "800px 0px" },
+    );
+    io.observe(wrap);
+    return () => io.disconnect();
+  }, [mapNearViewport]);
 
   function handleRailPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === "touch") return;
@@ -1629,13 +1673,15 @@ export default function NinhBinhLanding({
   }, [flipStart, flipDone]);
 
   useEffect(() => {
+    if (introAlreadyPlayed) return;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timeout = window.setTimeout(() => {
       setIntroVisible(false);
+      markIntroPlayed();
     }, prefersReducedMotion ? 900 : 7200);
 
     return () => window.clearTimeout(timeout);
-  }, []);
+  }, [introAlreadyPlayed]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -1749,25 +1795,33 @@ export default function NinhBinhLanding({
         INTRO -- KHONG CO DUONG BO QUA. Co y, theo yeu cau chu du an 05/08.
         Truoc day co ca nut "Bo qua intro" LAN bam-cho-nao-cung-tat.
         Ca hai da go: man intro 6,5 giay nay la khoang thoi gian duy nhat
-        de ba trinh phat video kip boot xong TRUOC khi khach cuon toi --
-        cat ngan no la cum nut khoi dong cua YouTube lai dap vao mat khach
+        de trinh phat video kip boot xong TRUOC khi khach cuon toi -- cat
+        ngan no la cum nut khoi dong cua YouTube lai dap vao mat khach
         (xem chu thich trong cinematic-video.tsx).
 
-        Chay DUNG MOT LAN moi lan tai trang: component chi mount mot lan,
-        va doi ngon ngu khong lam no chay lai (switchLanguage doi state
-        noi bo + history.replaceState, khong dieu huong, nen `key` o
-        app/page.tsx khong doi).
+        Chay DUNG MOT LAN cho moi luot vao tham (WEB-PERF-01, 31/08): F5
+        va bam "quay lai" deu giu nguyen `sessionStorage` cua tab nen
+        khong chay lai; mo tab/cua so moi la mot luot vao tham khac nen
+        van chay. Doi ngon ngu cung khong lam no chay lai (switchLanguage
+        doi state noi bo + history.replaceState, khong dieu huong, nen
+        `key` o app/page.tsx khong doi). Xem `showIntro`/`introAlreadyPlayed`
+        va cac ham `*IntroPlayed*` phia tren dinh nghia component.
 
         Tu go bo bang `onAnimationEnd` thay vi hen gio cung 6500ms: duoi
         prefers-reduced-motion, CSS rut animation con 1400ms, hen gio cung
-        se giu mot lop phu vo hinh them 5 giay khong ly do.
+        se giu mot lop phu vo hinh them 5 giay khong ly do. Han hen gio
+        7200ms/900ms trong effect phia tren chi la luoi an toan neu
+        `animationend` vi ly do nao do khong ban.
       */}
-      {introVisible ? (
+      {showIntro ? (
         <div
           className="opening-screen"
           data-testid="opening-intro"
           onAnimationEnd={(event) => {
-            if (event.target === event.currentTarget) setIntroVisible(false);
+            if (event.target === event.currentTarget) {
+              setIntroVisible(false);
+              markIntroPlayed();
+            }
           }}
         >
           <Image
@@ -1888,17 +1942,14 @@ export default function NinhBinhLanding({
       </section>
 
       {/*
-        `eager` CHI dat o clip dau: man intro khoa man hinh vai giay ngay
-        dau trang, tan dung dung khoang do de trinh phat boot xong va cum
-        nut khoi dong cua YouTube kip tan truoc khi khach cuon toi.
-
-        CA BA clip deu `eager`, nhung RAI DEU trong khung intro (0s / 2,2s
-        / 4,2s) chu khong nap cung luc: nap dong thoi thi tren 4G ca ba
-        cung cham, va clip dau -- cai khach gap som nhat -- lai thiet nhat.
-        Rai deu thi toi luc intro tan (6,5s) ca ba da boot xong va cum nut
-        khoi dong cua YouTube da tan het.
+        `eager`: man intro khoa man hinh vai giay ngay dau trang, tan dung
+        dung khoang do de trinh phat boot xong truoc khi khach cuon toi.
+        Truoc 31/08 con hai bang video nua o duoi trang (rai deu 2,2s /
+        4,2s de khong nap ca ba cung luc); chu du an chi muon giu dung
+        video dau nen hai bang do da bi bo, xem chu thich o dinh nghia
+        `cinematicClip` phia tren.
       */}
-      <CinematicVideo clip={cinematicClips[lang][0]} eager />
+      <CinematicVideo clip={cinematicClip[lang]} eager />
 
       <PinnedStory beats={storyBeats[lang]} />
 
@@ -1925,28 +1976,37 @@ export default function NinhBinhLanding({
               {t.nearby}
             </a>
           </Reveal>
-          <div className="relative z-0 isolate overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#F6F1E7] p-3 shadow-xl shadow-[#183F34]/10">
-            <TourismMap
-              activeDestinationId={focusedDestinationId}
-              copy={{
-                add: t.add as string,
-                added: t.added as string,
-                discover: t.discover as string,
-                locationDenied: t.locationDenied as string,
-                locationFound: t.locationFound as string,
-                locationOutside: t.locationOutside as string,
-                locating: t.locating as string,
-                nearMe: t.nearMe as string,
-                welcome: t.welcome as string,
-                welcomeDescription: t.welcomeDescription as string,
-                youAreHere: t.youAreHere as string,
-              }}
-              destinations={destinations}
-              lang={lang}
-              onAdd={addDestination}
-              onDiscover={openDetail}
-              selectedIds={selectedIds}
-            />
+          <div
+            ref={mapWrapRef}
+            className="relative z-0 isolate overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#F6F1E7] p-3 shadow-xl shadow-[#183F34]/10"
+          >
+            {mapNearViewport ? (
+              <TourismMap
+                activeDestinationId={focusedDestinationId}
+                copy={{
+                  add: t.add as string,
+                  added: t.added as string,
+                  discover: t.discover as string,
+                  locationDenied: t.locationDenied as string,
+                  locationFound: t.locationFound as string,
+                  locationOutside: t.locationOutside as string,
+                  locating: t.locating as string,
+                  nearMe: t.nearMe as string,
+                  welcome: t.welcome as string,
+                  welcomeDescription: t.welcomeDescription as string,
+                  youAreHere: t.youAreHere as string,
+                }}
+                destinations={destinations}
+                lang={lang}
+                onAdd={addDestination}
+                onDiscover={openDetail}
+                selectedIds={selectedIds}
+              />
+            ) : (
+              <div className="grid h-[560px] min-h-[70vh] place-items-center rounded-[8px] bg-[#D7E6DD] text-[#183F34]">
+                <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#A8CEC1] border-t-[#183F34]" />
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -2000,8 +2060,6 @@ export default function NinhBinhLanding({
         onAdd={(id) => addDestination(id as DestinationId)}
         isAdded={(id) => selectedIds.includes(id as DestinationId)}
       />
-
-      <CinematicVideo clip={cinematicClips[lang][1]} eager eagerDelayMs={2200} />
 
       <DestinationIndex
         items={destinations.slice(ZIGZAG_FEATURED).map((place, index) => ({
@@ -2161,8 +2219,6 @@ export default function NinhBinhLanding({
           offer: (bookingEnabled ? t.zigzagCtaOffer : t.zigzagCtaOfferPlain) as string,
         }}
       />
-
-      <CinematicVideo clip={cinematicClips[lang][2]} eager eagerDelayMs={4200} />
 
       <section id="ai" data-customer-section="home-itinerary-brief" className="px-5 py-16 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">

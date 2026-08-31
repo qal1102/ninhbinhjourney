@@ -4,6 +4,7 @@ import { Reveal } from "@/components/shared/reveal";
 import { RevealHeading } from "@/components/shared/reveal-heading";
 import { PACE_LABEL, PACKAGES, type PackageCatalogItem } from "@/content/packages";
 import { DESTINATIONS } from "@/content/destinations";
+import { PACKAGE_IMAGE_SITE_ID } from "@/content/package-images";
 
 type Language = "en" | "vi";
 
@@ -60,23 +61,6 @@ const PACE_LABEL_EN: Record<PackageCatalogItem["pace"], string> = {
   relaxed: "relaxed pace",
   balanced: "balanced pace",
   active: "active pace",
-};
-
-/*
- * Anh minh hoa cho tung goi lay THANG tu content/destinations.ts (kho anh
- * da duyet, dang dung o /packages/[slug]) -- khong them anh moi. Moi map
- * toi dung MOT diem co that trong `schedule` cua chinh goi do, khong chon
- * bua: heritage-day mo dau bang Trang An, slow-ninh-binh khep lai o Pho co
- * Hoa Lu buoi toi, family-discovery ghe Bai Dinh, ca cinematic-sunset lan
- * Ban Trang deu neo o Tam Coc -- Bich Dong (cung mot vung, hai goi khac
- * nhau, nen dung chung anh cung khong sai lech).
- */
-const PACKAGE_IMAGE_SITE_ID: Record<string, string> = {
-  "heritage-day": "10000000-0000-4000-8000-000000000001",
-  "slow-ninh-binh": "10000000-0000-4000-8000-000000000004",
-  "family-discovery": "10000000-0000-4000-8000-000000000003",
-  "cinematic-sunset": "10000000-0000-4000-8000-000000000005",
-  "ban-trang-tam-coc-2026": "10000000-0000-4000-8000-000000000005",
 };
 
 function packageDisplay(item: PackageCatalogItem, lang: Language) {

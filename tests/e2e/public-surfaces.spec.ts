@@ -6,9 +6,25 @@ import { expect, test } from "@playwright/test";
 // reach was measuring the wrong thing.
 const criticalRoutes = ["/", "/explore", "/packages", "/plan"] as const;
 
+// WEB-PERF-01 (31/08): màn mở đầu nay nhớ bằng `sessionStorage` nên nó chỉ
+// chạy một lần cho mỗi lượt vào thăm (F5/quay lại vẫn nhớ, tab mới thì
+// không). Playwright Test đã cấp một context/tab MỚI cho mỗi test nên
+// `sessionStorage` vốn đã trống, nhưng dọn tường minh trước mỗi lần `goto`
+// dưới đây để bài kiểm không bao giờ phụ thuộc ngầm vào việc đó.
+async function clearIntroSession(page: import("@playwright/test").Page) {
+  await page.addInitScript(() => {
+    try {
+      window.sessionStorage.removeItem("nbj-intro-played");
+    } catch {
+      // Chế độ riêng tư chặn sessionStorage -- không sao, intro vẫn chạy.
+    }
+  });
+}
+
 test("home intro keeps all four identity words with separated timing, then auto-dismisses with no skip control", async ({
   page,
 }) => {
+  await clearIntroSession(page);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?lang=vi&presentation=1", {
     waitUntil: "domcontentloaded",
@@ -55,6 +71,26 @@ test("home intro keeps all four identity words with separated timing, then auto-
   // Tự tắt đúng lúc animation CSS kết thúc (~6,5s) -- không phải hẹn giờ
   // đoán mò trong bài test.
   await expect(intro).toHaveCount(0, { timeout: 12000 });
+});
+
+test("home intro does not replay on reload or back-navigation within the same tab", async ({
+  page,
+}) => {
+  await clearIntroSession(page);
+  // Chế độ giảm chuyển động (mặc định của config) cho tắt nhanh ở 900ms,
+  // đủ để bài kiểm chờ intro chạy xong lần đầu mà không phải đợi 6,5 giây.
+  await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 4000 });
+
+  // F5: sessionStorage của tab vẫn còn nguyên qua một lần tải lại trang.
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0);
+
+  // Bấm "quay lại" sau khi rời trang: vẫn cùng một tab, sessionStorage vẫn
+  // còn, nên intro không được chạy lại lần nữa.
+  await page.goto("/explore?lang=vi", { waitUntil: "domcontentloaded" });
+  await page.goBack({ waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0);
 });
 
 test("home does not repeat the intro slogan and presents routes after the destination catalog", async ({
@@ -176,15 +212,18 @@ test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive
   await expect(campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" })).toBeFocused();
 });
 
-test("cinematic panels use local MP4 without embedded player controls", async ({ page }) => {
+test("cinematic panel uses local MP4 without embedded player controls", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 12000 });
 
+  // WEB-PERF-01 (31/08): chỉ còn ĐÚNG MỘT băng video nền -- chủ dự án yêu
+  // cầu bỏ hai băng phía dưới trang, hai tệp .mp4 tương ứng cũng đã bị xoá
+  // khỏi public/.
   const panels = page.locator(".cinematic-frame");
   const videos = panels.locator("video");
-  await expect(panels).toHaveCount(3);
-  await expect(videos).toHaveCount(3, { timeout: 10000 });
+  await expect(panels).toHaveCount(1);
+  await expect(videos).toHaveCount(1, { timeout: 10000 });
   await expect(panels.locator("iframe")).toHaveCount(0);
 
   const sources = await videos.evaluateAll((items) =>
@@ -195,13 +234,9 @@ test("cinematic panels use local MP4 without embedded player controls", async ({
   );
   expect(sources).toEqual([
     { controls: false, path: "/videos/cinematic/ninh-binh-water.mp4" },
-    { controls: false, path: "/videos/cinematic/tam-coc-river.mp4" },
-    { controls: false, path: "/videos/cinematic/trang-an-heritage.mp4" },
   ]);
 
   await expect(panels.nth(0)).toContainText("Đỉnh Ngọa Long · Hang Múa");
-  await expect(panels.nth(1)).toContainText("Quần thể danh thắng Tràng An · UNESCO 2014");
-  await expect(panels.nth(2)).toContainText("Tuyến 1 · Tràng An");
 });
 
 test("route showcase changes image and label with the selected stop", async ({ page }) => {

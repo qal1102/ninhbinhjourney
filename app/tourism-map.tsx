@@ -44,6 +44,25 @@ function userIcon() {
   });
 }
 
+function InvalidateOnResize() {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    // Leaflet measures its container once at creation time and never re-checks it.
+    // If this map is ever mounted while hidden (display:none) — or the parent layout
+    // shifts the container's box after mount — Leaflet keeps using the stale size and
+    // renders tiles cut off or misaligned until something forces a recompute.
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+
+  return null;
+}
+
 function MapFocus({ activeDestinationId, destinations }: Pick<TourismMapProps, "activeDestinationId" | "destinations">) {
   const map = useMap();
   const active = destinations.find((destination) => destination.id === activeDestinationId);
@@ -177,11 +196,12 @@ export default function TourismMap({
       scrollWheelZoom={false}
       zoom={defaultZoom}
     >
+      <InvalidateOnResize />
       <MapFocus activeDestinationId={activeDestinationId} destinations={destinations} />
       <LocationControl copy={copy} onPosition={setUserPosition} />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {userPosition ? (
         <Marker icon={visitorIcon} position={userPosition} title={copy.youAreHere}>

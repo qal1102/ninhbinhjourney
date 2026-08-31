@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   parseJourneyIntent,
   REQUIRED_VIETNAMESE_SAMPLE,
@@ -79,6 +79,19 @@ export function PlanExperience({
   const [budget, setBudget] = useState(2_000_000);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  // True while the visitor still wants the mic open. Chrome (and others) will
+  // auto-stop a `continuous` recognizer after a stretch of silence even though
+  // no one tapped stop; onend below checks this flag to tell "browser cut me
+  // off mid-sentence" apart from "visitor tapped stop / denied / hard error".
+  const keepListeningRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      keepListeningRef.current = false;
+      recognitionRef.current?.stop();
+    };
+  }, []);
   const [result, setResult] = useState<{
     intent: JourneyIntent;
     itinerary: Itinerary;
@@ -107,7 +120,17 @@ export function PlanExperience({
     );
   }
 
+  function stopVoice() {
+    keepListeningRef.current = false;
+    recognitionRef.current?.stop();
+  }
+
   function startVoice() {
+    if (voiceState === "listening") {
+      stopVoice();
+      return;
+    }
+
     const Recognition = (
       window as typeof window & {
         SpeechRecognition?: SpeechRecognitionConstructor;
@@ -127,9 +150,17 @@ export function PlanExperience({
       return;
     }
     const recognition = new Recognition();
-    recognition.lang = "vi-VN";
+    // Trang này chưa có công tắc chọn ngôn ngữ hiển thị, nên lấy đúng ngôn ngữ
+    // trình duyệt của khách thay vì ghim cứng vi-VN — trước đây khách nói tiếng
+    // Anh vẫn bị nhận dạng bằng mô hình tiếng Việt nên ra chữ sai lung tung.
+    recognition.lang = navigator.language?.toLowerCase().startsWith("en")
+      ? "en-US"
+      : "vi-VN";
     recognition.interimResults = true;
-    recognition.continuous = false;
+    // continuous=true giữ mic mở qua những chỗ ngừng tự nhiên giữa câu; để
+    // false thì trình duyệt đóng cả phiên ngay khi gặp một quãng lặng, đúng
+    // như phàn nàn "chưa nói xong nó đã tắt".
+    recognition.continuous = true;
     recognition.onstart = () => setVoiceState("listening");
     recognition.onresult = (event) => {
       setVoiceState("transcribing");
@@ -140,6 +171,7 @@ export function PlanExperience({
       if (transcript) setText(transcript);
     };
     recognition.onerror = (event) => {
+      keepListeningRef.current = false;
       setVoiceState(event.error === "not-allowed" ? "denied" : "error");
       setMessage(
         event.error === "not-allowed"
@@ -147,10 +179,24 @@ export function PlanExperience({
           : "Không thể nhận dạng giọng nói. Hãy tiếp tục bằng ô văn bản.",
       );
     };
-    recognition.onend = () =>
+    recognition.onend = () => {
+      // Ngay cả khi continuous=true, một số trình duyệt vẫn tự ngắt phiên sau
+      // một quãng lặng dài mà khách không hề bấm dừng. Còn muốn nghe thì nối
+      // lại ngay; chỉ dừng thật khi khách tự bấm, bị từ chối quyền, hoặc gặp lỗi.
+      if (keepListeningRef.current) {
+        try {
+          recognition.start();
+          return;
+        } catch {
+          // Trình duyệt từ chối nối lại (ví dụ tab vừa mất focus) — coi như dừng.
+        }
+      }
       setVoiceState((current) =>
         current === "denied" || current === "error" ? current : "stopped",
       );
+    };
+    keepListeningRef.current = true;
+    recognitionRef.current = recognition;
     recognition.start();
   }
 
@@ -255,7 +301,9 @@ export function PlanExperience({
               ◉
             </span>
             <span className="mt-2 block text-sm">
-              {voiceState === "listening" ? "Đang nghe…" : "Dùng microphone"}
+              {voiceState === "listening"
+                ? "Đang nghe, bấm lại để dừng"
+                : "Dùng microphone"}
             </span>
           </span>
         </button>

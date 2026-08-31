@@ -1,7 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPackageBySlug, PACKAGES } from "@/content/packages";
 import { DESTINATIONS } from "@/content/destinations";
+import { getPackageHeroImage } from "@/content/package-images";
 import {
   getExperiencePresentationFlags,
   readPublicEnvironment,
@@ -32,6 +34,7 @@ export default async function PackageDetailPage({
   const sites = item.siteIds
     .map((id) => DESTINATIONS.find((destination) => destination.id === id))
     .filter((destination) => destination !== undefined);
+  const hero = getPackageHeroImage(item);
 
   return (
     <main data-customer-section="package-detail" className="min-h-screen bg-[#183f34] px-5 py-10 text-white sm:px-8 lg:py-16">
@@ -42,6 +45,16 @@ export default async function PackageDetailPage({
         >
           ← So sánh gói
         </Link>
+        <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-3xl sm:aspect-[21/9]">
+          <Image
+            src={hero.src}
+            alt={hero.alt}
+            fill
+            priority
+            sizes="(min-width: 1024px) 1152px, 100vw"
+            className="object-cover"
+          />
+        </div>
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_0.72fr]">
           <section>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
@@ -65,12 +78,23 @@ export default async function PackageDetailPage({
                   data-customer-content-id={site.id}
                   data-customer-content-type="destination"
                   href={`/destination/${site.slug}?journey=${journey ?? ""}`}
-                  className="rounded-2xl border border-white/15 bg-white/7 p-5"
+                  className="overflow-hidden rounded-2xl border border-white/15 bg-white/7"
                 >
-                  <p className="font-display text-2xl">{site.name.vi}</p>
-                  <p className="mt-2 text-sm leading-6 text-white/58">
-                    {site.editorialLine.vi}
-                  </p>
+                  <div className="relative aspect-[16/10]">
+                    <Image
+                      src={site.image}
+                      alt={site.imageAlt.vi}
+                      fill
+                      sizes="(min-width: 640px) 22vw, 100vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <p className="font-display text-2xl">{site.name.vi}</p>
+                    <p className="mt-2 text-sm leading-6 text-white/58">
+                      {site.editorialLine.vi}
+                    </p>
+                  </div>
                 </Link>
               ))}
             </div>

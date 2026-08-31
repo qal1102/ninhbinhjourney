@@ -127,7 +127,16 @@ Ranh giới này là cố ý: những thứ ở cột phải mà mở ra thì m�
 
 ### Màn hình quản trị
 
-**Quản lý tài khoản** (`/erp/tai-khoan`) — nơi giám đốc thực hiện toàn bộ chuỗi cấp quyền ở mục 2.
+| Màn hình | Làm gì |
+|---|---|
+| **Quản lý tài khoản** (`/erp/tai-khoan`) | Nơi giám đốc thực hiện toàn bộ chuỗi cấp quyền ở mục 2. Mã tài khoản **do máy đặt** từ họ tên, không ai gõ tay |
+| **Khách hàng** (`/erp/khach-hang`) | Hồ sơ khách và những gì họ đã đi qua |
+| **Kênh khách** (`/erp/marketing`) | Mã QR dán ở bến, ở quầy; đổi được nơi mã dẫn tới mà không phải in lại biển. Xem khách đến từ nguồn nào. Mã chiến dịch và mã QR **do máy đặt** theo tên |
+| **Nhật ký** (`/erp/nhat-ky`) | Dòng thời gian việc đã làm; mọi vai đều vào được, phạm vi nhìn do máy chủ cắt |
+
+Tên trên menu là tên chuẩn, dùng đúng chữ này ở mọi nơi. **"Marketing" là tên cũ, đã bỏ** — chủ dự án dùng thử 31/08 và hỏi thẳng nó là cái gì.
+
+Trang `/erp/release` là bảng đối chiếu kỹ thuật trước khi bật tính năng, **không phải màn hình vận hành** và không có lối vào từ menu.
 
 ---
 

@@ -62,9 +62,14 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     });
     await page.route("**/api/customer-booking-confirmations", async (route) => {
       const body = route.request().postDataJSON() as Record<string, unknown>;
+      // TC-22: mac dinh van la loi tra tien mo phong, va man hinh KHONG
+      // duoc gui kem lien he o loi nay — thu mot du lieu ca nhan khong dung
+      // toi la mot khoan no. Khoa chat bang toEqual de mot truong lo ra la
+      // bai kiem do ngay.
       expect(body).toEqual({
         payment_request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
         hold_id: "60000000-0000-4000-8000-000000000001",
+        payment_mode: "simulation",
       });
       await route.fulfill({
         status: 201,

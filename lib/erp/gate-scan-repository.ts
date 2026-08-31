@@ -56,6 +56,10 @@ export type GateScanResult =
   // tach khoi "het luot": ve doan van con thua luot trong khi nguoi nay thi
   // khong, va bao nham se day nhan vien di tim mot van de khong ton tai.
   | "already-entered"
+  // TC-22: ve that, dung ngay, dung cua, con luot — chi la chua tra tien.
+  // Tach hAn khoi "void" va "exhausted": bao nham hai cai do la day nhan
+  // vien di tim mot van de khong ton tai.
+  | "payment-due"
   | "void"
   | "legacy-uncheckable";
 
@@ -67,6 +71,7 @@ export const GATE_SCAN_RESULT_LABELS: Readonly<Record<GateScanResult, string>> =
     "wrong-day": "Vé không dùng cho hôm nay",
     exhausted: "Vé đã dùng hết lượt",
     "already-entered": "Khách này đã vào rồi",
+    "payment-due": "Chưa thu tiền — thu xong mới cho vào",
     void: "Vé đã bị huỷ",
     "legacy-uncheckable": "Lượt quét cũ, chưa đối chiếu được vé",
   });
@@ -100,6 +105,8 @@ export type GateScanDecision = {
   ticket: TicketSummary | null;
   /** TC-06: có giá trị khi mã vừa quét là mã riêng của một người trong đoàn. */
   member: GroupMemberSummary | null;
+  /** TC-22: số tiền còn phải thu, chỉ khác 0 khi `result` là `payment-due`. */
+  paymentDueVnd: number;
 };
 
 export type ValidateGateScanInput = RecordGateScanInput & {
@@ -382,6 +389,7 @@ async function validateInSupabase(
     replayed: Boolean(data.replayed),
     ticket: ticketFromRow(data.ticket),
     member: memberFromRow(data.member),
+    paymentDueVnd: Number(data.payment_due_vnd ?? 0),
   };
 }
 
@@ -403,6 +411,8 @@ async function validateInCookie(
     replayed: false,
     ticket: null,
     member: null,
+    // Che do demo cuc bo khong co kho don hang de hoi, nen khong bao gio no tien.
+    paymentDueVnd: 0,
   };
 }
 
@@ -670,4 +680,53 @@ export async function countGateScansToday(siteId: ErpSiteId): Promise<number> {
 export async function recordGateScan(input: RecordGateScanInput): Promise<GateScanEvent> {
   if (readMode() === "supabase") return recordInSupabase(input);
   return recordInCookie(input);
+}
+
+export type OnSitePaymentCollection = {
+  collected: boolean;
+  alreadyCollected: boolean;
+  amountVnd: number;
+  orderCode: string;
+  collectedBy: string;
+  collectedAt: string;
+};
+
+/**
+ * TC-22 — nhân viên ở cổng thu tiền cho một tấm vé khách chọn trả tại điểm.
+ *
+ * Tách hẳn khỏi việc cho khách vào, dù trên màn hình chỉ là một cú chạm: thu
+ * tiền là một sự kiện tiền bạc, cho vào là một sự kiện cổng. Ghi chung một
+ * dòng thì tới lúc đối soát không ai tách lại được.
+ *
+ * Quyền dùng lại đúng luật gác cổng đã có (`erp_gate_actor_can_scan`), không
+ * dựng luật quyền thứ hai. Bấm hai lần không ghi hai khoản — cơ sở dữ liệu
+ * chặn bằng khoá duy nhất, và trả về `alreadyCollected` để màn hình nói thật.
+ */
+export async function collectOnSitePayment(input: {
+  siteId: ErpSiteId;
+  code: string;
+  actorId: string;
+}): Promise<OnSitePaymentCollection> {
+  if (readMode() !== "supabase") {
+    throw new GateScanRepositoryError(
+      "Chế độ chạy thử cục bộ không có kho đơn hàng để thu tiền.",
+    );
+  }
+  const result = await createAdminClient().rpc("erp_collect_on_site_payment", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_code: input.code,
+    p_actor_account_id: input.actorId,
+    p_occurred_at: new Date().toISOString(),
+  });
+  if (result.error) throw repositoryError("ghi nhận khoản thu tại cổng", result.error);
+  const row = (result.data ?? {}) as Record<string, unknown>;
+  return {
+    collected: row.collected === true,
+    alreadyCollected: row.already_collected === true,
+    amountVnd: Number(row.amount_vnd ?? 0),
+    orderCode: String(row.order_code ?? ""),
+    collectedBy: String(row.collected_by ?? ""),
+    collectedAt: String(row.collected_at ?? ""),
+  };
 }

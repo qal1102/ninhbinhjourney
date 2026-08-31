@@ -5,7 +5,7 @@ import {
   isSameOriginCustomerRequest,
 } from "@/domain/customer-identity";
 import {
-  confirmCustomerSimulatedBooking,
+  confirmCustomerBooking,
   CustomerBookingRepositoryError,
   isCustomerBookingEnabled,
 } from "@/lib/customer-data/booking-repository";
@@ -42,24 +42,33 @@ export async function POST(request: Request) {
       );
     }
     const input = CustomerBookingConfirmationRequestSchema.parse(JSON.parse(rawBody));
-    const result = await confirmCustomerSimulatedBooking({
+    const result = await confirmCustomerBooking({
       paymentRequestId: input.payment_request_id,
       holdId: input.hold_id,
       anonymousId,
+      paymentMode: input.payment_mode,
+      contact: input.contact,
     });
     return Response.json(
       {
         accepted: true,
         duplicate: result.duplicate,
         order: { id: result.orderId, code: result.orderCode, status: result.orderStatus },
-        payment: { id: result.paymentAttemptId, status: result.paymentStatus, mode: "simulation" },
+        payment: {
+          id: result.paymentAttemptId,
+          status: result.paymentStatus,
+          mode: result.paymentMode,
+          amount_due_vnd: result.amountDueVnd,
+        },
         tickets: result.tickets,
       },
       { status: result.duplicate ? 200 : 201, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
     const repositoryError = error instanceof CustomerBookingRepositoryError ? error : null;
-    const status = repositoryError?.code === "OWNERSHIP_REQUIRED"
+    const status = repositoryError?.code === "UNPAID_LIMIT"
+      ? 429
+      : repositoryError?.code === "OWNERSHIP_REQUIRED"
       ? 403
       : repositoryError?.code === "HOLD_EXPIRED" || repositoryError?.code === "ORDER_CONFIRMED" || repositoryError?.code === "ID_COLLISION"
         ? 409

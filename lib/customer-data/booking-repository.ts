@@ -7,6 +7,7 @@ import type {
   CustomerProductSlotRow,
 } from "@/domain/customer-booking";
 import { PACKAGES } from "@/content/packages";
+import { protectCustomerContact } from "@/lib/customer-data/identity-repository";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 
@@ -28,6 +29,8 @@ export class CustomerBookingRepositoryError extends Error {
       | "HOLD_EXPIRED"
       | "OWNERSHIP_REQUIRED"
       | "ID_COLLISION"
+      | "CONTACT_REQUIRED"
+      | "UNPAID_LIMIT"
       | "ORDER_CONFIRMED"
       | "RATE_LIMITED"
       | "PERSISTENCE_FAILED",
@@ -85,6 +88,9 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_ORDER_ALREADY_CONFIRMED", "ORDER_CONFIRMED", "Đơn này đã được xác nhận bằng một yêu cầu khác."],
     ["CUSTOMER_ORDER_STATE_INVALID", "ORDER_CONFIRMED", "Đơn không còn ở trạng thái có thể xác nhận."],
     ["CUSTOMER_BOOKING_RATE_LIMITED", "RATE_LIMITED", "Đã tạo quá nhiều lượt giữ chỗ trong một giờ."],
+    ["CUSTOMER_PAYMENT_MODE_INVALID", "INPUT_INVALID", "Cách trả tiền gửi lên chưa hợp lệ."],
+    ["CUSTOMER_PAYMENT_CONTACT_REQUIRED", "CONTACT_REQUIRED", "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc."],
+    ["CUSTOMER_PAYMENT_UNPAID_LIMIT", "UNPAID_LIMIT", "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp giúp em ạ."],
   ];
   for (const [needle, code, safeMessage] of mappings) {
     if (message.includes(needle)) {
@@ -217,17 +223,47 @@ export async function createCustomerBookingHold(input: {
   };
 }
 
-export async function confirmCustomerSimulatedBooking(input: {
+/**
+ * TC-22 — hai lối trả tiền, một đường mã.
+ *
+ * `simulation` giữ nguyên hành vi cũ từng chữ: xác nhận ngay, không nợ đồng
+ * nào. `pay-on-site` giữ chỗ và phát vé, nhưng ghi lại một khoản chờ thu; cổng
+ * sẽ chặn cho tới khi nhân viên thu đủ.
+ *
+ * Số điện thoại hoặc email **không đi ra khỏi máy chủ dưới dạng thô**:
+ * `protectCustomerContact` băm và mã hoá tại đây, cơ sở dữ liệu chỉ nhận bản
+ * đã bảo vệ. Chính vì vậy chỗ này không nhận `contact` cho lối mô phỏng — thu
+ * một dữ liệu cá nhân không dùng tới là một khoản nợ, không phải một tính năng.
+ */
+export async function confirmCustomerBooking(input: {
   paymentRequestId: string;
   holdId: string;
   anonymousId: string;
+  paymentMode: "simulation" | "pay-on-site";
+  /** Bắt buộc khi `paymentMode` là `pay-on-site`; bỏ qua ở lối mô phỏng. */
+  contact?: string;
 }) {
-  const { data, error } = await createAdminClient().rpc("customer_confirm_simulated_booking", {
+  const protectedContact =
+    input.paymentMode === "pay-on-site" && input.contact
+      ? protectCustomerContact(input.contact)
+      : null;
+  if (input.paymentMode === "pay-on-site" && !protectedContact) {
+    throw new CustomerBookingRepositoryError(
+      "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email.",
+      "INPUT_INVALID",
+    );
+  }
+  const { data, error } = await createAdminClient().rpc("customer_confirm_booking", {
     p_tenant_id: TENANT_ID,
     p_payment_request_id: input.paymentRequestId,
     p_hold_id: input.holdId,
     p_anonymous_id: input.anonymousId,
     p_occurred_at: new Date().toISOString(),
+    p_payment_mode: input.paymentMode,
+    p_identity_type: protectedContact?.identityType ?? null,
+    p_identity_digest: protectedContact?.digest ?? null,
+    p_identity_ciphertext: protectedContact?.ciphertext ?? null,
+    p_encryption_key_version: protectedContact?.keyVersion ?? null,
   });
   const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : undefined;
   if (error || !row) throw mapRepositoryError(error);
@@ -236,7 +272,9 @@ export async function confirmCustomerSimulatedBooking(input: {
     orderCode: String(row.order_code),
     orderStatus: String(row.order_status) as "confirmed",
     paymentAttemptId: String(row.payment_attempt_id),
-    paymentStatus: String(row.payment_status) as "succeeded",
+    paymentStatus: String(row.payment_status) as "succeeded" | "pending",
+    paymentMode: String(row.payment_mode) as "simulation" | "pay-on-site",
+    amountDueVnd: Number(row.amount_due_vnd ?? 0),
     tickets: ticketsFromRow(row.tickets),
     duplicate: row.inserted !== true,
   };

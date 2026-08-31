@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandAtelier } from "@/components/discovery/brand-atelier";
 import { LuxuryCampaignArchive } from "@/components/discovery/luxury-campaign-archive";
 import { SeasonalEditorialGroup } from "@/components/discovery/seasonal-editorial-group";
+import { CONTACT as contact } from "@/content/contact";
 
 export type SeasonalAction = "booking" | "contact" | "gift" | "planning";
 
@@ -54,12 +55,6 @@ export type BrowserCopy = {
   previousStory: string;
   nextStory: string;
   galleryLabel: string;
-};
-
-const contact = {
-  email: "xuantruong_nb@hn.vnn.vn",
-  phoneHref: "tel:+842293876930",
-  phoneLabel: "0229 387 6930",
 };
 
 export function SeasonalExperienceBrowser({

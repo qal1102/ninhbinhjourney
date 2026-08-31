@@ -52,6 +52,7 @@ import {
   type FieldReport,
 } from "@/lib/erp/field-report-repository";
 import {
+  collectOnSitePayment,
   GATE_SCAN_RESULT_LABELS,
   GateScanRepositoryError,
   listScannableTicketsToday,
@@ -666,6 +667,20 @@ export async function recordGateScanAction(input: {
       scannedByName: user.name,
       scannedAt: decision.scannedAt,
     };
+    if (decision.result === "payment-due") {
+      // TC-22: đây không phải một tấm vé hỏng, nên câu chữ phải nói đúng việc
+      // nhân viên cần làm — thu bao nhiêu — chứ không chỉ nói "không cho vào".
+      const tien = new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+        maximumFractionDigits: 0,
+      }).format(decision.paymentDueVnd);
+      return {
+        success: false,
+        message: `${decision.code}: khách chọn trả tiền tại điểm. Thu ${tien} rồi bấm “Đã thu tiền”.`,
+        decision,
+      };
+    }
     if (decision.result !== "accepted") {
       return {
         success: false,
@@ -825,6 +840,54 @@ export async function refreshDemoTicketsAction(): Promise<{
       ok: false,
       message: "Chỉ giám đốc mới làm mới được vé mẫu.",
       ticketCodes: [],
+    };
+  }
+}
+
+/**
+ * TC-22 — nhân viên ở cổng bấm "đã thu tiền" cho một tấm vé trả tại điểm.
+ *
+ * Quyền không kiểm ở đây: PostgreSQL đọc đúng luật gác cổng đã có. Chỗ này chỉ
+ * là đường đi, và một luật quyền thứ hai ở tầng này sẽ là chỗ để hai bên lệch
+ * nhau mà không ai biết.
+ */
+export async function collectOnSitePaymentAction(input: {
+  siteId: string;
+  code: string;
+}): Promise<{ ok: boolean; message: string }> {
+  const user = await getCurrentErpUser();
+  if (!user) return { ok: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) {
+    return { ok: false, message: "Cơ sở không hợp lệ." };
+  }
+  try {
+    const ket_qua = await collectOnSitePayment({
+      siteId: input.siteId,
+      code: input.code,
+      actorId: user.id,
+    });
+    const tien = new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0,
+    }).format(ket_qua.amountVnd);
+    if (ket_qua.alreadyCollected) {
+      return {
+        ok: true,
+        message: `Đơn ${ket_qua.orderCode} đã có người thu ${tien} rồi. Mời bạn quét lại để cho khách vào.`,
+      };
+    }
+    return {
+      ok: true,
+      message: `Đã ghi nhận thu ${tien} cho đơn ${ket_qua.orderCode}. Mời bạn quét lại để cho khách vào.`,
+    };
+  } catch (error) {
+    if (error instanceof GateScanRepositoryError) {
+      return { ok: false, message: error.message };
+    }
+    return {
+      ok: false,
+      message: "Chưa ghi nhận được khoản thu. Bạn thử lại giúp em, nếu vẫn vậy thì báo đội kỹ thuật.",
     };
   }
 }

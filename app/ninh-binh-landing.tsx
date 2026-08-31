@@ -15,6 +15,7 @@ import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
+import { CONTACT as contactInfo } from "@/content/contact";
 
 export type Language = "en" | "vi";
 export type DestinationId =
@@ -164,6 +165,11 @@ const copy = {
     packagesCta: "View this package",
     packagesViewAll: "See all five packages",
     packagesPricePerGuest: "per adult · demo",
+    // WEB-STRUCT-02: loi dat cho qua dien thoai, ngoai nut vao tung goi.
+    // So/email that lay tu `content/contact.ts`, khong dat trong bang chu.
+    packagesCallCta: "Call to reserve directly",
+    packagesEmailCta: "Email to reserve",
+    packagesCallNote: "Prefer to book by phone? Call Xuân Trường directly.",
     exploreRouteStop: "Explore this stop",
     routeStopLabel: "Stop",
     addRoute: "Add route",
@@ -185,6 +191,36 @@ const copy = {
     hiddenGemsIntro:
       "Vân Long wetland, Am Tiên cave, Bích Động pagoda, Thái Vi temple. Quieter, and mostly missed by anyone giving Ninh Bình two days.",
     seeAllDestinations: "See all destinations",
+    /*
+     * WEB-STRUCT-02: khoi "diem noi bat" ngan, dat truoc danh muc day du
+     * (DestinationZigzag/DestinationIndex) -- xem `FEATURED_DESTINATION_IDS`.
+     * Chu lay dung du kien da co trong `zigzagIntro`/`hourPhrases` phia
+     * tren (486 bac da Hang Mua, hang song Ngo Dong o Tam Coc), khong bia
+     * moi.
+     */
+    featuredLabel: "Signature stops",
+    featuredTitle: "Six places every visitor mentions, before the other nine",
+    featuredIntro:
+      "Trang An opens by boat, Hang Mua closes with 486 stone steps, and Hoa Lu Old Town holds onto its lantern light once the sun goes down. These are the six names that keep coming up when people talk about Ninh Bình — the full list of fifteen sits just below.",
+    featuredCta: "See all fifteen destinations",
+    /*
+     * WEB-STRUCT-02: loi moi hop tac cho nhan hang/doanh nghiep, TACH RIENG
+     * khoi chuong Brand Atelier trong `MidAutumnCampaign` (Celine, Chanel,
+     * Hermes... la concept doc lap cho mua Trung thu, khong phai doi tac
+     * da ky) -- khong nhac ten brand nao o day de khong the nham lan.
+     */
+    partnersLabel: "For brands & businesses",
+    partnersTitle: "Want to film at Trang An, or host dinner by the Ngô Đồng?",
+    partnersBody:
+      "Ninh Bình Journey works directly with brands and businesses that want to hold an event, shoot commercial footage or partner with us for a season here in Ninh Bình — from the still water of Trang An to the rice-lined banks of Tam Cốc. Call Xuân Trường directly, and the team will work out the location, schedule and scale before anything is booked.",
+    partnersCategory1Title: "Private events",
+    partnersCategory1Body: "A wedding, a launch or a gathering right on the water at Trang An.",
+    partnersCategory2Title: "Commercial shoots",
+    partnersCategory2Body: "Film and photo crews that need limestone peaks, caves and river settings.",
+    partnersCategory3Title: "Seasonal partnership",
+    partnersCategory3Body: "Join a peak season, like the Mid-Autumn programme Ninh Bình Journey has just run.",
+    partnersCall: "Call to discuss",
+    partnersEmail: "Send a partnership email",
     /*
      * `zigzag*` gio chi con dung cho VAI DIEM DAU (xem `ZIGZAG_FEATURED`).
      * `index*` la khoi danh sach cho phan con lai. Khong bia con so nao o
@@ -292,6 +328,9 @@ const copy = {
     packagesCta: "Xem gói này",
     packagesViewAll: "Xem cả năm gói",
     packagesPricePerGuest: "mỗi người lớn · demo",
+    packagesCallCta: "Gọi đặt chỗ trực tiếp",
+    packagesEmailCta: "Gửi email đặt chỗ",
+    packagesCallNote: "Muốn đặt qua điện thoại? Gọi thẳng cho Xuân Trường.",
     exploreRouteStop: "Khám phá điểm này",
     routeStopLabel: "Chặng",
     addRoute: "Thêm tuyến",
@@ -313,6 +352,23 @@ const copy = {
     hiddenGemsIntro:
       "Đầm Vân Long, động Am Tiên, chùa Bích Động, đền Thái Vi. Vắng hơn, và phần lớn khách đi Ninh Bình hai ngày sẽ không kịp tới.",
     seeAllDestinations: "Xem tất cả điểm đến",
+    featuredLabel: "Điểm đến nổi bật",
+    featuredTitle: "Trước khi đi hết mười lăm nơi, sáu chỗ này không thể bỏ qua",
+    featuredIntro:
+      "Tràng An mở đầu bằng thuyền, Hang Múa khép bằng 486 bậc đá, Phố cổ Hoa Lư giữ lại ánh đèn lồng cho lúc trời tối. Đây là sáu cái tên khách nào cũng nhắc tới khi rời Ninh Bình — muốn xem trọn cả mười lăm nơi, danh mục đầy đủ nằm ngay bên dưới.",
+    featuredCta: "Xem toàn bộ mười lăm điểm đến",
+    partnersLabel: "Dành cho doanh nghiệp",
+    partnersTitle: "Muốn quay hình ở Tràng An, hay đặt tiệc bên sông Ngô Đồng?",
+    partnersBody:
+      "Ninh Bình Journey làm việc trực tiếp với nhãn hàng và doanh nghiệp muốn tổ chức sự kiện, quay hình thương mại hoặc đồng hành theo mùa tại Ninh Bình — từ mặt nước Tràng An tới triền lúa Tam Cốc. Gọi thẳng cho Xuân Trường, đội ngũ sẽ bàn địa điểm, lịch trình và quy mô phù hợp trước khi triển khai.",
+    partnersCategory1Title: "Sự kiện riêng",
+    partnersCategory1Body: "Tiệc, lễ ra mắt hoặc buổi họp mặt ngay bên mặt nước Tràng An.",
+    partnersCategory2Title: "Quay chụp thương mại",
+    partnersCategory2Body: "Đoàn phim và ê-kíp ảnh cần bối cảnh núi đá vôi, hang động, sông nước.",
+    partnersCategory3Title: "Tài trợ theo mùa",
+    partnersCategory3Body: "Đồng hành cùng mùa cao điểm, như chương trình Trung thu Ninh Bình Journey vừa triển khai.",
+    partnersCall: "Gọi trao đổi hợp tác",
+    partnersEmail: "Gửi email hợp tác",
     indexLabel: "Phần còn lại của bản đồ",
     indexTitle: "Mười nơi nữa, ít ai kịp đi hết.",
     indexIntro:
@@ -1229,6 +1285,30 @@ const paymentMethodsVi = ["Visa", "Mastercard", "JCB", "VietQR", "MoMo", "ZaloPa
 const ZIGZAG_FEATURED = 5;
 
 /*
+ * WEB-STRUCT-02 (31/08): sau muc "Ba cau chuyen de bat dau" bi xoa han
+ * 05/08, trang chu khong con mot loi gioi thieu ngan nao dan vao danh
+ * muc 15 diem den ben duoi -- khach phai tu boi qua ca DestinationZigzag
+ * lan DestinationIndex moi biet noi nao la "hot" nhat. Sau id nay CHON
+ * TRONG SO CHIN DIEM `tier: "signature"` da co san (khong bia diem moi,
+ * khong bia so lieu): Trang An, Tam Coc, Hang Mua, Bai Dinh, Co do Hoa Lu
+ * va Pho co Hoa Lu -- sau cai ten xuat hien trong hau het moi tuyen goi y
+ * (`routeCollections`) va ca nam goi ban (`content/packages.ts`), tuc la
+ * dung nhung diem khach thuc su se di chu khong phai chon ngau nhien.
+ * Tam Chuc (cung signature) khong dua vao day vi thuoc Ha Nam, khong phai
+ * Ninh Binh that (xem `outsideTourismCore` trong `content/destinations.ts`
+ * va muc W3 o HANDOFF.md) -- de trong o day de tranh nhan "diem noi bat
+ * Ninh Binh" bi hieu nham.
+ */
+const FEATURED_DESTINATION_IDS: DestinationId[] = [
+  "trang_an",
+  "tam_coc",
+  "hang_mua",
+  "bai_dinh",
+  "hoa_lu_ancient_capital",
+  "hoa_lu_old_town",
+];
+
+/*
  * VIET LAI LAN HAI, 06/08 -- lan nay theo luat "GOI TEN, DUNG TA" moi
  * them vao UI_UX_RULES.md sau khi doi chieu voi muave.disantrangan.vn.
  *
@@ -2025,6 +2105,75 @@ export default function NinhBinhLanding({
       */}
 
       {/*
+        WEB-STRUCT-02 (31/08): khoi "diem noi bat" ngan -- chu du an yeu
+        cau "sắp xếp lại 1 chút kiểu như các địa điểm hot ở Ninh Bình".
+        Chi 6/15 diem (`FEATURED_DESTINATION_IDS`, chon trong so 9 diem
+        `tier: "signature"` da co, khong bia diem moi), dan thang vao danh
+        muc day du ngay ben duoi qua neo `#destinations`. Chu lay tu
+        `tagline`/`category` da co trong mang `destinations`, khong tu che
+        cau moi cho tung the.
+      */}
+      <section
+        id="destinations-highlights"
+        data-customer-section="home-featured-destinations"
+        className="bg-[#FBFAF6] px-5 py-16 sm:px-8 lg:py-20"
+      >
+        <div className="mx-auto max-w-7xl">
+          <Reveal className="max-w-3xl">
+            <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#3F7568]">{t.featuredLabel}</p>
+            <RevealHeading
+              as="h2"
+              text={t.featuredTitle as string}
+              className="font-display mt-4 text-4xl leading-tight text-[#183F34] sm:text-6xl"
+            />
+            <p className="mt-5 text-lg leading-relaxed text-[#4A5751]">{t.featuredIntro}</p>
+          </Reveal>
+          <div className="mt-10 flex gap-5 overflow-x-auto pb-2 [scrollbar-width:none] sm:gap-6">
+            {FEATURED_DESTINATION_IDS.map((id) => destinations.find((place) => place.id === id))
+              .filter((place): place is Destination => Boolean(place))
+              .map((place) => (
+                <button
+                  key={place.id}
+                  type="button"
+                  data-customer-track={`home-featured-${place.id}`}
+                  data-customer-content-id={place.id}
+                  data-customer-content-type="destination"
+                  onClick={() => openDetail(place.id)}
+                  className="group relative w-64 shrink-0 overflow-hidden rounded-[10px] text-left shadow-lg shadow-[#183F34]/12 sm:w-72"
+                >
+                  <div className="relative aspect-[4/5] w-full">
+                    <Image
+                      src={place.image}
+                      alt={place.name[lang]}
+                      fill
+                      sizes="288px"
+                      className="object-cover transition duration-500 group-hover:scale-105"
+                      style={{ objectPosition: place.imagePosition }}
+                    />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,28,23,0),rgba(12,28,23,.16)_55%,rgba(12,28,23,.88))]" />
+                    <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
+                      <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.18em] text-[#E7B96A]">
+                        {place.category[lang]}
+                      </p>
+                      <p className="font-display mt-1 text-2xl leading-none">{place.name[lang]}</p>
+                      <p className="mt-2 text-sm leading-5 text-white/78">{place.tagline[lang]}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+          </div>
+          <div className="mt-8 text-center">
+            <a
+              href="#destinations"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#183F34]/30 px-6 font-semibold text-[#183F34] transition hover:bg-[#183F34]/6"
+            >
+              {t.featuredCta} <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/*
         Danh muc diem den chia lam HAI NHIP, co chu dich (05/08).
         Truoc do ca 15 diem di qua cung mot khuon zigzag: 9.540px lien
         tuc, tuc 44% ca trang, va doc rat deu deu -- den diem thu bay thi
@@ -2036,6 +2185,7 @@ export default function NinhBinhLanding({
         mot to tap chi, VA van giu du ca 15 diem tren trang chu, khong
         cat bot noi dung nao.
       */}
+      <div id="destinations" className="scroll-mt-24" aria-hidden="true" />
       <DestinationZigzag
         items={destinations.slice(0, ZIGZAG_FEATURED).map((place) => ({
           id: place.id,
@@ -2184,6 +2334,9 @@ export default function NinhBinhLanding({
           cta: t.packagesCta as string,
           viewAll: t.packagesViewAll as string,
           pricePerGuest: t.packagesPricePerGuest as string,
+          callCta: t.packagesCallCta as string,
+          emailCta: t.packagesEmailCta as string,
+          callNote: t.packagesCallNote as string,
         }}
       />
 
@@ -2313,6 +2466,66 @@ export default function NinhBinhLanding({
               <button type="button" onClick={() => setCheckoutOpen(true)} className="rounded-full bg-[#E7B96A] px-5 py-3 font-semibold text-[#183F34] transition hover:bg-[#f0c87c]">{t.reserve}</button>
             </div>
           </aside>
+        </div>
+      </section>
+
+      {/*
+        WEB-STRUCT-02 (31/08): loi moi hop tac cho nhan hang/doanh nghiep
+        -- chu du an yeu cau "liên hệ hợp tác với các nhãn hàng bla bla".
+        TACH HAN khoi chuong Brand Atelier trong `MidAutumnCampaign`
+        (Celine, Chanel, Hermes... la concept doc lap cho mua Trung thu,
+        khong phai doi tac da ky, xem `components/discovery/
+        brand-atelier.tsx`) -- khoi nay o cuoi trang, khong nhac ten brand
+        nao, chi moi nhan hang/doanh nghiep that lien he qua dung so dien
+        thoai/email o `content/contact.ts`.
+      */}
+      <section
+        id="partnerships"
+        data-customer-section="home-business-partnerships"
+        className="bg-[#183F34] px-5 py-16 text-white sm:px-8 lg:py-20"
+      >
+        <div className="mx-auto max-w-6xl">
+          <Reveal className="max-w-3xl">
+            <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#A8CEC1]">{t.partnersLabel}</p>
+            <RevealHeading
+              as="h2"
+              text={t.partnersTitle as string}
+              className="font-display mt-4 text-4xl leading-tight sm:text-6xl"
+            />
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/78">{t.partnersBody}</p>
+          </Reveal>
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {[
+              [t.partnersCategory1Title, t.partnersCategory1Body],
+              [t.partnersCategory2Title, t.partnersCategory2Body],
+              [t.partnersCategory3Title, t.partnersCategory3Body],
+            ].map(([title, body]) => (
+              <div key={title as string} className="rounded-[10px] border border-white/15 bg-white/6 p-5">
+                <p className="font-display text-xl">{title}</p>
+                <p className="mt-2 text-sm leading-6 text-white/72">{body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <a
+              href={contactInfo.phoneHref}
+              data-customer-track="home-partnerships-call"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#E7B96A] px-6 font-semibold text-[#183F34] transition hover:bg-[#f0c87c]"
+            >
+              {t.partnersCall} · {contactInfo.phoneLabel}
+            </a>
+            <a
+              href={`mailto:${contactInfo.email}?subject=${encodeURIComponent(
+                lang === "vi"
+                  ? "Hợp tác cùng Ninh Bình Journey"
+                  : "Partnership enquiry — Ninh Binh Journey",
+              )}`}
+              data-customer-track="home-partnerships-email"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/35 px-6 font-semibold text-white transition hover:bg-white/12"
+            >
+              {t.partnersEmail}
+            </a>
+          </div>
         </div>
       </section>
 

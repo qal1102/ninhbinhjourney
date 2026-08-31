@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getPackageBySlug, PACKAGES } from "@/content/packages";
 import { DESTINATIONS } from "@/content/destinations";
 import { getPackageHeroImage } from "@/content/package-images";
+import { MiniRouteMap } from "@/components/discovery/mini-route-map";
 import {
   getExperiencePresentationFlags,
   readPublicEnvironment,
@@ -98,6 +99,23 @@ export default async function PackageDetailPage({
                 </Link>
               ))}
             </div>
+            {sites.length > 0 ? (
+              <div className="mt-9">
+                <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
+                  Các điểm trong gói, trên bản đồ Ninh Bình
+                </p>
+                <div className="mt-3 rounded-2xl border border-white/15 bg-white/5 p-4">
+                  <MiniRouteMap
+                    tone="dark"
+                    points={sites.map((site) => ({
+                      id: site.id,
+                      label: site.name.vi,
+                      coordinates: site.coordinates,
+                    }))}
+                  />
+                </div>
+              </div>
+            ) : null}
           </section>
           <aside className="h-fit rounded-3xl bg-[#fbfaf6] p-6 text-[#151a17] sm:p-8">
             <p className="text-sm text-[#59654b]">

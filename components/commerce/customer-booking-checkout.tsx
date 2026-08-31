@@ -216,6 +216,9 @@ export function CustomerBookingCheckout({
   // phát; không bắt buộc, và bỏ qua không ảnh hưởng gì tới việc vào cổng.
   const [leaderName, setLeaderName] = useState("");
   const [leaderPhone, setLeaderPhone] = useState("");
+  // TC-22: khách chọn trả tiền tại điểm thay vì trả ngay trên trang.
+  const [payAtSite, setPayAtSite] = useState(false);
+  const [contact, setContact] = useState("");
   const [groupLabel, setGroupLabel] = useState("");
   const [group, setGroup] = useState<VisitorGroupStatus | null>(null);
   const [groupPending, setGroupPending] = useState(false);
@@ -378,6 +381,12 @@ export function CustomerBookingCheckout({
 
   async function confirmBooking() {
     if (!hold || remainingSeconds <= 0) return;
+    // TC-22: chọn trả tiền tại điểm thì phải có liên hệ. Chặn ngay ở đây để
+    // khách thấy lý do tại chỗ, thay vì bấm xong mới nhận một câu từ chối.
+    if (payAtSite && contact.trim().length < 6) {
+      setMessage("Bạn để lại giúp em số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc ạ.");
+      return;
+    }
     setPending("confirm");
     setMessage("");
     try {
@@ -388,11 +397,17 @@ export function CustomerBookingCheckout({
         body: JSON.stringify({
           payment_request_id: paymentRequestId.current,
           hold_id: hold.hold.id,
+          payment_mode: payAtSite ? "pay-on-site" : "simulation",
+          ...(payAtSite ? { contact: contact.trim() } : {}),
         }),
       });
       const payload = await responsePayload(response) as ConfirmationResult;
       setConfirmation(payload);
-      setMessage("Đặt chỗ đã xác nhận. Vé bên dưới là vé T8 mà cổng vận hành đọc trực tiếp.");
+      setMessage(
+        payAtSite
+          ? "Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào ạ."
+          : "Đặt chỗ đã xác nhận. Vé bên dưới là vé thật mà cổng vận hành đọc trực tiếp.",
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể xác nhận đặt chỗ lúc này.");
     } finally {
@@ -868,16 +883,48 @@ export function CustomerBookingCheckout({
             </button>
           </>
         ) : (
+          <>
+          {/* TC-22: hai lối trả tiền, khách tự chọn. Mặc định vẫn là trả
+              ngay trên trang; trả tại điểm là lối tạm trong lúc hệ thống
+              chưa gánh được thanh toán thật. */}
+          <fieldset className="mt-7 rounded-2xl border border-[#d7d5cd] bg-white/60 p-4">
+            <legend className="px-2 text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Trả tiền thế nào</legend>
+            <label className="flex min-h-11 items-start gap-3 text-sm">
+              <input type="radio" name="cach-tra-tien" checked={!payAtSite} onChange={() => setPayAtSite(false)} className="mt-1" />
+              <span><strong className="font-bold">Trả ngay trên trang</strong> — thanh toán mô phỏng, không thu tiền thật.</span>
+            </label>
+            <label className="mt-3 flex min-h-11 items-start gap-3 text-sm">
+              <input type="radio" name="cach-tra-tien" checked={payAtSite} onChange={() => setPayAtSite(true)} className="mt-1" />
+              <span><strong className="font-bold">Trả tại điểm</strong> — giữ chỗ trước, tới nơi đưa mã cho nhân viên rồi trả tiền.</span>
+            </label>
+            {payAtSite ? (
+              <label className="mt-4 grid gap-1 text-xs font-bold text-[#5f6f66]">
+                Số điện thoại hoặc email
+                <input
+                  value={contact}
+                  onChange={(event) => setContact(event.target.value)}
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="0912 345 678"
+                  className="min-h-11 rounded-xl border border-[#cbd7d1] bg-white px-3 text-sm font-medium"
+                />
+                <span className="mt-1 font-normal leading-5 text-[#6f7a73]">
+                  Chỉ dùng để đội ngũ liên lạc khi có việc, và để một chỗ giữ mà không tới còn truy được về ai. Số của bạn được mã hoá trước khi lưu.
+                </span>
+              </label>
+            ) : null}
+          </fieldset>
           <button
             type="button"
             onClick={confirmBooking}
             disabled={pending !== null || remainingSeconds <= 0}
-            className="mt-7 min-h-12 w-full rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17] disabled:opacity-50"
+            className="mt-4 min-h-12 w-full rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17] disabled:opacity-50"
           >
-            {pending === "confirm" ? "Đang phát hành vé…" : remainingSeconds <= 0 ? "Giữ chỗ đã hết hạn" : "Xác nhận thanh toán mô phỏng"}
+            {pending === "confirm" ? "Đang phát hành vé…" : remainingSeconds <= 0 ? "Giữ chỗ đã hết hạn" : payAtSite ? "Giữ chỗ, trả tiền tại điểm" : "Xác nhận thanh toán mô phỏng"}
           </button>
+          </>
         )}
-        <p className="mt-5 text-xs leading-5 text-white/45">Gửi lại cùng một yêu cầu không tạo thêm order, payment hay vé thứ hai.</p>
+        <p className="mt-5 text-xs leading-5 text-white/45">Gửi lại cùng một yêu cầu không tạo thêm đơn, khoản thanh toán hay vé thứ hai.</p>
       </aside>
     </div>
   );

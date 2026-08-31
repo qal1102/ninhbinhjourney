@@ -7,6 +7,7 @@ import {
   getDestinationBySlug,
 } from "@/content/destinations";
 import { DestinationTimeline } from "@/components/discovery/destination-timeline";
+import { MiniRouteMap } from "@/components/discovery/mini-route-map";
 
 type DestinationPageProps = {
   params: Promise<{ slug: string }>;
@@ -237,9 +238,27 @@ export default async function DestinationPage({
               </dd>
             </div>
             <div>
-              <dt className="font-bold text-[#59654b]">Tọa độ WGS 84</dt>
-              <dd className="mt-1">
-                {destination.coordinates[0]}, {destination.coordinates[1]}
+              <dt className="font-bold text-[#59654b]">Vị trí</dt>
+              <dd className="mt-2">
+                <MiniRouteMap
+                  points={[
+                    {
+                      id: destination.id,
+                      label: destination.name.vi,
+                      coordinates: destination.coordinates,
+                    },
+                  ]}
+                  showLegend={false}
+                  mapClassName="h-40"
+                />
+                <a
+                  href={`https://www.google.com/maps?q=${destination.coordinates[0]},${destination.coordinates[1]}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-xs font-semibold text-[#356957] underline underline-offset-4"
+                >
+                  Mở trên Google Maps
+                </a>
               </dd>
             </div>
             <div>

@@ -34,12 +34,38 @@ export const CustomerBookingHoldRequestSchema = z
     },
   );
 
+/**
+ * TC-22 — khách chọn trả tiền ngay (mô phỏng) hay trả tại điểm.
+ *
+ * Bỏ trống `payment_mode` thì tính là `simulation`, đúng hành vi trước TC-22 —
+ * mọi lời gọi cũ vẫn chạy y như cũ.
+ *
+ * `contact` chỉ nhận khi trả tại điểm, và ràng buộc đó nằm ngay trong lược đồ:
+ * thu một dữ liệu cá nhân mà không dùng tới là một khoản nợ, không phải một
+ * tính năng. Máy chủ băm và mã hoá trước khi lưu, không bao giờ lưu thô.
+ */
 export const CustomerBookingConfirmationRequestSchema = z
   .object({
     payment_request_id: z.string().uuid(),
     hold_id: z.string().uuid(),
+    payment_mode: z.enum(["simulation", "pay-on-site"]).default("simulation"),
+    contact: z.string().trim().min(6).max(160).optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) => value.payment_mode !== "pay-on-site" || Boolean(value.contact),
+    {
+      message: "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email.",
+      path: ["contact"],
+    },
+  )
+  .refine(
+    (value) => value.payment_mode === "pay-on-site" || !value.contact,
+    {
+      message: "Trả tiền ngay thì không cần để lại liên hệ.",
+      path: ["contact"],
+    },
+  );
 
 // TC-02: tham số cho màn hình chọn giờ — chỉ đọc, không tạo hay khoá gì.
 export const CustomerBookingSlotsQuerySchema = z

@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import {
   listTodayTicketsAction,
   lookupTicketsAction,
+  collectOnSitePaymentAction,
   recordGateScanAction,
   refreshDemoTicketsAction,
 } from "@/app/erp/actions";
@@ -80,6 +81,10 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   const [scanCode, setScanCode] = useState("");
   const [scanMessage, setScanMessage] = useState("");
   const [scanRefused, setScanRefused] = useState(false);
+  // TC-22: mã vừa quét đang nợ tiền. Giữ lại mã và số tiền để nút "đã thu"
+  // biết thu cho ai — nhân viên không phải gõ lại mã lần nữa.
+  const [scanDue, setScanDue] = useState<{ code: string; amountVnd: number } | null>(null);
+  const [collectPending, setCollectPending] = useState(false);
   const [scanPending, setScanPending] = useState(false);
   const [lookupQuery, setLookupQuery] = useState("");
   const [lookupResults, setLookupResults] = useState<TicketSummary[]>([]);
@@ -254,6 +259,11 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
       });
       setScanMessage(result.message);
       setScanRefused(!result.success);
+      setScanDue(
+        result.decision?.result === "payment-due"
+          ? { code: result.decision.code, amountVnd: result.decision.paymentDueVnd }
+          : null,
+      );
       if (result.success) {
         setScanCode("");
       }
@@ -309,6 +319,43 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
           ) : null}
           {cameraMessage ? <p role="status" className="mt-2 text-xs text-white/70">{cameraMessage}</p> : null}
           {scanMessage ? <p role={scanRefused ? "alert" : "status"} className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${scanRefused ? "bg-[#7d3226] text-[#ffd9d1]" : "bg-white/10"}`}>{scanMessage}</p> : null}
+          {/* TC-22: khách chọn trả tiền tại điểm. Ô này chỉ hiện đúng lúc cần,
+              và ghi rõ số tiền — nhân viên đứng ở cổng không có thời gian đi
+              tra xem phải thu bao nhiêu. */}
+          {scanDue ? (
+            <div className="mt-3 rounded-xl border border-[#e6c07a]/60 bg-[#5a4620]/60 px-4 py-4">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#f0d79a]">Chưa thu tiền</p>
+              <p className="mt-2 text-2xl font-black text-white">
+                {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(scanDue.amountVnd)}
+              </p>
+              <p className="mt-1 font-mono text-xs text-white/70">{scanDue.code}</p>
+              <button
+                type="button"
+                disabled={collectPending}
+                onClick={async () => {
+                  setCollectPending(true);
+                  try {
+                    const ket_qua = await collectOnSitePaymentAction({ siteId: site.id, code: scanDue.code });
+                    setScanMessage(ket_qua.message);
+                    setScanRefused(!ket_qua.ok);
+                    if (ket_qua.ok) {
+                      setScanDue(null);
+                      setScanCode(scanDue.code);
+                    }
+                    router.refresh();
+                  } finally {
+                    setCollectPending(false);
+                  }
+                }}
+                className="mt-4 min-h-12 w-full rounded-xl bg-white px-5 text-sm font-black text-[#3f3016] disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+              >
+                {collectPending ? "Đang ghi nhận…" : "Đã thu tiền"}
+              </button>
+              <p className="mt-3 text-xs leading-5 text-white/65">
+                Ghi nhận xong, mã quay lại ô quét. Bạn quét thêm một lượt nữa là khách vào được ạ.
+              </p>
+            </div>
+          ) : null}
           <div className="mt-6 border-t border-white/15 pt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Vé quét thử được hôm nay</p>

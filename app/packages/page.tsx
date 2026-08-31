@@ -133,13 +133,14 @@ export default async function PackagesPage({
             : "Bảng giá tham khảo · chưa mở đặt online"}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-5xl leading-[0.95] text-[#183f34] sm:text-7xl">
-          Bốn cách đi Ninh Bình, mỗi cách một nhịp riêng.
+          Bốn cách đi Ninh Bình, và một bàn tiệc dưới trăng.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
           Chọn theo thời gian bạn có và điều bạn muốn cảm nhận — di sản trọn
           ngày, một ngày chậm rãi, buổi sáng cùng gia đình hay một chiều hoàng
-          hôn cho ảnh đẹp. Giá dưới đây là dữ liệu minh họa theo người lớn,
-          không phải giá thị trường hiện hành.
+          hôn cho ảnh đẹp. Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông
+          Ngô Đồng, tính theo bàn hai khách. Giá của bốn gói còn lại là dữ liệu
+          minh họa tính theo người lớn, không phải giá thị trường hiện hành.
         </p>
         <div className="mt-10 flex flex-col gap-6 lg:gap-8">
           <PackageCard

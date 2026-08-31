@@ -17,7 +17,7 @@ vi.mock("@/lib/customer-data/booking-repository", () => {
     CustomerBookingRepositoryError,
     isCustomerBookingEnabled: mocks.enabled,
     createCustomerBookingHold: mocks.createHold,
-    confirmCustomerSimulatedBooking: mocks.confirm,
+    confirmCustomerBooking: mocks.confirm,
     listCustomerProductSlots: mocks.listSlots,
   };
 });
@@ -75,6 +75,8 @@ describe("CUS-06 booking routes", () => {
       orderStatus: "confirmed",
       paymentAttemptId: "70000000-0000-4000-8000-000000000001",
       paymentStatus: "succeeded",
+      paymentMode: "simulation",
+      amountDueVnd: 0,
       tickets: [{ ticketCode: "WEB-ABCDEF123456", entriesAllowed: 2 }],
       duplicate: false,
     });
@@ -143,6 +145,61 @@ describe("CUS-06 booking routes", () => {
       tickets: [{ ticketCode: "WEB-ABCDEF123456", entriesAllowed: 2 }],
     });
     expect(mocks.confirm).toHaveBeenCalledWith(expect.objectContaining({ anonymousId }));
+    // TC-22: bo trong `payment_mode` thi van la loi tra tien mo phong nhu truoc.
+    expect(mocks.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentMode: "simulation" }),
+    );
+  });
+
+  it("TC-22: tra tien tai diem thi bat buoc co lien he", async () => {
+    mocks.cookies.mockResolvedValue({ get: vi.fn().mockReturnValue({ value: anonymousId }) });
+    const response = await confirmBooking(request("/api/customer-booking-confirmations", {
+      payment_request_id: "30000000-0000-4000-8000-000000000001",
+      hold_id: "60000000-0000-4000-8000-000000000001",
+      payment_mode: "pay-on-site",
+    }));
+    expect(response.status).toBe(400);
+    expect(mocks.confirm).not.toHaveBeenCalled();
+  });
+
+  it("TC-22: tra tien ngay thi khong nhan lien he — thu du lieu khong dung toi la mot khoan no", async () => {
+    mocks.cookies.mockResolvedValue({ get: vi.fn().mockReturnValue({ value: anonymousId }) });
+    const response = await confirmBooking(request("/api/customer-booking-confirmations", {
+      payment_request_id: "30000000-0000-4000-8000-000000000001",
+      hold_id: "60000000-0000-4000-8000-000000000001",
+      payment_mode: "simulation",
+      contact: "0912345678",
+    }));
+    expect(response.status).toBe(400);
+    expect(mocks.confirm).not.toHaveBeenCalled();
+  });
+
+  it("TC-22: tra tien tai diem co lien he thi chuyen dung xuong kho", async () => {
+    mocks.cookies.mockResolvedValue({ get: vi.fn().mockReturnValue({ value: anonymousId }) });
+    mocks.confirm.mockResolvedValue({
+      orderId: "50000000-0000-4000-8000-000000000001",
+      orderCode: "NBJ-ABCDEF123456",
+      orderStatus: "confirmed",
+      paymentAttemptId: "70000000-0000-4000-8000-000000000001",
+      paymentStatus: "pending",
+      paymentMode: "pay-on-site",
+      amountDueVnd: 1780000,
+      tickets: [],
+      duplicate: false,
+    });
+    const response = await confirmBooking(request("/api/customer-booking-confirmations", {
+      payment_request_id: "30000000-0000-4000-8000-000000000001",
+      hold_id: "60000000-0000-4000-8000-000000000001",
+      payment_mode: "pay-on-site",
+      contact: "0912345678",
+    }));
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toMatchObject({
+      payment: { status: "pending", mode: "pay-on-site", amount_due_vnd: 1780000 },
+    });
+    expect(mocks.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentMode: "pay-on-site", contact: "0912345678" }),
+    );
   });
 
   it("TC-02: lists and merges slots across sites of the same package", async () => {

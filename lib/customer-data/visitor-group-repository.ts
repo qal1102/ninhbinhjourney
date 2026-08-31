@@ -62,6 +62,11 @@ function mapRepositoryError(error: unknown): VisitorGroupRepositoryError {
   );
 }
 
+function careNeedFrom(value: unknown): VisitorGroupMember["careNeed"] {
+  const raw = String(value);
+  return raw === "young-child" || raw === "elderly" || raw === "mobility" ? raw : "none";
+}
+
 function membersFrom(value: unknown): VisitorGroupMember[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
@@ -75,6 +80,7 @@ function membersFrom(value: unknown): VisitorGroupMember[] {
       memberCode: String(row.member_code ?? ""),
       guestGroup: nhom,
       displayName: String(row.display_name ?? ""),
+      careNeed: careNeedFrom(row.care_need),
       activated: row.activated === true,
       entries: entries.flatMap((entry) => {
         if (!entry || typeof entry !== "object") return [];
@@ -98,6 +104,7 @@ function statusFrom(value: unknown): VisitorGroupStatus | null {
   if (!row.group_code) return null;
   return {
     groupCode: String(row.group_code),
+    groupLabel: String(row.group_label ?? ""),
     orderCode: String(row.order_code ?? ""),
     leaderName: String(row.leader_name ?? ""),
     visitDate: String(row.visit_date ?? ""),
@@ -112,6 +119,7 @@ export async function createVisitorGroup(input: {
   anonymousId: string;
   leaderName: string;
   leaderPhone: string;
+  groupLabel: string;
 }): Promise<VisitorGroupStatus> {
   const { data, error } = await createAdminClient().rpc("erp_create_visitor_group", {
     p_tenant_id: TENANT_ID,
@@ -119,6 +127,7 @@ export async function createVisitorGroup(input: {
     p_anonymous_id: input.anonymousId,
     p_leader_name: input.leaderName,
     p_leader_phone: input.leaderPhone,
+    p_group_label: input.groupLabel,
   });
   if (error) throw mapRepositoryError(error);
   const status = statusFrom(data);
@@ -142,6 +151,41 @@ export async function activateVisitorGroupMember(input: {
     displayName: String(row.display_name ?? ""),
     activated: row.activated_at != null,
   };
+}
+
+/**
+ * TC-15 — trưởng đoàn điền hộ tên cả đoàn.
+ *
+ * `anonymousId` là phiên khách đã đặt đơn, không phải mã đoàn. Mã đoàn thì cả
+ * đoàn ai cũng cầm; nếu nó đủ để đổi tên người khác thì bất kỳ ai trong đoàn
+ * cũng sửa được tên mọi người, và không ai truy ra được ai vừa sửa. Tầng chặn
+ * thật nằm ở PostgreSQL, đây chỉ là đường đi tới đó.
+ */
+export async function setVisitorGroupMemberDetails(input: {
+  groupCode: string;
+  anonymousId: string;
+  members: Array<{
+    memberIndex: number;
+    displayName: string;
+    careNeed: VisitorGroupMember["careNeed"];
+  }>;
+}): Promise<VisitorGroupStatus> {
+  const { data, error } = await createAdminClient().rpc("erp_set_group_member_details", {
+    p_tenant_id: TENANT_ID,
+    p_group_code: input.groupCode.toUpperCase(),
+    p_anonymous_id: input.anonymousId,
+    p_members: input.members.map((member) => ({
+      member_index: member.memberIndex,
+      display_name: member.displayName,
+      care_need: member.careNeed,
+    })),
+  });
+  if (error) throw mapRepositoryError(error);
+  const status = statusFrom(data);
+  if (!status) {
+    throw new VisitorGroupRepositoryError("Không tìm thấy đoàn nào mang mã này.", "GROUP_NOT_FOUND");
+  }
+  return status;
 }
 
 export async function getVisitorGroupStatus(groupCode: string): Promise<VisitorGroupStatus> {

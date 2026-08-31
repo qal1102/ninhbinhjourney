@@ -6,14 +6,16 @@ export const CustomerBookingHoldRequestSchema = z
     anonymous_id: z.string().uuid(),
     product_id: z.string().uuid(),
     visit_date: z.iso.date(),
-    party_size: z.number().int().min(1).max(20),
+    // TC-15: tran 45 — mot xe khach lon o Viet Nam la 45 cho. Van phai co
+    // tran, vi no chan mot cu go nham thanh mot luot giu 10.000 cho.
+    party_size: z.number().int().min(1).max(45),
     // TC-03: hai nhóm tuổi, `party_size` vẫn là tổng.
     //
     // Để trống được, và đó là chủ ý: một tab mở từ trước lúc triển khai vẫn
     // đặt được, mọi khách tính là người lớn — đúng bằng hành vi cũ. Bắt buộc
     // sẽ đổi lỗi ấy thành một màn hình đỏ mà khách không hiểu vì sao.
-    adults: z.number().int().min(1).max(20).optional(),
-    children: z.number().int().min(0).max(19).optional(),
+    adults: z.number().int().min(1).max(45).optional(),
+    children: z.number().int().min(0).max(44).optional(),
     // TC-02: khách phải chọn đúng một khung giờ trước khi giữ chỗ — không còn
     // đường nào lặng lẽ rơi về "giữ mọi khung đang bật" từ mặt khách nữa.
     slot_starts_at: z.iso.datetime(),

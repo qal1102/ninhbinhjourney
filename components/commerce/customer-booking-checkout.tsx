@@ -142,6 +142,17 @@ const SOURCE_LABEL = {
   measured: "Số liệu đã đo",
 } as const;
 
+// TC-15 — nhu cầu chăm sóc thay cho tuổi, đúng chủ đích của domain/visitor-group.ts.
+// Giữ nguyên bốn giá trị và nhãn này, vì máy trực cổng đọc theo đúng chữ trong danh sách.
+type CareNeedValue = VisitorGroupStatus["members"][number]["careNeed"];
+
+const CARE_NEED_OPTIONS: Array<{ value: CareNeedValue; label: string }> = [
+  { value: "none", label: "Không cần gì thêm" },
+  { value: "young-child", label: "Đi cùng trẻ nhỏ" },
+  { value: "elderly", label: "Người cao tuổi" },
+  { value: "mobility", label: "Khó đi lại" },
+];
+
 function localIsoDate(daysFromToday: number) {
   const date = new Date();
   date.setDate(date.getDate() + daysFromToday);
@@ -205,10 +216,30 @@ export function CustomerBookingCheckout({
   // phát; không bắt buộc, và bỏ qua không ảnh hưởng gì tới việc vào cổng.
   const [leaderName, setLeaderName] = useState("");
   const [leaderPhone, setLeaderPhone] = useState("");
+  const [groupLabel, setGroupLabel] = useState("");
   const [group, setGroup] = useState<VisitorGroupStatus | null>(null);
   const [groupPending, setGroupPending] = useState(false);
   const [groupRefreshing, setGroupRefreshing] = useState(false);
   const [groupMessage, setGroupMessage] = useState("");
+
+  // TC-15 — bảng điền hộ: chỉ giữ những dòng trưởng đoàn thật sự đã sửa, để
+  // lúc lưu không vô tình ghi đè tên khách đã tự khai bằng một giá trị cũ.
+  const [memberEdits, setMemberEdits] = useState<
+    Record<number, { displayName: string; careNeed: CareNeedValue }>
+  >({});
+  const [memberDetailsPending, setMemberDetailsPending] = useState(false);
+  const [memberDetailsMessage, setMemberDetailsMessage] = useState("");
+
+  function updateMemberEdit(
+    memberIndex: number,
+    member: VisitorGroupStatus["members"][number],
+    patch: Partial<{ displayName: string; careNeed: CareNeedValue }>,
+  ) {
+    setMemberEdits((previous) => {
+      const base = previous[memberIndex] ?? { displayName: member.displayName, careNeed: member.careNeed };
+      return { ...previous, [memberIndex]: { ...base, ...patch } };
+    });
+  }
 
   useEffect(() => {
     if (!hold) return;
@@ -261,14 +292,14 @@ export function CustomerBookingCheckout({
 
   const selectedSlot = slots?.find((slot) => slot.startsAt === selectedSlotStartsAt) ?? null;
   const partySizeExceedsSlot = Boolean(selectedSlot && partySize > selectedSlot.remaining);
-  const partySizeInvalid = adults < 1 || partySize < 1 || partySize > 20;
+  const partySizeInvalid = adults < 1 || partySize < 1 || partySize > 45;
 
   // Bàn Trăng khoá tổng số chỗ: đổi được bao nhiêu khách có vé, bao nhiêu trẻ
   // dưới 1m3, nhưng tổng luôn đúng bằng fixedPartySize. Sản phẩm khác thì hai ô
   // độc lập, chỉ ràng buộc tối thiểu một khách có vé và tổng không vượt quá 20.
   function updateAdults(rawValue: number) {
     if (!Number.isFinite(rawValue)) return;
-    const nextAdults = clamp(Math.trunc(rawValue), 1, 20);
+    const nextAdults = clamp(Math.trunc(rawValue), 1, 45);
     if (packageItem.fixedPartySize) {
       const total = packageItem.fixedPartySize;
       const boundedAdults = clamp(nextAdults, 1, total);
@@ -276,14 +307,14 @@ export function CustomerBookingCheckout({
       setChildren(total - boundedAdults);
     } else {
       setAdults(nextAdults);
-      setChildren((previousChildren) => clamp(previousChildren, 0, Math.max(0, 20 - nextAdults)));
+      setChildren((previousChildren) => clamp(previousChildren, 0, Math.max(0, 45 - nextAdults)));
     }
     invalidateHold();
   }
 
   function updateChildren(rawValue: number) {
     if (!Number.isFinite(rawValue)) return;
-    const nextChildren = clamp(Math.trunc(rawValue), 0, 19);
+    const nextChildren = clamp(Math.trunc(rawValue), 0, 44);
     if (packageItem.fixedPartySize) {
       const total = packageItem.fixedPartySize;
       const boundedChildren = clamp(nextChildren, 0, Math.max(0, total - 1));
@@ -291,7 +322,7 @@ export function CustomerBookingCheckout({
       setAdults(total - boundedChildren);
     } else {
       setChildren(nextChildren);
-      setAdults((previousAdults) => clamp(previousAdults, 1, Math.max(1, 20 - nextChildren)));
+      setAdults((previousAdults) => clamp(previousAdults, 1, Math.max(1, 45 - nextChildren)));
     }
     invalidateHold();
   }
@@ -385,6 +416,7 @@ export function CustomerBookingCheckout({
           anonymous_id: anonymousId,
           leader_name: leaderName.trim(),
           leader_phone: leaderPhone.trim(),
+          group_label: groupLabel.trim(),
         }),
       });
       const payload = (await response.json().catch(() => null)) as VisitorGroupApiResponse | null;
@@ -419,6 +451,50 @@ export function CustomerBookingCheckout({
       // Giữ nguyên danh sách đang hiện, không xoá dữ liệu chỉ vì một lần tải lại lỗi.
     } finally {
       setGroupRefreshing(false);
+    }
+  }
+
+  // TC-15 — trưởng đoàn điền hộ tên và nhu cầu chăm sóc, lưu một lần cho mọi
+  // dòng đã sửa. Việc khách tự quét mã riêng để ghi tên vẫn đè lên giá trị ở
+  // đây — quy tắc đó nằm ở máy chủ, UI chỉ cần nói rõ cho trưởng đoàn biết.
+  async function saveMemberDetails(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!group || memberDetailsPending) return;
+    const edited = Object.entries(memberEdits);
+    if (edited.length === 0) return;
+    setMemberDetailsPending(true);
+    setMemberDetailsMessage("");
+    try {
+      const anonymousId = getOrCreateCustomerAnonymousId(window.localStorage);
+      const response = await fetch("/api/customer-visitor-groups", {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          group_code: group.groupCode,
+          anonymous_id: anonymousId,
+          members: edited.map(([memberIndex, edit]) => ({
+            member_index: Number(memberIndex),
+            display_name: edit.displayName.trim(),
+            care_need: edit.careNeed,
+          })),
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as VisitorGroupApiResponse | null;
+      if (!response.ok || !payload?.accepted) {
+        setMemberDetailsMessage(
+          (payload && !payload.accepted && payload.error?.message)
+            || "Chưa lưu được, mời bạn thử lại.",
+        );
+        return;
+      }
+      setGroup(payload.group);
+      setMemberEdits({});
+      setMemberDetailsMessage("Đã lưu tên cả đoàn.");
+    } catch {
+      setMemberDetailsMessage("Chưa lưu được, mời bạn thử lại.");
+    } finally {
+      setMemberDetailsPending(false);
     }
   }
 
@@ -506,7 +582,7 @@ export function CustomerBookingCheckout({
                   aria-label="Số khách cao từ 1m3 trở lên"
                   type="number"
                   min={1}
-                  max={packageItem.fixedPartySize ?? 20}
+                  max={packageItem.fixedPartySize ?? 45}
                   value={adults}
                   onChange={(event) => updateAdults(Number(event.target.value))}
                   className="mt-1 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal text-[#27362f]"
@@ -518,7 +594,7 @@ export function CustomerBookingCheckout({
                   aria-label="Số trẻ cao dưới 1m3"
                   type="number"
                   min={0}
-                  max={packageItem.fixedPartySize ? Math.max(0, packageItem.fixedPartySize - 1) : 19}
+                  max={packageItem.fixedPartySize ? Math.max(0, packageItem.fixedPartySize - 1) : 44}
                   value={children}
                   onChange={(event) => updateChildren(Number(event.target.value))}
                   className="mt-1 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal text-[#27362f]"
@@ -650,6 +726,15 @@ export function CustomerBookingCheckout({
                         className="mt-1 min-h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 font-normal text-white placeholder:text-white/40"
                       />
                     </label>
+                    <label className="block text-xs font-bold text-white/70">
+                      Đặt tên cho đoàn (không bắt buộc)
+                      <input
+                        value={groupLabel}
+                        onChange={(event) => setGroupLabel(event.target.value)}
+                        placeholder="Ví dụ: Đoàn Hà Nội, công ty ABC Travel"
+                        className="mt-1 min-h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 font-normal text-white placeholder:text-white/40"
+                      />
+                    </label>
                     {groupMessage ? <p role="alert" className="text-sm text-[#f4b8a4]">{groupMessage}</p> : null}
                     <button
                       type="submit"
@@ -663,7 +748,12 @@ export function CustomerBookingCheckout({
               ) : (
                 <>
                   <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Mã đoàn của bạn</p>
-                  <p className="font-display mt-2 text-3xl text-[#e7c78d]">{group.groupCode}</p>
+                  <div className="mt-2 flex flex-wrap items-baseline gap-3">
+                    <p className="font-display text-3xl text-[#e7c78d]">{group.groupCode}</p>
+                    {group.groupLabel ? (
+                      <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/75">{group.groupLabel}</span>
+                    ) : null}
+                  </div>
                   <p className="mt-2 text-sm leading-6 text-white/70">
                     Trưởng đoàn gửi mã này cho cả đoàn. Mỗi người quét mã riêng để ghi tên mình vào chuyến đi — không quét vẫn vào cổng bình thường như mọi khách khác.
                   </p>
@@ -694,6 +784,62 @@ export function CustomerBookingCheckout({
                   >
                     {groupRefreshing ? "Đang cập nhật…" : "Cập nhật trạng thái cả đoàn"}
                   </button>
+
+                  <div className="mt-8 border-t border-white/10 pt-6">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Điền hộ cho cả đoàn</p>
+                    <p className="mt-2 text-sm leading-6 text-white/70">
+                      Muốn ghi tên và nhu cầu chăm sóc cho cả đoàn cùng lúc, mời trưởng đoàn điền vào đây rồi lưu một lần.
+                      Trưởng đoàn chỉ cần ghi tên gọi cho từng người thôi ạ — ai tự quét mã riêng khai tên mình, tên đó
+                      thay cho tên trưởng đoàn ghi ở đây.
+                    </p>
+                    <form onSubmit={saveMemberDetails} className="mt-4">
+                      <div className="max-h-[28rem] space-y-3 overflow-y-auto rounded-2xl border border-white/10 p-3">
+                        {group.members.map((member) => {
+                          const edit = memberEdits[member.memberIndex];
+                          return (
+                            <div key={member.memberCode} className="rounded-xl bg-white/8 p-3">
+                              <p className="text-xs font-bold text-white/55">
+                                Khách số {member.memberIndex} · {member.guestGroup === "child" ? "Dưới 1m3" : "Từ 1m3 trở lên"}
+                              </p>
+                              <label className="mt-2 block text-xs font-bold text-white/70">
+                                Tên gọi
+                                <input
+                                  value={edit?.displayName ?? member.displayName}
+                                  onChange={(event) => updateMemberEdit(member.memberIndex, member, { displayName: event.target.value })}
+                                  placeholder="Chưa ghi tên"
+                                  className="mt-1 min-h-11 w-full rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-normal text-white placeholder:text-white/40"
+                                />
+                              </label>
+                              <label className="mt-2 block text-xs font-bold text-white/70">
+                                Nhu cầu chăm sóc
+                                <select
+                                  value={edit?.careNeed ?? member.careNeed}
+                                  onChange={(event) => updateMemberEdit(member.memberIndex, member, { careNeed: event.target.value as CareNeedValue })}
+                                  className="mt-1 min-h-11 w-full rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-normal text-white"
+                                >
+                                  {CARE_NEED_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value} className="text-[#151a17]">
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {memberDetailsMessage ? (
+                        <p role="status" className="mt-3 text-sm text-white/80">{memberDetailsMessage}</p>
+                      ) : null}
+                      <button
+                        type="submit"
+                        disabled={memberDetailsPending || Object.keys(memberEdits).length === 0}
+                        className="mt-4 min-h-12 w-full rounded-full bg-white/15 px-6 font-extrabold text-white transition-colors hover:bg-white/25 disabled:opacity-50"
+                      >
+                        {memberDetailsPending ? "Đang lưu…" : "Lưu tên cả đoàn"}
+                      </button>
+                    </form>
+                  </div>
                 </>
               )}
             </div>

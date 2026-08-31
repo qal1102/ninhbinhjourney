@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
@@ -12,6 +12,11 @@ import {
   type ErpSiteId,
 } from "@/domain/erp";
 import { ERP_ACCOUNTANT_MODULE_IDS } from "@/domain/erp-role-policy";
+
+/** Trạng thái này không đổi sau lượt gắn đầu, nên không cần lắng nghe gì. */
+function subscribeNothing() {
+  return () => {};
+}
 
 type RecognitionResultEvent = Event & {
   resultIndex: number;
@@ -279,6 +284,11 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
   const durationTimerRef = useRef<number | null>(null);
   const threadEndRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  // Nút trợ lý gắn vào `document.body` bằng portal, mà máy chủ dựng HTML thì
+  // chưa có `document`. `useSyncExternalStore` trả `false` lúc dựng ở máy chủ
+  // và `true` ở trình duyệt, nên hai bản khớp nhau mà không phải gọi
+  // `setState` trong `useEffect`.
+  const mounted = useSyncExternalStore(subscribeNothing, () => true, () => false);
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [interim, setInterim] = useState("");
@@ -586,29 +596,37 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
   return (
     <>
-      {/* ERP-UX-06e: trợ lý về lại chỗ cũ — nút nổi ở góc dưới bên phải, nơi
-          ngón tay cái với tới được và mắt đã quen tìm. Chủ dự án nói thẳng là
-          chỗ đó đẹp hơn.
+      {/* ERP-UX-07: trợ lý phải **bám theo màn hình**, cuộn tới đâu theo tới
+          đó, trên máy tính lẫn trên điện thoại.
 
-          Lượt trước em đẩy nó lên thanh đầu trang, nhưng đó là chữa nhầm chỗ.
-          Hai lỗi thật khi ấy là **che nội dung** — ảnh chụp bắt được nó nằm đè
-          lên thẻ chốt ca, giấu mất nút thao tác bên phải — và **`z-[1000]` cao
-          hơn cả lớp phủ menu điện thoại (`z-[110]`)**, nên mở menu ra nó vẫn
-          nổi lên trên. Cả hai đều chữa được mà không phải dời nút đi đâu cả:
-          `z-40` cho nó nằm dưới lớp phủ menu, còn `<main>` chừa sẵn khoảng
-          trống dưới đáy nên không còn gì bị nút đè lên.
+          ⚠ Cái bẫy đã sập một lần, đừng sập lại: nút này được gọi ra từ bên
+          trong thanh đầu trang, mà thanh ấy mang `backdrop-blur`. Một phần tử
+          có `backdrop-filter` **trở thành khung neo cho mọi con cháu
+          `position: fixed`** — nên `fixed bottom-5` không tính theo màn hình
+          nữa mà tính theo cái thanh cao vài chục điểm ảnh, và nút rơi xuống
+          ngay dưới mép thanh ở phía trên trang. Nhìn thì tưởng đặt nhầm chỗ,
+          thật ra là CSS neo nhầm gốc.
 
-          Bảng trợ lý khi mở vẫn là portal `z-[1100]` — lúc đó nó là hộp thoại,
-          che nội dung là đúng vai trò. */}
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Mở trợ lý điều hành"
-        className="fixed bottom-5 right-4 z-40 inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-[#183f34] px-3 text-sm font-black text-white shadow-lg shadow-[#0d2a22]/25 transition hover:bg-[#12332a] sm:right-5 sm:px-4"
-      >
-        <Image src="/brand/ninh-binh-mark.png" alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
-        <span className="hidden sm:block">Trợ lý</span>
-      </button>
+          Cách chữa là **đưa nút ra khỏi cây con ấy**: gắn thẳng vào
+          `document.body` bằng portal, đúng như bảng trợ lý vẫn làm. Lúc đó
+          `fixed` mới tính theo màn hình.
+
+          `z-40` giữ cho nút nằm dưới lớp phủ menu điện thoại (`z-[110]`), và
+          `<main>` chừa sẵn khoảng trống dưới đáy nên không đè lên nội dung. */}
+      {mounted
+        ? createPortal(
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-label="Mở trợ lý điều hành"
+              className="fixed bottom-5 right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#183f34] px-3 text-sm font-black text-white shadow-lg shadow-[#0d2a22]/25 transition hover:bg-[#12332a] sm:right-5 sm:px-4"
+            >
+              <Image src="/brand/ninh-binh-mark.png" alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
+              <span className="hidden sm:block">Trợ lý</span>
+            </button>,
+            document.body,
+          )
+        : null}
 
       {open && typeof document !== "undefined" ? createPortal(
         <div className="pointer-events-none fixed inset-0 z-[1100]">

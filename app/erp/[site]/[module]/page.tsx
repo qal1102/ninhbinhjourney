@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { ModuleContextHelp } from "@/components/erp/module-context-help";
 import { ModuleWorkspace } from "@/components/erp/module-workspace";
@@ -11,6 +12,7 @@ import { listCapacityWorkspace } from "@/lib/erp/capacity-repository";
 import { listSopWorkspace } from "@/lib/erp/sop-repository";
 import { getIncidentCases } from "@/lib/erp/incident-repository";
 import { getFieldReports } from "@/lib/erp/field-report-repository";
+import { resolveModuleBackTarget } from "@/lib/erp/erp-back-link";
 import { getRecentGateScans, getTicketSalesSummary } from "@/lib/erp/gate-scan-repository";
 import { getProjectWorkspace } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
@@ -91,9 +93,11 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
     ]);
   const query = (await searchParams) ?? {};
   const requestedCamera = Array.isArray(query.camera) ? query.camera[0] : query.camera;
+  const backTarget = resolveModuleBackTarget(site);
 
   return (
     <ErpShell user={user} site={site} activeModuleId={moduleDefinition.id}>
+      <ErpBackLink href={backTarget.href} label={backTarget.label} />
       <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#668078]">

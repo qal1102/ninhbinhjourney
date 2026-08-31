@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { Customer360Dashboard } from "@/components/customer-data/customer-360-dashboard";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { canViewCustomer360 } from "@/domain/customer-journey";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
 import {
   isCustomerJourneyPersistenceEnabled,
   listCustomer360Journeys,
@@ -57,6 +59,7 @@ export default async function Customer360Page() {
 
   return (
     <ErpShell user={user}>
+      <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <Customer360Dashboard status={status} journeys={journeys} orders={orders} recommendations={recommendations} outboundActions={outboundActions} />
     </ErpShell>
   );

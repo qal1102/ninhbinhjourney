@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { AccountingControlCenter } from "@/components/erp/accounting-control-center";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
@@ -14,6 +15,7 @@ import {
   listUnmatchedStatementLines,
 } from "@/lib/erp/cash-deposit-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 
@@ -65,6 +67,7 @@ export default async function ErpFinancePage({ searchParams }: Props) {
 
   return (
     <ErpShell user={user}>
+      <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <AccountingControlCenter
         user={user}
         shiftClosures={shiftClosures}

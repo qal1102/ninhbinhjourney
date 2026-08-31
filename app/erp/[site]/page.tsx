@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ERP_MODULES, getErpSite } from "@/domain/erp";
 import { groupVisibleErpModules } from "@/domain/erp-navigation";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
+import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
 import { countEmployeesOnShift } from "@/lib/erp/attendance-repository";
 import {
   accountCanAccessSite,
@@ -52,6 +54,7 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
 
   return (
     <ErpShell user={user} site={site}>
+      <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <section className="relative overflow-hidden rounded-3xl bg-[#183f34] text-white">
         <Image src={site.image} alt="" fill sizes="100vw" className="object-cover opacity-30" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(18,52,42,.97),rgba(18,52,42,.68),rgba(18,52,42,.25))]" />
@@ -95,7 +98,10 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[#477565]">Nghiệp vụ được mở cho bạn</p>
             <h2 className="font-display mt-2 text-3xl text-[#183f34] sm:text-4xl">Công việc tại {site.shortName}</h2>
           </div>
-          <Link href="/erp" className="text-sm font-bold text-[#5e7068] hover:text-[#183f34]">← Đổi cơ sở</Link>
+          {/* ERP-UX-08: chỗ này từng có thêm một liên kết "← Đổi cơ sở" cũng
+              trỏ về `/erp`. Nay đầu trang đã có đường quay lại, để hai mũi tên
+              cùng dẫn về một nơi trên cùng một màn hình chỉ làm người ta phải
+              đọc kỹ mới biết chúng khác gì nhau — mà chúng thì không khác. */}
         </div>
 
         {/* ERP-UX-01: bỏ hẳn số thứ tự 01–08 và ô màu trên mỗi thẻ. Đánh số

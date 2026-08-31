@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import NinhBinhLanding, { type Language } from "./ninh-binh-landing";
-import { readPublicEnvironment } from "@/config/experience";
+import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -22,17 +22,20 @@ export default async function Home({ searchParams }: PageProps) {
     firstParam(params.presentation) === "1" ||
     firstParam(params.mode) === "presentation" ||
     process.env.NEXT_PUBLIC_PRESENTATION_MODE === "true";
-  const environment = readPublicEnvironment();
-  const clientDemo =
-    environment.status === "ready" &&
-    environment.config.mode === "client-demo";
+  // Nguon that duy nhat cho "co hua dat cho duoc khong": bien
+  // CUSTOMER_BOOKING_ENABLED, dung dung mot ham voi /packages va
+  // /checkout (xem lib/customer-data/booking-repository.ts). Da curl
+  // production va thay /checkout tra ve nhanh "Gói A · giữ chỗ trên lõi
+  // ERP" -- tuc bien nay dang BAT tren production, khong con la "Online
+  // checkout is not configured" nhu chu thich cu tung ghi.
+  const bookingEnabled = isCustomerBookingEnabled();
 
   return (
     <NinhBinhLanding
       initialLang={lang}
       key={`${lang}-${source}-${presentationMode ? "presentation" : "standard"}`}
       source={source}
-      clientDemo={clientDemo}
+      bookingEnabled={bookingEnabled}
       presentationMode={presentationMode}
     />
   );

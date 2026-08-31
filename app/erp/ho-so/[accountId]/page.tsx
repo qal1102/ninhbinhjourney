@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { StaffProfileView } from "@/components/erp/staff-profile-view";
 import { AuditTimelineView } from "@/components/erp/audit-timeline-view";
@@ -11,6 +12,7 @@ import {
 } from "@/lib/erp/account-registry-repository";
 import { listAuditTimeline } from "@/lib/erp/audit-timeline-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { resolveStaffProfileBackTarget } from "@/lib/erp/erp-back-link";
 
 type Props = {
   params: Promise<{ accountId: string }>;
@@ -56,9 +58,12 @@ export default async function StaffProfilePage({ params }: Props) {
     return [];
   });
 
+  const backTarget = resolveStaffProfileBackTarget(systemAdmin);
+
   return (
     <ErpShell user={user}>
       <div className="space-y-5">
+        <ErpBackLink href={backTarget.href} label={backTarget.label} />
         <StaffProfileView account={target} canEdit={canEdit} audit={audit} />
         <section>
           <h2 className="mb-3 text-xl font-black text-[#20342c]">

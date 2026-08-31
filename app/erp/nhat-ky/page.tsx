@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { AuditTimelineView } from "@/components/erp/audit-timeline-view";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
@@ -7,6 +8,7 @@ import {
   listHeadcountBySite,
 } from "@/lib/erp/audit-timeline-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -45,6 +47,7 @@ export default async function AuditTimelinePage({ searchParams }: Props) {
 
   return (
     <ErpShell user={user}>
+      <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <div className="mb-6">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-[#668078]">
           Truy vết trách nhiệm

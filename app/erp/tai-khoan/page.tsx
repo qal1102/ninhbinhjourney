@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AccountAdministration } from "@/components/erp/account-administration";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import {
   getRegistryAccount,
@@ -8,6 +9,7 @@ import {
   listRegistryAccounts,
 } from "@/lib/erp/account-registry-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
 
 export default async function ErpAccountAdministrationPage() {
   const user = await getCurrentErpUser();
@@ -27,6 +29,7 @@ export default async function ErpAccountAdministrationPage() {
 
   return (
     <ErpShell user={user}>
+      <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <AccountAdministration accounts={accounts} audit={audit} />
     </ErpShell>
   );

@@ -12,6 +12,7 @@ import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
 import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
+import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 
@@ -93,7 +94,7 @@ type Props = {
   initialLang: Language;
   source: string;
   presentationMode: boolean;
-  clientDemo: boolean;
+  bookingEnabled: boolean;
 };
 
 const TourismMap = dynamic(() => import("./tourism-map"), {
@@ -118,6 +119,16 @@ const copy = {
     begin: "Plan my journey",
     exploreMap: "Explore map",
     /*
+     * Duong thu ba vao gioi thieu trang chu: khong them nut thu ba ngang
+     * hang voi hai nut tren (tranh dung lai kieu "ba lop dieu huong bang
+     * nhau" da bi chu du an loai hai lan tren chinh trang nay, xem
+     * UI_UX_RULES.md#known-incident). Day chi la mot dong chu ngan, chi
+     * xuong khoi #packages ngay tren trang, va noi dung doi theo
+     * `bookingEnabled` de khong hua giu cho khi chua bat that.
+     */
+    heroPackagesCue: "Five packages, ready to go — reserve just below",
+    heroPackagesCuePlain: "Five packages, ready to go — see details just below",
+    /*
      * Dong gio thuc tai Ninh Binh. Moi khung gio mot chi tiet CHI NINH
      * BINH moi noi duoc -- dat phep thu o UI_UX_RULES.md#voice-rules:
      * doi "Ninh Binh" thanh "Ha Long" ma cau van dung thi cau do la cau
@@ -138,6 +149,21 @@ const copy = {
     journeysBody:
       "Each route tells its own thread: water first, temples next, then forest and lantern light as the day slows down. Drag through, and pick the one that sounds like the day you want.",
     viewRoute: "View route",
+    /*
+     * Khoi "gói trải nghiệm" dat ngay sau dai tuyen goi y, truoc JourneyCta
+     * -- xem PackageShowcase o components/discovery/package-showcase.tsx.
+     * Chu o day chi la khung/nhan cua khoi; ten/gia/lich tung goi lay
+     * THANG tu content/packages.ts, khong bia them o day.
+     */
+    packagesLabel: "Ready-made packages",
+    packagesTitle: "Five packages, schedule and price already set.",
+    packagesIntro:
+      "Tràng An at first light, Tam Cốc late in the afternoon — the five packages below come with the schedule, the entries and the QR pass already set. All that is left is picking a date.",
+    packagesBookingNote: "Reserve directly in the system — payment is simulated, and nothing is charged.",
+    packagesBookingNotePlain: "Prices and schedules below are for reference — online booking is not yet open.",
+    packagesCta: "View this package",
+    packagesViewAll: "See all five packages",
+    packagesPricePerGuest: "per adult · demo",
     exploreRouteStop: "Explore this stop",
     routeStopLabel: "Stop",
     addRoute: "Add route",
@@ -180,7 +206,7 @@ const copy = {
     zigzagCtaPrimary: "Plan a journey with us",
     zigzagCtaSecondary: "View our ready-made packages",
     zigzagCtaOffer:
-      "Reserving through the website takes 10% off the counter price, paid by QR code right in your browser.",
+      "Pick a date and hold your place right here. Payment is simulated and nothing is charged — but the place is really held.",
     zigzagCtaOfferPlain:
       "Describe what you have in mind in ordinary words; we will build the itinerary from there.",
     companionLabel: "Journey Builder",
@@ -241,6 +267,8 @@ const copy = {
     footerNote: "Ninh Bình Journey · Hành trình giữa núi, nước và di sản vượt thời gian.",
     begin: "Lập hành trình",
     exploreMap: "Khám phá bản đồ",
+    heroPackagesCue: "Năm gói trải nghiệm đã dựng sẵn — giữ chỗ ngay bên dưới",
+    heroPackagesCuePlain: "Năm gói trải nghiệm đã dựng sẵn — xem chi tiết bên dưới",
     hourLead: "Ở Ninh Bình bây giờ",
     hourPhrases: {
       dawn: "sương chưa tan khỏi mặt sông",
@@ -255,6 +283,15 @@ const copy = {
     journeysBody:
       "Mỗi tuyến là một mạch kể: nước trước, chùa sau, rồi rừng và ánh đèn lồng khi ngày chậm lại. Kéo qua, chọn mạch nào giống ngày bạn đang mong.",
     viewRoute: "Xem tuyến",
+    packagesLabel: "Gói trải nghiệm",
+    packagesTitle: "Năm gói đã dựng sẵn lịch và giá.",
+    packagesIntro:
+      "Tràng An lúc sáng sớm, Tam Cốc buổi chiều muộn — năm gói dưới đây đã xếp sẵn lịch, quyền vào điểm và mã QR dùng ngay tại chỗ. Còn lại chỉ là chọn ngày.",
+    packagesBookingNote: "Giữ chỗ ngay trên hệ thống, thanh toán mô phỏng, không thu tiền thật.",
+    packagesBookingNotePlain: "Giá và lịch dưới đây là dữ liệu tham khảo, đặt trực tuyến chưa mở.",
+    packagesCta: "Xem gói này",
+    packagesViewAll: "Xem cả năm gói",
+    packagesPricePerGuest: "mỗi người lớn · demo",
     exploreRouteStop: "Khám phá điểm này",
     routeStopLabel: "Chặng",
     addRoute: "Thêm tuyến",
@@ -292,7 +329,7 @@ const copy = {
     zigzagCtaPrimary: "Lập hành trình cùng chúng tôi",
     zigzagCtaSecondary: "Xem các gói có sẵn",
     zigzagCtaOffer:
-      "Đặt qua website giảm 10% so với giá tại quầy, thanh toán bằng mã QR ngay trên trình duyệt.",
+      "Chọn ngày rồi giữ chỗ ngay trên trang. Thanh toán ở đây là mô phỏng, không thu tiền thật, nhưng chỗ thì giữ thật.",
     zigzagCtaOfferPlain:
       "Bạn cứ nói mình muốn đi kiểu gì; chúng tôi dựng lịch trình từ đó.",
     companionLabel: "Bộ lập tuyến hành trình",
@@ -1413,7 +1450,7 @@ export default function NinhBinhLanding({
   initialLang,
   source,
   presentationMode,
-  clientDemo,
+  bookingEnabled,
 }: Props) {
   const [lang, setLang] = useState<Language>(initialLang);
   const t = copy[lang];
@@ -1817,8 +1854,6 @@ export default function NinhBinhLanding({
             Dung bug nay da tung bi bat mot lan (xem HANDOFF 03/08: "Ninh
             Binh tourism core", "Intent -> rules -> validated itinerary",
             "Trang thai: idle") -- lan nay la cho con sot lai.
-            `clientDemo` van duoc dung o duoi (khoi `JourneyCta`) de quyet
-            dinh co hua thanh toan QR hay khong, nen KHONG bo bien nay.
           */}
           <h1 className="fade-up font-display text-6xl leading-[0.9] text-[#FBFAF6] sm:text-8xl lg:text-[9rem]">{t.title}</h1>
           <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
@@ -1840,6 +1875,15 @@ export default function NinhBinhLanding({
             <a data-customer-track="home-hero-plan" data-customer-content-id="journey-planner" data-customer-content-type="primary-cta" href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
             <a data-customer-track="home-hero-explore" data-customer-content-id="explore-map" data-customer-content-type="secondary-cta" href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
           </div>
+          <a
+            data-customer-track="home-hero-packages"
+            data-customer-content-id="packages-catalog"
+            data-customer-content-type="tertiary-cta"
+            href="#packages"
+            className="fade-up mt-5 inline-flex w-fit items-center gap-2 text-sm font-semibold text-[#E7B96A] underline decoration-[#E7B96A]/40 underline-offset-4 transition hover:decoration-[#E7B96A]"
+          >
+            {bookingEnabled ? t.heroPackagesCue : t.heroPackagesCuePlain} <span aria-hidden="true">↓</span>
+          </a>
         </div>
       </section>
 
@@ -2063,6 +2107,28 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
+      {/*
+        Khoi "gói trải nghiệm" (WEB-BOOK-01): dat ngay sau dai tuyen goi y,
+        truoc JourneyCta -- khach vua xem xong 15 diem den + cac tuyen goi
+        y, gio thay ngay 5 goi CO GIA, CO LICH, bam la vao duoc /packages.
+        Truoc dot nay trang chu khong co duong nao toi /packages hay
+        /checkout ca; JourneyCta ben duoi co nut "secondary" tro toi
+        /packages nhung nam cuoi trang va khong co du lieu goi nao di kem.
+      */}
+      <PackageShowcase
+        lang={lang}
+        source={source}
+        copy={{
+          label: t.packagesLabel as string,
+          title: t.packagesTitle as string,
+          intro: t.packagesIntro as string,
+          bookingNote: (bookingEnabled ? t.packagesBookingNote : t.packagesBookingNotePlain) as string,
+          cta: t.packagesCta as string,
+          viewAll: t.packagesViewAll as string,
+          pricePerGuest: t.packagesPricePerGuest as string,
+        }}
+      />
+
       <JourneyCta
         copy={{
           title: t.zigzagCtaTitle as string,
@@ -2070,13 +2136,29 @@ export default function NinhBinhLanding({
           primary: t.zigzagCtaPrimary as string,
           secondary: t.zigzagCtaSecondary as string,
           /*
-           * Chi hua thanh toan QR khi thanh toan sandbox that su bat
-           * (NEXT_PUBLIC_EXPERIENCE_MODE=client-demo). O che do production
-           * /checkout tra ve "Online checkout is not configured" -- hua
-           * roi dan khach vao ngo cut con te hon la khong hua. Da kiem
-           * that bang curl len production truoc khi viet dong nay.
+           * Truoc day dong nay doc `clientDemo` (tuc
+           * NEXT_PUBLIC_EXPERIENCE_MODE=client-demo, thanh toan sandbox) va
+           * chu thich cu noi o production /checkout tra ve "Online checkout
+           * is not configured". Da kiem lai bang curl len production hom
+           * nay: /checkout tra ve nhanh "Gói A · giữ chỗ trên lõi ERP", tuc
+           * la dat cho THAT dang bat -- chu thich cu sai, vi thu quyet dinh
+           * that KHONG PHAI `clientDemo` ma la bien moi truong
+           * CUSTOMER_BOOKING_ENABLED (xem
+           * lib/customer-data/booking-repository.ts#isCustomerBookingEnabled,
+           * dung chung mot ham voi /packages va /checkout). `clientDemo` gio
+           * bo han khoi Props vi khong con noi nao trong file nay dung toi.
+           *
+           * WEB-BOOK-01, loi bat duoc khi soat tay: chinh viec doi cong tac
+           * tu `clientDemo` sang `bookingEnabled` da BAT LEN mot loi hua sai.
+           * Cau cu viet "dat qua website giam 10% so voi gia tai quay, thanh
+           * toan bang ma QR ngay tren trinh duyet" -- ca hai ve deu khong co
+           * that: khong cho nao trong ma nay giam 10%, va
+           * customer-booking-checkout noi ro thanh toan la MO PHONG, khong
+           * thu tien, khong co QR thanh toan (QR o day la ma ve, hien ra SAU
+           * khi da xac nhan). Ky truoc cau nay bi `clientDemo` che lai nen
+           * khong ai thay. Da viet lai cho dung viec that.
            */
-          offer: (clientDemo ? t.zigzagCtaOffer : t.zigzagCtaOfferPlain) as string,
+          offer: (bookingEnabled ? t.zigzagCtaOffer : t.zigzagCtaOfferPlain) as string,
         }}
       />
 

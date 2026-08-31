@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { getCustomerReleaseReadiness } from "@/lib/customer-data/release-readiness-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +16,7 @@ export default async function ErpReleaseReadinessPage() {
   const report = await getCustomerReleaseReadiness();
   return (
     <ErpShell user={user}>
+      <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <section className="space-y-6" data-testid="customer-release-readiness">
         <div className={`rounded-3xl border p-6 sm:p-8 ${report.safeForCanary ? "border-[#9fc4b5] bg-[#eef7f2]" : "border-[#e1c49a] bg-[#fff8ea]"}`}>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#6c755f]">A6 · Production activation gate · chỉ đọc</p>

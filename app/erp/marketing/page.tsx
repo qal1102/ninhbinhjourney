@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { MarketingQrControlCenter } from "@/components/erp/marketing-qr-control-center";
+import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { listMarketingQrConfig } from "@/lib/customer-data/marketing-qr-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
 import { CustomerFunnelDashboard } from "@/components/customer-data/customer-funnel-dashboard";
 import { getCustomerFunnelReport, isCustomerFunnelDashboardEnabled } from "@/lib/customer-data/funnel-repository";
 import type { CustomerFunnelReport } from "@/domain/customer-funnel";
@@ -30,6 +32,7 @@ export default async function ErpMarketingPage() {
 
   return (
     <ErpShell user={user}>
+      <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <div className="space-y-6">
         {config ? (
           <MarketingQrControlCenter config={config} />

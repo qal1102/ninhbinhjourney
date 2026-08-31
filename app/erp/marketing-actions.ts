@@ -1,14 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { generateCode, MARKETING_CODE_SHAPE } from "@/domain/auto-code";
 import {
   MarketingCampaignInputSchema,
+  MarketingCodeSchema,
   MarketingQrDestinationUpdateSchema,
   MarketingQrSourceInputSchema,
 } from "@/domain/marketing-qr";
 import {
   createMarketingCampaign,
   createMarketingQrSource,
+  listMarketingQrConfig,
   MarketingQrRepositoryError,
   updateMarketingQrDestination,
 } from "@/lib/customer-data/marketing-qr-repository";
@@ -40,15 +43,20 @@ export async function createMarketingCampaignAction(
   formData: FormData,
 ): Promise<MarketingQrActionState> {
   try {
-    const input = MarketingCampaignInputSchema.parse({
-      code: formData.get("code"),
+    const { name, status } = MarketingCampaignInputSchema.omit({ code: true }).parse({
       name: formData.get("name"),
       status: formData.get("status"),
     });
     const user = await requireMarketingDirector();
-    await createMarketingCampaign({ ...input, actorAccountId: user.id });
+    // Phải đọc được danh sách mã đang dùng trước khi sinh mã mới — sinh mã
+    // trong lúc không biết chỗ nào đã có là cách chắc chắn tạo ra trùng mã.
+    const config = await listMarketingQrConfig();
+    const code = MarketingCodeSchema.parse(
+      generateCode(name, config.campaigns.map((campaign) => campaign.code), MARKETING_CODE_SHAPE),
+    );
+    await createMarketingCampaign({ code, name, status, actorAccountId: user.id });
     revalidatePath("/erp/marketing");
-    return { status: "success", message: "Đã tạo campaign và ghi audit." };
+    return { status: "success", message: `Đã tạo chiến dịch “${name}”, mã ${code}.` };
   } catch (error) {
     return errorState(error);
   }
@@ -59,18 +67,39 @@ export async function createMarketingQrSourceAction(
   formData: FormData,
 ): Promise<MarketingQrActionState> {
   try {
-    const input = MarketingQrSourceInputSchema.parse({
-      campaignId: formData.get("campaignId"),
-      code: formData.get("code"),
-      placementId: formData.get("placementId"),
-      placementLabel: formData.get("placementLabel"),
-      destinationPath: formData.get("destinationPath"),
-      status: formData.get("status"),
-    });
+    const { campaignId, placementLabel, destinationPath, status } = MarketingQrSourceInputSchema
+      .omit({ code: true, placementId: true })
+      .parse({
+        campaignId: formData.get("campaignId"),
+        placementLabel: formData.get("placementLabel"),
+        destinationPath: formData.get("destinationPath"),
+        status: formData.get("status"),
+      });
     const user = await requireMarketingDirector();
-    await createMarketingQrSource({ ...input, actorAccountId: user.id });
+    // Cùng lý do như tạo campaign: phải thấy hết mã và vị trí đang dùng
+    // trước khi đặt mã mới, không thì hai người bấm cùng lúc sẽ trùng mã.
+    const config = await listMarketingQrConfig();
+    const campaign = config.campaigns.find((item) => item.id === campaignId);
+    if (!campaign) {
+      return { status: "error", message: "Không tìm thấy chiến dịch này. Bạn tải lại trang rồi thử lại giúp em." };
+    }
+    const placementId = MarketingCodeSchema.parse(
+      generateCode(placementLabel, config.sources.map((source) => source.placementId), MARKETING_CODE_SHAPE),
+    );
+    const code = MarketingCodeSchema.parse(
+      generateCode(`${campaign.code} ${placementLabel}`, config.sources.map((source) => source.code), MARKETING_CODE_SHAPE),
+    );
+    await createMarketingQrSource({
+      campaignId,
+      code,
+      placementId,
+      placementLabel,
+      destinationPath,
+      status,
+      actorAccountId: user.id,
+    });
     revalidatePath("/erp/marketing");
-    return { status: "success", message: "Đã tạo mã QR động. In lại mã không cần thiết khi chỉ đổi đích." };
+    return { status: "success", message: `Đã tạo mã QR động cho “${placementLabel}”, mã ${code} (vị trí ${placementId}).` };
   } catch (error) {
     return errorState(error);
   }

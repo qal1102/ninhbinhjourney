@@ -11,6 +11,7 @@ import { listPendingProjectChangeRequests } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import { listPendingSopDecisions } from "@/lib/erp/sop-repository";
+import { getDirectorTicketOverview } from "@/lib/erp/ticket-overview-repository";
 import { listWorkdays, vietnamDateKey } from "@/lib/erp/workday-repository";
 import {
   listWorkdayEmployeeOptions,
@@ -40,6 +41,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
     escalatedIncidents,
     pendingProjectChangeRequests,
     pendingSopDecisions,
+    ticketOverview,
   ] = await Promise.all([
     getAccessState(),
     listShiftClosures({ siteIds: user.siteIds }),
@@ -66,6 +68,15 @@ export default async function ErpHomePage({ searchParams }: Props) {
           return [];
         })
       : Promise.resolve([]),
+    // Bảng vé chỉ đọc, không sửa gì. Nó hỏng thì phần còn lại của trang vẫn
+    // phải mở được — nên bắt lỗi tại đây và để màn hình nói thật là chưa đọc
+    // được, thay vì cả trang chủ giám đốc trắng xoá.
+    isDirector
+      ? getDirectorTicketOverview(user.siteIds).catch((error) => {
+          console.error("Director ticket overview read failed", error);
+          return null;
+        })
+      : Promise.resolve(null),
   ]);
   const params = (await searchParams) ?? {};
   const denied = Array.isArray(params.denied)
@@ -97,6 +108,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
           escalatedIncidents={escalatedIncidents}
           pendingProjectChangeRequests={pendingProjectChangeRequests}
           pendingSopDecisions={pendingSopDecisions}
+          ticketOverview={ticketOverview}
         />
       ) : (
         <RoleHomeDashboard

@@ -119,15 +119,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 href="/erp/marketing"
                 className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
               >
-                Marketing
-              </Link>
-            ) : null}
-            {user.role === "director" ? (
-              <Link
-                href="/erp/release"
-                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
-              >
-                Phát hành
+                Kênh khách
               </Link>
             ) : null}
             {systemAdmin ? (
@@ -177,7 +169,10 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
         />
       ) : null}
 
-      <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8">
+      {/* `pb-28`: chừa sẵn chỗ cho nút trợ lý nổi ở góc dưới bên phải. Không
+          có khoảng trống này thì thẻ cuối trang bị nút đè lên — đúng lỗi đã
+          bắt được bằng ảnh chụp thật hồi ERP-UX-01. */}
+      <main className="mx-auto w-full max-w-[1600px] px-4 pb-28 pt-6 sm:px-6 sm:pb-28 sm:pt-8">
         {children}
       </main>
     </div>

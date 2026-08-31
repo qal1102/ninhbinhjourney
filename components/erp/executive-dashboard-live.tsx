@@ -8,6 +8,8 @@ import type { WorkdayRecord } from "@/domain/erp-workday";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import type { IncidentCase } from "@/lib/erp/incident-repository";
 import type { ProjectChangeRequestWithSite } from "@/lib/erp/project-repository";
+import type { DirectorTicketOverview } from "@/lib/erp/ticket-overview-repository";
+import { DirectorTicketPanel } from "./director-ticket-panel";
 import { ShiftCloseDirectorQueue } from "./shift-close-workflow";
 
 type Props = {
@@ -20,6 +22,7 @@ type Props = {
   escalatedIncidents: readonly IncidentCase[];
   pendingProjectChangeRequests: readonly ProjectChangeRequestWithSite[];
   pendingSopDecisions: readonly SopPendingDecision[];
+  ticketOverview: DirectorTicketOverview | null;
 };
 
 const changeKindLabels: Record<ProjectChangeRequestWithSite["kind"], string> = {
@@ -76,6 +79,7 @@ export function ExecutiveDashboard({
   escalatedIncidents,
   pendingProjectChangeRequests,
   pendingSopDecisions,
+  ticketOverview,
 }: Props) {
   const siteShortNameById = new Map(
     sites.map((site) => [site.id, site.shortName]),
@@ -280,7 +284,7 @@ export function ExecutiveDashboard({
         <div className="mt-7 grid grid-cols-2 gap-3 xl:grid-cols-4">
           {[
             [
-              "Vé trong hồ sơ ca",
+              "Vé người trực khai lúc chốt ca",
               ticketsSold.toLocaleString("vi-VN"),
               `${currentShiftRecords.length} ca đã gửi`,
             ],
@@ -315,6 +319,12 @@ export function ExecutiveDashboard({
           ))}
         </div>
       </section>
+
+      {/* ERP-UX-06d: câu hỏi đầu tiên của một người điều hành khu du lịch là
+          "hôm nay bán được bao nhiêu vé". Trước đây trang này không trả lời
+          được — muốn biết phải đi vào từng cơ sở rồi mở đúng một nghiệp vụ.
+          Bảng dưới đây đếm thẳng từ vé đã phát hành, gộp cả bốn cơ sở. */}
+      <DirectorTicketPanel overview={ticketOverview} />
 
       {/* Một màn hình, một hành động chính. Nếu không chỉ ra được hành động
           đó là gì thì màn hình chưa xong — luật ERP. */}

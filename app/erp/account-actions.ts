@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { generateCode, ACCOUNT_CODE_SHAPE } from "@/domain/auto-code";
 import { isErpSiteId } from "@/domain/erp";
 import {
   isErpAccountStatus,
@@ -14,6 +15,7 @@ import {
   getRegistryAccount,
   hasSystemAdmin,
   linkAuthUser,
+  listRegistryAccounts,
   setRegistryAccountStatus,
   setRegistryRoleAssignment,
   upsertRegistryAccount,
@@ -72,15 +74,6 @@ function revalidateAccounts() {
 }
 
 const AccountSchema = z.object({
-  accountId: z
-    .string()
-    .trim()
-    .min(2, "Mã tài khoản phải có ít nhất 2 ký tự.")
-    .max(100, "Mã tài khoản quá dài.")
-    .regex(
-      /^[a-z0-9][a-z0-9-]*$/,
-      "Mã tài khoản chỉ dùng chữ thường, số và dấu gạch ngang.",
-    ),
   displayName: z.string().trim().min(2, "Họ tên phải có ít nhất 2 ký tự.").max(120),
   jobTitle: z.string().trim().min(2, "Chức danh phải có ít nhất 2 ký tự.").max(160),
   employmentType: z.enum([
@@ -93,6 +86,19 @@ const AccountSchema = z.object({
   status: z.enum(["active", "suspended", "revoked"]),
 });
 
+// Mã tài khoản chỉ do máy sinh (xem domain/auto-code.ts), không còn ô nhập
+// tay nào cho nó — nhưng vẫn chốt lại đúng ràng buộc cũ ở đây, phòng khi
+// generateCode có sinh lệch (ví dụ shape bị đổi sai ở một chỗ khác) thì lỗi
+// hiện ra ngay, chứ không âm thầm lưu một mã sai định dạng xuống kho.
+const GeneratedAccountIdSchema = z
+  .string()
+  .min(2, "Mã tài khoản phải có ít nhất 2 ký tự.")
+  .max(100, "Mã tài khoản quá dài.")
+  .regex(
+    /^[a-z0-9][a-z0-9-]*$/,
+    "Mã tài khoản chỉ dùng chữ thường, số và dấu gạch ngang.",
+  );
+
 export async function upsertAccountAction(
   _previous: AccountActionState,
   formData: FormData,
@@ -100,17 +106,35 @@ export async function upsertAccountAction(
   try {
     const actor = await requireSystemAdmin();
     const input = AccountSchema.parse({
-      accountId: formData.get("accountId"),
       displayName: formData.get("displayName"),
       jobTitle: formData.get("jobTitle"),
       employmentType: formData.get("employmentType"),
       status: formData.get("status"),
     });
-    await upsertRegistryAccount({ actorAccountId: actor.id, ...input });
+    // upsertRegistryAccount ghi đè lặng lẽ nếu trùng mã — vì vậy PHẢI đọc
+    // trước toàn bộ mã đang dùng (gồm cả tài khoản đã ngưng/thu hồi,
+    // listRegistryAccounts() không lọc trạng thái) rồi mới sinh mã mới.
+    // Nếu bước đọc này lỗi, ném ra ngay và dừng ở đây — không được đoán
+    // liều một mã rồi lưu, vì đoán sai nghĩa là ghi đè lên một người thật.
+    const existingAccounts = await listRegistryAccounts();
+    // Nền tảng đọc bảng trả về tối đa 1.000 hàng một lượt. Chạm trần nghĩa là
+    // danh sách đã bị cắt bớt, và một mã nằm ở phần bị cắt sẽ trông như còn
+    // trống — sinh trúng mã đó là ghi đè lên một người đang đi làm. Chưa tới
+    // ngưỡng ấy thì thôi, nhưng tới thì phải dừng và nói ra, đừng đoán.
+    if (existingAccounts.length >= 1000) {
+      throw new Error(
+        "Danh sách tài khoản đã chạm mức đọc tối đa nên chưa chắc đủ. Em chưa dám tự đặt mã lúc này, xin báo lại để đội kỹ thuật nới chỗ đọc.",
+      );
+    }
+    const takenAccountIds = existingAccounts.map((account) => account.accountId);
+    const accountId = GeneratedAccountIdSchema.parse(
+      generateCode(input.displayName, takenAccountIds, ACCOUNT_CODE_SHAPE),
+    );
+    await upsertRegistryAccount({ actorAccountId: actor.id, accountId, ...input });
     revalidateAccounts();
     return {
       status: "success",
-      message: `Đã lưu tài khoản ${input.accountId}.`,
+      message: `Đã tạo tài khoản cho ${input.displayName}, mã đăng nhập nội bộ là ${accountId}.`,
     };
   } catch (error) {
     return errorState(error);

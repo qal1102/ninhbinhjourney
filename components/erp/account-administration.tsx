@@ -97,16 +97,13 @@ function CreateAccountForm() {
         </h2>
       </summary>
       <form action={action} className="border-t border-[#e2e8e4] bg-[#f8faf8] p-5 sm:p-6">
+        <p className="mb-3 text-xs leading-5 text-[#7c8882]">
+          Máy tự đặt mã đăng nhập nội bộ từ họ và tên, không cần gõ tay —
+          ví dụ &ldquo;Nguyễn Văn Ba&rdquo; ra mã{" "}
+          <span className="font-mono">nguyen-van-ba</span>. Trùng tên thì máy
+          tự thêm số ở cuối để không đè lên tài khoản đã có.
+        </p>
         <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <label className="grid gap-1 text-xs font-bold text-[#5f7068]">
-            Mã tài khoản
-            <input
-              name="accountId"
-              required
-              placeholder="vd: employee-tam-chuc-02"
-              className="min-h-11 min-w-0 rounded-xl border border-[#ced8d1] bg-white px-3 text-sm font-medium"
-            />
-          </label>
           <label className="grid gap-1 text-xs font-bold text-[#5f7068]">
             Họ và tên
             <input

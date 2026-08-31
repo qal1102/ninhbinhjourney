@@ -586,25 +586,28 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
   return (
     <>
-      {/* ERP-UX-01: nút này từng là một nút nổi `fixed bottom-4 right-4`, và
-          nó che nội dung ở **mọi** khổ màn hình — ảnh chụp thật bắt được nó
-          nằm đè lên thẻ chốt ca, giấu mất nút thao tác bên phải. Nó còn để
-          `z-[1000]`, cao hơn cả lớp phủ của menu mobile (`z-[110]`), nên mở
-          menu ra nó vẫn nổi lên trên.
+      {/* ERP-UX-06e: trợ lý về lại chỗ cũ — nút nổi ở góc dưới bên phải, nơi
+          ngón tay cái với tới được và mắt đã quen tìm. Chủ dự án nói thẳng là
+          chỗ đó đẹp hơn.
 
-          Hạ z-index chỉ chữa được nửa sau. Cách đúng là **đưa hẳn ra khỏi
-          vùng nội dung**: giờ đây nó là một nút bình thường trên thanh đầu
-          trang, nằm cùng hàng với Nhật ký / Khách hàng / Marketing. Không còn
-          lớp nổi nào đè lên nội dung nữa. Bảng trợ lý khi mở vẫn là portal
-          `z-[1100]` — lúc đó nó là hộp thoại, che nội dung là đúng vai trò. */}
+          Lượt trước em đẩy nó lên thanh đầu trang, nhưng đó là chữa nhầm chỗ.
+          Hai lỗi thật khi ấy là **che nội dung** — ảnh chụp bắt được nó nằm đè
+          lên thẻ chốt ca, giấu mất nút thao tác bên phải — và **`z-[1000]` cao
+          hơn cả lớp phủ menu điện thoại (`z-[110]`)**, nên mở menu ra nó vẫn
+          nổi lên trên. Cả hai đều chữa được mà không phải dời nút đi đâu cả:
+          `z-40` cho nó nằm dưới lớp phủ menu, còn `<main>` chừa sẵn khoảng
+          trống dưới đáy nên không còn gì bị nút đè lên.
+
+          Bảng trợ lý khi mở vẫn là portal `z-[1100]` — lúc đó nó là hộp thoại,
+          che nội dung là đúng vai trò. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mở trợ lý điều hành"
-        className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-[#183f34] px-2 text-sm font-black text-white transition hover:bg-[#12332a] sm:px-3"
+        className="fixed bottom-5 right-4 z-40 inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-[#183f34] px-3 text-sm font-black text-white shadow-lg shadow-[#0d2a22]/25 transition hover:bg-[#12332a] sm:right-5 sm:px-4"
       >
         <Image src="/brand/ninh-binh-mark.png" alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
-        <span className="hidden xl:block">Trợ lý</span>
+        <span className="hidden sm:block">Trợ lý</span>
       </button>
 
       {open && typeof document !== "undefined" ? createPortal(

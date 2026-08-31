@@ -35,7 +35,7 @@ export default async function ErpMarketingPage() {
           <MarketingQrControlCenter config={config} />
         ) : (
         <section className="rounded-3xl border border-[#e0d6c4] bg-[#fdf8ef] p-6 sm:p-8">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8a6b27]">Marketing · QR động</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8a6b27]">Kênh khách · mã QR đổi được đích</p>
           <h1 className="font-display mt-3 text-4xl text-[#3d3325] sm:text-5xl">Kho QR chưa sẵn sàng ở môi trường này</h1>
           <p className="mt-4 max-w-3xl text-sm leading-6 text-[#6b6250]">Không hiển thị dữ liệu minh họa. Kiểm tra migration CUS-04 và cấu hình server trước khi quản lý mã QR.</p>
         </section>

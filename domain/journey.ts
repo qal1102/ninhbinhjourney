@@ -89,6 +89,43 @@ function numberBeforeKeyword(text: string, keyword: string) {
   return match ? Number(match[1]) : undefined;
 }
 
+/**
+ * Người Việt nói "hai ngày", "ba người lớn" nhiều hơn viết "2 ngày", "3 người
+ * lớn". Chỉ đọc chữ số là bỏ sót đúng cách nói thường ngày.
+ *
+ * Bảng cố tình dừng ở mười, và cố tình **thiếu vài chữ đọc được thành số**:
+ * "tư" thì đứng trong "ngày tư", "thứ tư" nhiều hơn là số bốn, còn "linh",
+ * "lẻ" thì chỉ có nghĩa khi ghép. Thêm chúng vào là đổi một chỗ đoán trúng
+ * lấy nhiều chỗ đoán sai.
+ */
+const VIETNAMESE_NUMBER_WORDS: Record<string, number> = {
+  mot: 1,
+  hai: 2,
+  ba: 3,
+  bon: 4,
+  nam: 5,
+  sau: 6,
+  bay: 7,
+  tam: 8,
+  chin: 9,
+  muoi: 10,
+};
+
+/**
+ * Đếm số đứng trước một từ khoá, nhận cả chữ số lẫn chữ viết.
+ *
+ * Bắt buộc số phải **dính liền** từ khoá. Chữ "năm" còn nghĩa là năm tháng,
+ * "tám" nằm sẵn trong "Tam Cốc", "ba" là bố — nên chỉ khi nó đứng ngay trước
+ * "ngày"/"người" thì mới chắc chắn nó là một con số.
+ */
+function countBeforeKeyword(text: string, keyword: string) {
+  const digits = numberBeforeKeyword(text, keyword);
+  if (digits !== undefined) return digits;
+  const words = Object.keys(VIETNAMESE_NUMBER_WORDS).join("|");
+  const match = text.match(new RegExp(`\\b(${words})\\s+${keyword}`));
+  return match ? VIETNAMESE_NUMBER_WORDS[match[1]] : undefined;
+}
+
 export function parseJourneyIntent(input: {
   text: string;
   locale: "vi" | "en";
@@ -101,34 +138,69 @@ export function parseJourneyIntent(input: {
     fieldConfidence: {},
   };
 
-  if (
-    /\bmot ngay\b/.test(text) ||
-    /\bone day\b/.test(text) ||
-    /\b1 ngay\b/.test(text)
-  ) {
-    draft.durationMinutes = 600;
-    draft.fieldConfidence.durationMinutes = 0.99;
+  // Nửa ngày phải xét trước mọi phép đếm ngày: "nửa" không phải một con số,
+  // mà nếu để lọt xuống dưới thì chữ "ngày" trong câu lại kéo về trọn một ngày.
+  if (/\bnua ngay\b/.test(text) || /\bhalf[- ]?day\b/.test(text)) {
+    draft.durationMinutes = 300;
+    draft.tripDays = 1;
+    draft.fieldConfidence.durationMinutes = 0.97;
   } else {
-    const hours =
-      numberBeforeKeyword(text, "gio") ?? numberBeforeKeyword(text, "hours?");
-    if (hours) {
-      draft.durationMinutes = hours * 60;
-      draft.fieldConfidence.durationMinutes = 0.95;
+    const days =
+      countBeforeKeyword(text, "ngay") ?? countBeforeKeyword(text, "days?");
+    const weekend = /\bcuoi tuan\b/.test(text) || /\bweekend\b/.test(text);
+    if (days && days >= 1) {
+      // Máy dựng được đúng một ngày, nên thời lượng luôn là một ngày. Con số
+      // ngày khách nói giữ riêng ở `tripDays` để màn hình nói thật, chứ nhân
+      // nó lên thành 1.200 phút thì ra một "ngày" hai mươi tiếng không có thật.
+      draft.durationMinutes = 600;
+      draft.tripDays = days;
+      draft.fieldConfidence.durationMinutes = days === 1 ? 0.99 : 0.7;
+    } else if (weekend) {
+      // Cuối tuần ở đây hiểu là hai ngày. Đây là suy đoán, không phải điều
+      // khách nói thẳng, nên độ chắc để thấp và màn hình vẫn cho sửa lại.
+      draft.durationMinutes = 600;
+      draft.tripDays = 2;
+      draft.fieldConfidence.durationMinutes = 0.6;
+    } else if (/\bone day\b/.test(text)) {
+      draft.durationMinutes = 600;
+      draft.tripDays = 1;
+      draft.fieldConfidence.durationMinutes = 0.99;
+    } else {
+      const hours =
+        numberBeforeKeyword(text, "gio") ?? numberBeforeKeyword(text, "hours?");
+      if (hours) {
+        draft.durationMinutes = hours * 60;
+        draft.fieldConfidence.durationMinutes = 0.95;
+      }
     }
   }
 
   const adults =
-    numberBeforeKeyword(text, "nguoi lon") ??
-    numberBeforeKeyword(text, "adults?");
+    countBeforeKeyword(text, "nguoi lon") ?? countBeforeKeyword(text, "adults?");
   const children =
-    numberBeforeKeyword(text, "tre") ?? numberBeforeKeyword(text, "children?");
+    countBeforeKeyword(text, "tre") ?? countBeforeKeyword(text, "children?");
   const seniors =
-    numberBeforeKeyword(text, "nguoi cao tuoi") ??
-    numberBeforeKeyword(text, "seniors?");
+    countBeforeKeyword(text, "nguoi cao tuoi") ??
+    countBeforeKeyword(text, "seniors?");
+  // "Cặp đôi" và "đi một mình" là hai cách nói phổ biến nhất mà máy vẫn chưa
+  // hiểu. Số khách nói thẳng ra vẫn được ưu tiên hơn con số suy từ cách nói.
+  const couple =
+    /\bcap doi\b|\bvo chong\b|\bnguoi yeu\b|\bban gai\b|\bban trai\b/.test(
+      text,
+    ) || /\bcouple\b|\bhoneymoon\b/.test(text);
+  const solo = /\bmot minh\b/.test(text) || /\bsolo\b|\balone\b/.test(text);
   if (/\bbo me\b|\bparents?\b/.test(text)) {
     draft.party = { adults: adults ?? 3, children: children ?? 0, seniors: 0 };
     draft.partyContext = ["travelling-with-parents"];
     draft.fieldConfidence.party = adults ? 0.96 : 0.82;
+  } else if (couple) {
+    draft.party = { adults: adults ?? 2, children: children ?? 0, seniors: 0 };
+    draft.partyContext = ["couple"];
+    draft.fieldConfidence.party = adults ? 0.96 : 0.88;
+  } else if (solo) {
+    draft.party = { adults: adults ?? 1, children: children ?? 0, seniors: 0 };
+    draft.partyContext = ["solo"];
+    draft.fieldConfidence.party = adults ? 0.96 : 0.9;
   } else if (adults || children || seniors) {
     draft.party = {
       adults: adults ?? 0,

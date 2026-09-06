@@ -818,6 +818,20 @@ export function CustomerBookingCheckout({
                   <p className="mt-2 text-sm leading-6 text-white/70">
                     Trưởng đoàn gửi mã này cho cả đoàn. Mỗi người quét mã riêng để ghi tên mình vào chuyến đi — không quét vẫn vào cổng bình thường như mọi khách khác.
                   </p>
+                  {/* TC-19: trang theo dõi của trưởng đoàn dựng xong rồi mà
+                      không có lối vào thì coi như chưa có. Đây là chỗ duy
+                      nhất mã đoàn hiện ra lần đầu, nên đường dẫn phải nằm
+                      ngay cạnh nó. */}
+                  <p className="mt-3 text-sm leading-6 text-white/70">
+                    Đứng ở cổng mà muốn biết còn ai chưa vào, mời trưởng đoàn mở{" "}
+                    <Link
+                      href={`/doan/truong/${group.groupCode}`}
+                      className="font-bold text-[#e7c78d] underline decoration-[#e7c78d]/50 underline-offset-4"
+                    >
+                      trang theo dõi đoàn
+                    </Link>
+                    {" "}— trang tự đếm lại sau mỗi nửa phút ạ.
+                  </p>
                   <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                     {group.members.map((member) => {
                       const hasEntered = member.entries.length > 0;

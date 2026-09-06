@@ -100,6 +100,16 @@ export interface JourneyIntentDraft {
   locale: "vi" | "en";
   rawText: string;
   durationMinutes?: number;
+  /**
+   * Số ngày khách nói ra, khi họ bảo "hai ngày" hoặc "cuối tuần".
+   *
+   * Cố ý chỉ nằm ở bản nháp, không đi tiếp vào `JourneyIntent` đã chốt:
+   * `generateItinerary` dựng đúng MỘT ngày — mốc tám giờ sáng, giờ mở cửa của
+   * từng nơi, nhiều nhất ba chặng. Đem con số này vào bản chốt là hứa một thứ
+   * máy chưa làm được. Nó ở đây để màn hình nói thật với khách rằng mình mới
+   * xếp ngày đầu, chứ không phải để nhân đôi lịch trình.
+   */
+  tripDays?: number;
   party?: { adults: number; children: number; seniors: number };
   partyContext?: string[];
   interests?: string[];

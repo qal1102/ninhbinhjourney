@@ -43,6 +43,16 @@ vi.mock("@/lib/erp/staff-access-repository", () => ({
   updateEmployeeAccessGrant: doubles.updateEmployeeAccessGrant,
 }));
 
+// TC-18: kho đoàn quầy phải được giả lập như mọi kho khác. Nó mở đầu bằng
+// `import "server-only"`, đúng nếp chung của các kho trong dự án — mà gói ấy
+// không tồn tại ngoài Next, nên để nó nạp thật là cả TỆP kiểm gãy từ lúc nạp,
+// chưa chạy nổi một bài nào.
+vi.mock("@/lib/erp/visitor-group-counter-repository", () => ({
+  createCounterVisitorGroup: vi.fn(),
+  // Lớp lỗi phải là lớp thật: `actions.ts` phân biệt lỗi bằng `instanceof`.
+  CounterVisitorGroupRepositoryError: class extends Error {},
+}));
+
 vi.mock("@/lib/erp/account-registry-repository", () => ({
   confirmPasswordChanged: vi.fn(),
 }));

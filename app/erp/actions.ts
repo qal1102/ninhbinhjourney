@@ -64,6 +64,12 @@ import {
   type TicketSummary,
 } from "@/lib/erp/gate-scan-repository";
 import { canSubmitFieldOperation } from "@/domain/erp-role-policy";
+import { validateCounterVisitorGroupInput } from "@/domain/erp-counter-visitor-group";
+import {
+  createCounterVisitorGroup,
+  CounterVisitorGroupRepositoryError,
+} from "@/lib/erp/visitor-group-counter-repository";
+import type { VisitorGroupStatus } from "@/domain/visitor-group";
 
 function safePasswordEqual(actual: string, expected: string) {
   const left = createHash("sha256").update(actual).digest();
@@ -889,5 +895,81 @@ export async function collectOnSitePaymentAction(input: {
       ok: false,
       message: "Chưa ghi nhận được khoản thu. Bạn thử lại giúp em, nếu vẫn vậy thì báo đội kỹ thuật.",
     };
+  }
+}
+
+const COUNTER_GROUP_INPUT_ERROR_MESSAGES: Record<string, string> = {
+  PARTY_SIZE_INVALID: "Số người phải là số nguyên từ 1 đến 45.",
+  GROUP_LABEL_REQUIRED: "Nhập một nhãn để dễ nhận ra đoàn này, ví dụ nơi xuất phát hoặc tên đoàn.",
+  GROUP_LABEL_TOO_LONG: "Nhãn đoàn tối đa 120 ký tự.",
+};
+
+export type CreateCounterVisitorGroupActionResult =
+  | { ok: true; status: VisitorGroupStatus }
+  | { ok: false; message: string };
+
+/**
+ * TC-18 — nhân viên bán vé lập một phiếu đoàn ngay tại quầy.
+ *
+ * Chỉ nhận số người và nhãn đoàn; mã đoàn và mã từng người do
+ * `erp_create_counter_visitor_group` tự sinh (ERP-UX-06 — không nhận mã gõ
+ * tay ở bất kỳ tầng nào). Quyền được kiểm hai lớp, giống hệt
+ * `recordGateScanAction`: lớp này (module `ve-dat-cho`) chỉ để trả lời sớm và
+ * đúng chữ, lớp thật nằm ở `erp_counter_actor_can_sell` trong PostgreSQL.
+ */
+export async function createCounterVisitorGroupAction(input: {
+  siteId: string;
+  partySize: number;
+  groupLabel: string;
+  /** Khoá chống lập trùng, do màn hình sinh một lần cho mỗi tấm phiếu. */
+  idempotencyKey: string;
+}): Promise<CreateCounterVisitorGroupActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { ok: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) {
+    return { ok: false, message: "Cơ sở không hợp lệ." };
+  }
+  const siteId: ErpSiteId = input.siteId;
+  if (
+    !accountCanAccessSite(user, siteId) ||
+    !accountCanAccessModule(user, siteId, "ve-dat-cho")
+  ) {
+    return { ok: false, message: "Bạn không được phân công bán vé tại cơ sở này." };
+  }
+
+  const parsed = validateCounterVisitorGroupInput({
+    partySize: input.partySize,
+    groupLabel: input.groupLabel,
+  });
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      message: COUNTER_GROUP_INPUT_ERROR_MESSAGES[parsed.error] ?? "Thông tin đoàn chưa hợp lệ.",
+    };
+  }
+
+  // Khoá rỗng thì máy chủ sẽ từ chối, và câu từ chối ấy nói về một thứ nhân
+  // viên không nhìn thấy bao giờ. Chặn ngay ở đây, bằng lời của người dùng.
+  const idempotencyKey = input.idempotencyKey.trim();
+  if (idempotencyKey.length < 1 || idempotencyKey.length > 128) {
+    return { ok: false, message: "Chưa lập được phiếu đoàn tại quầy. Mời bạn tải lại trang rồi thử lại ạ." };
+  }
+
+  try {
+    const status = await createCounterVisitorGroup({
+      siteId,
+      actorAccountId: user.id,
+      actorName: user.name,
+      partySize: parsed.partySize,
+      groupLabel: parsed.groupLabel,
+      idempotencyKey,
+    });
+    revalidatePath(`/erp/${siteId}/ve-dat-cho`);
+    return { ok: true, status };
+  } catch (error) {
+    if (error instanceof CounterVisitorGroupRepositoryError) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: false, message: "Chưa lập được phiếu đoàn tại quầy. Hãy thử lại." };
   }
 }

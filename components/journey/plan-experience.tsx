@@ -84,6 +84,20 @@ const WALKING_SUMMARY: Record<
   high: "đi bộ nhiều được",
 };
 
+/**
+ * Đúng những mức thời lượng ô chọn đang có. Khách gõ "7 tiếng" thì máy đọc ra
+ * 420 phút — một giá trị không nằm trong danh sách, và ô chọn hiện ra trống
+ * trơn. Kéo về mức gần nhất rồi hiện lên, để khách còn thấy mình đang bị hiểu
+ * thành gì mà sửa.
+ */
+const DURATION_CHOICES = [300, 360, 480, 600] as const;
+
+function nearestDurationChoice(minutes: number) {
+  return DURATION_CHOICES.reduce((best, choice) =>
+    Math.abs(choice - minutes) < Math.abs(best - minutes) ? choice : best,
+  );
+}
+
 const PRESETS = [
   {
     id: "lan-dau",
@@ -108,6 +122,18 @@ const PRESETS = [
     title: { vi: "Đi chụp ảnh", en: "Here for the photographs" },
     hint: { vi: "Sáu tiếng, thiên nhiên", en: "Six hours, landscapes" },
     text: "Tôi có 6 giờ, thích thiên nhiên và nhiếp ảnh, muốn đi bộ vừa phải.",
+  },
+  {
+    id: "hai-vo-chong",
+    title: { vi: "Hai vợ chồng", en: "Just the two of us" },
+    hint: { vi: "Một ngày cho hai người", en: "One day for two" },
+    text: "Hai vợ chồng tôi có một ngày, muốn nhẹ nhàng và ít đi bộ.",
+  },
+  {
+    id: "mot-minh",
+    title: { vi: "Đi một mình", en: "Travelling alone" },
+    hint: { vi: "Trọn ngày, đi bộ nhiều", en: "A full day, plenty of walking" },
+    text: "Tôi đi một mình, có một ngày, muốn đi bộ nhiều và thích thiên nhiên.",
   },
 ] as const;
 
@@ -347,7 +373,9 @@ export function PlanExperience({
     setVisitDate(
       (current) => parsed.visitDate ?? (current || localDateInDays(7)),
     );
-    setDurationMinutes(parsed.durationMinutes ?? 600);
+    setDurationMinutes(
+      parsed.durationMinutes ? nearestDurationChoice(parsed.durationMinutes) : 600,
+    );
     setAdults(parsed.party?.adults ?? 1);
     setChildren(parsed.party?.children ?? 0);
     setSeniors(parsed.party?.seniors ?? 0);
@@ -645,6 +673,20 @@ export function PlanExperience({
               {seniors > 0 ? `, ${seniors} người cao tuổi` : ""}
               {visitDate ? ` · đi ngày ${visitDate.split("-").reverse().join("/")}` : ""}
             </p>
+            {/* Khách nói "hai ngày" thì phải trả lời cho đúng chuyện ấy. Máy
+                mới xếp được một ngày, nên nói thẳng ra là mình xếp ngày đầu.
+                Im lặng đưa một ngày rồi để khách tự đoán là cách nhanh nhất
+                làm họ nghĩ trang này hỏng. */}
+            {draft.tripDays && draft.tripDays >= 2 ? (
+              <p
+                data-plan-multiday
+                className="mt-3 rounded-xl bg-[#f1ede2] px-4 py-3 text-sm leading-6 text-[#59654b]"
+              >
+                Bạn nói chuyến này đi {draft.tripDays} ngày ạ. Em xếp ngày đầu
+                trước để bạn xem thử; những ngày sau bạn đổi ngày đi rồi bấm
+                lại là có tiếp.
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={() => setShowDetails((current) => !current)}
@@ -675,9 +717,16 @@ export function PlanExperience({
                   }
                   className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
                 >
+                  {/* Mục "2 ngày" cũ đã bỏ, và đây là lý do: chọn nó xong,
+                      lịch trình trả về GIỐNG HỆT từng chữ so với chọn một
+                      ngày -- cùng ba chặng, cùng 450 phút. Máy dựng đúng một
+                      ngày: mốc tám giờ sáng, giờ mở cửa từng nơi, nhiều nhất
+                      ba chặng. Để mục ấy lại là mời khách chọn một thứ mình
+                      không làm, rồi im lặng đưa họ thứ khác. */}
+                  <option value={300}>Nửa ngày · 5 giờ</option>
                   <option value={360}>6 giờ</option>
-                  <option value={600}>1 ngày · 10 giờ</option>
-                  <option value={1200}>2 ngày</option>
+                  <option value={480}>8 giờ</option>
+                  <option value={600}>Trọn ngày · 10 giờ</option>
                 </select>
               </label>
               <label className="text-sm font-bold">

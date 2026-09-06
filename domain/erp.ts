@@ -34,13 +34,6 @@ export type ErpSite = {
   geofenceRadiusMeters: number;
   summary: string;
   status: "stable" | "attention";
-  snapshot: {
-    visitors: number;
-    checkedIn: number;
-    employeesOnShift: number;
-    openIncidents: number;
-    capacityPercent: number;
-  };
 };
 
 export type ErpModule = {
@@ -85,13 +78,6 @@ export const ERP_SITES: readonly ErpSite[] = [
     geofenceRadiusMeters: 900,
     summary: "Bến thuyền, tuyến tham quan mặt nước và điều phối khách theo khung giờ.",
     status: "stable",
-    snapshot: {
-      visitors: 2840,
-      checkedIn: 1916,
-      employeesOnShift: 84,
-      openIncidents: 2,
-      capacityPercent: 68,
-    },
   },
   {
     id: "tam-chuc",
@@ -103,13 +89,6 @@ export const ERP_SITES: readonly ErpSite[] = [
     geofenceRadiusMeters: 1500,
     summary: "Điều phối cổng, xe điện, bến thuyền và các điểm tâm linh trong quần thể.",
     status: "attention",
-    snapshot: {
-      visitors: 3610,
-      checkedIn: 2478,
-      employeesOnShift: 112,
-      openIncidents: 5,
-      capacityPercent: 83,
-    },
   },
   {
     id: "tam-coc",
@@ -121,13 +100,6 @@ export const ERP_SITES: readonly ErpSite[] = [
     geofenceRadiusMeters: 800,
     summary: "Quản lý bến đò, tuyến sông, thứ tự thuyền và lưu lượng khách tại bến.",
     status: "stable",
-    snapshot: {
-      visitors: 1740,
-      checkedIn: 1288,
-      employeesOnShift: 57,
-      openIncidents: 1,
-      capacityPercent: 61,
-    },
   },
   {
     id: "bai-dinh",
@@ -139,13 +111,6 @@ export const ERP_SITES: readonly ErpSite[] = [
     geofenceRadiusMeters: 1400,
     summary: "Điều phối cổng, xe điện, tuyến tham quan và dòng khách trong quần thể tâm linh.",
     status: "stable",
-    snapshot: {
-      visitors: 3260,
-      checkedIn: 2214,
-      employeesOnShift: 96,
-      openIncidents: 3,
-      capacityPercent: 74,
-    },
   },
 ] as const;
 

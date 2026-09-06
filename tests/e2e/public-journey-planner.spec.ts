@@ -89,6 +89,50 @@ test("mỗi thẻ gợi ý cho ra một cách hiểu khác nhau", async ({ page 
   expect(family).toContain("trẻ em");
 });
 
+/*
+ * Khách viết "hai ngày" thì máy phải trả lời cho đúng chuyện ấy.
+ *
+ * Máy dựng được đúng MỘT ngày — đo thẳng: chọn "2 ngày" ở ô thời lượng cũ trả
+ * về lịch trình giống hệt từng chữ so với chọn một ngày, cùng ba chặng, cùng
+ * 450 phút. Nên mục "2 ngày" đã bỏ khỏi ô chọn, và thay vào đó là một dòng nói
+ * thẳng mình mới xếp ngày đầu. Bài này giữ cho dòng ấy đừng biến mất, vì mất
+ * nó là trang lại im lặng đưa một ngày rồi để khách tự đoán.
+ */
+test("khách nói hai ngày thì trang nói thẳng là mới xếp ngày đầu", async ({
+  page,
+}) => {
+  await page.goto("/plan");
+  await page
+    .getByLabel(TEXT_BOX)
+    .fill("Nhà tôi đi hai ngày, hai vợ chồng, muốn thong thả và ít đi bộ.");
+  await page.getByRole("button", { name: RUN_BUTTON }).click();
+
+  const multiday = page.locator("[data-plan-multiday]");
+  await expect(multiday).toBeVisible();
+  await expect(multiday).toContainText("2 ngày");
+  await expect(multiday).toContainText("ngày đầu");
+
+  // Và cách nói "hai vợ chồng" phải ra đúng hai người lớn, chứ không về mặc định.
+  await expect(page.locator("[data-plan-summary]")).toContainText(
+    "2 người lớn",
+  );
+});
+
+test("ô thời lượng không còn mời khách chọn thứ máy không làm được", async ({
+  page,
+}) => {
+  await page.goto("/plan");
+  await page.getByLabel(TEXT_BOX).fill("Tôi chỉ có nửa ngày thôi.");
+  await page.getByRole("button", { name: RUN_BUTTON }).click();
+  await page.getByRole("button", { name: EXPAND_BUTTON }).click();
+
+  const duration = page.getByLabel("Thời lượng");
+  // "Nửa ngày" phải được hiểu, và ô chọn phải hiện đúng mức ấy chứ không trống.
+  await expect(duration).toHaveValue("300");
+  // Mục "2 ngày" cũ đã bỏ: chọn nó xong vẫn ra đúng một ngày.
+  await expect(duration.getByRole("option", { name: "2 ngày" })).toHaveCount(0);
+});
+
 test("the visitor picks the travel date instead of inheriting a fixed one", async ({
   page,
 }) => {

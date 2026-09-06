@@ -443,6 +443,12 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   GROUP_MEMBER_NOT_FOUND:
     "Không tìm thấy mã khách này trong đoàn nào.",
 
+  // TC-18 — doan mua tai quay.
+  GROUP_COUNTER_INPUT_INVALID:
+    "Số người hoặc nhãn đoàn chưa hợp lệ.",
+  GROUP_COUNTER_ACTOR_REQUIRED:
+    "Tài khoản này chưa được phân công bán vé tại cơ sở này.",
+
   // TC-22 — dat cho truoc, tra tien tai diem.
   CUSTOMER_PAYMENT_MODE_INVALID:
     "Cách trả tiền gửi lên chưa hợp lệ.",

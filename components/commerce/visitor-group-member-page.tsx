@@ -114,6 +114,9 @@ export function VisitorGroupMemberExperience({ memberCode }: { memberCode: strin
         <p className="mt-8 text-xs leading-5 text-[#6b786f]">
           Mã của bạn · <code className="font-mono">{memberCode}</code>
         </p>
+        <p className="mt-2 text-xs leading-5 text-[#6b786f]">
+          Bận không đi được thì cứ đưa mã này cho người đi thay bạn, cổng vẫn cho vào bình thường ạ.
+        </p>
       </div>
     </main>
   );

@@ -30,9 +30,19 @@ export const VisitorGroupCreateRequestSchema = z
  * `anonymous_id` ở đây không phải hình thức — quyền điền hộ buộc phải là phiên
  * khách đã đặt đơn, chứ không phải mã đoàn. Mã đoàn thì cả đoàn ai cũng cầm.
  */
+/**
+ * Hình dạng mã đoàn, khai đúng một lần.
+ *
+ * Máy chủ sinh mã bằng `'DOAN-' || upper(substr(...uuid..., 1, 10))` trong
+ * migration `202608300056`. Chép lại khuôn này ra nhiều nơi thì tới ngày đổi
+ * độ dài mã, sẽ có chỗ sửa chỗ quên, và cái quên ấy biểu hiện thành "mã đúng
+ * mà trang báo không tìm thấy đoàn" — thứ không ai đoán ra nổi.
+ */
+export const VISITOR_GROUP_CODE_PATTERN = /^DOAN-[A-Z0-9]{10}$/i;
+
 export const VisitorGroupMemberDetailsRequestSchema = z
   .object({
-    group_code: z.string().trim().regex(/^DOAN-[A-Z0-9]{10}$/i),
+    group_code: z.string().trim().regex(VISITOR_GROUP_CODE_PATTERN),
     anonymous_id: z.string().uuid(),
     members: z
       .array(
@@ -64,7 +74,7 @@ export const VisitorGroupMemberActivateRequestSchema = z
 
 export const VisitorGroupStatusQuerySchema = z
   .object({
-    group_code: z.string().trim().regex(/^DOAN-[A-Z0-9]{10}$/i),
+    group_code: z.string().trim().regex(VISITOR_GROUP_CODE_PATTERN),
   })
   .strict();
 

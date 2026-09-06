@@ -7,6 +7,7 @@ import {
   listTodayTicketsAction,
   lookupTicketsAction,
   collectOnSitePaymentAction,
+  createCounterVisitorGroupAction,
   recordGateScanAction,
   refreshDemoTicketsAction,
 } from "@/app/erp/actions";
@@ -14,6 +15,7 @@ import { MIN_SCANNED_CODE_LENGTH } from "@/domain/erp-camera-scan";
 import type { ErpSite } from "@/domain/erp";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import { isDemoTicketCode } from "@/domain/erp-ticket-code";
+import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import { useGateCameraScanner } from "@/lib/erp/use-gate-camera-scanner";
 import type {
@@ -86,6 +88,16 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   const [todayTicketsPending, setTodayTicketsPending] = useState(false);
   const [refreshPending, setRefreshPending] = useState(false);
   const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
+  // TC-18: đoàn mua tại quầy — số người + nhãn đoàn, hệ thống tự sinh mã.
+  const [counterPartySize, setCounterPartySize] = useState("");
+  const [counterGroupLabel, setCounterGroupLabel] = useState("");
+  const [counterPending, setCounterPending] = useState(false);
+  const [counterMessage, setCounterMessage] = useState("");
+  const [counterGroup, setCounterGroup] = useState<VisitorGroupStatus | null>(null);
+  // Giữ ngoài state: đổi giá trị này không cần dựng lại màn hình, và nó phải
+  // sống sót qua mọi lần dựng lại giữa hai lượt gửi của cùng một tấm phiếu.
+  const counterRequestKeyRef = useRef<string | null>(null);
+  const [counterQr, setCounterQr] = useState("");
   // TC-16: camera chỉ đổ mã vào đúng ô quét bên dưới, luồng xử lý giữ nguyên.
   const videoRef = useRef<HTMLVideoElement>(null);
   const camera = useGateCameraScanner(videoRef, setScanCode);
@@ -136,6 +148,62 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
       active = false;
     };
   }, [todayTickets]);
+
+  // TC-18: vẽ QR thật cho mã đoàn quầy vừa lập, cùng cách vẽ QR vé ở trên.
+  useEffect(() => {
+    if (!counterGroup) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- chưa có phiếu đoàn nào thì dọn QR cũ
+      setCounterQr("");
+      return;
+    }
+    let active = true;
+    void QRCode.toDataURL(counterGroup.groupCode, {
+      width: 200,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#183f34", light: "#ffffff" },
+    }).then((url) => {
+      if (active) setCounterQr(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [counterGroup]);
+
+  async function submitCounterGroup(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const partySize = Number(counterPartySize);
+    // Khoá chống lập trùng: giữ nguyên qua mọi lần gửi lại của CÙNG một tấm
+    // phiếu, chỉ đổi khi đã lập xong. Nút tự khoá lúc đang chờ chỉ chặn được
+    // cú bấm thứ hai trên cùng màn hình; nó không chặn được lượt gửi lại sau
+    // khi kết nối 4G ở quầy rơi giữa chừng — và tấm phiếu thừa ấy cộng thẳng
+    // vào ô "vé đã bán" của giám đốc.
+    const key = counterRequestKeyRef.current ?? crypto.randomUUID();
+    counterRequestKeyRef.current = key;
+    setCounterPending(true);
+    try {
+      const result = await createCounterVisitorGroupAction({
+        siteId: site.id,
+        partySize,
+        groupLabel: counterGroupLabel,
+        idempotencyKey: key,
+      });
+      if (result.ok) {
+        setCounterGroup(result.status);
+        setCounterMessage("");
+        setCounterPartySize("");
+        setCounterGroupLabel("");
+        // Phiếu đã lập xong: tấm tiếp theo phải mang khoá mới, không thì máy
+        // chủ lại trả về đúng tấm vừa rồi.
+        counterRequestKeyRef.current = null;
+      } else {
+        setCounterGroup(null);
+        setCounterMessage(result.message);
+      }
+    } finally {
+      setCounterPending(false);
+    }
+  }
 
   async function handleRefreshDemoTickets() {
     setRefreshPending(true);
@@ -331,6 +399,80 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           {lookupMessage ? <p role="status" className="mt-2 text-xs text-white/70">{lookupMessage}</p> : null}
           {lookupResults.length > 0 ? <ul className="mt-3 space-y-2">{lookupResults.map((ticket) => <li key={ticket.ticketCode} className="rounded-lg bg-white/7 px-3 py-2 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-mono font-bold">{ticket.ticketCode}</span><button type="button" onClick={() => setScanCode(ticket.ticketCode)} className="rounded-md bg-white px-2 py-1 font-black text-[#183f34]">Đưa vào ô quét</button></div><p className="mt-1 text-white/70">{ticket.guestName || "Không có tên"} · {ticket.guestPhone || "Không có SĐT"} · {ticket.entriesUsed}/{ticket.entriesAllowed} lượt · hiệu lực {ticket.validOn}</p></li>)}</ul> : null}
         </div>{gateScans.length > 0 ? <div className="mt-5 border-t border-white/15 pt-4"><p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Quét gần nhất · toàn cơ sở</p><ul className="mt-3 space-y-2">{gateScans.map((scan) => <li key={scan.id} className="flex items-center justify-between gap-3 rounded-lg bg-white/7 px-3 py-2 text-xs"><span className="font-mono font-bold">{scan.code}</span><span className="text-white/70">{scan.scannedByName} · {new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(scan.scannedAt))}</span></li>)}</ul></div> : null}</section>
+      ) : null}
+
+      {/* TC-18: đoàn mua tại quầy — vẫn là logic đoàn trưởng, chỉ khác chỗ
+          treo vé. Mã đoàn và mã từng người luôn do máy sinh (ERP-UX-06):
+          không có ô nào cho gõ tay mã. */}
+      {mode === "sales" ? (
+        <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+          <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Đoàn mua tại quầy</p>
+          <h2 className="mt-2 text-2xl font-black text-[#20342c]">Lập phiếu đoàn, đưa QR cho khách</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5c6f67]">
+            Nhập số người và một nhãn để dễ nhận ra đoàn này — ví dụ nơi xuất phát
+            hoặc tên đoàn. Hệ thống tự sinh mã đoàn và mã riêng cho từng người;
+            đoàn trưởng có thể tự điền tên từng người sau, hoặc bỏ qua — ai chưa
+            điền vẫn đi tham quan bình thường.
+          </p>
+          <form onSubmit={submitCounterGroup} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="text-xs font-bold text-[#5c6f67] sm:w-32">
+              Số người
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={45}
+                required
+                value={counterPartySize}
+                onChange={(event) => setCounterPartySize(event.target.value)}
+                className="mt-1 min-h-11 w-full rounded-xl border border-[#d8e0db] px-3 text-[#20342c]"
+                placeholder="Ví dụ: 32"
+              />
+            </label>
+            <label className="min-w-0 flex-1 text-xs font-bold text-[#5c6f67]">
+              Nhãn đoàn
+              <input
+                type="text"
+                required
+                maxLength={120}
+                value={counterGroupLabel}
+                onChange={(event) => setCounterGroupLabel(event.target.value)}
+                className="mt-1 min-h-11 w-full rounded-xl border border-[#d8e0db] px-3 text-[#20342c]"
+                placeholder="Ví dụ: Đoàn Hà Nội – công ty ABC"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={counterPending}
+              className="min-h-11 rounded-xl bg-[#183f34] px-5 font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-[#183f34] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+            >
+              {counterPending ? "Đang lập phiếu…" : "Lập phiếu đoàn"}
+            </button>
+          </form>
+          {counterMessage ? (
+            <p role="alert" className="mt-3 rounded-xl bg-[#fdeceb] px-4 py-3 text-sm font-bold text-[#8b3d31]">
+              {counterMessage}
+            </p>
+          ) : null}
+          {counterGroup ? (
+            <div className="mt-4 flex flex-col items-start gap-4 rounded-xl border border-[#d8e0db] bg-[#f3f6f4] p-4 sm:flex-row sm:items-center">
+              {counterQr ? (
+                // eslint-disable-next-line @next/next/no-img-element -- QR is a generated data URL, not an optimizable asset
+                <img src={counterQr} alt={`Mã QR đoàn ${counterGroup.groupCode}`} className="h-32 w-32 shrink-0 rounded-lg bg-white p-2" />
+              ) : null}
+              <div className="min-w-0">
+                <p className="font-mono text-lg font-black text-[#183f34]">{counterGroup.groupCode}</p>
+                <p className="mt-1 text-sm text-[#3f524a]">
+                  {counterGroup.groupLabel} · {counterGroup.memberCount.toLocaleString("vi-VN")} người
+                </p>
+                <p className="mt-2 text-xs leading-5 text-[#7b8881]">
+                  Đưa mã QR này cho khách quét ở cổng. Đoàn trưởng có thể tự điền
+                  tên từng người tại trang <span className="font-mono">/doan/{counterGroup.groupCode}</span>.
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </section>
       ) : null}
 
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">

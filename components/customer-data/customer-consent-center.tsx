@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -26,6 +26,7 @@ export function CustomerConsentCenter() {
   const [marketing, setMarketing] = useState(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const bannerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -93,11 +94,40 @@ export function CustomerConsentCenter() {
     }
   }
 
+  /*
+   * Dải quyền riêng tư nằm đè lên trang, nên phải chừa chỗ cho nó ở cuối
+   * trang — nếu không, thứ nằm dưới cùng vĩnh viễn bị nó che.
+   *
+   * Đây là lỗi ĐO ĐƯỢC trên production 06/09/2026, không phải phòng xa: ở khổ
+   * điện thoại, nút "Giữ chỗ 15 phút" của trang đặt chỗ nằm đúng dưới dải này
+   * và bấm không ăn. Trang đặt chỗ vừa cao thêm vì có thêm phần chọn trả tại
+   * điểm, thế là nút tụt xuống vừa đủ để lọt vào vùng bị che. Khách trên điện
+   * thoại bấm mãi không được, mà **cửa duy nhất để đặt chỗ là cái nút ấy**.
+   *
+   * Đo chiều cao thật rồi chừa, chứ không đoán một con số: dải này cao thấp
+   * khác nhau tuỳ khổ màn hình và tuỳ có dòng báo lỗi hay không.
+   */
+  useEffect(() => {
+    const node = bannerRef.current;
+    if (!node) return;
+    const previous = document.body.style.paddingBottom;
+    const apply = () => {
+      document.body.style.paddingBottom = `${node.offsetHeight + 24}px`;
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      document.body.style.paddingBottom = previous;
+    };
+  }, [ready, hasDecision, pathname]);
+
   if (!ready || !isCustomerConsentSurface(pathname)) return null;
 
   if (!hasDecision) {
     return (
-      <aside className="fixed inset-x-3 bottom-3 z-[1300] mx-auto max-w-xl rounded-[22px] border border-white/18 bg-[#183f34]/95 p-4 text-white shadow-2xl backdrop-blur sm:bottom-5 sm:p-5" aria-label="Lựa chọn quyền riêng tư">
+      <aside ref={bannerRef} className="fixed inset-x-3 bottom-3 z-[1300] mx-auto max-w-xl rounded-[22px] border border-white/18 bg-[#183f34]/95 p-4 text-white shadow-2xl backdrop-blur sm:bottom-5 sm:p-5" aria-label="Lựa chọn quyền riêng tư">
         <div className="pr-2">
           <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.2em] text-[#e7c78d]">Một lựa chọn nhỏ</p>
           <h2 className="font-display mt-1 text-xl">Giúp chúng tôi làm hành trình phù hợp hơn?</h2>

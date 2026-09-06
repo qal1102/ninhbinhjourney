@@ -147,9 +147,10 @@ export function TicketLookup() {
       <div className="mt-6 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
         <p className="font-extrabold">Hệ thống chưa gửi tin nhắn hay email xác nhận</p>
         <p className="mt-2 text-sm leading-6">
-          Phần gửi tin còn đang dựng, nên đặt xong bạn sẽ không nhận được tin nhắn nào cả. Trang
-          này là đường lấy lại vé, và nó cần đúng hai thứ chỉ bạn có: mã đặt chỗ và liên hệ đã để
-          lại. Chỉ một mình mã đặt chỗ thì em xin phép chưa mở vé được ạ.
+          Bên em đang đấu nối Zalo; xong việc đó thì mã đặt chỗ tự về máy bạn. Từ giờ tới lúc
+          ấy, đặt xong bạn không nhận được tin nhắn nào cả. Trang này là đường lấy lại vé, và
+          nó cần đúng hai thứ chỉ bạn có: mã đặt chỗ và liên hệ đã để lại. Chỉ một mình mã đặt
+          chỗ thì em xin phép chưa mở vé được ạ.
         </p>
       </div>
 

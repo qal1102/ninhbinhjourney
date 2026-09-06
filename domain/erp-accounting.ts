@@ -1,4 +1,5 @@
 import type { ErpSiteId } from "@/domain/erp";
+import type { ErpDataOrigin } from "@/domain/erp-data-origin";
 
 export type AccountingJournalStatus =
   | "draft"
@@ -44,6 +45,11 @@ export type AccountingJournal = {
   id: string;
   tenantId: string;
   siteId: ErpSiteId;
+  /**
+   * Bút toán này ghi việc thật, hay là bút toán gieo mẫu / cặn chạy thử.
+   * Xem `domain/erp-data-origin.ts` cho luật chia đôi đi kèm.
+   */
+  dataOrigin: ErpDataOrigin;
   journalCode: string;
   sourceType: AccountingSourceType;
   sourceWorkflowId: string | null;

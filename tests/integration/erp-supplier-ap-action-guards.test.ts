@@ -120,6 +120,7 @@ function invoiceFixture(
     id: INVOICE_ID,
     tenantId: "00000000-0000-4000-8000-000000000001",
     siteId: "trang-an",
+    dataOrigin: "real",
     caseCode: "AP-TA-202607-001",
     paymentRequestedByAccountId: null,
     paymentRequestedAt: null,

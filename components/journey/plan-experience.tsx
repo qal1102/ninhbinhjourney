@@ -52,10 +52,63 @@ type SpeechRecognitionLike = {
 
 type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 
-const examples = [
-  REQUIRED_VIETNAMESE_SAMPLE,
-  "Tôi có 6 giờ, thích thiên nhiên và nhiếp ảnh, muốn đi bộ vừa phải.",
-  "Gia đình tôi có 2 người lớn và 2 trẻ em, muốn một ngày cân bằng ở Ninh Bình.",
+/*
+ * Bốn lối vào bấm một cái là chạy.
+ *
+ * Trước đây trang này mở ra bằng một ô trống rồi **chín ô nữa** phải điền
+ * trước khi khách thấy được bất cứ thứ gì. Chủ dự án nói đúng chỗ đau: người
+ * mới tới một vùng đất còn chưa biết mình muốn gì, hỏi họ chín câu thì họ
+ * đóng trang. Nếp chung của các trang du lịch lớn là ngược lại — cho xem kết
+ * quả trước, rồi mới cho chỉnh; ô nhập chi tiết là lối lui, không phải cửa
+ * chính.
+ *
+ * Câu chữ dưới đây KHÔNG phải viết cho hay. Chúng là những câu bộ phân tích
+ * **thật sự đọc được**: nó dò "một ngày", "N giờ", "bố mẹ", "2 người lớn",
+ * "ít đi bộ". Đặt một câu nghe tự nhiên mà nó không hiểu thì bấm vào ra toàn
+ * giá trị mặc định, và khách sẽ tưởng trang hỏng. Sửa câu nào ở đây thì thử
+ * lại câu đó với `parseJourneyIntent` trước.
+ */
+/** Chữ cho dòng tóm tắt — nói bằng lời người, không phải bằng khoá dữ liệu. */
+const PACE_SUMMARY: Record<NonNullable<JourneyIntent["pace"]>, string> = {
+  relaxed: "Nhịp thư thả",
+  balanced: "Nhịp cân bằng",
+  active: "Nhịp năng động",
+};
+
+const WALKING_SUMMARY: Record<
+  NonNullable<JourneyIntent["walkingTolerance"]>,
+  string
+> = {
+  low: "ít đi bộ",
+  moderate: "đi bộ vừa phải",
+  high: "đi bộ nhiều được",
+};
+
+const PRESETS = [
+  {
+    id: "lan-dau",
+    title: { vi: "Lần đầu tới, có một ngày", en: "First time, one day" },
+    hint: { vi: "Đi vừa phải, xem được nhiều", en: "Steady pace, see a lot" },
+    text: "Tôi có một ngày ở Ninh Bình, lần đầu tới đây, muốn đi vừa phải.",
+  },
+  {
+    id: "bo-me",
+    title: { vi: "Đi cùng bố mẹ", en: "With my parents" },
+    hint: { vi: "Nhẹ nhàng, ít đi bộ", en: "Gentle, little walking" },
+    text: REQUIRED_VIETNAMESE_SAMPLE,
+  },
+  {
+    id: "gia-dinh",
+    title: { vi: "Cả nhà có trẻ nhỏ", en: "Family with children" },
+    hint: { vi: "Hai lớn hai nhỏ, một ngày", en: "Two adults, two children" },
+    text: "Gia đình tôi có 2 người lớn và 2 trẻ em, muốn một ngày cân bằng ở Ninh Bình.",
+  },
+  {
+    id: "chup-anh",
+    title: { vi: "Đi chụp ảnh", en: "Here for the photographs" },
+    hint: { vi: "Sáu tiếng, thiên nhiên", en: "Six hours, landscapes" },
+    text: "Tôi có 6 giờ, thích thiên nhiên và nhiếp ảnh, muốn đi bộ vừa phải.",
+  },
 ] as const;
 
 /*
@@ -229,6 +282,7 @@ export function PlanExperience({
   const [draft, setDraft] = useState<JourneyIntentDraft | null>(null);
   const [visitDate, setVisitDate] = useState("");
   const [minVisitDate, setMinVisitDate] = useState("");
+  const [showDetails, setShowDetails] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState(600);
   const [adults, setAdults] = useState(3);
   const [children, setChildren] = useState(0);
@@ -280,8 +334,12 @@ export function PlanExperience({
     visitDate,
   ]);
 
-  function parseText() {
-    const parsed = parseJourneyIntent({ text, locale: lang });
+  // `source` cho phép bấm một thẻ gợi ý là chạy ngay trong cùng một nhịp.
+  // Gọi `setText()` rồi `parseText()` thì `parseText` vẫn đọc giá trị cũ của
+  // lần dựng trước -- lỗi kinh điển, và ở đây nó biểu hiện thành "bấm thẻ mà
+  // ra kết quả của thẻ bấm trước đó".
+  function parseText(source?: string) {
+    const parsed = parseJourneyIntent({ text: source ?? text, locale: lang });
     setDraft(parsed);
     // Resolved here rather than on mount: the date field only exists after this
     // click, so today's date never has to match server-rendered markup.
@@ -297,7 +355,7 @@ export function PlanExperience({
     setWalking(parsed.walkingTolerance ?? "moderate");
     setBudget(parsed.budgetVnd?.target ?? 2_000_000);
     setMessage(
-      "Hãy kiểm tra các trường đã trích xuất. Chưa có hành trình nào được tạo hoặc lưu.",
+      "Đây là những gì chúng tôi hiểu được. Bạn xem giúp có đúng không, chưa có gì được lưu lại cả.",
     );
   }
 
@@ -513,8 +571,40 @@ export function PlanExperience({
       </section>
 
       <section className="rounded-3xl border border-[#d7d5cd] bg-white p-6 shadow-sm sm:p-8">
-        <label htmlFor="journey-text" className="font-display text-2xl">
-          Yêu cầu bằng văn bản
+        <h2 className="font-display text-2xl text-[#183f34]">
+          Bạn định đi kiểu gì?
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[#59654b]">
+          Chọn một tình huống gần với bạn nhất, chúng tôi xếp thử một ngày rồi
+          bạn chỉnh sau. Hoặc bạn cứ kể bằng lời của mình ở ô bên dưới.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              data-plan-preset={preset.id}
+              onClick={() => {
+                setText(preset.text);
+                parseText(preset.text);
+              }}
+              className="rounded-2xl border border-[#dedbd2] bg-[#fbfaf6] p-4 text-left transition-colors hover:border-[#356957]"
+            >
+              <span className="block font-bold text-[#183f34]">
+                {preset.title[lang]}
+              </span>
+              <span className="mt-1 block text-sm text-[#6b7660]">
+                {preset.hint[lang]}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <label
+          htmlFor="journey-text"
+          className="mt-7 block border-t border-[#dedbd2] pt-6 text-sm font-bold text-[#43564d]"
+        >
+          Hoặc kể bằng lời của bạn
         </label>
         <textarea
           id="journey-text"
@@ -528,41 +618,44 @@ export function PlanExperience({
           placeholder={REQUIRED_VIETNAMESE_SAMPLE}
           className="mt-4 w-full rounded-2xl border border-[#c9ccc5] p-4 leading-7 outline-none focus:border-[#183f34]"
         />
-        <div className="mt-4 grid gap-2">
-          {examples.map((example, index) => (
-            <button
-              key={example}
-              type="button"
-              onClick={() => {
-                setText(example);
-                setDraft(null);
-              }}
-              className="rounded-xl bg-[#f4f0e7] p-3 text-left text-sm leading-6"
-            >
-              Ví dụ {index + 1}: {example}
-            </button>
-          ))}
-        </div>
         <button
           type="button"
-          onClick={parseText}
+          onClick={() => parseText()}
           disabled={text.trim().length < 2}
           className="mt-5 min-h-12 rounded-full bg-[#183f34] px-6 font-bold text-white disabled:opacity-40"
         >
-          Hiểu yêu cầu
+          Xem thử một ngày cho tôi
         </button>
 
         {draft ? (
           <div className="mt-7 border-t border-[#dedbd2] pt-7">
-            <div className="flex items-center justify-between gap-4">
-              <h3 className="font-display text-2xl text-[#183f34]">
-                Xác nhận ý định
-              </h3>
-              <span className="rounded-full bg-[#eef3ef] px-3 py-1 text-xs font-bold text-[#356957]">
-                Có thể sửa
-              </span>
-            </div>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <h3 className="font-display text-2xl text-[#183f34]">
+              Chúng tôi hiểu thế này
+            </h3>
+            {/* Một dòng tóm tắt thay cho chín ô. Chín ô vẫn còn nguyên, chỉ
+                gập lại -- giấu đi thì khách không biết mình đang bị đoán hộ
+                những gì, mà bày cả ra thì lại đúng bức tường cũ. */}
+            <p
+              data-plan-summary
+              className="mt-3 text-sm leading-6 text-[#59654b]"
+            >
+              {PACE_SUMMARY[pace]} · {WALKING_SUMMARY[walking]} ·{" "}
+              {Math.round(durationMinutes / 60)} tiếng · {adults} người lớn
+              {children > 0 ? `, ${children} trẻ em` : ""}
+              {seniors > 0 ? `, ${seniors} người cao tuổi` : ""}
+              {visitDate ? ` · đi ngày ${visitDate.split("-").reverse().join("/")}` : ""}
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowDetails((current) => !current)}
+              className="mt-3 min-h-10 text-sm font-bold text-[#356957] underline underline-offset-2"
+            >
+              {showDetails ? "Thu gọn" : "Chỉnh lại cho đúng"}
+            </button>
+            <div
+              hidden={!showDetails}
+              className="mt-5 grid gap-4 sm:grid-cols-2"
+            >
               <label className="text-sm font-bold">
                 Ngày đi
                 <input

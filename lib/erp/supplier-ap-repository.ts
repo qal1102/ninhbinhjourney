@@ -5,6 +5,7 @@ import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { ErpSiteId } from "@/domain/erp";
+import { erpFinanceDataOrigin } from "@/domain/erp-data-origin";
 import {
   SUPPLIER_AP_EXCEPTION_LABELS,
   evaluateSupplierApMatch,
@@ -346,6 +347,10 @@ function invoiceFromRows(
     id: asString(row.id, "Mã hóa đơn"),
     tenantId: asString(row.tenant_id, "Mã đơn vị"),
     siteId: asSiteId(row.site_id),
+    // Ba bảng tài chính KHÔNG có cột `data_origin` và cố ý không bao giờ có:
+    // cơ sở dữ liệu chặn mọi lần sửa hàng đã ghi sổ, và nó chặn đúng. Nguồn
+    // gốc suy ra lúc đọc — xem `domain/erp-data-origin.ts`.
+    dataOrigin: erpFinanceDataOrigin(row),
     caseCode: asString(row.case_code, "Mã hồ sơ"),
     supplier,
     requestReference: asString(row.request_reference, "Mã đề nghị mua"),
@@ -659,6 +664,9 @@ function demoRecord(input: {
     id: input.id,
     tenantId: TENANT_ID,
     siteId: input.siteId,
+    // Cả bộ này là hồ sơ gieo mẫu, dựng cho bản chạy thử cục bộ. Nói thẳng ra
+    // ở đây thì màn hình đeo nhãn được, và ô tiền của giám đốc không đếm nhầm.
+    dataOrigin: "demo-seed" as const,
     caseCode: input.caseCode,
     supplier,
     requestReference: input.requestReference,
@@ -1169,6 +1177,8 @@ export async function submitSupplierInvoice(
       id,
       tenantId: TENANT_ID,
       siteId: input.siteId,
+      // Hóa đơn do người dùng vừa nhập vào là hồ sơ thật.
+      dataOrigin: "real",
       caseCode:
         "AP-" +
         supplier.code +

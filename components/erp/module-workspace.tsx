@@ -23,7 +23,9 @@ import type {
 import type { ProjectWorkspace } from "@/lib/erp/project-repository";
 import type { ShiftHandover } from "@/lib/erp/shift-handover-repository";
 import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
+import type { ShiftReconciliationView } from "@/lib/erp/shift-reconciliation-repository";
 import { listWorkdayEmployeeOptions } from "@/lib/erp/workday-view";
+import { ShiftReconciliationPanel } from "./shift-reconciliation-panel";
 import { AttendancePanel } from "./attendance-panel";
 import { ShiftHandoverPanel } from "./shift-handover-panel";
 import { StaffAccessManager } from "./staff-access-manager";
@@ -61,6 +63,8 @@ type Props = {
   staffDirectory: readonly ErpStaffDirectoryEntry[];
   capacityWorkspace: CapacityWorkspaceData | null;
   sopWorkspace: SopWorkspaceData | null;
+  /** TC-21 — chỉ đọc cho module tài chính & đối soát; `null` ở mọi module khác. */
+  shiftReconciliation: ShiftReconciliationView | null;
   initialCameraId?: string;
 };
 
@@ -306,6 +310,7 @@ export function ModuleWorkspace({
   staffDirectory,
   capacityWorkspace,
   sopWorkspace,
+  shiftReconciliation,
   initialCameraId,
 }: Props) {
   if (module.id === "suc-chua") {
@@ -373,7 +378,16 @@ export function ModuleWorkspace({
   }
   if (module.id === "tai-chinh-doi-soat") {
     return (
-      <SiteFinanceSource site={site} user={user} records={shiftClosures} />
+      <div className="space-y-6">
+        {shiftReconciliation ? (
+          <ShiftReconciliationPanel
+            site={site}
+            moduleId={module.id}
+            view={shiftReconciliation}
+          />
+        ) : null}
+        <SiteFinanceSource site={site} user={user} records={shiftClosures} />
+      </div>
     );
   }
   if (module.id === "camera-ai") {

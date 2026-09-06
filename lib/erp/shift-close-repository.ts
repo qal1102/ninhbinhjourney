@@ -16,6 +16,10 @@ import {
   type ShiftCloseReview,
   type ShiftCloseStatus,
 } from "@/domain/erp-shift-close";
+import {
+  erpFinanceDataOrigin,
+  parseErpDataOrigin,
+} from "@/domain/erp-data-origin";
 import type { ErpRole, ErpSiteId } from "@/domain/erp";
 
 const DEMO_COOKIE_NAME = "nbj-erp-shift-close-v1";
@@ -355,6 +359,10 @@ function recordFromRows(
       "workflow.idempotency_key",
     ),
     siteId,
+    // Ba bảng tài chính KHÔNG có cột `data_origin` và cố ý không bao giờ có:
+    // cơ sở dữ liệu chặn mọi lần sửa hàng đã ghi sổ, và nó chặn đúng. Nguồn
+    // gốc suy ra lúc đọc — xem `domain/erp-data-origin.ts`.
+    dataOrigin: erpFinanceDataOrigin(row),
     shiftCode: asString(
       row.business_code ?? row.shift_label,
       "workflow.business_code",
@@ -1035,6 +1043,7 @@ function boundedRecord(value: unknown): ShiftCloseRecord {
     shiftCode: boundedText(parsed.shiftCode, "shiftCode", 100),
     idempotencyKey: requireIdempotencyKey(parsed.idempotencyKey),
     siteId: parsed.siteId,
+    dataOrigin: parseErpDataOrigin(parsed.dataOrigin),
     businessDate: parsed.businessDate,
     station: boundedText(parsed.station, "station", 160),
     shiftLabel: boundedText(parsed.shiftLabel, "shiftLabel", 160),

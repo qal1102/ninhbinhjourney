@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  MAX_SCANNED_CODE_LENGTH,
+  MIN_SCANNED_CODE_LENGTH,
+} from "@/domain/erp-camera-scan";
 import type { OfflineGateDeviceState, OfflineGateQueueItem } from "@/domain/offline-gate";
 import {
   digestTicketCode,
@@ -12,19 +16,7 @@ import {
   stateWithQueuedScan,
   stateWithSyncResult,
 } from "@/lib/erp/offline-gate-store";
-
-/**
- * Trình duyệt chưa đưa BarcodeDetector vào kiểu DOM có sẵn, nên khai báo tối
- * thiểu ở đây — giống cách components/ops/check-in-console.tsx và
- * components/erp/ticket-guest-workspace.tsx đang làm — để dùng API thật của
- * Chrome trên Android mà không cần thêm gói nào.
- */
-type BarcodeDetectorLike = {
-  detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
-};
-type BarcodeDetectorConstructor = new (input?: {
-  formats?: string[];
-}) => BarcodeDetectorLike;
+import { useGateCameraScanner } from "@/lib/erp/use-gate-camera-scanner";
 
 const RESULT_LABELS = {
   accepted: "Tạm hợp lệ theo bộ vé của ca — cho khách vào và chờ máy chủ đối soát.",
@@ -41,13 +33,10 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
   const [refused, setRefused] = useState(false);
   const [busy, setBusy] = useState(false);
   const [manifestActive, setManifestActive] = useState(false);
-  const [cameraSupported, setCameraSupported] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(false);
-  const [cameraMessage, setCameraMessage] = useState("");
-  const automaticSyncKey = useRef<string | null>(null);
+  // TC-16: camera chỉ đổ mã vào đúng ô quét ngoại tuyến đã có bên dưới.
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<number | null>(null);
+  const camera = useGateCameraScanner(videoRef, setCode);
+  const automaticSyncKey = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -71,86 +60,6 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
 
   const pending = useMemo(() => state?.scans.filter((scan) => scan.syncStatus === "pending") ?? [], [state]);
   const diverged = useMemo(() => state?.scans.filter((scan) => scan.syncStatus === "diverged") ?? [], [state]);
-
-  useEffect(() => {
-    const detectorAvailable =
-      typeof window !== "undefined" &&
-      Boolean(
-        (window as typeof window & { BarcodeDetector?: BarcodeDetectorConstructor })
-          .BarcodeDetector,
-      );
-    const mediaAvailable =
-      typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ trình duyệt mới biết máy có hỗ trợ camera hay không
-    setCameraSupported(detectorAvailable && mediaAvailable);
-  }, []);
-
-  const stopCameraScan = useCallback(() => {
-    if (scanIntervalRef.current !== null) {
-      window.clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    setCameraOpen(false);
-  }, []);
-
-  async function startCameraScan() {
-    setCameraMessage("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false,
-      });
-      streamRef.current = stream;
-      setCameraOpen(true);
-    } catch {
-      setCameraMessage("Bạn chưa cho phép dùng camera. Mời bạn gõ mã vào ô bên dưới.");
-      setCameraOpen(false);
-    }
-  }
-
-  // Vòng quét chạy khi camera mở: đọc liên tục cho tới khi thấy mã hoặc bị đóng.
-  useEffect(() => {
-    if (!cameraOpen) return;
-    const video = videoRef.current;
-    const stream = streamRef.current;
-    if (!video || !stream) return;
-    video.srcObject = stream;
-    void video.play().catch(() => {});
-    const Detector = (
-      window as typeof window & { BarcodeDetector?: BarcodeDetectorConstructor }
-    ).BarcodeDetector;
-    if (!Detector) return;
-    const detector = new Detector({ formats: ["qr_code"] });
-    let cancelled = false;
-    const timer = window.setInterval(async () => {
-      if (cancelled || !videoRef.current) return;
-      try {
-        const found = await detector.detect(videoRef.current);
-        const raw = found[0]?.rawValue?.trim();
-        if (raw) {
-          setCode(raw.toUpperCase());
-          stopCameraScan();
-        }
-      } catch {
-        // Đọc thoáng qua bị lỗi (khung mờ, chưa lấy nét) thì bỏ qua, vòng quét vẫn tiếp tục.
-      }
-    }, 350);
-    scanIntervalRef.current = timer;
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-  }, [cameraOpen, stopCameraScan]);
-
-  // Tắt hẳn camera khi rời trang hoặc component gỡ khỏi cây, đừng để đèn camera sáng mãi.
-  useEffect(() => {
-    return () => {
-      if (scanIntervalRef.current !== null) window.clearInterval(scanIntervalRef.current);
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-    };
-  }, []);
 
   useEffect(() => {
     if (!state?.manifest || !manifestActive) return;
@@ -196,11 +105,13 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
     }
     // TC-06: cat dia chi web ra khoi ma quet duoc, dung mot luat voi may chu.
     const normalized = normalizeScannedCode(code);
-    if (normalized.length < 6 || normalized.length > 60) {
+    if (normalized.length < MIN_SCANNED_CODE_LENGTH || normalized.length > MAX_SCANNED_CODE_LENGTH) {
       setMessage("Mã QR không hợp lệ.");
       setRefused(true);
       return;
     }
+    // Ghi vào hàng đợi là xong việc của camera; đừng để đèn camera sáng tiếp.
+    camera.stop();
     setBusy(true);
     try {
       const codeDigest = await digestTicketCode(normalized);
@@ -291,23 +202,23 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
       <form onSubmit={queueScan} className="mt-4 flex flex-col gap-2 sm:flex-row">
         <input value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" required className="min-h-12 min-w-0 flex-1 rounded-xl border border-[#b8c9c2] bg-white px-4 font-mono text-[#183f34]" placeholder="Quét hoặc nhập mã vé" />
         <button type="submit" disabled={busy || !manifestActive} className="min-h-12 rounded-xl bg-[#e7c78d] px-5 font-black text-[#3f321d] disabled:opacity-50">Ghi vào hàng đợi</button>
-        {cameraSupported ? (
-          <button
-            type="button"
-            onClick={() => (cameraOpen ? stopCameraScan() : startCameraScan())}
-            className="min-h-12 rounded-xl border border-[#8da69c] px-5 text-sm font-black text-[#183f34] outline-none focus-visible:ring-2 focus-visible:ring-[#183f34] focus-visible:ring-offset-2"
-          >
-            {cameraOpen ? "Đóng camera" : "Quét bằng camera"}
-          </button>
-        ) : null}
+        {/* TC-16: nút luôn hiện. Máy nào không quét được thì bấm vào là biết
+            vì sao, hơn hẳn một nút biến mất không lời giải thích. */}
+        <button
+          type="button"
+          onClick={camera.toggle}
+          className="min-h-12 rounded-xl border border-[#8da69c] px-5 text-sm font-black text-[#183f34] outline-none focus-visible:ring-2 focus-visible:ring-[#183f34] focus-visible:ring-offset-2"
+        >
+          {camera.open ? "Đóng camera" : "Quét bằng camera"}
+        </button>
       </form>
-      {cameraOpen ? (
+      {camera.open ? (
         <div className="mt-3 overflow-hidden rounded-xl bg-black">
           <video ref={videoRef} muted playsInline className="aspect-video w-full object-cover" />
           <p className="bg-black/60 px-3 py-2 text-xs text-white/80">Mời bạn đưa mã QR vào giữa khung hình, máy tự đọc ạ.</p>
         </div>
       ) : null}
-      {cameraMessage ? <p role="status" className="mt-2 text-xs text-[#5c6f67]">{cameraMessage}</p> : null}
+      {camera.message ? <p role="status" className="mt-2 text-xs leading-5 text-[#5c6f67]">{camera.message}</p> : null}
       {message ? <p role={refused ? "alert" : "status"} className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${refused ? "bg-[#fff0eb] text-[#873f31]" : "bg-[#e6f1eb] text-[#285b49]"}`}>{message}</p> : null}
       {state?.manifest ? <p className="mt-3 text-xs text-[#74827c]">Manifest {state.manifest.manifestId.slice(0, 8).toUpperCase()} · hết hạn {new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(state.manifest.expiresAt))}</p> : null}
     </section>

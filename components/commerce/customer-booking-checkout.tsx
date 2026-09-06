@@ -705,7 +705,8 @@ export function CustomerBookingCheckout({
                 {confirmation.order.code}
               </p>
               <p className="mt-3 text-sm leading-6 text-white/75">
-                Hệ thống chưa gửi được tin nhắn hay email xác nhận, nên bạn chụp lại màn hình
+                Bên em đang đấu nối Zalo; xong việc đó thì mã đặt chỗ tự về máy bạn. Còn bây
+                giờ hệ thống chưa gửi được tin nhắn hay email nào, nên bạn chụp lại màn hình
                 này giúp em ạ.
                 {confirmation.payment.mode === "pay-on-site" ? (
                   <>

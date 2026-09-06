@@ -29,6 +29,7 @@ import {
   type ShiftCloseStatus,
 } from "@/domain/erp-shift-close";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { DataOriginTag } from "./data-origin-tag";
 
 type SiteWorkflowProps = {
   site: ErpSite;
@@ -208,7 +209,10 @@ function ShiftCloseDetails({
     <details className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm open:border-[#91aa9f]">
       <summary className="grid cursor-pointer list-none gap-3 p-4 sm:grid-cols-[0.8fr_1.3fr_auto] sm:items-center sm:p-5">
         <div>
-          <p className="text-xs font-black text-[#60736a]">{record.shiftCode}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-black text-[#60736a]">{record.shiftCode}</p>
+            <DataOriginTag origin={record.dataOrigin} />
+          </div>
           <p className="mt-1 text-xs text-[#87928d]">{record.station} · {record.shiftLabel}</p>
         </div>
         <div>

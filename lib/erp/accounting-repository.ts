@@ -19,6 +19,7 @@ import {
   type AccountingPeriodAction,
   type AccountingReviewDecision,
 } from "@/domain/erp-accounting";
+import { erpFinanceDataOrigin } from "@/domain/erp-data-origin";
 import {
   buildShiftCloseJournalProposal,
   type ShiftCloseRecord,
@@ -381,6 +382,10 @@ function journalFromRows(
     id: asString(row.id, "journal.id"),
     tenantId: asString(row.tenant_id, "journal.tenant_id"),
     siteId: asSiteId(row.site_id),
+    // Ba bảng tài chính KHÔNG có cột `data_origin` và cố ý không bao giờ có:
+    // cơ sở dữ liệu chặn mọi lần sửa hàng đã ghi sổ, và nó chặn đúng. Nguồn
+    // gốc suy ra lúc đọc — xem `domain/erp-data-origin.ts`.
+    dataOrigin: erpFinanceDataOrigin(row),
     journalCode: asString(row.journal_code, "journal.journal_code"),
     sourceType: row.source_type,
     sourceWorkflowId,
@@ -1105,6 +1110,9 @@ async function prepareInDemo(
       id,
       tenantId: TENANT_ID,
       siteId: source.siteId,
+      // Bút toán thừa hưởng nguồn gốc của hồ sơ ca sinh ra nó: ghi sổ một ca
+      // gieo mẫu thì bút toán ấy cũng là bút toán mẫu, không phải tiền thật.
+      dataOrigin: source.dataOrigin,
       journalCode:
         "JV-" +
         source.businessDate.replaceAll("-", "") +

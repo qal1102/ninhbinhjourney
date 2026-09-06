@@ -17,6 +17,7 @@ import { getRecentGateScans, getTicketSalesSummary } from "@/lib/erp/gate-scan-r
 import { getProjectWorkspace } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listShiftHandovers } from "@/lib/erp/shift-handover-repository";
+import { readShiftReconciliation } from "@/lib/erp/shift-reconciliation-repository";
 import { listStaffDirectory } from "@/lib/erp/staff-directory";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import {
@@ -93,7 +94,23 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
     ]);
   const query = (await searchParams) ?? {};
   const requestedCamera = Array.isArray(query.camera) ? query.camera[0] : query.camera;
+  const requestedShift = Array.isArray(query.ca) ? query.ca[0] : query.ca;
   const backTarget = resolveModuleBackTarget(site);
+
+  // TC-21 — đối soát cuối ca. Đọc sau `Promise.all` vì nó cần chính danh sách
+  // ca vừa đọc về, và cần biết người dùng đang chọn ca nào. Bảng này chỉ đọc,
+  // nên hỏng cũng không được kéo cả module tài chính xuống theo.
+  const shiftReconciliation =
+    moduleDefinition.id === "tai-chinh-doi-soat"
+      ? await readShiftReconciliation({
+          siteId: site.id,
+          shifts: shiftClosures,
+          selectedShiftId: requestedShift,
+        }).catch((error) => {
+          console.error("Shift reconciliation read failed", error);
+          return null;
+        })
+      : null;
 
   return (
     <ErpShell user={user} site={site} activeModuleId={moduleDefinition.id}>
@@ -138,6 +155,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         staffDirectory={staffDirectory}
         capacityWorkspace={capacityWorkspace}
         sopWorkspace={sopWorkspace}
+        shiftReconciliation={shiftReconciliation}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

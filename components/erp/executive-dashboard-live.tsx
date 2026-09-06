@@ -5,6 +5,7 @@ import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import type { SopPendingDecision } from "@/domain/erp-sop";
 import type { SupplierApInvoice } from "@/domain/erp-supplier-ap";
 import type { WorkdayRecord } from "@/domain/erp-workday";
+import { partitionErpDataOrigin } from "@/domain/erp-data-origin";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import type { IncidentCase } from "@/lib/erp/incident-repository";
 import type { ProjectChangeRequestWithSite } from "@/lib/erp/project-repository";
@@ -43,6 +44,35 @@ function journalValue(journal: AccountingJournal) {
   return journal.lines.reduce((total, line) => total + line.debitVnd, 0);
 }
 
+/**
+ * Nói ra còn bao nhiêu hồ sơ mẫu, thay vì giấu.
+ *
+ * Giám đốc thấy 0 bút toán mà biết sổ vẫn còn mấy bút toán mẫu thì con số 0
+ * kia mới đọc được. Giấu đi thì chính sự vênh giữa "trang chủ nói 0" và "vào
+ * sổ thấy đầy hồ sơ" làm người ta nghi màn hình hỏng.
+ */
+function describeSampleRows(
+  shiftCloses: number,
+  journals: number,
+  supplierInvoices: number,
+) {
+  const parts: string[] = [];
+  if (shiftCloses > 0) {
+    parts.push(`${shiftCloses.toLocaleString("vi-VN")} hồ sơ ca`);
+  }
+  if (journals > 0) {
+    parts.push(`${journals.toLocaleString("vi-VN")} bút toán`);
+  }
+  if (supplierInvoices > 0) {
+    parts.push(
+      `${supplierInvoices.toLocaleString("vi-VN")} hóa đơn nhà cung cấp`,
+    );
+  }
+  if (parts.length === 0) return null;
+  if (parts.length === 1) return parts[0];
+  return parts.slice(0, -1).join(", ") + " và " + parts[parts.length - 1];
+}
+
 function latestUpdatedAt(
   records: readonly ShiftCloseRecord[],
   workdays: readonly WorkdayRecord[],
@@ -72,23 +102,46 @@ function latestUpdatedAt(
 export function ExecutiveDashboard({
   user,
   sites,
-  records,
+  records: allRecords,
   workdays,
-  journals,
-  supplierApInvoices,
+  journals: allJournals,
+  supplierApInvoices: allSupplierApInvoices,
   escalatedIncidents,
   pendingProjectChangeRequests,
   pendingSopDecisions,
   ticketOverview,
 }: Props) {
+  // ERP-FAKE-03. Luật chia đôi, giữ cứng: **mọi con số trên trang này đều gọi
+  // giám đốc ra quyết định**, nên chúng chỉ được đếm hồ sơ thật. Hồ sơ gieo
+  // mẫu và cặn chạy thử vẫn ở nguyên trong màn hình nghiệp vụ, kèm nhãn, để
+  // nhân viên còn cái mà tập — nhưng không tấm nào được lọt vào ô tiền ở đây.
+  //
+  // Đo trên production 05/09/2026: 14 hồ sơ ca, 11 bút toán, 5 hóa đơn nhà
+  // cung cấp, không hàng nào là nghiệp vụ thật. Trước đợt này trang chủ khai
+  // hết cả ba con số ấy như tiền thật.
+  const { real: records, sample: sampleRecords } =
+    partitionErpDataOrigin(allRecords);
+  const { real: journals, sample: sampleJournals } =
+    partitionErpDataOrigin(allJournals);
+  const { real: supplierApInvoices, sample: sampleSupplierApInvoices } =
+    partitionErpDataOrigin(allSupplierApInvoices);
+  const sampleNote = describeSampleRows(
+    sampleRecords.length,
+    sampleJournals.length,
+    sampleSupplierApInvoices.length,
+  );
   const siteShortNameById = new Map(
     sites.map((site) => [site.id, site.shortName]),
   );
+  // Mốc "bây giờ" của trang cố ý lấy từ **toàn bộ** bản ghi, kể cả hồ sơ mẫu:
+  // nó là cái đồng hồ để đo phiếu công việc quá hạn, không phải con số ai đó
+  // đọc để ra quyết định. Lọc nó theo nguồn gốc thì ngày nào chưa có ca thật,
+  // đồng hồ tụt về 0 và mọi phiếu quá hạn biến mất khỏi màn hình.
   const referenceNow = [
-    ...records.map((record) => record.updatedAt),
+    ...allRecords.map((record) => record.updatedAt),
     ...workdays.map((record) => record.updatedAt),
-    ...journals.map((journal) => journal.updatedAt),
-    ...supplierApInvoices.map((invoice) => invoice.updatedAt),
+    ...allJournals.map((journal) => journal.updatedAt),
+    ...allSupplierApInvoices.map((invoice) => invoice.updatedAt),
     ...pendingSopDecisions.map((assessment) => assessment.submittedAt),
   ].reduce((latest, value) => {
     const timestamp = Date.parse(value);
@@ -164,11 +217,13 @@ export function ExecutiveDashboard({
     escalatedIncidents.length +
     pendingProjectChangeRequests.length +
     pendingSopDecisions.length;
+  // "Cập nhật gần nhất" cũng là đồng hồ, không phải con số ra quyết định:
+  // nó nói lần cuối kho dữ liệu này động đậy là khi nào.
   const asOf = latestUpdatedAt(
-    records,
+    allRecords,
     workdays,
-    journals,
-    supplierApInvoices,
+    allJournals,
+    allSupplierApInvoices,
     pendingSopDecisions,
   );
 
@@ -318,6 +373,17 @@ export function ExecutiveDashboard({
             </article>
           ))}
         </div>
+
+        {/* Không giấu phần dữ liệu mẫu đi — xem `describeSampleRows` ở trên
+            cho lý do. Cùng lối diễn đạt với bảng vé ngay bên dưới. */}
+        {sampleNote ? (
+          <p className="mt-4 rounded-xl border border-white/15 bg-white/[0.06] p-4 text-[11px] leading-5 text-[#d3e5dd]">
+            Sổ còn <strong className="text-white">{sampleNote}</strong> gieo sẵn
+            từ lúc dựng hệ thống. Chúng không được tính vào con số nào ở trên,
+            cũng không lọt vào khối cần bạn quyết định. Nhân viên vẫn mở được để
+            tập.
+          </p>
+        ) : null}
       </section>
 
       {/* ERP-UX-06d: câu hỏi đầu tiên của một người điều hành khu du lịch là

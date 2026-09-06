@@ -13,6 +13,7 @@ const postedJournal: AccountingJournal = {
   id: "journal-original",
   tenantId: "tenant",
   siteId: "trang-an",
+  dataOrigin: "real",
   journalCode: "JV-20260729-001",
   sourceType: "shift-close",
   sourceWorkflowId: "shift-close",

@@ -20,6 +20,7 @@ import {
   type SupplierApSupplier,
 } from "@/domain/erp-supplier-ap";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { DataOriginTag } from "./data-origin-tag";
 
 const INITIAL_ACTION_STATE: SupplierApActionState = {
   status: "idle",
@@ -662,9 +663,12 @@ function InvoiceCard({
     >
       <summary className="grid cursor-pointer list-none gap-3 p-4 sm:grid-cols-[0.8fr_1.4fr_0.8fr_auto] sm:items-center sm:p-5">
         <div>
-          <p className="font-mono text-xs font-black text-[#60736a]">
-            {invoice.caseCode}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-mono text-xs font-black text-[#60736a]">
+              {invoice.caseCode}
+            </p>
+            <DataOriginTag origin={invoice.dataOrigin} />
+          </div>
           <p className="mt-1 text-xs text-[#7c8982]">
             {siteName(invoice.siteId)} · v{invoice.version}
           </p>

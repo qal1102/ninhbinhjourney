@@ -28,6 +28,7 @@ import type {
   SupplierApSupplier,
 } from "@/domain/erp-supplier-ap";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { DataOriginTag } from "./data-origin-tag";
 import { CashDepositReconciliationCenter } from "./cash-deposit-reconciliation-center";
 import { ShiftCloseAccountingQueue } from "./shift-close-workflow";
 import { SupplierApControlCenter } from "./supplier-ap-control-center";
@@ -486,9 +487,12 @@ function JournalCard({
     >
       <summary className="grid cursor-pointer list-none gap-3 p-4 sm:grid-cols-[0.7fr_1.2fr_0.8fr_auto] sm:items-center sm:p-5">
         <div>
-          <p className="text-xs font-black text-[#65776e]">
-            {journal.journalCode}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-black text-[#65776e]">
+              {journal.journalCode}
+            </p>
+            <DataOriginTag origin={journal.dataOrigin} />
+          </div>
           <p className="mt-1 text-xs text-[#87928d]">
             {siteName(journal.siteId)}
           </p>

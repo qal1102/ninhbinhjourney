@@ -1,4 +1,5 @@
 import type { ErpRole, ErpSiteId } from "@/domain/erp";
+import type { ErpDataOrigin } from "@/domain/erp-data-origin";
 
 export type SupplierApStatus =
   | "match-exception"
@@ -109,6 +110,11 @@ export type SupplierApInvoice = {
   id: string;
   tenantId: string;
   siteId: ErpSiteId;
+  /**
+   * Hóa đơn thật của nhà cung cấp, hay hồ sơ gieo mẫu / cặn chạy thử.
+   * Xem `domain/erp-data-origin.ts` cho luật chia đôi đi kèm.
+   */
+  dataOrigin: ErpDataOrigin;
   caseCode: string;
   supplier: SupplierApSupplier;
   requestReference: string;

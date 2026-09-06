@@ -654,9 +654,13 @@ Việc còn lại chỉ là **nói ra**: đây là tiện ích có chủ đích,
 | | |
 |---|---|
 | **Model** | **Sonnet 5** |
-| **Tiên quyết** | TC-16. |
+| **Tiên quyết** | **Không.** ~~TC-16.~~ |
+
+> **Sửa dòng tiên quyết ngày 06/09/2026.** Bản kế hoạch cũ ghi TC-21 phải chờ TC-16, và đó là chỗ sai. Đối soát cuối ca đọc **lượt quét cổng** trong bảng `erp_gate_scan_events` — bảng ấy có từ migration `202607310012`, đã đủ cột `result`, `scanned_by_account_id`, `scanned_at` từ `202608020028`, và hôm nay vẫn đang nhận lượt quét gõ tay. TC-16 chỉ thêm **một cách nhập liệu mới** (camera điện thoại) cho đúng luồng ấy, không sinh ra dữ liệu nào mà đối soát cần. Bắt TC-21 chờ TC-16 là giữ một việc làm được ngay ở lại trong hàng đợi mà chẳng được gì.
 
 Mỗi lượt quét đã ghi cổng nào, ai quét, lúc nào. Ghép với ca trực là ra bảng đối soát cuối ca — **không ai phải ngồi cộng tay**, và không phải ghi thêm dữ liệu nào.
+
+**TC-22 đổi hẳn tầm quan trọng của việc này.** Khách nay chọn được "trả tiền tại điểm", nhân viên quét mã rồi thu tiền mặt ngay ở cổng. Khoản tiền ấy nằm trong `customer_payment_attempts`, còn con số cuối ca nhân viên tự khai nằm trong `erp_shift_close_workflows` — **hai bên chưa có một dòng nào nối với nhau**. Tiền nhân viên cầm ở cổng vì thế không nằm trong bất kỳ con số chốt ca nào. Đó là một lỗ tiền có thật, và TC-21 là chỗ vá nó.
 
 ---
 
@@ -707,7 +711,7 @@ Nghĩa là một năm vận hành nặng thêm khoảng 1,4 GB vào một cơ s�
 | TC-18 | Đoàn mua tại quầy | Sonnet 5 | TC-15 | **Có** |
 | TC-19 | Đoàn còn thiếu người | Sonnet 5 | TC-15 | Không |
 | TC-20 | Mã chuyển tay được | Haiku 4.5 | TC-15 | Không |
-| TC-21 | Đối soát cuối ca tự động | Sonnet 5 | TC-16 | Không |
+| TC-21 | Đối soát cuối ca tự động | Sonnet 5 | **không** (sửa 06/09, xem TC-21) | Không đổi bảng; thêm một hàm SQL **chỉ đọc** |
 
 **Haiku 4.5 dùng ở đâu:** bổ sung mã lỗi vào `rpc-error-messages.ts` sau khi RPC đã khóa; dựng fixture cho test đã có hợp đồng; chạy lượt chụp ảnh theo checklist ERP; định dạng lại tài liệu. **Không giao Haiku một nhiệm vụ TC nguyên vẹn nào.**
 

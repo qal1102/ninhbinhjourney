@@ -10,10 +10,12 @@ import {
   recordGateScanAction,
   refreshDemoTicketsAction,
 } from "@/app/erp/actions";
+import { MIN_SCANNED_CODE_LENGTH } from "@/domain/erp-camera-scan";
 import type { ErpSite } from "@/domain/erp";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import { isDemoTicketCode } from "@/domain/erp-ticket-code";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { useGateCameraScanner } from "@/lib/erp/use-gate-camera-scanner";
 import type {
   GateScanEvent,
   TicketSalesSummary,
@@ -21,18 +23,6 @@ import type {
 } from "@/lib/erp/gate-scan-repository";
 import { ShiftCloseSiteWorkflow } from "./shift-close-workflow";
 import { OfflineGateConsole } from "./offline-gate-console";
-
-/**
- * Trình duyệt chưa đưa BarcodeDetector vào kiểu DOM có sẵn, nên khai báo tối
- * thiểu ở đây — giống cách components/ops/check-in-console.tsx đã làm — để
- * dùng API thật của Chrome trên Android mà không cần thêm gói nào.
- */
-type BarcodeDetectorLike = {
-  detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
-};
-type BarcodeDetectorConstructor = new (input?: {
-  formats?: string[];
-}) => BarcodeDetectorLike;
 
 type Props = {
   site: ErpSite;
@@ -96,12 +86,9 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   const [todayTicketsPending, setTodayTicketsPending] = useState(false);
   const [refreshPending, setRefreshPending] = useState(false);
   const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
-  const [cameraSupported, setCameraSupported] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(false);
-  const [cameraMessage, setCameraMessage] = useState("");
+  // TC-16: camera chỉ đổ mã vào đúng ô quét bên dưới, luồng xử lý giữ nguyên.
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<number | null>(null);
+  const camera = useGateCameraScanner(videoRef, setScanCode);
   const isDirector = user.role === "director";
   const sales = ticketSales ?? EMPTY_TICKET_SALES;
   const selected = sales.periods.find((item) => item.period === period) ?? sales.periods[0];
@@ -164,90 +151,12 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
     }
   }
 
-  useEffect(() => {
-    const detectorAvailable =
-      typeof window !== "undefined" &&
-      Boolean(
-        (window as typeof window & { BarcodeDetector?: BarcodeDetectorConstructor })
-          .BarcodeDetector,
-      );
-    const mediaAvailable =
-      typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ trình duyệt mới biết máy có hỗ trợ camera hay không
-    setCameraSupported(detectorAvailable && mediaAvailable);
-  }, []);
-
-  async function startCameraScan() {
-    setCameraMessage("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false,
-      });
-      streamRef.current = stream;
-      setCameraOpen(true);
-    } catch {
-      setCameraMessage("Bạn chưa cho phép dùng camera. Mời bạn gõ mã vào ô bên dưới.");
-      setCameraOpen(false);
-    }
-  }
-
-  function stopCameraScan() {
-    if (scanIntervalRef.current !== null) {
-      window.clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    setCameraOpen(false);
-  }
-
-  // Vòng quét chạy khi camera mở: đọc liên tục cho tới khi thấy mã hoặc bị đóng.
-  useEffect(() => {
-    if (!cameraOpen) return;
-    const video = videoRef.current;
-    const stream = streamRef.current;
-    if (!video || !stream) return;
-    video.srcObject = stream;
-    void video.play().catch(() => {});
-    const Detector = (
-      window as typeof window & { BarcodeDetector?: BarcodeDetectorConstructor }
-    ).BarcodeDetector;
-    if (!Detector) return;
-    const detector = new Detector({ formats: ["qr_code"] });
-    let cancelled = false;
-    const timer = window.setInterval(async () => {
-      if (cancelled || !videoRef.current) return;
-      try {
-        const found = await detector.detect(videoRef.current);
-        const raw = found[0]?.rawValue?.trim();
-        if (raw) {
-          setScanCode(raw.toUpperCase());
-          stopCameraScan();
-        }
-      } catch {
-        // Đọc thoáng qua bị lỗi (khung mờ, chưa lấy nét) thì bỏ qua, vòng quét vẫn tiếp tục.
-      }
-    }, 350);
-    scanIntervalRef.current = timer;
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-  }, [cameraOpen]);
-
-  // Tắt hẳn camera khi rời trang hoặc component gỡ khỏi cây, đừng để đèn camera sáng mãi.
-  useEffect(() => {
-    return () => {
-      if (scanIntervalRef.current !== null) window.clearInterval(scanIntervalRef.current);
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-    };
-  }, []);
-
-async function recordScan(event: React.FormEvent<HTMLFormElement>) {
+  async function recordScan(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalized = scanCode.trim().toUpperCase();
-    if (normalized.length < 6) { setScanMessage("Mã QR không hợp lệ."); return; }
+    if (normalized.length < MIN_SCANNED_CODE_LENGTH) { setScanMessage("Mã QR không hợp lệ."); return; }
+    // Ghi nhận xong là xong việc của camera; đừng để đèn camera sáng tiếp.
+    camera.stop();
     setScanPending(true);
     try {
       // T8: one key per attempt, so a retry after a dropped response returns
@@ -302,23 +211,23 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
           <form onSubmit={recordScan} className="mt-5 flex flex-col gap-2 sm:flex-row">
             <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} required autoComplete="off" className="min-h-12 min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 font-mono text-white placeholder:text-white/40" placeholder="Đưa mã vào máy quét hoặc nhập mã QR" />
             <button type="submit" disabled={scanPending} className="min-h-12 rounded-xl bg-white px-5 font-black text-[#183f34] disabled:cursor-wait disabled:opacity-60">{scanPending ? "Đang ghi nhận..." : "Xác thực & ghi nhận"}</button>
-            {cameraSupported ? (
-              <button
-                type="button"
-                onClick={() => (cameraOpen ? stopCameraScan() : startCameraScan())}
-                className="min-h-12 rounded-xl border border-white/25 px-5 font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34]"
-              >
-                {cameraOpen ? "Đóng camera" : "Quét bằng camera"}
-              </button>
-            ) : null}
+            {/* TC-16: nút luôn hiện. Máy nào không quét được thì bấm vào là
+                biết vì sao, hơn hẳn một nút biến mất không lời giải thích. */}
+            <button
+              type="button"
+              onClick={camera.toggle}
+              className="min-h-12 rounded-xl border border-white/25 px-5 font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34]"
+            >
+              {camera.open ? "Đóng camera" : "Quét bằng camera"}
+            </button>
           </form>
-          {cameraOpen ? (
+          {camera.open ? (
             <div className="mt-3 overflow-hidden rounded-xl bg-black">
               <video ref={videoRef} muted playsInline className="aspect-video w-full object-cover" />
               <p className="bg-black/60 px-3 py-2 text-xs text-white/80">Mời bạn đưa mã QR vào giữa khung hình, máy tự đọc ạ.</p>
             </div>
           ) : null}
-          {cameraMessage ? <p role="status" className="mt-2 text-xs text-white/70">{cameraMessage}</p> : null}
+          {camera.message ? <p role="status" className="mt-2 text-xs leading-5 text-white/80">{camera.message}</p> : null}
           {scanMessage ? <p role={scanRefused ? "alert" : "status"} className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${scanRefused ? "bg-[#7d3226] text-[#ffd9d1]" : "bg-white/10"}`}>{scanMessage}</p> : null}
           {/* TC-22: khách chọn trả tiền tại điểm. Ô này chỉ hiện đúng lúc cần,
               và ghi rõ số tiền — nhân viên đứng ở cổng không có thời gian đi

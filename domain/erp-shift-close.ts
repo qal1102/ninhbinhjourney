@@ -1,4 +1,5 @@
 import type { ErpRole, ErpSiteId } from "@/domain/erp";
+import type { ErpDataOrigin } from "@/domain/erp-data-origin";
 
 export const SHIFT_CLOSE_MATERIALITY_VND = 1_000;
 
@@ -56,6 +57,11 @@ export type ShiftCloseRecord = {
   shiftCode: string;
   idempotencyKey: string;
   siteId: ErpSiteId;
+  /**
+   * Hồ sơ này là ca thật, hồ sơ gieo mẫu, hay cặn của một lượt chạy thử.
+   * Xem `domain/erp-data-origin.ts` cho luật chia đôi đi kèm.
+   */
+  dataOrigin: ErpDataOrigin;
   businessDate: string;
   station: string;
   shiftLabel: string;
@@ -228,6 +234,10 @@ export function createShiftCloseSubmission(
     shiftCode: input.shiftCode.trim(),
     idempotencyKey: input.idempotencyKey.trim(),
     siteId: input.siteId,
+    // Hồ sơ mới do người trực gửi lên là ca thật. Chỉ những hàng đã gieo sẵn
+    // từ trước mới mang nhãn khác, và chúng được dán nhãn ở tầng dữ liệu
+    // (migration 202609060061), không phải ở đây.
+    dataOrigin: "real",
     businessDate: input.businessDate,
     station: input.station.trim(),
     shiftLabel: input.shiftLabel.trim(),

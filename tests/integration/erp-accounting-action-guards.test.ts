@@ -104,6 +104,7 @@ const journal: AccountingJournal = {
   id: JOURNAL_ID,
   tenantId: "00000000-0000-4000-8000-000000000001",
   siteId: "trang-an",
+  dataOrigin: "real",
   journalCode: "JV-20260729-001",
   sourceType: "shift-close",
   sourceWorkflowId: WORKFLOW_ID,

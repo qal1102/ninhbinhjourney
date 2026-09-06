@@ -27,6 +27,7 @@ function invoice(
     id: "87000000-0000-4000-8000-000000000001",
     tenantId: "00000000-0000-4000-8000-000000000001",
     siteId: "tam-chuc",
+    dataOrigin: "real",
     caseCode: "AP-TC-202607-018",
     paymentRequestedByAccountId: null,
     paymentRequestedAt: null,

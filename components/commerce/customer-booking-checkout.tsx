@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import type { PackageCatalogItem } from "@/content/packages";
@@ -106,7 +107,14 @@ type HoldResult = {
 
 type ConfirmationResult = {
   order: { id: string; code: string; status: "confirmed" };
-  payment: { id: string; status: "succeeded"; mode: "simulation" };
+  // TC-22 mở lối trả tại điểm, nên hai trường này KHÔNG còn một giá trị duy
+  // nhất nữa: một đơn trả tại điểm về đây là `pending` / `pay-on-site`.
+  payment: {
+    id: string;
+    status: "succeeded" | "pending";
+    mode: "simulation" | "pay-on-site";
+    amount_due_vnd: number;
+  };
   tickets: Array<{
     ticketId: string;
     ticketCode: string;
@@ -685,6 +693,43 @@ export function CustomerBookingCheckout({
         {confirmation ? (
           <div className="mt-6" data-testid="customer-booking-confirmed">
             <p className="rounded-2xl bg-[#dceadd] p-4 font-bold text-[#183f34]">Đã xác nhận · {confirmation.order.code}</p>
+
+            {/* TC-23: nói thẳng hệ thống chưa gửi được tin nhắn, và chỉ cho
+                khách đúng một đường lấy lại vé. Tuyệt đối không viết chữ nào
+                ngụ ý "chúng tôi đã gửi tin cho bạn" — điều đó chưa làm được. */}
+            <div className="mt-5 rounded-2xl border border-[#e7c78d]/45 bg-[#e7c78d]/12 p-4">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#e7c78d]">
+                Xin bạn giữ lấy mã này
+              </p>
+              <p className="font-display mt-2 text-2xl tracking-[0.06em] text-[#e7c78d]">
+                {confirmation.order.code}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-white/75">
+                Hệ thống chưa gửi được tin nhắn hay email xác nhận, nên bạn chụp lại màn hình
+                này giúp em ạ.
+                {confirmation.payment.mode === "pay-on-site" ? (
+                  <>
+                    {" "}
+                    Lỡ mất trang, mời bạn vào{" "}
+                    <Link
+                      href="/tra-cuu-ve"
+                      className="font-bold text-[#e7c78d] underline decoration-[#e7c78d]/50 underline-offset-4"
+                    >
+                      tra cứu vé
+                    </Link>{" "}
+                    rồi nhập mã trên cùng số điện thoại hoặc email bạn vừa để lại là vé hiện lại
+                    đầy đủ.
+                  </>
+                ) : (
+                  <>
+                    {" "}
+                    Lối trả ngay không nhận liên hệ của bạn, nên trang tra cứu chưa có gì để đối
+                    chiếu — tấm ảnh chụp màn hình là bản lưu duy nhất của bạn ạ.
+                  </>
+                )}
+              </p>
+            </div>
+
             <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Vé của bạn</p>
             <p className="mt-1 text-sm leading-6 text-white/70">Tới cổng, bạn đưa mã cho nhân viên quét là vào được ngay ạ.</p>
             <ul className="mt-3 space-y-3">

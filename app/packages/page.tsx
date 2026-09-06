@@ -4,6 +4,7 @@ import { PACE_LABEL, PACKAGES, type PackageCatalogItem } from "@/content/package
 import { getPackageHeroImage } from "@/content/package-images";
 import {
   getExperiencePresentationFlags,
+  getExperienceSurfaceAttributes,
   readPublicEnvironment,
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
@@ -114,13 +115,26 @@ export default async function PackagesPage({
 }) {
   const journeyValue = (await searchParams).journey;
   const journey = typeof journeyValue === "string" ? journeyValue : undefined;
-  const flags = getExperiencePresentationFlags(readPublicEnvironment());
+  const environment = readPublicEnvironment();
+  const flags = getExperiencePresentationFlags(environment);
   const customerBookingEnabled = isCustomerBookingEnabled();
-  const checkoutAvailable = flags.sandboxCheckout || customerBookingEnabled;
+  // Phép hợp "sandbox HOẶC đặt chỗ thật" đã chuyển hẳn vào
+  // `getExperienceSurfaceAttributes`, để nút "Chọn gói" dưới đây và thuộc tính
+  // trang tự khai luôn nói cùng một điều. Trước đây hai chỗ tính riêng thì chỉ
+  // cần sửa lệch một bên là bài kiểm đọc sai cấu hình mà không ai biết.
+  const surfaceAttributes = getExperienceSurfaceAttributes(environment, {
+    customerBookingEnabled,
+  });
+  const checkoutAvailable =
+    surfaceAttributes["data-checkout-available"] === "true";
   const [featured, ...rest] = PACKAGES;
 
   return (
-    <main data-customer-section="packages-catalog" className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
+    <main
+      {...surfaceAttributes}
+      data-customer-section="packages-catalog"
+      className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16"
+    >
       <div className="mx-auto max-w-7xl">
         <Link href={journey ? `/journey/${journey}` : "/plan"} className="text-sm font-bold text-[#356957]">
           ← Quay lại hành trình

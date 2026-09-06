@@ -476,6 +476,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Đơn không còn ở trạng thái có thể xác nhận.",
   CUSTOMER_BOOKING_RATE_LIMITED:
     "Phiên khách đã tạo quá nhiều lượt giữ chỗ trong một giờ.",
+  CUSTOMER_LOOKUP_INPUT_INVALID:
+    "Yêu cầu tra cứu vé thiếu loại liên hệ, chuỗi băm liên hệ hoặc thời điểm hợp lệ.",
   CUSTOMER_RECOMMENDATION_TIME_INVALID:
     "Thời điểm làm mới gợi ý không hợp lệ; chỉ nhận tín hiệu hành trình trong khoảng thời gian cho phép.",
   CUSTOMER_RECOMMENDATION_UNAVAILABLE:

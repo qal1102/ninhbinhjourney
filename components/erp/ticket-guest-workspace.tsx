@@ -12,6 +12,7 @@ import {
 } from "@/app/erp/actions";
 import type { ErpSite } from "@/domain/erp";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
+import { isDemoTicketCode } from "@/domain/erp-ticket-code";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import type {
   GateScanEvent,
@@ -358,7 +359,7 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
           ) : null}
           <div className="mt-6 border-t border-white/15 pt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Vé quét thử được hôm nay</p>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Vé còn hiệu lực hôm nay</p>
               {isDirector ? (
                 <button
                   type="button"
@@ -375,7 +376,11 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
             ) : todayTickets.length === 0 ? (
               <p className="mt-3 text-xs text-white/70">
                 {todayTicketsMessage || "Hôm nay chưa có vé nào còn hiệu lực tại cơ sở này."}{" "}
-                {isDirector ? "Mời bạn bấm nút làm mới vé mẫu ở trên." : "Mời bạn nhờ giám đốc bấm nút làm mới vé mẫu."}
+                Bạn vẫn quét được vé khách đưa: nhập mã vào ô phía trên hoặc
+                tra theo tên, số điện thoại ở mục bên dưới.{" "}
+                {isDirector
+                  ? "Cần vé để tập quét thì bấm nút làm mới vé mẫu ở trên."
+                  : "Riêng vé mẫu để tập quét thì chỉ giám đốc làm mới được."}
               </p>
             ) : (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -393,7 +398,14 @@ async function recordScan(event: React.FormEvent<HTMLFormElement>) {
                       <span className="grid h-16 w-16 shrink-0 place-items-center rounded-md bg-[#eef3f0] text-[10px] text-[#7b8881]">Đang tạo QR…</span>
                     )}
                     <span className="min-w-0">
-                      <span className="block truncate font-mono text-sm font-black">{ticket.ticketCode}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="truncate font-mono text-sm font-black">{ticket.ticketCode}</span>
+                        {isDemoTicketCode(ticket.ticketCode) ? (
+                          <span className="shrink-0 rounded-full bg-[#fdf0dd] px-2 py-0.5 text-[10px] font-black text-[#8a5e30]">mẫu</span>
+                        ) : (
+                          <span className="shrink-0 rounded-full bg-[#dff1e8] px-2 py-0.5 text-[10px] font-black text-[#246249]">khách thật</span>
+                        )}
+                      </span>
                       <span className="mt-1 block text-xs text-[#5c6f67]">{TICKET_PRODUCT_LABELS[ticket.product] ?? ticket.product} · còn {ticket.entriesAllowed - ticket.entriesUsed} lượt</span>
                     </span>
                   </button>

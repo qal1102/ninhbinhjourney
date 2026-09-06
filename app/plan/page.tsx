@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { readPublicEnvironment } from "@/config/experience";
+import { cookies } from "next/headers";
+import {
+  getExperienceSurfaceAttributes,
+  readPublicEnvironment,
+} from "@/config/experience";
+import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { PlanExperience } from "@/components/journey/plan-experience";
 import { SetupState } from "@/components/shared/setup-state";
 
@@ -9,14 +14,42 @@ export const metadata = {
     "Voice và text fallback cho lịch trình Ninh Bình có kiểm tra thời gian, đi bộ và khung giờ.",
 };
 
-export default function PlanPage() {
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function PlanPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const environment = readPublicEnvironment();
   if (environment.status === "missing") {
     return <SetupState environment={environment} surface="Journey builder" />;
   }
 
+  // Đọc ngôn ngữ đúng cách trang chủ đang đọc (`app/page.tsx`): ưu tiên
+  // `?lang=` trên đường dẫn, sau đó tới cookie `ninh-binh-lang` mà nút đổi
+  // ngôn ngữ ngoài trang chủ đặt xuống. Mọi liên kết dẫn vào đây đều mang
+  // sẵn `lang`, trước nay trang này bỏ qua nó.
+  const params = (await searchParams) ?? {};
+  const cookieStore = await cookies();
+  const requestedLang = firstParam(params.lang);
+  const savedLang = cookieStore.get("ninh-binh-lang")?.value;
+  const lang: "vi" | "en" =
+    requestedLang === "en" || (!requestedLang && savedLang === "en")
+      ? "en"
+      : "vi";
+
+  const surfaceAttributes = getExperienceSurfaceAttributes(environment, {
+    customerBookingEnabled: isCustomerBookingEnabled(),
+  });
+
   return (
-    <main className="min-h-screen bg-[#f4f0e7] text-[#151a17]">
+    <main
+      {...surfaceAttributes}
+      className="min-h-screen bg-[#f4f0e7] text-[#151a17]"
+    >
       <header className="border-b border-[#d7d5cd] bg-[#fbfaf6]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <Link
@@ -47,6 +80,7 @@ export default function PlanPage() {
         </p>
         <div className="mt-10">
           <PlanExperience
+            lang={lang}
             showDemoCommand={environment.config.voiceDemoFallbackEnabled}
             identityCollectionEnabled={
               process.env.CUSTOMER_IDENTITY_COLLECTION_ENABLED === "true"

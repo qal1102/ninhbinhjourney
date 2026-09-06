@@ -8,11 +8,15 @@ import type { ErpSite } from "@/domain/erp";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import type { FieldReport } from "@/lib/erp/field-report-repository";
 import { canSubmitFieldOperation } from "@/domain/erp-role-policy";
+import { summarizeFieldReports } from "@/domain/erp-field-report-summary";
 
 type Props = { site: ErpSite; user: CurrentErpUser; reports: FieldReport[] };
 
 export function FieldReportWorkspace({ site, user, reports }: Props) {
   const router = useRouter();
+  // `reports` là 50 lượt gần nhất của cơ sở, không phải của riêng hôm nay --
+  // nên ô "hôm nay" phải tự cắt theo ngày làm việc chứ không lấy độ dài mảng.
+  const summary = summarizeFieldReports(reports, new Date());
   const [selected, setSelected] = useState<FieldReport | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [savedMessage, setSavedMessage] = useState("");
@@ -56,7 +60,7 @@ export function FieldReportWorkspace({ site, user, reports }: Props) {
   return (
     <div className="space-y-5">
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[["Báo cáo hôm nay", reports.length + 21, "Theo ảnh và ca làm"], ["Đã xác nhận", 19, "Có người duyệt"], ["Đang xử lý", 4, "Theo deadline"], ["Thiếu bằng chứng", 1, "Quá hạn 26 phút"]].map(([label, value, note]) => <article key={label} className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm"><p className="text-xs text-[#6b7972]">{label}</p><p className="mt-2 text-2xl font-black text-[#203a30]">{value}</p><p className="mt-2 text-xs text-[#85918b]">{note}</p></article>)}
+        {[["Báo cáo hôm nay", summary.today, "Tính theo ngày làm việc"], ["Chờ xác nhận", summary.awaitingConfirmation, "Quản lý chưa duyệt"], ["Đã xác nhận", summary.confirmed, "Có người duyệt"], ["Thiếu ảnh hiện trường", summary.missingEvidence, "Chưa đính kèm bằng chứng"]].map(([label, value, note]) => <article key={label} className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm"><p className="text-xs text-[#6b7972]">{label}</p><p className="mt-2 text-2xl font-black text-[#203a30]">{value}</p><p className="mt-2 text-xs text-[#85918b]">{note}</p></article>)}
       </section>
 
       {canSubmitFieldOperation(user.role) ? <form onSubmit={submitReport} className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
@@ -77,6 +81,7 @@ export function FieldReportWorkspace({ site, user, reports }: Props) {
 
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Nhật ký có ảnh</p><h2 className="mt-2 text-2xl font-black text-[#20342c]">Báo cáo gần nhất</h2>
+        {reports.length === 0 ? <div className="mt-5 rounded-xl border border-[#e0e6e2] bg-[#f8faf8] p-5"><p className="font-black text-[#2d4138]">Chưa có báo cáo nào tại {site.shortName}.</p><p className="mt-2 text-sm leading-6 text-[#65756e]">{canSubmitFieldOperation(user.role) ? "Điền biểu mẫu phía trên kèm một ảnh hiện trường, báo cáo sẽ hiện ngay tại đây." : "Khi nhân viên nộp báo cáo kèm ảnh, chúng sẽ hiện tại đây."} Màn hình này không dựng báo cáo mẫu để lấp chỗ trống.</p></div> : null}
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{reports.map((report) => <button key={report.id} type="button" onClick={() => setSelected(report)} className="overflow-hidden rounded-2xl border border-[#dce3df] bg-white text-left transition hover:border-[#8ba99c]"><div className="aspect-[16/9] bg-cover bg-center" style={{ backgroundImage: `linear-gradient(180deg,transparent,rgba(8,24,18,.55)),url("${report.imageUrl ?? site.image}")` }} /><div className="p-4"><div className="flex items-center justify-between gap-2"><span className="text-xs font-black text-[#547166]">{report.id}</span><span className="text-xs text-[#7b8881]">{new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(report.createdAt))}</span></div><p className="mt-2 font-black text-[#2d4138]">{report.area}</p><p className="mt-1 text-xs text-[#6e7b75]">{report.task}</p><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#edf1ee]"><div className="h-full rounded-full bg-[#397a62]" style={{ width: `${report.progress}%` }} /></div></div></button>)}</div>
       </section>
 

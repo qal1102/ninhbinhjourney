@@ -338,20 +338,80 @@ for (const route of criticalRoutes) {
   });
 }
 
-test("NBJ-I06 production mode hides concept and demonstration controls", async ({
+/*
+ * Đọc lại cấu hình mà chính trang đang khai ra DOM. Hai thuộc tính này do
+ * `config/experience.ts#getExperienceSurfaceAttributes` sinh ra, dùng chung
+ * cho `/`, `/plan` và `/packages`, nên bài kiểm không phải đoán xem máy chủ
+ * đang chạy biến môi trường nào.
+ */
+async function readSurfaceConfig(page: import("@playwright/test").Page) {
+  const root = page.locator("[data-experience-mode]");
+  // Đúng một phần tử gốc được khai, không hơn: nếu một khối con nào đó cũng
+  // tự khai mode thì cả bài kiểm dưới đây đang đọc nhầm chỗ.
+  await expect(root).toHaveCount(1);
+  const mode = await root.getAttribute("data-experience-mode");
+  const checkout = await root.getAttribute("data-checkout-available");
+  expect(["client-demo", "production"]).toContain(mode);
+  expect(["true", "false"]).toContain(checkout);
+  return { mode, checkoutAvailable: checkout === "true" };
+}
+
+/*
+ * NBJ-I06. Bài này trước đây tên là "production mode hides concept and
+ * demonstration controls" và ĐỎ ở mọi đợt deploy suốt nhiều tháng, vì nó ôm
+ * một kỳ vọng cũ: hễ chạy trên production thì `NEXT_PUBLIC_EXPERIENCE_MODE`
+ * phải là `production`. Thực tế `vercel.json` cố ý build `client-demo` và bật
+ * `CUSTOMER_BOOKING_ENABLED` để luồng trình diễn và giữ chỗ chạy được — nút
+ * "Run demo command" và "Chọn gói" hiện ra là ĐÚNG ý chủ dự án. Một bài kiểm
+ * đỏ vĩnh viễn thì không ai còn nhìn nó nữa, và nó che mất lỗi thật; chính
+ * kiểu này đã đẻ ra một báo cáo "lỗi nghiêm trọng" sai trong dự án.
+ *
+ * Nay bài kiểm đọc cấu hình trang tự khai rồi khẳng định theo đúng nhánh đó.
+ * Cả hai nhánh đều có thể đỏ: khai `production` mà còn nút demo là sai, khai
+ * `client-demo` mà nút biến mất cũng sai.
+ *
+ * Hai khẳng định cũ trên `/` đã bỏ vì chúng không bao giờ đỏ được: chữ
+ * "Concept Collaborations" nằm trong `components/discovery/home-editorial.tsx`
+ * mà không file nào import, còn nhãn "Client demonstration" chỉ dựng ở
+ * `/explore`. Đếm trên trang chủ thì cả hai luôn bằng 0, bất kể cấu hình nào.
+ */
+test("NBJ-I06 public surfaces match the experience mode they declare", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(page.getByText("Concept Collaborations")).toHaveCount(0);
-  await expect(page.getByText(/Client demonstration/i)).toHaveCount(0);
+  // `domcontentloaded` chứ không chờ `load`: hai thuộc tính cần đọc đều do máy
+  // chủ dựng sẵn trong HTML, trong khi trang chủ còn kéo băng video nền nên sự
+  // kiện `load` có khi mãi không tới (cùng lý do đã ghi ở bài axe phía trên).
+  await page.goto("/plan", { waitUntil: "domcontentloaded" });
+  const plan = await readSurfaceConfig(page);
+  const demoCommand = page.getByRole("button", { name: "Run demo command" });
+  if (plan.mode === "production") {
+    await expect(demoCommand).toHaveCount(0);
+  } else {
+    // Nút nạp transcript mẫu là thứ giữ cho buổi trình diễn chạy được khi
+    // micro không dùng được. Mất nó trên bản demo là mất một đường lui.
+    await expect(demoCommand.first()).toBeAttached();
+  }
 
-  await page.goto("/plan");
-  await expect(
-    page.getByRole("button", { name: "Run demo command" }),
-  ).toHaveCount(0);
+  await page.goto("/packages", { waitUntil: "domcontentloaded" });
+  const packages = await readSurfaceConfig(page);
+  const choosePackage = page.getByRole("link", { name: /Chọn gói/i });
+  if (packages.checkoutAvailable) {
+    await expect(choosePackage.first()).toBeAttached();
+  } else {
+    await expect(choosePackage).toHaveCount(0);
+  }
+  // Chế độ trình diễn luôn kèm thanh toán sandbox, nên đã khai `client-demo`
+  // thì không có cách nào khoá đường đi tiếp của khách.
+  if (packages.mode === "client-demo") {
+    expect(packages.checkoutAvailable).toBe(true);
+  }
 
-  await page.goto("/packages");
-  await expect(page.getByRole("link", { name: /Chọn gói/i })).toHaveCount(0);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const home = await readSurfaceConfig(page);
+  // Ba bề mặt cùng đọc một hàm nên phải khai giống nhau. Lệch nhau nghĩa là
+  // có trang tự dựng logic riêng, đúng cái bẫy đã làm bài này đỏ trường kỳ.
+  expect(home.mode).toBe(plan.mode);
+  expect(home.checkoutAvailable).toBe(packages.checkoutAvailable);
 });
 
 test("discovery list mode works without waiting on the map", async ({

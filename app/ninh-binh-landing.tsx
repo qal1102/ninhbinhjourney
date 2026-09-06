@@ -15,6 +15,7 @@ import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
+import type { ExperienceSurfaceAttributes } from "@/config/experience";
 import { CONTACT as contactInfo } from "@/content/contact";
 
 export type Language = "en" | "vi";
@@ -96,6 +97,7 @@ type Props = {
   source: string;
   presentationMode: boolean;
   bookingEnabled: boolean;
+  surfaceAttributes: ExperienceSurfaceAttributes;
 };
 
 const TourismMap = dynamic(() => import("./tourism-map"), {
@@ -117,6 +119,12 @@ const copy = {
     title: "Ninh Binh",
     subtitle: "A journey between mountains, water and timeless heritage",
     footerNote: "Ninh Binh Journey · A journey between mountains, water and timeless heritage.",
+    /*
+     * TC-23: the only entry point for a guest who booked, closed the tab and
+     * now has nothing to show at the gate. It stays a quiet footer line on
+     * purpose -- no third navigation layer on this page.
+     */
+    footerLookup: "Already booked? Open your ticket again",
     begin: "Plan my journey",
     exploreMap: "Explore map",
     /*
@@ -301,6 +309,7 @@ const copy = {
     title: "Ninh Bình",
     subtitle: "Hành trình giữa núi, nước và di sản vượt thời gian",
     footerNote: "Ninh Bình Journey · Hành trình giữa núi, nước và di sản vượt thời gian.",
+    footerLookup: "Đã đặt chỗ rồi? Mở lại vé của bạn",
     begin: "Lập hành trình",
     exploreMap: "Khám phá bản đồ",
     heroPackagesCue: "Năm gói trải nghiệm đã dựng sẵn — giữ chỗ ngay bên dưới",
@@ -1540,6 +1549,7 @@ export default function NinhBinhLanding({
   source,
   presentationMode,
   bookingEnabled,
+  surfaceAttributes,
 }: Props) {
   const [lang, setLang] = useState<Language>(initialLang);
   const t = copy[lang];
@@ -1870,7 +1880,10 @@ export default function NinhBinhLanding({
   }
 
   return (
-    <main className="min-h-screen bg-[#FBFAF6] text-[#1D2925]">
+    <main
+      {...surfaceAttributes}
+      className="min-h-screen bg-[#FBFAF6] text-[#1D2925]"
+    >
       {/*
         INTRO -- KHONG CO DUONG BO QUA. Co y, theo yeu cau chu du an 05/08.
         Truoc day co ca nut "Bo qua intro" LAN bam-cho-nao-cung-tat.
@@ -2531,6 +2544,12 @@ export default function NinhBinhLanding({
 
       <footer className="border-t border-[#e2ded2] bg-[#FBFAF6] px-5 py-10 text-center sm:px-8">
         <p className="font-display text-lg text-[#183F34]">{t.footerNote}</p>
+        <a
+          href={`/tra-cuu-ve?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
+          className="mt-3 inline-block text-sm font-semibold text-[#356957] underline decoration-[#356957]/40 underline-offset-4 transition hover:text-[#183F34]"
+        >
+          {t.footerLookup}
+        </a>
       </footer>
 
       {/*

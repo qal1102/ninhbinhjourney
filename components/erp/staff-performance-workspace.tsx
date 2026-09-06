@@ -1,29 +1,144 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
 import type { ErpSite } from "@/domain/erp";
+import {
+  deriveShiftPresence,
+  type ShiftPresenceRow,
+} from "@/domain/erp-shift-presence";
+import type { AttendanceEvent } from "@/lib/erp/demo-session";
+import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 
-type Props = { site: ErpSite };
+/*
+ * Màn hình này từng hiển thị ba nhân viên KHÔNG CÓ THẬT, đủ họ tên, kèm
+ * "462 vé · 79,4 triệu", "12 triệu chờ đối soát" và một dòng "bình quân 3
+ * năm: 91%" trong khi hệ thống mới chạy hai tháng. Nó nằm giữa hai khối dữ
+ * liệu thật (bàn giao ca, phân quyền) nên mượn được vẻ đáng tin của hàng
+ * xóm, và mọi quản lý ở mọi cơ sở đều thấy đúng ba con người đó.
+ *
+ * Nay chỉ còn đúng câu hỏi mà dữ liệu hiện có trả lời được: ai được phân
+ * công ở đây, và hôm nay ai đã vào ca. Năng suất, doanh thu theo đầu người
+ * và tỉ lệ đúng hạn thì chưa có nguồn -- nói thẳng là chưa đo, đừng dựng số
+ * cho kín ô.
+ */
 
-const staff = [
-  { name: "Đỗ Thị Lan", role: "Nhân viên cổng vé", shift: "07:30–12:15", tasks: "7/8", progress: 88, deadline: "11:30", current: "Đối soát đoàn TA-018", completed: "Mở quầy; kiểm máy quét; xử lý 462 lượt QR; nộp 4 ảnh", tickets: "462 vé · 79,4 triệu", evidence: "4 ảnh · 1 biên bản", difference: "0 đ", status: "Đúng tiến độ" },
-  { name: "Nguyễn Văn Hải", role: "Điều phối bến", shift: "07:00–13:00", tasks: "5/7", progress: 71, deadline: "10:45", current: "Lắp biển phân luồng số 4", completed: "Kiểm tra 3 tuyến; bàn giao 12 thuyền; nộp 3 ảnh", tickets: "Không bán vé", evidence: "3 ảnh · GPS đủ", difference: "Không áp dụng", status: "Nguy cơ trễ" },
-  { name: "Trần Minh Anh", role: "Kinh doanh đoàn", shift: "08:00–17:00", tasks: "6/6", progress: 100, deadline: "10:30", current: "Chờ phản hồi khách FB-281", completed: "Gửi 3 báo giá; xác nhận đoàn 42 khách; cập nhật 2 hợp đồng", tickets: "118 vé · 16,2 triệu", evidence: "3 báo giá · 2 email", difference: "12 triệu chờ đối soát", status: "Hoàn thành" },
-] as const;
+type Props = {
+  site: ErpSite;
+  directory: readonly ErpStaffDirectoryEntry[];
+  attendance: readonly AttendanceEvent[];
+};
 
-const summaries = {
-  day: ["84/89", "92%", "96%", "2"],
-  week: ["428/446", "94%", "95%", "7"],
-  month: ["1.842/1.906", "96%", "93%", "18"],
-  year: ["12.486/12.972", "97%", "92%", "64"],
+const STATE_STYLE = {
+  "on-shift": { label: "Đang trong ca", className: "bg-[#dff1e8] text-[#246249]" },
+  "off-shift": { label: "Đã tan ca", className: "bg-[#eef1ef] text-[#5c6b64]" },
+  "not-started": { label: "Chưa vào ca", className: "bg-[#fdf0dd] text-[#8a5e30]" },
 } as const;
 
-export function StaffPerformanceWorkspace({ site }: Props) {
-  const [period, setPeriod] = useState<keyof typeof summaries>("day");
-  const values = summaries[period];
-  return <section className="space-y-5">
-    <div className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Nhân sự & công việc</p><h2 className="mt-2 text-2xl font-black text-[#20342c]">Ca làm tại {site.shortName}</h2></div><div className="grid grid-cols-4 rounded-xl bg-[#f0f4f1] p-1">{(["day", "week", "month", "year"] as const).map((item) => <button type="button" key={item} onClick={() => setPeriod(item)} className={`min-h-9 rounded-lg px-2 text-xs font-black ${period === item ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}>{item === "day" ? "Ngày" : item === "week" ? "Tuần" : item === "month" ? "Tháng" : "Năm"}</button>)}</div></div><div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">{[["Có mặt / kế hoạch", values[0], "Theo chấm công GPS"], ["Đúng giờ", values[1], "Bình quân 3 năm: 91%"], ["Việc đúng deadline", values[2], "Theo nhật ký công việc"], ["Việc có nguy cơ trễ", values[3], "Quản lý đã nhận cảnh báo"]].map(([label, value, note]) => <article key={label} className="rounded-xl bg-[#f3f6f4] p-4"><p className="text-xs text-[#718078]">{label}</p><p className="mt-2 text-xl font-black">{value}</p><p className="mt-2 text-xs text-[#7b8881]">{note}</p></article>)}</div></div>
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(new Date(value));
+}
 
-    <div className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6"><p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Theo từng người</p><h2 className="mt-2 text-2xl font-black text-[#20342c]">Tiến độ, kết quả và bằng chứng</h2><div className="mt-5 space-y-3">{staff.map((employee) => <details key={employee.name} className="rounded-xl border border-[#e0e6e2] open:border-[#91aa9f]"><summary className="grid cursor-pointer list-none gap-3 p-4 sm:grid-cols-[1fr_0.55fr_0.55fr_auto] sm:items-center"><div><p className="font-black text-[#2d4138]">{employee.name}</p><p className="mt-1 text-xs text-[#7b8881]">{employee.role} · {employee.shift}</p></div><div><p className="text-xs text-[#7b8881]">Công việc</p><p className="mt-1 font-black">{employee.tasks}</p></div><div><p className="text-xs text-[#7b8881]">Tiến độ</p><p className="mt-1 font-black">{employee.progress}%</p></div><span className={`w-fit rounded-full px-2.5 py-1 text-xs font-black ${employee.status === "Nguy cơ trễ" ? "bg-[#ffe4de] text-[#934336]" : "bg-[#dff1e8] text-[#246249]"}`}>{employee.status}</span></summary><div className="border-t border-[#e6ebe8] bg-[#f8faf8] p-4 sm:p-5"><div className="h-1.5 overflow-hidden rounded-full bg-[#e7ece9]"><div className={`h-full rounded-full ${employee.progress < 80 ? "bg-[#c46c50]" : "bg-[#397a62]"}`} style={{ width: `${employee.progress}%` }} /></div><dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3"><div><dt className="text-xs text-[#7b8881]">Đang làm · hạn {employee.deadline}</dt><dd className="mt-1 font-black">{employee.current}</dd></div><div><dt className="text-xs text-[#7b8881]">Đã hoàn thành</dt><dd className="mt-1 font-bold">{employee.completed}</dd></div><div><dt className="text-xs text-[#7b8881]">Vé & doanh thu ghi nhận</dt><dd className="mt-1 font-bold">{employee.tickets}</dd></div><div><dt className="text-xs text-[#7b8881]">Bằng chứng</dt><dd className="mt-1 font-bold">{employee.evidence}</dd></div><div><dt className="text-xs text-[#7b8881]">Chênh lệch cuối ca</dt><dd className="mt-1 font-bold">{employee.difference}</dd></div><div><dt className="text-xs text-[#7b8881]">Mã hạch toán</dt><dd className="mt-1 font-mono font-bold">OPS-{site.id.toUpperCase()}-SHIFT</dd></div></dl></div></details>)}</div></div>
-  </section>;
+function presenceNote(row: ShiftPresenceRow) {
+  if (!row.latestAt) return "Hôm nay chưa chấm công tại cơ sở này";
+  const time = formatTime(row.latestAt);
+  const suffix = row.demoLocation ? " · vị trí mô phỏng" : "";
+  return row.state === "on-shift"
+    ? `Vào ca lúc ${time}${suffix}`
+    : `Tan ca lúc ${time}${suffix}`;
+}
+
+export function StaffPerformanceWorkspace({ site, directory, attendance }: Props) {
+  const { rows, summary } = deriveShiftPresence({
+    directory,
+    events: attendance,
+    siteId: site.id,
+    at: new Date(),
+  });
+
+  return (
+    <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+      <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
+        Nhân sự & công việc
+      </p>
+      <h2 className="mt-2 text-2xl font-black text-[#20342c]">
+        Ca làm tại {site.shortName}
+      </h2>
+      <p className="mt-2 text-sm text-[#65756e]">
+        Đọc từ phân công tài khoản và lượt chấm công hôm nay tại cơ sở này.
+      </p>
+
+      {summary.assigned === 0 ? (
+        <div className="mt-5 rounded-xl border border-[#e0e6e2] bg-[#f8faf8] p-5">
+          <p className="font-black text-[#2d4138]">
+            Chưa ai được phân công vào {site.shortName}.
+          </p>
+          <p className="mt-2 text-sm leading-6 text-[#65756e]">
+            Cấp vai trò cho một tài khoản tại màn hình Tài khoản &amp; phân
+            quyền, người đó sẽ hiện ở đây ngay. Màn hình này không dựng nhân
+            sự mẫu để lấp chỗ trống.
+          </p>
+          <Link
+            href="/erp/tai-khoan"
+            className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-[#183f34] px-4 text-sm font-black text-white"
+          >
+            Mở Tài khoản &amp; phân quyền
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[
+              ["Được phân công", summary.assigned, "Tài khoản đang hoạt động"],
+              ["Đang trong ca", summary.onShift, "Đã chấm vào, chưa chấm ra"],
+              ["Đã tan ca", summary.finished, "Đã chấm ra hôm nay"],
+              ["Chưa vào ca", summary.notStarted, "Hôm nay chưa chấm công"],
+            ].map(([label, value, note]) => (
+              <article key={String(label)} className="rounded-xl bg-[#f3f6f4] p-4">
+                <p className="text-xs text-[#718078]">{label}</p>
+                <p className="mt-2 text-xl font-black">{value}</p>
+                <p className="mt-2 text-xs text-[#7b8881]">{note}</p>
+              </article>
+            ))}
+          </div>
+
+          <ul className="mt-5 space-y-2">
+            {rows.map((row) => {
+              const style = STATE_STYLE[row.state];
+              return (
+                <li
+                  key={row.accountId}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e0e6e2] p-4"
+                >
+                  <div>
+                    <Link
+                      href={`/erp/ho-so/${row.accountId}`}
+                      className="font-black text-[#2d4138] underline-offset-2 hover:underline"
+                    >
+                      {row.displayName}
+                    </Link>
+                    <p className="mt-1 text-xs text-[#7b8881]">
+                      {row.jobTitle} · {presenceNote(row)}
+                    </p>
+                  </div>
+                  <span
+                    className={`w-fit rounded-full px-2.5 py-1 text-xs font-black ${style.className}`}
+                  >
+                    {style.label}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+
+      <p className="mt-5 border-t border-[#e6ebe8] pt-4 text-xs leading-5 text-[#7b8881]">
+        Năng suất theo đầu người, doanh thu từng nhân viên và tỉ lệ đúng hạn
+        chưa có nguồn dữ liệu, nên chưa hiển thị ở đây. Tiến độ từng việc xem
+        tại Chấm công &amp; phiếu việc.
+      </p>
+    </section>
+  );
 }

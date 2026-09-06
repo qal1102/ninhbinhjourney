@@ -343,7 +343,11 @@ export function ModuleWorkspace({
           colleagues={shiftHandoverColleagues(access, site.id, user.id)}
           businessDate={vietnamBusinessDate()}
         />
-        <StaffPerformanceWorkspace site={site} />
+        <StaffPerformanceWorkspace
+          site={site}
+          directory={staffDirectory}
+          attendance={attendance}
+        />
         <StaffAccessManager
           site={site}
           user={user}

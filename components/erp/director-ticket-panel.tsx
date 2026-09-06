@@ -199,6 +199,21 @@ export function DirectorTicketPanel({
               cả — gộp chung vào là ra một con số không có thật.
             </p>
           </div>
+
+          {/* Không giấu phần dữ liệu mẫu đi. Giám đốc thấy 0 vé mà biết kho
+              vẫn có mấy tấm thì con số 0 kia mới đọc được; giấu đi thì chính
+              sự vênh ấy làm người ta nghi màn hình hỏng. */}
+          {overview.demoSeedTickets30d > 0 ? (
+            <p className="mt-4 rounded-xl border border-[#e6d6b4] bg-[#fdf8ec] p-4 text-xs leading-5 text-[#6c5a34]">
+              Kho vé còn{" "}
+              <strong>
+                {overview.demoSeedTickets30d.toLocaleString("vi-VN")} tấm vé mẫu
+              </strong>{" "}
+              gieo sẵn từ lúc dựng hệ thống. Chúng không được tính vào bất kỳ con
+              số nào ở trên, kể cả biểu đồ khách đến từ đâu. Nhân viên vẫn dùng
+              chúng để tập quét ở cổng.
+            </p>
+          ) : null}
         </div>
       </div>
     </section>

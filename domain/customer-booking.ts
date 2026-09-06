@@ -182,3 +182,63 @@ export function mergeProductSlotRows(
     })
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
+
+/**
+ * TC-23 — lấy lại vé bằng mã đặt chỗ cộng liên hệ đã dùng khi đặt.
+ *
+ * Hai ô, không một ô. Chỉ mã đặt chỗ thì chưa đủ: mã hiện trên màn hình, chụp
+ * lại được, nhìn qua vai cũng đọc được. Ai đoán trúng một mã mà mở được vé
+ * người khác thì cả luồng vé mất nghĩa.
+ */
+export const CustomerTicketLookupRequestSchema = z
+  .object({
+    order_code: z.string().trim().min(4).max(40),
+    contact: z.string().trim().min(6).max(160),
+  })
+  .strict();
+
+/**
+ * Đưa mã khách gõ về đúng khuôn máy chủ lưu: `NBJ-` cộng 12 ký tự.
+ *
+ * Khách chép mã từ màn hình, từ ảnh chụp, từ tin nhắn gửi cho người nhà — nên
+ * dấu cách, chữ thường và cái gạch nối bị rơi mất đều là chuyện thường. Nhận
+ * hết những dạng đó rồi tự nắn lại, thay vì bắt khách gõ đúng từng ký tự.
+ *
+ * Trả `null` khi không nắn nổi. Chỗ gọi phải hiểu đây là "gõ chưa đúng khuôn",
+ * KHÔNG phải "không có mã này" — hai câu ấy nói hai chuyện khác hẳn nhau.
+ */
+export function normalizeCustomerOrderCode(raw: string): string | null {
+  const compact = raw.trim().toUpperCase().replace(/[\s.–—-]/g, "");
+  const body = compact.startsWith("NBJ") ? compact.slice(3) : compact;
+  return /^[A-Z0-9]{12}$/.test(body) ? `NBJ-${body}` : null;
+}
+
+export type CustomerTicketLookupTicket = {
+  ticketId: string;
+  ticketCode: string;
+  siteId: string;
+  validOn: string;
+  entriesAllowed: number;
+  entriesUsed: number;
+  guestGroup: "adult" | "child" | "group";
+  status: "issued" | "partially-used" | "used" | "void";
+};
+
+export type CustomerTicketLookupResult =
+  | { found: false; throttled: boolean }
+  | {
+      found: true;
+      throttled: false;
+      orderCode: string;
+      productId: string;
+      visitDate: string;
+      partySize: number;
+      adults: number | null;
+      children: number | null;
+      totalVnd: number;
+      currency: "VND";
+      paymentMode: "simulation" | "pay-on-site" | null;
+      paymentStatus: "succeeded" | "pending" | null;
+      amountDueVnd: number;
+      tickets: CustomerTicketLookupTicket[];
+    };

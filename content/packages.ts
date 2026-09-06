@@ -1,11 +1,29 @@
 import { CORE_IDS } from "@/config/experience";
 
+/**
+ * Ai đi cùng ai — dạng có cấu trúc của đúng câu `audience` ngay bên dưới.
+ *
+ * `audience` là chữ viết cho khách đọc, mỗi gói một kiểu ("Lần đầu đến Ninh
+ * Bình", "Gia đình có trẻ em"…). Dò từ khoá trong câu chữ đó để đoán ra
+ * người đi cùng thì mong manh: đổi một chữ trong copy là phép ghép hỏng mà
+ * không ai hay. `companionFit` khai thẳng điều `audience` đang nói, để
+ * `domain/package-match.ts` so khớp trên dữ liệu chứ không trên văn xuôi.
+ * Sửa `audience` thì sửa luôn dòng này cho khớp.
+ */
+export type PackageCompanionGroup =
+  | "solo"
+  | "couple"
+  | "adults"
+  | "children"
+  | "seniors";
+
 export type PackageCatalogItem = {
   id: string;
   regionId: string;
   slug: string;
   name: string;
   audience: string;
+  companionFit: readonly PackageCompanionGroup[];
   durationLabel: string;
   durationMinutes: number;
   pace: "relaxed" | "balanced" | "active";
@@ -36,6 +54,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     slug: "heritage-day",
     name: "Di sản trong một ngày",
     audience: "Lần đầu đến Ninh Bình",
+    companionFit: ["solo", "couple", "adults"],
     durationLabel: "1 ngày",
     durationMinutes: 600,
     pace: "balanced",
@@ -63,6 +82,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     slug: "slow-ninh-binh",
     name: "Nhịp chậm Ninh Bình",
     audience: "Bố mẹ/người lớn tuổi, ít đi bộ",
+    companionFit: ["seniors"],
     durationLabel: "1 ngày",
     durationMinutes: 540,
     pace: "relaxed",
@@ -86,6 +106,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     slug: "family-discovery",
     name: "Gia đình khám phá",
     audience: "Gia đình có trẻ em",
+    companionFit: ["children"],
     durationLabel: "1 ngày",
     durationMinutes: 600,
     pace: "balanced",
@@ -109,6 +130,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     slug: "cinematic-sunset",
     name: "Cinematic Ninh Bình",
     audience: "Nhiếp ảnh/cặp đôi",
+    companionFit: ["couple", "solo"],
     durationLabel: "Nửa ngày + tối",
     durationMinutes: 420,
     pace: "active",
@@ -132,6 +154,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     slug: "ban-trang-tam-coc-2026",
     name: "Bàn Trăng bên Ngô Đồng",
     audience: "Hai người muốn khép ngày Tam Cốc bằng một bàn tối riêng",
+    companionFit: ["couple"],
     durationLabel: "19:00–21:30 · mùa trăng 2026",
     durationMinutes: 150,
     pace: "relaxed",

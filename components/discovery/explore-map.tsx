@@ -2,7 +2,8 @@
 
 import L from "leaflet";
 import { useEffect, useMemo } from "react";
-import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, useMap } from "react-leaflet";
+import { MapTiles } from "@/components/shared/map-tiles";
 import type { DestinationCatalogItem } from "@/content/destinations";
 
 type ExploreMapProps = {
@@ -109,10 +110,7 @@ export default function ExploreMap({
     >
       <InvalidateOnResize />
       <FitToDestinations destinations={destinations} />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <MapTiles />
       {destinations.map((destination) => (
         <Marker
           key={destination.id}

@@ -246,6 +246,16 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                       <span className="font-mono text-xs font-black text-[#718078]">
                         {incident.id}
                       </span>
+                      {/* Hồ sơ gieo mẫu và cặn chạy thử vẫn ở lại đây để nhân
+                          viên còn cái mà tập, nhưng phải nhìn ra ngay. Chúng
+                          đã bị loại khỏi khối "Cần giám đốc quyết định". */}
+                      {incident.dataOrigin !== "real" ? (
+                        <span className="rounded-full bg-[#fdf0dd] px-2 py-0.5 text-[10px] font-black text-[#8a5e30]">
+                          {incident.dataOrigin === "demo-seed"
+                            ? "hồ sơ mẫu"
+                            : "cặn chạy thử"}
+                        </span>
+                      ) : null}
                     </div>
                     <div className="min-w-0">
                       <p className="font-black text-[#2c3e36]">

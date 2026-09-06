@@ -158,3 +158,37 @@ export function getExperiencePresentationFlags(
       environment.config.sandboxPaymentEnabled,
   };
 }
+
+export type ExperienceSurfaceAttributes = {
+  "data-experience-mode": ExperienceMode;
+  "data-checkout-available": "true" | "false";
+};
+
+/*
+ * Hai thuộc tính dành cho máy đọc, dán lên phần tử gốc của trang công khai
+ * để bài kiểm biết trang đang chạy cấu hình nào thay vì phải đoán theo tên
+ * môi trường. Không hiện chữ nào ra mắt khách.
+ *
+ * Hàm này không tự quyết định gì. Nó đọc lại `getExperiencePresentationFlags`
+ * ở ngay trên và nhận cờ đặt chỗ của khách từ bên gọi, rồi viết ra hai chuỗi.
+ * Cờ đặt chỗ phải truyền vào chứ không import: `isCustomerBookingEnabled` nằm
+ * trong `lib/customer-data/booking-repository.ts`, kéo theo cả client Supabase
+ * dùng khoá bí mật, mà file này thì `lib/supabase/client.ts` import xuống
+ * trình duyệt.
+ *
+ * `data-checkout-available` gộp đúng phép hợp mà `/packages` vẫn dùng để bật
+ * nút "Chọn gói": thanh toán sandbox của bản trình diễn, hoặc đặt chỗ thật qua
+ * CUSTOMER_BOOKING_ENABLED. Chỉ cần một trong hai là khách đi tiếp được.
+ */
+export function getExperienceSurfaceAttributes(
+  environment: PublicEnvironment,
+  options: { customerBookingEnabled: boolean },
+): ExperienceSurfaceAttributes {
+  const flags = getExperiencePresentationFlags(environment);
+  const checkoutAvailable =
+    flags.sandboxCheckout || options.customerBookingEnabled;
+  return {
+    "data-experience-mode": flags.clientDemo ? "client-demo" : "production",
+    "data-checkout-available": checkoutAvailable ? "true" : "false",
+  };
+}

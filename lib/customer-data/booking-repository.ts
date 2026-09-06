@@ -5,9 +5,14 @@ import type {
   CustomerBookingSlot,
   CustomerBookingTicket,
   CustomerProductSlotRow,
+  CustomerTicketLookupResult,
+  CustomerTicketLookupTicket,
 } from "@/domain/customer-booking";
 import { PACKAGES } from "@/content/packages";
-import { protectCustomerContact } from "@/lib/customer-data/identity-repository";
+import {
+  CustomerIdentityRepositoryError,
+  protectCustomerContact,
+} from "@/lib/customer-data/identity-repository";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 
@@ -91,6 +96,7 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_PAYMENT_MODE_INVALID", "INPUT_INVALID", "Cách trả tiền gửi lên chưa hợp lệ."],
     ["CUSTOMER_PAYMENT_CONTACT_REQUIRED", "CONTACT_REQUIRED", "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc."],
     ["CUSTOMER_PAYMENT_UNPAID_LIMIT", "UNPAID_LIMIT", "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp giúp em ạ."],
+    ["CUSTOMER_LOOKUP_INPUT_INVALID", "INPUT_INVALID", "Mã đặt chỗ hoặc liên hệ gõ chưa đúng khuôn ạ."],
   ];
   for (const [needle, code, safeMessage] of mappings) {
     if (message.includes(needle)) {
@@ -367,5 +373,105 @@ export async function listCustomer360BookingOrders(limit = 100): Promise<Custome
         }] : [];
       }),
     };
+  });
+}
+
+/**
+ * TC-23 — trả lại vé cho khách đã đặt, khi màn hình cũ không còn nữa.
+ *
+ * Hệ thống KHÔNG gửi được tin nhắn hay email xác nhận: phần gửi ra ngoài mới
+ * có hàng đợi mô phỏng, chưa đấu nhà cung cấp nào. Nên khách đóng tab là mất
+ * mã QR, và tới cổng không có gì đưa cho nhân viên quét. Lối tự tra cứu này là
+ * cách lấp chỗ đó mà không tốn một đồng dịch vụ nào.
+ *
+ * Ba điều phải giữ đúng, đọc kỹ trước khi sửa:
+ *
+ * 1. **Liên hệ đi qua đúng `protectCustomerContact`** — cùng hàm băm HMAC mà
+ *    lúc đặt chỗ đã dùng, nên hai bên sinh ra cùng một chuỗi. So chuỗi với
+ *    chuỗi, không bao giờ giải mã bản mã ra để đối chiếu.
+ * 2. **Sai mã và sai liên hệ trả về CÙNG một thứ** — `{ found: false }`. Chỗ
+ *    gọi tuyệt đối không được tách hai nhánh ấy ra thành hai câu khác nhau.
+ * 3. **Thời gian trả lời được kê cho bằng nhau** — tìm thấy hay không cũng
+ *    chờ đủ `LOOKUP_FLOOR_MS`. Không có nó thì một lần trả lời nhanh bất
+ *    thường tự khai rằng mã ấy chưa từng tồn tại.
+ */
+const LOOKUP_FLOOR_MS = 450;
+
+function lookupTicketsFromRow(value: unknown): CustomerTicketLookupTicket[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    return [{
+      ticketId: String(row.ticket_id),
+      ticketCode: String(row.ticket_code),
+      siteId: String(row.site_id),
+      validOn: String(row.valid_on),
+      entriesAllowed: Number(row.entries_allowed),
+      entriesUsed: Number(row.entries_used ?? 0),
+      guestGroup: guestGroupFrom(row.guest_group),
+      status: String(row.status) as CustomerTicketLookupTicket["status"],
+    }];
+  });
+}
+
+export async function lookupCustomerOrderTickets(input: {
+  orderCode: string;
+  contact: string;
+}): Promise<CustomerTicketLookupResult> {
+  const startedAt = Date.now();
+  const settle = async <T,>(result: T): Promise<T> => {
+    const remaining = LOOKUP_FLOOR_MS - (Date.now() - startedAt);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+    return result;
+  };
+
+  let protectedContact: ReturnType<typeof protectCustomerContact>;
+  try {
+    protectedContact = protectCustomerContact(input.contact);
+  } catch (error) {
+    // Liên hệ gõ sai khuôn là chuyện của ô nhập, không phải chuyện của đơn nào
+    // cả — câu này không hé lộ một mã đặt chỗ nào có thật hay không.
+    if (error instanceof CustomerIdentityRepositoryError && error.code === "INPUT_INVALID") {
+      throw new CustomerBookingRepositoryError(error.message, "INPUT_INVALID");
+    }
+    throw error instanceof CustomerIdentityRepositoryError
+      ? new CustomerBookingRepositoryError(error.message, "CONFIGURATION_MISSING")
+      : new CustomerBookingRepositoryError(
+          "Bạn nhập giúp em số điện thoại hoặc email đã dùng lúc đặt ạ.",
+          "INPUT_INVALID",
+        );
+  }
+
+  const { data, error } = await createAdminClient().rpc("customer_lookup_order_tickets", {
+    p_tenant_id: TENANT_ID,
+    p_order_code: input.orderCode,
+    p_identity_type: protectedContact.identityType,
+    p_identity_digest: protectedContact.digest,
+    p_occurred_at: new Date().toISOString(),
+  });
+  const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : undefined;
+  if (error || !row) throw mapRepositoryError(error);
+
+  if (row.found !== true) {
+    return settle({ found: false, throttled: row.throttled === true });
+  }
+  return settle({
+    found: true,
+    throttled: false,
+    orderCode: String(row.order_code),
+    productId: String(row.product_id),
+    visitDate: String(row.visit_date),
+    partySize: Number(row.party_size),
+    adults: row.adults === null || row.adults === undefined ? null : Number(row.adults),
+    children: row.children === null || row.children === undefined ? null : Number(row.children),
+    totalVnd: Number(row.total_vnd),
+    currency: "VND",
+    paymentMode: (row.payment_mode ?? null) as "simulation" | "pay-on-site" | null,
+    paymentStatus: (row.payment_status ?? null) as "succeeded" | "pending" | null,
+    amountDueVnd: Number(row.amount_due_vnd ?? 0),
+    tickets: lookupTicketsFromRow(row.tickets),
   });
 }

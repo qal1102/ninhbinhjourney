@@ -3,7 +3,8 @@
 import L from "leaflet";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
+import { MapTiles } from "@/components/shared/map-tiles";
 import type { Destination, DestinationId, Language, MapCopy } from "./ninh-binh-landing";
 
 type TourismMapProps = {
@@ -199,10 +200,7 @@ export default function TourismMap({
       <InvalidateOnResize />
       <MapFocus activeDestinationId={activeDestinationId} destinations={destinations} />
       <LocationControl copy={copy} onPosition={setUserPosition} />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <MapTiles />
       {userPosition ? (
         <Marker icon={visitorIcon} position={userPosition} title={copy.youAreHere}>
           <Tooltip direction="right" offset={[12, 0]} permanent>

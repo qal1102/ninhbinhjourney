@@ -7,9 +7,9 @@ import {
   Marker,
   Polyline,
   Popup,
-  TileLayer,
   useMap,
 } from "react-leaflet";
+import { MapTiles } from "@/components/shared/map-tiles";
 import { DESTINATIONS } from "@/content/destinations";
 
 export type RouteStop = {
@@ -94,10 +94,7 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
       zoom={11}
     >
       <FitToRoute stops={resolved} />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <MapTiles />
       <Polyline
         positions={resolved.map((stop) => stop.position)}
         pathOptions={{ color: "#e7c78d", weight: 3, dashArray: "6 5" }}

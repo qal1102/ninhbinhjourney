@@ -68,6 +68,14 @@ export type DirectorTicketOverview = {
   /** Doanh thu thật, chỉ của đơn đặt qua web đã xác nhận. Vé bán tại quầy chưa lưu giá ở đâu cả. */
   webRevenue30dVnd: number;
   webOrders30d: number;
+  /**
+   * Vé gieo mẫu trong ba mươi ngày, đã bị loại khỏi mọi con số phía trên.
+   *
+   * Không giấu đi: giám đốc mở màn hình thấy 0 vé mà kho lại có 8 tấm thì
+   * chính sự vênh ấy làm người ta nghi màn hình hỏng. Nói thẳng có bao nhiêu
+   * tấm mẫu và chúng không được tính, thì con số 0 kia mới đọc được.
+   */
+  demoSeedTickets30d: number;
   generatedAt: string;
 };
 
@@ -126,6 +134,7 @@ export async function getDirectorTicketOverview(
     byChannel: [],
     webRevenue30dVnd: 0,
     webOrders30d: 0,
+    demoSeedTickets30d: 0,
     generatedAt,
   };
   if (process.env.ERP_PERSISTENCE_MODE?.trim() !== "supabase") return empty;
@@ -134,16 +143,51 @@ export async function getDirectorTicketOverview(
   const client = createAdminClient();
   const siteUuids = siteIds.map((id) => ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[id]);
 
+  /**
+   * Cột `data_origin` đã có chưa?
+   *
+   * Nó đến từ migration `202609060060`, và migration ấy chưa áp được lên
+   * production. Nếu mã này cứ lọc theo cột chưa tồn tại thì PostgREST trả
+   * `42703` và **cả bảng vé của giám đốc tắt ngóm** — đổi một con số hơi sai
+   * lấy một màn hình trắng là lỗ vốn.
+   *
+   * Nên hỏi trước đúng một câu, rồi mới quyết. Chỉ nuốt đúng mã lỗi "không có
+   * cột ấy"; mọi lỗi khác vẫn ném ra như thường, vì im lặng nuốt lỗi kho dữ
+   * liệu là cách để một màn hình sai trông y như một màn hình đúng.
+   */
+  async function hasDataOriginColumn() {
+    const { error } = await client
+      .from("erp_tickets")
+      .select("data_origin", { count: "exact", head: true })
+      .eq("tenant_id", TENANT_ID);
+    if (!error) return true;
+    if (error.code === "42703") return false;
+    throw new TicketOverviewError("Không đọc được số vé đã bán.", { cause: error });
+  }
+
+  const originReady = await hasDataOriginColumn();
+
+  /**
+   * `origin` mặc định là `"real"`: mọi con số giám đốc đọc đều **loại vé gieo
+   * mẫu ra**. Truyền `"demo-seed"` chỉ để đếm riêng phần mẫu mà nói cho họ
+   * biết, chứ không bao giờ cộng vào.
+   */
   async function countTickets(
     range: TicketWindow,
-    filter?: { siteUuid?: string; channel?: string },
+    filter?: { siteUuid?: string; channel?: string; origin?: "real" | "demo-seed" },
   ) {
+    // Chưa có cột thì không tách được mẫu với thật. Trả 0 cho câu đếm phần
+    // mẫu, để màn hình im lặng bỏ dòng chú thích đi thay vì khai một con số
+    // nó không biết.
+    if (!originReady && filter?.origin === "demo-seed") return 0;
+
     let query = client
       .from("erp_tickets")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", TENANT_ID)
       .gte("issued_at", range.from.toISOString())
       .lt("issued_at", range.to.toISOString());
+    if (originReady) query = query.eq("data_origin", filter?.origin ?? "real");
     query = filter?.siteUuid
       ? query.eq("site_id", filter.siteUuid)
       : query.in("site_id", siteUuids);
@@ -155,7 +199,7 @@ export async function getDirectorTicketOverview(
     return count ?? 0;
   }
 
-  // Một mốc "bây giờ" duy nhất cho cả mười lăm câu đếm. Gọi `new Date()`
+  // Một mốc "bây giờ" duy nhất cho cả mười sáu câu đếm. Gọi `new Date()`
   // nhiều lần thì các cửa sổ lệch nhau vài mili giây, và một tấm vé phát
   // hành đúng lúc ấy có thể lọt vào hai cửa sổ hoặc rơi ra ngoài cả hai.
   const at = new Date();
@@ -177,6 +221,7 @@ export async function getDirectorTicketOverview(
     siteMonthCounts,
     channelCounts,
     webOrders,
+    demoSeedTickets30d,
   ] = await Promise.all([
     countTickets(today),
     countTickets(yesterday),
@@ -196,6 +241,7 @@ export async function getDirectorTicketOverview(
     ),
     Promise.all(CHANNELS.map((channel) => countTickets(month, { channel }))),
     readWebOrders(client, month),
+    countTickets(month, { origin: "demo-seed" }),
   ]);
 
   const windows: TicketWindowCount[] = [
@@ -247,6 +293,7 @@ export async function getDirectorTicketOverview(
     byChannel,
     webRevenue30dVnd: webOrders.revenueVnd,
     webOrders30d: webOrders.orderCount,
+    demoSeedTickets30d,
     generatedAt,
   };
 }

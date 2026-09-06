@@ -45,9 +45,38 @@ export type IncidentTimelineItem = {
   note: string;
 };
 
+/**
+ * Hồ sơ này là việc thật, dữ liệu gieo mẫu, hay cặn của một lượt chạy thử.
+ *
+ * Đo trên production 05/09/2026: cả 16 hồ sơ đều không phải việc thật — 12
+ * hàng gieo mẫu (8 trong đó chưa đóng) và 4 hàng cặn chạy thử. Tám hồ sơ chưa
+ * đóng ấy chảy thẳng vào khối "Cần giám đốc quyết định" ở trang chủ, nên giám
+ * đốc mở ERP ra thấy tám việc chờ mình quyết mà không việc nào có thật.
+ *
+ * Cách xử lý cố ý chia đôi: **màn hình nghiệp vụ vẫn giữ chúng** kèm nhãn, vì
+ * nhân viên cần hồ sơ để tập; còn **mọi con số gọi người ta ra quyết định thì
+ * loại chúng ra**. Gọi ai đó đi xử lý một việc không có thật là cách chắc nhất
+ * để lần sau họ bỏ qua một việc có thật.
+ */
+export type IncidentDataOrigin = "real" | "demo-seed" | "test-residue";
+
+const INCIDENT_DATA_ORIGINS: readonly IncidentDataOrigin[] = [
+  "real",
+  "demo-seed",
+  "test-residue",
+];
+
+function isIncidentDataOrigin(value: unknown): value is IncidentDataOrigin {
+  return (
+    typeof value === "string" &&
+    (INCIDENT_DATA_ORIGINS as readonly string[]).includes(value)
+  );
+}
+
 export type IncidentCase = {
   id: string;
   siteId: ErpSiteId;
+  dataOrigin: IncidentDataOrigin;
   title: string;
   area: string;
   summary: string;
@@ -218,6 +247,7 @@ function createSeedCases(siteId: ErpSiteId): IncidentCase[] {
     {
       id: `INC-${code}-071`,
       siteId,
+      dataOrigin: "demo-seed",
       title: "Khách cần hỗ trợ y tế tại cổng chính",
       area: "Cổng chính · Làn khách đoàn",
       summary:
@@ -250,6 +280,7 @@ function createSeedCases(siteId: ErpSiteId): IncidentCase[] {
     {
       id: `INC-${code}-069`,
       siteId,
+      dataOrigin: "demo-seed",
       title: "Dòng khách dồn tại điểm đón",
       area: "Điểm đón trung tâm · Làn số 2",
       summary:
@@ -281,6 +312,7 @@ function createSeedCases(siteId: ErpSiteId): IncidentCase[] {
     {
       id: `INC-${code}-064`,
       siteId,
+      dataOrigin: "demo-seed",
       title: "Đồ thất lạc đã bàn giao cho khách",
       area: "Quầy hỗ trợ khách",
       summary:
@@ -489,6 +521,7 @@ async function reportIncidentFromCameraInCookie(
   const created: IncidentCase = {
     id: `INC-${code}-CAM${Date.now()}`,
     siteId: input.siteId,
+    dataOrigin: "real",
     title: `Cảnh báo camera tại ${input.zone}`,
     area: input.zone,
     summary: `${input.note.trim() || "Camera AI ghi nhận bất thường tại khu vực này."} Mật độ ghi nhận: ${input.peopleCount} người.`,
@@ -543,6 +576,10 @@ function caseFromRow(row: Record<string, unknown>): IncidentCase | null {
   return {
     id: row.id as string,
     siteId,
+    // Mặc định `"real"` khi cột chưa có: `readSupabaseCases` dùng `select("*")`
+    // nên nó tự có mặt sau khi áp migration 202609060060, và trong quãng giữa
+    // thì màn hình vẫn chạy như cũ thay vì tắt ngóm.
+    dataOrigin: isIncidentDataOrigin(row.data_origin) ? row.data_origin : "real",
     title: row.title as string,
     area: row.area as string,
     summary: row.summary as string,
@@ -676,7 +713,16 @@ export async function listEscalatedIncidents(
   const bySite = await Promise.all(siteIds.map((siteId) => getIncidentCases(siteId)));
   return bySite
     .flat()
-    .filter((incident) => incident.escalated && incident.status !== "closed");
+    .filter(
+      (incident) =>
+        // Chỉ việc THẬT mới được gọi giám đốc ra quyết định. Trên production
+        // hôm nay cả tám hồ sơ chưa đóng đều là dữ liệu gieo mẫu, nên khối
+        // "Cần giám đốc quyết định" đang gọi người ta xử lý việc không có
+        // thật. Màn hình nghiệp vụ vẫn giữ chúng để nhân viên tập.
+        incident.dataOrigin === "real" &&
+        incident.escalated &&
+        incident.status !== "closed",
+    );
 }
 
 export async function transitionIncidentByManager(input: IncidentActionInput): Promise<IncidentCase> {

@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CONTACT } from "@/content/contact";
 import {
   parseJourneyIntent,
   REQUIRED_VIETNAMESE_SAMPLE,
 } from "@/domain/journey";
+import {
+  matchPackagesToIntent,
+  PACKAGE_MATCH_REASON_LABEL,
+  PACKAGE_NO_MATCH_LABEL,
+  type PackageMatchResult,
+} from "@/domain/package-match";
 import type {
   Itinerary,
   JourneyIntent,
   JourneyIntentDraft,
 } from "@/domain/models";
 import { ItineraryEditor } from "./itinerary-editor";
+
+type Language = "vi" | "en";
 
 type VoiceState =
   | "idle"
@@ -48,6 +58,154 @@ const examples = [
   "Gia đình tôi có 2 người lớn và 2 trẻ em, muốn một ngày cân bằng ở Ninh Bình.",
 ] as const;
 
+/*
+ * Chữ cho khối "gói hợp với bạn".
+ *
+ * Viết tiếng Việt trước rồi mới dịch sang tiếng Anh, theo đúng lối
+ * `content/destinations.ts` và `components/discovery/package-showcase.tsx`
+ * đang làm. Giọng phải giữ đúng mức khiêm tốn: đây là phép so khớp từ khoá
+ * có luật rõ ràng, không phải máy hiểu tiếng người, nên chữ trên màn hình
+ * không được hứa quá điều nó làm.
+ */
+const MATCH_COPY: Record<
+  Language,
+  {
+    eyebrow: string;
+    title: string;
+    emptyTitle: string;
+    method: string;
+    strong: string;
+    partial: string;
+    detail: string;
+    viewAll: string;
+    call: string;
+    emptyGuide: string;
+    emptyGeneric: string;
+  }
+> = {
+  vi: {
+    eyebrow: "Dựa trên điều bạn vừa kể",
+    title: "Gói hợp với bạn",
+    emptyTitle: "Lần này chưa có gói nào hợp",
+    method:
+      "Chúng tôi dò từ khoá trong câu bạn viết, rồi đối chiếu nhịp đi, thời lượng, người đi cùng với năm gói có sẵn. Giá đứng ngoài phép so này, vì giá trên trang gói mới chỉ là dữ liệu minh hoạ.",
+    strong: "Hợp rõ",
+    partial: "Hợp một phần",
+    detail: "Xem gói này",
+    viewAll: "Xem cả năm gói",
+    call: `Gọi ${CONTACT.phoneLabel}`,
+    emptyGuide:
+      "Mời bạn xem hết năm gói, hoặc gọi cho chúng tôi một tiếng để xếp riêng một ngày theo đúng ý bạn.",
+    emptyGeneric: "Chưa gói nào hợp với điều bạn vừa kể.",
+  },
+  en: {
+    eyebrow: "From what you just told us",
+    title: "Packages that fit",
+    emptyTitle: "Nothing fits this time",
+    method:
+      "We look for keywords in your sentence, then hold them against the pace, the length and the intended guests of the five packages we run. Price stays out of it: the figures on the package pages are illustrative.",
+    strong: "Close fit",
+    partial: "Partial fit",
+    detail: "See this package",
+    viewAll: "See all five packages",
+    call: `Call ${CONTACT.phoneLabel}`,
+    emptyGuide:
+      "Do look through all five packages, or give us a ring and we will lay out a day around what you described.",
+    emptyGeneric: "Nothing here fits what you just described.",
+  },
+};
+
+function PackageMatchPanel({
+  lang,
+  result,
+}: {
+  lang: Language;
+  result: PackageMatchResult;
+}) {
+  const copy = MATCH_COPY[lang];
+  const matched = result.matches.length > 0;
+
+  return (
+    <section
+      data-plan-package-match={matched ? "matched" : "empty"}
+      className="mt-7 border-t border-[#dedbd2] pt-7"
+    >
+      <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
+        {copy.eyebrow}
+      </p>
+      <h3 className="font-display mt-3 text-2xl text-[#183f34]">
+        {matched ? copy.title : copy.emptyTitle}
+      </h3>
+      <p className="mt-3 text-sm leading-6 text-[#59654b]">{copy.method}</p>
+
+      {matched ? (
+        <ul className="mt-5 grid gap-4">
+          {result.matches.map((match) => (
+            <li
+              key={match.slug}
+              data-plan-package-slug={match.slug}
+              className="rounded-2xl border border-[#dedbd2] bg-[#fbfaf6] p-4"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="font-display text-xl text-[#183f34]">
+                  {match.name}
+                </p>
+                <span className="rounded-full bg-[#eef3ef] px-3 py-1 text-xs font-bold text-[#356957]">
+                  {match.strength === "strong" ? copy.strong : copy.partial}
+                </span>
+              </div>
+              <ul className="mt-3 grid gap-1 text-sm leading-6">
+                {match.reasons.map((reason) => (
+                  <li key={reason}>
+                    · {PACKAGE_MATCH_REASON_LABEL[reason][lang]}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                data-customer-track="planner-package-match"
+                data-customer-content-id={match.item.id}
+                data-customer-content-type="package"
+                href={`/packages/${match.slug}?lang=${lang}`}
+                className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[#183f34] px-5 text-sm font-bold text-white"
+              >
+                {copy.detail}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="mt-4 rounded-2xl bg-[#f4f0e7] p-4 text-sm leading-6">
+          <p>
+            {result.noMatchReason
+              ? PACKAGE_NO_MATCH_LABEL[result.noMatchReason][lang]
+              : copy.emptyGeneric}
+          </p>
+          <p className="mt-2">{copy.emptyGuide}</p>
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link
+          data-customer-track="planner-packages-view-all"
+          data-customer-content-id="packages-catalog"
+          data-customer-content-type="secondary-cta"
+          href={`/packages?lang=${lang}`}
+          className="inline-flex min-h-11 items-center rounded-full border border-[#183f34] px-5 text-sm font-bold text-[#183f34]"
+        >
+          {copy.viewAll}
+        </Link>
+        <a
+          data-customer-track="planner-packages-call"
+          href={CONTACT.phoneHref}
+          className="inline-flex min-h-11 items-center rounded-full border border-[#c9ccc5] px-5 text-sm font-bold text-[#183f34]"
+        >
+          {copy.call}
+        </a>
+      </div>
+    </section>
+  );
+}
+
 /** Local (Asia/Ho_Chi_Minh) calendar date, offset by whole days. */
 function localDateInDays(offsetDays: number) {
   const now = new Date();
@@ -60,9 +218,11 @@ function localDateInDays(offsetDays: number) {
 export function PlanExperience({
   showDemoCommand,
   identityCollectionEnabled,
+  lang = "vi",
 }: {
   showDemoCommand: boolean;
   identityCollectionEnabled: boolean;
+  lang?: Language;
 }) {
   const [text, setText] = useState("");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
@@ -99,8 +259,29 @@ export function PlanExperience({
     persistence: "browser" | "demo" | "anonymous";
   } | null>(null);
 
+  // Ghép lại mỗi lần khách sửa một ô, chứ không chỉ lúc bấm "hiểu yêu cầu":
+  // khách chỉnh nhịp đi hay số người là thấy danh sách gói đổi theo ngay.
+  const packageMatch = useMemo(() => {
+    if (!draft) return null;
+    return matchPackagesToIntent({
+      pace,
+      durationMinutes,
+      party: { adults, children, seniors },
+      partyContext: draft.partyContext ?? [],
+      visitDate: visitDate || undefined,
+    });
+  }, [
+    draft,
+    pace,
+    durationMinutes,
+    adults,
+    children,
+    seniors,
+    visitDate,
+  ]);
+
   function parseText() {
-    const parsed = parseJourneyIntent({ text, locale: "vi" });
+    const parsed = parseJourneyIntent({ text, locale: lang });
     setDraft(parsed);
     // Resolved here rather than on mount: the date field only exists after this
     // click, so today's date never has to match server-rendered markup.
@@ -210,7 +391,7 @@ export function PlanExperience({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text,
-          locale: "vi",
+          locale: lang,
           durationMinutes,
           party: { adults, children, seniors },
           partyContext: draft.partyContext ?? [],
@@ -488,6 +669,9 @@ export function PlanExperience({
                 ? "Đang kiểm tra và lưu…"
                 : "Xác nhận và tạo hành trình"}
             </button>
+            {packageMatch ? (
+              <PackageMatchPanel lang={lang} result={packageMatch} />
+            ) : null}
           </div>
         ) : null}
 

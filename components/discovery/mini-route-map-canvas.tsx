@@ -2,7 +2,8 @@
 
 import L from "leaflet";
 import { useEffect, useMemo } from "react";
-import { MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, useMap } from "react-leaflet";
+import { MapTiles, TILE_FALLBACK_NOTE_STATIC } from "@/components/shared/map-tiles";
 import type { MiniRouteMapPoint } from "@/components/discovery/mini-route-map";
 
 const fallbackCenter: [number, number] = [20.2503, 105.897];
@@ -65,14 +66,12 @@ export default function MiniRouteMapCanvas({
       scrollWheelZoom={false}
       dragging={points.length > 1}
       zoomControl={points.length > 1}
-      attributionControl={false}
       className="h-full w-full"
     >
       <FitToPoints points={points} />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      {/* Bản đồ nhỏ chỉ ghim vị trí, không bấm vào từng điểm, nên lời nhắn
+          khi thiếu ảnh nền cũng nói đúng chừng đó. */}
+      <MapTiles fallbackNote={TILE_FALLBACK_NOTE_STATIC} />
       {points.length > 1 ? (
         <Polyline
           positions={path}

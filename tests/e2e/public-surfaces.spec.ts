@@ -47,7 +47,9 @@ async function prepareReadOnlyHome(page: import("@playwright/test").Page) {
 
 async function waitForHomeLayout(page: import("@playwright/test").Page) {
   await expect(page.getByTestId("opening-intro")).toHaveCount(0, {
-    timeout: 4000,
+    // Production can take longer than local to hydrate the server-rendered
+    // intro shell before it reads the already-seen session flag.
+    timeout: 12000,
   });
   await expect(page.locator("#seasonal-brand-atelier")).toHaveCount(1);
   await page.waitForLoadState("load");

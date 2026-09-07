@@ -141,10 +141,9 @@ export function BrandAtelier({
         if (copyElement) {
           gsap.fromTo(
             Array.from(copyElement.children),
-            { y: 34, opacity: 0.28 },
+            { y: 34 },
             {
               y: 0,
-              opacity: 1,
               stagger: 0.07,
               ease: "power2.out",
               scrollTrigger: {
@@ -205,8 +204,8 @@ export function BrandAtelier({
       if (copyElements.length) {
         timeline.fromTo(
           copyElements,
-          { y: 45, opacity: 0 },
-          { y: 0, opacity: 1, stagger: 0.06, ease: "power2.out" },
+          { y: 45 },
+          { y: 0, stagger: 0.06, ease: "power2.out" },
           0.28,
         );
       }
@@ -416,7 +415,7 @@ export function BrandAtelier({
                   <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.22em] text-[var(--atelier-accent)]">{item.kicker}</p>
                   <p className="font-display mt-4 text-5xl leading-[0.88] sm:text-6xl">{brand}</p>
                   <h4 className="font-display mt-4 text-2xl leading-tight sm:text-3xl">{story}</h4>
-                  <p className="mt-5 max-w-md text-[0.95rem] leading-7 opacity-68">{item.body}</p>
+                  <p className="mt-5 max-w-md text-[0.95rem] leading-7 opacity-80">{item.body}</p>
                   <span className="mt-7 inline-flex items-center gap-3 border-b border-current/28 pb-2 text-sm font-extrabold">
                     {item.editorialAction ?? copy.actions[item.action]}
                     <span aria-hidden="true" className="transition-transform duration-500 group-hover/chapter:translate-x-2">→</span>

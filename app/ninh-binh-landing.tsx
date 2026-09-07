@@ -169,11 +169,11 @@ const copy = {
     packagesTitle: "Five journeys, with the route and price mapped out.",
     packagesIntro:
       "Begin at Tràng An before the boats gather, or keep Tam Cốc for the late light. Each journey already has its timing, entry points and a clear way to reserve.",
-    packagesBookingNote: "Choose a date to test the reservation flow. No payment will be collected.",
+    packagesBookingNote: "Choose a date to continue your reservation. No payment will be collected.",
     packagesBookingNotePlain: "The routes and prices are ready to browse; online reservation is not yet open.",
     packagesCta: "View this package",
     packagesViewAll: "See all five packages",
-    packagesPricePerGuest: "per adult · demo",
+    packagesPricePerGuest: "per adult",
     // WEB-STRUCT-02: loi dat cho qua dien thoai, ngoai nut vao tung goi.
     // So/email that lay tu `content/contact.ts`, khong dat trong bang chu.
     packagesCallCta: "Call to reserve directly",
@@ -196,7 +196,7 @@ const copy = {
     storiesIntro:
       "Three stories to begin with. Read them slowly — these places have waited thousands of years, and they are in no hurry.",
     signatureStories: "Signature route",
-    hiddenGems: "The quiet corners few people know",
+    hiddenGems: "Quieter corners of Ninh Bình",
     hiddenGemsIntro:
       "Vân Long wetland, Am Tiên cave, Bích Động pagoda, Thái Vi temple. Quieter, and mostly missed by anyone giving Ninh Bình two days.",
     seeAllDestinations: "See all destinations",
@@ -208,7 +208,7 @@ const copy = {
      * moi.
      */
     featuredLabel: "Signature stops",
-    featuredTitle: "Six places every visitor mentions, before the other nine",
+    featuredTitle: "Six places to begin with, before the other nine",
     featuredIntro:
       "Trang An opens by boat, Hang Mua closes with 486 stone steps, and Hoa Lu Old Town holds onto its lantern light once the sun goes down. These are the six names that keep coming up when people talk about Ninh Bình — the full list of fifteen sits just below.",
     featuredCta: "See all fifteen destinations",
@@ -227,7 +227,7 @@ const copy = {
     partnersCategory2Title: "Commercial shoots",
     partnersCategory2Body: "Film and photo crews that need limestone peaks, caves and river settings.",
     partnersCategory3Title: "Seasonal partnership",
-    partnersCategory3Body: "Join a peak season, like the Mid-Autumn programme Ninh Bình Journey has just run.",
+    partnersCategory3Body: "Shape a seasonal programme for Ninh Bình.",
     partnersCall: "Call to discuss",
     partnersEmail: "Send a partnership email",
     /*
@@ -255,7 +255,7 @@ const copy = {
     zigzagCtaOfferPlain:
       "Describe what you have in mind in ordinary words; we will build the itinerary from there.",
     companionLabel: "Journey Builder",
-    companionTitle: "Build a route that feels human",
+    companionTitle: "Shape a day at your own pace",
     companionBody:
       "Tell us how many hours you have, who is coming, and whether water or mountains call you more. The route takes shape from there — and nothing is booked until you say so.",
     prompt: "Tell me what kind of journey you want...",
@@ -273,7 +273,7 @@ const copy = {
       "Boat journey, local lunch, private transfer, Bai Dinh visit and a lantern evening at Hoa Lu Old Town.",
     viewExperience: "View experience",
     reserve: "Reserve this experience",
-    checkoutTitle: "Simulated checkout",
+    checkoutTitle: "Reservation details",
     checkoutIntro: "Review the journey and payment options. No real payment is processed.",
     guests: "Guests",
     transport: "Private transfer",
@@ -333,11 +333,11 @@ const copy = {
     packagesTitle: "Năm hành trình đã có tuyến đi và mức giá rõ ràng.",
     packagesIntro:
       "Khởi hành ở Tràng An trước giờ đông thuyền, hoặc để Tam Cốc cho buổi chiều nhiều nắng. Mỗi hành trình đã có khung giờ, điểm vào và cách giữ chỗ rõ ràng.",
-    packagesBookingNote: "Chọn ngày để thử trọn luồng giữ chỗ. Website không thu tiền.",
+    packagesBookingNote: "Chọn ngày để tiếp tục giữ chỗ. Website không thu tiền.",
     packagesBookingNotePlain: "Tuyến đi và mức giá đã sẵn sàng để xem; đặt trực tuyến chưa mở.",
     packagesCta: "Xem gói này",
     packagesViewAll: "Xem cả năm gói",
-    packagesPricePerGuest: "mỗi người lớn · demo",
+    packagesPricePerGuest: "mỗi người lớn",
     packagesCallCta: "Gọi đặt chỗ trực tiếp",
     packagesEmailCta: "Gửi email đặt chỗ",
     packagesCallNote: "Muốn đặt qua điện thoại? Gọi thẳng cho Xuân Trường.",
@@ -358,12 +358,12 @@ const copy = {
     storiesIntro:
       "Ba câu chuyện để bắt đầu. Đọc chậm thôi — những nơi này đã chờ hàng nghìn năm, không vội.",
     signatureStories: "Tuyến nổi bật",
-    hiddenGems: "Những góc lặng ít người biết",
+    hiddenGems: "Những góc lặng của Ninh Bình",
     hiddenGemsIntro:
       "Đầm Vân Long, động Am Tiên, chùa Bích Động, đền Thái Vi. Vắng hơn, và phần lớn khách đi Ninh Bình hai ngày sẽ không kịp tới.",
     seeAllDestinations: "Xem tất cả điểm đến",
     featuredLabel: "Điểm đến nổi bật",
-    featuredTitle: "Trước khi đi hết mười lăm nơi, sáu chỗ này không thể bỏ qua",
+    featuredTitle: "Sáu nơi để bắt đầu, trước chín điểm còn lại",
     featuredIntro:
       "Tràng An mở đầu bằng thuyền, Hang Múa khép bằng 486 bậc đá, Phố cổ Hoa Lư giữ lại ánh đèn lồng cho lúc trời tối. Đây là sáu cái tên khách nào cũng nhắc tới khi rời Ninh Bình — muốn xem trọn cả mười lăm nơi, danh mục đầy đủ nằm ngay bên dưới.",
     featuredCta: "Xem toàn bộ mười lăm điểm đến",
@@ -376,7 +376,7 @@ const copy = {
     partnersCategory2Title: "Quay chụp thương mại",
     partnersCategory2Body: "Đoàn phim và ê-kíp ảnh cần bối cảnh núi đá vôi, hang động, sông nước.",
     partnersCategory3Title: "Tài trợ theo mùa",
-    partnersCategory3Body: "Đồng hành cùng mùa cao điểm, như chương trình Trung thu Ninh Bình Journey vừa triển khai.",
+    partnersCategory3Body: "Cùng xây dựng một chương trình theo mùa tại Ninh Bình.",
     partnersCall: "Gọi trao đổi hợp tác",
     partnersEmail: "Gửi email hợp tác",
     indexLabel: "Phần còn lại của bản đồ",
@@ -399,7 +399,7 @@ const copy = {
     zigzagCtaOfferPlain:
       "Bạn cứ nói mình muốn đi kiểu gì; chúng tôi dựng lịch trình từ đó.",
     companionLabel: "Bộ lập tuyến hành trình",
-    companionTitle: "Dựng một tuyến đi có nhịp người thật",
+    companionTitle: "Sắp một ngày theo nhịp của bạn",
     companionBody:
       "Kể chúng tôi nghe bạn có mấy giờ, đi cùng ai, thích nước hay thích núi hơn. Tuyến đi sẽ tự thành hình từ đó — và chưa có gì được giữ chỗ khi bạn chưa gật đầu.",
     prompt: "Bạn muốn một hành trình như thế nào...",
@@ -417,7 +417,7 @@ const copy = {
       "Đi thuyền, ăn trưa địa phương, xe riêng, thăm Bái Đính và buổi tối đèn lồng tại Phố cổ Hoa Lư.",
     viewExperience: "Xem trải nghiệm",
     reserve: "Giữ chỗ trải nghiệm",
-    checkoutTitle: "Thanh toán mô phỏng",
+    checkoutTitle: "Thông tin giữ chỗ",
     checkoutIntro: "Xem lại hành trình và phương thức thanh toán. Không xử lý thanh toán thật.",
     guests: "Số khách",
     transport: "Xe riêng",

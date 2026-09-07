@@ -338,15 +338,12 @@ select {
 }
 
 [data-atelier-chapter] [data-seasonal-card-copy] {
-  opacity: 0.72;
   transform: translateY(18px);
   transition:
-    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
     transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-atelier-chapter][data-in-view="true"] [data-seasonal-card-copy] {
-  opacity: 1;
   transform: translateY(0);
 }
 

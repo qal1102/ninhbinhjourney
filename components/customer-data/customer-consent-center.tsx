@@ -133,8 +133,14 @@ export function CustomerConsentCenter() {
     const node = bannerRef.current;
     if (!node) return;
     const previous = document.body.style.paddingBottom;
+    const root = document.documentElement;
+    const previousBannerOffset = root.style.getPropertyValue(
+      "--nbj-consent-banner-offset",
+    );
     const apply = () => {
-      document.body.style.paddingBottom = `${node.offsetHeight + 24}px`;
+      const offset = `${node.offsetHeight + 24}px`;
+      document.body.style.paddingBottom = offset;
+      root.style.setProperty("--nbj-consent-banner-offset", offset);
     };
     apply();
     const observer = new ResizeObserver(apply);
@@ -142,6 +148,11 @@ export function CustomerConsentCenter() {
     return () => {
       observer.disconnect();
       document.body.style.paddingBottom = previous;
+      if (previousBannerOffset) {
+        root.style.setProperty("--nbj-consent-banner-offset", previousBannerOffset);
+      } else {
+        root.style.removeProperty("--nbj-consent-banner-offset");
+      }
     };
   }, [ready, hasDecision, pathname]);
 

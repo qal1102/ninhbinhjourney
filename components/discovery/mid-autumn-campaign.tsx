@@ -12,7 +12,7 @@ const campaign = {
   vi: {
     eyebrow: "Rằm tháng Tám · 25.09.2026",
     title: "Trăng lên trên dòng Ngô Đồng.",
-    body: "Mùa trăng năm nay mở ra nhiều hơn một hộp bánh: một bàn tối bên sông, một đêm diễn giữa núi đá, một chuyến đi dành riêng cho hai người, hay một ý tưởng được cùng nhau làm thành hình.",
+    body: "Mùa trăng bắt đầu từ nhiều hơn một hộp bánh: một bàn bên sông, một chuyến đi cho hai người và những ý tưởng cho buổi tối.",
     primaryCta: "Khám phá theo dịp",
     planningCta: "Lên hành trình mùa trăng",
     collectionLabel: "Bộ quà mùa trăng 2026",
@@ -360,7 +360,7 @@ const campaign = {
       {
         id: "brand-atelier",
         eyebrow: "Biên tập hình ảnh · Ninh Bình 2026",
-        title: "Năm nhà mốt, một miền di sản.",
+        title: "Năm góc nhìn, một miền di sản.",
         body: "Năm cách nhìn đặt cạnh núi đá, mặt nước và mùa sen của Ninh Bình. Mỗi bộ hình giữ một nhịp riêng; càng đi sâu, câu chuyện càng ấm và gần với bàn tay làm nghề.",
         ratio: "portrait",
         layout: "atelier",
@@ -558,7 +558,7 @@ const campaign = {
       {
         id: "brand-atelier",
         eyebrow: "Editorial series · Ninh Binh 2026",
-        title: "Five houses, one heritage landscape.",
+        title: "Five perspectives, one heritage landscape.",
         body: "Five points of view set among Ninh Binh's limestone, water and lotus season. Each chapter keeps its own pace; the deeper we go, the closer the story comes to material and craft.",
         ratio: "portrait",
         layout: "atelier",

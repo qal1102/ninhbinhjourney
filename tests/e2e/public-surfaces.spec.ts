@@ -309,7 +309,7 @@ test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive
   await expect(campaign.getByRole("heading", { name: "Heritage, seen in another light." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Ninh Binh is an open invitation." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "When a house finds a landscape of its own." })).toBeVisible();
-  await expect(campaign.getByRole("heading", { name: "Five houses, one heritage landscape." })).toBeVisible();
+  await expect(campaign.getByRole("heading", { name: "Five perspectives, one heritage landscape." })).toBeVisible();
 
   const serviceLayouts = await campaign.locator("[data-seasonal-layout]").evaluateAll((layouts) =>
     layouts.map((layout) => layout.getAttribute("data-seasonal-layout")),
@@ -382,6 +382,75 @@ test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive
   await page.keyboard.press("Escape");
   await expect(contactDialog).toHaveCount(0);
   await expect(campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" })).toBeFocused();
+});
+
+test("mobile concierge remains above an undecided privacy banner", async ({ page }) => {
+  test.skip(
+    process.env.NBJ_E2E_CUSTOMER_IDENTITY !== "1",
+    "Consent management is disabled outside the customer-identity test environment.",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/customer-events", async (route) => {
+    await route.fulfill({ status: 204 });
+  });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("nbj-intro-played", "1");
+  });
+  await page.goto("/?lang=en", { waitUntil: "domcontentloaded" });
+  await waitForHomeLayout(page);
+
+  const banner = page.getByRole("complementary", { name: "Privacy choice" });
+  const trigger = page.getByRole("button", { name: "Open journey concierge" });
+  await expect(banner).toBeVisible();
+  await expect(trigger).toBeVisible();
+
+  const [bannerBox, triggerBox] = await Promise.all([
+    banner.boundingBox(),
+    trigger.boundingBox(),
+  ]);
+  expect(bannerBox).not.toBeNull();
+  expect(triggerBox).not.toBeNull();
+  expect(
+    triggerBox!.y + triggerBox!.height,
+    "Journey concierge must sit above the visible privacy banner at 390px.",
+  ).toBeLessThanOrEqual(bannerBox!.y);
+
+  await trigger.click();
+  await expect(
+    page.getByRole("dialog", { name: "Where would you like to go?" }),
+  ).toBeVisible();
+  await expect(banner).toBeVisible();
+});
+
+test("Brand Atelier has no serious or critical accessibility violations after settling", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await prepareReadOnlyHome(page);
+  await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
+  await waitForHomeLayout(page);
+
+  const atelier = page.locator("#seasonal-brand-atelier");
+  await atelier.scrollIntoViewIfNeeded();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        window.requestAnimationFrame(() =>
+          window.requestAnimationFrame(() => resolve()),
+        ),
+      ),
+  );
+
+  const results = await new AxeBuilder({ page })
+    .include("#seasonal-brand-atelier")
+    .withTags(["wcag2a", "wcag2aa"])
+    .analyze();
+  expect(
+    results.violations.filter(
+      (violation) =>
+        violation.impact === "critical" || violation.impact === "serious",
+    ),
+  ).toEqual([]);
 });
 
 test("cinematic panel uses local MP4 without embedded player controls", async ({ page }) => {

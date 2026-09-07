@@ -347,6 +347,18 @@ select {
   transform: translateY(0);
 }
 
+/*
+ * Privacy is the only required fixed decision on a first visit. Keeping the
+ * optional concierge FAB visible above that banner merely moves the collision
+ * into the hero CTA, so defer the FAB until the choice has been made. The
+ * inline journey index remains available in document order throughout.
+ */
+html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
 [data-atelier-chapter] button:hover .atelier-image,
 [data-atelier-chapter] button:focus-visible .atelier-image {
   filter: saturate(1.04) contrast(1.015);

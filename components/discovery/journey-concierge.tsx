@@ -326,7 +326,8 @@ export function JourneyConcierge({ lang }: { lang: Language }) {
             data-customer-track="journey-concierge-open"
             data-customer-content-id="journey-concierge"
             data-customer-content-type="navigation"
-            className="fixed bottom-[calc(0.75rem+var(--nbj-consent-banner-offset,0px))] right-3 z-[80] inline-flex min-h-12 max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full border border-white/25 bg-[#183F34] px-3.5 text-sm font-extrabold text-white shadow-[0_14px_42px_rgba(10,31,24,.3)] transition hover:bg-[#24594A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B96A] motion-reduce:transition-none max-[279px]:h-14 max-[279px]:w-14 max-[279px]:justify-center max-[279px]:p-0 sm:bottom-[calc(1.25rem+var(--nbj-consent-banner-offset,0px))] sm:right-5 sm:px-4"
+            data-journey-concierge-trigger
+            className="fixed bottom-3 right-3 z-[80] inline-flex min-h-12 max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full border border-white/25 bg-[#183F34] px-3.5 text-sm font-extrabold text-white shadow-[0_14px_42px_rgba(10,31,24,.3)] transition hover:bg-[#24594A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B96A] motion-reduce:transition-none max-[279px]:h-14 max-[279px]:w-14 max-[279px]:justify-center max-[279px]:p-0 sm:bottom-5 sm:right-5 sm:px-4"
           >
             <span
               aria-hidden="true"

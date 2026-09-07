@@ -384,7 +384,7 @@ test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive
   await expect(campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" })).toBeFocused();
 });
 
-test("mobile concierge remains above an undecided privacy banner", async ({ page }) => {
+test("mobile gives privacy the fixed layer before revealing the concierge", async ({ page }) => {
   test.skip(
     process.env.NBJ_E2E_CUSTOMER_IDENTITY !== "1",
     "Consent management is disabled outside the customer-identity test environment.",
@@ -392,6 +392,23 @@ test("mobile concierge remains above an undecided privacy banner", async ({ page
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route("**/api/customer-events", async (route) => {
     await route.fulfill({ status: 204 });
+  });
+  await page.route("**/api/customer-consents", async (route) => {
+    const body = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({
+      status: 202,
+      contentType: "application/json",
+      body: JSON.stringify({
+        accepted: true,
+        consent: {
+          product_analytics: body.product_analytics ? "granted" : "denied",
+          marketing_communications: "denied",
+          essential_service: "not-requested",
+          policy_version: "xuan-truong-analytics-draft-v1",
+          marketing_policy_version: "xuan-truong-marketing-draft-v1",
+        },
+      }),
+    });
   });
   await page.addInitScript(() => {
     window.sessionStorage.setItem("nbj-intro-played", "1");
@@ -402,24 +419,15 @@ test("mobile concierge remains above an undecided privacy banner", async ({ page
   const banner = page.getByRole("complementary", { name: "Privacy choice" });
   const trigger = page.getByRole("button", { name: "Open journey concierge" });
   await expect(banner).toBeVisible();
+  await expect(trigger).toBeHidden();
+
+  await banner.getByRole("button", { name: "Essential only" }).click();
+  await expect(banner).toBeHidden();
   await expect(trigger).toBeVisible();
-
-  const [bannerBox, triggerBox] = await Promise.all([
-    banner.boundingBox(),
-    trigger.boundingBox(),
-  ]);
-  expect(bannerBox).not.toBeNull();
-  expect(triggerBox).not.toBeNull();
-  expect(
-    triggerBox!.y + triggerBox!.height,
-    "Journey concierge must sit above the visible privacy banner at 390px.",
-  ).toBeLessThanOrEqual(bannerBox!.y);
-
   await trigger.click();
   await expect(
     page.getByRole("dialog", { name: "Where would you like to go?" }),
   ).toBeVisible();
-  await expect(banner).toBeVisible();
 });
 
 test("Brand Atelier has no serious or critical accessibility violations after settling", async ({

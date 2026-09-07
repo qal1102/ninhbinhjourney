@@ -580,7 +580,7 @@ export function MidAutumnCampaign({ lang, source }: { lang: Language; source: st
   const planHref = `/plan?lang=${lang}&source=${encodeURIComponent(campaignSource)}`;
 
   return (
-    <section id="mid-autumn" data-customer-section="home-mid-autumn" className="overflow-x-clip bg-[#17231f] pb-24 text-[#FBFAF6] sm:pb-32 lg:pb-40">
+    <section id="mid-autumn" data-customer-section="home-mid-autumn" className="scroll-mt-20 overflow-x-clip bg-[#17231f] pb-24 text-[#FBFAF6] sm:pb-32 lg:pb-40">
       <div className="border-y border-white/12 lg:grid lg:min-h-[88svh] lg:grid-cols-[0.78fr_1.22fr]">
         <div className="flex items-end bg-[#13251f] px-5 py-16 sm:px-8 sm:py-20 lg:py-24 lg:pl-[max(2rem,calc((100vw-80rem)/2))] lg:pr-12">
           <Reveal className="max-w-xl">

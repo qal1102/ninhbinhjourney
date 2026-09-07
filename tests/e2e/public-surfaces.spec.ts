@@ -21,6 +21,46 @@ async function clearIntroSession(page: import("@playwright/test").Page) {
   });
 }
 
+/**
+ * Keep public-home regression tests read-only even when they are pointed at
+ * production. The consent choice prevents the client tracker from emitting,
+ * while the route interception is a second line of defence against writes.
+ * Marking the intro as seen also lets layout assertions begin from a stable
+ * document rather than a six-second fixed overlay.
+ */
+async function prepareReadOnlyHome(page: import("@playwright/test").Page) {
+  await page.route("**/api/customer-events", async (route) => {
+    await route.fulfill({ status: 204 });
+  });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("nbj-intro-played", "1");
+    window.localStorage.setItem(
+      "nbj-customer-analytics-consent",
+      JSON.stringify({
+        product_analytics: "denied",
+        marketing_communications: "denied",
+        policy_version: "xuan-truong-analytics-draft-v1",
+      }),
+    );
+  });
+}
+
+async function waitForHomeLayout(page: import("@playwright/test").Page) {
+  await expect(page.getByTestId("opening-intro")).toHaveCount(0, {
+    timeout: 4000,
+  });
+  await expect(page.locator("#seasonal-brand-atelier")).toHaveCount(1);
+  await page.waitForLoadState("load");
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() =>
+        window.requestAnimationFrame(() => resolve()),
+      );
+    });
+  });
+}
+
 test("home intro keeps all four identity words with separated timing, then auto-dismisses with no skip control", async ({
   page,
 }) => {
@@ -93,21 +133,151 @@ test("home intro does not replay on reload or back-navigation within the same ta
   await expect(page.getByTestId("opening-intro")).toHaveCount(0);
 });
 
-test("home does not repeat the intro slogan and presents routes after the destination catalog", async ({
+test("home keeps tourism first and places seasonal brand stories after the journey tools", async ({
   page,
 }) => {
+  await prepareReadOnlyHome(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 4000 });
+  await waitForHomeLayout(page);
 
   const hero = page.locator("main > section").first();
   await expect(hero).not.toContainText("Thiên nhiên. Di sản. Kỳ quan.");
 
   const sectionOrder = await page
-    .locator("#destination-index, #curated-routes")
+    .locator(
+      "#destinations-highlights, #all-destinations, #destination-index, #curated-routes, #packages, #ai, #itinerary, #partnerships, #mid-autumn, #seasonal-luxury-campaign-archive, #seasonal-brand-atelier",
+    )
     .evaluateAll((sections) => sections.map((section) => section.id));
-  expect(sectionOrder).toEqual(["destination-index", "curated-routes"]);
+  expect(sectionOrder).toEqual([
+    "destinations-highlights",
+    "all-destinations",
+    "destination-index",
+    "curated-routes",
+    "packages",
+    "ai",
+    "itinerary",
+    "partnerships",
+    "mid-autumn",
+    "seasonal-luxury-campaign-archive",
+    "seasonal-brand-atelier",
+  ]);
   await expect(page.locator("#curated-routes .route-progress-track")).toHaveCount(1);
+});
+
+test("hero package cue and journey concierge lead to real chapters", async ({
+  page,
+}) => {
+  await prepareReadOnlyHome(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
+  await waitForHomeLayout(page);
+
+  const cue = page.locator('[data-customer-track="home-hero-packages"]');
+  await expect(cue).toHaveAttribute("href", "#packages");
+  await cue.click();
+  await expect(page).toHaveURL(/#packages$/);
+  await expect
+    .poll(() =>
+      page.locator("#packages").evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.top >= -2 && rect.top < window.innerHeight * 0.3;
+      }),
+    )
+    .toBe(true);
+
+  const trigger = page.getByRole("button", { name: "Open journey concierge" });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Where would you like to go?" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("link", { name: /First time in Ninh Binh/ })).toHaveAttribute(
+    "href",
+    "#destinations-highlights",
+  );
+  await expect(dialog.getByRole("link", { name: /Choose a ready-made package/ })).toHaveAttribute(
+    "href",
+    "#packages",
+  );
+  await expect(dialog.getByRole("link", { name: /Moon gifts and dinner/ })).toHaveAttribute(
+    "href",
+    "#mid-autumn",
+  );
+  await expect(dialog.getByRole("link", { name: /Concepts for brands/ })).toHaveAttribute(
+    "href",
+    "#seasonal-brand-atelier",
+  );
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+
+  await page.locator("#mid-autumn").evaluate((element) =>
+    element.scrollIntoView({ block: "start" }),
+  );
+  await expect(
+    page.locator('[data-customer-track="journey-index-mid-autumn"]'),
+  ).toHaveAttribute("aria-current", "location");
+
+  await page.locator("#seasonal-brand-atelier").evaluate((element) =>
+    element.scrollIntoView({ block: "start" }),
+  );
+  await expect(
+    page.locator('[data-customer-track="journey-index-seasonal-brand-atelier"]'),
+  ).toHaveAttribute("aria-current", "location");
+
+  await trigger.click();
+  await page.getByRole("dialog").getByRole("link", { name: /First time in Ninh Binh/ }).click();
+  await expect(page).toHaveURL(/#destinations-highlights$/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("home typography, package actions and animated chapters stay inside exact viewports", async ({
+  page,
+}) => {
+  test.slow();
+  await prepareReadOnlyHome(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  for (const width of [224, 320, 390, 1023, 1574]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
+    await waitForHomeLayout(page);
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+    expect(overflow, `horizontal overflow at ${width}px`).toBeLessThanOrEqual(1);
+
+    const chapterOrder = await page
+      .locator("#packages, #mid-autumn, #seasonal-brand-atelier")
+      .evaluateAll((sections) => sections.map((section) => section.id));
+    expect(chapterOrder).toEqual([
+      "packages",
+      "mid-autumn",
+      "seasonal-brand-atelier",
+    ]);
+
+    if (width === 1023 || width === 1574) {
+      const actions = page.locator(
+        '#packages a[data-customer-content-type="package"]',
+      );
+      await expect(actions).toHaveCount(5);
+      const withinCards = await actions.evaluateAll((links) =>
+        links.every((link) => {
+          const card = link.closest(".reveal-on-scroll");
+          if (!card) return false;
+          const linkRect = link.getBoundingClientRect();
+          const cardRect = card.getBoundingClientRect();
+          return (
+            linkRect.left >= cardRect.left - 1 &&
+            linkRect.right <= cardRect.right + 1 &&
+            linkRect.width > 0
+          );
+        }),
+      );
+      expect(withinCards, `package actions at ${width}px`).toBe(true);
+    }
+  }
 });
 
 test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive and a Hermès finale", async ({

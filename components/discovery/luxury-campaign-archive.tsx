@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type {
   BrowserCopy,
   SeasonalExperience,
@@ -25,6 +25,9 @@ export function LuxuryCampaignArchive({
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const pointerStartRef = useRef<number | null>(null);
+  const swipeHandledRef = useRef(false);
   const active = group.items[activeIndex] ?? group.items[0];
   const media = useMemo(
     () => active ? Array.from(new Set([active.image, ...(active.gallery ?? [])])) : [],
@@ -34,10 +37,16 @@ export function LuxuryCampaignArchive({
   if (!active) return null;
   const activeMedia = media[mediaIndex] ?? active.image;
 
-  function move(direction: -1 | 1) {
-    const next = (activeIndex + direction + group.items.length) % group.items.length;
+  function selectStory(next: number, nextDirection: -1 | 1) {
+    setDirection(nextDirection);
     setMediaIndex(0);
     setActiveIndex(next);
+  }
+
+  function move(nextDirection: -1 | 1) {
+    const next =
+      (activeIndex + nextDirection + group.items.length) % group.items.length;
+    selectStory(next, nextDirection);
   }
 
   return (
@@ -79,8 +88,7 @@ export function LuxuryCampaignArchive({
                   aria-pressed={selected}
                   aria-label={`${copy.selectStory}: ${item.title}`}
                   onClick={() => {
-                    setMediaIndex(0);
-                    setActiveIndex(index);
+                    selectStory(index, index >= activeIndex ? 1 : -1);
                   }}
                   className={`group flex min-h-[5.4rem] min-w-[9.8rem] items-center gap-3 px-4 text-left transition sm:min-w-[11rem] sm:px-5 xl:min-w-0 xl:px-3 ${selected ? "bg-[#F1E8D8] text-[#17120f]" : "text-white/72 hover:bg-white/[0.045] hover:text-white"}`}
                 >
@@ -99,7 +107,7 @@ export function LuxuryCampaignArchive({
       </div>
 
       <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-12 lg:gap-10 lg:py-20">
-        <aside className="order-2 lg:order-1 lg:col-span-4 lg:flex lg:min-h-[650px] lg:flex-col">
+        <aside key={active.id} aria-live="polite" aria-atomic="true" className="luxury-archive-copy order-2 lg:order-1 lg:col-span-4 lg:flex lg:min-h-[650px] lg:flex-col">
           <p className="text-[0.58rem] font-extrabold uppercase tracking-[0.24em] text-[#D6AA6D]">{active.kicker}</p>
           <p className="font-display mt-4 text-5xl leading-[0.86] sm:text-6xl">{brandName(active.title)}</p>
           <h4 className="font-display mt-5 max-w-sm text-2xl leading-tight text-white/86 sm:text-3xl">{active.title.split(" · ").slice(1).join(" · ")}</h4>
@@ -128,11 +136,34 @@ export function LuxuryCampaignArchive({
           <button
             type="button"
             data-luxury-stage
-            onClick={() => onOpen(active)}
+            onPointerDown={(event) => {
+              pointerStartRef.current = event.clientX;
+              swipeHandledRef.current = false;
+            }}
+            onPointerUp={(event) => {
+              const start = pointerStartRef.current;
+              pointerStartRef.current = null;
+              if (start === null) return;
+              const delta = event.clientX - start;
+              if (Math.abs(delta) < 48) return;
+              swipeHandledRef.current = true;
+              move(delta > 0 ? -1 : 1);
+            }}
+            onPointerCancel={() => {
+              pointerStartRef.current = null;
+            }}
+            onClick={(event) => {
+              if (swipeHandledRef.current) {
+                event.preventDefault();
+                swipeHandledRef.current = false;
+                return;
+              }
+              onOpen(active);
+            }}
             aria-label={`${copy.openDetail}: ${active.title}`}
-            className="group relative block aspect-[16/10] w-full overflow-hidden bg-[#27211d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D6AA6D]"
+            className="group relative block aspect-[16/10] w-full touch-pan-y overflow-hidden bg-[#27211d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D6AA6D]"
           >
-            <Image key={activeMedia} src={activeMedia} alt={active.title} fill priority={activeIndex === 0} sizes="(min-width: 1024px) 68vw, 100vw" className="luxury-archive-image object-cover" />
+            <Image key={`${activeMedia}-${direction}`} src={activeMedia} alt={active.title} fill sizes="(min-width: 1024px) 68vw, 100vw" className={`luxury-archive-image luxury-archive-image-${direction > 0 ? "next" : "previous"} object-cover`} />
             <span aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-white/12" />
             <span className="absolute bottom-5 right-5 grid h-12 w-12 place-items-center rounded-full border border-white/45 bg-black/15 text-xl text-white backdrop-blur transition duration-500 group-hover:rotate-45 group-hover:bg-white group-hover:text-black">↗</span>
           </button>

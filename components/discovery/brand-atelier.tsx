@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type {
   BrowserCopy,
   SeasonalExperience,
@@ -58,6 +60,7 @@ export function BrandAtelier({
   onOpen: (item: SeasonalExperience) => void;
 }) {
   const [currentId, setCurrentId] = useState(group.items[0]?.id ?? "");
+  const rootRef = useRef<HTMLElement>(null);
   const chapterRefs = useRef(new Map<string, HTMLElement>());
   const indexRef = useRef<HTMLElement>(null);
   const indexItemRefs = useRef(new Map<string, HTMLAnchorElement>());
@@ -92,6 +95,126 @@ export function BrandAtelier({
     });
   }, [currentId]);
 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (
+      !window.matchMedia(
+        "(min-width: 1024px) and (prefers-reduced-motion: no-preference)",
+      ).matches
+    ) {
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+    const ctx = gsap.context(() => {
+      const chapters = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          '[data-atelier-chapter]:not([data-atelier-finale="true"])',
+        ),
+      );
+
+      chapters.forEach((chapter, index) => {
+        const image = chapter.querySelector<HTMLElement>(".atelier-image");
+        const copyElement = chapter.querySelector<HTMLElement>(
+          "[data-seasonal-card-copy]",
+        );
+
+        if (image) {
+          gsap.fromTo(
+            image,
+            { yPercent: index % 2 === 0 ? -4 : 4, scale: 1.075 },
+            {
+              yPercent: index % 2 === 0 ? 4 : -4,
+              scale: 1.015,
+              ease: "none",
+              scrollTrigger: {
+                trigger: chapter,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 0.65,
+              },
+            },
+          );
+        }
+
+        if (copyElement) {
+          gsap.fromTo(
+            Array.from(copyElement.children),
+            { y: 34, opacity: 0.28 },
+            {
+              y: 0,
+              opacity: 1,
+              stagger: 0.07,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: chapter,
+                start: "top 82%",
+                end: "top 38%",
+                scrub: 0.5,
+              },
+            },
+          );
+        }
+      });
+
+      const finale = root.querySelector<HTMLElement>(
+        '[data-atelier-finale="true"]',
+      );
+      if (!finale) return;
+
+      const curtain = finale.querySelector<HTMLElement>("[data-atelier-curtain]");
+      const image = finale.querySelector<HTMLElement>(".atelier-image");
+      const word = finale.querySelector<HTMLElement>("[data-atelier-finale-word]");
+      const copyElements = finale.querySelectorAll<HTMLElement>(
+        "[data-atelier-finale-copy] > *",
+      );
+      const timeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: finale,
+          start: "top 86%",
+          end: "top 18%",
+          scrub: 0.65,
+        },
+      });
+
+      if (curtain) {
+        timeline.fromTo(
+          curtain,
+          { scaleX: 1 },
+          { scaleX: 0, transformOrigin: "right center", ease: "power3.inOut" },
+          0,
+        );
+      }
+      if (image) {
+        timeline.fromTo(
+          image,
+          { scale: 1.11, yPercent: -3 },
+          { scale: 1.015, yPercent: 3, ease: "none" },
+          0,
+        );
+      }
+      if (word) {
+        timeline.fromTo(
+          word,
+          { xPercent: -10, opacity: 0.08 },
+          { xPercent: 3, opacity: 0.82, ease: "power2.out" },
+          0.12,
+        );
+      }
+      if (copyElements.length) {
+        timeline.fromTo(
+          copyElements,
+          { y: 45, opacity: 0 },
+          { y: 0, opacity: 1, stagger: 0.06, ease: "power2.out" },
+          0.28,
+        );
+      }
+    }, root);
+
+    return () => ctx.revert();
+  }, [group.items]);
+
   const shellStyle = {
     "--atelier-surface": theme.surface,
     "--atelier-ink": theme.ink,
@@ -100,6 +223,7 @@ export function BrandAtelier({
 
   return (
     <section
+      ref={rootRef}
       id={`seasonal-${group.id}`}
       aria-labelledby={`seasonal-${group.id}-title`}
       data-atelier-current={currentId}
@@ -125,7 +249,24 @@ export function BrandAtelier({
         <p className="max-w-xl text-base leading-8 opacity-70 lg:justify-self-end lg:text-lg">{group.body}</p>
       </div>
 
-      <div className="sticky top-0 z-30 border-y border-current/12 bg-[color:var(--atelier-surface)]/90 backdrop-blur-xl transition-colors duration-700">
+      <div aria-hidden="true" className="atelier-marquee overflow-hidden border-y border-current/12 py-4 sm:py-5">
+        <div className="atelier-marquee-track flex w-max">
+          {[0, 1].map((copyIndex) => (
+            <div key={copyIndex} className="flex shrink-0 items-center">
+              {group.items.map((item) => (
+                <span key={`${copyIndex}-${item.id}`} className="flex shrink-0 items-center">
+                  <span className="font-display px-5 text-2xl leading-none sm:px-8 sm:text-4xl">
+                    {splitTitle(item.title).brand}
+                  </span>
+                  <span className="text-[var(--atelier-accent)]">◆</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="sticky top-0 z-30 border-b border-current/12 bg-[color:var(--atelier-surface)]/90 backdrop-blur-xl transition-colors duration-700">
         <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
           <nav ref={indexRef} aria-label={copy.atelierNavigation} className="flex items-center gap-6 overflow-x-auto py-4 pr-12 [scrollbar-width:none] lg:pr-0">
             {group.items.map((item, index) => {
@@ -185,8 +326,13 @@ export function BrandAtelier({
                   type="button"
                   onClick={() => onOpen(item)}
                   aria-label={`${copy.openDetail}: ${item.title}`}
-                  className="group/finale relative mx-auto grid w-full overflow-hidden text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#F4C28D] lg:grid-cols-12"
-                >
+                className="group/finale relative mx-auto grid w-full overflow-hidden text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#F4C28D] lg:grid-cols-12"
+              >
+                  <span
+                    data-atelier-curtain
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 z-30 origin-right scale-x-0 bg-[#A94D27]"
+                  />
                   <svg aria-hidden="true" viewBox="0 0 1200 680" className="atelier-river-line pointer-events-none absolute inset-0 h-full w-full opacity-25" preserveAspectRatio="none">
                     <path d="M-100 560C154 338 328 652 535 430C720 230 846 489 1012 286C1112 164 1218 190 1320 92" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="8 10" />
                     <path d="M-80 610C176 398 346 691 559 475C756 275 870 538 1042 334C1137 222 1248 230 1340 142" fill="none" stroke="currentColor" strokeWidth="0.45" />
@@ -202,12 +348,19 @@ export function BrandAtelier({
                       className="atelier-image object-cover object-center"
                     />
                     <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#4c1b0b]/38 via-transparent to-transparent" />
+                    <span
+                      data-atelier-finale-word
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-0 bottom-[7%] hidden whitespace-nowrap font-display text-[17vw] leading-[0.72] text-white/80 mix-blend-soft-light lg:block"
+                    >
+                      {brand}
+                    </span>
                     <span className="absolute bottom-5 left-5 border-l border-white/50 pl-3 text-[0.58rem] font-extrabold uppercase tracking-[0.24em] text-white/82 sm:bottom-7 sm:left-8">
                       Ninh Bình · 2026
                     </span>
                   </div>
 
-                  <div data-seasonal-card-copy className="relative z-10 grid gap-8 px-5 py-12 sm:px-8 sm:py-16 lg:col-span-12 lg:grid-cols-12 lg:items-end lg:px-[max(2rem,calc((100vw-80rem)/2))] lg:py-20">
+                  <div data-seasonal-card-copy data-atelier-finale-copy className="relative z-10 grid gap-8 px-5 py-12 sm:px-8 sm:py-16 lg:col-span-12 lg:grid-cols-12 lg:items-end lg:px-[max(2rem,calc((100vw-80rem)/2))] lg:py-20">
                     <div className="lg:col-span-7">
                       <p className="text-[0.64rem] font-extrabold uppercase tracking-[0.25em] text-[#FFE0B5]">{item.kicker}</p>
                       <p className="font-display mt-5 text-6xl leading-[0.82] sm:text-8xl lg:text-[8.5rem]">{brand}</p>

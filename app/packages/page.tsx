@@ -32,35 +32,35 @@ function PackageCard({
   return (
     <article
       className={`overflow-hidden rounded-3xl border border-[#d7d5cd] bg-white shadow-sm ${
-        featured ? "lg:grid lg:grid-cols-[1.1fr_1fr]" : `lg:flex lg:items-stretch ${reversed ? "lg:flex-row-reverse" : ""}`
+        featured ? "xl:grid xl:grid-cols-[1.1fr_1fr]" : `xl:flex xl:items-stretch ${reversed ? "xl:flex-row-reverse" : ""}`
       }`}
     >
       <div
         className={`relative ${
-          featured ? "aspect-[16/10] lg:aspect-auto" : "aspect-[16/10] lg:aspect-auto lg:w-2/5 lg:shrink-0"
+          featured ? "aspect-[16/10] xl:aspect-auto" : "aspect-[16/10] xl:aspect-auto xl:w-2/5 xl:shrink-0"
         }`}
       >
         <Image
           src={image.src}
           alt={image.alt}
           fill
-          sizes={featured ? "(min-width: 1024px) 55vw, 100vw" : "(min-width: 1024px) 40vw, 100vw"}
+          sizes={featured ? "(min-width: 1280px) 55vw, 100vw" : "(min-width: 1280px) 40vw, 100vw"}
           className="object-cover"
         />
       </div>
-      <div className={featured ? "p-6 sm:p-8 lg:p-10" : "p-6 sm:p-8 lg:flex-1"}>
+      <div className={featured ? "min-w-0 p-5 min-[280px]:p-6 sm:p-8 xl:p-10" : "min-w-0 p-5 min-[280px]:p-6 sm:p-8 xl:flex-1"}>
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0 flex-1 basis-[16rem]">
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">
               {item.durationLabel} · {PACE_LABEL[item.pace]}
             </p>
-            <h2 className={`font-display mt-2 text-[#183f34] ${featured ? "text-4xl" : "text-3xl"}`}>
+            <h2 className={`font-display mt-2 break-words leading-tight text-[#183f34] ${featured ? "text-4xl" : "text-3xl"}`}>
               {item.name}
             </h2>
             <p className="mt-2 text-sm text-[#59654b]">{item.audience}</p>
           </div>
-          <div className="rounded-2xl bg-[#f4f0e7] px-4 py-3 text-right">
-            <p className="font-display text-xl">
+          <div className="max-w-full rounded-2xl bg-[#f4f0e7] px-4 py-3 text-left min-[280px]:text-right">
+            <p className="break-words font-display text-xl leading-tight">
               {item.demoPriceVnd.toLocaleString("vi-VN")} VND
             </p>
             <p className="text-xs text-[#645c4b]">mỗi người lớn · demo</p>
@@ -133,7 +133,7 @@ export default async function PackagesPage({
     <main
       {...surfaceAttributes}
       data-customer-section="packages-catalog"
-      className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16"
+      className="min-h-screen bg-[#f4f0e7] px-4 py-10 text-[#151a17] min-[280px]:px-5 sm:px-8 lg:py-16"
     >
       <div className="mx-auto max-w-7xl">
         <Link href={journey ? `/journey/${journey}` : "/plan"} className="text-sm font-bold text-[#356957]">
@@ -146,7 +146,7 @@ export default async function PackagesPage({
               ? "Dữ liệu minh họa · giữ chỗ mô phỏng, chưa thu tiền thật"
             : "Bảng giá tham khảo · chưa mở đặt online"}
         </p>
-        <h1 className="font-display mt-4 max-w-5xl text-5xl leading-[0.95] text-[#183f34] sm:text-7xl">
+        <h1 className="font-display mt-4 max-w-5xl text-[clamp(2.6rem,7vw,4.5rem)] leading-[0.95] text-[#183f34] [text-wrap:balance]">
           Bốn cách đi Ninh Bình, và một bàn tiệc dưới trăng.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">

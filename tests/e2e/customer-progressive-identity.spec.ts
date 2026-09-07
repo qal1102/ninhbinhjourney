@@ -49,7 +49,7 @@ test.describe("CUS-05 progressive identity and consent", () => {
     });
 
     await page.goto("/plan", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Giúp chúng tôi làm hành trình phù hợp hơn?" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Cho phép ghi nhận nội dung hữu ích?" })).toBeVisible();
     await page.waitForTimeout(1200);
     expect(analyticsEvents).toHaveLength(0);
     await page.getByRole("button", { name: "Đồng ý" }).click();
@@ -125,8 +125,8 @@ test.describe("CUS-05 progressive identity and consent", () => {
     });
 
     await page.goto("/plan", { waitUntil: "domcontentloaded" });
-    await page.getByLabel("Yêu cầu bằng văn bản").fill("Tôi muốn đi Tam Cốc một ngày, nhịp thư thả.");
-    await page.getByRole("button", { name: "Hiểu yêu cầu" }).click();
+    await page.getByLabel("Hoặc kể bằng lời của bạn").fill("Tôi muốn đi Tam Cốc một ngày, nhịp thư thả.");
+    await page.getByRole("button", { name: "Xem thử một ngày cho tôi" }).click();
     await page.getByRole("button", { name: "Xác nhận và tạo hành trình" }).click();
     await expect(page.getByRole("heading", { name: "Một cách liên hệ, do bạn tự chọn." })).toBeVisible();
     await page.getByLabel("Email hoặc số điện thoại").fill("guest@example.com");

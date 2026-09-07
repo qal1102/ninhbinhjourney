@@ -127,24 +127,24 @@ export function DestinationZigzag({
   }, [items]);
 
   return (
-    <section ref={rootRef} id="all-destinations" className="bg-[#FBFAF6] px-5 py-20 sm:px-8 lg:py-28">
+    <section ref={rootRef} id="all-destinations" className="isolate scroll-mt-20 overflow-x-clip bg-[#FBFAF6] px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{copy.sectionLabel}</p>
-          <h2 className="font-display mt-3 text-4xl leading-tight text-[#183F34] sm:text-6xl">
+          <h2 className="font-display mt-3 text-[clamp(2.25rem,6vw,3.75rem)] leading-tight text-[#183F34] [text-wrap:balance]">
             {copy.sectionTitle}
           </h2>
           <p className="mt-5 text-lg leading-relaxed text-[#4A5751]">{copy.sectionIntro}</p>
         </div>
 
-        <div className="mt-16 flex flex-col gap-20 lg:gap-28">
+        <div className="mt-12 flex flex-col gap-12 sm:mt-14 sm:gap-16 lg:gap-20">
           {items.map((item, index) => {
             const fromLeft = index % 2 === 0;
             return (
               <article
                 key={item.id}
                 data-side={fromLeft ? "left" : "right"}
-                className="zigzag-row grid items-center gap-8 lg:grid-cols-2 lg:gap-16"
+                className="zigzag-row grid min-w-0 items-center gap-7 md:grid-cols-2 md:gap-10 lg:gap-14"
               >
                 <div
                   // `data-flip-src` cho phep trang chu tim dung tam anh
@@ -152,20 +152,20 @@ export function DestinationZigzag({
                   // khung chi tiet -- khong phai luon prop qua nhieu lop.
                   data-flip-src={item.id}
                   className={`zigzag-media relative aspect-[4/3] overflow-hidden rounded-[10px] bg-[#E8E4DA] ${
-                    fromLeft ? "lg:order-1" : "lg:order-2"
+                    fromLeft ? "md:order-1" : "md:order-2"
                   }`}
                 >
                   <Image
                     src={item.image}
                     alt={item.name}
                     fill
-                    sizes="(min-width: 1024px) 46vw, 100vw"
+                    sizes="(min-width: 768px) 46vw, 100vw"
                     className="scale-110 object-cover"
                     style={{ objectPosition: item.imagePosition }}
                   />
                 </div>
 
-                <div className={`zigzag-copy ${fromLeft ? "lg:order-2" : "lg:order-1"}`}>
+                <div className={`zigzag-copy min-w-0 ${fromLeft ? "md:order-2" : "md:order-1"}`}>
                   {/* KHONG danh so 01/02/03 o day: 15 diem den khong phai
                       mot chuoi tuan tu, khach khong can biet cai nao "thu
                       may". Danh so chi dung khi thu tu mang thong tin that
@@ -174,7 +174,7 @@ export function DestinationZigzag({
                   <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#3F7568]">
                     {item.category} · {item.duration}
                   </p>
-                  <h3 className="font-display mt-3 text-3xl text-[#183F34] sm:text-5xl">{item.name}</h3>
+                  <h3 className="font-display mt-3 break-words text-3xl leading-tight text-[#183F34] sm:text-4xl lg:text-5xl">{item.name}</h3>
                   <p className="mt-3 text-lg text-[#2C3B35]">{item.tagline}</p>
                   <p className="mt-4 leading-relaxed text-[#4A5751]">{item.description}</p>
                   <ul className="mt-5 flex flex-wrap gap-2">
@@ -191,14 +191,14 @@ export function DestinationZigzag({
                     <button
                       type="button"
                       onClick={() => onExplore(item.id)}
-                      className="min-h-11 rounded-full bg-[#183F34] px-6 font-semibold text-[#FBFAF6] transition hover:bg-[#2C5F4F]"
+                      className="min-h-11 max-w-full rounded-full bg-[#183F34] px-5 text-center text-sm font-semibold leading-5 text-[#FBFAF6] transition hover:bg-[#2C5F4F] min-[280px]:px-6 min-[280px]:text-base"
                     >
                       {copy.explore}
                     </button>
                     <button
                       type="button"
                       onClick={() => onAdd(item.id)}
-                      className="min-h-11 rounded-full border border-[#183F34]/40 px-6 font-semibold text-[#183F34] transition hover:bg-[#183F34]/8"
+                      className="min-h-11 max-w-full rounded-full border border-[#183F34]/40 px-5 text-center text-sm font-semibold leading-5 text-[#183F34] transition hover:bg-[#183F34]/8 min-[280px]:px-6 min-[280px]:text-base"
                     >
                       {isAdded(item.id) ? copy.added : copy.add}
                     </button>

@@ -128,16 +128,16 @@ export function PackageShowcase({
   );
 
   return (
-    <section id="packages" data-customer-section="home-packages" className="bg-[#FBFAF6] px-5 py-20 sm:px-8 lg:py-28">
+    <section id="packages" data-customer-section="home-packages" className="scroll-mt-20 bg-[#FBFAF6] px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-24">
       <div className="mx-auto max-w-7xl">
-        <Reveal className="max-w-3xl">
+        <Reveal className="max-w-5xl">
           <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#3F7568]">{copy.label}</p>
           <RevealHeading
             as="h2"
             text={copy.title}
-            className="font-display mt-4 text-4xl leading-tight text-[#183F34] sm:text-6xl"
+            className="font-display mt-4 max-w-4xl text-[clamp(2.35rem,6vw,4.75rem)] leading-[0.98] text-[#183F34] [text-wrap:balance]"
           />
-          <p className="mt-5 text-lg leading-relaxed text-[#4A5751]">{copy.intro}</p>
+          <p className="mt-5 max-w-3xl text-base leading-7 text-[#4A5751] sm:text-lg sm:leading-8">{copy.intro}</p>
           <p className="mt-3 text-sm font-semibold text-[#3F7568]">{copy.bookingNote}</p>
           {/*
             WEB-STRUCT-02: ngoai nut vao tung goi, phai co loi dat cho qua
@@ -145,35 +145,35 @@ export function PackageShowcase({
             (nguon dung chung voi `seasonal-experience-browser.tsx`),
             khong bia so khac.
           */}
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-6 grid max-w-5xl gap-3 sm:grid-cols-2 xl:grid-cols-[max-content_max-content_minmax(0,1fr)] xl:items-center">
             <a
               href={CONTACT.phoneHref}
               data-customer-track="home-packages-call"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#183F34] px-6 font-semibold text-white transition hover:bg-[#2C5F4F]"
+              className="inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-full bg-[#183F34] px-5 text-center text-sm font-semibold leading-5 text-white transition hover:bg-[#2C5F4F] min-[280px]:px-6 min-[280px]:text-base"
             >
               {copy.callCta} · {CONTACT.phoneLabel}
             </a>
             <a
               href={`mailto:${CONTACT.email}?subject=${contactSubject}`}
               data-customer-track="home-packages-email"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#183F34]/40 px-6 font-semibold text-[#183F34] transition hover:bg-[#183F34]/8"
+              className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border border-[#183F34]/40 px-5 text-center text-sm font-semibold leading-5 text-[#183F34] transition hover:bg-[#183F34]/8 min-[280px]:px-6 min-[280px]:text-base"
             >
               {copy.emailCta}
             </a>
-            <p className="text-sm text-[#6D756F]">{copy.callNote}</p>
+            <p className="text-sm leading-6 text-[#6D756F] sm:col-span-2 xl:col-span-1">{copy.callNote}</p>
           </div>
         </Reveal>
 
         <Reveal
           delayMs={80}
-          className="mt-14 grid overflow-hidden rounded-[10px] border border-[#A8CEC1]/60 bg-white shadow-xl shadow-[#183F34]/10 lg:grid-cols-[1.1fr_1fr]"
+          className="mt-12 grid overflow-hidden rounded-[10px] border border-[#A8CEC1]/60 bg-white shadow-xl shadow-[#183F34]/10 xl:grid-cols-[1.1fr_1fr]"
         >
-          <div className="relative aspect-[4/3] lg:aspect-auto">
+          <div className="relative aspect-[4/3] xl:aspect-auto">
             <Image
               src={featuredDisplay.image}
               alt={featuredDisplay.imageAlt}
               fill
-              sizes="(min-width: 1024px) 46vw, 100vw"
+              sizes="(min-width: 1280px) 46vw, 100vw"
               className="object-cover"
             />
           </div>
@@ -181,23 +181,23 @@ export function PackageShowcase({
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#3F7568]">
               {featuredDisplay.durationLabel} · {featuredDisplay.paceLabel}
             </p>
-            <h3 className="font-display mt-3 text-3xl text-[#183F34] sm:text-4xl">{featuredDisplay.name}</h3>
+            <h3 className="font-display mt-3 text-3xl leading-tight text-[#183F34] sm:text-4xl">{featuredDisplay.name}</h3>
             <p className="mt-3 text-[#2C3B35]">{featuredDisplay.audience}</p>
-            <p className="mt-5 font-display text-2xl text-[#183F34]">{featuredDisplay.priceText}</p>
+            <p className="mt-5 break-words font-display text-2xl leading-tight text-[#183F34]">{featuredDisplay.priceText}</p>
             <p className="text-xs text-[#6D756F]">{copy.pricePerGuest}</p>
             <Link
               data-customer-track={`home-packages-${featured.slug}`}
               data-customer-content-id={featured.id}
               data-customer-content-type="package"
               href={featuredHref}
-              className="mt-6 inline-flex w-fit min-h-11 items-center rounded-full bg-[#183F34] px-6 font-semibold text-white transition hover:bg-[#2C5F4F]"
+              className="mt-6 inline-flex min-h-11 max-w-full w-fit items-center justify-center rounded-full bg-[#183F34] px-6 text-center font-semibold leading-5 text-white transition hover:bg-[#2C5F4F]"
             >
               {copy.cta}
             </Link>
           </div>
         </Reveal>
 
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-12">
+        <div className="mt-8 grid grid-cols-1 items-start gap-5 sm:gap-6 md:grid-cols-2 xl:grid-cols-12">
           {rest.map((item, index) => {
             const display = packageDisplay(item, lang);
             const href = packageHref(item.slug, lang, source);
@@ -216,36 +216,36 @@ export function PackageShowcase({
                 key={item.slug}
                 delayMs={Math.min(index, 3) * 60}
                 className={`overflow-hidden rounded-[10px] border border-[#A8CEC1]/50 bg-white shadow-lg shadow-[#183F34]/8 ${
-                  big ? "lg:col-span-7" : "lg:col-span-5"
+                  big ? "xl:col-span-7" : "xl:col-span-5"
                 }`}
               >
-                <div className={`relative w-full ${big ? "aspect-[16/10]" : "aspect-[4/5]"}`}>
+                <div className={`relative w-full aspect-[16/10] ${big ? "xl:aspect-[7/6]" : "xl:aspect-[4/5]"}`}>
                   <Image
                     src={display.image}
                     alt={display.imageAlt}
                     fill
-                    sizes={big ? "(min-width: 1024px) 58vw, 100vw" : "(min-width: 1024px) 40vw, 100vw"}
+                    sizes={big ? "(min-width: 1280px) 58vw, 100vw" : "(min-width: 1280px) 40vw, 100vw"}
                     className="object-cover"
                   />
                 </div>
-                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
+                <div className="flex min-w-0 flex-col gap-5 p-5 sm:p-6">
                   <div className="min-w-0">
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">
                       {display.durationLabel} · {display.paceLabel}
                     </p>
-                    <h3 className={`font-display mt-2 text-[#183F34] ${big ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"}`}>
+                    <h3 className={`font-display mt-2 break-words leading-tight text-[#183F34] ${big ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"}`}>
                       {display.name}
                     </h3>
                     <p className="mt-1 text-sm text-[#6D756F]">{display.audience}</p>
                   </div>
-                  <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-                    <p className="font-display text-xl text-[#183F34]">{display.priceText}</p>
+                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-t border-[#183F34]/12 pt-4">
+                    <p className="min-w-0 break-words font-display text-lg leading-tight text-[#183F34] sm:text-xl">{display.priceText}</p>
                     <Link
                       data-customer-track={`home-packages-${item.slug}`}
                       data-customer-content-id={item.id}
                       data-customer-content-type="package"
                       href={href}
-                      className="inline-flex min-h-10 items-center rounded-full border border-[#183F34]/40 px-5 text-sm font-semibold text-[#183F34] transition hover:bg-[#183F34] hover:text-white"
+                      className="inline-flex min-h-10 max-w-full items-center justify-center rounded-full border border-[#183F34]/40 px-5 text-center text-sm font-semibold leading-5 text-[#183F34] transition hover:bg-[#183F34] hover:text-white"
                     >
                       {copy.cta}
                     </Link>

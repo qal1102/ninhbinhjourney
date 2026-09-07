@@ -11,6 +11,7 @@ import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
+import { JourneyConcierge } from "@/components/discovery/journey-concierge";
 import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
@@ -113,7 +114,7 @@ const copy = {
   en: {
     // Nhan thu hai tung la "Stories", tro toi khoi `#stories` da xoa.
     // Gio no tro toi danh muc diem den, nen phai goi dung ten.
-    nav: ["Map", "Destinations", "Builder", "Journey"],
+    nav: ["Places", "Routes", "Packages", "Moon season"],
     introTop: "Ninh Binh",
     introWords: ["Nature.", "Heritage.", "Wonder."],
     title: "Ninh Binh",
@@ -135,8 +136,8 @@ const copy = {
      * xuong khoi #packages ngay tren trang, va noi dung doi theo
      * `bookingEnabled` de khong hua giu cho khi chua bat that.
      */
-    heroPackagesCue: "Five packages, ready to go — reserve just below",
-    heroPackagesCuePlain: "Five packages, ready to go — see details just below",
+    heroPackagesCue: "Explore five ready-made journeys",
+    heroPackagesCuePlain: "Explore five ready-made journeys",
     /*
      * Dong gio thuc tai Ninh Binh. Moi khung gio mot chi tiet CHI NINH
      * BINH moi noi duoc -- dat phep thu o UI_UX_RULES.md#voice-rules:
@@ -165,11 +166,11 @@ const copy = {
      * THANG tu content/packages.ts, khong bia them o day.
      */
     packagesLabel: "Ready-made packages",
-    packagesTitle: "Five packages, schedule and price already set.",
+    packagesTitle: "Five journeys, with the route and price mapped out.",
     packagesIntro:
-      "Tràng An at first light, Tam Cốc late in the afternoon — the five packages below come with the schedule, the entries and the QR pass already set. All that is left is picking a date.",
-    packagesBookingNote: "Reserve directly in the system — payment is simulated, and nothing is charged.",
-    packagesBookingNotePlain: "Prices and schedules below are for reference — online booking is not yet open.",
+      "Begin at Tràng An before the boats gather, or keep Tam Cốc for the late light. Each journey already has its timing, entry points and a clear way to reserve.",
+    packagesBookingNote: "Choose a date to test the reservation flow. No payment will be collected.",
+    packagesBookingNotePlain: "The routes and prices are ready to browse; online reservation is not yet open.",
     packagesCta: "View this package",
     packagesViewAll: "See all five packages",
     packagesPricePerGuest: "per adult · demo",
@@ -303,7 +304,7 @@ const copy = {
     locationDenied: "Location permission was not granted.",
   },
   vi: {
-    nav: ["Bản đồ", "Điểm đến", "Lập tuyến", "Lịch trình"],
+    nav: ["Điểm đến", "Tuyến đi", "Gói có sẵn", "Mùa Trăng"],
     introTop: "Ninh Bình",
     introWords: ["Thiên nhiên.", "Di sản.", "Kỳ quan."],
     title: "Ninh Bình",
@@ -312,8 +313,8 @@ const copy = {
     footerLookup: "Đã đặt chỗ rồi? Mở lại vé của bạn",
     begin: "Lập hành trình",
     exploreMap: "Khám phá bản đồ",
-    heroPackagesCue: "Năm gói trải nghiệm đã dựng sẵn — giữ chỗ ngay bên dưới",
-    heroPackagesCuePlain: "Năm gói trải nghiệm đã dựng sẵn — xem chi tiết bên dưới",
+    heroPackagesCue: "Xem năm hành trình đã chuẩn bị sẵn",
+    heroPackagesCuePlain: "Xem năm hành trình đã chuẩn bị sẵn",
     hourLead: "Ở Ninh Bình bây giờ",
     hourPhrases: {
       dawn: "sương chưa tan khỏi mặt sông",
@@ -329,11 +330,11 @@ const copy = {
       "Mỗi tuyến là một mạch kể: nước trước, chùa sau, rồi rừng và ánh đèn lồng khi ngày chậm lại. Kéo qua, chọn mạch nào giống ngày bạn đang mong.",
     viewRoute: "Xem tuyến",
     packagesLabel: "Gói trải nghiệm",
-    packagesTitle: "Năm gói đã dựng sẵn lịch và giá.",
+    packagesTitle: "Năm hành trình đã có tuyến đi và mức giá rõ ràng.",
     packagesIntro:
-      "Tràng An lúc sáng sớm, Tam Cốc buổi chiều muộn — năm gói dưới đây đã xếp sẵn lịch, quyền vào điểm và mã QR dùng ngay tại chỗ. Còn lại chỉ là chọn ngày.",
-    packagesBookingNote: "Giữ chỗ ngay trên hệ thống, thanh toán mô phỏng, không thu tiền thật.",
-    packagesBookingNotePlain: "Giá và lịch dưới đây là dữ liệu tham khảo, đặt trực tuyến chưa mở.",
+      "Khởi hành ở Tràng An trước giờ đông thuyền, hoặc để Tam Cốc cho buổi chiều nhiều nắng. Mỗi hành trình đã có khung giờ, điểm vào và cách giữ chỗ rõ ràng.",
+    packagesBookingNote: "Chọn ngày để thử trọn luồng giữ chỗ. Website không thu tiền.",
+    packagesBookingNotePlain: "Tuyến đi và mức giá đã sẵn sàng để xem; đặt trực tuyến chưa mở.",
     packagesCta: "Xem gói này",
     packagesViewAll: "Xem cả năm gói",
     packagesPricePerGuest: "mỗi người lớn · demo",
@@ -1982,7 +1983,7 @@ export default function NinhBinhLanding({
               // Neo thu hai truoc day tro toi `#stories` -- khoi do da xoa
               // han 05/08 nen lien ket roi vao hu khong. Gio tro toi danh
               // muc diem den, dung voi nhan moi cua no.
-              <a key={item} href={`#${["map", "all-destinations", "ai", "itinerary"][index]}`} className="transition hover:text-[#E7B96A]">
+              <a key={item} href={`#${["destinations-highlights", "curated-routes", "packages", "mid-autumn"][index]}`} className="transition hover:text-[#E7B96A]">
                 {item}
               </a>
             ))}
@@ -1992,7 +1993,7 @@ export default function NinhBinhLanding({
             <button type="button" className={`rounded-full px-3 py-1.5 ${lang === "vi" ? "bg-[#FBFAF6] text-[#183F34]" : ""}`} onClick={() => switchLanguage("vi")}>VI</button>
           </div>
         </div>
-        <div id="top" className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-5 pb-16 pt-28 sm:px-8 lg:pb-24">
+        <div id="top" className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-4 pb-16 pt-28 min-[280px]:px-5 sm:px-8 lg:pb-24">
           {/*
             Nhan "Client demonstration · Supabase shared core" da GO HAN
             05/08. Day la ngon ngu KY THUAT NOI BO lot thang ra mat khach
@@ -2002,7 +2003,7 @@ export default function NinhBinhLanding({
             Binh tourism core", "Intent -> rules -> validated itinerary",
             "Trang thai: idle") -- lan nay la cho con sot lai.
           */}
-          <h1 className="fade-up font-display text-6xl leading-[0.9] text-[#FBFAF6] sm:text-8xl lg:text-[9rem]">{t.title}</h1>
+          <h1 className="fade-up break-words font-display text-[clamp(3.25rem,14vw,9rem)] leading-[0.9] text-[#FBFAF6]">{t.title}</h1>
           <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
           {/*
             Gio that tai Ninh Binh. Bien trang tu mot to roi thanh mot noi
@@ -2027,7 +2028,7 @@ export default function NinhBinhLanding({
             data-customer-content-id="packages-catalog"
             data-customer-content-type="tertiary-cta"
             href="#packages"
-            className="fade-up mt-5 inline-flex w-fit items-center gap-2 text-sm font-semibold text-[#E7B96A] underline decoration-[#E7B96A]/40 underline-offset-4 transition hover:decoration-[#E7B96A]"
+            className="fade-up mt-5 inline-flex max-w-full w-fit items-center gap-2 text-sm font-semibold leading-6 text-[#E7B96A] underline decoration-[#E7B96A]/40 underline-offset-4 transition hover:decoration-[#E7B96A]"
           >
             {bookingEnabled ? t.heroPackagesCue : t.heroPackagesCuePlain} <span aria-hidden="true">↓</span>
           </a>
@@ -2046,9 +2047,9 @@ export default function NinhBinhLanding({
 
       <PinnedStory beats={storyBeats[lang]} />
 
-      <MidAutumnCampaign lang={lang} source={source} />
+      <JourneyConcierge lang={lang} />
 
-      <section id="map" data-customer-section="home-map" className="px-5 py-16 sm:px-8 lg:py-24">
+      <section id="map" data-customer-section="home-map" className="scroll-mt-20 px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
           <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.youAreHere}</p>
@@ -2129,7 +2130,7 @@ export default function NinhBinhLanding({
       <section
         id="destinations-highlights"
         data-customer-section="home-featured-destinations"
-        className="bg-[#FBFAF6] px-5 py-16 sm:px-8 lg:py-20"
+        className="scroll-mt-20 bg-[#FBFAF6] px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-20"
       >
         <div className="mx-auto max-w-7xl">
           <Reveal className="max-w-3xl">
@@ -2256,7 +2257,7 @@ export default function NinhBinhLanding({
         vao mot goc. Bo cuc moi tach anh va noi dung thanh hai mat phang;
         khong khoa chieu cao, nen chu duoc phep tho theo do dai that.
       */}
-      <section id="curated-routes" data-customer-section="home-curated-routes" className="route-showcase overflow-hidden bg-[#F6F1E7] py-20 text-[#1D2925] sm:py-24 lg:py-28">
+      <section id="curated-routes" data-customer-section="home-curated-routes" className="route-showcase scroll-mt-20 overflow-hidden bg-[#F6F1E7] py-16 text-[#1D2925] sm:py-20 lg:py-24">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <Reveal className="grid gap-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
@@ -2386,7 +2387,7 @@ export default function NinhBinhLanding({
         }}
       />
 
-      <section id="ai" data-customer-section="home-itinerary-brief" className="px-5 py-16 sm:px-8 lg:py-24">
+      <section id="ai" data-customer-section="home-itinerary-brief" className="scroll-mt-20 px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <Reveal>
             <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{t.companionLabel}</p>
@@ -2398,14 +2399,14 @@ export default function NinhBinhLanding({
             <p className="mt-5 max-w-xl text-lg leading-8 text-[#4d5b55]">{t.companionBody}</p>
           </Reveal>
           <Reveal delayMs={120} className="rounded-[8px] border border-[#A8CEC1]/70 bg-white p-5 shadow-xl shadow-[#183F34]/10">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 min-[280px]:grid-cols-3">
               {durations.map((duration) => (
                 <button key={duration.id} type="button" onClick={() => setSelectedDuration(duration.id)} className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedDuration === duration.id ? "border-[#183F34] bg-[#183F34] text-white" : "border-[#A8CEC1] text-[#183F34]"}`}>
                   {duration[lang]}
                 </button>
               ))}
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-1 gap-2 min-[280px]:grid-cols-2 sm:grid-cols-3">
               {chips.map((chip) => {
                 const selected = selectedChips.includes(chip.id);
                 return (
@@ -2417,7 +2418,7 @@ export default function NinhBinhLanding({
             </div>
             <textarea className="mt-5 min-h-32 w-full resize-none rounded-[8px] border border-[#A8CEC1] bg-[#FBFAF6] p-4 text-[#1D2925] outline-none transition focus:border-[#3F7568]" placeholder={t.prompt as string} defaultValue={lang === "en" ? "I have one day, travel with my parents, and prefer a relaxed cultural route." : "Tôi có một ngày, đi cùng bố mẹ và muốn một lịch trình văn hóa nhẹ nhàng."} />
             <div className="mt-4 flex justify-end">
-              <button type="button" onClick={createJourney} disabled={loading} className="min-w-44 rounded-full bg-[#183F34] px-5 py-2 font-semibold text-white transition hover:bg-[#24594a] disabled:cursor-wait disabled:opacity-75">
+              <button type="button" onClick={createJourney} disabled={loading} className="w-full min-w-0 rounded-full bg-[#183F34] px-5 py-2 font-semibold text-white transition hover:bg-[#24594a] disabled:cursor-wait disabled:opacity-75 min-[280px]:w-auto min-[280px]:min-w-44">
                 {loading ? t.creating : t.create}
               </button>
             </div>
@@ -2425,7 +2426,7 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
-      <section id="itinerary" data-customer-section="home-itinerary-result" className="bg-[#F6F1E7] px-5 py-16 sm:px-8 lg:py-24">
+      <section id="itinerary" data-customer-section="home-itinerary-result" className="scroll-mt-20 overflow-x-clip bg-[#F6F1E7] px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_.95fr]">
           <div>
             <Reveal>
@@ -2433,17 +2434,17 @@ export default function NinhBinhLanding({
               <RevealHeading
                 as="h2"
                 text={t.itinerary as string}
-                className="font-display mt-3 text-4xl text-[#183F34] sm:text-6xl"
+                className="font-display mt-3 text-[clamp(2.25rem,7vw,3.75rem)] leading-tight text-[#183F34] [text-wrap:balance]"
               />
               <p className="mt-3 text-[#58665F]">{t.itineraryNote}</p>
             </Reveal>
             <div className="mt-6 overflow-hidden rounded-[8px] border border-[#A8CEC1]/70 bg-[#FBFAF6]">
               {itinerary.map((stop, index) => (
-                <article key={`${stop.time}-${stop.id}-${index}`} className="grid gap-4 border-b border-[#A8CEC1]/40 p-4 last:border-b-0 sm:grid-cols-[88px_1fr_auto]">
+                <article key={`${stop.time}-${stop.id}-${index}`} className="grid min-w-0 gap-4 border-b border-[#A8CEC1]/40 p-3 last:border-b-0 min-[280px]:p-4 sm:grid-cols-[88px_minmax(0,1fr)_auto]">
                   <p className="font-semibold text-[#183F34]">{stop.time}</p>
-                  <div>
-                    <h3 className="font-display text-2xl text-[#183F34]">{stop.title[lang]}</h3>
-                    <p className="mt-1 text-sm text-[#6D756F]">{stop.note[lang]} · {stop.distance[lang]}</p>
+                  <div className="min-w-0">
+                    <h3 className="break-words font-display text-2xl leading-tight text-[#183F34]">{stop.title[lang]}</h3>
+                    <p className="mt-1 break-words text-sm text-[#6D756F]">{stop.note[lang]} · {stop.distance[lang]}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {stop.tags[lang].map((tag) => <span key={tag} className="rounded-full bg-[#F6F1E7] px-3 py-1 text-xs text-[#3F7568]">{tag}</span>)}
                     </div>
@@ -2465,13 +2466,13 @@ export default function NinhBinhLanding({
             </div>
           </div>
 
-          <aside id="experience" className="rounded-[8px] bg-[#183F34] p-6 text-[#FBFAF6] shadow-xl shadow-[#183F34]/20">
+          <aside id="experience" className="min-w-0 rounded-[8px] bg-[#183F34] p-4 text-[#FBFAF6] shadow-xl shadow-[#183F34]/20 min-[280px]:p-6">
             <div className="relative mb-6 aspect-[16/10] overflow-hidden rounded-[8px]">
               <Image src="/images/destinations/hoa-lu-old-town.jpg" alt={t.experienceName as string} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(24,63,52,.55))]" />
             </div>
             <p className="text-sm uppercase tracking-[0.24em] text-[#A8CEC1]">{t.experienceTitle}</p>
-            <h2 className="font-display mt-4 text-4xl">{t.experienceName}</h2>
+            <h2 className="break-words font-display mt-4 text-[clamp(2rem,10vw,2.5rem)] leading-tight">{t.experienceName}</h2>
             <p className="mt-4 leading-7 text-[#FBFAF6]/78">{t.experienceBody}</p>
             <p className="mt-6 rounded-[8px] bg-white/10 p-4 text-[#FBFAF6]/86">{t.experienceFit}</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -2495,7 +2496,7 @@ export default function NinhBinhLanding({
       <section
         id="partnerships"
         data-customer-section="home-business-partnerships"
-        className="bg-[#183F34] px-5 py-16 text-white sm:px-8 lg:py-20"
+        className="scroll-mt-20 bg-[#183F34] px-4 py-16 text-white min-[280px]:px-5 sm:px-8 lg:py-20"
       >
         <div className="mx-auto max-w-6xl">
           <Reveal className="max-w-3xl">
@@ -2541,6 +2542,8 @@ export default function NinhBinhLanding({
           </div>
         </div>
       </section>
+
+      <MidAutumnCampaign lang={lang} source={source} />
 
       <footer className="border-t border-[#e2ded2] bg-[#FBFAF6] px-5 py-10 text-center sm:px-8">
         <p className="font-display text-lg text-[#183F34]">{t.footerNote}</p>

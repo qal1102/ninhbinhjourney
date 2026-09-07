@@ -189,7 +189,7 @@ export function SeasonalExperienceBrowser({
 
       {active ? (
         <div
-          className="fixed inset-0 z-[1600] grid place-items-end bg-[#07110d]/72 p-0 backdrop-blur-sm sm:place-items-center sm:p-5"
+          className="seasonal-dialog-backdrop fixed inset-0 z-[1600] grid place-items-end bg-[#07110d]/72 p-0 backdrop-blur-sm sm:place-items-center sm:p-5"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeExperience();
@@ -199,7 +199,7 @@ export function SeasonalExperienceBrowser({
             role="dialog"
             aria-modal="true"
             aria-labelledby="seasonal-dialog-title"
-            className="relative max-h-[94vh] w-full overflow-y-auto rounded-t-[26px] bg-[#F7F3E9] text-[#183F34] shadow-2xl sm:max-w-5xl sm:rounded-[26px]"
+            className="seasonal-dialog-panel relative max-h-[94vh] w-full overflow-y-auto rounded-t-[26px] bg-[#F7F3E9] text-[#183F34] shadow-2xl sm:max-w-5xl sm:rounded-[26px]"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <button

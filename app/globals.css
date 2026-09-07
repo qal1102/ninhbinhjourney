@@ -30,12 +30,16 @@
   --font-serif: var(--font-heading);
 }
 
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;
-  overflow-x: clip;
 }
 
 button,
@@ -356,6 +360,17 @@ select {
   animation: atelier-river-drift 18s linear infinite;
 }
 
+.atelier-marquee-track {
+  animation: atelier-marquee 30s linear infinite;
+  will-change: transform;
+}
+
+@keyframes atelier-marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 @keyframes atelier-river-drift {
   to {
     stroke-dashoffset: -180;
@@ -368,8 +383,35 @@ select {
  * themselves remain the primary visual change; motion only clarifies state.
  */
 .luxury-archive-image {
-  animation: luxury-frame-enter 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
   filter: saturate(0.95) contrast(1.015);
+}
+
+.luxury-archive-image-next {
+  animation: luxury-frame-enter-next 840ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.luxury-archive-image-previous {
+  animation: luxury-frame-enter-previous 840ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.luxury-archive-copy > * {
+  animation: luxury-copy-enter 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.luxury-archive-copy > :nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.luxury-archive-copy > :nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.luxury-archive-copy > :nth-child(4) {
+  animation-delay: 135ms;
+}
+
+.luxury-archive-copy > :nth-child(n + 5) {
+  animation-delay: 180ms;
 }
 
 .seasonal-index-image,
@@ -377,17 +419,51 @@ select {
   animation: seasonal-frame-enter 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes luxury-frame-enter {
+.seasonal-dialog-backdrop {
+  animation: seasonal-backdrop-enter 360ms ease-out both;
+}
+
+.seasonal-dialog-panel {
+  animation: seasonal-panel-enter 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes luxury-frame-enter-next {
   from {
+    clip-path: inset(0 100% 0 0);
     filter: saturate(0.72) contrast(0.96);
-    opacity: 0.36;
-    transform: scale(1.035);
+    transform: translate3d(4%, 0, 0) scale(1.05);
   }
 
   to {
+    clip-path: inset(0 0 0 0);
     filter: saturate(0.95) contrast(1.015);
-    opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes luxury-frame-enter-previous {
+  from {
+    clip-path: inset(0 0 0 100%);
+    filter: saturate(0.72) contrast(0.96);
+    transform: translate3d(-4%, 0, 0) scale(1.05);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+    filter: saturate(0.95) contrast(1.015);
+    transform: scale(1);
+  }
+}
+
+@keyframes luxury-copy-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -400,6 +476,27 @@ select {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes seasonal-backdrop-enter {
+  from {
+    background-color: rgb(7 17 13 / 0%);
+    backdrop-filter: blur(0);
+  }
+}
+
+@keyframes seasonal-panel-enter {
+  from {
+    clip-path: inset(12% 10% 0 10% round 32px);
+    opacity: 0;
+    transform: translate3d(0, 42px, 0) scale(0.975);
+  }
+
+  to {
+    clip-path: inset(0 round 26px);
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
@@ -907,9 +1004,17 @@ select {
     animation: none;
   }
 
+  .atelier-marquee-track {
+    animation: none;
+    transform: none;
+  }
+
   .luxury-archive-image,
+  .luxury-archive-copy > *,
   .seasonal-index-image,
-  .seasonal-dialog-image {
+  .seasonal-dialog-image,
+  .seasonal-dialog-backdrop,
+  .seasonal-dialog-panel {
     animation: none;
   }
 }

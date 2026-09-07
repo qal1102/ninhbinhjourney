@@ -44,11 +44,11 @@ export function DestinationIndex({
   const active = items[activeIndex] ?? items[0] ?? null;
 
   return (
-    <section id="destination-index" className="bg-[#FBFAF6] px-5 py-20 sm:px-8 lg:py-28">
+    <section id="destination-index" className="scroll-mt-20 overflow-x-clip bg-[#FBFAF6] px-4 py-14 min-[280px]:px-5 sm:px-8 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <p className="text-sm uppercase tracking-[0.24em] text-[#3F7568]">{copy.sectionLabel}</p>
-          <h2 className="font-display mt-3 text-4xl leading-tight text-[#183F34] sm:text-6xl">
+          <h2 className="font-display mt-3 text-[clamp(2.15rem,6vw,3.75rem)] leading-tight text-[#183F34] [text-wrap:balance]">
             {copy.sectionTitle}
           </h2>
           <p className="mt-5 text-lg leading-relaxed text-[#4A5751]">{copy.sectionIntro}</p>
@@ -67,7 +67,7 @@ export function DestinationIndex({
                     onClick={() => onSelect(item.id)}
                     onPointerEnter={() => setActiveIndex(index)}
                     onFocus={() => setActiveIndex(index)}
-                    className={`group grid w-full grid-cols-[3rem_4rem_1fr_auto] items-center gap-3 border-t border-[#183F34]/14 py-5 text-left transition-colors sm:grid-cols-[3.5rem_5rem_1fr_auto] sm:gap-5 sm:py-6 lg:grid-cols-[3.5rem_1fr_auto] lg:px-2 lg:py-7 ${
+                    className={`group grid min-w-0 w-full grid-cols-[1.5rem_3rem_minmax(0,1fr)_1rem] items-center gap-1.5 border-t border-[#183F34]/14 py-4 text-left transition-colors min-[280px]:grid-cols-[2rem_3.5rem_minmax(0,1fr)_1rem] min-[280px]:gap-2 min-[280px]:py-5 sm:grid-cols-[3.5rem_5rem_minmax(0,1fr)_auto] sm:gap-5 sm:py-6 lg:grid-cols-[3.5rem_minmax(0,1fr)_auto] lg:px-2 lg:py-7 ${
                       selected ? "bg-[#183F34]/[0.045]" : "hover:bg-[#183F34]/[0.025]"
                     }`}
                   >
@@ -77,7 +77,7 @@ export function DestinationIndex({
 
                     <span
                       data-flip-src={item.id}
-                      className="relative h-16 w-16 overflow-hidden rounded-[8px] bg-[#E8E4DA] sm:h-20 sm:w-20 lg:hidden"
+                      className="relative h-12 w-12 overflow-hidden rounded-[8px] bg-[#E8E4DA] min-[280px]:h-14 min-[280px]:w-14 sm:h-20 sm:w-20 lg:hidden"
                     >
                       <Image
                         src={item.image}
@@ -91,13 +91,13 @@ export function DestinationIndex({
 
                     <span className="min-w-0">
                       <span
-                        className={`font-display block text-2xl leading-tight transition-colors sm:text-4xl lg:text-[2.7rem] ${
+                        className={`font-display block break-words text-[1.05rem] leading-[1.08] transition-colors min-[280px]:text-2xl min-[280px]:leading-tight sm:text-4xl lg:text-[2.7rem] ${
                           selected ? "text-[#3F7568]" : "text-[#183F34] group-hover:text-[#3F7568]"
                         }`}
                       >
                         {item.name}
                       </span>
-                      <span className="mt-1.5 block text-[0.66rem] uppercase tracking-[0.18em] text-[#5F6962] sm:text-xs">
+                      <span className="mt-1.5 block break-words text-[0.58rem] uppercase leading-tight tracking-[0.08em] text-[#5F6962] min-[280px]:text-[0.66rem] min-[280px]:tracking-[0.12em] sm:text-xs sm:tracking-[0.18em]">
                         {item.category} · {item.duration}
                       </span>
                     </span>

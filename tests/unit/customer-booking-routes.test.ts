@@ -162,13 +162,69 @@ describe("CUS-06 booking routes", () => {
     expect(mocks.confirm).not.toHaveBeenCalled();
   });
 
-  it("TC-22: tra tien ngay thi khong nhan lien he — thu du lieu khong dung toi la mot khoan no", async () => {
+  it("TC-25: trả ngay CÓ để lại liên hệ thì phải nhận, để khách còn lấy lại được vé", async () => {
+    // Luật cũ của TC-22 cấm chuyện này, với lý lẽ đúng lúc ấy: thu một dữ liệu
+    // cá nhân không dùng tới là một khoản nợ. TC-23 lật tiền đề — hệ thống
+    // chưa gửi được tin nhắn nào, nên `/tra-cuu-ve` là đường lấy lại vé duy
+    // nhất, mà nó đối chiếu bằng mã đặt chỗ CỘNG liên hệ. Cấm lưu nghĩa là
+    // khách trả ngay đóng tab là mất vé.
     mocks.cookies.mockResolvedValue({ get: vi.fn().mockReturnValue({ value: anonymousId }) });
+    mocks.confirm.mockResolvedValue({
+      orderId: "50000000-0000-4000-8000-000000000002",
+      orderCode: "NBJ-ABCDEF123457",
+      orderStatus: "confirmed",
+      paymentAttemptId: "70000000-0000-4000-8000-000000000002",
+      paymentStatus: "succeeded",
+      paymentMode: "simulation",
+      amountDueVnd: 0,
+      tickets: [],
+      inserted: true,
+    });
     const response = await confirmBooking(request("/api/customer-booking-confirmations", {
       payment_request_id: "30000000-0000-4000-8000-000000000001",
       hold_id: "60000000-0000-4000-8000-000000000001",
       payment_mode: "simulation",
       contact: "0912345678",
+    }));
+    expect(response.status).toBe(201);
+    expect(mocks.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentMode: "simulation", contact: "0912345678" }),
+    );
+  });
+
+  it("TC-25: trả ngay KHÔNG để lại liên hệ vẫn chạy y như trước", async () => {
+    // Không bắt buộc là không bắt buộc. Khách không muốn cho số thì vẫn phải
+    // đặt được vé, chỉ là mất trang thì không lấy lại được — và màn hình nói
+    // thẳng điều đó chứ không im lặng.
+    mocks.cookies.mockResolvedValue({ get: vi.fn().mockReturnValue({ value: anonymousId }) });
+    mocks.confirm.mockResolvedValue({
+      orderId: "50000000-0000-4000-8000-000000000003",
+      orderCode: "NBJ-ABCDEF123458",
+      orderStatus: "confirmed",
+      paymentAttemptId: "70000000-0000-4000-8000-000000000003",
+      paymentStatus: "succeeded",
+      paymentMode: "simulation",
+      amountDueVnd: 0,
+      tickets: [],
+      inserted: true,
+    });
+    const response = await confirmBooking(request("/api/customer-booking-confirmations", {
+      payment_request_id: "30000000-0000-4000-8000-000000000004",
+      hold_id: "60000000-0000-4000-8000-000000000001",
+      payment_mode: "simulation",
+    }));
+    expect(response.status).toBe(201);
+    expect(mocks.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentMode: "simulation", contact: undefined }),
+    );
+  });
+
+  it("TC-25: trả TẠI ĐIỂM mà thiếu liên hệ thì vẫn bị chặn — không nới một ly", async () => {
+    mocks.cookies.mockResolvedValue({ get: vi.fn().mockReturnValue({ value: anonymousId }) });
+    const response = await confirmBooking(request("/api/customer-booking-confirmations", {
+      payment_request_id: "30000000-0000-4000-8000-000000000005",
+      hold_id: "60000000-0000-4000-8000-000000000001",
+      payment_mode: "pay-on-site",
     }));
     expect(response.status).toBe(400);
     expect(mocks.confirm).not.toHaveBeenCalled();

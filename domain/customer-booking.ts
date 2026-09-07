@@ -35,14 +35,23 @@ export const CustomerBookingHoldRequestSchema = z
   );
 
 /**
- * TC-22 — khách chọn trả tiền ngay (mô phỏng) hay trả tại điểm.
+ * TC-22 — khách chọn trả tiền ngay hay trả tại điểm.
  *
  * Bỏ trống `payment_mode` thì tính là `simulation`, đúng hành vi trước TC-22 —
  * mọi lời gọi cũ vẫn chạy y như cũ.
  *
- * `contact` chỉ nhận khi trả tại điểm, và ràng buộc đó nằm ngay trong lược đồ:
- * thu một dữ liệu cá nhân mà không dùng tới là một khoản nợ, không phải một
- * tính năng. Máy chủ băm và mã hoá trước khi lưu, không bao giờ lưu thô.
+ * **TC-25 gỡ một ràng buộc cũ, và đây là lý do.** Bản đầu CẤM gửi `contact`
+ * kèm lối trả ngay, với lý lẽ đúng lúc ấy: *thu một dữ liệu cá nhân mà không
+ * dùng tới là một khoản nợ, không phải một tính năng.*
+ *
+ * TC-23 lật tiền đề đó. Hệ thống chưa gửi được tin nhắn hay email nào, nên
+ * `/tra-cuu-ve` là **đường lấy lại vé duy nhất** của khách, và nó đối chiếu
+ * bằng mã đặt chỗ CỘNG liên hệ. Cấm lưu liên hệ ở lối trả ngay nghĩa là khách
+ * đóng tab là mất vé, không còn đường nào lấy lại. Liên hệ giờ CÓ dùng tới.
+ *
+ * Nên luật mới: **trả tại điểm thì bắt buộc, trả ngay thì tuỳ khách.** Không
+ * bắt buộc, không mặc định điền sẵn, và màn hình phải nói rõ nó dùng để làm gì.
+ * Máy chủ băm và mã hoá trước khi lưu, không bao giờ lưu thô.
  */
 export const CustomerBookingConfirmationRequestSchema = z
   .object({
@@ -56,13 +65,6 @@ export const CustomerBookingConfirmationRequestSchema = z
     (value) => value.payment_mode !== "pay-on-site" || Boolean(value.contact),
     {
       message: "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email.",
-      path: ["contact"],
-    },
-  )
-  .refine(
-    (value) => value.payment_mode === "pay-on-site" || !value.contact,
-    {
-      message: "Trả tiền ngay thì không cần để lại liên hệ.",
       path: ["contact"],
     },
   );

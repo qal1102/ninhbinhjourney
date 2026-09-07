@@ -238,21 +238,26 @@ export async function createCustomerBookingHold(input: {
  *
  * Số điện thoại hoặc email **không đi ra khỏi máy chủ dưới dạng thô**:
  * `protectCustomerContact` băm và mã hoá tại đây, cơ sở dữ liệu chỉ nhận bản
- * đã bảo vệ. Chính vì vậy chỗ này không nhận `contact` cho lối mô phỏng — thu
- * một dữ liệu cá nhân không dùng tới là một khoản nợ, không phải một tính năng.
+ * đã bảo vệ.
+ *
+ * **TC-25:** trước đây chỗ này cố ý bỏ `contact` ở lối mô phỏng, vì "thu một
+ * dữ liệu cá nhân không dùng tới là một khoản nợ, không phải một tính năng".
+ * Lý lẽ ấy đúng cho tới TC-23: nay `/tra-cuu-ve` là đường lấy lại vé duy nhất
+ * và nó đối chiếu bằng mã đặt chỗ cộng liên hệ, nên liên hệ CÓ dùng tới. Bỏ nó
+ * đi nghĩa là khách trả ngay đóng tab là mất vé. Vẫn giữ nguyên tinh thần thu
+ * ít: trả tại điểm thì bắt buộc, trả ngay thì chỉ lưu khi khách tự để lại.
  */
 export async function confirmCustomerBooking(input: {
   paymentRequestId: string;
   holdId: string;
   anonymousId: string;
   paymentMode: "simulation" | "pay-on-site";
-  /** Bắt buộc khi `paymentMode` là `pay-on-site`; bỏ qua ở lối mô phỏng. */
+  /** Bắt buộc khi `paymentMode` là `pay-on-site`; tuỳ khách ở lối trả ngay. */
   contact?: string;
 }) {
-  const protectedContact =
-    input.paymentMode === "pay-on-site" && input.contact
-      ? protectCustomerContact(input.contact)
-      : null;
+  const protectedContact = input.contact
+    ? protectCustomerContact(input.contact)
+    : null;
   if (input.paymentMode === "pay-on-site" && !protectedContact) {
     throw new CustomerBookingRepositoryError(
       "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email.",

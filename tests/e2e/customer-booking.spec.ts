@@ -107,8 +107,13 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
   test("holds shared capacity then confirms a simulated payment into a T8 ticket", async ({ page }) => {
     await page.goto("/checkout?package=heritage-day");
     await expect(page.getByRole("heading", { name: /Một chỗ đã giữ/i })).toBeVisible();
-    await expect(page.getByText(/Thanh toán mô phỏng — không thu tiền/i)).toBeVisible();
-    await expect(page.getByLabel(/email|điện thoại|số thẻ/i)).toHaveCount(0);
+    // TC-25: khối này từng mở đầu bằng "Thanh toán mô phỏng — không thu tiền",
+    // và người đọc dừng ngay ở chữ "mô phỏng". Nay nói cái CÓ trước.
+    await expect(page.getByText(/Vé phát ra ở đây là vé thật/i)).toBeVisible();
+    // Lời hứa không đổi và là lời hứa quan trọng nhất trên trang này: không
+    // bao giờ hỏi số thẻ hay tài khoản ngân hàng. Ô liên hệ thì có, và cố ý
+    // có — nó là đường lấy lại vé duy nhất khi hệ thống chưa gửi được tin.
+    await expect(page.getByLabel(/số thẻ|thẻ tín dụng|tài khoản ngân hàng|cvv/i)).toHaveCount(0);
 
     // TC-02: ba bước ngày → giờ → số khách — nút giữ chỗ chỉ mở khi đã chọn giờ.
     const slotButton = page.getByRole("button", { name: /Khung .*còn 12 chỗ/i });
@@ -129,7 +134,10 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     expect(holdRequestBody.children).toBe(1);
     await expect(page.getByText(/Đã giữ chỗ thật trong kho công suất/i)).toBeVisible();
 
-    await page.getByRole("button", { name: "Xác nhận thanh toán mô phỏng" }).click();
+    // TC-25: mặc định nay là trả tại điểm — lối duy nhất chạy trọn vẹn. Bài
+    // này đo lối trả trước, nên phải chọn nó ra một cách tường minh.
+    await page.getByRole("radio", { name: /Nhận vé ngay, chưa trừ tiền/ }).check();
+    await page.getByRole("button", { name: "Nhận vé ngay" }).click();
     await expect(page.getByTestId("customer-booking-confirmed")).toContainText("NBJ-ABCDEF123456");
     await expect(page.getByTestId("customer-booking-confirmed")).toContainText("WEB-ABCDEF123456");
     await expect(page.getByTestId("customer-booking-confirmed")).toContainText("2 lượt vào");

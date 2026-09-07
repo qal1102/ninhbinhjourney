@@ -454,6 +454,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Cách trả tiền gửi lên chưa hợp lệ.",
   CUSTOMER_PAYMENT_CONTACT_REQUIRED:
     "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc.",
+  CUSTOMER_PAYMENT_CONTACT_INVALID:
+    "Số điện thoại hoặc email bạn để lại chưa đúng dạng. Bạn xem lại giúp em ạ.",
   CUSTOMER_PAYMENT_UNPAID_LIMIT:
     "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp giúp em ạ.",
   PAYMENT_COLLECT_INPUT_INVALID:

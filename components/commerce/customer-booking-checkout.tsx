@@ -225,7 +225,13 @@ export function CustomerBookingCheckout({
   const [leaderName, setLeaderName] = useState("");
   const [leaderPhone, setLeaderPhone] = useState("");
   // TC-22: khách chọn trả tiền tại điểm thay vì trả ngay trên trang.
-  const [payAtSite, setPayAtSite] = useState(false);
+  // TC-25: mặc định là trả tại điểm — lối duy nhất chạy trọn vẹn, có người
+  // thu tiền thật và có bảng đối soát cuối ca nhận khoản ấy.
+  const [payAtSite, setPayAtSite] = useState(true);
+  // Có liên hệ nào thật sự được gửi lên cùng đơn này không. Đọc lại ô nhập lúc
+  // dựng màn hình xác nhận thì sai: khách có thể gõ thêm vào ô sau khi đã đặt
+  // xong, và màn hình sẽ hứa một đường tra cứu không tồn tại.
+  const [contactSaved, setContactSaved] = useState(false);
   const [contact, setContact] = useState("");
   const [groupLabel, setGroupLabel] = useState("");
   const [group, setGroup] = useState<VisitorGroupStatus | null>(null);
@@ -406,11 +412,14 @@ export function CustomerBookingCheckout({
           payment_request_id: paymentRequestId.current,
           hold_id: hold.hold.id,
           payment_mode: payAtSite ? "pay-on-site" : "simulation",
-          ...(payAtSite ? { contact: contact.trim() } : {}),
+          // TC-25: lối trả trước cũng gửi liên hệ, nhưng chỉ khi khách có gõ
+          // vào. Gửi một chuỗi rỗng lên là máy chủ từ chối cả đơn.
+          ...(contact.trim().length >= 6 ? { contact: contact.trim() } : {}),
         }),
       });
       const payload = await responsePayload(response) as ConfirmationResult;
       setConfirmation(payload);
+      setContactSaved(contact.trim().length >= 6);
       setMessage(
         payAtSite
           ? "Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào ạ."
@@ -640,10 +649,19 @@ export function CustomerBookingCheckout({
             ) : null}
           </div>
 
+          {/* TC-25: khối này trước đây mở đầu bằng "Thanh toán mô phỏng —
+              không thu tiền", và đó là câu giết cả luồng. Người đọc dừng ngay
+              ở chữ "mô phỏng" rồi bỏ đi, vì tưởng bấm tiếp cũng chẳng ra gì.
+              Sự thật ngược lại: chỗ giữ là thật, đơn là thật, vé phát ra nằm
+              trong kho vé vận hành và máy quét ở cổng đọc được. Thứ duy nhất
+              chưa nối là đường chuyển tiền từ ngân hàng.
+
+              Nên nói cái CÓ trước, rồi mới nói cái chưa có — vẫn đủ thật,
+              nhưng không mời người ta bỏ đi ngay từ dòng đầu. */}
           <div className="mt-7 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
-            <p className="font-extrabold">Thanh toán mô phỏng — không thu tiền</p>
+            <p className="font-extrabold">Vé phát ra ở đây là vé thật</p>
             <p className="mt-2 text-sm leading-6">
-              Hệ thống không hỏi số thẻ, tài khoản ngân hàng hay dữ liệu thanh toán thật. Nút xác nhận chỉ kiểm chứng vòng đời order → payment mô phỏng → vé T8.
+              Chỗ được giữ thật trong kho công suất, vé có mã QR mà máy quét ở cổng đọc được. Riêng đường chuyển tiền từ ngân hàng thì bên em chưa đấu nối, nên trang này <strong className="font-bold">không hỏi số thẻ hay tài khoản</strong> của bạn — và cũng sẽ không bao giờ hỏi trên một trang chưa đấu nối.
             </p>
           </div>
 
@@ -708,7 +726,12 @@ export function CustomerBookingCheckout({
                 Bên em đang đấu nối Zalo; xong việc đó thì mã đặt chỗ tự về máy bạn. Còn bây
                 giờ hệ thống chưa gửi được tin nhắn hay email nào, nên bạn chụp lại màn hình
                 này giúp em ạ.
-                {confirmation.payment.mode === "pay-on-site" ? (
+                {/* TC-25: câu này nay tuỳ vào việc khách CÓ để lại liên hệ hay
+                    không, chứ không tuỳ vào cách trả tiền. Trước đây lối trả
+                    ngay luôn nhận câu "trang tra cứu chưa có gì để đối chiếu",
+                    và đó là sự thật của lúc ấy — nhưng là một sự thật đáng lẽ
+                    không nên tồn tại. */}
+                {contactSaved ? (
                   <>
                     {" "}
                     Lỡ mất trang, mời bạn vào{" "}
@@ -724,8 +747,8 @@ export function CustomerBookingCheckout({
                 ) : (
                   <>
                     {" "}
-                    Lối trả ngay không nhận liên hệ của bạn, nên trang tra cứu chưa có gì để đối
-                    chiếu — tấm ảnh chụp màn hình là bản lưu duy nhất của bạn ạ.
+                    Lần này bạn không để lại số nào, nên trang tra cứu chưa có gì để đối chiếu —
+                    tấm ảnh chụp màn hình là bản lưu duy nhất của bạn ạ.
                   </>
                 )}
               </p>
@@ -944,35 +967,45 @@ export function CustomerBookingCheckout({
           </>
         ) : (
           <>
-          {/* TC-22: hai lối trả tiền, khách tự chọn. Mặc định vẫn là trả
-              ngay trên trang; trả tại điểm là lối tạm trong lúc hệ thống
-              chưa gánh được thanh toán thật. */}
+          {/* TC-25 đổi thứ tự hai lối, và đây là lý do.
+              Trả tại điểm là lối DUY NHẤT chạy trọn vẹn từ đầu tới cuối: giữ
+              chỗ, phát vé, nhân viên thu tiền mặt ở cổng, và khoản ấy nay về
+              đúng bảng đối soát cuối ca. Không có một mắt xích nào phải giả
+              vờ. Nên nó đứng trước và là lựa chọn mặc định.
+              Lối trả trước đứng sau, nói thẳng là chưa trừ tiền. */}
           <fieldset className="mt-7 rounded-2xl border border-[#d7d5cd] bg-white/60 p-4">
             <legend className="px-2 text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Trả tiền thế nào</legend>
             <label className="flex min-h-11 items-start gap-3 text-sm">
-              <input type="radio" name="cach-tra-tien" checked={!payAtSite} onChange={() => setPayAtSite(false)} className="mt-1" />
-              <span><strong className="font-bold">Trả ngay trên trang</strong> — thanh toán mô phỏng, không thu tiền thật.</span>
+              <input type="radio" name="cach-tra-tien" checked={payAtSite} onChange={() => setPayAtSite(true)} className="mt-1" />
+              <span><strong className="font-bold">Trả tại điểm</strong> — giữ chỗ ngay, tới nơi đưa mã cho nhân viên rồi trả tiền mặt.</span>
             </label>
             <label className="mt-3 flex min-h-11 items-start gap-3 text-sm">
-              <input type="radio" name="cach-tra-tien" checked={payAtSite} onChange={() => setPayAtSite(true)} className="mt-1" />
-              <span><strong className="font-bold">Trả tại điểm</strong> — giữ chỗ trước, tới nơi đưa mã cho nhân viên rồi trả tiền.</span>
+              <input type="radio" name="cach-tra-tien" checked={!payAtSite} onChange={() => setPayAtSite(false)} className="mt-1" />
+              <span><strong className="font-bold">Nhận vé ngay, chưa trừ tiền</strong> — vé và mã QR có liền; bên em chưa đấu nối ngân hàng nên trang không thu đồng nào.</span>
             </label>
-            {payAtSite ? (
-              <label className="mt-4 grid gap-1 text-xs font-bold text-[#5f6f66]">
-                Số điện thoại hoặc email
-                <input
-                  value={contact}
-                  onChange={(event) => setContact(event.target.value)}
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="0912 345 678"
-                  className="min-h-11 rounded-xl border border-[#cbd7d1] bg-white px-3 text-sm font-medium"
-                />
-                <span className="mt-1 font-normal leading-5 text-[#6f7a73]">
-                  Chỉ dùng để đội ngũ liên lạc khi có việc, và để một chỗ giữ mà không tới còn truy được về ai. Số của bạn được mã hoá trước khi lưu.
-                </span>
-              </label>
-            ) : null}
+            {/* TC-25: ô liên hệ nay hiện ở CẢ HAI lối.
+                Trước đây nó chỉ hiện khi trả tại điểm, nên khách trả trước
+                không có gì được lưu — đóng tab là mất vé, vì trang tra cứu
+                đối chiếu bằng mã đặt chỗ CỘNG liên hệ. Hệ thống lại chưa gửi
+                được tin nhắn nào, nên đó là đường lấy lại duy nhất. */}
+            <label className="mt-4 grid gap-1 text-xs font-bold text-[#5f6f66]">
+              {payAtSite ? "Số điện thoại hoặc email" : "Số điện thoại hoặc email (không bắt buộc)"}
+              <input
+                value={contact}
+                onChange={(event) => setContact(event.target.value)}
+                // Ô này nhận CẢ số điện thoại lẫn email, nên không được ghim
+                // `inputMode="tel"`: bàn phím số trên điện thoại không gõ nổi
+                // dấu @. Đúng lỗi đã sửa ở trang tra cứu vé.
+                placeholder="0912 345 678 hoặc ban@email.com"
+                className="min-h-11 rounded-xl border border-[#cbd7d1] bg-white px-3 text-sm font-medium"
+              />
+              <span className="mt-1 font-normal leading-5 text-[#6f7a73]">
+                {payAtSite
+                  ? "Để đội ngũ liên lạc được khi có việc, và để một chỗ giữ mà không tới còn truy được về ai."
+                  : "Để lỡ mất trang, bạn còn mở lại được vé ở mục tra cứu vé. Không để lại cũng được, nhưng khi ấy tấm ảnh chụp màn hình là bản lưu duy nhất của bạn."}
+                {" "}Số của bạn được mã hoá trước khi lưu.
+              </span>
+            </label>
           </fieldset>
           <button
             type="button"
@@ -980,7 +1013,10 @@ export function CustomerBookingCheckout({
             disabled={pending !== null || remainingSeconds <= 0}
             className="mt-4 min-h-12 w-full rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17] disabled:opacity-50"
           >
-            {pending === "confirm" ? "Đang phát hành vé…" : remainingSeconds <= 0 ? "Giữ chỗ đã hết hạn" : payAtSite ? "Giữ chỗ, trả tiền tại điểm" : "Xác nhận thanh toán mô phỏng"}
+            {/* TC-25: nút cũ ghi "Xác nhận thanh toán mô phỏng" — đọc lên là
+                thấy một cái nút giả, chẳng ai buồn bấm. Nay nút nói đúng thứ
+                sắp xảy ra: bấm xong là có vé. */}
+            {pending === "confirm" ? "Đang phát hành vé…" : remainingSeconds <= 0 ? "Giữ chỗ đã hết hạn" : payAtSite ? "Giữ chỗ, trả tiền tại điểm" : "Nhận vé ngay"}
           </button>
           </>
         )}

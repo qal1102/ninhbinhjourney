@@ -102,6 +102,31 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   const videoRef = useRef<HTMLVideoElement>(null);
   const camera = useGateCameraScanner(videoRef, setScanCode);
   const isDirector = user.role === "director";
+  // Mã QR phóng to để quét bằng điện thoại. Sinh riêng ở kích thước lớn chứ
+  // không kéo giãn tấm 160 pixel: kéo giãn thì các ô vuông nhoè cạnh, và đó
+  // đúng là thứ làm camera đọc trượt.
+  const [zoomedQr, setZoomedQr] = useState<{ code: string; url: string } | null>(null);
+  const openTicketQrZoom = useCallback(async (code: string) => {
+    try {
+      const url = await QRCode.toDataURL(code, {
+        width: 640,
+        margin: 2,
+        errorCorrectionLevel: "M",
+        color: { dark: "#183f34", light: "#ffffff" },
+      });
+      setZoomedQr({ code, url });
+    } catch {
+      // Vẽ hỏng thì thôi, không dựng lớp phủ rỗng cho người dùng nhìn.
+    }
+  }, []);
+  useEffect(() => {
+    if (!zoomedQr) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setZoomedQr(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomedQr]);
   const sales = ticketSales ?? EMPTY_TICKET_SALES;
   const selected = sales.periods.find((item) => item.period === period) ?? sales.periods[0];
 
@@ -351,30 +376,61 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
             {todayTicketsPending ? (
               <p className="mt-3 text-xs text-white/70">Đang tải danh sách vé…</p>
             ) : todayTickets.length === 0 ? (
-              <p className="mt-3 text-xs text-white/70">
-                {todayTicketsMessage || "Hôm nay chưa có vé nào còn hiệu lực tại cơ sở này."}{" "}
-                Bạn vẫn quét được vé khách đưa: nhập mã vào ô phía trên hoặc
-                tra theo tên, số điện thoại ở mục bên dưới.{" "}
-                {isDirector
-                  ? "Cần vé để tập quét thì bấm nút làm mới vé mẫu ở trên."
-                  : "Riêng vé mẫu để tập quét thì chỉ giám đốc làm mới được."}
-              </p>
+              /* Chỗ này là lý do chủ dự án nói "quét cái gì". Toàn bộ vé mẫu
+                 hết hiệu lực từ đầu tháng 8, nên danh sách rỗng và màn hình
+                 không có một mã QR nào để chĩa điện thoại vào. Nút kéo vé về
+                 thì có, nhưng nó là một nút nhỏ nằm trên tiêu đề, và một câu
+                 chữ xám mách nước ở dưới — người dùng thật không thấy.
+                 Nay lời mời làm việc ấy trở thành hành động chính, to và rõ. */
+              <div className="mt-3 rounded-2xl border border-white/20 bg-white/8 p-4">
+                <p className="text-sm font-bold text-white/90">
+                  {todayTicketsMessage || "Hôm nay chưa có vé nào còn hiệu lực tại cơ sở này."}
+                </p>
+                {isDirector ? (
+                  <>
+                    <p className="mt-2 text-xs leading-5 text-white/70">
+                      Muốn thử quét thì bấm nút dưới đây: hệ thống kéo bộ vé mẫu về đúng ngày hôm nay và hiện mã QR ngay tại đây. Bạn mở màn hình này trên máy tính rồi dùng điện thoại quét chính mã ấy là chạy trọn vòng.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleRefreshDemoTickets}
+                      disabled={refreshPending}
+                      className="mt-3 min-h-12 w-full rounded-xl bg-white px-5 font-black text-[#183f34] outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34] disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+                    >
+                      {refreshPending ? "Đang kéo vé mẫu về…" : "Kéo vé mẫu về hôm nay để quét thử"}
+                    </button>
+                  </>
+                ) : (
+                  <p className="mt-2 text-xs leading-5 text-white/70">
+                    Bạn vẫn quét được vé khách đưa: nhập mã vào ô phía trên, hoặc tra theo tên và số điện thoại ở mục bên dưới. Riêng vé mẫu để tập quét thì chỉ giám đốc kéo về được.
+                  </p>
+                )}
+              </div>
             ) : (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {todayTickets.map((ticket) => (
-                  <button
+                  <div
                     key={ticket.ticketCode}
-                    type="button"
-                    onClick={() => setScanCode(ticket.ticketCode)}
-                    className="flex items-center gap-3 rounded-xl bg-white/95 p-3 text-left text-[#183f34] outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34]"
+                    className="flex items-center gap-3 rounded-xl bg-white/95 p-3 text-left text-[#183f34]"
                   >
-                    {qrDataUrls[ticket.ticketCode] ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- QR is a generated data URL, not an optimizable asset
-                      <img src={qrDataUrls[ticket.ticketCode]} alt={`Mã QR của vé ${ticket.ticketCode}`} className="h-16 w-16 shrink-0 rounded-md" />
-                    ) : (
-                      <span className="grid h-16 w-16 shrink-0 place-items-center rounded-md bg-[#eef3f0] text-[10px] text-[#7b8881]">Đang tạo QR…</span>
-                    )}
-                    <span className="min-w-0">
+                    {/* Bấm vào QR là phóng to. Mã 64 pixel trên màn hình thì
+                        mắt người đọc được, còn camera điện thoại chĩa vào rất
+                        khó bắt nét — mà quét bằng điện thoại mới đúng là việc
+                        màn hình này sinh ra để làm. */}
+                    <button
+                      type="button"
+                      onClick={() => void openTicketQrZoom(ticket.ticketCode)}
+                      title="Phóng to mã QR để quét bằng điện thoại"
+                      className="shrink-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#183f34]"
+                    >
+                      {qrDataUrls[ticket.ticketCode] ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- QR is a generated data URL, not an optimizable asset
+                        <img src={qrDataUrls[ticket.ticketCode]} alt={`Phóng to mã QR của vé ${ticket.ticketCode}`} className="h-16 w-16 rounded-md" />
+                      ) : (
+                        <span className="grid h-16 w-16 place-items-center rounded-md bg-[#eef3f0] text-[10px] text-[#7b8881]">Đang tạo QR…</span>
+                      )}
+                    </button>
+                    <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
                         <span className="truncate font-mono text-sm font-black">{ticket.ticketCode}</span>
                         {isDemoTicketCode(ticket.ticketCode) ? (
@@ -384,8 +440,24 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                         )}
                       </span>
                       <span className="mt-1 block text-xs text-[#5c6f67]">{TICKET_PRODUCT_LABELS[ticket.product] ?? ticket.product} · còn {ticket.entriesAllowed - ticket.entriesUsed} lượt</span>
+                      <span className="mt-2 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setScanCode(ticket.ticketCode)}
+                          className="min-h-9 rounded-lg bg-[#183f34] px-3 text-xs font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-[#183f34]"
+                        >
+                          Đưa vào ô quét
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void openTicketQrZoom(ticket.ticketCode)}
+                          className="min-h-9 rounded-lg border border-[#c3d2cb] px-3 text-xs font-black text-[#2c463c] outline-none focus-visible:ring-2 focus-visible:ring-[#183f34]"
+                        >
+                          Phóng to QR
+                        </button>
+                      </span>
                     </span>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -558,12 +630,46 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
         </article>
       </section>
 
-      {mode === "sales" && (user.role === "employee" || user.role === "manager") ? (
+      {/* Chủ dự án nói thẳng: "account giám đốc có thể check luôn mấy chức
+          năng đó cho lẹ nhé tao đã nói rồi." Đúng — họ đăng nhập bằng đúng
+          một tài khoản, và một màn hình ẩn với tài khoản ấy là một màn hình
+          không tồn tại. Chốt ca vốn là việc của người trực, nhưng giám đốc
+          phải xem và thử được, nên bỏ hàng rào vai ở đây. */}
+      {mode === "sales" ? (
         <ShiftCloseSiteWorkflow
           site={site}
           user={user}
           records={shiftClosures}
         />
+      ) : null}
+
+      {zoomedQr ? (
+        <div
+          className="fixed inset-0 z-[120] grid place-items-center bg-black/70 p-5"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Mã QR của vé ${zoomedQr.code}`}
+          onClick={() => setZoomedQr(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl bg-white p-5 text-center text-[#183f34]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- QR is a generated data URL, not an optimizable asset */}
+            <img src={zoomedQr.url} alt={`Mã QR của vé ${zoomedQr.code}`} className="mx-auto w-full max-w-xs" />
+            <p className="mt-3 font-mono text-sm font-black">{zoomedQr.code}</p>
+            <p className="mt-2 text-xs leading-5 text-[#5c6f67]">
+              Mời bạn mở màn hình này trên máy tính rồi dùng điện thoại quét chính mã trên đây — đúng như khách chìa mã ở cổng.
+            </p>
+            <button
+              type="button"
+              onClick={() => setZoomedQr(null)}
+              className="mt-4 min-h-12 w-full rounded-xl bg-[#183f34] px-5 font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-[#183f34]"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
       ) : null}
     </div>
   );

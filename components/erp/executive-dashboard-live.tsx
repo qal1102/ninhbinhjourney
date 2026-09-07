@@ -440,6 +440,35 @@ export function ExecutiveDashboard({
             </Link>
           ))}
         </div>
+
+        {/* Chủ dự án dùng thật rồi hỏi: "tao dùng account giám đốc có thấy
+            chức năng quét đéo đâu?" — hỏi đúng. Màn hình quét nằm ở
+            `/erp/{cơ sở}/check-in-khach`, tức phải qua ba tầng và một nhóm
+            tên "Booking & Check-in" mới tới; không ai đi tìm một thứ mình
+            không biết là có. Hai đường dưới đây đi thẳng tới hai màn hình
+            có thể cầm điện thoại lên thử được ngay. */}
+        {sites[0] ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-[#7a8781]">
+              Thử tận tay tại {sites[0].shortName}:
+            </span>
+            <Link
+              href={`/erp/${sites[0].id}/check-in-khach`}
+              className="inline-flex min-h-10 items-center rounded-lg bg-[#183f34] px-3 text-sm font-bold text-white transition hover:bg-[#12332a]"
+            >
+              Quét mã ở cổng →
+            </Link>
+            <Link
+              href={`/erp/${sites[0].id}/ve-dat-cho`}
+              className="inline-flex min-h-10 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+            >
+              Bán vé, lập phiếu đoàn →
+            </Link>
+            <span className="text-xs text-[#8b968f]">
+              Cơ sở nào cũng có hai màn hình này.
+            </span>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-[#e2d4b9] bg-[#fffaf0] p-5 sm:p-6">

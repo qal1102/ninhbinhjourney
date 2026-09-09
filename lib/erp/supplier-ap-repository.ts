@@ -350,7 +350,16 @@ function invoiceFromRows(
     // Ba bảng tài chính KHÔNG có cột `data_origin` và cố ý không bao giờ có:
     // cơ sở dữ liệu chặn mọi lần sửa hàng đã ghi sổ, và nó chặn đúng. Nguồn
     // gốc suy ra lúc đọc — xem `domain/erp-data-origin.ts`.
-    dataOrigin: erpFinanceDataOrigin(row),
+    //
+    // ⚠ Ba ô ghi chú này ĐANG CHƯA CÓ bộ kiểm nào đặt dấu vào: smoke T10b chỉ
+    // đi luồng tiền, không dựng hóa đơn nhà cung cấp. Truyền vào đây là để một
+    // bộ kiểm công nợ sau này không phải nhớ sửa lại chỗ này — chứ đường đi ấy
+    // chưa từng chạy thật lần nào.
+    dataOrigin: erpFinanceDataOrigin(row, [
+      row.exception_note,
+      row.accountant_note,
+      row.checker_note,
+    ]),
     caseCode: asString(row.case_code, "Mã hồ sơ"),
     supplier,
     requestReference: asString(row.request_reference, "Mã đề nghị mua"),

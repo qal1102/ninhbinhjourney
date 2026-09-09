@@ -70,18 +70,27 @@ export function erpDataOriginLabel(origin: ErpDataOrigin): string | null {
  * thêm một cái nhãn cũng không đáng để mở cánh cửa ấy — nên nguồn gốc ở đây
  * **suy ra lúc đọc**, không ghi vào hàng.
  *
- * Ba dấu hiệu, xét theo thứ tự:
+ * Bốn dấu hiệu, xét theo thứ tự từ chắc tới yếu:
  *
  *   1. Có cột `data_origin` thì tin cột (phòng khi sau này bảng nào đó có).
  *   2. Mã hàng mang tiền tố gieo sẵn — `61000000-`, `87000000-`, `88000000-`.
  *      Hàng thật dùng `gen_random_uuid()` nên không bao giờ trúng.
- *   3. Tạo trước mốc dưới đây thì là cặn của các lượt chạy thử.
+ *   3. Tạo trước mốc `ERP_REAL_DATA_FROM` thì là cặn của các lượt chạy thử.
+ *   4. Ghi chú **mở đầu** bằng dấu bộ kiểm thử tự đặt — xem dưới.
  *
- * Vì sao cần cả dấu hiệu thứ ba: đo trên production 06/09/2026, sổ kế toán có
+ * Vì sao cần dấu hiệu thứ ba: đo trên production 06/09/2026, sổ kế toán có
  * 11 hàng thì **chỉ 2 hàng mang tiền tố gieo sẵn**, 9 hàng còn lại mang mã
  * ngẫu nhiên vì chúng do các lượt chạy thử đi qua đúng quy trình tạo ra —
  * đúng thứ `AGENTS.md` cảnh báo. Không có gì trong cấu trúc phân biệt được
  * chúng với hàng thật, chỉ có thời gian.
+ *
+ * Vì sao cần cả dấu hiệu thứ tư: mốc thời gian chỉ che được quá khứ. Bộ kiểm
+ * `prod-smoke-t10b-cash-reconciliation-roundtrip` chạy thẳng trên production,
+ * mỗi lượt dựng một ca chốt và mấy bút toán mới tinh — mã ngẫu nhiên, giờ tạo
+ * là hôm nay, tức là **sau** mốc. Nó có hoàn tác bút toán về net-zero, nhưng
+ * hàng chốt ca thì ở lại. Không có dấu hiệu thứ tư thì mỗi lượt smoke lại thả
+ * thêm một ca "thật" giả vào ô tiền của giám đốc, đúng kiểu trôi số mà
+ * `AGENTS.md` kể ở vụ 02/08.
  */
 const ERP_SEED_ID_PREFIXES = ["61000000-", "87000000-", "88000000-"] as const;
 
@@ -95,11 +104,51 @@ const ERP_SEED_ID_PREFIXES = ["61000000-", "87000000-", "88000000-"] as const;
  */
 export const ERP_REAL_DATA_FROM = Date.UTC(2026, 7, 5, 17, 0, 0); // 06/08/2026 00:00 +07
 
-export function erpFinanceDataOrigin(row: {
-  data_origin?: unknown;
-  id?: unknown;
-  created_at?: unknown;
-}): ErpDataOrigin {
+/**
+ * Dấu mà bộ kiểm thử tự đặt vào ô ghi chú của hàng nó tạo trên production.
+ *
+ * Khuôn phải khớp đúng `QA-T10B-RT-` cộng 13 chữ số của `Date.now()`, và phải
+ * **nằm ngay đầu ghi chú** — xem `tests/e2e/prod-smoke-t10b-cash-reconciliation-roundtrip.spec.ts`,
+ * nơi mọi ô đều điền theo lối `${MARKER} — …`.
+ *
+ * **Chỗ yếu, nói thẳng ra chứ không giấu.** Ba dấu hiệu trên đứng ngoài tầm
+ * với của người dùng: mã hàng do cơ sở dữ liệu sinh, giờ tạo do cơ sở dữ liệu
+ * đóng, cột nhãn thì chưa có. Dấu này thì khác — nó nằm trong ô chữ tự do mà
+ * nhân viên gõ được. Ai gõ trúng khuôn là ca thật của họ biến khỏi con số của
+ * giám đốc, tức là lật ngược đúng nguyên tắc "thà đếm dư còn hơn giấu mất một
+ * việc thật" mà cả tệp này đang giữ.
+ *
+ * Vẫn nhận, vì hai lẽ. Một, neo đầu chuỗi cộng đúng 13 chữ số làm việc gõ
+ * trúng do vô ý gần như không xảy ra: một ghi chú thật có nhắc `QA-T10B-RT`
+ * giữa câu vẫn là `real`, và chỉ người **cố ý** dựng đúng khuôn mới giấu được
+ * ca của mình. Hai, đây là hệ demo, và cái giá của việc không nhận dấu thì đã
+ * thấy rồi — ô tiền giám đốc nói dối sau mỗi lượt smoke.
+ *
+ * Đổi `MARKER` bên spec mà quên chỗ này là lỗ hổng mở lại trong im lặng, nên
+ * có bài kiểm hợp đồng đọc thẳng tệp spec để khoá hai đầu lại với nhau.
+ */
+const ERP_TEST_MARKER_PATTERN = /^QA-T10B-RT-\d{13}(?!\d)/;
+
+function hasErpTestMarker(notes: readonly unknown[]): boolean {
+  return notes.some(
+    (note) =>
+      typeof note === "string" &&
+      ERP_TEST_MARKER_PATTERN.test(note.trimStart()),
+  );
+}
+
+/**
+ * @param notes Các ô ghi chú của chính hàng ấy, để dò dấu bộ kiểm thử. Để
+ *   trống thì hàm chạy y như trước: bảng nào không có ô ghi chú vẫn đúng.
+ */
+export function erpFinanceDataOrigin(
+  row: {
+    data_origin?: unknown;
+    id?: unknown;
+    created_at?: unknown;
+  },
+  notes: readonly unknown[] = [],
+): ErpDataOrigin {
   if (isErpDataOrigin(row.data_origin)) return row.data_origin;
   if (
     typeof row.id === "string" &&
@@ -112,6 +161,9 @@ export function erpFinanceDataOrigin(row: {
     // Ngày hỏng thì coi là thật: thà đếm dư còn hơn giấu mất một việc thật.
     if (!Number.isNaN(at) && at < ERP_REAL_DATA_FROM) return "test-residue";
   }
+  // Xét sau cùng, vì đây là dấu hiệu yếu nhất — nó nằm trong ô chữ người dùng
+  // gõ được, còn ba dấu hiệu trên thì không ai chạm tới được.
+  if (hasErpTestMarker(notes)) return "test-residue";
   return "real";
 }
 

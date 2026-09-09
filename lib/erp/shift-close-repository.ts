@@ -362,7 +362,10 @@ function recordFromRows(
     // Ba bảng tài chính KHÔNG có cột `data_origin` và cố ý không bao giờ có:
     // cơ sở dữ liệu chặn mọi lần sửa hàng đã ghi sổ, và nó chặn đúng. Nguồn
     // gốc suy ra lúc đọc — xem `domain/erp-data-origin.ts`.
-    dataOrigin: erpFinanceDataOrigin(row),
+    //
+    // `note` là ô "Nội dung bàn giao" người gửi ca gõ vào, và cũng là ô mà bộ
+    // smoke T10b đặt dấu `QA-T10B-RT-…` lên hàng nó tự dựng trên production.
+    dataOrigin: erpFinanceDataOrigin(row, [row.note]),
     shiftCode: asString(
       row.business_code ?? row.shift_label,
       "workflow.business_code",
@@ -1038,12 +1041,20 @@ function boundedRecord(value: unknown): ShiftCloseRecord {
     parsed.directorDecision,
     "directorDecision",
   );
+  // Bản ghi lưu ngoại tuyến mang sẵn nhãn tính từ lần đọc trước, có thể là
+  // trước khi hàm nhận ra dấu bộ kiểm. Nhãn "mẫu" và "cặn" thì giữ nguyên;
+  // riêng nhãn "thật" mới soi lại ghi chú, để một ca smoke lưu từ hôm trước
+  // không nằm mãi trong ô tiền giám đốc.
+  const persistedOrigin = parseErpDataOrigin(parsed.dataOrigin);
   const sanitized: ShiftCloseRecord = {
     id: boundedText(parsed.id, "id", 100),
     shiftCode: boundedText(parsed.shiftCode, "shiftCode", 100),
     idempotencyKey: requireIdempotencyKey(parsed.idempotencyKey),
     siteId: parsed.siteId,
-    dataOrigin: parseErpDataOrigin(parsed.dataOrigin),
+    dataOrigin:
+      persistedOrigin === "real"
+        ? erpFinanceDataOrigin({}, [parsed.note])
+        : persistedOrigin,
     businessDate: parsed.businessDate,
     station: boundedText(parsed.station, "station", 160),
     shiftLabel: boundedText(parsed.shiftLabel, "shiftLabel", 160),

@@ -263,17 +263,46 @@ test("mobile director can use the hamburger, finance drill-down and voice comman
   await expect(page.getByRole("link", { name: /Tài chính toàn vùng/ })).toBeVisible();
   await page.getByRole("link", { name: /Tài chính toàn vùng/ }).click();
   await expect(page).toHaveURL(/\/erp\/finance$/);
-  await expect(page.getByText("Doanh thu & hiệu quả")).toBeVisible();
-  await expect(page.getByText("Chi phí đã ghi nhận", { exact: true })).toBeVisible();
-  await expect(page.getByText("Phải trả đến hạn", { exact: true })).toBeVisible();
+
+  // Ba khẳng định cũ ở đây ("Doanh thu & hiệu quả", "Chi phí đã ghi nhận",
+  // "Phải trả đến hạn") bám vào bảng điều khiển tài chính mà T13 đã xoá cùng
+  // `finance-dashboard.tsx`. Chuỗi đó không còn ở bất kỳ đâu trong mã nguồn,
+  // nên bài này đỏ vĩnh viễn vì chủ thể không còn — không phải vì sản phẩm
+  // hỏng. Màn hình `/erp/finance` bây giờ là `AccountingControlCenter`, và
+  // giám đốc thấy bốn khối: thẻ số đã ghi sổ, công nợ nhà cung cấp, đối soát
+  // tiền mặt, sổ nhật ký. Khẳng định lại theo đúng bốn khối ấy — gỡ khối nào
+  // đi cũng phải đỏ.
+  await expect(page.getByRole("heading", { level: 1, name: "Tài chính đã ghi nhận" })).toBeVisible();
+  await expect(page.getByText("Tài chính & báo cáo · toàn vùng", { exact: true })).toBeVisible();
+  await expect(page.getByText("Tổng phát sinh Nợ", { exact: true })).toBeVisible();
+  await expect(page.getByText("Bút toán đảo", { exact: true })).toBeVisible();
+  // Trợ lý điều hành trỏ thẳng vào `/erp/finance#supplier-payables`, nên cái
+  // neo ấy là hợp đồng giữa hai màn hình chứ không phải chi tiết trình bày.
+  await expect(page.locator("#supplier-payables")).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "Công nợ từ PO và nghiệm thu" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Nộp quỹ → ngân hàng → đối chiếu sao kê" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Sổ nhật ký kế toán" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
 
   await page.getByRole("button", { name: "Mở trợ lý điều hành" }).click();
   await expect(page.getByRole("dialog", { name: "Bạn cần mở màn hình nào?" })).toBeVisible();
   const command = page.getByPlaceholder("Ví dụ: Mở tài chính tổng hợp");
+  const assistantThread = page.getByTestId("assistant-thread");
   await command.fill("Hôm nay doanh thu bao nhiêu?");
+  // "1,84 tỷ đồng" là số hằng T13 đã gỡ. Câu hỏi doanh thu bây giờ đi qua
+  // `/api/erp/assistant`, cộng từ hồ sơ chốt ca trong phạm vi tài khoản. Nên
+  // khẳng định đúng tính chất ấy: có một lượt gọi API trả 200, và câu trả lời
+  // là số tiền đọc được từ hồ sơ. Ai thay bằng số hằng thì câu trả lời hết
+  // dạng tiền tệ hoặc lượt gọi biến mất, hai đằng đều đỏ.
+  const revenueResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/erp/assistant") &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "Gửi lệnh" }).click();
-  await expect(page.getByText("1,84 tỷ đồng")).toBeVisible();
+  expect((await revenueResponse).status()).toBe(200);
+  await expect(assistantThread).toContainText(/₫ doanh thu thuần/);
+  await expect(page.getByText("1,84 tỷ đồng")).toHaveCount(0);
 
   await command.fill("Mở camera Bến thuyền Tam Chúc");
   await page.getByRole("button", { name: "Gửi lệnh" }).click();
@@ -305,21 +334,39 @@ test("mobile site menu groups work by operating function", async ({ page }, test
 test("mobile voice recognition opens the requested event project", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile voice pipeline check");
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+
+  // Bản mock cũ dựng theo cách trợ lý làm việc hồi 29/07, khi mã sản phẩm chỉ
+  // đọc `event.results[0][0].transcript`. Ngày 02/08 (T17) trợ lý bật
+  // `interimResults` và từ đó phân biệt kết quả tạm với kết quả cuối bằng cờ
+  // `isFinal` — đúng như Web Speech API thật quy định. Mock cũ không có cờ ấy,
+  // nên `isFinal` là `undefined`: câu nói rơi hết vào nhánh "chữ đang hiện
+  // dần", `execute` không bao giờ chạy và trang đứng yên ở `/erp`. Đây là lỗi
+  // của bài kiểm, không phải của sản phẩm.
+  //
+  // Mock mới bám sát API thật và **để bài kiểm tự bấm nhịp**: nói dở câu
+  // (`isFinal: false`) rồi mới nói trọn câu (`isFinal: true`), nhờ vậy kiểm
+  // được cả phần chữ hiện dần lẫn phần điều hướng.
   await page.evaluate(() => {
     class MockRecognition {
       lang = "";
       continuous = false;
       interimResults = false;
       onstart: (() => void) | null = null;
-      onresult: ((event: { results: Array<{ 0: { transcript: string } }> }) => void) | null = null;
+      onresult:
+        | ((event: {
+            resultIndex: number;
+            results: Array<{ 0: { transcript: string }; isFinal: boolean }>;
+          }) => void)
+        | null = null;
       onend: (() => void) | null = null;
       onerror: (() => void) | null = null;
       start() {
         this.onstart?.();
-        window.setTimeout(() => {
-          this.onresult?.({ results: [{ 0: { transcript: "Mở dự án lễ hội Tràng An" } }] });
-          this.onend?.();
-        }, 0);
+        (window as unknown as { nbjSpeechDriver: unknown }).nbjSpeechDriver = {
+          say: (transcript: string, isFinal: boolean) =>
+            this.onresult?.({ resultIndex: 0, results: [{ 0: { transcript }, isFinal }] }),
+          finish: () => this.onend?.(),
+        };
       }
       stop() {}
     }
@@ -328,7 +375,31 @@ test("mobile voice recognition opens the requested event project", async ({ page
   });
   await page.getByRole("button", { name: "Mở trợ lý điều hành" }).click();
   await page.getByRole("button", { name: /Nói để mở nhanh/ }).click();
+
+  type SpeechDriver = { say: (transcript: string, isFinal: boolean) => void; finish: () => void };
+
+  await page.evaluate(() => {
+    (window as unknown as { nbjSpeechDriver: SpeechDriver }).nbjSpeechDriver.say("mở dự án", false);
+  });
+  const assistantThread = page.getByTestId("assistant-thread");
+  await expect(assistantThread).toContainText("Đang chuyển thành văn bản");
+  await expect(assistantThread).toContainText("mở dự án");
+  await expect(page).toHaveURL(/\/erp$/);
+
+  await page.evaluate(() => {
+    const speech = (window as unknown as { nbjSpeechDriver: SpeechDriver }).nbjSpeechDriver;
+    speech.say("Mở dự án lễ hội Tràng An", true);
+    speech.finish();
+  });
   await expect(page).toHaveURL(/\/erp\/trang-an\/du-an-su-kien$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Dự án & sự kiện" })).toBeVisible();
+
+  // Câu vừa nói phải còn nguyên trong luồng hội thoại sau khi chuyển trang —
+  // đó là điều T17 hứa và là lý do luồng được giữ trong `sessionStorage`.
+  await page.getByRole("button", { name: "Mở trợ lý điều hành" }).click();
+  await expect(assistantThread).toContainText("Tin nhắn thoại");
+  await expect(assistantThread).toContainText("Mở dự án lễ hội Tràng An");
+  await expect(assistantThread).toContainText("Đã mở Dự án & sự kiện · Tràng An");
 });
 
 test("manager grants a module and the employee receives it on the next login", async ({

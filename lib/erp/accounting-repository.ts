@@ -385,7 +385,11 @@ function journalFromRows(
     // Ba bảng tài chính KHÔNG có cột `data_origin` và cố ý không bao giờ có:
     // cơ sở dữ liệu chặn mọi lần sửa hàng đã ghi sổ, và nó chặn đúng. Nguồn
     // gốc suy ra lúc đọc — xem `domain/erp-data-origin.ts`.
-    dataOrigin: erpFinanceDataOrigin(row),
+    //
+    // Bộ smoke T10b đặt dấu `QA-T10B-RT-…` lên cả hai ô: kế toán lập bút toán
+    // ghi vào `maker_note`, kế toán trưởng duyệt ghi vào `checker_note`. Bút
+    // toán hoàn tác lấy lý do hoàn tác làm `maker_note`, nên cũng dính dấu.
+    dataOrigin: erpFinanceDataOrigin(row, [row.maker_note, row.checker_note]),
     journalCode: asString(row.journal_code, "journal.journal_code"),
     sourceType: row.source_type,
     sourceWorkflowId,

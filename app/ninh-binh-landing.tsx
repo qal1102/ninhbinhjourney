@@ -7,7 +7,10 @@ import { Reveal } from "@/components/shared/reveal";
 import { RevealHeading } from "@/components/shared/reveal-heading";
 import { findFlipStart, type FlipStart } from "@/components/shared/flip-image";
 import { useNinhBinhHour, type DayBand } from "@/components/shared/ninh-binh-hour";
-import { PinnedStory, type PinnedStoryBeat } from "@/components/discovery/pinned-story";
+import {
+  TrangAnScrollStory,
+  type TrangAnStoryBeat,
+} from "@/components/discovery/trang-an-scroll-story";
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
@@ -497,53 +500,129 @@ const cinematicClip: Record<Language, CinematicClip> = {
   },
 };
 
-const storyBeats: Record<Language, PinnedStoryBeat[]> = {
-  en: [
-    {
-      image: "/images/destinations/van-long.png",
-      alt: "A bamboo boat crossing the still water of Van Long wetland",
-      eyebrow: "Ramsar site · IUCN Green List",
-      headline: "Fewer than 300 Delacour's langurs are left on earth. Most of them live here.",
-      body: "This is the only wetland reserve in Vietnam on the IUCN Green List. The boats run without engines and the rowers keep their voices down. Some mornings the langurs come right down to the water; some mornings you sit the whole way and see none.",
-    },
-    {
-      image: "/images/destinations/cuc-phuong.png",
-      alt: "Ancient forest canopy in Cuc Phuong National Park",
-      eyebrow: "Established 1962",
-      headline: "Before Vietnam had a second national park, there was Cuc Phuong.",
-      body: "Old-growth forest, trees that stood here before there was a road in, and primate rescue programmes still running today. Step through the gate and the whole region changes register: cooler, slower, a deeper green.",
-    },
-    {
-      image: "/images/destinations/phat-diem.png",
-      alt: "Stone and timber architecture at Phat Diem Cathedral",
-      eyebrow: "Phát Diệm stone cathedral · 1875–1899",
-      headline: "A Catholic cathedral, built to the shape of a Vietnamese village communal house.",
-      body: "Father Phêrô Trần Lục spent twenty-four years raising this twenty-two-hectare complex, finishing in 1899. The Phương Đình that stands at its centre is 21 metres across, 17 deep and 25 high — a bell tower carrying the exact silhouette of a village đình, and made of stone and timber rather than concrete.",
-    },
-  ],
-  vi: [
-    {
-      image: "/images/destinations/van-long.png",
-      alt: "Thuyền nan lướt qua mặt nước tĩnh lặng ở Vân Long",
-      eyebrow: "Khu Ramsar · Danh sách Xanh IUCN",
-      headline: "Cả thế giới còn chưa tới 300 con voọc mông trắng. Phần lớn sống ở đây.",
-      body: "Đây là khu đất ngập nước duy nhất của Việt Nam có tên trong Danh sách Xanh IUCN. Thuyền không nổ máy, người chèo cũng không nói to. Có buổi voọc xuống tận mép nước, có buổi ngồi hết chuyến chẳng thấy con nào.",
-    },
-    {
-      image: "/images/destinations/cuc-phuong.png",
-      alt: "Tán rừng già trong Vườn quốc gia Cúc Phương",
-      eyebrow: "Thành lập năm 1962",
-      headline: "Trước khi Việt Nam có vườn quốc gia thứ hai, đã có Cúc Phương.",
-      body: "Rừng già, những cây đứng đây từ trước khi có đường vào, và các chương trình cứu hộ linh trưởng vẫn chạy tới hôm nay. Bước qua cổng vườn là cả vùng đổi giọng: mát hơn, chậm hơn, xanh sẫm hơn hẳn.",
-    },
-    {
-      image: "/images/destinations/phat-diem.png",
-      alt: "Kiến trúc đá và gỗ tại Nhà thờ đá Phát Diệm",
-      eyebrow: "Nhà thờ đá Phát Diệm · 1875–1899",
-      headline: "Một nhà thờ Công giáo, dựng theo đúng dáng đình làng Việt.",
-      body: "Linh mục Phêrô Trần Lục mất hai mươi tư năm dựng quần thể hai mươi hai hecta này, tới năm 1899 mới xong. Phương Đình đứng giữa rộng 21 mét, sâu 17, cao 25 — một tháp chuông mang nguyên dáng đình làng, và làm bằng đá với gỗ chứ không phải bê tông.",
-    },
-  ],
+const trangAnStory: Record<
+  Language,
+  {
+    sectionLabel: string;
+    title: string;
+    progressLabel: string;
+    beats: TrangAnStoryBeat[];
+  }
+> = {
+  en: {
+    sectionLabel: "Tràng An · Route 1",
+    title: "Follow one water route into Tràng An",
+    progressLabel: "Journey rhythm",
+    beats: [
+      {
+        id: "den-trinh",
+        image: "/images/destinations/intro-trang-an-rain.png",
+        imagePosition: "54% 50%",
+        alt: "A rowing boat moving between the limestone mountains of Tràng An",
+        stopLabel: "Đền Trình",
+        eyebrow: "Departure · around 3–4 hours",
+        headline: "Route 1: nine caves, three sacred sites.",
+        body: "Boats leave Đền Trình for a 3–4 hour circuit. Route 1 passes nine caves — the most in Tràng An — so it is the one to choose when you can give the water a full half-day.",
+      },
+      {
+        id: "hang-toi",
+        image: "/images/destinations/intro-trang-an-rain.png",
+        imagePosition: "34% 50%",
+        alt: "Still water and limestone peaks along the Tràng An boat route",
+        stopLabel: "Hang Tối · 320 m",
+        eyebrow: "Hang Địa Linh → Hang Tối",
+        headline: "Hang Tối runs for 320 metres.",
+        body: "After Hang Địa Linh, the boat enters the longest cave on this route. For 320 metres, the view narrows to water and limestone.",
+      },
+      {
+        id: "den-tran",
+        image: "/images/destinations/trang-an.jpg",
+        imagePosition: "33% 58%",
+        alt: "A waterside pavilion beneath the limestone cliffs of Tràng An",
+        stopLabel: "Đền Trần",
+        eyebrow: "Hang Sáng → Hang Nấu Rượu",
+        headline: "From Hang Nấu Rượu, the route continues to Đền Trần.",
+        body: "Hang Nấu Rượu carries the story of water once drawn to make wine for the king. From there, boats call at Đền Trần before continuing to Hang Ba Giọt.",
+      },
+      {
+        id: "phu-khong",
+        image: "/images/destinations/trang-an.jpg",
+        imagePosition: "62% 50%",
+        alt: "Evening light across the water and limestone cliffs at Tràng An",
+        stopLabel: "Phủ Khống",
+        eyebrow: "Hang Ba Giọt → Hang Sơn Dương",
+        headline: "Phủ Khống sits in the second half of the journey.",
+        body: "After Hang Ba Giọt, Hang Seo and Hang Sơn Dương, boats call at Phủ Khống and Chùa Báo Hiếu. Their names keep this from becoming scenery without memory.",
+      },
+      {
+        id: "quy-hau",
+        image: "/images/destinations/intro-trang-an-rain.png",
+        imagePosition: "66% 50%",
+        alt: "A small rowing boat returning across the quiet water of Tràng An",
+        stopLabel: "Hang Quy Hậu",
+        eyebrow: "Chùa Báo Hiếu → return to the wharf",
+        headline: "Hang Quy Hậu carries the boat back to the wharf.",
+        body: "The circuit closes after Hang Khống and Hang Trần. By then, nine caves are no longer a number on a route card; they are the measure of the whole journey.",
+      },
+    ],
+  },
+  vi: {
+    sectionLabel: "Tràng An · Tuyến 1",
+    title: "Theo một tuyến nước vào Tràng An",
+    progressLabel: "Nhịp hành trình",
+    beats: [
+      {
+        id: "den-trinh",
+        image: "/images/destinations/intro-trang-an-rain.png",
+        imagePosition: "54% 50%",
+        alt: "Thuyền chèo giữa những dãy núi đá vôi ở Tràng An",
+        stopLabel: "Đền Trình",
+        eyebrow: "Khởi hành · khoảng 3–4 giờ",
+        headline: "Tuyến 1: chín hang, ba điểm tâm linh.",
+        body: "Thuyền rời Đền Trình cho một vòng tuyến khoảng 3–4 giờ. Tuyến 1 đi qua chín hang — nhiều nhất ở Tràng An — nên hợp với người muốn dành trọn một buổi trên mặt nước.",
+      },
+      {
+        id: "hang-toi",
+        image: "/images/destinations/intro-trang-an-rain.png",
+        imagePosition: "34% 50%",
+        alt: "Mặt nước tĩnh và núi đá vôi trên tuyến thuyền Tràng An",
+        stopLabel: "Hang Tối · 320 m",
+        eyebrow: "Hang Địa Linh → Hang Tối",
+        headline: "Hang Tối dài 320 mét.",
+        body: "Sau Hang Địa Linh, thuyền vào hang dài nhất tuyến. Trong 320 mét, khung nhìn thu lại chỉ còn mặt nước và vòm đá.",
+      },
+      {
+        id: "den-tran",
+        image: "/images/destinations/trang-an.jpg",
+        imagePosition: "33% 58%",
+        alt: "Thủy đình bên mặt nước dưới vách núi đá vôi Tràng An",
+        stopLabel: "Đền Trần",
+        eyebrow: "Hang Sáng → Hang Nấu Rượu",
+        headline: "Từ Hang Nấu Rượu, tuyến đi tiếp tới Đền Trần.",
+        body: "Hang Nấu Rượu gắn với tích lấy nước nấu rượu tiến vua. Từ đây, thuyền ghé Đền Trần trước khi đi tiếp tới Hang Ba Giọt.",
+      },
+      {
+        id: "phu-khong",
+        image: "/images/destinations/trang-an.jpg",
+        imagePosition: "62% 50%",
+        alt: "Ánh chiều trên mặt nước và vách núi Tràng An",
+        stopLabel: "Phủ Khống",
+        eyebrow: "Hang Ba Giọt → Hang Sơn Dương",
+        headline: "Phủ Khống nằm ở nửa sau hành trình.",
+        body: "Qua Hang Ba Giọt, Hang Seo và Hang Sơn Dương, thuyền ghé Phủ Khống rồi Chùa Báo Hiếu. Những địa danh giữ cho chuyến đi không chỉ còn là phong cảnh.",
+      },
+      {
+        id: "quy-hau",
+        image: "/images/destinations/intro-trang-an-rain.png",
+        imagePosition: "66% 50%",
+        alt: "Thuyền nhỏ trở về trên mặt nước yên ở Tràng An",
+        stopLabel: "Hang Quy Hậu",
+        eyebrow: "Chùa Báo Hiếu → trở về bến",
+        headline: "Hang Quy Hậu đưa thuyền về bến.",
+        body: "Tuyến khép lại sau Hang Khống và Hang Trần. Đến lúc ấy, chín hang không còn là một con số trên bảng tuyến; đó là thước đo của cả hành trình.",
+      },
+    ],
+  },
 };
 
 const destinations: Destination[] = [
@@ -2045,7 +2124,7 @@ export default function NinhBinhLanding({
       */}
       <CinematicVideo clip={cinematicClip[lang]} eager />
 
-      <PinnedStory beats={storyBeats[lang]} />
+      <TrangAnScrollStory {...trangAnStory[lang]} />
 
       <JourneyConcierge lang={lang} />
 

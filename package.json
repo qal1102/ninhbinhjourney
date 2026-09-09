@@ -12,6 +12,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:local": "node scripts/run-local-e2e.mjs",
     "test:a11y": "playwright test tests/e2e/public-surfaces.spec.ts",
     "verify": "npm run typecheck && npm run lint && npm run test:run && npm run build",
     "release:assert-project": "node scripts/assert-vercel-project.mjs",

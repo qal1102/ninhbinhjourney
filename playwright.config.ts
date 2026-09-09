@@ -22,8 +22,23 @@ export default defineConfig({
   testDir: "./tests/e2e",
   outputDir: "artifacts/playwright",
   reporter: [["list"], ["html", { outputFolder: "artifacts/playwright-report", open: "never" }]],
-  fullyParallel: true,
-  workers: 4,
+  // Chay production thi BAT BUOC mot luong.
+  //
+  // Moi bai smoke production deu dang nhap CUNG MOT tai khoan giam doc that
+  // roi chuyen vai tren do. Chuyen vai la trang thai nam o may chu, khong
+  // phai trong trinh duyet — nen hai luong song song giam len nhau: luong nay
+  // tra vai xong thi nut cua luong kia bien mat va no cho den het gio.
+  //
+  // Hong o do khong chi lam bai kiem do oan. No do o dung buoc don dep
+  // endRoleSwitch, nen tai khoan giam doc co the ket lai o vai ke toan tren
+  // production: chu du an dang nhap giam doc ma thay man hinh ke toan.
+  //
+  // Do ngay 09/09/2026: song song thi do lai duoc 2/2 lan, mot luong thi 6/6
+  // xanh va tai khoan tra ve dung vai. Dat o day chu khong chi trong
+  // scripts/run-prod-smoke.ps1, vi goi `npx playwright test` thang van dam
+  // phai — chinh nguoi viet dong nay da dam phai.
+  fullyParallel: !remoteBaseUrl,
+  workers: remoteBaseUrl ? 1 : 4,
   forbidOnly: true,
   retries: 0,
   timeout: 30_000,

@@ -64,12 +64,27 @@ $env:NBJ_A6_RELEASE_EXPECTATION = "canary-ready"
 $env:NBJ_A3_OFFLINE_SMOKE      = "1"
 $env:NBJ_A5_FUNNEL_SMOKE       = "1"
 
+# CHAY MOT LUONG. Khong duoc bo --workers=1 ben duoi.
+#
+# Cau hinh mac dinh la workers: 4 va fullyParallel: true -- tren may cuc bo
+# thi khong sao. O day thi khac: moi luong deu dang nhap CUNG MOT tai khoan
+# giam doc that roi CHUYEN VAI tren do. Chuyen vai la trang thai nam o may
+# chu chu khong phai trong trinh duyet, nen hai luong song song giam len nhau:
+# luong nay tra vai xong thi nut cua luong kia bien mat, no ngoi cho het gio.
+#
+# Hong o day khong chi la bai kiem do oan. No do o dung buoc don dep
+# endRoleSwitch, nen tai khoan giam doc co the KET LAI o vai ke toan tren
+# production -- chu du an dang nhap giam doc ma thay man hinh ke toan.
+#
+# Do ngay 09/09/2026: chay song song do lai duoc 2/2 lan; --workers=1 thi 6/6
+# xanh va tai khoan tra ve dung vai.
 try {
   & node $cli test `
     tests/e2e/prod-smoke-customer-release-readiness.spec.ts `
     tests/e2e/prod-smoke-a3-offline-gate.spec.ts `
     tests/e2e/prod-smoke-a5-funnel.spec.ts `
     tests/e2e/prod-smoke-t11-capacity-ui.spec.ts `
+    --workers=1 `
     --reporter=list
   $code = $LASTEXITCODE
 } finally {

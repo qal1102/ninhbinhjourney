@@ -55,6 +55,10 @@ test("Tràng An scroll story keeps exactly five editorial beats in Vietnamese an
 test("desktop motion keeps the Tràng An story in the viewport without horizontal overflow", async ({
   page,
 }) => {
+  // Nine deliberate scroll checkpoints include 6.48s of scrub settling.
+  // Production cold starts under four parallel workers can consume most of
+  // the default 30s before those assertions even begin.
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const story = await openStory(page, "en");

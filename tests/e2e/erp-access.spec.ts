@@ -982,15 +982,74 @@ test("manager completes source evidence before an invoice reaches accounting", a
   ).toHaveCount(0);
 });
 
-test("director drills into staff progress, results and revenue evidence", async ({ page }) => {
+// ERP-UX-09: bài này từng khẳng định "462 vé · 79,4 triệu", "4 ảnh · 1 biên
+// bản" và "OPS-TRANG-AN-SHIFT" trong một khối `details`. Cả ba chuỗi nay
+// không còn ở đâu trong mã nguồn — và chúng biến mất KHÔNG phải do ai lỡ tay:
+// đó đúng là những con số bịa mà ERP-FAKE-01 đã cố ý bóc đi, vì không có
+// nguồn dữ liệu nào sinh ra chúng. Bài kiểm cũ vì thế đang canh giữ một tính
+// năng đã bị gỡ có chủ đích, và một bài kiểm đỏ thường trực thì không chặn
+// được hồi quy nào.
+//
+// Bài mới canh đúng cái quyết định ấy: màn hình chỉ được nói những gì nó thật
+// sự đọc được, và phải nói thẳng phần nó chưa có.
+test("director reads real staff presence and the screen admits what it has no data for", async ({
+  page,
+}) => {
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an/nhan-su");
 
-  const performance = page.locator("details").filter({ hasText: "Đối soát đoàn TA-018" });
-  await performance.locator("summary").click();
-  await expect(performance).toContainText("462 vé · 79,4 triệu");
-  await expect(performance).toContainText("4 ảnh · 1 biên bản");
-  await expect(performance).toContainText("OPS-TRANG-AN-SHIFT");
+  const shiftSection = page.locator("section").filter({
+    hasText: "Đọc từ phân công tài khoản và lượt chấm công hôm nay",
+  });
+  await expect(
+    shiftSection.getByRole("heading", { name: "Ca làm tại Tràng An" }),
+  ).toBeVisible();
+
+  // Bốn ô đếm phải cộng khớp nhau. Đây là khẳng định có sức nặng: ai nhét một
+  // con số dựng sẵn vào bất kỳ ô nào cũng làm vỡ đẳng thức này, trong khi một
+  // khẳng định "ô này bằng 7" thì chỉ khoá cứng dữ liệu mẫu hôm nay.
+  const readCard = async (label: string) => {
+    const value = await shiftSection
+      .locator("article")
+      .filter({ hasText: label })
+      .locator("p")
+      .nth(1)
+      .innerText();
+    return Number.parseInt(value, 10);
+  };
+  const assigned = await readCard("Được phân công");
+  const onShift = await readCard("Đang trong ca");
+  const finished = await readCard("Đã tan ca");
+  const notStarted = await readCard("Chưa vào ca");
+  expect(assigned).toBeGreaterThan(0);
+  expect(onShift + finished + notStarted).toBe(assigned);
+
+  // Danh sách phải đúng bằng số người được phân công — không nhiều hơn (nhân
+  // sự mẫu lấp chỗ trống), không ít hơn (ai đó bị rơi khỏi danh sách).
+  const people = shiftSection.getByRole("listitem");
+  await expect(people).toHaveCount(assigned);
+
+  // "Drills into" — phần còn giữ nguyên tinh thần của bài cũ: giám đốc bấm
+  // vào một người và tới được đúng hồ sơ người ấy.
+  const firstPerson = people.first().getByRole("link").first();
+  const name = (await firstPerson.innerText()).trim();
+  const href = await firstPerson.getAttribute("href");
+  expect(href).toMatch(/^\/erp\/ho-so\/[a-z0-9-]+$/);
+  await firstPerson.click();
+  await expect(page).toHaveURL(new RegExp(`${href}$`));
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(name);
+
+  // Lời tự khai phải còn nguyên. Gỡ nó đi mà không có nguồn dữ liệu thật thì
+  // màn hình lại im lặng về chỗ nó không biết — đúng thứ ERP-FAKE-01 đã sửa.
+  await page.goBack();
+  await expect(shiftSection).toContainText(
+    "chưa có nguồn dữ liệu, nên chưa hiển thị ở đây",
+  );
+
+  // Ba con số bịa cũ không được quay lại bằng bất cứ đường nào.
+  await expect(page.getByText("462 vé · 79,4 triệu")).toHaveCount(0);
+  await expect(page.getByText("OPS-TRANG-AN-SHIFT")).toHaveCount(0);
+  await expect(page.getByText("4 ảnh · 1 biên bản")).toHaveCount(0);
 });
 
 test("mobile ERP workspaces stay vertical without horizontal overflow", async ({ page }, testInfo) => {

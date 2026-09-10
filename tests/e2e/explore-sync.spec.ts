@@ -25,7 +25,10 @@ async function prepareExplore(page: Page) {
       }),
     );
   });
-  await page.goto("/explore?lang=vi", { waitUntil: "domcontentloaded" });
+  // This suite exercises hydrated client state. On a cold production cache,
+  // DOMContentLoaded can precede the deferred Next.js bundle, so a click can
+  // land on server-rendered controls before React has attached its handlers.
+  await page.goto("/explore?lang=vi", { waitUntil: "load" });
   await expect(page.locator("[data-explore-list]")).toHaveCount(1);
 }
 
@@ -183,7 +186,7 @@ test("mobile list selection returns to the map with the matching active marker",
 
   await expect(page.locator('[data-explore-view-panel="map"]')).toBeVisible();
   await expectSynchronizedActive(page, slug);
-  await expect(page.locator("[data-explore-map-region]")).toBeFocused();
+  await expect(page.locator("[data-explore-map-focus]")).toBeFocused();
 });
 
 test("keyboard focus and reduced-motion selection keep the core map-list contract usable", async ({
@@ -202,7 +205,7 @@ test("keyboard focus and reduced-motion selection keep the core map-list contrac
 
   await expectSynchronizedActive(page, slug);
   await expect(page.locator('[data-explore-view-panel="map"]')).toBeVisible();
-  await expect(page.locator("[data-explore-map-region]")).toBeFocused();
+  await expect(page.locator("[data-explore-map-focus]")).toBeFocused();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 

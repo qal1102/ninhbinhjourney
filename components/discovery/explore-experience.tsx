@@ -189,6 +189,7 @@ export function ExploreExperience() {
   const ignoreScrollRef = useRef(false);
   const releaseScrollTimerRef = useRef<number | null>(null);
   const scrollGenerationRef = useRef(0);
+  const focusMapAfterSelectionRef = useRef(false);
 
   const filtered = useMemo(() => {
     const paceMinutes =
@@ -321,6 +322,25 @@ export function ExploreExperience() {
     return () => window.removeEventListener("scroll", handleWindowScroll);
   }, [scheduleActiveFromScroll, viewMode]);
 
+  useEffect(() => {
+    if (viewMode !== "map" || !focusMapAfterSelectionRef.current) return;
+
+    // Focus after React has committed the mobile mode switch. Focusing from the
+    // originating click handler is racy for keyboard activation: the browser
+    // can restore focus to the button after that button has become hidden.
+    // The panel itself is the target because the Leaflet child loads through a
+    // dynamic import and might not exist yet on a cold production visit.
+    const mapPanel = mapPanelRef.current;
+    if (!mapPanel) return;
+
+    focusMapAfterSelectionRef.current = false;
+    mapPanel.focus({ preventScroll: true });
+    mapPanel.scrollIntoView({
+      block: "nearest",
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
+  }, [activeSlug, reducedMotion, viewMode]);
+
   useEffect(
     () => () => {
       if (scrollFrameRef.current !== null) {
@@ -354,17 +374,8 @@ export function ExploreExperience() {
     setActiveSlug(destination.slug);
     if (window.innerWidth >= 1024) return;
 
+    focusMapAfterSelectionRef.current = true;
     setViewMode("map");
-    window.requestAnimationFrame(() => {
-      const mapRegion = mapPanelRef.current?.querySelector<HTMLElement>(
-        "[data-explore-map-region]",
-      );
-      mapRegion?.focus({ preventScroll: true });
-      mapPanelRef.current?.scrollIntoView({
-        block: "nearest",
-        behavior: reducedMotion ? "auto" : "smooth",
-      });
-    });
   }
 
   function selectDestinationFromMap(
@@ -537,8 +548,12 @@ export function ExploreExperience() {
       <div className="mt-5 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:gap-6">
         <div
           ref={mapPanelRef}
+          role="region"
+          aria-label="Bản đồ và điểm đến đang xem"
+          tabIndex={-1}
+          data-explore-map-focus
           data-explore-view-panel="map"
-          className={viewMode === "map" ? "block" : "hidden lg:block"}
+          className={`${viewMode === "map" ? "block" : "hidden lg:block"} focus-visible:rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#356957]`}
         >
           <ExploreMap
             destinations={filtered}

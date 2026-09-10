@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "@/components/shared/use-reduced-motion";
 import {
   DESTINATIONS,
   destinationInterests,
@@ -14,6 +15,9 @@ import {
 
 type ViewMode = "map" | "list";
 type FamilyFilter = "all" | "children" | "seniors";
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const interestLabels: Record<DestinationInterest, string> = {
   heritage: "Di sản",
@@ -53,14 +57,45 @@ function DestinationSheet({
   onClose: () => void;
 }) {
   const closeButton = useRef<HTMLButtonElement>(null);
+  const dialog = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    closeButton.current?.focus();
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.requestAnimationFrame(() => closeButton.current?.focus());
+
+    function handleDialogKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(
+        dialog.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [],
+      ).filter((element) => !element.hasAttribute("hidden"));
+      if (!focusable.length) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+
+    window.addEventListener("keydown", handleDialogKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleDialogKey);
+    };
   }, [onClose]);
 
   return (
@@ -72,9 +107,11 @@ function DestinationSheet({
       }}
     >
       <section
+        ref={dialog}
         role="dialog"
         aria-modal="true"
         aria-labelledby="destination-sheet-title"
+        data-testid="explore-detail-sheet"
         className="max-h-[88vh] w-full overflow-y-auto rounded-3xl bg-[#fbfaf6] shadow-2xl lg:max-w-md"
       >
         <div className="relative aspect-[16/10]">
@@ -139,8 +176,19 @@ export function ExploreExperience() {
   const [walking, setWalking] = useState<MobilityLevel>("moderate");
   const [family, setFamily] = useState<FamilyFilter>("all");
   const [availableOnly, setAvailableOnly] = useState(true);
-  const [selected, setSelected] = useState<DestinationCatalogItem | null>(null);
+  const [activeSlug, setActiveSlug] = useState<string | null>(null);
+  const [detailDestination, setDetailDestination] =
+    useState<DestinationCatalogItem | null>(null);
+  const reducedMotion = useReducedMotion();
   const returnFocusRef = useRef<HTMLElement | null>(null);
+  const resultsStatusRef = useRef<HTMLParagraphElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const mapPanelRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef(new Map<string, HTMLElement>());
+  const scrollFrameRef = useRef<number | null>(null);
+  const ignoreScrollRef = useRef(false);
+  const releaseScrollTimerRef = useRef<number | null>(null);
+  const scrollGenerationRef = useRef(0);
 
   const filtered = useMemo(() => {
     const paceMinutes =
@@ -160,29 +208,214 @@ export function ExploreExperience() {
     });
   }, [availableOnly, family, interest, maxMinutes, pace, walking]);
 
-  function selectDestination(
+  const activeDestination =
+    filtered.find((destination) => destination.slug === activeSlug) ?? null;
+
+  const registerCard = useCallback(
+    (slug: string, element: HTMLElement | null) => {
+      if (element) cardRefs.current.set(slug, element);
+      else cardRefs.current.delete(slug);
+    },
+    [],
+  );
+
+  const scheduleScrollRelease = useCallback((delay = 140) => {
+    if (releaseScrollTimerRef.current !== null) {
+      window.clearTimeout(releaseScrollTimerRef.current);
+    }
+    releaseScrollTimerRef.current = window.setTimeout(() => {
+      ignoreScrollRef.current = false;
+      releaseScrollTimerRef.current = null;
+    }, delay);
+  }, []);
+
+  const suppressScrollSync = useCallback((initialDelay = 180) => {
+    ignoreScrollRef.current = true;
+    scrollGenerationRef.current += 1;
+    if (scrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(scrollFrameRef.current);
+      scrollFrameRef.current = null;
+    }
+    scheduleScrollRelease(initialDelay);
+  }, [scheduleScrollRelease]);
+
+  const scrollCardIntoList = useCallback(
+    (slug: string) => {
+      const list = listRef.current;
+      const card = cardRefs.current.get(slug);
+      if (!list || !card || window.innerWidth < 1024) return;
+
+      const listRect = list.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const top =
+        list.scrollTop +
+        cardRect.top -
+        listRect.top -
+        (list.clientHeight - cardRect.height) / 2;
+      suppressScrollSync();
+      list.scrollTo({
+        top: Math.max(0, top),
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
+    },
+    [reducedMotion, suppressScrollSync],
+  );
+
+  const scheduleActiveFromScroll = useCallback(
+    (root: HTMLElement | null) => {
+      if (ignoreScrollRef.current) {
+        // Release follows the tail of the real smooth-scroll event stream,
+        // instead of guessing how long the browser animation will take.
+        scheduleScrollRelease();
+        return;
+      }
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+
+      const generation = scrollGenerationRef.current;
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
+        if (
+          ignoreScrollRef.current ||
+          generation !== scrollGenerationRef.current
+        ) {
+          return;
+        }
+
+        const rootRect = root?.getBoundingClientRect() ?? {
+          top: 0,
+          bottom: window.innerHeight,
+          height: window.innerHeight,
+        };
+        const activationLine = rootRect.top + rootRect.height * 0.46;
+        let nextSlug: string | null = null;
+        let nearestDistance = Number.POSITIVE_INFINITY;
+
+        for (const [slug, card] of cardRefs.current) {
+          const cardRect = card.getBoundingClientRect();
+          if (cardRect.bottom <= rootRect.top || cardRect.top >= rootRect.bottom) {
+            continue;
+          }
+          const cardCenter = cardRect.top + cardRect.height / 2;
+          const distance = Math.abs(cardCenter - activationLine);
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nextSlug = slug;
+          }
+        }
+
+        if (nextSlug) setActiveSlug(nextSlug);
+      });
+    },
+    [scheduleScrollRelease],
+  );
+
+  useEffect(() => {
+    if (viewMode !== "list") return;
+    const mobileViewport = window.matchMedia("(max-width: 1023px)");
+    const handleWindowScroll = () => {
+      if (mobileViewport.matches) scheduleActiveFromScroll(null);
+    };
+    window.addEventListener("scroll", handleWindowScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleWindowScroll);
+  }, [scheduleActiveFromScroll, viewMode]);
+
+  useEffect(
+    () => () => {
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+      if (releaseScrollTimerRef.current !== null) {
+        window.clearTimeout(releaseScrollTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  function switchView(mode: ViewMode) {
+    setViewMode(mode);
+    if (mode !== "list" || !activeSlug || window.innerWidth >= 1024) return;
+
+    suppressScrollSync();
+    window.requestAnimationFrame(() => {
+      cardRefs.current.get(activeSlug)?.scrollIntoView({
+        block: "center",
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
+    });
+  }
+
+  function focusDestinationFromList(destination: DestinationCatalogItem) {
+    // Clicking or keyboard-focusing a control near the edge of this nested
+    // scroller can make the browser reveal it by a few pixels. That synthetic
+    // scroll must not immediately overwrite the explicit destination choice.
+    suppressScrollSync();
+    setActiveSlug(destination.slug);
+    if (window.innerWidth >= 1024) return;
+
+    setViewMode("map");
+    window.requestAnimationFrame(() => {
+      const mapRegion = mapPanelRef.current?.querySelector<HTMLElement>(
+        "[data-explore-map-region]",
+      );
+      mapRegion?.focus({ preventScroll: true });
+      mapPanelRef.current?.scrollIntoView({
+        block: "nearest",
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
+    });
+  }
+
+  function selectDestinationFromMap(
     destination: DestinationCatalogItem,
     trigger: HTMLElement,
   ) {
     returnFocusRef.current = trigger;
-    setSelected(destination);
+    setActiveSlug(destination.slug);
+    scrollCardIntoList(destination.slug);
+    setDetailDestination(destination);
   }
 
-  function closeSheet() {
-    setSelected(null);
-    window.setTimeout(() => returnFocusRef.current?.focus(), 0);
+  function openDestinationDetail(
+    destination: DestinationCatalogItem,
+    trigger: HTMLElement,
+  ) {
+    returnFocusRef.current = trigger;
+    suppressScrollSync();
+    setActiveSlug(destination.slug);
+    setDetailDestination(destination);
+  }
+
+  const closeSheet = useCallback(() => {
+    setDetailDestination(null);
+    window.requestAnimationFrame(() => {
+      const returnTarget = returnFocusRef.current;
+      if (returnTarget?.isConnected && returnTarget.getClientRects().length > 0) {
+        returnTarget.focus({ preventScroll: true });
+      } else {
+        resultsStatusRef.current?.focus({ preventScroll: true });
+      }
+    });
+  }, []);
+
+  function clearActiveDestination() {
+    suppressScrollSync();
+    setActiveSlug(null);
   }
 
   return (
-    <div>
+    <div data-testid="explore-experience">
       <div className="grid gap-3 rounded-3xl border border-[#d7d5cd] bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-6">
         <label className="text-sm font-bold text-[#26342e]">
           Sở thích
           <select
             value={interest}
-            onChange={(event) =>
-              setInterest(event.target.value as DestinationInterest | "all")
-            }
+            data-explore-filter="interest"
+            onChange={(event) => {
+              setInterest(event.target.value as DestinationInterest | "all");
+              clearActiveDestination();
+            }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
             <option value="all">Tất cả</option>
@@ -197,7 +430,10 @@ export function ExploreExperience() {
           Thời gian
           <select
             value={maxMinutes}
-            onChange={(event) => setMaxMinutes(Number(event.target.value))}
+            onChange={(event) => {
+              setMaxMinutes(Number(event.target.value));
+              clearActiveDestination();
+            }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
             <option value={90}>Tối đa 90 phút</option>
@@ -209,9 +445,10 @@ export function ExploreExperience() {
           Nhịp đi
           <select
             value={pace}
-            onChange={(event) =>
-              setPace(event.target.value as typeof pace)
-            }
+            onChange={(event) => {
+              setPace(event.target.value as typeof pace);
+              clearActiveDestination();
+            }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
             <option value="relaxed">Thư thả</option>
@@ -223,9 +460,10 @@ export function ExploreExperience() {
           Mức đi bộ
           <select
             value={walking}
-            onChange={(event) =>
-              setWalking(event.target.value as MobilityLevel)
-            }
+            onChange={(event) => {
+              setWalking(event.target.value as MobilityLevel);
+              clearActiveDestination();
+            }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
             <option value="low">Thấp</option>
@@ -237,9 +475,10 @@ export function ExploreExperience() {
           Phù hợp
           <select
             value={family}
-            onChange={(event) =>
-              setFamily(event.target.value as FamilyFilter)
-            }
+            onChange={(event) => {
+              setFamily(event.target.value as FamilyFilter);
+              clearActiveDestination();
+            }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
             <option value="all">Mọi nhóm</option>
@@ -251,7 +490,10 @@ export function ExploreExperience() {
           <input
             type="checkbox"
             checked={availableOnly}
-            onChange={(event) => setAvailableOnly(event.target.checked)}
+            onChange={(event) => {
+              setAvailableOnly(event.target.checked);
+              clearActiveDestination();
+            }}
             className="h-5 w-5 accent-[#183f34]"
           />
           Còn khung giờ
@@ -259,7 +501,13 @@ export function ExploreExperience() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-[#59654b]" aria-live="polite">
+        <p
+          ref={resultsStatusRef}
+          tabIndex={-1}
+          data-testid="explore-results-status"
+          className="text-sm text-[#59654b] focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#356957]"
+          aria-live="polite"
+        >
           <strong className="text-[#183f34]">{filtered.length}</strong> điểm hợp
           với bộ lọc của bạn
         </p>
@@ -271,9 +519,10 @@ export function ExploreExperience() {
             <button
               key={mode}
               type="button"
-              onClick={() => setViewMode(mode)}
+              onClick={() => switchView(mode)}
               aria-pressed={viewMode === mode}
-              className={`min-h-10 rounded-full px-5 text-sm font-bold ${
+              data-explore-view={mode}
+              className={`min-h-11 rounded-full px-5 text-sm font-bold ${
                 viewMode === mode
                   ? "bg-[#183f34] text-white"
                   : "text-[#365247]"
@@ -286,15 +535,51 @@ export function ExploreExperience() {
       </div>
 
       <div className="mt-5 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:gap-6">
-        <div className={viewMode === "map" ? "block" : "hidden lg:block"}>
+        <div
+          ref={mapPanelRef}
+          data-explore-view-panel="map"
+          className={viewMode === "map" ? "block" : "hidden lg:block"}
+        >
           <ExploreMap
             destinations={filtered}
-            selectedSlug={selected?.slug ?? null}
-            onSelect={selectDestination}
+            selectedSlug={activeDestination?.slug ?? null}
+            onSelect={selectDestinationFromMap}
           />
+          {activeDestination ? (
+            <div
+              data-testid="explore-active-destination"
+              className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#b9cbc3] bg-[#183f34] px-4 py-3 text-[#fbfaf6] shadow-sm"
+              aria-live="polite"
+            >
+              <div className="min-w-0">
+                <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.2em] text-[#e7b96a]">
+                  Đang xem trên bản đồ
+                </p>
+                <p className="font-display mt-1 truncate text-xl">
+                  {activeDestination.name.vi}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={(event) =>
+                  openDestinationDetail(activeDestination, event.currentTarget)
+                }
+                className="min-h-11 rounded-full border border-white/40 px-4 text-xs font-bold transition hover:border-[#e7b96a] hover:text-[#f4d49b]"
+              >
+                Xem chi tiết
+              </button>
+            </div>
+          ) : null}
         </div>
         <div
-          className={`space-y-3 lg:max-h-[31rem] lg:overflow-y-auto lg:pr-2 ${
+          ref={listRef}
+          role="region"
+          aria-label="Danh sách điểm đến phù hợp"
+          tabIndex={0}
+          data-explore-list
+          data-explore-view-panel="list"
+          onScroll={(event) => scheduleActiveFromScroll(event.currentTarget)}
+          className={`space-y-3 focus-visible:rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#356957] lg:max-h-[31rem] lg:overflow-y-auto lg:pr-2 ${
             viewMode === "list" ? "block" : "hidden lg:block"
           }`}
         >
@@ -311,6 +596,8 @@ export function ExploreExperience() {
                   setPace("balanced");
                   setWalking("high");
                   setFamily("all");
+                  setAvailableOnly(false);
+                  clearActiveDestination();
                 }}
                 className="mt-4 min-h-11 rounded-full border border-[#183f34] px-5 font-bold"
               >
@@ -321,10 +608,17 @@ export function ExploreExperience() {
             filtered.map((destination, index) => (
               <article
                 key={destination.id}
-                className={`grid grid-cols-[7rem_1fr] gap-4 rounded-2xl border bg-white p-3 transition ${
-                  selected?.slug === destination.slug
-                    ? "border-[#d58c35] shadow-md"
-                    : "border-[#d7d5cd]"
+                ref={(element) => registerCard(destination.slug, element)}
+                id={`explore-card-${destination.slug}`}
+                data-explore-destination={destination.slug}
+                data-active={activeDestination?.slug === destination.slug ? "true" : "false"}
+                aria-current={
+                  activeDestination?.slug === destination.slug ? "location" : undefined
+                }
+                className={`grid scroll-m-4 grid-cols-[7rem_1fr] gap-4 rounded-2xl border bg-white p-3 transition ${
+                  activeDestination?.slug === destination.slug
+                    ? "border-[#d58c35] bg-[#fffdf8] shadow-[0_16px_36px_rgba(24,63,52,0.12)]"
+                    : "border-[#d7d5cd] hover:border-[#8aa398]"
                 }`}
               >
                 <div className="relative min-h-28 overflow-hidden rounded-xl">
@@ -347,15 +641,30 @@ export function ExploreExperience() {
                   <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59654b]">
                     {destination.editorialLine.vi}
                   </p>
-                  <button
-                    type="button"
-                    onClick={(event) =>
-                      selectDestination(destination, event.currentTarget)
-                    }
-                    className="mt-3 min-h-9 rounded-full border border-[#8aa398] px-3 text-xs font-bold text-[#183f34]"
-                  >
-                    Tập trung trên bản đồ
-                  </button>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      data-explore-focus={destination.slug}
+                      onClick={() => focusDestinationFromList(destination)}
+                      className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-bold transition ${
+                        activeDestination?.slug === destination.slug
+                          ? "bg-[#183f34] text-white"
+                          : "border border-[#8aa398] text-[#183f34] hover:bg-[#edf3f0]"
+                      }`}
+                    >
+                      Xem trên bản đồ
+                    </button>
+                    <button
+                      type="button"
+                      data-testid={`explore-detail-${destination.slug}`}
+                      onClick={(event) =>
+                        openDestinationDetail(destination, event.currentTarget)
+                      }
+                      className="inline-flex min-h-11 items-center rounded-full px-3 text-xs font-bold text-[#356957] underline decoration-[#8aa398] underline-offset-4"
+                    >
+                      Xem chi tiết
+                    </button>
+                  </div>
                 </div>
               </article>
             ))
@@ -363,8 +672,8 @@ export function ExploreExperience() {
         </div>
       </div>
 
-      {selected ? (
-        <DestinationSheet destination={selected} onClose={closeSheet} />
+      {detailDestination ? (
+        <DestinationSheet destination={detailDestination} onClose={closeSheet} />
       ) : null}
     </div>
   );

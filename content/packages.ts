@@ -165,7 +165,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
       "Thực đơn thử nghiệm theo mùa cho hai khách",
       "Trà và một phần bánh Trung thu dùng tại bàn",
       "Một hộp Trăng Non hai bánh mang về",
-      "Giữ chỗ 15 phút trên công suất ERP",
+      "Giữ chỗ 15 phút trên sức chứa thật trong ngày",
     ],
     exclusions: [
       "Đồ uống gọi thêm",

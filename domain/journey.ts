@@ -70,6 +70,21 @@ const travelMinutes: Record<string, Record<string, number>> = {
   },
 };
 
+// Nhãn tiếng Việt cho ba hằng số nhịp đi và ba mức đi bộ. Chúng đi vào câu
+// giải thích hiện trên từng chặng, nên phải đọc lọt tai trong một câu tiếng
+// Việt, không phải tên biến.
+const PACE_REASON_LABEL: Record<JourneyIntent["pace"], string> = {
+  relaxed: "nhịp thư thả bạn muốn",
+  balanced: "nhịp cân bằng bạn muốn",
+  active: "nhịp năng động bạn muốn",
+};
+
+const MOBILITY_REASON_LABEL: Record<MobilityLevel, string> = {
+  low: "đi lại nhẹ chân",
+  moderate: "đi bộ vừa phải",
+  high: "cần đi bộ nhiều",
+};
+
 const packagePricePerAdult = {
   relaxed: 790_000,
   balanced: 890_000,
@@ -208,6 +223,21 @@ export function parseJourneyIntent(input: {
       seniors: seniors ?? 0,
     };
     draft.fieldConfidence.party = 0.95;
+  } else {
+    // "Nhà tôi 4 người có trẻ nhỏ" là cách người Việt đếm đoàn thường ngày, và
+    // trước đây máy bỏ qua sạch: không có "người lớn", không có "cặp đôi",
+    // không có "một mình" — nên đoàn bốn người rơi về mặc định MỘT khách, rồi
+    // trang gợi ý gói với lý do "Đi một mình cũng thoải mái".
+    //
+    // Nhánh này chỉ chạy khi không đọc được bất kỳ con số cụ thể nào ở trên,
+    // nên "hai người cao tuổi" hay "3 người lớn" vẫn đi đường cũ và không bị
+    // đếm hai lần. Máy chưa biết trong bốn người ấy mấy trẻ nhỏ, nên không tự
+    // bịa ra; độ chắc để vừa phải, và ô "Chỉnh lại cho đúng" vẫn cho khách sửa.
+    const people = countBeforeKeyword(text, "nguoi") ?? countBeforeKeyword(text, "people");
+    if (people && people >= 1) {
+      draft.party = { adults: people, children: 0, seniors: 0 };
+      draft.fieldConfidence.party = 0.8;
+    }
   }
 
   if (/\bit di bo\b|\blow walking\b|\bless walking\b/.test(text)) {
@@ -370,10 +400,15 @@ export function generateItinerary(
       startAt: isoAt(visitDate, startMinute),
       endAt: isoAt(visitDate, endMinute),
       travelMinutesFromPrevious: travel,
+      // Câu này hiện nguyên văn trên từng chặng của lịch trình. Trước đây nó
+      // ghép thẳng tên hằng số tiếng Anh vào giữa một câu tiếng Việt — khách
+      // đọc được "khớp nhịp balanced" và "giới hạn đi bộ low". Chữ "nhịp
+      // balanced" là ví dụ cấm được nêu đích danh trong
+      // .claude/skills/viet-tieng-viet/SKILL.md.
       reason:
         intent.walkingTolerance === "low"
-          ? `${destination.name.vi} phù hợp giới hạn đi bộ ${destination.mobilityLevel}; khung giờ demo còn phù hợp.`
-          : `${destination.name.vi} khớp nhịp ${intent.pace} và nằm trong khung giờ demo.`,
+          ? `${destination.name.vi} ${MOBILITY_REASON_LABEL[destination.mobilityLevel]}, hợp với mức đi bộ bạn nêu; khung giờ mở cửa vẫn còn kịp.`
+          : `${destination.name.vi} khớp ${PACE_REASON_LABEL[intent.pace]} và nằm trong khung giờ mở cửa.`,
     });
     cursor = endMinute;
     previousSlug = destination.slug;

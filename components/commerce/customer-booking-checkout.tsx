@@ -144,8 +144,10 @@ function formatGuestGroupSummary(tickets: ConfirmationResult["tickets"]) {
   return parts.join(" · ");
 }
 
+// "T11a" là số hiệu một phiếu việc trong hàng đợi nội bộ, không phải chữ khách
+// hiểu được. Khách chỉ cần biết con số sức chứa này lấy từ đâu ra.
 const SOURCE_LABEL = {
-  estimate: "Ước tính vận hành T11a",
+  estimate: "Ước tính từ vận hành",
   customer: "Số liệu doanh nghiệp cung cấp",
   measured: "Số liệu đã đo",
 } as const;
@@ -535,7 +537,7 @@ export function CustomerBookingCheckout({
       <section className="overflow-hidden rounded-[2rem] border border-[#d4d1c7] bg-white shadow-[0_24px_70px_rgba(24,63,52,0.08)]">
         <div className="border-b border-[#e5e1d8] bg-[#fbfaf6] p-6 sm:p-8">
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#9a6328]">
-            Giữ chỗ trên công suất ERP
+            Giữ chỗ theo sức chứa thật trong ngày
           </p>
           <h2 className="font-display mt-3 text-4xl leading-tight text-[#183f34] sm:text-5xl">
             Chọn ngày. Chúng tôi giữ chỗ trong 15 phút.
@@ -670,7 +672,7 @@ export function CustomerBookingCheckout({
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">Các điểm đã khóa công suất</p>
-                  <p className="mt-2 text-sm text-[#59654b]">Điểm không có ngưỡng T11a vẫn thuộc lịch trình nhưng không bị ghi nhận giả là đã giữ sức chứa.</p>
+                  <p className="mt-2 text-sm text-[#59654b]">Điểm nào chưa có ngưỡng sức chứa thì vẫn nằm trong lịch trình, nhưng bên em không ghi nhận là đã giữ chỗ ở đó.</p>
                 </div>
                 <div className="rounded-2xl bg-[#183f34] px-5 py-3 text-right text-white">
                   <p className="text-xs uppercase tracking-[0.16em] text-white/60">Còn lại</p>
@@ -682,7 +684,7 @@ export function CustomerBookingCheckout({
                   <li key={slot.slotId} className="rounded-2xl border border-[#dde1db] p-4">
                     <div className="flex flex-wrap justify-between gap-2">
                       <strong>{new Date(slot.startsAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })}</strong>
-                      <span className="text-xs font-bold text-[#557568]">T11a v{slot.thresholdVersion}</span>
+                      <span className="text-xs font-bold text-[#557568]">Ngưỡng sức chứa v{slot.thresholdVersion}</span>
                     </div>
                     <p className="mt-2 text-sm text-[#59654b]">{SOURCE_LABEL[slot.capacitySource]}</p>
                   </li>
@@ -866,7 +868,10 @@ export function CustomerBookingCheckout({
                             <p className="mt-1 text-xs text-white/55">
                               {member.guestGroup === "child" ? "Dưới 1m3" : "Từ 1m3 trở lên"}
                             </p>
-                            <p className={`mt-2 text-xs font-bold ${hasEntered ? "text-[#9ee6b8]" : "text-white/45"}`}>
+                            {/* "Chưa vào cổng" ở `text-white/45` trên nền
+                                `bg-white/8` chỉ được 3,26:1 — cùng một lỗi
+                                với khối chọn cách trả tiền. /70 cho 5,5:1. */}
+                            <p className={`mt-2 text-xs font-bold ${hasEntered ? "text-[#9ee6b8]" : "text-white/70"}`}>
                               {hasEntered ? "Đã vào cổng" : "Chưa vào cổng"}
                             </p>
                           </div>
@@ -973,13 +978,26 @@ export function CustomerBookingCheckout({
               đúng bảng đối soát cuối ca. Không có một mắt xích nào phải giả
               vờ. Nên nó đứng trước và là lựa chọn mặc định.
               Lối trả trước đứng sau, nói thẳng là chưa trừ tiền. */}
-          <fieldset className="mt-7 rounded-2xl border border-[#d7d5cd] bg-white/60 p-4">
-            <legend className="px-2 text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Trả tiền thế nào</legend>
-            <label className="flex min-h-11 items-start gap-3 text-sm">
+          {/* Khối này nằm trên tấm thẻ xanh đậm, nên nền `bg-white/60` trước
+              đây trong suốt một nửa và ra màu #a3b2ae. Chữ trong khối lại
+              trộn hai bảng màu: mấy dòng chọn lối trả tiền thừa hưởng chữ
+              trắng của thẻ, còn nhãn và câu chú thích dùng màu chữ của nền
+              sáng. Kết quả đo bằng axe: 2,2:1 cho chữ trắng và 2,0–2,4:1 cho
+              chữ xám, trên chính màn hình khách quyết định trả tiền thế nào.
+              Nay nền đục hẳn bằng màu kem của trang, và mọi dòng chữ trong
+              khối lấy màu của nền sáng. */}
+          <fieldset className="mt-7 rounded-2xl border border-[#d7d5cd] bg-[#f4f0e7] p-4 text-[#27362f]">
+            {/* `legend` nằm vắt lên đường viền trên và KHÔNG được nền của
+                `fieldset` sơn phía sau, nên chữ xanh đậm này rơi thẳng xuống
+                nền xanh đậm của tấm thẻ — 1,8:1, đọc gần như không ra. Tự sơn
+                nền kem cho chính nó là xong; axe không bắt được chỗ này vì nó
+                quy nền của legend về nền fieldset. */}
+            <legend className="rounded bg-[#f4f0e7] px-2 text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Trả tiền thế nào</legend>
+            <label className="flex min-h-11 items-start gap-3 text-sm text-[#27362f]">
               <input type="radio" name="cach-tra-tien" checked={payAtSite} onChange={() => setPayAtSite(true)} className="mt-1" />
               <span><strong className="font-bold">Trả tại điểm</strong> — giữ chỗ ngay, tới nơi đưa mã cho nhân viên rồi trả tiền mặt.</span>
             </label>
-            <label className="mt-3 flex min-h-11 items-start gap-3 text-sm">
+            <label className="mt-3 flex min-h-11 items-start gap-3 text-sm text-[#27362f]">
               <input type="radio" name="cach-tra-tien" checked={!payAtSite} onChange={() => setPayAtSite(false)} className="mt-1" />
               <span><strong className="font-bold">Nhận vé ngay, chưa trừ tiền</strong> — vé và mã QR có liền; bên em chưa đấu nối ngân hàng nên trang không thu đồng nào.</span>
             </label>
@@ -999,7 +1017,7 @@ export function CustomerBookingCheckout({
                 placeholder="0912 345 678 hoặc ban@email.com"
                 className="min-h-11 rounded-xl border border-[#cbd7d1] bg-white px-3 text-sm font-medium"
               />
-              <span className="mt-1 font-normal leading-5 text-[#6f7a73]">
+              <span className="mt-1 font-normal leading-5 text-[#59654b]">
                 {payAtSite
                   ? "Để đội ngũ liên lạc được khi có việc, và để một chỗ giữ mà không tới còn truy được về ai."
                   : "Để lỡ mất trang, bạn còn mở lại được vé ở mục tra cứu vé. Không để lại cũng được, nhưng khi ấy tấm ảnh chụp màn hình là bản lưu duy nhất của bạn."}
@@ -1020,7 +1038,9 @@ export function CustomerBookingCheckout({
           </button>
           </>
         )}
-        <p className="mt-5 text-xs leading-5 text-white/45">Gửi lại cùng một yêu cầu không tạo thêm đơn, khoản thanh toán hay vé thứ hai.</p>
+        {/* `text-white/45` trên nền #183F34 chỉ đạt 3,67:1. Nâng lên /60 là
+            5,3:1 mà vẫn giữ đúng vai trò dòng chú thích mờ. */}
+        <p className="mt-5 text-xs leading-5 text-white/60">Gửi lại cùng một yêu cầu không tạo thêm đơn, khoản thanh toán hay vé thứ hai.</p>
       </aside>
     </div>
   );

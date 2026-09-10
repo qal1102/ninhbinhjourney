@@ -79,7 +79,10 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_PAYMENT_INPUT_INVALID", "INPUT_INVALID", "Yêu cầu xác nhận đặt chỗ chưa hợp lệ."],
     ["CUSTOMER_PROFILE_NOT_FOUND", "PROFILE_NOT_FOUND", "Phiên khách chưa có hồ sơ ẩn danh hợp lệ."],
     ["CUSTOMER_PRODUCT_UNAVAILABLE", "PRODUCT_UNAVAILABLE", "Gói này hiện chưa mở giữ chỗ."],
-    ["CUSTOMER_CAPACITY_SOURCE_MISSING", "CAPACITY_SOURCE_MISSING", "Gói này chưa có nguồn sức chứa T11a cho khung bán."],
+    // Câu này hiện thẳng ra mắt khách trên /checkout, nên không được mang số
+    // hiệu phiếu việc nội bộ ("T11a") — xem luật cấm chữ kỹ thuật lọt ra mặt
+    // khách ở docs/reference/UI_UX_RULES.md.
+    ["CUSTOMER_CAPACITY_SOURCE_MISSING", "CAPACITY_SOURCE_MISSING", "Gói này chưa khai sức chứa cho khung giờ bán, nên bên em chưa mở giữ chỗ được ạ."],
     ["CUSTOMER_CAPACITY_UNAVAILABLE", "CAPACITY_UNAVAILABLE", "Khung giờ vừa hết chỗ cho số khách đã chọn."],
     ["CUSTOMER_BOOKING_SLOT_PAUSED", "SLOT_PAUSED", "Khung giờ đang tạm dừng nhận đặt chỗ."],
     ["CUSTOMER_BOOKING_SLOT_PAST", "SLOT_PAST", "Khung giờ này đã qua hoặc quá gần giờ bắt đầu."],

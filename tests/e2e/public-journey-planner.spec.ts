@@ -118,6 +118,49 @@ test("khách nói hai ngày thì trang nói thẳng là mới xếp ngày đầu
   );
 });
 
+/*
+ * "Nhà tôi 4 người có trẻ nhỏ" là cách đếm đoàn thường ngày, và máy từng bỏ
+ * qua sạch: không có chữ "người lớn", không phải "cặp đôi", không phải "một
+ * mình" — nên bốn người rơi về mặc định MỘT khách, rồi trang gợi ý gói kèm lý
+ * do "Đi một mình cũng thoải mái". Đọc lên là thấy trang không nghe mình nói.
+ */
+test("khách đếm đoàn kiểu 'nhà tôi 4 người' thì không bị hiểu thành đi một mình", async ({
+  page,
+}) => {
+  await page.goto("/plan");
+  await page.getByLabel(TEXT_BOX).fill("Nhà tôi 4 người có trẻ nhỏ.");
+  await page.getByRole("button", { name: RUN_BUTTON }).click();
+
+  await expect(page.locator("[data-plan-summary]")).toContainText("4 người lớn");
+  // Và lý do gợi ý gói không được nói ngược lại điều khách vừa kể.
+  await expect(page.getByText("Đi một mình cũng thoải mái")).toHaveCount(0);
+});
+
+/*
+ * Câu giải thích trên từng chặng từng ghép thẳng tên hằng số tiếng Anh vào
+ * giữa một câu tiếng Việt: "Tràng An khớp nhịp balanced…", "…giới hạn đi bộ
+ * low". "Nhịp balanced" là ví dụ cấm được nêu đích danh trong
+ * .claude/skills/viet-tieng-viet/SKILL.md.
+ */
+test("lý do từng chặng viết bằng tiếng Việt, không lộ tên hằng số", async ({
+  page,
+}) => {
+  await page.goto("/plan");
+  await page
+    .getByLabel(TEXT_BOX)
+    .fill("Tôi có một ngày, hai vợ chồng, muốn đi bộ vừa phải.");
+  await page.getByRole("button", { name: RUN_BUTTON }).click();
+  await page.getByRole("button", { name: "Xác nhận và tạo hành trình" }).click();
+
+  const firstStop = page.locator("ol > li").first();
+  await expect(firstStop).toBeVisible();
+  await expect(firstStop).toContainText("nhịp cân bằng");
+
+  const itineraryText = await page.locator("main").innerText();
+  expect(itineraryText).not.toMatch(/\b(balanced|relaxed|active|moderate)\b/);
+  expect(itineraryText).not.toMatch(/giới hạn đi bộ (low|moderate|high)/);
+});
+
 test("ô thời lượng không còn mời khách chọn thứ máy không làm được", async ({
   page,
 }) => {

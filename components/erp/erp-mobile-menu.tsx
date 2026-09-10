@@ -13,6 +13,10 @@ type Props = {
   name: string;
   jobTitle: string;
   role: ErpRole;
+  /** Tài khoản đang đăng nhập, để mở hồ sơ cá nhân ngay từ ngăn kéo. */
+  accountId: string;
+  /** Có quyền quản trị hệ thống thì mới thấy lối vào "Tài khoản & phân quyền". */
+  systemAdmin?: boolean;
   siteIds: ErpSiteId[];
   currentSiteId?: ErpSiteId;
   modules: readonly ErpModule[];
@@ -61,6 +65,8 @@ export function ErpMobileMenu({
   name,
   jobTitle,
   role,
+  accountId,
+  systemAdmin,
   siteIds,
   currentSiteId,
   modules,
@@ -318,7 +324,7 @@ export function ErpMobileMenu({
             }}
           >
             <div className="flex items-start justify-between gap-4 bg-[#183f34] p-5 text-white">
-              <div className="min-w-0"><p className="truncate font-black">{name}</p><p className="mt-1 truncate text-xs text-white/60">{jobTitle}</p></div>
+              <Link href={`/erp/ho-so/${accountId}`} onClick={closeDrawer} className="min-w-0"><p className="truncate font-black underline-offset-4 hover:underline">{name}</p><p className="mt-1 truncate text-xs text-white/60">{jobTitle} · Xem hồ sơ</p></Link>
               <button type="button" onClick={closeDrawer} aria-label="Đóng" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-xl">×</button>
             </div>
 
@@ -330,6 +336,7 @@ export function ErpMobileMenu({
                 {role === "director" ? <Link href="/erp/khach-hang" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Khách hàng <span>→</span></Link> : null}
                 {role === "director" ? <Link href="/erp/marketing" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Kênh khách <span>→</span></Link> : null}
                 <Link href="/erp/nhat-ky" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Nhật ký <span>→</span></Link>
+                {systemAdmin ? <Link href="/erp/tai-khoan" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Tài khoản <span>→</span></Link> : null}
               </div>
 
               <p className="mt-6 px-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#718078]">Cơ sở</p>

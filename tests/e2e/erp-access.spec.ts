@@ -1081,3 +1081,123 @@ test("ERP login has no serious accessibility violation or horizontal overflow", 
   );
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+/*
+ * Bốn bài dưới đây sinh ra từ một buổi "đi bấm tay" bằng tài khoản giám đốc
+ * ngày 09/09/2026, không phải từ một yêu cầu tính năng. Chủ dự án chỉ dùng
+ * tài khoản giám đốc, nên chỗ nào giám đốc không bấm tới được thì coi như
+ * không tồn tại — và cả bốn chỗ dưới đây đều đã từng như vậy.
+ */
+
+test("việc chính của giám đốc dẫn tới đúng chỗ quyết định được", async ({ page }) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+
+  // Nút "việc cần làm trước tiên" từng trỏ sang `/erp/finance`. Hàng chốt ca
+  // ở trang ấy bọc trong `user.role === "accountant"`, nên giám đốc bấm xong
+  // sang một trang KHÔNG BAO GIỜ chứa hồ sơ mình phải duyệt. Nay nút đưa
+  // thẳng xuống khối quyết định nằm cùng trang.
+  const nextAction = page.getByRole("link", { name: /Xuống hồ sơ chốt ca/ });
+  await expect(nextAction).toBeVisible();
+  await expect(nextAction).toHaveAttribute("href", "#quyet-dinh-giam-doc");
+  await nextAction.click();
+  const decisionSection = page.locator("#quyet-dinh-giam-doc");
+  await expect(decisionSection).toBeVisible();
+  await expect(decisionSection).toContainText("Cần giám đốc quyết định");
+
+  // Và hồ sơ ấy thật sự nằm trong khối này chứ không phải ở sổ kế toán.
+  const shiftRow = decisionSection.locator("details").first();
+  await expect(shiftRow).toBeVisible();
+  const shiftCode = (await shiftRow.locator("summary").innerText()).match(
+    /SC-[A-Z]+-\d{8}-\d+/,
+  );
+  expect(shiftCode).not.toBeNull();
+  await page.goto("/erp/finance");
+  await expect(page.getByText(shiftCode![0])).toHaveCount(0);
+});
+
+test("hàng chốt ca chờ giám đốc nói rõ là bấm mở được", async ({ page }) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+
+  // `summary` ở đây dùng `list-none`, tức không còn tam giác mặc định. Không
+  // có chữ gợi ý thì hai nút quyết định nằm khuất bên trong và giám đốc chỉ
+  // thấy một dòng trạng thái đứng yên — đúng cái bẫy "màn hình im lặng".
+  const shiftRow = page
+    .locator("#quyet-dinh-giam-doc details")
+    .first();
+  const summary = shiftRow.locator("summary");
+  await expect(summary).toContainText("Mở để quyết định");
+  await expect(
+    shiftRow.getByRole("button", { name: "Duyệt phương án ngoại lệ" }),
+  ).toBeHidden();
+
+  await summary.click();
+  await expect(summary).toContainText("Thu gọn");
+  await expect(
+    shiftRow.getByRole("button", { name: "Duyệt phương án ngoại lệ" }),
+  ).toBeVisible();
+  await expect(
+    shiftRow.getByRole("button", { name: "Trả kế toán làm rõ" }),
+  ).toBeVisible();
+});
+
+test("hàng chốt ca rỗng nói vì sao rỗng và chỉ chỗ đi tiếp", async ({ page }) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+  await page.goto("/erp/trang-an/ve-dat-cho");
+
+  // Trước đây chỗ này chỉ có đúng một câu "Không có ca nào trong hàng đợi
+  // hiện tại." treo giữa trang: không tiêu đề, không lý do, không lối đi.
+  const queue = page.getByRole("region", { name: "Quy trình chốt ca vé" });
+  await expect(queue).toContainText("Hàng chốt ca của bạn");
+  await expect(queue).toContainText("Không có ca nào chờ bạn xử lý");
+  await expect(queue).toContainText("chỉ hiện hồ sơ đang chờ chính tài khoản của bạn");
+  const wayOut = queue.getByRole("link", { name: /Mở đối soát cuối ca/ });
+  await expect(wayOut).toBeVisible();
+  await wayOut.click();
+  await expect(page).toHaveURL(/\/erp\/trang-an\/tai-chinh-doi-soat$/);
+});
+
+test("báo cáo hiện trường thiếu ảnh không mượn ảnh quảng bá của cơ sở", async ({ page }) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+  await page.goto("/erp/trang-an/bao-cao-hien-truong");
+
+  // Ô đếm nói thẳng là ba báo cáo thiếu bằng chứng, nhưng thẻ vẫn lấy
+  // `site.image` — ảnh quảng bá Tràng An — làm nền. Ba tấm ảnh đẹp đứng ngay
+  // dưới con số nói không có ảnh nào: một trong hai đang nói dối.
+  await expect(page.getByText("Thiếu ảnh hiện trường")).toBeVisible();
+  const card = page.locator("main button").filter({ hasText: "IMG-0842" });
+  await expect(card).toContainText("Chưa đính kèm ảnh hiện trường");
+  const backgrounds = await card
+    .locator("div")
+    .evaluateAll((elements) =>
+      elements.map((element) => getComputedStyle(element).backgroundImage),
+    );
+  expect(backgrounds.some((value) => value.includes("trang-an"))).toBe(false);
+
+  await card.click();
+  const dialog = page.getByRole("dialog", { name: /Báo cáo IMG-0842/ });
+  await expect(dialog).toContainText("chưa đính kèm ảnh hiện trường");
+});
+
+test("giám đốc dùng điện thoại vẫn mở được tài khoản và hồ sơ của mình", async ({
+  page,
+}, testInfo) => {
+  test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile drawer check");
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+
+  // Trên máy tính hai lối này nằm ở thanh đầu trang, nhưng cả hai đều `hidden`
+  // dưới `lg` và ngăn kéo không chép chúng sang. Mở ERP bằng điện thoại là
+  // `/erp/tai-khoan` và `/erp/ho-so/...` biến mất khỏi sản phẩm.
+  await page.getByRole("button", { name: "Mở menu" }).click();
+  const drawer = page.getByRole("dialog", { name: "Menu điều hành" });
+  await drawer.getByRole("link", { name: /^Tài khoản/ }).click();
+  await expect(page).toHaveURL(/\/erp\/tai-khoan$/);
+  await expect(page.getByRole("heading", { name: "Tài khoản & phân quyền" })).toBeVisible();
+
+  await page.goto("/erp");
+  await page.getByRole("button", { name: "Mở menu" }).click();
+  await drawer.getByRole("link", { name: /Nguyễn Minh Anh/ }).click();
+  await expect(page).toHaveURL(/\/erp\/ho-so\/director-001$/);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+  ).toBeLessThanOrEqual(1);
+});

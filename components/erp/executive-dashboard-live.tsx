@@ -281,9 +281,16 @@ export function ExecutiveDashboard({
       return {
         kind: "Ngoại lệ chốt ca",
         title: `${pendingShiftCloseDecisions.length} hồ sơ chốt ca chờ bạn duyệt ngoại lệ`,
-        detail: "Ca chưa được duyệt thì tiền mặt chưa khớp sổ.",
-        href: "/erp/finance",
-        cta: "Mở sổ đối soát",
+        detail:
+          "Ca chưa được duyệt thì tiền mặt chưa khớp sổ. Hồ sơ nằm ngay dưới trang này.",
+        // Trước đây nút này trỏ sang `/erp/finance`. Ở đó hàng chốt ca chỉ
+        // dựng cho vai kế toán (`ShiftCloseAccountingQueue` bọc trong
+        // `user.role === "accountant"`), nên giám đốc bấm xong sang một trang
+        // KHÔNG BAO GIỜ có hồ sơ ấy — việc chính của họ thành ngõ cụt. Nơi
+        // duy nhất giám đốc quyết được là khối "Cần giám đốc quyết định" ngay
+        // bên dưới, nên nút đưa thẳng xuống đó.
+        href: "#quyet-dinh-giam-doc",
+        cta: "Xuống hồ sơ chốt ca",
       };
     }
     const invoice = pendingSupplierDecisions[0];
@@ -471,7 +478,10 @@ export function ExecutiveDashboard({
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-[#e2d4b9] bg-[#fffaf0] p-5 sm:p-6">
+      <section
+        id="quyet-dinh-giam-doc"
+        className="scroll-mt-24 rounded-2xl border border-[#e2d4b9] bg-[#fffaf0] p-5 sm:p-6"
+      >
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.17em] text-[#87642b]">

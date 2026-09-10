@@ -29,7 +29,6 @@ export function AttendancePanel({ site, user, events }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<AttendanceActionResult | null>(null);
-  const [locationFailed, setLocationFailed] = useState(false);
   const personalEvents = useMemo(
     () =>
       events
@@ -67,9 +66,7 @@ export function AttendancePanel({ site, user, events }: Props) {
 
   function readGps() {
     setResult(null);
-    setLocationFailed(false);
     if (!("geolocation" in navigator)) {
-      setLocationFailed(true);
       setResult({ success: false, message: "Thiết bị không hỗ trợ định vị GPS." });
       return;
     }
@@ -81,7 +78,6 @@ export function AttendancePanel({ site, user, events }: Props) {
           accuracy: position.coords.accuracy,
         }),
       () => {
-        setLocationFailed(true);
         setResult({
           success: false,
           message: "Chưa lấy được vị trí. Hãy cấp quyền định vị rồi thử lại.",
@@ -133,7 +129,11 @@ export function AttendancePanel({ site, user, events }: Props) {
           </p>
         ) : null}
 
-        {locationFailed ? <p className="mt-3 rounded-xl bg-[#fff0dc] px-4 py-3 text-sm font-bold text-[#76501d]">Không thể xác minh GPS. Hãy bật quyền vị trí và thử lại.</p> : null}
+        {/* Bỏ dải cảnh báo thứ hai: `locationFailed` chỉ bật ở đúng hai nhánh
+            mà cả hai đều đã đặt `result` với lý do cụ thể, nên hộp này không
+            bao giờ nói thêm điều gì mới. Bấm chấm công lúc chưa cấp quyền thì
+            màn hình hiện hai câu khác chữ, khác màu, cùng một nội dung —
+            trông như hệ thống lỗi hai lần. */}
       </section>
 
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">

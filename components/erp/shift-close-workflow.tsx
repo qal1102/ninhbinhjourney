@@ -206,8 +206,11 @@ function ShiftCloseDetails({
   action?: React.ReactNode;
 }) {
   return (
-    <details className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm open:border-[#91aa9f]">
-      <summary className="grid cursor-pointer list-none gap-3 p-4 sm:grid-cols-[0.8fr_1.3fr_auto] sm:items-center sm:p-5">
+    // `group` + `group-open:` là khuôn đã dùng ở thanh nghiệp vụ máy tính
+    // (`erp-desktop-navigation.tsx`); giữ cùng một khuôn để hàng chốt ca mở ra
+    // đúng cảm giác quen thuộc.
+    <details className="group overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm open:border-[#91aa9f]">
+      <summary className="grid cursor-pointer list-none gap-3 p-4 [&::-webkit-details-marker]:hidden sm:grid-cols-[0.8fr_1.3fr_auto] sm:items-center sm:p-5">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-xs font-black text-[#60736a]">{record.shiftCode}</p>
@@ -221,8 +224,35 @@ function ShiftCloseDetails({
             {record.ticketsSold.toLocaleString("vi-VN")} vé · {formatVnd(record.amounts.grossVnd)}
           </p>
         </div>
-        <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-black ${STATUS_TONES[record.status]}`}>
-          {STATUS_LABELS[record.status]}
+        {/* Hàng này là một `details` gập lại, mà `list-none` đã bỏ mất tam
+            giác mặc định — nhìn vào chỉ thấy một dòng trạng thái đứng yên.
+            Hồ sơ chờ giám đốc thì hai nút quyết định nằm bên trong, nên không
+            có dấu hiệu mở là việc chính của giám đốc bị giấu. Thêm chữ và mũi
+            tên để thấy ngay là bấm được. */}
+        <span className="flex w-fit items-center gap-2">
+          <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-black ${STATUS_TONES[record.status]}`}>
+            {STATUS_LABELS[record.status]}
+          </span>
+          <span className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-black text-[#5f7268]">
+            <span className="group-open:hidden">
+              {action ? "Mở để quyết định" : "Xem hồ sơ"}
+            </span>
+            <span className="hidden group-open:inline">Thu gọn</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-open:rotate-180"
+            >
+              <path
+                d="m4 6 4 4 4-4"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
         </span>
       </summary>
       <div className="border-t border-[#e5eae7] bg-[#f8faf8] p-4 sm:p-5">
@@ -583,12 +613,36 @@ export function ShiftCloseSiteWorkflow({ site, user, records }: SiteWorkflowProp
             }
           />
         ))}
+        {/* Khối rỗng này trước đây chỉ là một câu lửng "Không có ca nào trong
+            hàng đợi hiện tại." — không tiêu đề, không lý do, không lối đi
+            tiếp. Giám đốc mở màn hình vé thấy đúng một dòng chữ treo giữa
+            trang thì kết luận màn hình hỏng, trong khi thật ra hàng việc của
+            họ chỉ nhận hồ sơ đã chuyển cấp. Nói rõ vì sao rỗng, và chỉ chỗ
+            xem toàn bộ ca của cơ sở. */}
         {visible.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-[#b8c6bf] bg-white px-5 py-10 text-center text-sm text-[#75817b]">
-            {user.role === "employee"
-              ? "Bạn chưa có hồ sơ chốt ca nào."
-              : "Không có ca nào trong hàng đợi hiện tại."}
-          </p>
+          <div className="rounded-2xl border border-dashed border-[#b8c6bf] bg-white px-5 py-8 text-sm text-[#75817b]">
+            <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
+              Hàng chốt ca của bạn
+            </p>
+            <p className="mt-2 text-base font-black text-[#2d4138]">
+              {user.role === "employee"
+                ? "Bạn chưa có hồ sơ chốt ca nào."
+                : "Không có ca nào chờ bạn xử lý."}
+            </p>
+            <p className="mt-2 leading-6">
+              {user.role === "employee"
+                ? "Hồ sơ bạn gửi lúc cuối ca sẽ hiện ngay tại đây, kèm trạng thái duyệt của quản lý."
+                : `Hàng này chỉ hiện hồ sơ đang chờ chính tài khoản của bạn. Ca đã gửi, đã duyệt hoặc đang chờ người khác tại ${site.shortName} xem ở màn hình đối soát.`}
+            </p>
+            {user.role === "employee" ? null : (
+              <Link
+                href={`/erp/${site.id}/tai-chinh-doi-soat`}
+                className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-[#c3d2cb] px-4 text-sm font-black text-[#2c463c] transition hover:border-[#8fa99f] hover:bg-[#f5f8f6]"
+              >
+                Mở đối soát cuối ca {site.shortName} →
+              </Link>
+            )}
+          </div>
         ) : null}
       </div>
     </section>

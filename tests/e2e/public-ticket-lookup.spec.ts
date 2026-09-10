@@ -59,6 +59,27 @@ test.describe("TC-23 tra cứu vé — đường lấy lại vé duy nhất", ()
     await expect(page.getByText(NO_MESSAGING_DISCLOSURE)).toBeVisible();
   });
 
+  /*
+   * Trang này từng không có lấy một liên kết nào trên cả trang — không logo,
+   * không nav, không đường về. Khách vào đây mà không nhớ ra mã đặt chỗ thì
+   * hết đường, chỉ còn nút back của trình duyệt. Trớ trêu là nhánh "chưa mở
+   * đặt chỗ" ngay bên cạnh vẫn luôn có lối ra, còn nhánh chính thì không.
+   */
+  test("trang có đường quay lại, không phải ngõ cụt", async ({ page }) => {
+    await page.goto(PAGE_PATH);
+
+    const home = page.getByRole("link", { name: /Về trang chủ/ });
+    await expect(home).toBeVisible();
+    await expect(home).toHaveAttribute("href", "/");
+
+    const packages = page.getByRole("link", { name: /Xem các gói hành trình/ });
+    await expect(packages).toBeVisible();
+    await expect(packages).toHaveAttribute("href", "/packages");
+
+    await home.click();
+    await expect(page).toHaveURL(/\/$/);
+  });
+
   test("ô liên hệ không bị ghim bàn phím điện thoại, vẫn gõ được email", async ({
     page,
   }) => {

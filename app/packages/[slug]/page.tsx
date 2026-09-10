@@ -60,7 +60,7 @@ export default async function PackageDetailPage({
           <section>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
               {customerBookingEnabled
-                ? `Giữ chỗ theo công suất ERP · ${item.durationLabel}`
+                ? `Giữ chỗ theo sức chứa thật · ${item.durationLabel}`
                 : flags.sandboxCheckout
                   ? `Dữ liệu minh họa · ${item.durationLabel}`
                 : `Bảng giá tham khảo · ${item.durationLabel}`}

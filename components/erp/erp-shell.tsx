@@ -56,10 +56,17 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
       <header className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
         <div className="mx-auto flex min-h-16 max-w-[1600px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
+            {/* `accountId` + `systemAdmin`: trên máy tính, hồ sơ cá nhân và
+                "Tài khoản & phân quyền" nằm ở thanh đầu trang, nhưng cả hai
+                đều `hidden` dưới `lg`. Ngăn kéo trước đây không chép chúng
+                sang, nên mở ERP bằng điện thoại là hai màn hình ấy biến mất
+                hẳn — không một lối nào bấm tới được. */}
             <ErpMobileMenu
               name={user.name}
               jobTitle={user.jobTitle}
               role={user.role}
+              accountId={user.id}
+              systemAdmin={systemAdmin}
               siteIds={user.siteIds}
               currentSiteId={site?.id}
               modules={visibleModules}

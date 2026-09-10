@@ -141,7 +141,13 @@ export default async function PackagesPage({
         </Link>
         <p className="mt-10 text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
           {customerBookingEnabled
-            ? "Giữ chỗ 15 phút theo công suất ERP · thanh toán mô phỏng"
+            // Hai chỗ hỏng trong một dòng cũ ("Giữ chỗ 15 phút theo công suất
+            // ERP · thanh toán mô phỏng"): "ERP" là chữ nội bộ, và "thanh toán
+            // mô phỏng" là lời cảnh báo đứng ngay cửa danh mục — đúng cái đã
+            // giết trang thanh toán hồi trước. Nói cái CÓ trước; phần chưa đấu
+            // nối ngân hàng vẫn nói đủ ở /checkout, còn giá minh hoạ vẫn nói
+            // thẳng trong đoạn ngay dưới đây.
+            ? "Giữ chỗ 15 phút · trả tiền khi tới nơi"
             : flags.sandboxCheckout
               ? "Dữ liệu minh họa · giữ chỗ mô phỏng, chưa thu tiền thật"
             : "Bảng giá tham khảo · chưa mở đặt online"}

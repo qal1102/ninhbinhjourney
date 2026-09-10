@@ -64,7 +64,12 @@ export default async function CheckoutPage({
           ← Chi tiết gói
         </Link>
         <p className="mt-9 text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-          {customerBookingEnabled ? "Gói A · giữ chỗ trên lõi ERP" : "Production-shaped sandbox lifecycle"}
+          {/* "Gói A · giữ chỗ trên lõi ERP" là chữ trong phòng làm việc, không
+              phải chữ của khách: "Gói A" là tên một giai đoạn thi công, "lõi
+              ERP" là tên một hệ thống nội bộ. Nó lại nằm ở dòng đầu tiên của
+              trang thanh toán — chỗ đắt nhất trên cả luồng. Xem luật cấm chữ
+              kỹ thuật lọt ra mặt khách ở docs/reference/UI_UX_RULES.md. */}
+          {customerBookingEnabled ? "Đặt vé vào cổng · chỗ giữ 15 phút" : "Production-shaped sandbox lifecycle"}
         </p>
         <h1 className="font-display mt-4 text-5xl leading-[0.96] text-[#183f34] sm:text-7xl">
           {customerBookingEnabled ? "Một chỗ đã giữ," : "Xác nhận rõ ràng,"}

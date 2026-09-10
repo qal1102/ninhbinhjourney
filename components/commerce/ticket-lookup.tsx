@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import QRCode from "qrcode";
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGES } from "@/content/packages";
@@ -132,7 +133,21 @@ export function TicketLookup() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#9a6328]">
+      {/* Trang này trước đây không có lấy một liên kết nào — không logo, không
+          nav, không đường về. Khách vào đây mà không nhớ ra mã đặt chỗ thì hết
+          đường, chỉ còn nút back của trình duyệt. Nhánh "chưa mở đặt chỗ" ngay
+          bên cạnh (app/tra-cuu-ve/page.tsx) vẫn luôn có lối ra; nhánh chính
+          thì không. Hai đường ra ở đây là hai việc khách thật sự làm tiếp: về
+          trang chủ, hoặc đi xem gói để đặt chuyến mới. */}
+      <nav aria-label="Điều hướng trang" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-bold">
+        <Link href="/" className="text-[#183f34]">
+          ← Về trang chủ
+        </Link>
+        <Link href="/packages" className="text-[#356957]">
+          Xem các gói hành trình
+        </Link>
+      </nav>
+      <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.22em] text-[#9a6328]">
         Ninh Bình Journey · Vé của bạn
       </p>
       <h1 className="font-display mt-3 text-4xl leading-tight text-[#183f34] sm:text-5xl">

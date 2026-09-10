@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 const MOCK_SLOT_STARTS_AT = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
@@ -126,7 +127,9 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     await page.getByLabel("Số trẻ cao dưới 1m3").fill("1");
 
     await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
-    await expect(page.getByText("Ước tính vận hành T11a")).toBeVisible();
+    // Chuỗi này từng là "Ước tính vận hành T11a" — số hiệu phiếu việc nội
+    // bộ đứng ngay trước mắt khách. Xem bài chống lọt chữ nội bộ ở cuối tệp.
+    await expect(page.getByText("Ước tính từ vận hành")).toBeVisible();
     // Máy chủ phải nhận đủ ba con số, và tổng phải khớp — thiếu một cái là vé
     // phát ra sai loại mà không có gì báo.
     expect(holdRequestBody.party_size).toBe(3);
@@ -191,5 +194,73 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
 
     // Không có khung nào chọn được thì nút giữ chỗ vẫn phải khoá.
     await expect(page.getByRole("button", { name: "Giữ chỗ 15 phút" })).toBeDisabled();
+  });
+
+  /*
+   * Màn hình chọn cách trả tiền là chỗ khách quyết định xuống tiền, và nó
+   * dựng bằng chữ xám trên nền kem — đúng kiểu dễ tụt tương phản mà mắt người
+   * viết không nhận ra. Bài này chỉ soi ĐÚNG bước ấy (sau khi đã giữ chỗ),
+   * chứ không soi cả trang, vì khối chọn cách trả tiền chỉ hiện ở bước này.
+   *
+   * Chỉ chặn `serious` và `critical` — cùng ngưỡng đã dùng ở
+   * public-surfaces.spec.ts, để bài không đỏ vì những cảnh báo vụn.
+   */
+  test("màn hình chọn cách trả tiền đọc được, không có lỗi tương phản nghiêm trọng", async ({
+    page,
+  }) => {
+    await page.goto("/checkout?package=heritage-day");
+    await page.getByRole("button", { name: /Khung .*còn 12 chỗ/i }).click();
+    await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
+    await expect(page.getByRole("radio", { name: /Nhận vé ngay, chưa trừ tiền/ })).toBeVisible();
+
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa"])
+      .analyze();
+    const nghiemTrong = results.violations.filter(
+      (violation) => violation.impact === "critical" || violation.impact === "serious",
+    );
+    expect(
+      nghiemTrong.map((violation) => `${violation.id}: ${violation.help}`),
+      "màn hình chọn cách trả tiền có lỗi trợ năng nghiêm trọng",
+    ).toEqual([]);
+  });
+
+  /*
+   * "Gói A" là tên một giai đoạn thi công, "lõi ERP"/"công suất ERP" là tên
+   * hệ thống nội bộ, "T11a" là số hiệu một phiếu việc. Cả bốn đã từng nằm
+   * ngay dòng đầu của trang thanh toán và trang danh mục.
+   *
+   * `UI_UX_RULES.md` cấm chữ kỹ thuật nội bộ lọt ra mặt khách, và ghi lại hai
+   * lần đã sập vì đúng lỗi này. Bài này canh cả ba trang thương mại cùng lúc,
+   * vì chữ ấy trước nay cứ mọc lại ở trang nào tiện tay nhất.
+   */
+  test("ba trang thương mại không để lọt chữ kỹ thuật nội bộ ra mặt khách", async ({ page }) => {
+    const internalJargon = /\bERP\b|\bT11a\b|\bT8\b|Gói A ·|lõi ERP|công suất ERP/;
+
+    for (const path of ["/packages", "/packages/heritage-day", "/checkout?package=heritage-day"]) {
+      // `load` không dùng được cho trang chi tiết gói: ảnh và trình phát nạp
+      // sẵn khiến sự kiện ấy có khi mãi không tới. Cùng lý do đã ghi ở vòng
+      // lặp axe trong public-surfaces.spec.ts.
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+
+      // Chờ khung chờ RỜI KHỎI trang trước khi đọc chữ.
+      //
+      // `app/loading.tsx` cũng dựng một thẻ <main> (mang `aria-busy`). Với
+      // `domcontentloaded` có một nhịp cả hai cùng nằm trong trang, và khi ấy
+      // `getByRole("main")` khớp trúng KHUNG CHỜ — câu khẳng định xanh một
+      // cách vô nghĩa — còn `locator("main")` thì gãy vì khớp hai phần tử.
+      // Đọc chữ của khung chờ thì bài kiểm này chẳng canh được gì.
+      await expect(page.locator("main[aria-busy='true']")).toHaveCount(0);
+      const noiDungThat = page.getByRole("main");
+      await expect(noiDungThat).toBeVisible();
+      const visibleText = await noiDungThat.innerText();
+      expect(visibleText, `${path} để lọt chữ nội bộ ra mặt khách`).not.toMatch(internalJargon);
+    }
+
+    // Và cả sau khi đã giữ chỗ — khối "các điểm đã khoá" chỉ hiện ở bước đó,
+    // và nó chính là chỗ "T11a" từng đứng — nay phải đọc là "Ước tính từ vận hành".
+    await page.getByRole("button", { name: /Khung .*còn 12 chỗ/i }).click();
+    await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
+    await expect(page.getByText("Ước tính từ vận hành")).toBeVisible();
   });
 });

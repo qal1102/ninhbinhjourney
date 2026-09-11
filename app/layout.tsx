@@ -5,7 +5,6 @@ import "@fontsource-variable/manrope/index.css";
 import "./globals.css";
 import { PageTransition } from "@/components/shared/page-transition";
 import { ScrollProgress } from "@/components/shared/scroll-progress";
-import { ScrollType } from "@/components/shared/scroll-type";
 import { CustomerBehaviorTracker } from "@/components/customer-data/customer-behavior-tracker";
 import { CustomerConsentCenter } from "@/components/customer-data/customer-consent-center";
 
@@ -23,7 +22,6 @@ export default function RootLayout({
     <html lang="vi" className="h-full scroll-smooth antialiased">
       <body className="min-h-full flex flex-col">
         <ScrollProgress />
-        <ScrollType />
         <Suspense fallback={null}>
           <CustomerBehaviorTracker />
         </Suspense>

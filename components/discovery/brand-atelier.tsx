@@ -33,8 +33,9 @@ const chapterLayout = [
   },
   {
     article: "lg:min-h-[104svh]",
-    media: "lg:col-span-9 lg:col-start-2",
-    copy: "lg:col-span-5 lg:col-start-7 lg:pt-4",
+    media: "lg:col-span-9 lg:col-start-2 lg:row-start-1",
+    copy:
+      "lg:relative lg:z-10 lg:col-span-5 lg:col-start-7 lg:row-start-1 lg:self-center lg:bg-[color:var(--atelier-surface)]/94 lg:p-8 lg:shadow-[0_24px_70px_rgba(36,35,31,.12)] xl:p-10",
   },
   {
     article: "lg:min-h-[96svh]",
@@ -180,7 +181,7 @@ export function BrandAtelier({
       if (curtain) {
         timeline.fromTo(
           curtain,
-          { scaleX: 1 },
+          { scaleX: 0.38 },
           { scaleX: 0, transformOrigin: "right center", ease: "power3.inOut" },
           0,
         );

@@ -61,42 +61,16 @@ select {
 }
 
 /*
- * Fraunces la font BIEN THIEN: ngoai do dam no con hai truc rieng --
- * `SOFT` (goc chu bo tron bao nhieu) va `opsz` (thiet ke cho co chu lon
- * hay nho). Hai bien duoi duoc components/shared/scroll-type.tsx ghi lai
- * theo TOC DO CUON: cuon nhanh thi chu cung va manh lai, dung thi no "no"
- * ra mem va day hon.
- *
- * Vi sao dang lam nay: no lam trang co cam giac VAT LY, nhu giay in that
- * phan ung voi tay nguoi. Gan nhu khong ai nhan ra mot cach co y thuc --
- * va do dung la y do.
- *
- * Gia tri mac dinh duoi day CHINH LA bo so cu (opsz 84, SOFT 40, wght
- * 620), nen khi khong co JS / bat giam chuyen dong, chu hien y het truoc.
+ * Giu metric cua Fraunces on dinh tren toan trang. Tung co mot effect doi
+ * opsz/SOFT/wght theo toc do cuon; effect do lam headline xuong dong lai,
+ * doi document height va keo scroll anchoring lui/toi. Motion typography tu
+ * nay phai nam trong mot scene co kich thuoc khoa, khong sua metric global.
  */
-:root {
-  --display-opsz: 84;
-  --display-soft: 40;
-  --display-wght: 620;
-}
-
 .font-display {
   font-family: var(--font-heading);
-  font-variation-settings:
-    "opsz" var(--display-opsz),
-    "SOFT" var(--display-soft),
-    "WONK" 0;
-  font-weight: var(--display-wght);
+  font-variation-settings: "opsz" 84, "SOFT" 40, "WONK" 0;
+  font-weight: 620;
   letter-spacing: -0.02em;
-  transition:
-    font-variation-settings 420ms ease-out,
-    font-weight 420ms ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .font-display {
-    transition: none;
-  }
 }
 
 .fade-up {

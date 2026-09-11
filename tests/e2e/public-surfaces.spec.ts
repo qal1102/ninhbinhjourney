@@ -384,6 +384,82 @@ test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive
   await expect(campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" })).toBeFocused();
 });
 
+test("Brand Atelier keeps Prada on one editorial stage without breaking mobile flow", async ({
+  page,
+}) => {
+  await prepareReadOnlyHome(page);
+  await page.goto("/?lang=en&presentation=1", { waitUntil: "load" });
+  await waitForHomeLayout(page);
+
+  const prada = page.locator('[data-atelier-chapter="prada-concept"]');
+  await prada.scrollIntoViewIfNeeded();
+  const layout = await prada.evaluate((chapter) => {
+    const media = chapter.querySelector<HTMLElement>("[data-seasonal-card-media]");
+    const copy = chapter.querySelector<HTMLElement>("[data-seasonal-card-copy]");
+    if (!media || !copy) return null;
+    const mediaRect = media.getBoundingClientRect();
+    const copyRect = copy.getBoundingClientRect();
+    return {
+      viewportWidth: window.innerWidth,
+      media: {
+        top: mediaRect.top,
+        right: mediaRect.right,
+        bottom: mediaRect.bottom,
+        left: mediaRect.left,
+      },
+      copy: {
+        top: copyRect.top,
+        right: copyRect.right,
+        bottom: copyRect.bottom,
+        left: copyRect.left,
+      },
+    };
+  });
+
+  expect(layout).not.toBeNull();
+  if (!layout) return;
+
+  if (layout.viewportWidth >= 1024) {
+    const horizontalOverlap = Math.min(layout.media.right, layout.copy.right)
+      - Math.max(layout.media.left, layout.copy.left);
+    const verticalOverlap = Math.min(layout.media.bottom, layout.copy.bottom)
+      - Math.max(layout.media.top, layout.copy.top);
+    expect(horizontalOverlap).toBeGreaterThan(160);
+    expect(verticalOverlap).toBeGreaterThan(240);
+  } else {
+    expect(layout.copy.top).toBeGreaterThanOrEqual(layout.media.bottom - 1);
+  }
+});
+
+test("vertical scrolling keeps the document geometry stable after content settles", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await prepareReadOnlyHome(page);
+  await page.goto("/?lang=en&presentation=1", { waitUntil: "load" });
+  await waitForHomeLayout(page);
+  await page.waitForTimeout(1_000);
+
+  await page.evaluate(() => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: max * 0.7, behavior: "auto" });
+  });
+
+  const samples: Array<{ y: number; height: number }> = [];
+  for (let index = 0; index < 14; index += 1) {
+    await page.waitForTimeout(100);
+    samples.push(await page.evaluate(() => ({
+      y: window.scrollY,
+      height: document.documentElement.scrollHeight,
+    })));
+  }
+
+  const scrollPositions = samples.map((sample) => sample.y);
+  const documentHeights = samples.map((sample) => sample.height);
+  expect(Math.max(...scrollPositions) - Math.min(...scrollPositions)).toBeLessThanOrEqual(2);
+  expect(Math.max(...documentHeights) - Math.min(...documentHeights)).toBeLessThanOrEqual(2);
+});
+
 test("mobile gives privacy the fixed layer before revealing the concierge", async ({ page }) => {
   test.skip(
     process.env.NBJ_E2E_CUSTOMER_IDENTITY !== "1",

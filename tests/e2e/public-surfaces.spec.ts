@@ -440,9 +440,20 @@ test("vertical scrolling keeps the document geometry stable after content settle
   await waitForHomeLayout(page);
   await page.waitForTimeout(1_000);
 
+  // `behavior: "instant"` chứ KHÔNG phải `"auto"`.
+  //
+  // Theo chuẩn CSSOM, `"auto"` nghĩa là *theo đúng `scroll-behavior` của
+  // CSS* — mà `app/layout.tsx` đặt `scroll-smooth` trên thẻ <html> (cố ý, để
+  // các nút nhảy mục đi mượt). Nên cú nhảy này cuộn ÊM, và mười bốn lần lấy
+  // mẫu ngay sau đó chụp đúng cú cuộn của chính bài kiểm: vị trí bò từ 0 lên
+  // 25.943 và bài đỏ với sai lệch hơn hai vạn pixel.
+  //
+  // Đã bắt tận tay: gài bẫy quanh `window.scrollTo` và `scrollIntoView` rồi
+  // đo lại — **không một lời gọi nào** từ mã sản phẩm, tức là trang không tự
+  // chạy; chỉ có cú cuộn êm của bài kiểm đang dở dang.
   await page.evaluate(() => {
     const max = document.documentElement.scrollHeight - window.innerHeight;
-    window.scrollTo({ top: max * 0.7, behavior: "auto" });
+    window.scrollTo({ top: max * 0.7, behavior: "instant" });
   });
 
   const samples: Array<{ y: number; height: number }> = [];

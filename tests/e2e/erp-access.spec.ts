@@ -1217,19 +1217,20 @@ test("giám đốc dùng điện thoại vẫn mở được tài khoản và h�
  * màn hình để điều hành, không phải để đọc số hiệu công việc của chúng ta.
  */
 const CHU_KY_THUAT_NOI_BO =
-  /\bERP\b|\bPII\b|\bT\d{1,2}[ab]?\b|\bCUS-\d+\b|\bA\d ·|migration|Supabase|server secret|\bRPC\b|\bRLS\b|\/erp\//;
+  /\bERP\b|\bPII\b|\bT\d{1,2}[ab]?\b|\bCUS-\d+\b|\bA\d ·|migration|Supabase|server secret|\bRPC\b|\bRLS\b|\/erp\/|Customer 360|\bpayment\b|\boutbound\b|\bprofile\b|\bconsent\b|\bstaged\b|\bprovider\b|\bproxy\b/i;
 
 /**
  * Đúng những màn hình giám đốc bấm tới được từ `/erp`.
  *
- * `/erp/khach-hang` cố ý vắng mặt: màn hình ấy vẫn còn câu "hãy kiểm tra
- * migration và cấu hình máy chủ", nhưng câu ấy nằm ở
- * `components/customer-data/customer-360-dashboard.tsx` — phần đang có người
- * khác sửa. Thêm vào đây bây giờ là đỏ một bài vì việc của người khác.
+ * `/erp/khach-hang` từng cố ý vắng mặt vì còn câu "hãy kiểm tra migration và
+ * cấu hình máy chủ". Ngày 13/09/2026 cả màn hình đã viết lại bằng tiếng Việt
+ * (bỏ "Customer 360", tên bảng `customer_journeys`, "payment", "outbound",
+ * "vé T8"), nên nay nó vào danh sách canh như mọi màn hình khác.
  */
 const MAN_HINH_GIAM_DOC = [
   "/erp",
   "/erp/finance",
+  "/erp/khach-hang",
   "/erp/marketing",
   "/erp/nhat-ky",
   "/erp/tai-khoan",

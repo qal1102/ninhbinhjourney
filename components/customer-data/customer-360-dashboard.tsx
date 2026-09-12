@@ -57,6 +57,36 @@ const CONSENT_STATUS_LABELS: Record<string, string> = {
   revoked: "Đã rút lại",
 };
 
+const SEGMENT_LABELS: Record<string, string> = {
+  "marketing-reachable": "Nhận được tin giới thiệu",
+  "identified-service-contact": "Đã để lại liên hệ",
+};
+
+const OUTBOUND_CHANNEL_LABELS: Record<Customer360OutboundAction["channel"], string> = {
+  email: "email",
+  sms: "tin nhắn SMS",
+  zalo: "Zalo",
+};
+
+const OUTBOUND_STATUS_LABELS: Record<string, string> = {
+  staged: "đang xếp hàng thử",
+  suppressed: "đã chặn",
+  "simulated-delivered": "đã gửi thử",
+  failed: "gửi hỏng",
+  "dead-letter": "gửi hỏng nhiều lần, đã dừng",
+  cancelled: "đã huỷ",
+};
+
+const SUPPRESSION_REASON_LABELS: Record<string, string> = {
+  "marketing-consent-required": "khách chưa đồng ý nhận thông tin giới thiệu",
+  "frequency-cap": "khách đã nhận đủ số tin cho phép trong 7 ngày",
+  "opted-out": "khách đã từ chối nhận tin",
+};
+
+function shortCustomerId(profileId: string) {
+  return profileId.slice(0, 8).toUpperCase();
+}
+
 const ORDER_STATUS_LABELS: Record<string, string> = {
   holding: "Đang giữ chỗ",
   confirmed: "Đã xác nhận",
@@ -84,12 +114,12 @@ export function Customer360Dashboard({
           Dữ liệu khách hàng · giai đoạn thử nghiệm
         </p>
         <h1 className="font-display mt-3 text-4xl text-[#3d3325] sm:text-5xl">
-          Customer 360 chưa được bật ở môi trường này
+          Màn hình khách hàng chưa được mở
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-6 text-[#6b6250]">
           {status === "disabled"
-            ? "Màn hình chỉ mở sau khi migration lớp khách hàng được áp dụng và ít nhất một cờ hành trình/booking được bật. Hiện không có dữ liệu khách thật nào được thu từ màn hình này."
-            : "Kho hành trình đang chưa phản hồi. Không thay bằng số minh hoạ; hãy kiểm tra migration và cấu hình máy chủ trước khi dùng."}
+            ? "Phần lưu hành trình và đặt chỗ của khách chưa được bật, nên chưa có dữ liệu khách nào để xem ở đây. Việc bật do bộ phận kỹ thuật làm."
+            : "Kho dữ liệu khách đang không trả lời, nên màn hình chưa hiện được gì. Chỗ trống này cố ý không điền số minh hoạ. Mời bạn tải lại sau ít phút; nếu vẫn vậy, xin báo bộ phận kỹ thuật."}
         </p>
       </section>
     );
@@ -99,47 +129,47 @@ export function Customer360Dashboard({
     <div className="space-y-6" data-testid="customer-360-dashboard">
       <section className="rounded-3xl bg-[#173f34] p-6 text-white sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b9d5ca]">
-          Customer 360 · định danh tăng dần
+          Khách hàng · biết thêm dần qua điều khách tự chia sẻ
         </p>
         <h1 className="font-display mt-3 text-4xl leading-tight sm:text-5xl">
           Hành trình khách đã chủ động tạo
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-6 text-[#d4e4de]">
-          Nguồn vào, sở thích, lịch trình, quyền sử dụng dữ liệu và liên hệ đã bảo vệ được đặt cùng một dòng thời gian. Gợi ý chỉ dùng lựa chọn rõ ràng của khách, luôn hiện lý do và phiên bản rule. Màn hình không có đường giải mã email hay số điện thoại; mỗi lần mở đều ghi audit.
+          Khách đến từ đâu, thích gì, lên lịch ra sao, cho phép dùng dữ liệu tới đâu — tất cả xếp trên cùng một dòng thời gian. Gợi ý chỉ dựa vào điều khách đã tự chọn, và luôn ghi rõ vì sao. Màn hình này không mở được email hay số điện thoại của khách, và mỗi lần mở đều được ghi vào nhật ký.
         </p>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2">
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
-          <p className="text-xs text-[#6e7b75]">Gợi ý có thể giải thích</p>
+          <p className="text-xs text-[#6e7b75]">Gợi ý dịch vụ</p>
           <p className="mt-2 text-3xl font-black text-[#203a30]">{recommendations.length}</p>
-          <p className="mt-2 text-xs text-[#849089]">rule version + reason code, không gọi là AI</p>
+          <p className="mt-2 text-xs text-[#849089]">mỗi gợi ý kèm lý do và luật đã dùng, không phải máy tự đoán</p>
         </article>
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
-          <p className="text-xs text-[#6e7b75]">Hàng đợi outbound</p>
+          <p className="text-xs text-[#6e7b75]">Tin chờ gửi cho khách</p>
           <p className="mt-2 text-3xl font-black text-[#203a30]">{outboundActions.length}</p>
-          <p className="mt-2 text-xs text-[#849089]">chỉ staged/suppressed mô phỏng, chưa gửi ra nhà cung cấp</p>
+          <p className="mt-2 text-xs text-[#849089]">mới xếp hàng thử, chưa gửi đi thật tin nào</p>
         </article>
       </section>
 
       {recommendations.length > 0 || outboundActions.length > 0 ? (
         <section className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Gợi ý & hành động marketing · kiểm soát được</p>
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Gợi ý và tin giới thiệu</p>
           <h2 className="mt-2 text-2xl font-black text-[#203a30]">Lý do trước, gửi ra ngoài sau</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#66756e]">Không có email, số điện thoại hay nội dung liên hệ ở đây. Hành động sẽ bị suppress nếu chưa có consent marketing hiện hành, đã opt-out hoặc quá 2 lần/7 ngày/kênh.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#66756e]">Ở đây không có email, số điện thoại hay nội dung tin. Tin tự bị chặn nếu khách chưa đồng ý nhận thông tin giới thiệu, đã từ chối, hoặc đã nhận quá 2 lần trong 7 ngày trên cùng một kênh.</p>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {recommendations.map((recommendation) => (
               <article key={recommendation.recommendationId} className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]">
                 <strong>{recommendation.productName}</strong>
                 <p className="mt-2">{RECOMMENDATION_REASON_LABELS[recommendation.reasonCode] ?? recommendation.reasonCode}</p>
-                <p className="mt-2 text-xs">profile {recommendation.profileId.slice(0, 8).toUpperCase()} · rule {recommendation.ruleVersion} · hết hạn {formatDate(recommendation.expiresAt)}</p>
+                <p className="mt-2 text-xs">Khách {shortCustomerId(recommendation.profileId)} · luật {recommendation.ruleVersion} · hết hạn {formatDate(recommendation.expiresAt)}</p>
               </article>
             ))}
             {outboundActions.map((action) => (
               <article key={action.actionId} className="rounded-2xl border border-[#eadcc4] bg-[#fff8eb] p-4 text-sm text-[#5d5037]">
-                <strong>Outbound {action.channel.toUpperCase()} · {action.status}</strong>
-                <p className="mt-2">{action.suppressionReason ? `Đã chặn: ${action.suppressionReason}` : "Đang ở hàng đợi mô phỏng; không có provider nào được gọi."}</p>
-                <p className="mt-2 text-xs">profile {action.profileId.slice(0, 8).toUpperCase()} · template {action.templateCode} · {formatDate(action.createdAt)}</p>
+                <strong>Tin qua {OUTBOUND_CHANNEL_LABELS[action.channel] ?? action.channel} · {OUTBOUND_STATUS_LABELS[action.status] ?? action.status}</strong>
+                <p className="mt-2">{action.suppressionReason ? `Đã chặn vì ${SUPPRESSION_REASON_LABELS[action.suppressionReason] ?? action.suppressionReason}.` : "Đang xếp hàng thử, chưa gửi qua nhà mạng hay dịch vụ nào."}</p>
+                <p className="mt-2 text-xs">Khách {shortCustomerId(action.profileId)} · mẫu tin {action.templateCode} · {formatDate(action.createdAt)}</p>
               </article>
             ))}
           </div>
@@ -150,14 +180,14 @@ export function Customer360Dashboard({
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
           <p className="text-xs text-[#6e7b75]">Hành trình đã lưu</p>
           <p className="mt-2 text-3xl font-black text-[#203a30]">{journeys.length}</p>
-          <p className="mt-2 text-xs text-[#849089]">nguồn: customer_journeys</p>
+          <p className="mt-2 text-xs text-[#849089]">khách tự lập ở trang Lập hành trình</p>
         </article>
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
-          <p className="text-xs text-[#6e7b75]">Đơn dịch vụ đã nối</p>
+          <p className="text-xs text-[#6e7b75]">Đơn đặt chỗ</p>
           <p className="mt-2 text-3xl font-black text-[#203a30]">
             {orders.length}
           </p>
-          <p className="mt-2 text-xs text-[#849089]">order + payment mô phỏng + vé T8</p>
+          <p className="mt-2 text-xs text-[#849089]">đơn đặt trên web, kèm vé đã phát</p>
         </article>
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
           <p className="text-xs text-[#6e7b75]">Hồ sơ có liên hệ bảo vệ</p>
@@ -171,26 +201,26 @@ export function Customer360Dashboard({
           <p className="mt-2 text-3xl font-black text-[#203a30]">
             {journeys.reduce((total, journey) => total + journey.events.length, 0)}
           </p>
-          <p className="mt-2 text-xs text-[#849089]">nguồn: customer_events</p>
+          <p className="mt-2 text-xs text-[#849089]">lượt xem, bấm, cuộn mà khách cho phép ghi</p>
         </article>
       </section>
 
       {orders.length > 0 ? (
         <section className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Bán dịch vụ · toàn bộ profile có order</p>
-          <h2 className="mt-2 text-2xl font-black text-[#203a30]">Order, payment mô phỏng và vé T8</h2>
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Đặt chỗ trên web · mọi khách đã có đơn</p>
+          <h2 className="mt-2 text-2xl font-black text-[#203a30]">Đơn, tiền và vé của từng khách</h2>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {orders.map((order) => (
               <article key={order.orderId} className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <strong>{order.productName}</strong>
-                    <p className="mt-1 text-xs">{order.orderCode} · profile {order.profileId.slice(0, 8).toUpperCase()}</p>
+                    <p className="mt-1 text-xs">{order.orderCode} · khách {shortCustomerId(order.profileId)}</p>
                     <p className="mt-1 text-xs">{order.visitDate} · {order.partySize} khách · {formatDate(order.createdAt)}</p>
                   </div>
                   <span className="rounded-full bg-[#e7efe9] px-2.5 py-1 text-xs font-bold text-[#35594b]">{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>
                 </div>
-                <p className="mt-3 font-bold">{order.totalVnd.toLocaleString("vi-VN")} VND · {order.paymentStatus === "succeeded" ? "payment mô phỏng thành công" : "chưa có payment"}</p>
+                <p className="mt-3 font-bold">{order.totalVnd.toLocaleString("vi-VN")} VND · {order.paymentStatus === "succeeded" ? "đã ghi nhận thanh toán thử" : "chưa thanh toán"}</p>
                 {order.tickets.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {order.tickets.map((ticket) => <code key={ticket.ticketCode} className="rounded-lg bg-[#173f34] px-2.5 py-1.5 text-xs font-bold text-[#e7c78d]">{ticket.ticketCode} · {ticket.entriesAllowed} lượt</code>)}
@@ -262,7 +292,7 @@ export function Customer360Dashboard({
                     {journey.segments.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {journey.segments.map((segment) => (
-                          <span key={segment} className="rounded-full bg-[#e7efe9] px-3 py-1 text-xs font-bold text-[#35594b]">{segment}</span>
+                          <span key={segment} className="rounded-full bg-[#e7efe9] px-3 py-1 text-xs font-bold text-[#35594b]">{SEGMENT_LABELS[segment] ?? segment}</span>
                         ))}
                       </div>
                     ) : null}

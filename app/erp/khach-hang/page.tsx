@@ -39,14 +39,23 @@ export default async function Customer360Page() {
   const recommendationsEnabled = isCustomerRecommendationsEnabled();
   if (journeyEnabled || bookingEnabled || recommendationsEnabled) {
     try {
+      // Ghi nhật ký truy cập TRƯỚC khi đọc bất cứ đơn hay gợi ý nào — đọc hành
+      // trình tự ghi nhật ký bên trong nó, nên nó phải đi đầu, một mình.
       if (journeyEnabled) {
         journeys = await listCustomer360Journeys(user.id);
       } else {
         await auditCustomer360Access(user.id);
       }
-      if (bookingEnabled) orders = await listCustomer360BookingOrders();
-      if (recommendationsEnabled) {
-        const queue = await listCustomer360Recommendations();
+      // Hai lượt đọc còn lại không phụ thuộc nhau, nên chạy song song thay vì
+      // nối đuôi. Lượt kiểm tay ngày 12/09/2026 thấy màn hình này chậm; đo lại
+      // ra khoảng 3 giây, chậm hơn màn Tài chính chừng một giây — đúng cỡ một
+      // lượt chờ nối đuôi thừa.
+      const [orderResult, queue] = await Promise.all([
+        bookingEnabled ? listCustomer360BookingOrders() : Promise.resolve(null),
+        recommendationsEnabled ? listCustomer360Recommendations() : Promise.resolve(null),
+      ]);
+      if (orderResult) orders = orderResult;
+      if (queue) {
         recommendations = queue.recommendations;
         outboundActions = queue.outboundActions;
       }

@@ -156,8 +156,21 @@ function createDefaultAttendanceState(): AttendanceState {
   ] as const;
   const events: AttendanceEvent[] = schedule.map(([userId, siteId, hour, minute], index) => {
     const site = ERP_SITES.find((candidate) => candidate.id === siteId)!;
-    const createdAt = new Date();
+    let createdAt = new Date();
     createdAt.setHours(hour, minute, 0, 0);
+    // Lượt vào ca mẫu không được nằm ở tương lai. Mở hệ thống trước 07:28
+    // thì "07:28 hôm nay" là giờ chưa tới, và vì các lượt xếp theo giờ nên nó
+    // luôn đứng cuối: nhân viên bấm ra ca xong rồi bấm vào ca lại thì bị báo
+    // "Bạn đã vào ca; hãy chấm ra trước". Hai bài chấm công trong
+    // `erp-access.spec.ts` đỏ đúng như vậy khi chạy lúc 2 giờ sáng 13/09/2026,
+    // còn ban ngày thì xanh. Chưa tới giờ gieo thì coi như vừa vào ca một
+    // giây trước — nhưng không lùi qua nửa đêm, kẻo lượt ấy rơi sang hôm qua
+    // và nhân viên thành chưa vào ca.
+    if (createdAt.getTime() > Date.now()) {
+      const dauNgay = new Date();
+      dauNgay.setHours(0, 0, 0, 0);
+      createdAt = new Date(Math.max(dauNgay.getTime(), Date.now() - 1000));
+    }
     return {
       id: `seed-attendance-${index + 1}`,
       userId,

@@ -216,7 +216,7 @@ export function CapacityWorkspace({
                     </p>
                   </div>
                   <div className="rounded-2xl bg-[#eff5f2] px-4 py-3 lg:min-w-44 lg:text-right">
-                    <p className="text-xs text-[#697970]">Tải proxy hiện tại</p>
+                    <p className="text-xs text-[#697970]">Đang chạm ngưỡng</p>
                     <p className="mt-1 text-3xl font-black text-[#183f34]">
                       {loadPercent.toLocaleString("vi-VN")}%
                     </p>

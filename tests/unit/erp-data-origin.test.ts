@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   ERP_REAL_DATA_FROM,
+  ERP_TEST_ACCOUNT_ID_PATTERN,
+  isHiddenErpTestAccount,
   erpDataOriginLabel,
   erpFinanceDataOrigin,
   isErpDataOrigin,
@@ -279,5 +281,48 @@ describe("dấu bộ kiểm phải khớp với chính bộ kiểm", () => {
     expect(oDienDau.length).toBeGreaterThan(0);
     const nhetGiuaCau = spec.match(/\.fill\(`[^`]+\$\{MARKER\}/g) ?? [];
     expect(nhetGiuaCau).toEqual([]);
+  });
+});
+
+describe("tài khoản do bài smoke dựng ra thì cất khỏi danh bạ", () => {
+  it("ẩn tài khoản kiểm thử đã khoá hoặc đã thu hồi", () => {
+    // Đúng chín mã đếm được trên production ngày 12/09/2026 thuộc hai khuôn này.
+    for (const status of ["suspended", "revoked"]) {
+      expect(isHiddenErpTestAccount({ accountId: "qa-t6b-check-1785667151983", status })).toBe(true);
+      expect(isHiddenErpTestAccount({ accountId: "qa-t14b-1785680918117", status })).toBe(true);
+    }
+  });
+
+  it("KHÔNG ẩn tài khoản kiểm thử còn đang mở — giấu nó là giấu luôn nút khoá", () => {
+    expect(isHiddenErpTestAccount({ accountId: "qa-t6b-check-1785667151983", status: "active" })).toBe(false);
+    expect(isHiddenErpTestAccount({ accountId: "qa-t14b-1785680918117", status: "active" })).toBe(false);
+  });
+
+  it("không bao giờ ẩn tài khoản người thật, kể cả khi đã khoá", () => {
+    for (const accountId of [
+      "nguyen-van-ba",
+      "qa-nguyen-thi-lan",
+      "qa-t6b-check",
+      "qa-t14b-12345",
+      "qa-t14b-17856809181170",
+      "xqa-t14b-1785680918117",
+      "giamdoc",
+    ]) {
+      expect(isHiddenErpTestAccount({ accountId, status: "suspended" }), accountId).toBe(false);
+    }
+  });
+
+  it("khuôn khớp đúng mã hai tệp smoke đang tự sinh", () => {
+    // Đổi cách đặt mã bên spec mà quên chỗ này thì tài khoản rác lại hiện ra
+    // trong im lặng. Đọc thẳng tệp spec để khoá hai đầu lại với nhau.
+    for (const [tep, tienTo] of [
+      ["tests/e2e/prod-smoke-t6b-auth.spec.ts", "qa-t6b-check-"],
+      ["tests/e2e/prod-smoke-t14b-directory.spec.ts", "qa-t14b-"],
+    ] as const) {
+      const spec = readFileSync(tep, "utf8");
+      expect(spec, tep).toContain("const stamp = Date.now();");
+      expect(spec, tep).toContain(`const accountId = \`${tienTo}\${stamp}\`;`);
+      expect(ERP_TEST_ACCOUNT_ID_PATTERN.test(`${tienTo}${Date.now()}`), tep).toBe(true);
+    }
   });
 });

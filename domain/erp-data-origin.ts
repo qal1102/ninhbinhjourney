@@ -178,3 +178,35 @@ export function partitionErpDataOrigin<T extends { dataOrigin: ErpDataOrigin }>(
   }
   return { real, sample };
 }
+
+/**
+ * Tài khoản do bài smoke production tự dựng, đã khoá, nên không được đứng
+ * lẫn trong danh bạ người thật.
+ *
+ * Lượt kiểm tay của chủ dự án ngày 12/09/2026: màn hình quản trị tài khoản có
+ * 23 thẻ thì **9 thẻ** là `qa-t6b-check-…` và `qa-t14b-…` — gần bốn phần mười
+ * màn hình là rác kiểm thử, và chúng cũng hiện ở danh bạ nhân sự từng cơ sở.
+ *
+ * Vì sao không xoá: dự án cố ý không có đường xoá tài khoản, tài khoản giữ vết
+ * kiểm toán. Hai bài smoke đã khoá chúng — đúng luật "để ở trạng thái cuối"
+ * của AGENTS.md. Chỗ sai là màn hình vẫn liệt kê, nên sửa ở tầng đọc.
+ *
+ * **Chỉ ẩn tài khoản đã khoá.** Một tài khoản kiểm thử còn đang hoạt động là
+ * một lối đăng nhập vào production mà không ai quản; giấu nó đi là giấu luôn
+ * nút khoá khỏi tay giám đốc. Nên nó phải hiện ra, dù trông xấu.
+ *
+ * Khuôn neo đầu và cuối, cộng đúng 13 chữ số của `Date.now()`: mã tài khoản
+ * thật sinh từ tên người (`nguyen-van-ba`) không bao giờ ra dạng này. Bài hợp
+ * đồng đọc thẳng hai tệp spec để khoá hai đầu lại với nhau.
+ */
+export const ERP_TEST_ACCOUNT_ID_PATTERN = /^qa-(?:t6b-check|t14b)-\d{13}$/;
+
+export function isHiddenErpTestAccount(account: {
+  accountId: string;
+  status: string;
+}): boolean {
+  return (
+    account.status !== "active" &&
+    ERP_TEST_ACCOUNT_ID_PATTERN.test(account.accountId)
+  );
+}

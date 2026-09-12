@@ -2,6 +2,7 @@ import "server-only";
 
 import { ERP_MODULES, type ErpModuleId, type ErpRole, type ErpSiteId } from "@/domain/erp";
 import { appRoleFromRegistryRole } from "@/domain/erp-account-roles";
+import { isHiddenErpTestAccount } from "@/domain/erp-data-origin";
 import {
   listRegistryAccounts,
   sitesFromGrants,
@@ -97,6 +98,8 @@ export function buildStaffDirectory(
     // Tài khoản chỉ giữ `system-admin` không phải một người đi làm ca; nó
     // không thuộc danh bạ nhân sự.
     if (!role) continue;
+    // Tài khoản bài smoke tự dựng rồi đã khoá — không phải người đi làm.
+    if (isHiddenErpTestAccount(account)) continue;
 
     const demoProfile = findDemoErpAccountById(account.accountId);
     const trained = demoProfile ? getGrantableModuleIds(demoProfile) : [];

@@ -51,11 +51,12 @@ const HAYSTACK_EXTENSIONS = /\.(ts|tsx|css|sql)$/;
  *   2. Ghép lúc chạy từ nhiều mảnh, nên không mảnh nào chứa cả câu.
  *   3. Sinh từ dữ liệu nghiệp vụ chứ không từ một câu chữ cố định.
  */
+//
+// `PROD-SMOKE-CODE` từng nằm trong danh sách này. Nó rời đi ngày 13/09/2026
+// vì migration `202609130068` dọn rác phải gọi đúng tên chuỗi ấy trong vị từ
+// xoá, nên chuỗi giờ "có trong mã nguồn" theo nghĩa của bộ canh — dù nó vẫn
+// là chữ bài smoke tự gõ, không phải chữ của sản phẩm.
 const MIEN_TRU: ReadonlyMap<string, string> = new Map([
-  [
-    "PROD-SMOKE-CODE",
-    "Mã do chính bài smoke tạo ra trên production, không phải chữ của sản phẩm.",
-  ],
   [
     "Ảnh test smoke production, có thể bỏ qua.",
     "Ghi chú do chính bài smoke gõ vào ô nhập khi tạo phiếu thử.",

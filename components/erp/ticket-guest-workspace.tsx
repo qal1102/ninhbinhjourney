@@ -39,13 +39,14 @@ type Period = "day" | "week" | "month" | "year";
 
 const EMPTY_TICKET_SALES: TicketSalesSummary = {
   periods: [
-    { period: "day", label: "Hôm nay", ticketCount: 0, changePercent: null },
-    { period: "week", label: "7 ngày", ticketCount: 0, changePercent: null },
-    { period: "month", label: "30 ngày", ticketCount: 0, changePercent: null },
-    { period: "year", label: "365 ngày", ticketCount: 0, changePercent: null },
+    { period: "day", label: "Hôm nay", ticketCount: 0, entryCount: 0, changePercent: null },
+    { period: "week", label: "7 ngày", ticketCount: 0, entryCount: 0, changePercent: null },
+    { period: "month", label: "30 ngày", ticketCount: 0, entryCount: 0, changePercent: null },
+    { period: "year", label: "365 ngày", ticketCount: 0, entryCount: 0, changePercent: null },
   ],
   productShares: [],
   recentSales: [],
+  truncated: false,
 };
 
 /**
@@ -561,18 +562,30 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
             ))}
           </div>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-2">
+        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
           <article className="rounded-xl bg-[#f3f6f4] p-4">
-            <p className="text-xs text-[#718078]">Số vé phát hành</p>
-            <p className="mt-2 text-2xl font-black">{selected.ticketCount.toLocaleString("vi-VN")}</p>
+            <p className="text-xs text-[#718078]">Lượt khách được vào</p>
+            <p className="mt-2 text-2xl font-black">{selected.entryCount.toLocaleString("vi-VN")}</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#8a958f]">cộng số lượt ghi trên từng vé</p>
           </article>
           <article className="rounded-xl bg-[#f3f6f4] p-4">
-            <p className="text-xs text-[#718078]">So kỳ liền trước</p>
+            <p className="text-xs text-[#718078]">Tấm vé đã phát</p>
+            <p className="mt-2 text-2xl font-black">{selected.ticketCount.toLocaleString("vi-VN")}</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#8a958f]">một vé đoàn là một tấm, dù cho nhiều người vào</p>
+          </article>
+          <article className="col-span-2 rounded-xl bg-[#f3f6f4] p-4 lg:col-span-1">
+            <p className="text-xs text-[#718078]">Lượt khách so kỳ liền trước</p>
             <p className={`mt-2 text-sm font-black ${selected.changePercent === null ? "text-[#7b8881]" : selected.changePercent >= 0 ? "text-[#2d735b]" : "text-[#8b3d31]"}`}>
               {formatChange(selected.changePercent)}
             </p>
           </article>
         </div>
+        {sales.truncated ? (
+          <p role="alert" className="mt-4 rounded-xl bg-[#fdeceb] px-4 py-3 text-xs font-bold leading-5 text-[#8b3d31]">
+            Số vé quá nhiều để đọc hết một lần, nên các con số trên đang thấp hơn
+            thực tế. Xin báo bộ phận kỹ thuật chuyển phép đếm này vào kho dữ liệu.
+          </p>
+        ) : null}
         <p className="mt-4 text-xs text-[#8a958f]">
           Đếm trực tiếp từ vé đã phát hành, không phải doanh thu quy đổi — hệ
           thống chưa lưu giá bán trên từng vé.
@@ -591,7 +604,12 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                 <div key={item.product} className="rounded-xl border border-[#e0e6e2] p-4">
                   <div className="flex justify-between gap-3">
                     <p className="font-black text-[#30443b]">{item.productLabel}</p>
-                    <strong>{item.count} vé · {item.sharePercent}%</strong>
+                    <strong className="text-right">
+                      {item.entryCount.toLocaleString("vi-VN")} lượt · {item.sharePercent}%
+                      <span className="block text-xs font-bold text-[#7b8881]">
+                        {item.ticketCount.toLocaleString("vi-VN")} tấm vé
+                      </span>
+                    </strong>
                   </div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#edf1ee]">
                     <div className="h-full rounded-full bg-[#397a62]" style={{ width: `${item.sharePercent}%` }} />

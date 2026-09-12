@@ -4,6 +4,12 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { ErpSiteId } from "@/domain/erp";
+import {
+  summariseProductShares,
+  summariseTicketPeriods,
+  type TicketSalesPeriodStat,
+  type TicketSalesProductShare,
+} from "@/domain/erp-ticket-sales";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 import { vietnamDateKey } from "@/lib/erp/workday-repository";
 
@@ -478,44 +484,32 @@ export type RecentTicketSale = {
   issuedAt: string;
 };
 
-export type TicketPeriodStat = {
-  period: "day" | "week" | "month" | "year";
-  label: string;
-  ticketCount: number;
-  /** null when the prior window had zero tickets -- a percentage against zero has no meaning. */
-  changePercent: number | null;
-};
+export type TicketPeriodStat = TicketSalesPeriodStat;
 
-export type ProductShare = {
-  product: string;
+export type ProductShare = TicketSalesProductShare & {
   productLabel: string;
-  count: number;
-  sharePercent: number;
 };
 
 export type TicketSalesSummary = {
   periods: TicketPeriodStat[];
   productShares: ProductShare[];
   recentSales: RecentTicketSale[];
+  /**
+   * Đọc chạm trần số hàng, tức là danh sách đã bị cắt và mọi con số trên
+   * màn hình đang **thấp hơn** thực tế. Màn hình phải nói ra, không được im.
+   */
+  truncated: boolean;
 };
+
+/** Trần số tấm vé kéo về một lần. Chạm trần thì `truncated` bật lên. */
+const TICKET_SALES_ROW_LIMIT = 2000;
 
 const EMPTY_TICKET_SALES_SUMMARY: TicketSalesSummary = {
-  periods: [
-    { period: "day", label: "Hôm nay", ticketCount: 0, changePercent: null },
-    { period: "week", label: "7 ngày", ticketCount: 0, changePercent: null },
-    { period: "month", label: "30 ngày", ticketCount: 0, changePercent: null },
-    { period: "year", label: "365 ngày", ticketCount: 0, changePercent: null },
-  ],
+  periods: summariseTicketPeriods([], 0),
   productShares: [],
   recentSales: [],
+  truncated: false,
 };
-
-const PERIOD_WINDOWS: readonly { period: TicketPeriodStat["period"]; label: string; ms: number }[] = [
-  { period: "day", label: "Hôm nay", ms: 24 * 60 * 60 * 1000 },
-  { period: "week", label: "7 ngày", ms: 7 * 24 * 60 * 60 * 1000 },
-  { period: "month", label: "30 ngày", ms: 30 * 24 * 60 * 60 * 1000 },
-  { period: "year", label: "365 ngày", ms: 365 * 24 * 60 * 60 * 1000 },
-];
 
 /**
  * T13: this used to be a hard-coded VND figure (`baseRevenue * 6.4` etc, one
@@ -536,46 +530,26 @@ async function getTicketSalesSummaryFromSupabase(
   const since = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString();
   const result = await client
     .from("erp_tickets")
-    .select("ticket_code, product, channel, guest_name, status, issued_at")
+    .select("ticket_code, product, channel, guest_name, status, issued_at, entries_allowed")
     .eq("tenant_id", TENANT_ID)
     .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId])
     .gte("issued_at", since)
     .order("issued_at", { ascending: false })
-    .limit(2000);
+    .limit(TICKET_SALES_ROW_LIMIT);
   if (result.error) throw repositoryError("đọc số vé đã bán", result.error);
   const rows = result.data ?? [];
 
   const now = Date.now();
-  const periods: TicketPeriodStat[] = PERIOD_WINDOWS.map(({ period, label, ms }) => {
-    let current = 0;
-    let previous = 0;
-    for (const row of rows) {
-      const issuedAt = Date.parse(String(row.issued_at));
-      if (Number.isNaN(issuedAt)) continue;
-      const age = now - issuedAt;
-      if (age >= 0 && age < ms) current += 1;
-      else if (age >= ms && age < 2 * ms) previous += 1;
-    }
-    const changePercent =
-      previous === 0 ? null : Math.round(((current - previous) / previous) * 1000) / 10;
-    return { period, label, ticketCount: current, changePercent };
-  });
-
-  const monthWindowMs = 30 * 24 * 60 * 60 * 1000;
-  const monthRows = rows.filter((row) => now - Date.parse(String(row.issued_at)) < monthWindowMs);
-  const countByProduct = new Map<string, number>();
-  for (const row of monthRows) {
-    const product = String(row.product);
-    countByProduct.set(product, (countByProduct.get(product) ?? 0) + 1);
-  }
-  const productShares: ProductShare[] = [...countByProduct.entries()]
-    .map(([product, count]) => ({
-      product,
-      productLabel: PRODUCT_LABELS[product] ?? product,
-      count,
-      sharePercent: monthRows.length === 0 ? 0 : Math.round((count / monthRows.length) * 1000) / 10,
-    }))
-    .sort((a, b) => b.count - a.count);
+  const salesRows = rows.map((row) => ({
+    issuedAt: String(row.issued_at),
+    entriesAllowed: row.entries_allowed,
+    product: String(row.product),
+  }));
+  const periods = summariseTicketPeriods(salesRows, now);
+  const productShares: ProductShare[] = summariseProductShares(salesRows, now).map((share) => ({
+    ...share,
+    productLabel: PRODUCT_LABELS[share.product] ?? share.product,
+  }));
 
   const recentSales: RecentTicketSale[] = rows.slice(0, 8).map((row) => ({
     ticketCode: String(row.ticket_code),
@@ -588,7 +562,12 @@ async function getTicketSalesSummaryFromSupabase(
     issuedAt: String(row.issued_at),
   }));
 
-  return { periods, productShares, recentSales };
+  return {
+    periods,
+    productShares,
+    recentSales,
+    truncated: rows.length >= TICKET_SALES_ROW_LIMIT,
+  };
 }
 
 export async function getTicketSalesSummary(

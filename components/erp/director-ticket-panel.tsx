@@ -78,11 +78,18 @@ export function DirectorTicketPanel({
             Vé đã bán · cả bốn cơ sở
           </p>
           <h2 className="mt-2 text-2xl font-black text-[#20342c]">
-            Hôm nay {today.current.toLocaleString("vi-VN")} vé
+            Hôm nay {today.current.toLocaleString("vi-VN")} tấm vé
           </h2>
         </div>
+        {/* Bảng này đếm TẤM VÉ bằng lệnh đếm của kho dữ liệu, nên không cộng
+            được số lượt ghi trên từng vé. Một vé đoàn vài chục người vẫn là
+            một tấm. Nói thẳng ra ở đây để không ai đọc nó thành số khách —
+            lượt kiểm tay 12/09/2026 đã đọc nhầm đúng như vậy. Cộng lượt khách
+            tại chỗ cần một hàm cộng trong kho dữ liệu, xem QA-ERP-TICKET-05. */}
         <p className="text-xs text-[#7c8882]">
-          Đếm từ vé đã phát hành, không phải số người trực tự khai lúc chốt ca.
+          Đếm tấm vé đã phát, không phải số người trực tự khai lúc chốt ca. Một
+          vé đoàn tính một tấm dù cho nhiều người vào; số lượt khách xem ở màn
+          hình Vé của từng cơ sở.
         </p>
       </div>
 
@@ -105,7 +112,7 @@ export function DirectorTicketPanel({
                     : "text-[#8b3d31]"
               }`}
             >
-              {formatChange(window.changePercent, window.previous, "vé")}
+              {formatChange(window.changePercent, window.previous, "tấm vé")}
             </p>
           </article>
         ))}

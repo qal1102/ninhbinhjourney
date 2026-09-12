@@ -15,6 +15,31 @@ import { ERP_DIRECTOR_PASSWORD, ERP_EMPLOYEE_PASSWORD, ERP_MANAGER_PASSWORD } fr
 //
 // A 1x1 PNG (same fixture used by erp-workday.spec.ts) stands in for a
 // real photo upload.
+//
+// ⛔ KHÔNG CHẠY TRÊN PRODUCTION NỮA — tắt ngày 13/09/2026.
+//
+// Bài này vi phạm hai trong bốn điều kiện "bài kiểm production phải tự dọn"
+// của AGENTS.md, và không sửa cho tuân thủ được:
+//
+//   1. Bài đầu để lại một báo cáo hiện trường ở trạng thái "Chờ quản lý xác
+//      nhận" — tức là một việc đang mở nằm trong hộp việc của quản lý thật.
+//      Không có đường xoá báo cáo hiện trường.
+//   2. Bài sau ghi một lượt quét bị từ chối mã `PRODSMOKE…` vào đúng danh sách
+//      "quét gần nhất" của cổng Tràng An. Ghi chú cũ bên dưới bảo "không cần
+//      dọn dẹp gì" vì bài không tiêu lượt vé nào — nhưng lượt quét bị từ chối
+//      vẫn được đếm trong đối soát cuối ca (TC-21), nên nó làm lệch số thật.
+//
+// Lượt kiểm tay của chủ dự án ngày 12/09/2026 đếm được 8 lượt quét
+// `PRODSMOKE…` nằm giữa màn hình vận hành, tất cả sinh ra ngày 01–02/08.
+// Migration `202609130068` dọn phần đã tồn; dòng `test.skip` dưới đây chặn nó
+// mọc lại. Việc gửi báo cáo có ảnh và việc từ chối mã lạ vẫn được canh cục
+// bộ trong `erp-access.spec.ts`. Riêng tính chất "một phiên khác hẳn đọc thấy
+// cùng dữ liệu" thì từ nay chỉ còn bằng chứng lịch sử trên production ngày
+// 02/08 — không có bài nào canh tiếp, nói thẳng ra để khỏi ai tưởng còn.
+test.skip(
+  Boolean(process.env.PLAYWRIGHT_BASE_URL?.trim()),
+  "Ghi báo cáo hiện trường đang chờ duyệt và lượt quét từ chối không có đường dọn, nên không được chạy trên production.",
+);
 
 const TINY_PNG_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";

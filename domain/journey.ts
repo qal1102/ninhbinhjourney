@@ -141,9 +141,89 @@ function countBeforeKeyword(text: string, keyword: string) {
   return match ? VIETNAMESE_NUMBER_WORDS[match[1]] : undefined;
 }
 
+/** Ngày hôm nay theo giờ Việt Nam, tách riêng để chỗ nào cũng đếm giống nhau. */
+function todayInVietnam(now: Date) {
+  const shifted = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+  };
+}
+
+function isoDate(year: number, month: number, day: number) {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** 31 tháng 2 là ngày không có thật; nhận vào là dựng lịch trình cho hư không. */
+function isRealDate(year: number, month: number, day: number) {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+/**
+ * Đọc ngày khách hẹn tới, khi họ nói thẳng ra một ngày cụ thể.
+ *
+ * "Ngày 12 tháng 10 tôi tới" trước đây rơi sạch. Bộ đọc chỉ dò SỐ NGÀY ĐI, mà
+ * ở câu ấy con số đứng SAU chữ "ngày" nên không khớp vào đâu cả — khách nêu
+ * đúng ngày mình tới, rồi màn hình lặng lẽ chọn hộ một ngày cách hôm nay bảy
+ * hôm. Màn hình vẫn luôn chờ sẵn `draft.visitDate`; chỉ là chưa ai điền.
+ *
+ * Chỉ nhận ba lối viết chắc chắn là ngày tháng: "ngày 12 tháng 10", "12 tháng
+ * 10", "12/10". Cả ba đều đòi con số đứng SAU chữ "ngày", hoặc kẹp giữa dấu
+ * gạch chéo — nên "đi 3 ngày" và "2 ngày 1 đêm" không lọt vào đây được, và
+ * hàng rào cũ (số đứng TRƯỚC từ khoá mới là số đếm) vẫn nguyên vẹn.
+ *
+ * Lối gạch chéo còn một cái bẫy riêng: "tôi có 1/2 ngày" là nửa ngày, không
+ * phải mùng một tháng hai. Nên ngay sau nó mà là một chữ đơn vị thì bỏ qua.
+ *
+ * Thiếu năm thì lấy lần tới gần nhất. Gõ "12 tháng 10" vào tháng mười một là
+ * khách hẹn tháng mười SANG NĂM; ô "Ngày đi" trên màn hình chặn mọi ngày trước
+ * hôm nay, nên trả về một ngày đã qua là đẩy khách vào một ô không bấm tiếp
+ * được.
+ */
+const DATE_UNIT_GUARD = "(?!\\s*(?:ngay|gio|tieng|nguoi|tuan|thang|nam|dem)\\b)";
+
+function parseVisitDate(text: string, now: Date) {
+  const match =
+    text.match(/\bngay\s*(\d{1,2})\s*(?:thang|\/)\s*(\d{1,2})(?:\s*(?:nam|\/)\s*(\d{4}))?/) ??
+    text.match(/\b(\d{1,2})\s*thang\s*(\d{1,2})(?:\s*(?:nam|\/)\s*(\d{4}))?/) ??
+    text.match(
+      new RegExp(`\\b(\\d{1,2})/(\\d{1,2})(?:/(\\d{4}))?${DATE_UNIT_GUARD}`),
+    );
+  if (!match) return undefined;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return undefined;
+
+  const spokenYear = match[3] ? Number(match[3]) : undefined;
+  if (spokenYear !== undefined) {
+    if (spokenYear < 2000 || spokenYear > 2100) return undefined;
+    return isRealDate(spokenYear, month, day)
+      ? { date: isoDate(spokenYear, month, day), confidence: 0.97 }
+      : undefined;
+  }
+
+  const today = todayInVietnam(now);
+  const todayIso = isoDate(today.year, today.month, today.day);
+  for (const year of [today.year, today.year + 1]) {
+    if (!isRealDate(year, month, day)) continue;
+    const candidate = isoDate(year, month, day);
+    if (candidate >= todayIso) return { date: candidate, confidence: 0.9 };
+  }
+  return undefined;
+}
+
 export function parseJourneyIntent(input: {
   text: string;
   locale: "vi" | "en";
+  /** Mốc "hôm nay" cho phép bài kiểm ghim một ngày cố định. */
+  today?: Date;
 }): JourneyIntentDraft {
   const rawText = input.text.trim();
   const text = normalizedText(rawText);
@@ -155,7 +235,16 @@ export function parseJourneyIntent(input: {
 
   // Nửa ngày phải xét trước mọi phép đếm ngày: "nửa" không phải một con số,
   // mà nếu để lọt xuống dưới thì chữ "ngày" trong câu lại kéo về trọn một ngày.
-  if (/\bnua ngay\b/.test(text) || /\bhalf[- ]?day\b/.test(text)) {
+  //
+  // "1/2 ngày" cũng là nửa ngày, và nó còn tệ hơn nếu để lọt: phép đếm bên
+  // dưới đọc số DÍNH LIỀN chữ "ngày", tức đọc trúng số 2 của mẫu số, rồi trả
+  // về HAI ngày. Khách viết nửa ngày mà trang đáp "Bạn nói chuyến này đi 2
+  // ngày ạ" — đúng kiểu trang không nghe mình nói.
+  if (
+    /\bnua ngay\b/.test(text) ||
+    /\b1\s*\/\s*2\s*ngay\b/.test(text) ||
+    /\bhalf[- ]?day\b/.test(text)
+  ) {
     draft.durationMinutes = 300;
     draft.tripDays = 1;
     draft.fieldConfidence.durationMinutes = 0.97;
@@ -285,6 +374,12 @@ export function parseJourneyIntent(input: {
   if (interests.length > 0) {
     draft.interests = interests;
     draft.fieldConfidence.interests = 0.9;
+  }
+
+  const visitDate = parseVisitDate(text, input.today ?? new Date());
+  if (visitDate) {
+    draft.visitDate = visitDate.date;
+    draft.fieldConfidence.visitDate = visitDate.confidence;
   }
 
   // Age/family wording must never fabricate disability or medical needs.

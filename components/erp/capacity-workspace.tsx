@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ErpSite } from "@/domain/erp";
 import {
   capacityAlertLevel,
@@ -84,11 +85,22 @@ function MissingCapacityStore({ site }: { site: ErpSite }) {
       <h2 className="mt-2 text-2xl font-black text-[#493c28] sm:text-3xl">
         Chưa thể đọc ngưỡng sức chứa
       </h2>
+      {/* Câu cũ bảo người dùng "kiểm tra kết nối kho ERP" — vừa là chữ nội
+          bộ, vừa sai người: giám đốc mở màn hình này để xem tải khách, không
+          phải để dò kết nối. Nói thật là chưa đọc được, rồi đưa sẵn một việc
+          bấm được thay vì bắt họ tự đoán phải làm gì. */}
       <p className="mt-3 max-w-3xl text-sm leading-6 text-[#70634f]">
-        Màn hình không tự tạo số liệu thay thế. Hãy kiểm tra kết nối kho ERP rồi
-        tải lại trang; các ngưỡng chỉ được hiển thị khi có nguồn và công thức đã
-        lưu.
+        Ngưỡng sức chứa chỉ hiện khi đọc được từ hồ sơ đã lưu, nên màn hình
+        không dựng số thay thế. Xin thử tải lại; nếu vẫn vậy thì hồ sơ ngưỡng
+        của cơ sở chưa lưu được, xin báo bộ phận kỹ thuật.
       </p>
+      <Link
+        href={`/erp/${site.id}/suc-chua`}
+        prefetch={false}
+        className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-[#d7c69c] bg-white px-4 text-sm font-black text-[#6b5520] transition hover:border-[#b79b56] hover:bg-[#fffaf0]"
+      >
+        Tải lại màn hình sức chứa
+      </Link>
     </section>
   );
 }
@@ -152,10 +164,10 @@ export function CapacityWorkspace({
       </header>
 
       <aside className="rounded-2xl border border-[#d9c98f] bg-[#fff9df] p-4 text-sm leading-6 text-[#66551d] sm:px-5">
-        <strong>Tín hiệu đầu vào hiện tại là proxy:</strong> số lượt check-in được
-        T8 chấp nhận trong giờ. Đây không phải số người đang có mặt, cảm biến tại
-        điểm nghẽn hay dữ liệu thời gian thực; cần thay bằng số đo tại bến/cổng khi
-        hạ tầng đo sẵn sàng.
+        <strong>Con số dưới đây mới là số thay thế:</strong> lượt khách được cổng
+        cho vào trong giờ. Đây không phải số người đang có mặt, cũng không phải số
+        đo từ cảm biến tại điểm nghẽn; khi bến và cổng có thiết bị đếm thì thay
+        bằng số đo thật.
       </aside>
 
       {user.role === "director" ? (

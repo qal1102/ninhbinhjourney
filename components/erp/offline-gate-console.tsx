@@ -179,9 +179,13 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
     <section className="rounded-3xl border border-[#b8c9c2] bg-[#f5f8f6] p-5 shadow-sm sm:p-6" data-testid="offline-gate-console">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#4b7566]">A3 · Cổng ngoại tuyến · {siteName}</p>
+          {/* Dòng này từng mở đầu bằng "A3 ·" — mã việc nội bộ — rồi nhắc
+              "PII" và "máy chủ T8" trong một câu người trực cổng phải đọc
+              giữa ca. Người dùng màn hình này cần biết máy làm gì, không cần
+              biết chúng tôi đánh số công việc thế nào. */}
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#4b7566]">Cổng ngoại tuyến · {siteName}</p>
           <h2 className="mt-2 text-2xl font-black text-[#183f34]">Quét tiếp khi mất mạng</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5c6f67]">Nạp trước bộ vé không PII. Lúc offline, quyết định là tạm thời; máy chủ T8 đối soát lại từng lượt khi có mạng và giữ nguyên khóa chống trùng.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5c6f67]">Bộ vé nạp sẵn chỉ mang mã vé, không mang tên hay số điện thoại của khách. Lúc mất mạng, mỗi lượt cho vào là quyết định tạm; có mạng trở lại thì hệ thống đối chiếu lại từng lượt và một vé vẫn chỉ vào được một lần.</p>
         </div>
         <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-black ${online ? "bg-[#dcefe7] text-[#226046]" : "bg-[#fff0cf] text-[#775217]"}`}>
           {online ? "Có mạng" : "Đang offline"}

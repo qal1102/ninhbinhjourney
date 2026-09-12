@@ -1201,3 +1201,144 @@ test("giám đốc dùng điện thoại vẫn mở được tài khoản và h�
     await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
   ).toBeLessThanOrEqual(1);
 });
+
+/**
+ * Lượt đi tiếp theo cùng con đường, 10/09/2026.
+ *
+ * Lượt trước dừng giữa chừng ở hàng chốt ca. Lượt này đi hết: đăng nhập giám
+ * đốc rồi mở từng màn hình bấm tới được, cả máy tính lẫn điện thoại. Năm bài
+ * dưới đây canh đúng năm chỗ đã bắt được — không có bài nào viết cho một chỗ
+ * chưa từng hỏng.
+ */
+
+/**
+ * Mã việc trong sổ thi công, tên hạ tầng và đường dẫn thô đều là chữ của
+ * người dựng hệ thống, không phải chữ của người dùng hệ thống. Giám đốc mở
+ * màn hình để điều hành, không phải để đọc số hiệu công việc của chúng ta.
+ */
+const CHU_KY_THUAT_NOI_BO =
+  /\bERP\b|\bPII\b|\bT\d{1,2}[ab]?\b|\bCUS-\d+\b|\bA\d ·|migration|Supabase|server secret|\bRPC\b|\bRLS\b|\/erp\//;
+
+/**
+ * Đúng những màn hình giám đốc bấm tới được từ `/erp`.
+ *
+ * `/erp/khach-hang` cố ý vắng mặt: màn hình ấy vẫn còn câu "hãy kiểm tra
+ * migration và cấu hình máy chủ", nhưng câu ấy nằm ở
+ * `components/customer-data/customer-360-dashboard.tsx` — phần đang có người
+ * khác sửa. Thêm vào đây bây giờ là đỏ một bài vì việc của người khác.
+ */
+const MAN_HINH_GIAM_DOC = [
+  "/erp",
+  "/erp/finance",
+  "/erp/marketing",
+  "/erp/nhat-ky",
+  "/erp/tai-khoan",
+  "/erp/ho-so/director-001",
+  "/erp/trang-an",
+  "/erp/trang-an/ve-dat-cho",
+  "/erp/trang-an/check-in-khach",
+  "/erp/trang-an/suc-chua",
+  "/erp/trang-an/su-co",
+  "/erp/trang-an/sop-dien-tap",
+  "/erp/trang-an/tai-chinh-doi-soat",
+  "/erp/trang-an/nhan-su",
+  "/erp/trang-an/cham-cong",
+];
+
+test("màn hình điều hành không để lọt chữ kỹ thuật nội bộ", async ({ page }) => {
+  test.slow();
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+
+  for (const path of MAN_HINH_GIAM_DOC) {
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+
+    // Chờ khung chờ RỜI KHỎI trang trước khi đọc chữ. `app/loading.tsx` cũng
+    // dựng một thẻ <main> mang `aria-busy`, nên có một nhịp hai thẻ cùng nằm
+    // trong trang và `getByRole("main")` khớp trúng khung chờ — đọc chữ của
+    // khung chờ thì bài kiểm này chẳng canh được gì.
+    await expect(page.locator("main[aria-busy='true']")).toHaveCount(0);
+    const noiDung = page.getByRole("main");
+    await expect(noiDung).toBeVisible();
+    expect(
+      await noiDung.innerText(),
+      `${path} để lọt chữ kỹ thuật nội bộ ra màn hình điều hành`,
+    ).not.toMatch(CHU_KY_THUAT_NOI_BO);
+  }
+});
+
+test("màn hình tài chính cơ sở gọi trạng thái ca bằng tiếng Việt", async ({ page }) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+  await page.goto("/erp/trang-an/tai-chinh-doi-soat");
+
+  // Khối "Nguồn doanh thu" từng in thẳng giá trị lưu trong kho, nên giám đốc
+  // mở màn hình tài chính của cơ sở là đọc được chữ `submitted` giữa một
+  // trang tiếng Việt — trong khi cùng hồ sơ ấy, hàng chốt ca gọi là
+  // "Chờ quản lý".
+  const hang = page.locator("details").filter({ hasText: "SC-TA-20260728-01" }).first();
+  const tomTat = hang.locator("summary");
+  await expect(tomTat).toContainText("Chờ quản lý");
+  await expect(tomTat).not.toContainText("submitted");
+
+  // `list-none` đã bỏ mất tam giác mở, nên hàng phải tự nói ra là bấm được.
+  await expect(tomTat).toContainText("Xem hồ sơ");
+  await expect(hang.getByText("Người gửi")).toBeHidden();
+  await tomTat.click();
+  await expect(tomTat).toContainText("Thu gọn");
+  await expect(hang.getByText("Người gửi")).toBeVisible();
+});
+
+test("hàng sự cố chuyển cấp nói rõ là bấm mở được", async ({ page }) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+  await page.goto("/erp/trang-an/su-co");
+
+  // Cùng một cái bẫy với hàng chốt ca: `details` bỏ tam giác mở. Giám đốc chỉ
+  // thấy một dòng đứng yên kèm đồng hồ đếm ngược, còn lý do chuyển cấp và
+  // người đang phụ trách thì nằm khuất bên trong.
+  const hoSo = page.locator("details").filter({ hasText: "INC-TA-071" }).first();
+  const tomTat = hoSo.locator("summary");
+  await expect(tomTat).toContainText("Mở hồ sơ");
+  await expect(hoSo.getByText("Người phụ trách")).toBeHidden();
+
+  await tomTat.click();
+  await expect(tomTat).toContainText("Thu gọn");
+  await expect(hoSo.getByText("Người phụ trách")).toBeVisible();
+  await expect(hoSo.getByText("Việc tiếp theo")).toBeVisible();
+});
+
+test("màn hình sức chứa chưa đọc được vẫn có một việc bấm được", async ({ page }) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+  await page.goto("/erp/trang-an/suc-chua");
+
+  // Bản chạy cục bộ không nối kho thật nên màn hình này rỗng — đúng dịp để
+  // canh chính cái khối rỗng ấy. Nó từng khép lại bằng "Hãy kiểm tra kết nối
+  // kho ERP rồi tải lại trang": vừa là chữ nội bộ, vừa giao cho giám đốc một
+  // việc không phải của họ, mà lại chẳng có nút nào để tải lại.
+  const khoiRong = page.getByText("Chưa thể đọc ngưỡng sức chứa");
+  await expect(khoiRong).toBeVisible();
+  await expect(page.getByRole("main")).toContainText("xin báo bộ phận kỹ thuật");
+
+  const loiDiTiep = page.getByRole("link", { name: "Tải lại màn hình sức chứa" });
+  await expect(loiDiTiep).toBeVisible();
+  await loiDiTiep.click();
+  await expect(page).toHaveURL(/\/erp\/trang-an\/suc-chua$/);
+});
+
+test("hồ sơ nhân sự chỉ đường bằng liên kết, không bằng chuỗi đường dẫn", async ({
+  page,
+}) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+  await page.goto("/erp/ho-so/director-001");
+
+  // Hai câu ở màn hình này từng in ra `/erp/tai-khoan` như một chuỗi mã: chỉ
+  // đúng nơi cần đến rồi bỏ mặc người đọc tự gõ lại đường dẫn. Một ngõ cụt
+  // ngay giữa màn hình quản trị.
+  const noiDung = page.getByRole("main");
+  await expect(noiDung).not.toContainText("/erp/tai-khoan");
+
+  const sangPhanQuyen = noiDung
+    .getByRole("link", { name: "Tài khoản & phân quyền" })
+    .first();
+  await expect(sangPhanQuyen).toBeVisible();
+  await sangPhanQuyen.click();
+  await expect(page).toHaveURL(/\/erp\/tai-khoan$/);
+});

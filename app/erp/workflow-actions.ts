@@ -48,8 +48,11 @@ function actionError(error: unknown): ShiftCloseActionState {
   if (error instanceof ShiftCloseRepositoryConfigurationError) {
     return {
       status: "error",
+      // Câu cũ đọc là "Kho dữ liệu ERP chưa được cấu hình đủ. Hãy kiểm tra
+      // URL và server secret Supabase." — nói tên hạ tầng ra màn hình, và
+      // giao cho người đang chốt ca một việc họ không làm được.
       message:
-        "Kho dữ liệu ERP chưa được cấu hình đủ. Hãy kiểm tra URL và server secret Supabase.",
+        "Hệ thống chưa nối được vào kho dữ liệu nên chưa lưu được hồ sơ ca. Xin giữ nguyên số đã khai và báo bộ phận kỹ thuật.",
     };
   }
   if (error instanceof ShiftCloseRepositoryConflictError) {

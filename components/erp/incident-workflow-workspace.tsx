@@ -274,6 +274,31 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                       <span className={`text-xs font-black ${sla.tone}`}>
                         {sla.text}
                       </span>
+                      {/* Hàng này là `details` đã bỏ tam giác mở, nên trước
+                          đây giám đốc chỉ thấy một dòng đứng yên kèm đồng hồ
+                          đếm ngược — lý do chuyển cấp, người phụ trách, việc
+                          tiếp theo và cả nút xử lý đều nằm bên trong mà không
+                          có dấu hiệu nào nói là bấm mở được. */}
+                      <span className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-black text-[#5f7268]">
+                        <span className="group-open:hidden">Mở hồ sơ</span>
+                        <span className="hidden group-open:inline">
+                          Thu gọn
+                        </span>
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          className="h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-open:rotate-180"
+                        >
+                          <path
+                            d="m4 6 4 4 4-4"
+                            stroke="currentColor"
+                            strokeWidth="1.75"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
                     </div>
                   </div>
                 </summary>

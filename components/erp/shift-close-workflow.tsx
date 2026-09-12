@@ -26,10 +26,13 @@ import {
   filterShiftCloseQueue,
   journalProposalTotals,
   type ShiftCloseRecord,
-  type ShiftCloseStatus,
 } from "@/domain/erp-shift-close";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import { DataOriginTag } from "./data-origin-tag";
+import {
+  SHIFT_CLOSE_STATUS_LABELS,
+  SHIFT_CLOSE_STATUS_TONES,
+} from "./shift-close-status";
 
 type SiteWorkflowProps = {
   site: ErpSite;
@@ -43,27 +46,9 @@ type QueueProps = {
   materialOnly?: boolean;
 };
 
-const STATUS_LABELS: Record<ShiftCloseStatus, string> = {
-  submitted: "Chờ quản lý",
-  "manager-returned": "Quản lý trả lại",
-  "manager-approved": "Chờ kế toán",
-  "accounting-review": "Kế toán đang kiểm tra",
-  posted: "Đã ghi sổ",
-  "exception-pending-director": "Chuyển giám đốc",
-  "director-approved": "Ngoại lệ đã duyệt",
-  "director-rejected": "Giám đốc trả lại",
-};
+const STATUS_LABELS = SHIFT_CLOSE_STATUS_LABELS;
 
-const STATUS_TONES: Record<ShiftCloseStatus, string> = {
-  submitted: "bg-[#fff0ce] text-[#77531c]",
-  "manager-returned": "bg-[#ffe5df] text-[#934336]",
-  "manager-approved": "bg-[#e1edf4] text-[#315f79]",
-  "accounting-review": "bg-[#e7e6f4] text-[#5c5486]",
-  posted: "bg-[#dff1e8] text-[#246249]",
-  "exception-pending-director": "bg-[#a94e3f] text-white",
-  "director-approved": "bg-[#dff1e8] text-[#246249]",
-  "director-rejected": "bg-[#ffe5df] text-[#934336]",
-};
+const STATUS_TONES = SHIFT_CLOSE_STATUS_TONES;
 
 function formatVnd(value: number) {
   return new Intl.NumberFormat("vi-VN", {

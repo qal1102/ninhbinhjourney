@@ -25,6 +25,10 @@ import type { ShiftHandover } from "@/lib/erp/shift-handover-repository";
 import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 import type { ShiftReconciliationView } from "@/lib/erp/shift-reconciliation-repository";
 import { listWorkdayEmployeeOptions } from "@/lib/erp/workday-view";
+import {
+  SHIFT_CLOSE_STATUS_LABELS,
+  SHIFT_CLOSE_STATUS_TONES,
+} from "./shift-close-status";
 import { ShiftReconciliationPanel } from "./shift-reconciliation-panel";
 import { AttendancePanel } from "./attendance-panel";
 import { ShiftHandoverPanel } from "./shift-handover-panel";
@@ -166,9 +170,9 @@ function SiteFinanceSource({
         {scoped.map((record) => (
           <details
             key={record.id}
-            className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm open:border-[#8eaa9e] sm:p-5"
+            className="group rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm open:border-[#8eaa9e] sm:p-5"
           >
-            <summary className="grid cursor-pointer list-none gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+            <summary className="grid cursor-pointer list-none gap-2 [&::-webkit-details-marker]:hidden sm:grid-cols-[1fr_auto] sm:items-center">
               <div>
                 <p className="font-black text-[#293f35]">
                   {record.shiftCode}
@@ -182,8 +186,39 @@ function SiteFinanceSource({
                 <p className="font-black text-[#203a30]">
                   {formatVnd(record.amounts.grossVnd - record.amounts.refundVnd)}
                 </p>
-                <p className="mt-1 text-xs font-bold text-[#65776e]">
-                  {record.status}
+                {/* Chỗ này từng in thẳng giá trị lưu trong kho: giám đốc mở
+                    màn hình tài chính của cơ sở là đọc được chữ `submitted`
+                    giữa một trang tiếng Việt. Nhãn tiếng Việt nay lấy chung
+                    một nguồn với hàng chốt ca, để hai màn hình không bao giờ
+                    gọi cùng một trạng thái bằng hai cái tên. */}
+                <p className="mt-1 flex items-center gap-2 text-xs font-bold text-[#65776e] sm:justify-end">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-black ${SHIFT_CLOSE_STATUS_TONES[record.status]}`}
+                  >
+                    {SHIFT_CLOSE_STATUS_LABELS[record.status]}
+                  </span>
+                  {/* `list-none` đã bỏ mất tam giác mở của `details`, nên nếu
+                      không có chữ và mũi tên thì hàng này nhìn như một dòng
+                      đứng yên — người gửi, số vé và chênh lệch nằm bên trong
+                      coi như không tồn tại. */}
+                  <span className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-black text-[#5f7268]">
+                    <span className="group-open:hidden">Xem hồ sơ</span>
+                    <span className="hidden group-open:inline">Thu gọn</span>
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-open:rotate-180"
+                    >
+                      <path
+                        d="m4 6 4 4 4-4"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
                 </p>
               </div>
             </summary>

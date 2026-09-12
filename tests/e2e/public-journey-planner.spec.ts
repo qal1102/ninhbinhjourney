@@ -137,6 +137,79 @@ test("khách đếm đoàn kiểu 'nhà tôi 4 người' thì không bị hiểu
 });
 
 /*
+ * Khách gõ đúng ngày mình tới thì trang phải lấy ngày ấy.
+ *
+ * Đo ngày 10/09/2026: gõ "ngày 12 tháng 10 tôi tới", ô "Ngày đi" hiện
+ * 17/09/2026 — một ngày cách hôm nay bảy hôm, do trang tự chọn hộ. Màn hình
+ * vẫn luôn đọc `draft.visitDate`; chỉ là bộ hiểu chữ chưa bao giờ điền vào đó.
+ *
+ * Ngày mong đợi tính ngay trong bài, đúng lối trang tính giờ Việt Nam, để bài
+ * không hỏng vào ngày 13 tháng 10 sang năm.
+ */
+function ngayToiGanNhat(day: number, month: number) {
+  const homNay = new Date(Date.now() + 7 * 60 * 60 * 1000);
+  const nam =
+    isoNgay(homNay.getUTCFullYear(), month, day) >= homNay.toISOString().slice(0, 10)
+      ? homNay.getUTCFullYear()
+      : homNay.getUTCFullYear() + 1;
+  return isoNgay(nam, month, day);
+}
+
+function isoNgay(nam: number, thang: number, ngay: number) {
+  return `${nam}-${String(thang).padStart(2, "0")}-${String(ngay).padStart(2, "0")}`;
+}
+
+test("khách nói rõ ngày tới thì trang lấy đúng ngày ấy, không tự chọn hộ", async ({
+  page,
+}) => {
+  await page.goto("/plan");
+  await page
+    .getByLabel(TEXT_BOX)
+    .fill("Ngày 12 tháng 10 tôi tới, hai vợ chồng, muốn đi bộ vừa phải.");
+  await page.getByRole("button", { name: RUN_BUTTON }).click();
+
+  const mongDoi = ngayToiGanNhat(12, 10);
+  // Dòng tóm tắt là chỗ khách đọc trước tiên, trước cả khi mở chín ô ra.
+  await expect(page.locator("[data-plan-summary]")).toContainText("đi ngày 12/10/");
+
+  await page.getByRole("button", { name: EXPAND_BUTTON }).click();
+  await expect(page.getByLabel("Ngày đi")).toHaveValue(mongDoi);
+});
+
+/*
+ * Và hàng rào cũ phải còn nguyên. "Tam Cốc" có chữ "tám", "năm" vừa là số vừa
+ * là năm tháng, nên bộ hiểu chữ cố ý chỉ đếm số khi nó ĐỨNG TRƯỚC từ khoá.
+ * Đọc thêm được ngày tháng mà làm thủng chỗ ấy thì "đi 2 ngày 1 đêm" hoá ra
+ * mùng hai tháng một, và "tôi có 1/2 ngày" hoá ra mùng một tháng hai.
+ */
+test("số ngày đi không bị đọc nhầm thành ngày tháng", async ({ page }) => {
+  await page.goto("/plan");
+  await page
+    .getByLabel(TEXT_BOX)
+    .fill("Nhà tôi đi 2 ngày 1 đêm, hai vợ chồng, muốn thong thả.");
+  await page.getByRole("button", { name: RUN_BUTTON }).click();
+
+  await expect(page.locator("[data-plan-multiday]")).toContainText("2 ngày");
+  await page.getByRole("button", { name: EXPAND_BUTTON }).click();
+  const ngayDi = page.getByLabel("Ngày đi");
+  await expect(ngayDi).not.toHaveValue(/-01-02$/);
+  await expect(ngayDi).not.toHaveValue(/-02-01$/);
+
+  // "1/2 ngày" là NỬA NGÀY. Nó sai được theo hai đường cùng lúc, và trước
+  // ngày 10/09/2026 nó sai đúng một đường: phép đếm ngày đọc trúng số 2 của
+  // mẫu số rồi trả về HAI ngày, nên trang đáp lại "Bạn nói chuyến này đi 2
+  // ngày ạ" cho một người vừa bảo mình chỉ có nửa buổi.
+  await page.getByLabel(TEXT_BOX).fill("Tôi chỉ có 1/2 ngày thôi.");
+  await page.getByRole("button", { name: RUN_BUTTON }).click();
+  // Chín ô vẫn đang mở từ lần bấm trên, nên KHÔNG bấm "Chỉnh lại cho đúng"
+  // lần nữa: lúc này nút ấy đã đổi thành "Thu gọn", bấm vào là gập mất ô.
+  await expect(page.getByLabel("Thời lượng")).toHaveValue("300");
+  await expect(page.locator("[data-plan-multiday]")).toHaveCount(0);
+  // Và đường sai thứ hai: mùng một tháng hai.
+  await expect(page.getByLabel("Ngày đi")).not.toHaveValue(/-02-01$/);
+});
+
+/*
  * Câu giải thích trên từng chặng từng ghép thẳng tên hằng số tiếng Anh vào
  * giữa một câu tiếng Việt: "Tràng An khớp nhịp balanced…", "…giới hạn đi bộ
  * low". "Nhịp balanced" là ví dụ cấm được nêu đích danh trong

@@ -21,8 +21,15 @@ const MALFORMED_CODE_MESSAGE =
   "Mã đặt chỗ có dạng NBJ- rồi mười hai ký tự, bạn xem lại giúp em ạ.";
 const NOT_FOUND_MESSAGE =
   "Em chưa tìm ra chuyến nào khớp mã đặt chỗ và liên hệ này ạ. Bạn xem lại giúp em mã đã ghi và số điện thoại hoặc email đã dùng lúc đặt.";
-const GENERIC_INVALID_INPUT_MESSAGE =
-  "Bạn nhập giúp em mã đặt chỗ cùng số điện thoại hoặc email đã dùng lúc đặt ạ.";
+// Máy chủ gửi về MÃ LỖI; câu chữ là của trang. Cùng một mã
+// `CUSTOMER_LOOKUP_INPUT_INVALID` mà máy chủ có lúc kèm "Bạn nhập giúp em mã
+// đặt chỗ…", có lúc kèm "Hãy nhập một email hoặc số điện thoại Việt Nam hợp
+// lệ." — hai giọng khác hẳn nhau cho cùng một chuyện. Trang tự viết một câu và
+// giữ nguyên câu ấy.
+const INVALID_INPUT_PAGE_MESSAGE =
+  "Em chưa đọc được mã đặt chỗ hoặc liên hệ bạn vừa nhập ạ. Mời bạn nhập lại mã bắt đầu bằng NBJ, cùng số điện thoại hoặc email đã dùng lúc đặt.";
+const SERVER_INVALID_INPUT_MESSAGE =
+  "Hãy nhập một email hoặc số điện thoại Việt Nam hợp lệ.";
 
 // Lỗi kỹ thuật lọt ra mắt khách đọc như một vết stack trace hay một từ khoá
 // HTTP/JavaScript trần, chứ không phải thứ tiếng Việt lễ tân mà cả sản phẩm
@@ -37,6 +44,24 @@ const GENERIC_INVALID_INPUT_MESSAGE =
 // mấy chữ còn lại tự viết cả hai lối hoa/thường.
 const TECHNICAL_LEAK_PATTERN =
   /[Ee]rror|[Ee]xception|undefined|null|\[object|[Ss]tack trace|NaN/;
+
+// Chữ kỹ thuật không phải lúc nào cũng là tiếng Anh. Đo ngày 10/09/2026, khách
+// gõ một mã đúng khuôn rồi bấm "Mở vé của tôi" thì nhận đúng hai câu viết cho
+// người trực máy chủ: "Kho liên hệ chưa có khóa mã hóa và khóa băm hợp lệ." và
+// "Chỉ nhận yêu cầu tra cứu first-party từ cùng origin." Mẫu trên không bắt
+// được chữ nào trong hai câu ấy, nên cần thêm mẫu này.
+//
+// Danh sách giữ hẹp, chỉ gồm chữ của hạ tầng: tên kho dữ liệu, tên khoá, và
+// hai từ khoá HTTP. Không đưa vào những chữ mà một câu tiếng Việt tử tế vẫn
+// dùng được, để bài kiểm không đỏ oan rồi bị người sau gỡ đi.
+const INTERNAL_JARGON_PATTERN =
+  /first-party|\borigin\b|khóa băm|khoá băm|Kho liên hệ|Kho đặt chỗ|Kho định danh|payload|endpoint/i;
+
+const CONFIG_FAILURE_SERVER_MESSAGE =
+  "Kho liên hệ chưa có khóa mã hóa và khóa băm hợp lệ.";
+const ORIGIN_REJECTED_SERVER_MESSAGE =
+  "Chỉ nhận yêu cầu tra cứu first-party từ cùng origin.";
+const HOTLINE = "0229 387 6930";
 
 test.describe("TC-23 tra cứu vé — đường lấy lại vé duy nhất", () => {
   test("trang mở được, tiêu đề và ô nhập hiện đúng", async ({ page }) => {
@@ -130,13 +155,17 @@ test.describe("TC-23 tra cứu vé — đường lấy lại vé duy nhất", ()
     // A single space passes the `required` attribute but trims to empty
     // before the page sends it on, so this exercises the "left blank" path
     // through the page's own submit handler and message rendering.
+    //
+    // Thân phản hồi mang đúng câu máy chủ THẬT SỰ gửi cho đường liên hệ gõ sai
+    // khuôn — câu ra lệnh "Hãy nhập…", lạc hẳn giọng của cả sản phẩm. Trang
+    // phải thay bằng câu của mình, nên bài này soát cả hai chiều.
     await page.route(LOOKUP_API_ROUTE, async (route) => {
       await route.fulfill({
         status: 400,
         contentType: "application/json",
         body: JSON.stringify({
           accepted: false,
-          error: { code: "CUSTOMER_LOOKUP_INPUT_INVALID", message: GENERIC_INVALID_INPUT_MESSAGE },
+          error: { code: "CUSTOMER_LOOKUP_INPUT_INVALID", message: SERVER_INVALID_INPUT_MESSAGE },
         }),
       });
     });
@@ -147,8 +176,144 @@ test.describe("TC-23 tra cứu vé — đường lấy lại vé duy nhất", ()
     await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
 
     const status = page.getByRole("status");
-    await expect(status).toHaveText(GENERIC_INVALID_INPUT_MESSAGE);
+    await expect(status).toHaveText(INVALID_INPUT_PAGE_MESSAGE);
     await expect(status).not.toHaveText(TECHNICAL_LEAK_PATTERN);
+    await expect(status).not.toContainText(SERVER_INVALID_INPUT_MESSAGE);
+  });
+
+  /*
+   * Hai bài dưới đây khoá đúng chỗ vừa sập ngày 10/09/2026.
+   *
+   * Trang trước đây in nguyên văn câu máy chủ gửi về. Mở trang bằng
+   * `127.0.0.1` rồi bấm "Mở vé của tôi", khách nhận: "Chỉ nhận yêu cầu tra cứu
+   * first-party từ cùng origin." Còn khi kho liên hệ thiếu khoá thì khách
+   * nhận: "Kho liên hệ chưa có khóa mã hóa và khóa băm hợp lệ."
+   *
+   * Người mất vé đang đứng ở cổng đọc hai câu ấy thì không biết làm gì tiếp,
+   * mà trang cũng chẳng chỉ cho họ một đường nào. Nên bài này đòi hai thứ:
+   * chữ của hạ tầng KHÔNG được ra tới đây, và câu thay thế phải có số điện
+   * thoại để khách còn gọi được.
+   */
+  test("kho dữ liệu trục trặc thì khách đọc được câu tử tế kèm số gọi, không phải chữ hạ tầng", async ({
+    page,
+  }) => {
+    await page.route(LOOKUP_API_ROUTE, async (route) => {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          accepted: false,
+          error: {
+            code: "CUSTOMER_LOOKUP_CONFIGURATION_MISSING",
+            message: CONFIG_FAILURE_SERVER_MESSAGE,
+          },
+        }),
+      });
+    });
+
+    await page.goto(PAGE_PATH);
+    await page.getByLabel(ORDER_CODE_LABEL).fill("NBJ-AAAAAAAAAAAA");
+    await page.getByLabel(CONTACT_LABEL).fill("0912345678");
+    await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
+
+    const status = page.getByRole("status");
+    await expect(status).toBeVisible();
+    await expect(status).not.toContainText(CONFIG_FAILURE_SERVER_MESSAGE);
+    await expect(status).not.toHaveText(INTERNAL_JARGON_PATTERN);
+    await expect(status).not.toHaveText(TECHNICAL_LEAK_PATTERN);
+    // Không có số gọi thì đây là ngõ cụt: trang tra cứu là đường lấy lại vé
+    // duy nhất, và nó vừa báo hỏng.
+    await expect(status).toContainText(HOTLINE);
+    await expect(page.getByTestId("ticket-lookup-result")).toHaveCount(0);
+  });
+
+  test("yêu cầu bị chặn ở cổng vào cũng không đọc ra chữ máy móc", async ({
+    page,
+  }) => {
+    await page.route(LOOKUP_API_ROUTE, async (route) => {
+      await route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({
+          accepted: false,
+          error: {
+            code: "CUSTOMER_LOOKUP_ORIGIN_REJECTED",
+            message: ORIGIN_REJECTED_SERVER_MESSAGE,
+          },
+        }),
+      });
+    });
+
+    await page.goto(PAGE_PATH);
+    await page.getByLabel(ORDER_CODE_LABEL).fill("NBJ-AAAAAAAAAAAA");
+    await page.getByLabel(CONTACT_LABEL).fill("0912345678");
+    await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
+
+    const status = page.getByRole("status");
+    await expect(status).toBeVisible();
+    await expect(status).not.toContainText(ORIGIN_REJECTED_SERVER_MESSAGE);
+    await expect(status).not.toHaveText(INTERNAL_JARGON_PATTERN);
+    await expect(status).toContainText(HOTLINE);
+  });
+
+  /*
+   * Ba bài trên chỉ đo lúc trang từ chối. Nhưng cả trang này tồn tại vì đúng
+   * một việc: trả tấm vé về tay khách. Việc ấy trước nay chưa bài nào đo.
+   */
+  test("tra ra đơn thì vé, mã QR và khoản còn phải trả hiện đủ", async ({
+    page,
+  }) => {
+    await page.route(LOOKUP_API_ROUTE, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          accepted: true,
+          found: true,
+          throttled: false,
+          order: {
+            code: "NBJ-ABCDEF123456",
+            product_id: "40000000-0000-4000-8000-000000000001",
+            visit_date: "2026-10-12",
+            party_size: 3,
+            adults: 2,
+            children: 1,
+            total_vnd: 1_780_000,
+            currency: "VND",
+          },
+          payment: { mode: "pay-on-site", status: "pending", amount_due_vnd: 1_780_000 },
+          tickets: [{
+            ticketId: "90000000-0000-4000-8000-000000000001",
+            ticketCode: "WEB-ABCDEF123456",
+            siteId: "10000000-0000-4000-8000-000000000001",
+            validOn: "2026-10-12",
+            entriesAllowed: 2,
+            entriesUsed: 0,
+            guestGroup: "adult",
+            status: "issued",
+          }],
+        }),
+      });
+    });
+
+    await page.goto(PAGE_PATH);
+    await page.getByLabel(ORDER_CODE_LABEL).fill("NBJ-ABCDEF123456");
+    await page.getByLabel(CONTACT_LABEL).fill("0912345678");
+    await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
+
+    const result = page.getByTestId("ticket-lookup-result");
+    await expect(result).toBeVisible();
+    await expect(result).toContainText("NBJ-ABCDEF123456");
+    await expect(result).toContainText("WEB-ABCDEF123456");
+    await expect(result).toContainText("1.780.000 VND");
+    // Trả tại điểm thì khách phải đọc được là mình còn nợ tiền, chứ không chỉ
+    // thấy một tấm vé rồi tưởng xong.
+    await expect(result).toContainText("Còn trả tại điểm");
+    // Mã QR là thứ nhân viên cổng quét. Ảnh trống thì tấm vé vô dụng.
+    await expect(
+      result.getByRole("img", { name: /Mã QR để quét ở cổng, mã vé WEB-ABCDEF123456/ }),
+    ).toBeVisible();
+    await expect(result).not.toHaveText(INTERNAL_JARGON_PATTERN);
   });
 
   test("mã đúng khuôn nhưng không khớp đơn nào trả lời tử tế", async ({

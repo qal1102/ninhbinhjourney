@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { ERP_SITES } from "@/domain/erp";
@@ -103,10 +104,17 @@ function EditForm({ account }: { account: ErpRegistryAccount }) {
           ))}
         </select>
       </label>
+      {/* Hai câu này (ở đây và ở khối "Quyền hạn") từng in ra đường dẫn
+          `/erp/tai-khoan` như một chuỗi mã, không bấm được. Chúng chỉ đúng nơi
+          cần đến rồi bỏ mặc người đọc tự gõ lại đường dẫn ấy — một ngõ cụt.
+          Nay là liên kết thật, mang đúng cái tên hiện trên thanh đầu trang. */}
       <p className="text-xs leading-5 text-[#7c8882] md:col-span-2">
         Đổi <strong>chức danh</strong> ở đây chỉ đổi cái nhãn hiển thị —
-        không thêm quyền nào. Cấp hoặc thu hồi vai trò chỉ thực hiện được ở{" "}
-        <span className="font-mono">/erp/tai-khoan</span>.
+        không thêm quyền nào. Cấp hoặc thu hồi vai trò xin mời sang{" "}
+        <Link href="/erp/tai-khoan" className="font-black text-[#2c5e4c] underline">
+          Tài khoản &amp; phân quyền
+        </Link>
+        .
       </p>
       {state.status !== "idle" ? (
         <p
@@ -214,9 +222,11 @@ export function StaffProfileView({ account, canEdit, audit }: Props) {
           )}
         </div>
         <p className="mt-3 text-xs text-[#7c8882]">
-          Thay đổi vai trò chỉ thực hiện được ở{" "}
-          <span className="font-mono">/erp/tai-khoan</span>, bởi tài khoản có
-          quyền quản trị hệ thống.
+          Thay đổi vai trò xin mời sang{" "}
+          <Link href="/erp/tai-khoan" className="font-black text-[#2c5e4c] underline">
+            Tài khoản &amp; phân quyền
+          </Link>
+          , và phải do tài khoản có quyền quản trị hệ thống thực hiện.
         </p>
       </section>
 
@@ -235,9 +245,15 @@ export function StaffProfileView({ account, canEdit, audit }: Props) {
         <h2 className="text-sm font-black uppercase tracking-[0.1em] text-[#477565]">
           Hoạt động gần đây
         </h2>
+        {/* Câu cũ khép lại bằng "là T15, chưa làm" — mã việc trong sổ thi
+            công, lọt thẳng ra màn hình người dùng. */}
         <p className="mt-1 text-xs text-[#8a958f]">
-          Đây mới là nhật ký quản trị tài khoản (tạo, sửa hồ sơ, cấp/thu hồi
-          vai trò). Nhật ký đầy đủ mọi thao tác nghiệp vụ là T15, chưa làm.
+          Đây mới là nhật ký quản trị tài khoản: tạo người dùng, sửa hồ sơ, cấp
+          hoặc thu hồi vai trò. Nhật ký đầy đủ mọi thao tác nghiệp vụ xin xem ở{" "}
+          <Link href="/erp/nhat-ky" className="font-black text-[#2c5e4c] underline">
+            Nhật ký hệ thống
+          </Link>
+          .
         </p>
         {audit.length === 0 ? (
           <p className="mt-3 text-sm text-[#7b8881]">Chưa có thay đổi nào được ghi nhận.</p>

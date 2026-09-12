@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ErpSite } from "@/domain/erp";
 import {
   sopFailureCounts,
@@ -59,10 +60,20 @@ function MissingSopStore({ site }: { site: ErpSite }) {
       <h2 className="mt-2 text-2xl font-black text-[#493c28] sm:text-3xl">
         Chưa thể đọc cổng Go/No-Go
       </h2>
+      {/* Xem chú thích cùng loại ở `capacity-workspace.tsx`: câu cũ nhắc "kho
+          ERP" và dừng lại ở đó, không cho người đọc một việc nào bấm được. */}
       <p className="mt-3 max-w-3xl text-sm leading-6 text-[#70634f]">
-        Hệ thống không dựng checklist hoặc quyết định giả ở chế độ này. Hãy kiểm
-        tra kết nối kho ERP rồi tải lại trang.
+        Hệ thống không dựng sẵn danh mục kiểm tra hay quyết định mở cửa giả, nên
+        khi chưa đọc được thì để trống. Xin thử tải lại; nếu vẫn vậy thì hồ sơ
+        quy trình của cơ sở chưa lưu được, xin báo bộ phận kỹ thuật.
       </p>
+      <Link
+        href={`/erp/${site.id}/sop-dien-tap`}
+        prefetch={false}
+        className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-[#d7c69c] bg-white px-4 text-sm font-black text-[#6b5520] transition hover:border-[#b79b56] hover:bg-[#fffaf0]"
+      >
+        Tải lại màn hình quy trình
+      </Link>
     </section>
   );
 }
@@ -123,10 +134,12 @@ export function SopWorkspace({
       </header>
 
       <aside className="rounded-2xl border border-[#dfb6aa] bg-[#fff3ef] p-4 text-sm leading-6 text-[#7b493e] sm:px-5">
-        <strong>Demo operational summary — requires organizational approval.</strong>{" "}
-        Các mục dưới đây là bản tóm tắt vận hành có mã và nguồn trang từ Playbook
-        Tam Chúc, chưa phải chính sách đã được tổ chức phê duyệt hoặc ngày hiệu
-        lực chính thức.
+        {/* Dòng mở đầu vốn là một câu tiếng Anh nguyên khối đứng giữa một
+            màn hình tiếng Việt. */}
+        <strong>Bản tóm tắt vận hành, chưa phải chính sách đã duyệt.</strong>{" "}
+        Các mục dưới đây trích từ sổ tay vận hành Tam Chúc, có mã và số trang
+        kèm theo, nhưng chưa được tổ chức phê duyệt và chưa có ngày hiệu lực
+        chính thức.
       </aside>
 
       {data.items.length === 0 ? (

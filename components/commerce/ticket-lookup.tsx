@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import QRCode from "qrcode";
+import { CONTACT } from "@/content/contact";
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGES } from "@/content/packages";
 import type { CustomerTicketLookupTicket } from "@/domain/customer-booking";
@@ -29,7 +30,36 @@ type LookupResponse =
       tickets: CustomerTicketLookupTicket[];
     }
   | { accepted: true; found: false; throttled: boolean; message: string }
-  | { accepted: false; error?: { message?: string } };
+  | { accepted: false; error?: { code?: string; message?: string } };
+
+/*
+ * Câu khách đọc do TRANG NÀY viết, không lấy nguyên văn của máy chủ.
+ *
+ * Đo ngày 10/09/2026 trên máy cục bộ, gõ một mã đúng khuôn rồi bấm "Mở vé của
+ * tôi", khách nhận đúng hai câu này:
+ *   "Kho liên hệ chưa có khóa mã hóa và khóa băm hợp lệ."
+ *   "Chỉ nhận yêu cầu tra cứu first-party từ cùng origin."
+ * Cả hai là chữ viết cho người trực máy chủ đọc. Khách mất vé đang đứng ở
+ * cổng thì đọc xong chẳng biết làm gì tiếp, mà trang cũng không chỉ cho họ
+ * một đường nào.
+ *
+ * Chặn từng câu một là chạy theo đuôi: mỗi lần kho dữ liệu thêm một thông báo
+ * mới là một câu nữa lọt ra. Nên đổi hẳn luật: máy chủ chọn MÃ LỖI, trang chọn
+ * CÂU CHỮ. Thêm mã mới ở máy chủ mà quên khai vào đây thì khách rơi về câu
+ * chung bên dưới — vẫn tử tế, vẫn có số điện thoại để gọi.
+ */
+const LOOKUP_ERROR_MESSAGE: Record<string, string> = {
+  CUSTOMER_LOOKUP_CODE_MALFORMED:
+    "Mã đặt chỗ có dạng NBJ- rồi mười hai ký tự, bạn xem lại giúp em ạ.",
+  CUSTOMER_LOOKUP_INPUT_INVALID:
+    "Em chưa đọc được mã đặt chỗ hoặc liên hệ bạn vừa nhập ạ. Mời bạn nhập lại mã bắt đầu bằng NBJ, cùng số điện thoại hoặc email đã dùng lúc đặt.",
+};
+
+const LOOKUP_FALLBACK_MESSAGE =
+  `Lúc này em chưa mở được vé giúp bạn ạ. Mời bạn thử lại sau ít phút, hoặc gọi bên em theo số ${CONTACT.phoneLabel} để đội ngũ mở vé ngay cho bạn.`;
+
+const LOOKUP_NETWORK_MESSAGE =
+  `Đường truyền đang trục trặc ạ. Bạn thử lại giúp em sau ít phút, hoặc gọi số ${CONTACT.phoneLabel} để bên em mở vé giúp bạn.`;
 
 /**
  * Mã QR của vé chứa ĐÚNG mã vé trần, không kèm địa chỉ web nào.
@@ -112,13 +142,18 @@ export function TicketLookup() {
         setResult(payload);
         return;
       }
-      setMessage(
-        (payload && payload.accepted === true && payload.found === false && payload.message)
-          || (payload && payload.accepted === false && payload.error?.message)
-          || "Em chưa mở được vé lúc này ạ, mời bạn thử lại sau ít phút.",
-      );
+      // Nhánh "chưa tìm ra chuyến nào" và nhánh "bạn thử hơi nhiều lần" là hai
+      // câu duy nhất lấy nguyên của máy chủ. Chúng phải nằm ở đó chứ không nằm
+      // đây: sai mã và sai liên hệ bắt buộc đọc GIỐNG HỆT nhau, và chỉ máy chủ
+      // mới biết đủ để giữ cho hai đường ấy không lệch một chữ nào.
+      if (payload && payload.accepted === true && payload.found === false) {
+        setMessage(payload.message || LOOKUP_FALLBACK_MESSAGE);
+        return;
+      }
+      const code = payload && payload.accepted === false ? payload.error?.code : undefined;
+      setMessage((code && LOOKUP_ERROR_MESSAGE[code]) || LOOKUP_FALLBACK_MESSAGE);
     } catch {
-      setMessage("Đường truyền đang trục trặc ạ. Bạn thử lại giúp em sau ít phút.");
+      setMessage(LOOKUP_NETWORK_MESSAGE);
     } finally {
       setPending(false);
     }

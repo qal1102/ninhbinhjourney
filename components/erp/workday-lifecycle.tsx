@@ -344,7 +344,7 @@ function LocationMapDialog({
           </div>
           <div className="rounded-xl border border-[#d9e2dd] bg-white p-4 text-sm">
             <p className="text-xs font-black uppercase tracking-[0.12em] text-[#5b7569]">
-              Dữ liệu lưu trong ERP
+              Vị trí đã ghi lại
             </p>
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-xs leading-5 text-[#5e6f66]">
               <dt>Vĩ độ</dt>

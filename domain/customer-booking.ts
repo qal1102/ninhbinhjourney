@@ -1,24 +1,49 @@
 import { z } from "zod";
 
+/**
+ * Số khách tối đa cho một lượt đặt trên web.
+ *
+ * Trần là **45**, và đó là quyết định kinh doanh của chủ dự án ở TC-15: đoàn
+ * thật đi xe 32 chỗ, mà trần cũ 20 chặn đúng loại khách ấy. Migration
+ * `202608300056_erp_visitor_groups_bus_size.sql` đã nới sáu ràng buộc dưới
+ * cơ sở dữ liệu lên 45 cho khớp. **Đừng hạ xuống 20 lần nữa** — bản kiểm thử
+ * ngày 12/09/2026 có đề nghị hạ, nhưng người viết chưa biết lịch sử này.
+ *
+ * Vẫn phải có trần, vì trần ở đây không hạn chế kinh doanh mà chặn một cú gõ
+ * nhầm thành lượt giữ mười nghìn chỗ.
+ *
+ * Để ở một chỗ duy nhất vì ba nơi từng lệch nhau: câu chữ dưới ô nhập ghi
+ * "tối đa 20 khách" trong khi ô nhập cho gõ tới 45 và máy chủ nhận 45. Câu
+ * chữ mới đọc thẳng hằng số này, nên không tự lệch lại được nữa.
+ */
+export const WEB_BOOKING_MAX_PARTY_SIZE = 45;
+
 export const CustomerBookingHoldRequestSchema = z
   .object({
     request_id: z.string().uuid(),
     anonymous_id: z.string().uuid(),
     product_id: z.string().uuid(),
     visit_date: z.iso.date(),
-    // TC-15: tran 45 — mot xe khach lon o Viet Nam la 45 cho. Van phai co
-    // tran, vi no chan mot cu go nham thanh mot luot giu 10.000 cho.
-    party_size: z.number().int().min(1).max(45),
+    party_size: z.number().int().min(1).max(WEB_BOOKING_MAX_PARTY_SIZE),
     // TC-03: hai nhóm tuổi, `party_size` vẫn là tổng.
     //
     // Để trống được, và đó là chủ ý: một tab mở từ trước lúc triển khai vẫn
     // đặt được, mọi khách tính là người lớn — đúng bằng hành vi cũ. Bắt buộc
     // sẽ đổi lỗi ấy thành một màn hình đỏ mà khách không hiểu vì sao.
-    adults: z.number().int().min(1).max(45).optional(),
-    children: z.number().int().min(0).max(44).optional(),
+    adults: z.number().int().min(1).max(WEB_BOOKING_MAX_PARTY_SIZE).optional(),
+    children: z.number().int().min(0).max(WEB_BOOKING_MAX_PARTY_SIZE - 1).optional(),
     // TC-02: khách phải chọn đúng một khung giờ trước khi giữ chỗ — không còn
     // đường nào lặng lẽ rơi về "giữ mọi khung đang bật" từ mặt khách nữa.
-    slot_starts_at: z.iso.datetime(),
+    // Nhận cả dạng có độ lệch múi giờ, không riêng dạng kết thúc bằng "Z".
+    //
+    // Chính máy chủ phát ra khung giờ này: `booking-repository` đọc cột
+    // `starts_at` của PostgreSQL rồi trả nguyên văn ra mặt khách, mà
+    // PostgreSQL viết "2026-09-13T02:30:00+00:00". Màn hình gửi lại đúng
+    // chuỗi ấy, và bản cũ của dòng này từ chối nó — nên **mọi lượt giữ chỗ
+    // trên production đều trả 400 CUSTOMER_BOOKING_INPUT_INVALID**, không một
+    // khách nào đặt được vé. Phát ra một dạng rồi chỉ nhận một dạng khác là
+    // lỗi của máy chủ, không phải của người gửi.
+    slot_starts_at: z.iso.datetime({ offset: true }),
   })
   .strict()
   .refine((value) => (value.adults === undefined) === (value.children === undefined), {

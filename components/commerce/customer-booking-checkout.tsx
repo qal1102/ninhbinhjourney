@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import type { PackageCatalogItem } from "@/content/packages";
 import type { CustomerProductTimeSlot } from "@/domain/customer-booking";
+import { WEB_BOOKING_MAX_PARTY_SIZE } from "@/domain/customer-booking";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import { getOrCreateCustomerAnonymousId } from "@/lib/customer-data/browser-tracking";
 
@@ -311,14 +312,16 @@ export function CustomerBookingCheckout({
 
   const selectedSlot = slots?.find((slot) => slot.startsAt === selectedSlotStartsAt) ?? null;
   const partySizeExceedsSlot = Boolean(selectedSlot && partySize > selectedSlot.remaining);
-  const partySizeInvalid = adults < 1 || partySize < 1 || partySize > 45;
+  const partySizeInvalid =
+    adults < 1 || partySize < 1 || partySize > WEB_BOOKING_MAX_PARTY_SIZE;
 
   // Bàn Trăng khoá tổng số chỗ: đổi được bao nhiêu khách có vé, bao nhiêu trẻ
   // dưới 1m3, nhưng tổng luôn đúng bằng fixedPartySize. Sản phẩm khác thì hai ô
-  // độc lập, chỉ ràng buộc tối thiểu một khách có vé và tổng không vượt quá 20.
+  // độc lập, chỉ ràng buộc tối thiểu một khách có vé và tổng không vượt quá
+  // WEB_BOOKING_MAX_PARTY_SIZE.
   function updateAdults(rawValue: number) {
     if (!Number.isFinite(rawValue)) return;
-    const nextAdults = clamp(Math.trunc(rawValue), 1, 45);
+    const nextAdults = clamp(Math.trunc(rawValue), 1, WEB_BOOKING_MAX_PARTY_SIZE);
     if (packageItem.fixedPartySize) {
       const total = packageItem.fixedPartySize;
       const boundedAdults = clamp(nextAdults, 1, total);
@@ -326,14 +329,16 @@ export function CustomerBookingCheckout({
       setChildren(total - boundedAdults);
     } else {
       setAdults(nextAdults);
-      setChildren((previousChildren) => clamp(previousChildren, 0, Math.max(0, 45 - nextAdults)));
+      setChildren((previousChildren) =>
+        clamp(previousChildren, 0, Math.max(0, WEB_BOOKING_MAX_PARTY_SIZE - nextAdults)),
+      );
     }
     invalidateHold();
   }
 
   function updateChildren(rawValue: number) {
     if (!Number.isFinite(rawValue)) return;
-    const nextChildren = clamp(Math.trunc(rawValue), 0, 44);
+    const nextChildren = clamp(Math.trunc(rawValue), 0, WEB_BOOKING_MAX_PARTY_SIZE - 1);
     if (packageItem.fixedPartySize) {
       const total = packageItem.fixedPartySize;
       const boundedChildren = clamp(nextChildren, 0, Math.max(0, total - 1));
@@ -341,7 +346,9 @@ export function CustomerBookingCheckout({
       setAdults(total - boundedChildren);
     } else {
       setChildren(nextChildren);
-      setAdults((previousAdults) => clamp(previousAdults, 1, Math.max(1, 45 - nextChildren)));
+      setAdults((previousAdults) =>
+        clamp(previousAdults, 1, Math.max(1, WEB_BOOKING_MAX_PARTY_SIZE - nextChildren)),
+      );
     }
     invalidateHold();
   }
@@ -616,7 +623,7 @@ export function CustomerBookingCheckout({
                   aria-label="Số khách cao từ 1m3 trở lên"
                   type="number"
                   min={1}
-                  max={packageItem.fixedPartySize ?? 45}
+                  max={packageItem.fixedPartySize ?? WEB_BOOKING_MAX_PARTY_SIZE}
                   value={adults}
                   onChange={(event) => updateAdults(Number(event.target.value))}
                   className="mt-1 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal text-[#27362f]"
@@ -628,7 +635,7 @@ export function CustomerBookingCheckout({
                   aria-label="Số trẻ cao dưới 1m3"
                   type="number"
                   min={0}
-                  max={packageItem.fixedPartySize ? Math.max(0, packageItem.fixedPartySize - 1) : 44}
+                  max={packageItem.fixedPartySize ? Math.max(0, packageItem.fixedPartySize - 1) : WEB_BOOKING_MAX_PARTY_SIZE - 1}
                   value={children}
                   onChange={(event) => updateChildren(Number(event.target.value))}
                   className="mt-1 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal text-[#27362f]"
@@ -641,7 +648,7 @@ export function CustomerBookingCheckout({
               </span>
             ) : (
               <span className="mt-2 block text-xs font-normal text-[#6b786f]">
-                Trẻ dưới 1m3 không mất vé, nhưng vẫn được giữ một chỗ trên thuyền. Mỗi lượt đặt tối đa 20 khách.
+                Trẻ dưới 1m3 không mất vé, nhưng vẫn được giữ một chỗ trên thuyền. Mỗi lượt đặt tối đa {WEB_BOOKING_MAX_PARTY_SIZE} khách, vừa một xe lớn. Đoàn đông hơn, mời bạn gọi cho bên em để bên em xếp riêng.
               </span>
             )}
             {partySizeExceedsSlot ? (

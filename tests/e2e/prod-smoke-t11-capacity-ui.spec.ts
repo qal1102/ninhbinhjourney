@@ -21,7 +21,17 @@ async function expectCapacityWorkspace(page: Page, formula: string) {
   ).toBeVisible({ timeout: 25_000 });
   await expect(page.getByText("nguồn: ước-lượng")).toBeVisible();
   await expect(page.getByText(formula)).toBeVisible();
-  await expect(page.getByText("Tín hiệu đầu vào hiện tại là proxy:")).toBeVisible();
+  // Màn hình PHẢI nói thẳng con số này là số thay thế, không phải số người
+  // đang có mặt — giám đốc đọc nó để quyết định dừng luồng hay không.
+  //
+  // Câu cũ là "Tín hiệu đầu vào hiện tại là proxy:" và có nhắc "T8". Cả hai
+  // là chữ trong phòng làm việc: `proxy` không phải tiếng Việt của khách hàng
+  // nào, `T8` là số hiệu một phiếu việc. Đã bóc đi — xem hàng JARGON-UX-01
+  // trong docs/HANDOFF.md.
+  await expect(page.getByText("mới là số thay thế")).toBeVisible();
+  await expect(page.getByText("không phải số người đang có mặt")).toBeVisible();
+  // Và không được để chữ nội bộ mọc lại ở đúng chỗ này.
+  await expect(page.getByText(/proxy|T8/)).toHaveCount(0);
   await expect(page.getByText("Phản ứng theo bốn mức")).toBeVisible();
 }
 

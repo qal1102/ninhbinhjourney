@@ -70,7 +70,7 @@ function Stepper({
     <div className="rounded-xl border border-[#dfe6e2] bg-[#f7f9f7] p-3">
       <p className="text-sm font-black text-[#20342c]">{label}</p>
       <p className="text-xs text-[#6e7b75]">{hint}</p>
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => onChange(Math.max(0, value - 1))}
@@ -90,13 +90,13 @@ function Stepper({
         >
           +
         </button>
-        <div className="ml-1 flex flex-wrap gap-1">
+        <div className="flex w-full gap-1 sm:ml-1 sm:w-auto">
           {[1, 2, 3, 4].map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => onChange(n)}
-              className={`h-9 min-w-9 rounded-lg px-2 text-sm font-black ${
+              className={`h-9 min-w-9 flex-1 rounded-lg px-2 text-sm font-black sm:flex-none ${
                 value === n ? "bg-[#183f34] text-white" : "bg-white text-[#42574e] ring-1 ring-[#dfe6e2]"
               }`}
             >
@@ -389,7 +389,11 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                 className="mt-1 h-5 w-5 shrink-0 accent-[#183f34]"
               />
               <span>
-                <strong>Tôi đã đếm đủ {formatVnd(cash)} khách đưa, thối lại {change === null ? "0 đ" : formatVnd(change)}, và bỏ {formatVnd(cart.totalVnd)} vào quỹ.</strong>{" "}
+                <strong>
+                  {cash > 0 && change !== null
+                    ? `Tôi đã đếm đủ ${formatVnd(cash)} khách đưa, thối lại ${formatVnd(change)}, và bỏ ${formatVnd(cart.totalVnd)} vào quỹ.`
+                    : `Tôi đã đếm đủ tiền khách đưa và bỏ ${formatVnd(cart.totalVnd)} vào quỹ.`}
+                </strong>{" "}
                 Nếu sai lệch, tôi chịu trách nhiệm. Phiếu ghi tên người bán và giờ bán.
               </span>
             </label>

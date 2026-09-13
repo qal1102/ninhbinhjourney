@@ -18,7 +18,6 @@ type ChapterId =
   | "packages"
   | "ai"
   | "mid-autumn"
-  | "seasonal-brand-atelier"
   | "partnerships";
 
 type Chapter = {
@@ -90,12 +89,6 @@ const COPY: Record<Language, ConciergeCopy> = {
         shortLabel: "Mùa Trăng",
         description: "Khám phá hộp bánh, bàn tiệc và những trải nghiệm theo mùa.",
       },
-      {
-        id: "seasonal-brand-atelier",
-        label: "Câu chuyện dành cho thương hiệu",
-        shortLabel: "Thương hiệu",
-        description: "Đi tới chương hình ảnh và những đề xuất kết nối thương hiệu.",
-      },
     ],
   },
   en: {
@@ -145,12 +138,6 @@ const COPY: Record<Language, ConciergeCopy> = {
         label: "Moon gifts and dinner",
         shortLabel: "Moon season",
         description: "Explore mooncakes, seasonal tables and experiences after dark.",
-      },
-      {
-        id: "seasonal-brand-atelier",
-        label: "Concepts for brands",
-        shortLabel: "Brands",
-        description: "Enter the image-led chapter of independent brand proposals.",
       },
     ],
   },

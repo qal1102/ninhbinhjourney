@@ -180,10 +180,9 @@ const copy = {
     featuredCta: "See all fifteen destinations",
     destinationPage: "Open this place's own page",
     /*
-     * WEB-STRUCT-02: loi moi hop tac cho nhan hang/doanh nghiep, TACH RIENG
-     * khoi chuong Brand Atelier trong `MidAutumnCampaign` (Celine, Chanel,
-     * Hermes... la concept doc lap cho mua Trung thu, khong phai doi tac
-     * da ky) -- khong nhac ten brand nao o day de khong the nham lan.
+     * WEB-STRUCT-02: loi moi hop tac cho nhan hang/doanh nghiep. Khong nhac
+     * ten thuong hieu nao o day. Tu 13/09/2026 trang cung khong con khoi
+     * thuong hieu nao (BRAND-LEGAL-01 trong docs/HANDOFF.md).
      */
     partnersLabel: "For brands & businesses",
     partnersTitle: "Want to film at Trang An, or host dinner by the Ngô Đồng?",
@@ -1796,11 +1795,8 @@ export default function NinhBinhLanding({
       {/*
         WEB-STRUCT-02 (31/08): loi moi hop tac cho nhan hang/doanh nghiep
         -- chu du an yeu cau "liên hệ hợp tác với các nhãn hàng bla bla".
-        TACH HAN khoi chuong Brand Atelier trong `MidAutumnCampaign`
-        (Celine, Chanel, Hermes... la concept doc lap cho mua Trung thu,
-        khong phai doi tac da ky, xem `components/discovery/
-        brand-atelier.tsx`) -- khoi nay o cuoi trang, khong nhac ten brand
-        nao, chi moi nhan hang/doanh nghiep that lien he qua dung so dien
+        Khoi nay khong nhac ten thuong hieu nao; tu 13/09/2026 trang cung
+        khong con khoi thuong hieu nao (BRAND-LEGAL-01 trong docs/HANDOFF.md), chi moi nhan hang/doanh nghiep that lien he qua dung so dien
         thoai/email o `content/contact.ts`.
       */}
       <section

@@ -51,7 +51,7 @@ async function waitForHomeLayout(page: import("@playwright/test").Page) {
     // intro shell before it reads the already-seen session flag.
     timeout: 12000,
   });
-  await expect(page.locator("#seasonal-brand-atelier")).toHaveCount(1);
+  await expect(page.locator("#seasonal-collaborations")).toHaveCount(1);
   await page.waitForLoadState("load");
   await page.evaluate(async () => {
     await document.fonts.ready;
@@ -148,7 +148,7 @@ test("home keeps tourism first and places seasonal brand stories after the journ
 
   const sectionOrder = await page
     .locator(
-      "#destinations-highlights, #all-destinations, #destination-index, #curated-routes, #packages, #ai, #itinerary, #partnerships, #mid-autumn, #seasonal-luxury-campaign-archive, #seasonal-brand-atelier",
+      "#destinations-highlights, #all-destinations, #destination-index, #curated-routes, #packages, #ai, #itinerary, #partnerships, #mid-autumn",
     )
     .evaluateAll((sections) => sections.map((section) => section.id));
   expect(sectionOrder).toEqual([
@@ -161,8 +161,6 @@ test("home keeps tourism first and places seasonal brand stories after the journ
     "itinerary",
     "partnerships",
     "mid-autumn",
-    "seasonal-luxury-campaign-archive",
-    "seasonal-brand-atelier",
   ]);
   await expect(page.locator("#curated-routes .route-progress-track")).toHaveCount(1);
 });
@@ -204,10 +202,7 @@ test("hero package cue and journey concierge lead to real chapters", async ({
     "href",
     "#mid-autumn",
   );
-  await expect(dialog.getByRole("link", { name: /Concepts for brands/ })).toHaveAttribute(
-    "href",
-    "#seasonal-brand-atelier",
-  );
+  await expect(dialog.getByRole("link", { name: /Concepts for brands/ })).toHaveCount(0);
 
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
@@ -218,13 +213,6 @@ test("hero package cue and journey concierge lead to real chapters", async ({
   );
   await expect(
     page.locator('[data-customer-track="journey-index-mid-autumn"]'),
-  ).toHaveAttribute("aria-current", "location");
-
-  await page.locator("#seasonal-brand-atelier").evaluate((element) =>
-    element.scrollIntoView({ block: "start" }),
-  );
-  await expect(
-    page.locator('[data-customer-track="journey-index-seasonal-brand-atelier"]'),
   ).toHaveAttribute("aria-current", "location");
 
   await trigger.click();
@@ -251,12 +239,11 @@ test("home typography, package actions and animated chapters stay inside exact v
     expect(overflow, `horizontal overflow at ${width}px`).toBeLessThanOrEqual(1);
 
     const chapterOrder = await page
-      .locator("#packages, #mid-autumn, #seasonal-brand-atelier")
+      .locator("#packages, #mid-autumn")
       .evaluateAll((sections) => sections.map((section) => section.id));
     expect(chapterOrder).toEqual([
       "packages",
       "mid-autumn",
-      "seasonal-brand-atelier",
     ]);
 
     if (width === 1023 || width === 1574) {
@@ -282,7 +269,7 @@ test("home typography, package actions and animated chapters stay inside exact v
   }
 });
 
-test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive and a Hermès finale", async ({
+test("Mid-Autumn campaign publishes distinct service layouts and no third-party brand", async ({
   page,
 }) => {
   test.slow();
@@ -304,51 +291,19 @@ test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive
   );
   await expect(campaign).toContainText("VND 390,000");
   await expect(campaign).toContainText("VND 2,480,000 / table");
-  await expect(campaign.locator("[data-seasonal-card]")).toHaveCount(31);
+  // 31 thẻ trước ngày 13/09/2026; hai khối thương hiệu (13 thẻ) đã gỡ vì ảnh
+  // in thẳng logo của hãng — xem hàng BRAND-LEGAL-01 trong docs/HANDOFF.md.
+  await expect(campaign.locator("[data-seasonal-card]")).toHaveCount(18);
   await expect(campaign.getByRole("heading", { name: "When the landscape becomes part of dinner." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Heritage, seen in another light." })).toBeVisible();
   await expect(campaign.getByRole("heading", { name: "Ninh Binh is an open invitation." })).toBeVisible();
-  await expect(campaign.getByRole("heading", { name: "When a house finds a landscape of its own." })).toBeVisible();
-  await expect(campaign.getByRole("heading", { name: "Five perspectives, one heritage landscape." })).toBeVisible();
+  await expect(campaign.getByRole("heading", { name: "When a house finds a landscape of its own." })).toHaveCount(0);
+  await expect(campaign.getByRole("heading", { name: "Five perspectives, one heritage landscape." })).toHaveCount(0);
 
   const serviceLayouts = await campaign.locator("[data-seasonal-layout]").evaluateAll((layouts) =>
     layouts.map((layout) => layout.getAttribute("data-seasonal-layout")),
   );
   expect(serviceLayouts).toEqual(["catalog", "feature", "stories", "mosaic", "index"]);
-
-  const archive = campaign.locator("#seasonal-luxury-campaign-archive");
-  await expect(archive.locator("[data-seasonal-card]")).toHaveCount(8);
-  await expect(archive.getByRole("button", { name: "Select story: Hermès · The river keeps the final light" })).toBeVisible();
-  await archive.getByRole("button", { name: "Select story: Dior · A lotus note through limestone country" }).click();
-  const diorStage = archive.locator("[data-luxury-stage]");
-  await expect(diorStage).toHaveAccessibleName("Open details: Dior · A lotus note through limestone country");
-  expect(await diorStage.locator("img").getAttribute("src")).toContain("dior-lotus-beauty");
-  await archive.getByRole("button", { name: "Campaign frames 2: Dior · A lotus note through limestone country" }).click();
-  expect(await diorStage.locator("img").getAttribute("src")).toContain("dior-lotus-atelier");
-
-  const atelier = campaign.locator("#seasonal-brand-atelier");
-  await expect(atelier.locator("[data-seasonal-card]")).toHaveCount(5);
-  const atelierOrder = await atelier.locator("[data-atelier-chapter]").evaluateAll((chapters) =>
-    chapters.map((chapter) => chapter.getAttribute("data-atelier-chapter")),
-  );
-  expect(atelierOrder).toEqual([
-    "celine-concept",
-    "chanel-concept",
-    "prada-concept",
-    "bottega-veneta-concept",
-    "hermes-concept",
-  ]);
-  await expect(atelier.locator("[data-atelier-finale='true']")).toHaveAttribute("data-seasonal-card", "hermes-concept");
-  expect(await atelier.locator("[data-atelier-finale='true'] img").first().getAttribute("src")).toContain("hermes-on-the-river");
-  for (const title of [
-    "Celine · A study in stillness",
-    "Chanel · Flowers against ancient stone",
-    "Prada · A sharper kind of calm",
-    "Bottega Veneta · Beauty in the making",
-    "Hermès · Far away, then home",
-  ]) {
-    await expect(atelier.getByRole("button", { name: `Open details: ${title}` })).toBeVisible();
-  }
 
   const separatePlanes = await campaign.locator("[data-seasonal-card]").evaluateAll((cards) =>
     cards.every((card) => {
@@ -382,53 +337,6 @@ test("Mid-Autumn campaign publishes distinct service layouts, a campaign archive
   await page.keyboard.press("Escape");
   await expect(contactDialog).toHaveCount(0);
   await expect(campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" })).toBeFocused();
-});
-
-test("Brand Atelier keeps Prada on one editorial stage without breaking mobile flow", async ({
-  page,
-}) => {
-  await prepareReadOnlyHome(page);
-  await page.goto("/?lang=en&presentation=1", { waitUntil: "load" });
-  await waitForHomeLayout(page);
-
-  const prada = page.locator('[data-atelier-chapter="prada-concept"]');
-  await prada.scrollIntoViewIfNeeded();
-  const layout = await prada.evaluate((chapter) => {
-    const media = chapter.querySelector<HTMLElement>("[data-seasonal-card-media]");
-    const copy = chapter.querySelector<HTMLElement>("[data-seasonal-card-copy]");
-    if (!media || !copy) return null;
-    const mediaRect = media.getBoundingClientRect();
-    const copyRect = copy.getBoundingClientRect();
-    return {
-      viewportWidth: window.innerWidth,
-      media: {
-        top: mediaRect.top,
-        right: mediaRect.right,
-        bottom: mediaRect.bottom,
-        left: mediaRect.left,
-      },
-      copy: {
-        top: copyRect.top,
-        right: copyRect.right,
-        bottom: copyRect.bottom,
-        left: copyRect.left,
-      },
-    };
-  });
-
-  expect(layout).not.toBeNull();
-  if (!layout) return;
-
-  if (layout.viewportWidth >= 1024) {
-    const horizontalOverlap = Math.min(layout.media.right, layout.copy.right)
-      - Math.max(layout.media.left, layout.copy.left);
-    const verticalOverlap = Math.min(layout.media.bottom, layout.copy.bottom)
-      - Math.max(layout.media.top, layout.copy.top);
-    expect(horizontalOverlap).toBeGreaterThan(160);
-    expect(verticalOverlap).toBeGreaterThan(240);
-  } else {
-    expect(layout.copy.top).toBeGreaterThanOrEqual(layout.media.bottom - 1);
-  }
 });
 
 test("vertical scrolling keeps the document geometry stable after content settles", async ({
@@ -515,37 +423,6 @@ test("mobile gives privacy the fixed layer before revealing the concierge", asyn
   await expect(
     page.getByRole("dialog", { name: "Where would you like to go?" }),
   ).toBeVisible();
-});
-
-test("Brand Atelier has no serious or critical accessibility violations after settling", async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await prepareReadOnlyHome(page);
-  await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
-  await waitForHomeLayout(page);
-
-  const atelier = page.locator("#seasonal-brand-atelier");
-  await atelier.scrollIntoViewIfNeeded();
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        window.requestAnimationFrame(() =>
-          window.requestAnimationFrame(() => resolve()),
-        ),
-      ),
-  );
-
-  const results = await new AxeBuilder({ page })
-    .include("#seasonal-brand-atelier")
-    .withTags(["wcag2a", "wcag2aa"])
-    .analyze();
-  expect(
-    results.violations.filter(
-      (violation) =>
-        violation.impact === "critical" || violation.impact === "serious",
-    ),
-  ).toEqual([]);
 });
 
 test("cinematic panel uses local MP4 without embedded player controls", async ({ page }) => {
@@ -789,3 +666,23 @@ test("captures local responsive evidence", async ({ page }, testInfo) => {
     fullPage: true,
   });
 });
+
+/*
+ * BRAND-LEGAL-01 · 13/09/2026 — trang có bán vé không được mang tên hay ảnh
+ * của thương hiệu thời trang, trang sức, đồng hồ nào mà dự án không có hợp
+ * đồng. Hai khối cũ in thẳng logo của hãng trong ảnh, nên gỡ cả chữ lẫn ảnh.
+ * Bài này đọc toàn bộ HTML (chữ, mã neo, đường dẫn ảnh), không chỉ chữ hiện ra.
+ */
+const THUONG_HIEU_BEN_THU_BA =
+  /celine|chanel|prada|bottega|herm[eè]s|bvlgari|bulgari|cartier|\bdior\b|gucci|rolex|vacheron|louis vuitton|officiel/i;
+
+for (const lang of ["vi", "en"] as const) {
+  test(`trang chủ ${lang} không còn tên hay ảnh của thương hiệu bên thứ ba`, async ({ page }) => {
+    await prepareReadOnlyHome(page);
+    await page.goto(`/?lang=${lang}&presentation=1`, { waitUntil: "domcontentloaded" });
+    await waitForHomeLayout(page);
+    const html = await page.content();
+    const trung = html.match(THUONG_HIEU_BEN_THU_BA);
+    expect(trung?.[0] ?? null, "trang chủ còn dấu vết thương hiệu bên thứ ba").toBeNull();
+  });
+}

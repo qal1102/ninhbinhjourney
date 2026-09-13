@@ -2,8 +2,6 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BrandAtelier } from "@/components/discovery/brand-atelier";
-import { LuxuryCampaignArchive } from "@/components/discovery/luxury-campaign-archive";
 import { SeasonalEditorialGroup } from "@/components/discovery/seasonal-editorial-group";
 import { CONTACT as contact } from "@/content/contact";
 
@@ -22,8 +20,6 @@ export type SeasonalExperience = {
   editorial?: boolean;
   editorialAction?: string;
   gallery?: string[];
-  atelierTone?: "linen" | "pearl" | "sage" | "forest" | "cognac";
-  atelierFinale?: boolean;
 };
 
 export type SeasonalGroup = {
@@ -32,7 +28,7 @@ export type SeasonalGroup = {
   title: string;
   body: string;
   ratio: "landscape" | "portrait";
-  layout?: "atelier" | "archive" | "catalog" | "feature" | "stories" | "mosaic" | "index" | "rail";
+  layout?: "catalog" | "feature" | "stories" | "mosaic" | "index" | "rail";
   items: SeasonalExperience[];
 };
 
@@ -49,8 +45,6 @@ export type BrowserCopy = {
   conceptNotice: string;
   editorialLabel: string;
   editorialNotice: string;
-  atelierNavigation: string;
-  archiveNavigation: string;
   selectStory: string;
   previousStory: string;
   nextStory: string;
@@ -159,30 +153,6 @@ export function SeasonalExperienceBrowser({
 
       <div className="mt-20 space-y-24 sm:mt-24 sm:space-y-32 lg:space-y-40">
         {groups.map((group, groupIndex) => {
-          if (group.layout === "atelier") {
-            return (
-              <BrandAtelier
-                key={group.id}
-                group={group}
-                groupIndex={groupIndex}
-                copy={copy}
-                onOpen={openExperience}
-              />
-            );
-          }
-
-          if (group.layout === "archive") {
-            return (
-              <LuxuryCampaignArchive
-                key={group.id}
-                group={group}
-                groupIndex={groupIndex}
-                copy={copy}
-                onOpen={openExperience}
-              />
-            );
-          }
-
           return <SeasonalEditorialGroup key={group.id} group={group} groupIndex={groupIndex} copy={copy} onOpen={openExperience} />;
         })}
       </div>

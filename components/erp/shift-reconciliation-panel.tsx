@@ -156,7 +156,7 @@ export function ShiftReconciliationPanel({
     );
   }
 
-  const { shift, reconciliation, scanUnavailableReason, cashUnavailableReason } =
+  const { shift, reconciliation, scanUnavailableReason, cashUnavailableReason, counterCashUnavailableReason } =
     view.selected;
   const { window, scans, scanBreakdown, cash, differences, gaps } = reconciliation;
 
@@ -338,6 +338,46 @@ export function ShiftReconciliationPanel({
                       <strong className="font-black text-[#20342c]">
                         {formatVnd(collector.totalVnd)}
                       </strong>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </article>
+
+        {/* QA-ERP-POS-04 — tiền bán vé tại quầy có phiếu, theo từng người bán. */}
+        <article className="rounded-2xl border border-[#dde5e0] bg-white p-4">
+          <h3 className="text-sm font-black text-[#20342c]">Tiền bán tại quầy</h3>
+          {!reconciliation.counterCash ? (
+            <p className="mt-2 text-sm font-medium text-[#5f7068]">
+              {counterCashUnavailableReason || "Chưa đọc được tiền bán tại quầy của ca này."}
+            </p>
+          ) : reconciliation.counterCash.count + reconciliation.counterCash.voidedCount === 0 ? (
+            <p className="mt-2 text-sm font-medium text-[#5f7068]">
+              Ca này chưa có phiếu bán vé tại quầy nào.
+            </p>
+          ) : (
+            <>
+              <p className="mt-2 text-3xl font-black text-[#20342c]">
+                {formatVnd(reconciliation.counterCash.totalVnd)}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[#6e7b75]">
+                {formatCount(reconciliation.counterCash.count)} phiếu còn hiệu lực
+                {reconciliation.counterCash.voidedCount > 0
+                  ? ` · ${formatCount(reconciliation.counterCash.voidedCount)} phiếu đã huỷ, hoàn ${formatVnd(reconciliation.counterCash.voidedVnd)}`
+                  : ""}
+              </p>
+              <ul className="mt-3 grid gap-2">
+                {reconciliation.counterCash.sellers.map((seller) => (
+                  <li
+                    key={seller.accountId}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#e6ece8] bg-[#f8faf8] px-3 py-2 text-xs"
+                  >
+                    <span className="font-bold text-[#20342c]">{seller.displayName}</span>
+                    <span className="font-medium text-[#4a5a52]">
+                      {formatCount(seller.count)} phiếu ·{" "}
+                      <strong className="font-black text-[#20342c]">{formatVnd(seller.totalVnd)}</strong>
                     </span>
                   </li>
                 ))}

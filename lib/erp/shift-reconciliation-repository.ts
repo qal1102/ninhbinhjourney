@@ -8,6 +8,7 @@ import {
   SHIFT_SCAN_RESULT_KEYS,
   reconcileShift,
   resolveShiftWindow,
+  type ShiftCounterCash,
   type ShiftOnSiteCash,
   type ShiftReconciliation,
   type ShiftScanCounts,
@@ -48,6 +49,8 @@ export type ShiftReconciliationSource = {
   scanUnavailableReason: string;
   /** Lý do phần tiền chưa đọc được; rỗng khi đọc được. */
   cashUnavailableReason: string;
+  /** Lý do phần tiền bán tại quầy chưa đọc được; rỗng khi đọc được. */
+  counterCashUnavailableReason: string;
 };
 
 export type ShiftReconciliationView = {
@@ -107,6 +110,63 @@ async function countScansByResult(
     }),
   );
   return Object.fromEntries(entries) as Record<ShiftScanResultKey, number>;
+}
+
+function readCounterCashRow(value: unknown): ShiftCounterCash | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const sellers = Array.isArray(row.sellers) ? row.sellers : [];
+  return {
+    count: Number(row.sale_count ?? 0),
+    totalVnd: Number(row.total_vnd ?? 0),
+    voidedCount: Number(row.voided_count ?? 0),
+    voidedVnd: Number(row.voided_vnd ?? 0),
+    sellers: sellers.map((entry) => {
+      const item = (entry ?? {}) as Record<string, unknown>;
+      const accountId = String(item.account_id ?? "");
+      return {
+        accountId,
+        displayName: String(item.display_name ?? accountId),
+        count: Number(item.count ?? 0),
+        totalVnd: Number(item.total_vnd ?? 0),
+      };
+    }),
+  };
+}
+
+/**
+ * QA-ERP-POS-04 — tiền bán vé tại quầy có phiếu trong khung giờ của ca.
+ *
+ * Cùng khuôn với `readOnSiteCash`: chỉ nuốt đúng lỗi "chưa có hàm" để nói
+ * thật là migration 069 chưa áp; mọi lỗi khác vẫn ném ra.
+ */
+async function readCounterCash(
+  client: SupabaseClient,
+  siteUuid: string,
+  window: { from: Date; to: Date },
+): Promise<{ counterCash: ShiftCounterCash | null; reason: string }> {
+  const { data, error } = await client.rpc("erp_shift_counter_cash", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: siteUuid,
+    p_from: window.from.toISOString(),
+    p_to: window.to.toISOString(),
+  });
+  if (error) {
+    if (error.code === "42883" || error.code === "PGRST202") {
+      return {
+        counterCash: null,
+        reason:
+          "Phần tiền bán tại quầy chưa đối soát được vì migration 202609130069 chưa" +
+          " áp lên máy chủ. Hệ thống xin phép để trống thay vì hiện 0 đồng.",
+      };
+    }
+    throw error;
+  }
+  const counterCash = readCounterCashRow(data);
+  if (!counterCash) {
+    return { counterCash: null, reason: "Máy chủ trả về dữ liệu tiền quầy không đọc được." };
+  }
+  return { counterCash, reason: "" };
 }
 
 function readCash(value: unknown): ShiftOnSiteCash | null {
@@ -242,6 +302,7 @@ export async function readShiftReconciliation(input: {
       reconciliation: reconcileShift({ shift: declaration, scanCounts: null, cash: null }),
       scanUnavailableReason: reason,
       cashUnavailableReason: reason,
+      counterCashUnavailableReason: reason,
     },
     emptyReason: "",
   });
@@ -259,10 +320,21 @@ export async function readShiftReconciliation(input: {
 
   const siteUuid = ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId];
 
-  const [scanResult, cashResult] = await Promise.allSettled([
+  const [scanResult, cashResult, counterResult] = await Promise.allSettled([
     countScansByResult(client, siteUuid, window),
     readOnSiteCash(client, siteUuid, window),
+    readCounterCash(client, siteUuid, window),
   ]);
+
+  let counterCash: ShiftCounterCash | null = null;
+  let counterCashUnavailableReason = "";
+  if (counterResult.status === "fulfilled") {
+    counterCash = counterResult.value.counterCash;
+    counterCashUnavailableReason = counterResult.value.reason;
+  } else {
+    console.error("Shift reconciliation counter cash read failed", counterResult.reason);
+    counterCashUnavailableReason = "Chưa đọc được tiền bán tại quầy của ca này.";
+  }
 
   let scanCounts: ShiftScanCounts | null = null;
   let scanUnavailableReason = "";
@@ -287,9 +359,10 @@ export async function readShiftReconciliation(input: {
     options,
     selected: {
       shift,
-      reconciliation: reconcileShift({ shift: declaration, scanCounts, cash }),
+      reconciliation: reconcileShift({ shift: declaration, scanCounts, cash, counterCash }),
       scanUnavailableReason,
       cashUnavailableReason,
+      counterCashUnavailableReason,
     },
     emptyReason: "",
   };

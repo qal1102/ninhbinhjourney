@@ -239,7 +239,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
   // máy chủ trả đúng phiếu cũ, không bán lần hai.
   const requestKey = useRef(khoaMoi());
 
-  const prices = workspace?.available ? workspace.prices : [];
+  const prices = useMemo(() => (workspace?.available ? workspace.prices : []), [workspace]);
   const cart = useMemo(() => computeCounterCart({ adults, children, prices }), [adults, children, prices]);
   const cash = Number(cashText.replace(/[^0-9]/g, "")) || 0;
   const change = counterChange(cash, cart.totalVnd);

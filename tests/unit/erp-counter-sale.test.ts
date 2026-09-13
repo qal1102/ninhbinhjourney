@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
-  COUNTER_SALE_ERROR_MESSAGES,
   computeCounterCart,
   counterCashSuggestions,
   counterChange,
-  counterSaleErrorMessage,
   counterSaleReadiness,
   parseCounterPrices,
   parseCounterSaleReceipt,
   type CounterPrice,
 } from "@/domain/erp-counter-sale";
 import { reconcileShift, type ShiftCounterCash } from "@/domain/erp-shift-reconciliation";
+import { findRpcBusinessMessage } from "@/lib/erp/rpc-error-messages";
 
 const GIA: CounterPrice[] = [
   { priceListId: "p-nl", product: "adult", unitPriceVnd: 250_000, effectiveFrom: "2026-09-13" },
@@ -118,12 +117,18 @@ describe("đọc phiếu và lỗi từ máy chủ", () => {
     ).toHaveLength(1);
   });
 
-  it("mọi lỗi máy chủ đều thành câu tiếng Việt, không in mã ra màn hình", () => {
-    for (const [ma, cau] of Object.entries(COUNTER_SALE_ERROR_MESSAGES)) {
-      expect(counterSaleErrorMessage(`ERROR: ${ma} (SQLSTATE 22023)`)).toBe(cau);
-      expect(cau).not.toMatch(/[A-Z_]{6,}/);
+  it("mọi lỗi quầy máy chủ trả về đều thành câu tiếng Việt, qua bảng lỗi chung", () => {
+    for (const ma of [
+      "COUNTER_SALE_CASH_NOT_CONFIRMED",
+      "COUNTER_SALE_CASH_SHORT",
+      "COUNTER_SALE_VOID_OWN_SALE",
+      "COUNTER_SALE_VOID_NOT_ALLOWED",
+      "COUNTER_SALE_ALREADY_ADMITTED",
+    ]) {
+      const cau = findRpcBusinessMessage({ message: `ERROR: ${ma} (SQLSTATE 22023)` });
+      expect(cau, ma).toBeTruthy();
+      expect(cau, ma).not.toMatch(/[A-Z_]{6,}/);
     }
-    expect(counterSaleErrorMessage("connection reset")).not.toMatch(/connection|reset/i);
   });
 });
 

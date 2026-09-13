@@ -585,6 +585,23 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CASH_JOURNAL_VERSION_CONFLICT:
     "Bút toán vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
   CASH_JOURNAL_NOT_BALANCED: "Bút toán chưa cân đối Nợ và Có.",
+  // --- Bán vé tại quầy (QA-ERP-POS-04) ---
+  COUNTER_SALE_INPUT_INVALID: "Số vé hoặc số tiền chưa hợp lệ. Xin kiểm tra lại rồi bấm lần nữa.",
+  COUNTER_SALE_ACTOR_REQUIRED: "Tài khoản này chưa được phân công bán vé tại cơ sở này.",
+  COUNTER_SALE_CASH_NOT_CONFIRMED:
+    "Chưa đánh dấu đã đếm tiền và bỏ vào quỹ, nên phiếu chưa được lưu.",
+  COUNTER_SALE_CASH_SHORT: "Số tiền khách đưa chưa đủ tổng theo bảng giá hôm nay.",
+  COUNTER_SALE_PRICE_MISSING: "Quầy chưa có giá cho loại vé này. Xin báo quản lý.",
+  COUNTER_SALE_VOID_REASON_REQUIRED: "Xin ghi lý do huỷ, ít nhất mười ký tự.",
+  COUNTER_SALE_VOID_NOT_ALLOWED: "Chỉ quản lý cơ sở hoặc giám đốc được huỷ vé.",
+  COUNTER_SALE_VOID_OWN_SALE:
+    "Không huỷ được phiếu do chính mình bán. Xin nhờ một quản lý khác.",
+  COUNTER_SALE_VOID_DAY_CLOSED:
+    "Phiếu của ngày trước đã vào chốt ca, không huỷ ở đây được. Xin làm điều chỉnh qua kế toán.",
+  COUNTER_SALE_ALREADY_ADMITTED: "Vé của phiếu này đã quét qua cổng, nên không huỷ được.",
+  COUNTER_SALE_NOT_FOUND: "Không tìm thấy phiếu này ở cơ sở đang xem.",
+  COUNTER_SALE_APPEND_ONLY:
+    "Phiếu bán và nhật ký quầy không sửa hay xoá được. Muốn đổi, xin huỷ phiếu và bán lại.",
 });
 
 /**

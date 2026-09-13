@@ -3,12 +3,12 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { ErpSiteId } from "@/domain/erp";
 import {
-  counterSaleErrorMessage,
   parseCounterPrices,
   parseCounterSaleReceipt,
   type CounterPrice,
   type CounterSaleReceipt,
 } from "@/domain/erp-counter-sale";
+import { findRpcBusinessMessage } from "@/lib/erp/rpc-error-messages";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
 /**
@@ -51,8 +51,12 @@ function createAdminClient(): SupabaseClient {
 }
 
 function tuChoi(error: unknown): CounterSaleRepositoryError {
-  const raw = typeof error === "object" && error && "message" in error ? String(error.message) : "";
-  return new CounterSaleRepositoryError(counterSaleErrorMessage(raw), "REJECTED", {
+  // Câu lỗi lấy từ bảng dùng chung của cả ERP; mã lạ thì một câu chung,
+  // không bao giờ in mã máy ra màn hình.
+  const message =
+    findRpcBusinessMessage(error) ??
+    "Chưa lưu được phiếu. Xin thử lại; nếu vẫn vậy thì báo bộ phận kỹ thuật.";
+  return new CounterSaleRepositoryError(message, "REJECTED", {
     cause: error instanceof Error ? error : undefined,
   });
 }

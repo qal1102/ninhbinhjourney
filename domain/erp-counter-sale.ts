@@ -301,7 +301,8 @@ export function parseCounterPriceHistory(value: unknown): CounterPriceHistoryRow
         unitPriceVnd,
         effectiveFrom: String(row.effective_from ?? ""),
         createdAt: String(row.created_at ?? ""),
-        createdByName: String(row.created_by_name ?? ""),
+        // Giá khởi tạo do migration ghi, người đặt là mã `system`: không in mã máy ra màn hình.
+        createdByName: row.created_by_name === "system" ? "Hệ thống" : String(row.created_by_name ?? ""),
         note: String(row.note ?? ""),
       },
     ];

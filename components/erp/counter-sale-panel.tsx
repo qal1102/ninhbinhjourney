@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import QRCode from "qrcode";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -376,6 +377,14 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
               <p className="mt-1 text-4xl font-black tabular-nums">{formatVnd(cart.totalVnd)}</p>
               <p className="mt-1 text-xs text-white/70">
                 {cart.partySize} khách · giá lấy từ bảng giá quầy hôm nay
+                {userRole === "director" ? (
+                  <>
+                    {" · "}
+                    <Link href="/erp/bang-gia-quay" className="font-bold text-white underline underline-offset-2">
+                      Sửa giá
+                    </Link>
+                  </>
+                ) : null}
               </p>
             </div>
 

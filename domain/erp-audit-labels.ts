@@ -59,6 +59,11 @@ export const ERP_AUDIT_ACTION_LABELS: Readonly<Record<string, string>> = Object.
   "cash-deposit.exception-approved": "Duyệt khoản nộp lệch",
   "cash-deposit.posted": "Ghi sổ khoản nộp tiền",
 
+  // Bán vé tại quầy
+  "counter-sale.completed": "Bán vé",
+  "counter-sale.voided": "Huỷ phiếu bán vé",
+  "counter-price.set": "Đặt giá vé quầy",
+
   // Hoá đơn nhà cung cấp
   "invoice.submitted-and-matched": "Gửi hoá đơn, đã khớp",
   "invoice.submitted-with-exception": "Gửi hoá đơn có chênh lệch",

@@ -17,6 +17,26 @@ export const COUNTER_PRODUCT_LABELS: Readonly<Record<CounterProduct, string>> = 
   child: "Trẻ dưới 1m3",
 });
 
+export type CounterPaymentMethod = "cash" | "qr-transfer";
+
+export const COUNTER_PAYMENT_METHOD_LABELS: Readonly<Record<CounterPaymentMethod, string>> = Object.freeze({
+  cash: "Tiền mặt",
+  "qr-transfer": "Chuyển khoản QR",
+});
+
+/**
+ * Mã nội dung chuyển khoản gợi ý cho khách ghi khi quét QR của quầy.
+ *
+ * Dựng từ khoá chống lập trùng của chính tấm phiếu đang soạn, nên có ngay từ
+ * trước khi bấm bán — khách cần ghi nó lúc chuyển, tức là trước khi phiếu
+ * được lưu. Chỉ chữ in hoa không dấu và số, đúng dạng ngân hàng nào cũng
+ * nhận, và đúng ràng buộc `^[A-Z0-9-]{4,40}$` ở migration 070.
+ */
+export function counterPaymentReference(requestKey: string): string {
+  const goc = requestKey.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return `NBJ-${(goc || "000000").slice(0, 6).padEnd(6, "0")}`;
+}
+
 /** Trần một phiếu, khớp ràng buộc trong migration 069 và trần đoàn TC-15. */
 export const COUNTER_SALE_MAX_PARTY = 45;
 
@@ -117,7 +137,10 @@ export function counterSaleReadiness(input: {
   cart: CounterCart;
   cashReceivedVnd: number;
   cashCountedConfirmed: boolean;
+  /** Không truyền thì coi là tiền mặt, đúng như trước khi có chuyển khoản QR. */
+  paymentMethod?: CounterPaymentMethod;
 }): CounterSaleReadiness {
+  const method = input.paymentMethod ?? "cash";
   const { cart } = input;
   if (cart.partySize === 0) return { ok: false, reason: "Chọn số vé trước đã." };
   if (cart.partySize > COUNTER_SALE_MAX_PARTY) {
@@ -132,11 +155,17 @@ export function counterSaleReadiness(input: {
       reason: `Quầy chưa có giá cho ${cart.missingPrices.map((p) => COUNTER_PRODUCT_LABELS[p].toLowerCase()).join(", ")}. Xin báo quản lý.`,
     };
   }
-  if (counterChange(input.cashReceivedVnd, cart.totalVnd) === null) {
+  if (method === "cash" && counterChange(input.cashReceivedVnd, cart.totalVnd) === null) {
     return { ok: false, reason: "Số tiền khách đưa chưa đủ tổng." };
   }
   if (!input.cashCountedConfirmed) {
-    return { ok: false, reason: "Đếm tiền, bỏ vào quỹ, rồi đánh dấu xác nhận." };
+    return {
+      ok: false,
+      reason:
+        method === "qr-transfer"
+          ? "Mở ứng dụng ngân hàng, thấy tiền về đúng số, rồi đánh dấu xác nhận."
+          : "Đếm tiền, bỏ vào quỹ, rồi đánh dấu xác nhận.",
+    };
   }
   return { ok: true };
 }
@@ -160,6 +189,8 @@ export type CounterSaleReceipt = {
   actingDirectorAccountId: string | null;
   soldAt: string;
   businessDate: string;
+  paymentMethod: CounterPaymentMethod;
+  paymentReference: string | null;
   adults: number;
   children: number;
   totalVnd: number;
@@ -190,6 +221,8 @@ export function parseCounterSaleReceipt(value: unknown): CounterSaleReceipt | nu
     actingDirectorAccountId: chuoiHoacNull(row.acting_director_account_id),
     soldAt: String(row.sold_at ?? ""),
     businessDate: String(row.business_date ?? ""),
+    paymentMethod: row.payment_method === "qr-transfer" ? "qr-transfer" : "cash",
+    paymentReference: chuoiHoacNull(row.payment_reference),
     adults: Number(row.adults ?? 0),
     children: Number(row.children ?? 0),
     totalVnd: Number(row.total_vnd ?? 0),
@@ -241,4 +274,57 @@ export function parseCounterPrices(value: unknown): CounterPrice[] {
 
 export function formatVnd(value: number) {
   return `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
+}
+
+export type CounterPriceHistoryRow = {
+  priceListId: string;
+  product: CounterProduct;
+  unitPriceVnd: number;
+  effectiveFrom: string;
+  createdAt: string;
+  createdByName: string;
+  note: string;
+};
+
+export function parseCounterPriceHistory(value: unknown): CounterPriceHistoryRow[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const product = row.product === "adult" || row.product === "child" ? row.product : null;
+    const unitPriceVnd = Number(row.unit_price_vnd);
+    if (!product || !Number.isFinite(unitPriceVnd)) return [];
+    return [
+      {
+        priceListId: String(row.price_list_id ?? ""),
+        product,
+        unitPriceVnd,
+        effectiveFrom: String(row.effective_from ?? ""),
+        createdAt: String(row.created_at ?? ""),
+        createdByName: String(row.created_by_name ?? ""),
+        note: String(row.note ?? ""),
+      },
+    ];
+  });
+}
+
+/**
+ * Kiểm đầu vào của một lần đặt giá trước khi gửi, để nói ngay câu tiếng Việt.
+ * Máy chủ vẫn kiểm lại đúng những điều này ở `erp_set_counter_price`.
+ */
+export function validateCounterPriceInput(input: {
+  unitPriceVnd: number;
+  effectiveFrom: string;
+  today: string;
+}): { ok: true } | { ok: false; reason: string } {
+  if (!Number.isInteger(input.unitPriceVnd) || input.unitPriceVnd < 0 || input.unitPriceVnd > 10_000_000) {
+    return { ok: false, reason: "Giá phải là số nguyên từ 0 tới 10.000.000 đồng." };
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.effectiveFrom)) {
+    return { ok: false, reason: "Chọn ngày bắt đầu áp dụng." };
+  }
+  if (input.effectiveFrom < input.today) {
+    return { ok: false, reason: "Không đặt giá lùi ngày: phiếu đã bán phải giữ đúng giá lúc bán." };
+  }
+  return { ok: true };
 }

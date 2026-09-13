@@ -600,6 +600,12 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Phiếu của ngày trước đã vào chốt ca, không huỷ ở đây được. Xin làm điều chỉnh qua kế toán.",
   COUNTER_SALE_ALREADY_ADMITTED: "Vé của phiếu này đã quét qua cổng, nên không huỷ được.",
   COUNTER_SALE_NOT_FOUND: "Không tìm thấy phiếu này ở cơ sở đang xem.",
+  COUNTER_SALE_PAYMENT_INVALID:
+    "Phương thức trả tiền hoặc nội dung chuyển khoản chưa hợp lệ. Nội dung chỉ gồm chữ in hoa không dấu, số và gạch nối.",
+  COUNTER_PRICE_INPUT_INVALID: "Giá hoặc loại vé chưa hợp lệ. Giá là số nguyên từ 0 tới 10.000.000 đồng.",
+  COUNTER_PRICE_DATE_INVALID:
+    "Ngày áp dụng phải từ hôm nay trở đi và không quá một năm. Không đặt giá lùi ngày.",
+  COUNTER_PRICE_NOT_ALLOWED: "Chỉ giám đốc được đặt giá vé quầy.",
   COUNTER_SALE_APPEND_ONLY:
     "Phiếu bán và nhật ký quầy không sửa hay xoá được. Muốn đổi, xin huỷ phiếu và bán lại.",
 });

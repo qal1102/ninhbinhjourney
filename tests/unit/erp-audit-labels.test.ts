@@ -65,6 +65,7 @@ describe("Nhật ký không in mã máy ra màn hình", () => {
       ["erp_account_admin_audit", "action"],
       ["erp_employee_access_audit", "action"],
       ["erp_workday_audit_events", "event_type"],
+      ["erp_counter_sale_events", "event_type"],
     ] as const) {
       const batDau = sql.indexOf(`create table if not exists public.${bang}`);
       expect(batDau, bang).toBeGreaterThan(-1);
@@ -76,6 +77,8 @@ describe("Nhật ký không in mã máy ra màn hình", () => {
     // Bảng xem theo vai trò lưu `started`/`ended`, hàm nhật ký ghép thêm tiền tố.
     maCanCo.add("role-switch.started");
     maCanCo.add("role-switch.ended");
+    // Nhánh đặt giá quầy trong hàm nhật ký ghi hằng chuỗi, không có ràng buộc bảng.
+    maCanCo.add("counter-price.set");
 
     expect(maCanCo.size).toBeGreaterThanOrEqual(12);
     const thieu = [...maCanCo].filter((ma) => !ERP_AUDIT_ACTION_LABELS[ma]);

@@ -14,7 +14,7 @@
 export const ERP_AUDIT_ACTION_LABELS: Readonly<Record<string, string>> = Object.freeze({
   // Xem theo vai trò
   "role-switch.started": "Bắt đầu xem thử với vai",
-  "role-switch.ended": "Kết thúc xem thử",
+  "role-switch.ended": "Kết thúc xem thử với vai",
   "role-switch.session": "Xem thử với vai",
 
   // Tài khoản & phân quyền
@@ -94,6 +94,19 @@ export function erpAuditActionLabel(action: string): string {
 
 /** Hành động tổng hợp: một lượt xem thử đã gộp cả lúc bắt đầu lẫn lúc kết thúc. */
 export const ERP_ROLE_SWITCH_SESSION_ACTION = "role-switch.session";
+
+/**
+ * Ba hành động xem thử đều ghi tên người được xem vào ô ghi chú, nên màn hình
+ * đặt tên ấy ngay sau nhãn thay vì để một dòng "Bắt đầu xem thử với vai" cụt.
+ *
+ * Bộ smoke chuyển thẳng từ vai này sang vai khác mà không kết thúc ở giữa,
+ * nên nhiều dòng "bắt đầu" không có cặp để gộp — đo trên production ngày
+ * 13/09/2026 còn 28 dòng như vậy, và trước lượt sửa này không dòng nào nói
+ * được là xem thử với ai.
+ */
+export function isErpRoleSwitchAction(action: string) {
+  return action.startsWith("role-switch.");
+}
 
 type DongNhatKy = {
   action: string;

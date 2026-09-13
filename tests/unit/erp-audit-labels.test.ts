@@ -144,6 +144,14 @@ describe("gộp mỗi lượt xem thử thành một dòng", () => {
     ).toHaveLength(3);
   });
 
+  it("ba hành động xem thử đều được nhận ra để đặt tên người ngay sau nhãn", async () => {
+    const { isErpRoleSwitchAction } = await import("@/domain/erp-audit-labels");
+    for (const ma of ["role-switch.started", "role-switch.ended", ERP_ROLE_SWITCH_SESSION_ACTION]) {
+      expect(isErpRoleSwitchAction(ma), ma).toBe(true);
+    }
+    expect(isErpRoleSwitchAction("journal.submitted")).toBe(false);
+  });
+
   it("dòng bắt đầu chưa có dòng kết thúc thì giữ nguyên", () => {
     const ra = gopLuotXemThu([dong("role-switch.started", "2026-09-13T01:02:00Z")]);
     expect(ra).toHaveLength(1);

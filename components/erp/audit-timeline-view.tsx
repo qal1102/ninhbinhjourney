@@ -5,6 +5,7 @@ import {
   ERP_ROLE_SWITCH_SESSION_ACTION,
   erpAuditActionLabel,
   gopLuotXemThu,
+  isErpRoleSwitchAction,
 } from "@/domain/erp-audit-labels";
 import { isErpTestMarkedNote } from "@/domain/erp-data-origin";
 import type {
@@ -200,7 +201,7 @@ export function AuditTimelineView({
                   title={[entry.action, entry.entityId].filter(Boolean).join(" · ")}
                 >
                   {entry.source} · {erpAuditActionLabel(entry.action)}
-                  {entry.action === ERP_ROLE_SWITCH_SESSION_ACTION && entry.note ? (
+                  {isErpRoleSwitchAction(entry.action) && entry.note ? (
                     <> {entry.note}</>
                   ) : null}
                   {isErpTestMarkedNote(entry.note) ? (
@@ -213,7 +214,7 @@ export function AuditTimelineView({
                   <p className="mt-1 text-xs leading-5 text-[#7a8781]">
                     Từ {formatTime(entry.occurredAt)} tới {formatTime(entry.endedAt)}
                   </p>
-                ) : entry.note && entry.action !== ERP_ROLE_SWITCH_SESSION_ACTION ? (
+                ) : entry.note && !isErpRoleSwitchAction(entry.action) ? (
                   <p className="mt-1 text-xs leading-5 text-[#7a8781]">{entry.note}</p>
                 ) : null}
               </div>

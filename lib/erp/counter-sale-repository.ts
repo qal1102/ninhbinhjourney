@@ -1,11 +1,15 @@
 import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { ErpSiteId } from "@/domain/erp";
+import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
 import {
+  parseCounterPriceHistory,
   parseCounterPrices,
   parseCounterSaleReceipt,
+  type CounterPaymentMethod,
   type CounterPrice,
+  type CounterPriceHistoryRow,
+  type CounterProduct,
   type CounterSaleReceipt,
 } from "@/domain/erp-counter-sale";
 import { findRpcBusinessMessage } from "@/lib/erp/rpc-error-messages";
@@ -133,7 +137,9 @@ export async function createCounterSale(input: {
   actingDirectorAccountId: string | null;
   adults: number;
   children: number;
+  paymentMethod: CounterPaymentMethod;
   cashReceivedVnd: number;
+  paymentReference: string | null;
   cashCountedConfirmed: boolean;
   requestKey: string;
 }): Promise<CounterSaleReceipt> {
@@ -146,7 +152,9 @@ export async function createCounterSale(input: {
     p_acting_director_account_id: input.actingDirectorAccountId,
     p_adults: input.adults,
     p_children: input.children,
+    p_payment_method: input.paymentMethod,
     p_cash_received_vnd: input.cashReceivedVnd,
+    p_payment_reference: input.paymentReference,
     p_cash_counted_confirmed: input.cashCountedConfirmed,
     p_request_key: input.requestKey,
   });
@@ -178,4 +186,93 @@ export async function voidCounterSale(input: {
   const receipt = parseCounterSaleReceipt(data);
   if (!receipt) throw tuChoi(new Error("COUNTER_SALE_EMPTY_RESPONSE"));
   return receipt;
+}
+
+export type CounterPriceBoardSite = {
+  siteId: ErpSiteId;
+  siteName: string;
+  prices: CounterPrice[];
+  history: CounterPriceHistoryRow[];
+};
+
+export type CounterPriceBoard =
+  | { available: true; sites: CounterPriceBoardSite[] }
+  | { available: false; message: string };
+
+/**
+ * QA-ERP-POS-05 — bảng giá quầy của cả bốn cơ sở cho màn hình giám đốc: giá
+ * đang áp và lịch sử những lần đặt. Kho chưa trả lời thì nói thật, không hiện
+ * một bảng giá rỗng như thể chưa ai đặt giá.
+ */
+export async function getCounterPriceBoard(): Promise<CounterPriceBoard> {
+  let client: SupabaseClient;
+  try {
+    client = createAdminClient();
+  } catch (error) {
+    return {
+      available: false,
+      message:
+        error instanceof CounterSaleRepositoryError
+          ? "Bảng giá quầy chưa nối được vào kho dữ liệu ở môi trường này."
+          : "Chưa đọc được bảng giá quầy.",
+    };
+  }
+  const ketQua = await Promise.all(
+    ERP_SITES.map(async (site) => {
+      const siteUuid = ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[site.id];
+      const [prices, history] = await Promise.all([
+        client.rpc("erp_counter_current_prices", { p_tenant_id: TENANT_ID, p_site_id: siteUuid }),
+        client.rpc("erp_counter_price_history", { p_tenant_id: TENANT_ID, p_site_id: siteUuid, p_limit: 20 }),
+      ]);
+      return { site, prices, history };
+    }),
+  );
+  const loi = ketQua.find((item) => item.prices.error || item.history.error);
+  if (loi) {
+    console.error("Counter price board read failed", loi.prices.error ?? loi.history.error);
+    return {
+      available: false,
+      message: "Chưa đọc được bảng giá quầy. Xin tải lại trang; nếu vẫn vậy thì báo bộ phận kỹ thuật.",
+    };
+  }
+  return {
+    available: true,
+    sites: ketQua.map(({ site, prices, history }) => ({
+      siteId: site.id,
+      siteName: site.shortName,
+      prices: parseCounterPrices(prices.data),
+      history: parseCounterPriceHistory(history.data),
+    })),
+  };
+}
+
+export async function setCounterPrice(input: {
+  siteId: ErpSiteId;
+  actorAccountId: string;
+  actorName: string;
+  product: CounterProduct;
+  unitPriceVnd: number;
+  effectiveFrom: string;
+  note: string;
+}): Promise<CounterPrice[]> {
+  const client = createAdminClient();
+  const { data, error } = await client.rpc("erp_set_counter_price", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_actor_account_id: input.actorAccountId,
+    p_actor_name: input.actorName,
+    p_product: input.product,
+    p_unit_price_vnd: input.unitPriceVnd,
+    p_effective_from: input.effectiveFrom,
+    p_note: input.note,
+  });
+  if (error) {
+    const message =
+      findRpcBusinessMessage(error) ??
+      "Chưa lưu được giá mới. Xin thử lại; nếu vẫn vậy thì báo bộ phận kỹ thuật.";
+    throw new CounterSaleRepositoryError(message, "REJECTED", {
+      cause: error instanceof Error ? error : undefined,
+    });
+  }
+  return parseCounterPrices(data);
 }

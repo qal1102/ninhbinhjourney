@@ -72,6 +72,7 @@ import {
 import {
   CounterSaleRepositoryError,
   createCounterSale,
+  setCounterPrice,
   voidCounterSale,
 } from "@/lib/erp/counter-sale-repository";
 import type { CounterSaleReceipt } from "@/domain/erp-counter-sale";
@@ -1000,7 +1001,9 @@ export async function createCounterSaleAction(input: {
   siteId: string;
   adults: number;
   children: number;
+  paymentMethod: "cash" | "qr-transfer";
   cashReceivedVnd: number;
+  paymentReference?: string | null;
   cashCountedConfirmed: boolean;
   requestKey: string;
 }): Promise<CounterSaleActionResult> {
@@ -1021,7 +1024,9 @@ export async function createCounterSaleAction(input: {
       actingDirectorAccountId: user.actingAs?.directorId ?? null,
       adults: Math.trunc(Number(input.adults)),
       children: Math.trunc(Number(input.children)),
+      paymentMethod: input.paymentMethod === "qr-transfer" ? "qr-transfer" : "cash",
       cashReceivedVnd: Math.trunc(Number(input.cashReceivedVnd)),
+      paymentReference: input.paymentReference ? String(input.paymentReference) : null,
       cashCountedConfirmed: true,
       requestKey: String(input.requestKey ?? ""),
     });
@@ -1062,5 +1067,45 @@ export async function voidCounterSaleAction(input: {
   } catch (error) {
     if (error instanceof CounterSaleRepositoryError) return { ok: false, message: error.message };
     return { ok: false, message: "Chưa huỷ được phiếu. Xin thử lại; nếu vẫn vậy thì báo bộ phận kỹ thuật." };
+  }
+}
+
+export type SetCounterPriceActionResult = { ok: boolean; message: string };
+
+/**
+ * QA-ERP-POS-05 — giám đốc đặt giá vé quầy. Chỉ giám đốc thật: đang "xem thử"
+ * vai khác thì tài khoản hiện hành không phải giám đốc và máy chủ từ chối, đúng
+ * như `erp_counter_actor_can_set_price`.
+ */
+export async function setCounterPriceAction(input: {
+  siteId: string;
+  product: string;
+  unitPriceVnd: number;
+  effectiveFrom: string;
+  note: string;
+}): Promise<SetCounterPriceActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { ok: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (user.role !== "director") return { ok: false, message: "Chỉ giám đốc được đặt giá vé quầy." };
+  if (!isErpSiteId(input.siteId)) return { ok: false, message: "Cơ sở không hợp lệ." };
+  if (input.product !== "adult" && input.product !== "child") {
+    return { ok: false, message: "Loại vé không hợp lệ." };
+  }
+  try {
+    await setCounterPrice({
+      siteId: input.siteId,
+      actorAccountId: user.id,
+      actorName: user.name,
+      product: input.product,
+      unitPriceVnd: Math.trunc(Number(input.unitPriceVnd)),
+      effectiveFrom: String(input.effectiveFrom ?? ""),
+      note: String(input.note ?? "").slice(0, 500),
+    });
+    revalidatePath("/erp/bang-gia-quay");
+    revalidatePath(`/erp/${input.siteId}/ve-dat-cho`);
+    return { ok: true, message: "Đã lưu giá mới. Quầy thấy giá này từ ngày áp dụng." };
+  } catch (error) {
+    if (error instanceof CounterSaleRepositoryError) return { ok: false, message: error.message };
+    return { ok: false, message: "Chưa lưu được giá mới. Xin thử lại; nếu vẫn vậy thì báo bộ phận kỹ thuật." };
   }
 }

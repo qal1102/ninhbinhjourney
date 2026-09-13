@@ -186,6 +186,23 @@ export type ShiftOnSiteCash = {
   outstandingVnd: number;
 };
 
+/** QA-ERP-POS-04 — tiền bán vé tại quầy có phiếu, cộng theo người bán. */
+export type CounterSeller = {
+  accountId: string;
+  displayName: string;
+  count: number;
+  totalVnd: number;
+};
+
+export type ShiftCounterCash = {
+  /** Phiếu còn hiệu lực. Phiếu đã huỷ là tiền đã hoàn, không nằm trong quỹ. */
+  count: number;
+  totalVnd: number;
+  voidedCount: number;
+  voidedVnd: number;
+  sellers: readonly CounterSeller[];
+};
+
 export type ShiftGapLevel = "alert" | "watch" | "info";
 
 export type ShiftGap = {
@@ -212,6 +229,8 @@ export type ShiftReconciliation = {
   scans: ShiftScanTotals | null;
   scanBreakdown: ShiftScanCounts | null;
   cash: ShiftOnSiteCash | null;
+  /** `null` khi chưa đọc được sổ bán quầy, hoặc chưa có migration 069. */
+  counterCash: ShiftCounterCash | null;
   differences: ShiftDifference[];
   gaps: ShiftGap[];
   /** false khi cả hai nguồn đều chưa trả về gì — màn hình phải nói thật, không hiện số 0. */
@@ -251,6 +270,72 @@ function formatVnd(value: number) {
 }
 
 /**
+ * Nhánh tiền khi đã có sổ bán quầy (QA-ERP-POS-04).
+ *
+ * Trước khi quầy ghi phiếu, tiền khai lúc chốt ca nhiều hơn khoản thu tại
+ * cổng là chuyện bình thường, vì phần dôi ra là tiền bán quầy chưa ai ghi.
+ * Có sổ quầy rồi thì không còn chỗ trống ấy nữa: mọi đồng tiền mặt trong quỹ
+ * phải có hoặc một khoản thu tại cổng, hoặc một phiếu bán quầy đứng sau.
+ */
+function reconcileCashWithCounter(input: {
+  declaredVnd: number;
+  cash: ShiftOnSiteCash | null;
+  counterCash: ShiftCounterCash;
+  gaps: ShiftGap[];
+}) {
+  const { declaredVnd, cash, counterCash, gaps } = input;
+  const counted = (cash?.totalVnd ?? 0) + counterCash.totalVnd;
+  const delta = declaredVnd - counted;
+
+  if (counted > declaredVnd) {
+    gaps.push({
+      id: "cash-below-counted",
+      level: "alert",
+      title: `Thiếu ${formatVnd(-delta)} trong tờ khai tiền mặt cuối ca`,
+      detail:
+        `Hệ thống đếm được ${formatVnd(counted)} tiền mặt có chứng từ` +
+        ` (${formatVnd(counterCash.totalVnd)} bán tại quầy` +
+        (cash ? `, ${formatVnd(cash.totalVnd)} thu tại cổng` : "") +
+        `), nhưng tờ chốt ca chỉ khai ${formatVnd(declaredVnd)}. Mỗi phiếu đều ghi` +
+        " tên người bán và người đã đánh dấu đã đếm tiền, xin bạn đối chiếu với" +
+        " từng người trước khi duyệt ca này.",
+    });
+  } else if (delta > 0) {
+    gaps.push({
+      id: "cash-without-receipt",
+      level: "watch",
+      title: `Có ${formatVnd(delta)} tiền mặt khai lúc chốt ca mà không có phiếu nào`,
+      detail:
+        "Quầy đã ghi phiếu cho từng lượt bán, nên phần tiền dôi ra không còn là" +
+        " chuyện bình thường. Có thể là một lượt bán quên ghi phiếu, hoặc gõ nhầm số" +
+        " lúc chốt ca. Xin bạn hỏi lại người trực quầy.",
+    });
+  }
+
+  if (counterCash.voidedCount > 0) {
+    gaps.push({
+      id: "counter-voided",
+      level: "info",
+      title: `${counterCash.voidedCount} phiếu bán quầy đã huỷ, hoàn ${formatVnd(counterCash.voidedVnd)} cho khách`,
+      detail:
+        "Tiền của phiếu đã huỷ không tính vào quỹ. Lý do huỷ và người huỷ nằm" +
+        " trên từng phiếu và trong Nhật ký hệ thống.",
+    });
+  }
+
+  if (cash && cash.outstandingCount > 0) {
+    gaps.push({
+      id: "outstanding-on-site",
+      level: "watch",
+      title: `${cash.outstandingCount} đơn còn nợ tiền tại cơ sở này, tổng ${formatVnd(cash.outstandingVnd)}`,
+      detail:
+        "Khách đã đặt chỗ và chọn trả tiền tại điểm, tới giờ vẫn chưa ai thu. Con" +
+        " số này tính cả những ca trước, không riêng ca đang xem.",
+    });
+  }
+}
+
+/**
  * Ghép ba nguồn thành một bảng đối soát.
  *
  * Nguồn nào chưa đọc được thì truyền `null`, đừng truyền số 0. Số 0 và "chưa
@@ -261,10 +346,16 @@ export function reconcileShift(input: {
   shift: ShiftDeclaration;
   scanCounts: ShiftScanCounts | null;
   cash: ShiftOnSiteCash | null;
+  /**
+   * Tiền bán tại quầy có phiếu (QA-ERP-POS-04). Không truyền, hoặc truyền
+   * `null`, thì bảng đối soát giữ nguyên cách tính trước đó từng dòng.
+   */
+  counterCash?: ShiftCounterCash | null;
 }): ShiftReconciliation {
   const window = resolveShiftWindow(input.shift);
   const scans = input.scanCounts ? totalsFrom(input.scanCounts) : null;
   const cash = input.cash;
+  const counterCash = input.counterCash ?? null;
   const gaps: ShiftGap[] = [];
 
   if (window.source === "business-day-fallback" && window.dayKeys.length === 0) {
@@ -323,7 +414,9 @@ export function reconcileShift(input: {
     }
   }
 
-  if (cash) {
+  if (counterCash) {
+    reconcileCashWithCounter({ declaredVnd: input.shift.cashVnd, cash, counterCash, gaps });
+  } else if (cash) {
     const delta = input.shift.cashVnd - cash.totalVnd;
     if (cash.totalVnd > input.shift.cashVnd) {
       gaps.push({
@@ -361,15 +454,26 @@ export function reconcileShift(input: {
     }
   }
 
+  const countedCash = counterCash
+    ? (cash?.totalVnd ?? 0) + counterCash.totalVnd
+    : cash
+      ? cash.totalVnd
+      : null;
+
   const differences: ShiftDifference[] = [
     {
       id: "cash",
       label: "Tiền mặt",
       declared: input.shift.cashVnd,
-      counted: cash ? cash.totalVnd : null,
-      delta: cash ? cash.totalVnd - input.shift.cashVnd : null,
+      counted: countedCash,
+      delta: countedCash === null ? null : countedCash - input.shift.cashVnd,
       unit: "vnd",
-      caveat:
+      caveat: counterCash
+        ? "Hệ thống cộng tiền bán vé tại quầy có phiếu" +
+          (cash ? " với khoản thu tại cổng." : ", phần thu tại cổng chưa đọc được nên chưa cộng.") +
+          " Phiếu đã huỷ là tiền đã hoàn cho khách, không tính vào quỹ." +
+          " Khai nhiều hơn đếm là có tiền mặt không có phiếu; đếm nhiều hơn khai là thiếu tiền."
+        :
         "Hệ thống mới đếm được khoản thu tại cổng. Tiền bán ở quầy chưa vào sổ" +
         " từng khoản, nên phần khai nhiều hơn phần đếm là chuyện bình thường —" +
         " phần đếm nhiều hơn phần khai mới là chuyện phải hỏi.",
@@ -393,8 +497,12 @@ export function reconcileShift(input: {
     scans,
     scanBreakdown: input.scanCounts,
     cash: cash ?? null,
+    counterCash,
     differences,
     gaps,
-    hasCountedData: Boolean(scans && scans.total > 0) || Boolean(cash && cash.count > 0),
+    hasCountedData:
+      Boolean(scans && scans.total > 0) ||
+      Boolean(cash && cash.count > 0) ||
+      Boolean(counterCash && counterCash.count + counterCash.voidedCount > 0),
   };
 }

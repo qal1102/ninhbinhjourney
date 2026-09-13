@@ -11,6 +11,8 @@ import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository
 
 export const metadata = {
   title: "Gói hành trình | Ninh Bình Journey",
+  description: "Những gói đi sẵn quanh Ninh Bình, giữ chỗ 15 phút và trả tiền khi tới nơi.",
+  alternates: { canonical: "/packages" },
 };
 
 function PackageCard({

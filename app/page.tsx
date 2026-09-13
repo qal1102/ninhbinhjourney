@@ -6,6 +6,11 @@ import {
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 
+export const metadata = {
+  // Trang chủ đổi ngôn ngữ bằng `?lang=`; các biến thể ấy cùng một nội dung.
+  alternates: { canonical: "/" },
+};
+
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };

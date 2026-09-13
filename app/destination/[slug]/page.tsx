@@ -7,25 +7,59 @@ import {
   getDestinationBySlug,
 } from "@/content/destinations";
 import { DestinationTimeline } from "@/components/discovery/destination-timeline";
+import { LandingDestinationPage } from "@/components/discovery/landing-destination-page";
 import { MiniRouteMap } from "@/components/discovery/mini-route-map";
+import {
+  DESTINATION_PAGE_SLUGS,
+  getLandingDestinationBySlug,
+} from "@/content/landing-destinations";
+import { absoluteUrl } from "@/lib/site-url";
 
 type DestinationPageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+/**
+ * Mười lăm điểm đến đều có trang riêng: chín trang hồ sơ sâu, và sáu trang
+ * dựng từ chữ đã biên tập cho trang chủ. Trước ngày 13/09/2026 chỉ có chín —
+ * sáu nơi còn lại không có địa chỉ nào để máy tìm kiếm lập chỉ mục.
+ */
 export function generateStaticParams() {
-  return DESTINATIONS.map((destination) => ({ slug: destination.slug }));
+  const slugs = new Set([
+    ...DESTINATIONS.map((destination) => destination.slug),
+    ...Object.values(DESTINATION_PAGE_SLUGS),
+  ]);
+  return [...slugs].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
   params,
 }: DestinationPageProps): Promise<Metadata> {
-  const destination = getDestinationBySlug((await params).slug);
-  if (!destination) return {};
+  const slug = (await params).slug;
+  const destination = getDestinationBySlug(slug);
+  const landing = destination ? undefined : getLandingDestinationBySlug(slug);
+  if (!destination && !landing) return {};
+  const title = `${destination?.name.vi ?? landing!.destination.name.vi} | Ninh Bình Journey`;
+  const description = destination?.description.vi ?? landing!.destination.description.vi;
+  const canonical = absoluteUrl(`/destination/${slug}`);
   return {
-    title: `${destination.name.vi} | Ninh Bình Journey`,
-    description: destination.description.vi,
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      siteName: "Ninh Bình Journey",
+      locale: "vi_VN",
+      type: "website",
+      // Ảnh 1200×630 dựng sẵn bằng `scripts/generate-share-images.mjs`; ảnh gốc
+      // nặng 2–3,5 MB, Zalo và Facebook thường bỏ khung xem trước.
+      images: [
+        { url: absoluteUrl(`/images/og/destination-${slug}.jpg`), width: 1200, height: 630 },
+      ],
+    },
   };
 }
 
@@ -33,8 +67,13 @@ export default async function DestinationPage({
   params,
   searchParams,
 }: DestinationPageProps) {
-  const destination = getDestinationBySlug((await params).slug);
-  if (!destination) notFound();
+  const slug = (await params).slug;
+  const destination = getDestinationBySlug(slug);
+  if (!destination) {
+    const landing = getLandingDestinationBySlug(slug);
+    if (!landing) notFound();
+    return <LandingDestinationPage destination={landing.destination} facts={landing.facts} />;
+  }
   const query = await searchParams;
   const fromJourney = typeof query.journey === "string";
   const fit = typeof query.fit === "string" ? query.fit : null;
@@ -53,7 +92,7 @@ export default async function DestinationPage({
             ← Khám phá
           </Link>
           <span className="rounded-full bg-black/25 px-3 py-1 text-xs font-bold backdrop-blur">
-            Demo information
+            Thông tin tham khảo
           </span>
         </div>
       </header>
@@ -228,7 +267,7 @@ export default async function DestinationPage({
                 {destination.demoOpeningWindow}
               </dd>
               <p className="mt-1 text-xs text-[#8a6b38]">
-                Demo information — không phải giờ mở cửa trực tiếp.
+                Giờ minh hoạ, chưa phải giờ mở cửa chính thức.
               </p>
             </div>
             <div>

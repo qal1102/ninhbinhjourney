@@ -11,7 +11,8 @@ import { SetupState } from "@/components/shared/setup-state";
 export const metadata = {
   title: "Lập hành trình | Ninh Bình Journey",
   description:
-    "Voice và text fallback cho lịch trình Ninh Bình có kiểm tra thời gian, đi bộ và khung giờ.",
+    "Bạn kể mình muốn đi thế nào, chúng tôi dựng lịch trình Ninh Bình vừa giờ giấc, vừa sức đi bộ.",
+  alternates: { canonical: "/plan" },
 };
 
 function firstParam(value: string | string[] | undefined) {

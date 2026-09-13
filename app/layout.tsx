@@ -7,10 +7,22 @@ import { PageTransition } from "@/components/shared/page-transition";
 import { ScrollProgress } from "@/components/shared/scroll-progress";
 import { CustomerBehaviorTracker } from "@/components/customer-data/customer-behavior-tracker";
 import { CustomerConsentCenter } from "@/components/customer-data/customer-consent-center";
+import { SITE_URL } from "@/lib/site-url";
 
+// Không đặt `alternates.canonical` ở đây: bố cục gốc bọc mọi trang, nên một
+// canonical ở tầng này sẽ khai mọi trang là bản sao của trang chủ.
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Ninh Bình Journey",
   description: "Hành trình giữa núi, nước và di sản vượt thời gian.",
+  openGraph: {
+    siteName: "Ninh Bình Journey",
+    locale: "vi_VN",
+    type: "website",
+    title: "Ninh Bình Journey",
+    description: "Hành trình giữa núi, nước và di sản vượt thời gian.",
+    images: [{ url: "/images/og/ninh-binh-journey.jpg", width: 1200, height: 630 }],
+  },
 };
 
 export default function RootLayout({

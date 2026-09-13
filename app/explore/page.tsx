@@ -6,6 +6,7 @@ export const metadata = {
   title: "Khám phá Ninh Bình | Ninh Bình Journey",
   description:
     "Bản đồ và danh sách đi cùng nhau: lọc theo thời gian, mức đi bộ và nhóm khách.",
+  alternates: { canonical: "/explore" },
 };
 
 export default function ExplorePage() {

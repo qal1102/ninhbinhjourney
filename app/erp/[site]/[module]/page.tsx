@@ -47,7 +47,14 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory, capacityWorkspace, sopWorkspace] =
     await Promise.all([
     getAccessState(),
-    getAttendanceState(),
+    // Chỉ Nhân sự và Chấm công dùng nhật ký chấm công. Ngày 13/09/2026 một
+    // nhịp đọc chấm công hỏng trên production (lỗi gốc rỗng, cùng giây với
+    // một lỗi đọc vé ở trang chủ) đã làm sập nguyên màn hình SOÁT VÉ Tam Cốc —
+    // màn hình vốn không cần một dòng chấm công nào. Nhân viên đứng ở cổng
+    // không được mất máy quét vì một phần họ không dùng.
+    moduleDefinition.id === "nhan-su" || moduleDefinition.id === "cham-cong"
+      ? getAttendanceState()
+      : Promise.resolve({ version: 1 as const, events: [] }),
     listShiftClosures({ siteIds: [site.id] }),
     listWorkdaysForUser(user, [site.id]),
       moduleDefinition.id === "doi-tac-nha-cung-ung"

@@ -25,6 +25,8 @@ import type {
 } from "@/lib/erp/gate-scan-repository";
 import { ShiftCloseSiteWorkflow } from "./shift-close-workflow";
 import { OfflineGateConsole } from "./offline-gate-console";
+import { CounterSalePanel } from "./counter-sale-panel";
+import type { CounterSaleWorkspace } from "@/lib/erp/counter-sale-repository";
 
 type Props = {
   site: ErpSite;
@@ -34,6 +36,7 @@ type Props = {
   gateScans: readonly GateScanEvent[];
   ticketSales: TicketSalesSummary | null;
   offlineGateEnabled?: boolean;
+  counterSale?: CounterSaleWorkspace | null;
 };
 type Period = "day" | "week" | "month" | "year";
 
@@ -69,7 +72,7 @@ function formatChange(percent: number | null) {
   return `${sign}${percent.toLocaleString("vi-VN")}% so với kỳ liền trước`;
 }
 
-export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScans, ticketSales, offlineGateEnabled = false }: Props) {
+export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScans, ticketSales, offlineGateEnabled = false, counterSale = null }: Props) {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("day");
   const [scanCode, setScanCode] = useState("");
@@ -472,6 +475,12 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           {lookupMessage ? <p role="status" className="mt-2 text-xs text-white/70">{lookupMessage}</p> : null}
           {lookupResults.length > 0 ? <ul className="mt-3 space-y-2">{lookupResults.map((ticket) => <li key={ticket.ticketCode} className="rounded-lg bg-white/7 px-3 py-2 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-mono font-bold">{ticket.ticketCode}</span><button type="button" onClick={() => setScanCode(ticket.ticketCode)} className="rounded-md bg-white px-2 py-1 font-black text-[#183f34]">Đưa vào ô quét</button></div><p className="mt-1 text-white/70">{ticket.guestName || "Không có tên"} · {ticket.guestPhone || "Không có SĐT"} · {ticket.entriesUsed}/{ticket.entriesAllowed} lượt · hiệu lực {ticket.validOn}</p></li>)}</ul> : null}
         </div>{gateScans.length > 0 ? <div className="mt-5 border-t border-white/15 pt-4"><p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Quét gần nhất · toàn cơ sở</p><ul className="mt-3 space-y-2">{gateScans.map((scan) => <li key={scan.id} className="flex items-center justify-between gap-3 rounded-lg bg-white/7 px-3 py-2 text-xs"><span className="font-mono font-bold">{scan.code}</span><span className="text-white/70">{scan.scannedByName} · {new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(scan.scannedAt))}</span></li>)}</ul></div> : null}</section>
+      ) : null}
+
+      {/* QA-ERP-POS-04: bán vé tại quầy có thu tiền mặt. Đứng trước phiếu đoàn
+          vì đây là việc quầy làm nhiều nhất trong ngày. */}
+      {mode === "sales" ? (
+        <CounterSalePanel site={site} userId={user.id} userRole={user.role} workspace={counterSale ?? null} />
       ) : null}
 
       {/* TC-18: đoàn mua tại quầy — vẫn là logic đoàn trưởng, chỉ khác chỗ

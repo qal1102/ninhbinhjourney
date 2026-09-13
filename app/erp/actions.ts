@@ -69,6 +69,12 @@ import {
   createCounterVisitorGroup,
   CounterVisitorGroupRepositoryError,
 } from "@/lib/erp/visitor-group-counter-repository";
+import {
+  CounterSaleRepositoryError,
+  createCounterSale,
+  voidCounterSale,
+} from "@/lib/erp/counter-sale-repository";
+import type { CounterSaleReceipt } from "@/domain/erp-counter-sale";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
 
 function safePasswordEqual(actual: string, expected: string) {
@@ -971,5 +977,90 @@ export async function createCounterVisitorGroupAction(input: {
       return { ok: false, message: error.message };
     }
     return { ok: false, message: "Chưa lập được phiếu đoàn tại quầy. Hãy thử lại." };
+  }
+}
+
+export type CounterSaleActionResult =
+  | { ok: true; receipt: CounterSaleReceipt; message: string }
+  | { ok: false; message: string };
+
+/**
+ * QA-ERP-POS-04 — nhân viên bán vé tại quầy.
+ *
+ * Màn hình chỉ gửi số vé, số tiền khách đưa và dấu xác nhận đã đếm tiền. Giá
+ * và tổng tiền do `erp_create_counter_sale` tự tính từ bảng giá đang hiệu lực.
+ * Quyền được kiểm hai lớp như `createCounterVisitorGroupAction`: lớp này để
+ * trả lời sớm và đúng chữ, lớp thật ở `erp_counter_actor_can_sell`.
+ *
+ * Giám đốc đang "xem thử" vai nhân viên thì phiếu mang tài khoản nhân viên,
+ * đúng như mọi thao tác khác trong lúc xem thử — nhưng tên giám đốc thật đi
+ * kèm vào phiếu và nhật ký, để không ai bị gán nhầm trách nhiệm về số tiền.
+ */
+export async function createCounterSaleAction(input: {
+  siteId: string;
+  adults: number;
+  children: number;
+  cashReceivedVnd: number;
+  cashCountedConfirmed: boolean;
+  requestKey: string;
+}): Promise<CounterSaleActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { ok: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) return { ok: false, message: "Cơ sở không hợp lệ." };
+  if (!accountCanAccessModule(user, input.siteId, "ve-dat-cho")) {
+    return { ok: false, message: "Tài khoản này chưa được phân công bán vé tại cơ sở này." };
+  }
+  if (input.cashCountedConfirmed !== true) {
+    return { ok: false, message: "Chưa đánh dấu đã đếm tiền và bỏ vào quỹ, nên phiếu chưa được lưu." };
+  }
+  try {
+    const receipt = await createCounterSale({
+      siteId: input.siteId,
+      actorAccountId: user.id,
+      actorName: user.name,
+      actingDirectorAccountId: user.actingAs?.directorId ?? null,
+      adults: Math.trunc(Number(input.adults)),
+      children: Math.trunc(Number(input.children)),
+      cashReceivedVnd: Math.trunc(Number(input.cashReceivedVnd)),
+      cashCountedConfirmed: true,
+      requestKey: String(input.requestKey ?? ""),
+    });
+    revalidatePath(`/erp/${input.siteId}/ve-dat-cho`);
+    return { ok: true, receipt, message: `Đã lưu phiếu ${receipt.saleCode}. Mời bạn đưa vé cho khách.` };
+  } catch (error) {
+    if (error instanceof CounterSaleRepositoryError) return { ok: false, message: error.message };
+    return { ok: false, message: "Chưa lưu được phiếu. Xin thử lại; nếu vẫn vậy thì báo bộ phận kỹ thuật." };
+  }
+}
+
+/** QA-ERP-POS-04 — quản lý hoặc giám đốc huỷ một phiếu bán trong ngày. */
+export async function voidCounterSaleAction(input: {
+  siteId: string;
+  saleCode: string;
+  reason: string;
+}): Promise<CounterSaleActionResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { ok: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) return { ok: false, message: "Cơ sở không hợp lệ." };
+  if (user.role !== "manager" && user.role !== "director") {
+    return { ok: false, message: "Chỉ quản lý cơ sở hoặc giám đốc được huỷ vé." };
+  }
+  if (String(input.reason ?? "").trim().length < 10) {
+    return { ok: false, message: "Xin ghi lý do huỷ, ít nhất mười ký tự." };
+  }
+  try {
+    const receipt = await voidCounterSale({
+      siteId: input.siteId,
+      actorAccountId: user.id,
+      actorName: user.name,
+      actingDirectorAccountId: user.actingAs?.directorId ?? null,
+      saleCode: String(input.saleCode ?? ""),
+      reason: String(input.reason ?? ""),
+    });
+    revalidatePath(`/erp/${input.siteId}/ve-dat-cho`);
+    return { ok: true, receipt, message: `Đã huỷ phiếu ${receipt.saleCode}. Xin hoàn tiền cho khách.` };
+  } catch (error) {
+    if (error instanceof CounterSaleRepositoryError) return { ok: false, message: error.message };
+    return { ok: false, message: "Chưa huỷ được phiếu. Xin thử lại; nếu vẫn vậy thì báo bộ phận kỹ thuật." };
   }
 }

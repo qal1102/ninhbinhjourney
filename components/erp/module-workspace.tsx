@@ -24,6 +24,7 @@ import type { ProjectWorkspace } from "@/lib/erp/project-repository";
 import type { ShiftHandover } from "@/lib/erp/shift-handover-repository";
 import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 import type { ShiftReconciliationView } from "@/lib/erp/shift-reconciliation-repository";
+import type { CounterSaleWorkspace } from "@/lib/erp/counter-sale-repository";
 import { listWorkdayEmployeeOptions } from "@/lib/erp/workday-view";
 import {
   SHIFT_CLOSE_STATUS_LABELS,
@@ -69,6 +70,7 @@ type Props = {
   sopWorkspace: SopWorkspaceData | null;
   /** TC-21 — chỉ đọc cho module tài chính & đối soát; `null` ở mọi module khác. */
   shiftReconciliation: ShiftReconciliationView | null;
+  counterSale?: CounterSaleWorkspace | null;
   initialCameraId?: string;
 };
 
@@ -346,6 +348,7 @@ export function ModuleWorkspace({
   capacityWorkspace,
   sopWorkspace,
   shiftReconciliation,
+  counterSale = null,
   initialCameraId,
 }: Props) {
   if (module.id === "suc-chua") {
@@ -460,7 +463,7 @@ export function ModuleWorkspace({
     );
   }
   if (module.id === "ve-dat-cho") {
-    return <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} />;
+    return <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} counterSale={counterSale} />;
   }
   if (module.id === "check-in-khach") {
     return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} offlineGateEnabled={process.env.ERP_OFFLINE_GATE_ENABLED === "true"} />;

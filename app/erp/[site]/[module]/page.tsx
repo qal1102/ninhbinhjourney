@@ -14,6 +14,7 @@ import { getIncidentCases } from "@/lib/erp/incident-repository";
 import { getFieldReports } from "@/lib/erp/field-report-repository";
 import { resolveModuleBackTarget } from "@/lib/erp/erp-back-link";
 import { getRecentGateScans, getTicketSalesSummary } from "@/lib/erp/gate-scan-repository";
+import { getCounterSaleWorkspace } from "@/lib/erp/counter-sale-repository";
 import { getProjectWorkspace } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listShiftHandovers } from "@/lib/erp/shift-handover-repository";
@@ -97,6 +98,22 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   const requestedShift = Array.isArray(query.ca) ? query.ca[0] : query.ca;
   const backTarget = resolveModuleBackTarget(site);
 
+  // QA-ERP-POS-04 — bán vé tại quầy. Đọc riêng, sau `Promise.all`, và bắt lỗi
+  // tại chỗ: kho giá quầy chưa trả lời thì phần bán nói thật là chưa bán được,
+  // còn phần vé đã bán và phiếu đoàn bên dưới vẫn mở bình thường.
+  const counterSale =
+    moduleDefinition.id === "ve-dat-cho"
+      ? await getCounterSaleWorkspace({ siteId: site.id, viewerAccountId: user.id }).catch(
+          (error) => {
+            console.error("Counter sale workspace read failed", error);
+            return {
+              available: false as const,
+              message: "Chưa đọc được bảng giá quầy. Xin tải lại trang.",
+            };
+          },
+        )
+      : null;
+
   // TC-21 — đối soát cuối ca. Đọc sau `Promise.all` vì nó cần chính danh sách
   // ca vừa đọc về, và cần biết người dùng đang chọn ca nào. Bảng này chỉ đọc,
   // nên hỏng cũng không được kéo cả module tài chính xuống theo.
@@ -156,6 +173,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         capacityWorkspace={capacityWorkspace}
         sopWorkspace={sopWorkspace}
         shiftReconciliation={shiftReconciliation}
+        counterSale={counterSale}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

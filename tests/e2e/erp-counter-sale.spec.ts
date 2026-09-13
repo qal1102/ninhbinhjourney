@@ -25,7 +25,7 @@ test("quầy chưa nối kho thì nói thẳng là chưa bán được, không b
   await expect(page.locator("main[aria-busy='true']")).toHaveCount(0);
 
   const khoi = page.locator("section").filter({
-    has: page.getByRole("heading", { name: "Ra đơn, thu tiền mặt, đưa vé cho khách" }),
+    has: page.getByRole("heading", { name: "Ra đơn, thu tiền, đưa vé cho khách" }),
   });
   await expect(khoi).toBeVisible();
   await expect(khoi.getByText("chưa bán được vé")).toBeVisible();

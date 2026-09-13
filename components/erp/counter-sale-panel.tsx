@@ -9,13 +9,23 @@ import {
 } from "@/app/erp/actions";
 import type { ErpSite } from "@/domain/erp";
 import {
+  ReceiptPrinterSettings,
+  TestPrintSheet,
+  receiptLinesForSale,
+  testPrintLines,
+  useReceiptPrinter,
+} from "./receipt-printer-panel";
+import {
+  COUNTER_PAYMENT_METHOD_LABELS,
   COUNTER_PRODUCT_LABELS,
   COUNTER_SALE_MAX_PARTY,
   computeCounterCart,
   counterCashSuggestions,
   counterChange,
+  counterPaymentReference,
   counterSaleReadiness,
   formatVnd,
+  type CounterPaymentMethod,
   type CounterPrice,
   type CounterSaleReceipt,
 } from "@/domain/erp-counter-sale";
@@ -110,7 +120,7 @@ function Stepper({
 }
 
 /** Phiếu thu in cho khách. Ghi rõ không phải hoá đơn giá trị gia tăng. */
-function ReceiptSheet({ site, receipt }: { site: ErpSite; receipt: CounterSaleReceipt }) {
+function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receipt: CounterSaleReceipt }) {
   const [qr, setQr] = useState<Record<string, string>>({});
   useEffect(() => {
     let huy = false;
@@ -137,7 +147,7 @@ function ReceiptSheet({ site, receipt }: { site: ErpSite; receipt: CounterSaleRe
   const daHuy = receipt.status === "voided";
   return (
     <article
-      data-print-receipt
+      id={id}
       className="mx-auto w-full max-w-sm rounded-2xl border border-[#d8e0db] bg-white p-5 text-[#1d2925] shadow-sm"
     >
       <header className="border-b border-dashed border-[#b8c6bf] pb-3 text-center">
@@ -173,14 +183,23 @@ function ReceiptSheet({ site, receipt }: { site: ErpSite; receipt: CounterSaleRe
           <dt>Tổng tiền</dt>
           <dd>{formatVnd(receipt.totalVnd)}</dd>
         </div>
-        <div className="flex justify-between">
-          <dt>Khách đưa</dt>
-          <dd>{formatVnd(receipt.cashReceivedVnd)}</dd>
-        </div>
-        <div className="flex justify-between">
-          <dt>Tiền thối</dt>
-          <dd>{formatVnd(receipt.changeVnd)}</dd>
-        </div>
+        {receipt.paymentMethod === "qr-transfer" ? (
+          <div className="flex justify-between">
+            <dt>{COUNTER_PAYMENT_METHOD_LABELS["qr-transfer"]}</dt>
+            <dd>{receipt.paymentReference ?? "đã nhận"}</dd>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between">
+              <dt>Khách đưa</dt>
+              <dd>{formatVnd(receipt.cashReceivedVnd)}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt>Tiền thối</dt>
+              <dd>{formatVnd(receipt.changeVnd)}</dd>
+            </div>
+          </>
+        )}
         <div className="flex justify-between text-xs text-[#5c6f67]">
           <dt>Người bán</dt>
           <dd>{receipt.soldByName}</dd>
@@ -230,6 +249,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
   const [children, setChildren] = useState(0);
   const [cashText, setCashText] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<CounterPaymentMethod>("cash");
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [receipt, setReceipt] = useState<CounterSaleReceipt | null>(null);
   const [voiding, setVoiding] = useState<string | null>(null);
@@ -237,14 +257,19 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
   const [pending, startTransition] = useTransition();
   // Một khoá cho mỗi tấm phiếu đang soạn. Mạng lỡ nhịp mà nhân viên bấm lại thì
   // máy chủ trả đúng phiếu cũ, không bán lần hai.
-  const requestKey = useRef(khoaMoi());
+  const [khoaDau] = useState(khoaMoi);
+  const requestKey = useRef(khoaDau);
+  const [reference, setReference] = useState(() => counterPaymentReference(khoaDau));
+  const printer = useReceiptPrinter();
 
   const prices = useMemo(() => (workspace?.available ? workspace.prices : []), [workspace]);
   const cart = useMemo(() => computeCounterCart({ adults, children, prices }), [adults, children, prices]);
   const cash = Number(cashText.replace(/[^0-9]/g, "")) || 0;
   const change = counterChange(cash, cart.totalVnd);
-  const readiness = counterSaleReadiness({ cart, cashReceivedVnd: cash, cashCountedConfirmed: confirmed });
+  const readiness = counterSaleReadiness({ cart, cashReceivedVnd: cash, cashCountedConfirmed: confirmed, paymentMethod });
   const canVoid = userRole === "manager" || userRole === "director";
+  const inThu = () =>
+    void printer.print({ elementId: "counter-test-print", lines: testPrintLines(site.name, printer.settings.paper) });
 
   // Đổi số vé hay số tiền thì lời xác nhận cũ không còn đúng với con số mới.
   function doiSo(fn: () => void) {
@@ -258,6 +283,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
     setCashText("");
     setConfirmed(false);
     requestKey.current = khoaMoi();
+    setReference(counterPaymentReference(requestKey.current));
   }
 
   function xacNhanBan() {
@@ -268,7 +294,9 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
         siteId: site.id,
         adults: cart.lines.find((l) => l.product === "adult")?.quantity ?? 0,
         children: cart.lines.find((l) => l.product === "child")?.quantity ?? 0,
-        cashReceivedVnd: cash,
+        paymentMethod,
+        cashReceivedVnd: paymentMethod === "qr-transfer" ? cart.totalVnd : cash,
+        paymentReference: paymentMethod === "qr-transfer" ? reference : null,
         cashCountedConfirmed: confirmed,
         requestKey: requestKey.current,
       });
@@ -302,18 +330,22 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
 
   return (
     <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
-      {/* Chỉ in đúng phiếu thu, không in cả màn hình ERP. */}
-      <style>{`@media print { body * { visibility: hidden !important; } [data-print-receipt], [data-print-receipt] * { visibility: visible !important; } [data-print-receipt] { position: absolute; left: 0; top: 0; width: 80mm; max-width: 80mm; border: 0; box-shadow: none; } }`}</style>
-
       <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Bán vé tại quầy</p>
-      <h2 className="mt-2 text-2xl font-black text-[#20342c]">Ra đơn, thu tiền mặt, đưa vé cho khách</h2>
+      <h2 className="mt-2 text-2xl font-black text-[#20342c]">Ra đơn, thu tiền, đưa vé cho khách</h2>
+      <TestPrintSheet id="counter-test-print" siteName={site.name} paper={printer.settings.paper} />
 
       {!workspace || !workspace.available ? (
-        <p className="mt-4 rounded-xl bg-[#fff8eb] px-4 py-3 text-sm font-bold text-[#6b5326]">
-          {workspace && !workspace.available
-            ? workspace.message
-            : "Quầy bán vé chưa nối được vào kho dữ liệu ở môi trường này, nên chưa bán được vé."}
-        </p>
+        <div className="mt-4 space-y-3">
+          <p className="rounded-xl bg-[#fff8eb] px-4 py-3 text-sm font-bold text-[#6b5326]">
+            {workspace && !workspace.available
+              ? workspace.message
+              : "Quầy bán vé chưa nối được vào kho dữ liệu ở môi trường này, nên chưa bán được vé."}
+          </p>
+          {/* Nối và in thử máy in không cần kho dữ liệu: quầy chuẩn bị máy in trước được. */}
+          <div className="max-w-xl">
+            <ReceiptPrinterSettings printer={printer} onTestPrint={inThu} />
+          </div>
+        </div>
       ) : (
         <div className="mt-5 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
@@ -347,39 +379,71 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
               </p>
             </div>
 
-            <div>
-              <label htmlFor="counter-cash" className="text-sm font-black text-[#20342c]">
-                Tiền khách đưa
-              </label>
-              <input
-                id="counter-cash"
-                inputMode="numeric"
-                autoComplete="off"
-                value={cash ? new Intl.NumberFormat("vi-VN").format(cash) : cashText}
-                onChange={(event) => doiSo(() => setCashText(event.target.value))}
-                placeholder="Ví dụ: 500.000"
-                className="mt-1 min-h-12 w-full rounded-xl border border-[#ccd8d1] px-4 text-xl font-black tabular-nums text-[#183f34] outline-none focus:border-[#4f806f]"
-              />
-              <div className="mt-2 flex flex-wrap gap-2">
-                {counterCashSuggestions(cart.totalVnd).map((goiY) => (
-                  <button
-                    key={goiY}
-                    type="button"
-                    onClick={() => doiSo(() => setCashText(String(goiY)))}
-                    className="min-h-9 rounded-lg bg-[#eef3f0] px-3 text-sm font-black text-[#35594b]"
-                  >
-                    {goiY === cart.totalVnd ? "Đủ tiền" : formatVnd(goiY)}
-                  </button>
-                ))}
-              </div>
-              <p className={`mt-2 text-lg font-black tabular-nums ${change === null ? "text-[#8b3d31]" : "text-[#2d735b]"}`}>
-                {cash === 0
-                  ? "Chưa nhập tiền khách đưa"
-                  : change === null
-                    ? `Còn thiếu ${formatVnd(cart.totalVnd - cash)}`
-                    : `Tiền thối lại: ${formatVnd(change)}`}
-              </p>
+            <div role="radiogroup" aria-label="Cách khách trả tiền" className="grid grid-cols-2 gap-2">
+              {(["cash", "qr-transfer"] as const).map((pt) => (
+                <button
+                  key={pt}
+                  type="button"
+                  role="radio"
+                  aria-checked={paymentMethod === pt}
+                  onClick={() => doiSo(() => setPaymentMethod(pt))}
+                  className={`min-h-11 rounded-xl border text-sm font-black ${
+                    paymentMethod === pt ? "border-[#183f34] bg-[#183f34] text-white" : "border-[#ccd8d1] bg-white text-[#42574e]"
+                  }`}
+                >
+                  {COUNTER_PAYMENT_METHOD_LABELS[pt]}
+                </button>
+              ))}
             </div>
+
+            {paymentMethod === "cash" ? (
+              <div>
+                <label htmlFor="counter-cash" className="text-sm font-black text-[#20342c]">
+                  Tiền khách đưa
+                </label>
+                <input
+                  id="counter-cash"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={cash ? new Intl.NumberFormat("vi-VN").format(cash) : cashText}
+                  onChange={(event) => doiSo(() => setCashText(event.target.value))}
+                  placeholder="Ví dụ: 500.000"
+                  className="mt-1 min-h-12 w-full rounded-xl border border-[#ccd8d1] px-4 text-xl font-black tabular-nums text-[#183f34] outline-none focus:border-[#4f806f]"
+                />
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {counterCashSuggestions(cart.totalVnd).map((goiY) => (
+                    <button
+                      key={goiY}
+                      type="button"
+                      onClick={() => doiSo(() => setCashText(String(goiY)))}
+                      className="min-h-9 rounded-lg bg-[#eef3f0] px-3 text-sm font-black text-[#35594b]"
+                    >
+                      {goiY === cart.totalVnd ? "Đủ tiền" : formatVnd(goiY)}
+                    </button>
+                  ))}
+                </div>
+                <p className={`mt-2 text-lg font-black tabular-nums ${change === null ? "text-[#8b3d31]" : "text-[#2d735b]"}`}>
+                  {cash === 0
+                    ? "Chưa nhập tiền khách đưa"
+                    : change === null
+                      ? `Còn thiếu ${formatVnd(cart.totalVnd - cash)}`
+                      : `Tiền thối lại: ${formatVnd(change)}`}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-[#b8cfbf] bg-[#edf3f0] p-4 text-sm leading-6 text-[#365247]">
+                <p className="font-black text-[#20342c]">Mời khách quét mã QR chuyển khoản của quầy</p>
+                <p className="mt-1">
+                  Số tiền: <strong className="tabular-nums">{formatVnd(cart.totalVnd)}</strong>
+                </p>
+                <p>
+                  Nội dung chuyển khoản: <strong className="font-mono text-base">{reference}</strong>
+                </p>
+                <p className="mt-2 text-xs text-[#5c6f67]">
+                  Nhờ khách ghi đúng nội dung này để kế toán khớp với sao kê. Chỉ xác nhận khi đã thấy tiền về tài khoản.
+                </p>
+              </div>
+            )}
 
             <label className="flex gap-3 rounded-xl border-2 border-[#e7c78d] bg-[#fff8eb] p-4 text-sm leading-6 text-[#5d5037]">
               <input
@@ -390,9 +454,11 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
               />
               <span>
                 <strong>
-                  {cash > 0 && change !== null
-                    ? `Tôi đã đếm đủ ${formatVnd(cash)} khách đưa, thối lại ${formatVnd(change)}, và bỏ ${formatVnd(cart.totalVnd)} vào quỹ.`
-                    : `Tôi đã đếm đủ tiền khách đưa và bỏ ${formatVnd(cart.totalVnd)} vào quỹ.`}
+                  {paymentMethod === "qr-transfer"
+                    ? `Tôi đã thấy ${formatVnd(cart.totalVnd)} về tài khoản, đúng nội dung ${reference}.`
+                    : cash > 0 && change !== null
+                      ? `Tôi đã đếm đủ ${formatVnd(cash)} khách đưa, thối lại ${formatVnd(change)}, và bỏ ${formatVnd(cart.totalVnd)} vào quỹ.`
+                      : `Tôi đã đếm đủ tiền khách đưa và bỏ ${formatVnd(cart.totalVnd)} vào quỹ.`}
                 </strong>{" "}
                 Nếu sai lệch, tôi chịu trách nhiệm. Phiếu ghi tên người bán và giờ bán.
               </span>
@@ -422,13 +488,17 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
           </div>
 
           <div className="space-y-3">
+            <ReceiptPrinterSettings printer={printer} onTestPrint={inThu} />
             {receipt ? (
               <>
-                <ReceiptSheet site={site} receipt={receipt} />
+                <ReceiptSheet id="counter-receipt" site={site} receipt={receipt} />
                 <div className="mx-auto flex max-w-sm gap-2">
                   <button
                     type="button"
-                    onClick={() => window.print()}
+                    onClick={() =>
+                      void printer.print({ elementId: "counter-receipt", lines: receiptLinesForSale(site.name, receipt) })
+                    }
+                    disabled={printer.busy}
                     className="min-h-11 flex-1 rounded-xl bg-[#183f34] px-4 font-black text-white"
                   >
                     In phiếu thu

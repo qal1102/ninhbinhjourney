@@ -325,18 +325,21 @@ test("Mid-Autumn campaign publishes distinct service layouts and no third-party 
   await page.keyboard.press("Escape");
   await expect(bookingDialog).toHaveCount(0);
 
-  await campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" }).click();
+  // Khối Hợp tác dựng kiểu danh mục: chọn tên trước, rồi mới mở chi tiết.
+  await campaign.getByRole("button", { name: "Select story: The Ninh Binh gift atelier" }).click();
+  await campaign.getByRole("button", { name: "Open details: The Ninh Binh gift atelier" }).click();
   const contactDialog = page.getByRole("dialog");
-  await expect(contactDialog.getByRole("heading", { name: "Hermès · Far away, then home" })).toBeVisible();
+  await expect(contactDialog.getByRole("heading", { name: "The Ninh Binh gift atelier" })).toBeVisible();
   await expect(contactDialog.getByRole("button", { name: "Close" })).toBeFocused();
   await expect(contactDialog.getByRole("link", { name: "Start a conversation" })).toHaveAttribute("href", /^mailto:xuantruong_nb@hn\.vnn\.vn/);
   await expect(contactDialog.getByRole("link", { name: "Call the team" })).toHaveAttribute("href", "tel:+842293876930");
-  await expect(contactDialog).toContainText("independent editorial series for brand outreach");
+  // Thẻ ý tưởng mở phải nói thẳng đây chưa phải hợp tác đã ký.
+  await expect(contactDialog).toContainText("does not announce an established commercial partnership");
   await page.keyboard.press("Shift+Tab");
   await expect(contactDialog.getByRole("link", { name: "Send an email" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(contactDialog).toHaveCount(0);
-  await expect(campaign.getByRole("button", { name: "Open details: Hermès · Far away, then home" })).toBeFocused();
+  await expect(campaign.getByRole("button", { name: "Open details: The Ninh Binh gift atelier" })).toBeFocused();
 });
 
 test("vertical scrolling keeps the document geometry stable after content settles", async ({

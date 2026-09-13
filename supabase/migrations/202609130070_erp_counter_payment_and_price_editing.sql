@@ -91,7 +91,7 @@ begin
 end;
 $$;
 
--- 2. Bảng giá: nhiều lần đặt trong một ngày, người đặt ghi tên --------------------------
+-- 2. Bảng giá: nhiều lần đặt trong một ngày, người đặt ghi tên, lần sau thắng lần trước --------------------------
 
 alter table public.erp_counter_price_list
   drop constraint if exists erp_counter_price_list_tenant_id_site_id_product_effective__key;
@@ -100,8 +100,14 @@ alter table public.erp_counter_price_list
   add column if not exists created_by_name text
     check (created_by_name is null or char_length(created_by_name) between 1 and 200);
 
+-- Số thứ tự tăng dần cho mỗi lần đặt giá. Hai lần đặt trong cùng một giao dịch
+-- mang cùng `now()`, nên xếp theo giờ tạo thì không phân được lần nào sau —
+-- chạy thử ngày 13/09/2026 đã bắt đúng chỗ ấy: sửa giá lần hai mà giá cũ vẫn áp.
+alter table public.erp_counter_price_list
+  add column if not exists revision bigint generated always as identity;
+
 create index if not exists erp_counter_price_list_lookup_idx
-  on public.erp_counter_price_list (tenant_id, site_id, product, effective_from desc, created_at desc);
+  on public.erp_counter_price_list (tenant_id, site_id, product, effective_from desc, revision desc);
 
 -- 3. Quyền đặt giá: chỉ giám đốc ---------------------------------------------------------
 
@@ -148,7 +154,7 @@ as $$
     where list.tenant_id = p_tenant_id
       and list.site_id = p_site_id
       and list.effective_from <= (now() at time zone 'Asia/Ho_Chi_Minh')::date
-    order by list.product, list.effective_from desc, list.created_at desc
+    order by list.product, list.effective_from desc, list.revision desc
   ) price;
 $$;
 
@@ -174,7 +180,7 @@ as $$
         'created_by_name', coalesce(row_data.created_by_name, row_data.created_by_account_id),
         'note', row_data.note
       )
-      order by row_data.effective_from desc, row_data.created_at desc
+      order by row_data.effective_from desc, row_data.revision desc
     ),
     '[]'::jsonb
   )
@@ -182,7 +188,7 @@ as $$
     select list.*
     from public.erp_counter_price_list list
     where list.tenant_id = p_tenant_id and list.site_id = p_site_id
-    order by list.effective_from desc, list.created_at desc
+    order by list.effective_from desc, list.revision desc
     limit least(greatest(coalesce(p_limit, 30), 1), 200)
   ) row_data;
 $$;
@@ -452,7 +458,7 @@ begin
       select * into v_price from public.erp_counter_price_list list
       where list.tenant_id = p_tenant_id and list.site_id = p_site_id
         and list.product = v_product and list.effective_from <= v_today
-      order by list.effective_from desc, list.created_at desc
+      order by list.effective_from desc, list.revision desc
       limit 1;
       if v_price.id is null then
         raise exception using errcode = 'P0002', message = 'COUNTER_SALE_PRICE_MISSING';
@@ -485,7 +491,7 @@ begin
       select * into v_price from public.erp_counter_price_list list
       where list.tenant_id = p_tenant_id and list.site_id = p_site_id
         and list.product = v_product and list.effective_from <= v_today
-      order by list.effective_from desc, list.created_at desc
+      order by list.effective_from desc, list.revision desc
       limit 1;
 
       insert into public.erp_tickets (

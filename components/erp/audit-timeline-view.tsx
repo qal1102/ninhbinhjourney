@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
 import { ERP_REGISTRY_ROLE_LABELS } from "@/domain/erp-account-roles";
+import {
+  ERP_ROLE_SWITCH_SESSION_ACTION,
+  erpAuditActionLabel,
+  gopLuotXemThu,
+} from "@/domain/erp-audit-labels";
+import { isErpTestMarkedNote } from "@/domain/erp-data-origin";
 import type {
   ErpAuditEntry,
   ErpHeadcountRow,
@@ -33,6 +39,16 @@ function formatMoment(value: string) {
   }).format(parsed);
 }
 
+function formatTime(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(parsed);
+}
+
 function actorPlace(entry: ErpAuditEntry) {
   if (entry.actorSiteIds.length === 0) return "toàn vùng";
   return entry.actorSiteIds.map(siteName).join(", ");
@@ -55,6 +71,8 @@ export function AuditTimelineView({
   const backfilledCount = entries.filter(
     (entry) => !entry.actorSnapshotAtWrite,
   ).length;
+  // Mỗi lượt xem thử ghi hai dòng; gộp lại để việc thật không bị vùi.
+  const rows = gopLuotXemThu(entries);
 
   return (
     <div className="space-y-5">
@@ -148,7 +166,7 @@ export function AuditTimelineView({
         ) : null}
 
         <ol className="mt-5 divide-y divide-[#e6ebe8]">
-          {entries.map((entry, index) => (
+          {rows.map((entry, index) => (
             <li
               key={`${entry.source}-${entry.occurredAt}-${entry.entityId ?? index}`}
               className="grid gap-1 py-3.5 sm:grid-cols-[1fr_auto] sm:gap-4"
@@ -174,16 +192,28 @@ export function AuditTimelineView({
                     </span>
                   ) : null}
                 </p>
-                <p className="mt-1 text-sm font-bold text-[#20342c]">
-                  {entry.source} · {entry.action}
-                  {entry.entityId ? (
-                    <span className="font-mono text-xs font-normal text-[#75817b]">
-                      {" "}
-                      {entry.entityId}
+                {/* Mã hành động và mã bản ghi là chữ máy: không in ra màn
+                    hình, chỉ giữ trong chú thích khi rê chuột để người cần
+                    truy vết vẫn lần ra được. */}
+                <p
+                  className="mt-1 text-sm font-bold text-[#20342c]"
+                  title={[entry.action, entry.entityId].filter(Boolean).join(" · ")}
+                >
+                  {entry.source} · {erpAuditActionLabel(entry.action)}
+                  {entry.action === ERP_ROLE_SWITCH_SESSION_ACTION && entry.note ? (
+                    <> {entry.note}</>
+                  ) : null}
+                  {isErpTestMarkedNote(entry.note) ? (
+                    <span className="ml-2 rounded bg-[#e8ecea] px-1.5 py-0.5 text-[10px] font-black text-[#5d6c65]">
+                      dữ liệu kiểm thử
                     </span>
                   ) : null}
                 </p>
-                {entry.note ? (
+                {entry.action === ERP_ROLE_SWITCH_SESSION_ACTION && entry.endedAt ? (
+                  <p className="mt-1 text-xs leading-5 text-[#7a8781]">
+                    Từ {formatTime(entry.occurredAt)} tới {formatTime(entry.endedAt)}
+                  </p>
+                ) : entry.note && entry.action !== ERP_ROLE_SWITCH_SESSION_ACTION ? (
                   <p className="mt-1 text-xs leading-5 text-[#7a8781]">{entry.note}</p>
                 ) : null}
               </div>
@@ -199,7 +229,7 @@ export function AuditTimelineView({
           ))}
         </ol>
 
-        {entries.length === 0 ? (
+        {rows.length === 0 ? (
           <p className="rounded-xl border border-dashed border-[#b8c6bf] px-5 py-10 text-center text-sm text-[#75817b]">
             {emptyMessage}
           </p>

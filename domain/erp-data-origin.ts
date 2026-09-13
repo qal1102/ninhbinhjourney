@@ -129,6 +129,11 @@ export const ERP_REAL_DATA_FROM = Date.UTC(2026, 7, 5, 17, 0, 0); // 06/08/2026 
  */
 const ERP_TEST_MARKER_PATTERN = /^QA-T10B-RT-\d{13}(?!\d)/;
 
+/** Ghi chú này mang dấu bộ kiểm thử smoke tự đặt lên hàng nó dựng. */
+export function isErpTestMarkedNote(note: unknown): boolean {
+  return typeof note === "string" && ERP_TEST_MARKER_PATTERN.test(note.trimStart());
+}
+
 function hasErpTestMarker(notes: readonly unknown[]): boolean {
   return notes.some(
     (note) =>

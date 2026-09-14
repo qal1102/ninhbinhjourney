@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SeasonalEditorialGroup } from "@/components/discovery/seasonal-editorial-group";
-import { CONTACT as contact } from "@/content/contact";
+import { CONTACT as contact, contactMailto } from "@/content/contact";
 
 export type SeasonalAction = "booking" | "contact" | "gift" | "planning";
 
@@ -122,12 +122,13 @@ export function SeasonalExperienceBrowser({
   function primaryHref(item: SeasonalExperience) {
     if (item.href) return item.href;
     if (item.action === "planning") return planHref;
-    const subject = encodeURIComponent(
+    // Hộp này chỉ dựng trên trình duyệt sau khi khách bấm, nên ghép địa chỉ ở đây
+    // không lọt vào HTML máy chủ.
+    return contactMailto(
       lang === "vi"
         ? `Trao đổi về ${item.title} — Ninh Bình Journey`
         : `Enquiry about ${item.title} — Ninh Binh Journey`,
     );
-    return `mailto:${contact.email}?subject=${subject}`;
   }
 
   return (
@@ -222,7 +223,7 @@ export function SeasonalExperienceBrowser({
                   </a>
                   <div className="grid grid-cols-2 gap-3">
                     <a href={contact.phoneHref} className="flex min-h-11 items-center justify-center rounded-full border border-[#bec9c3] px-4 text-sm font-bold">{copy.call}</a>
-                    <a href={`mailto:${contact.email}`} className="flex min-h-11 items-center justify-center rounded-full border border-[#bec9c3] px-4 text-sm font-bold">{copy.email}</a>
+                    <a href={contactMailto()} className="flex min-h-11 items-center justify-center rounded-full border border-[#bec9c3] px-4 text-sm font-bold">{copy.email}</a>
                   </div>
                   <p className="pt-2 text-xs leading-5 text-[#748078]">{copy.contactNote} · {contact.phoneLabel}</p>
                 </div>

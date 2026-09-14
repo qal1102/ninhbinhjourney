@@ -6,6 +6,7 @@ import { PACE_LABEL, PACKAGES, type PackageCatalogItem } from "@/content/package
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGE_IMAGE_SITE_ID } from "@/content/package-images";
 import { CONTACT } from "@/content/contact";
+import { ProtectedMailLink } from "@/components/discovery/protected-mail-link";
 
 type Language = "en" | "vi";
 
@@ -121,11 +122,10 @@ export function PackageShowcase({
   const featuredDisplay = packageDisplay(featured, lang);
   const featuredHref = packageHref(featured.slug, lang, source);
   const viewAllHref = `/packages?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`;
-  const contactSubject = encodeURIComponent(
+  const contactSubject =
     lang === "vi"
       ? "Hỏi về gói trải nghiệm — Ninh Bình Journey"
-      : "Enquiry about experience packages — Ninh Binh Journey",
-  );
+      : "Enquiry about experience packages — Ninh Binh Journey";
 
   return (
     <section id="packages" data-customer-section="home-packages" className="scroll-mt-20 bg-[#FBFAF6] px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-24">
@@ -153,13 +153,13 @@ export function PackageShowcase({
             >
               {copy.callCta} · {CONTACT.phoneLabel}
             </a>
-            <a
-              href={`mailto:${CONTACT.email}?subject=${contactSubject}`}
-              data-customer-track="home-packages-email"
+            <ProtectedMailLink
+              subject={contactSubject}
+              track="home-packages-email"
               className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border border-[#183F34]/40 px-5 text-center text-sm font-semibold leading-5 text-[#183F34] transition hover:bg-[#183F34]/8 min-[280px]:px-6 min-[280px]:text-base"
             >
               {copy.emailCta}
-            </a>
+            </ProtectedMailLink>
             <p className="text-sm leading-6 text-[#6D756F] sm:col-span-2 xl:col-span-1">{copy.callNote}</p>
           </div>
         </Reveal>

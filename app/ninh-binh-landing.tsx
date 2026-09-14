@@ -22,6 +22,7 @@ import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 import type { ExperienceSurfaceAttributes } from "@/config/experience";
 import { CONTACT as contactInfo } from "@/content/contact";
+import { ProtectedMailLink } from "@/components/discovery/protected-mail-link";
 import {
   destinationFacts,
   destinationPageHref,
@@ -1856,17 +1857,17 @@ export default function NinhBinhLanding({
             >
               {t.partnersCall} · {contactInfo.phoneLabel}
             </a>
-            <a
-              href={`mailto:${contactInfo.email}?subject=${encodeURIComponent(
+            <ProtectedMailLink
+              subject={
                 lang === "vi"
                   ? "Hợp tác cùng Ninh Bình Journey"
-                  : "Partnership enquiry — Ninh Binh Journey",
-              )}`}
-              data-customer-track="home-partnerships-email"
+                  : "Partnership enquiry — Ninh Binh Journey"
+              }
+              track="home-partnerships-email"
               className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/35 px-6 font-semibold text-white transition hover:bg-white/12"
             >
               {t.partnersEmail}
-            </a>
+            </ProtectedMailLink>
           </div>
         </div>
       </section>

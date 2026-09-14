@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { FLOATING_YIELD_CLASS, useFloatingYield } from "@/lib/use-floating-yield";
 import {
   CUSTOMER_ANALYTICS_CONSENT_STORAGE_KEY,
   CUSTOMER_CONSENT_CHANGED_EVENT,
@@ -27,6 +28,7 @@ export function CustomerConsentCenter() {
   const [marketing, setMarketing] = useState(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const nhuongCho = useFloatingYield();
   const bannerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -141,6 +143,10 @@ export function CustomerConsentCenter() {
     const apply = () => {
       const offset = `${node.offsetHeight + 24}px`;
       document.body.style.paddingBottom = offset;
+      // QA-P2-09: màn đầu trang chủ cao đúng một màn hình và dồn nút xuống đáy,
+      // nên chừa ở cuối trang không cứu được nút "Lập hành trình" bị dải này
+      // đè. Công bố chiều cao dải để màn đầu tự chừa chỗ.
+      root.style.setProperty("--nbj-consent-offset", offset);
     };
     apply();
     const observer = new ResizeObserver(apply);
@@ -148,6 +154,7 @@ export function CustomerConsentCenter() {
     return () => {
       observer.disconnect();
       document.body.style.paddingBottom = previous;
+      root.style.removeProperty("--nbj-consent-offset");
       if (previousBannerVisible === null) {
         root.removeAttribute("data-nbj-consent-banner-visible");
       } else {
@@ -197,7 +204,8 @@ export function CustomerConsentCenter() {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="fixed bottom-3 left-3 z-[1200] min-h-9 rounded-full border border-[#b9c5bf] bg-white/92 px-3 text-[0.68rem] font-bold text-[#29463b] shadow-md backdrop-blur" aria-label={language === "en" ? "Open privacy settings" : "Mở trung tâm quyền riêng tư"}>
+      {/* QA-P2-09: nút nổi nhường chỗ khi đang cuộn xuống đọc hoặc đang gõ. */}
+      <button type="button" onClick={() => setOpen(true)} aria-hidden={nhuongCho && !open ? true : undefined} tabIndex={nhuongCho && !open ? -1 : undefined} className={`fixed bottom-3 left-3 z-[1200] min-h-9 rounded-full border border-[#b9c5bf] bg-white/92 px-3 text-[0.68rem] font-bold text-[#29463b] shadow-md backdrop-blur transition duration-200 motion-reduce:transition-none ${nhuongCho && !open ? FLOATING_YIELD_CLASS : ""}`} aria-label={language === "en" ? "Open privacy settings" : "Mở trung tâm quyền riêng tư"}>
         {language === "en" ? "Privacy" : "Riêng tư"}
       </button>
       {open ? (

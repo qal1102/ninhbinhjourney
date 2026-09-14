@@ -9,6 +9,10 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
+import { FLOATING_YIELD_CLASS, useFloatingYield } from "@/lib/use-floating-yield";
+
+/** Nút "Mục lục" ở đầu trang bắn sự kiện này để mở hộp thoại mục lục. */
+export const JOURNEY_CONCIERGE_OPEN_EVENT = "nbj:open-journey-concierge";
 
 type Language = "en" | "vi";
 
@@ -188,6 +192,10 @@ export function JourneyConcierge({ lang }: { lang: Language }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const mounted = useSyncExternalStore(subscribeNothing, () => true, () => false);
+  const nhuongCho = useFloatingYield();
+  // Nút đã mở hộp thoại, để đóng xong trả tiêu điểm đúng chỗ: nút nổi, hoặc nút
+  // "Mục lục" ở đầu trang điện thoại.
+  const openerRef = useRef<HTMLElement | null>(null);
 
   const activeChapter = useMemo(
     () => copy.chapters.find((chapter) => chapter.id === activeId) ?? copy.chapters[0],
@@ -246,11 +254,26 @@ export function JourneyConcierge({ lang }: { lang: Language }) {
 
   const closeDialog = useCallback(() => {
     setOpen(false);
-    window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+    window.requestAnimationFrame(() =>
+      (openerRef.current ?? triggerRef.current)?.focus({ preventScroll: true }),
+    );
   }, []);
 
   const openDialog = useCallback(() => {
+    openerRef.current = triggerRef.current;
     setOpen(true);
+  }, []);
+
+  // QA-P2-09: trên điện thoại, menu trang từng chỉ nằm sau nút nổi tên "Trợ lý
+  // hành trình" — người tìm menu không bấm vào đó. Đầu trang nay có nút "Mục
+  // lục" bắn sự kiện này để mở đúng hộp thoại ấy.
+  useEffect(() => {
+    const moTuDauTrang = (event: Event) => {
+      openerRef.current = event.target instanceof HTMLElement ? event.target : null;
+      setOpen(true);
+    };
+    window.addEventListener(JOURNEY_CONCIERGE_OPEN_EVENT, moTuDauTrang);
+    return () => window.removeEventListener(JOURNEY_CONCIERGE_OPEN_EVENT, moTuDauTrang);
   }, []);
 
   useEffect(() => {
@@ -314,7 +337,11 @@ export function JourneyConcierge({ lang }: { lang: Language }) {
             data-customer-content-id="journey-concierge"
             data-customer-content-type="navigation"
             data-journey-concierge-trigger
-            className="fixed bottom-3 right-3 z-[80] inline-flex min-h-12 max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full border border-white/25 bg-[#183F34] px-3.5 text-sm font-extrabold text-white shadow-[0_14px_42px_rgba(10,31,24,.3)] transition hover:bg-[#24594A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B96A] motion-reduce:transition-none max-[279px]:h-14 max-[279px]:w-14 max-[279px]:justify-center max-[279px]:p-0 sm:bottom-5 sm:right-5 sm:px-4"
+            aria-hidden={nhuongCho && !open ? true : undefined}
+            tabIndex={nhuongCho && !open ? -1 : undefined}
+            className={`fixed bottom-3 right-3 z-[80] inline-flex min-h-12 max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full border border-white/25 bg-[#183F34] px-3.5 text-sm font-extrabold text-white shadow-[0_14px_42px_rgba(10,31,24,.3)] transition duration-200 hover:bg-[#24594A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B96A] motion-reduce:transition-none max-[279px]:h-14 max-[279px]:w-14 max-[279px]:justify-center max-[279px]:p-0 sm:bottom-5 sm:right-5 sm:px-4 ${
+              nhuongCho && !open ? FLOATING_YIELD_CLASS : ""
+            }`}
           >
             <span
               aria-hidden="true"
@@ -338,7 +365,8 @@ export function JourneyConcierge({ lang }: { lang: Language }) {
           </button>
 
           {open ? (
-            <div className="pointer-events-none fixed inset-0 z-[1100]">
+            {/* z-[1350]: mở từ nút "Mục lục" khi dải quyền riêng tư (z-[1300]) còn đó thì hộp này phải nằm trên dải; hộp chi tiết quyền riêng tư vẫn ở z-[1400]. */}
+            <div className="pointer-events-none fixed inset-0 z-[1350]">
               <button
                 type="button"
                 aria-label={copy.close}

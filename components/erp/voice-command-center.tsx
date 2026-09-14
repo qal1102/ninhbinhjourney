@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { FLOATING_YIELD_CLASS, useFloatingYield } from "@/lib/use-floating-yield";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
@@ -297,10 +298,8 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
   const [speechSupported, setSpeechSupported] = useState(true);
   const [voiceMessage, setVoiceMessage] = useState("");
   // QA-P2-09: "không lớp nổi nào được che nội dung" (UI_UX_RULES, mục ERP).
-  // Nút trợ lý nhường chỗ khi người dùng đang cuộn xuống đọc tiếp, hoặc đang
-  // gõ vào một ô nhập — đúng hai lúc nó hay đè lên nút "Thôi", ô số tiền.
-  // Cuộn lên, dừng ở cuối trang, hoặc rời ô nhập thì nút hiện lại.
-  const [nhuongCho, setNhuongCho] = useState(false);
+  // Nút trợ lý nhường chỗ khi đang cuộn xuống hoặc đang gõ vào ô nhập.
+  const nhuongCho = useFloatingYield();
 
   function pushEntry(entry: ThreadEntry) {
     setThread((previous) => [...previous, entry].slice(-THREAD_MAX_ENTRIES));
@@ -599,39 +598,6 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
   useEffect(() => stopDurationTimer, []);
 
-  useEffect(() => {
-    let viTriCu = window.scrollY;
-    let dangGo = false;
-    const laONhap = (el: EventTarget | null) =>
-      el instanceof HTMLElement && el.matches("input:not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable=true]");
-    const khiCuon = () => {
-      if (dangGo) return;
-      const y = window.scrollY;
-      const cuoiTrang = window.innerHeight + y >= document.documentElement.scrollHeight - 48;
-      if (cuoiTrang || y < 80 || y < viTriCu - 4) setNhuongCho(false);
-      else if (y > viTriCu + 4) setNhuongCho(true);
-      viTriCu = y;
-    };
-    const khiVaoO = (event: FocusEvent) => {
-      if (!laONhap(event.target)) return;
-      dangGo = true;
-      setNhuongCho(true);
-    };
-    const khiRoiO = (event: FocusEvent) => {
-      if (!laONhap(event.target)) return;
-      dangGo = false;
-      setNhuongCho(false);
-    };
-    window.addEventListener("scroll", khiCuon, { passive: true });
-    document.addEventListener("focusin", khiVaoO);
-    document.addEventListener("focusout", khiRoiO);
-    return () => {
-      window.removeEventListener("scroll", khiCuon);
-      document.removeEventListener("focusin", khiVaoO);
-      document.removeEventListener("focusout", khiRoiO);
-    };
-  }, []);
-
   return (
     <>
       {/* ERP-UX-07: trợ lý phải **bám theo màn hình**, cuộn tới đâu theo tới
@@ -660,7 +626,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
               aria-hidden={nhuongCho && !open ? true : undefined}
               tabIndex={nhuongCho && !open ? -1 : undefined}
               className={`fixed bottom-5 right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#183f34] px-3 text-sm font-black text-white shadow-lg shadow-[#0d2a22]/25 transition duration-200 hover:bg-[#12332a] motion-reduce:transition-none sm:right-5 sm:px-4 ${
-                nhuongCho && !open ? "pointer-events-none translate-y-24 opacity-0" : ""
+                nhuongCho && !open ? FLOATING_YIELD_CLASS : ""
               }`}
             >
               <Image src="/brand/ninh-binh-mark.png" alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />

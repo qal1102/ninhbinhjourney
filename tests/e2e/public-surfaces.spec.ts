@@ -186,7 +186,11 @@ test("hero package cue and journey concierge lead to real chapters", async ({
     )
     .toBe(true);
 
+  // QA-P2-09: nút nổi nhường chỗ khi vừa cuộn xuống; nhích lên một chút là nó
+  // hiện lại — đúng như người đọc thật làm khi muốn tìm mục lục.
   const trigger = page.getByRole("button", { name: "Open journey concierge" });
+  await page.mouse.wheel(0, -60);
+  await expect(trigger).toBeVisible();
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Where would you like to go?" });
   await expect(dialog).toBeVisible();
@@ -418,6 +422,31 @@ test("mobile gives privacy the fixed layer before revealing the concierge", asyn
   const trigger = page.getByRole("button", { name: "Open journey concierge" });
   await expect(banner).toBeVisible();
   await expect(trigger).toBeHidden();
+
+  // QA-P2-09: dải quyền riêng tư không được đè nút chính của màn đầu trang.
+  const cta = page.locator('[data-customer-track="home-hero-plan"]');
+  await expect
+    .poll(async () => {
+      const [nut, dai] = await Promise.all([cta.boundingBox(), banner.boundingBox()]);
+      return nut && dai ? Math.round(dai.y - (nut.y + nut.height)) : -999;
+    })
+    .toBeGreaterThanOrEqual(0);
+
+  // QA-P2-09: người tìm menu trên điện thoại thấy ngay nút "Menu" ở đầu trang,
+  // và hộp mục lục mở từ đó nằm trên dải quyền riêng tư, không bị dải che.
+  const menu = page.getByRole("button", { name: "Menu" });
+  await menu.click();
+  const hopMucLuc = page.getByRole("dialog", { name: "Where would you like to go?" });
+  await expect(hopMucLuc).toBeVisible();
+  const lopTrenCung = await hopMucLuc.evaluate((dialog) => {
+    const r = dialog.getBoundingClientRect();
+    const el = document.elementFromPoint(r.left + r.width / 2, r.bottom - 12);
+    return Boolean(el && dialog.contains(el));
+  });
+  expect(lopTrenCung).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(hopMucLuc).toHaveCount(0);
+  await expect(menu).toBeFocused();
 
   await banner.getByRole("button", { name: "Essential only" }).click();
   await expect(banner).toBeHidden();

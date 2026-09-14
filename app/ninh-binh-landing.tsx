@@ -15,7 +15,7 @@ import {
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
-import { JourneyConcierge } from "@/components/discovery/journey-concierge";
+import { JOURNEY_CONCIERGE_OPEN_EVENT, JourneyConcierge } from "@/components/discovery/journey-concierge";
 import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
@@ -1299,12 +1299,32 @@ export default function NinhBinhLanding({
               </a>
             ))}
           </nav>
+          <div className="flex items-center gap-2">
+          {/*
+            QA-P2-09: tren dien thoai, thanh dieu huong `md:flex` an di va menu
+            trang chi con nam sau nut noi ten "Tro ly hanh trinh" -- nguoi tim
+            menu khong bam vao do. Nut "Muc luc" dung dung cho nguoi ta tim menu
+            va mo chinh hop thoai muc luc ay.
+          */}
+          <button
+            type="button"
+            onClick={(event) => event.currentTarget.dispatchEvent(new Event(JOURNEY_CONCIERGE_OPEN_EVENT, { bubbles: true }))}
+            aria-haspopup="dialog"
+            aria-controls="journey-concierge-dialog"
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 text-sm font-semibold text-[#FBFAF6] backdrop-blur transition hover:bg-white/20 md:hidden"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M4 7h16M4 12h16M4 17h10" />
+            </svg>
+            {lang === "vi" ? "Mục lục" : "Menu"}
+          </button>
           <div className="flex rounded-full border border-white/25 bg-white/10 p-1 text-sm backdrop-blur">
             <button type="button" className={`rounded-full px-3 py-1.5 ${lang === "en" ? "bg-[#FBFAF6] text-[#183F34]" : ""}`} onClick={() => switchLanguage("en")}>EN</button>
             <button type="button" className={`rounded-full px-3 py-1.5 ${lang === "vi" ? "bg-[#FBFAF6] text-[#183F34]" : ""}`} onClick={() => switchLanguage("vi")}>VI</button>
           </div>
+          </div>
         </div>
-        <div id="top" className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-4 pb-16 pt-28 min-[280px]:px-5 sm:px-8 lg:pb-24">
+        <div id="top" className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-offset,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-offset,0px))]">
           {/*
             Nhan "Client demonstration · Supabase shared core" da GO HAN
             05/08. Day la ngon ngu KY THUAT NOI BO lot thang ra mat khach

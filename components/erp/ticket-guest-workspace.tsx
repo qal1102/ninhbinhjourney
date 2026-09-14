@@ -411,8 +411,14 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                 )}
               </div>
             ) : (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {todayTickets.map((ticket) => (
+              /* QA-P2-09: vé mẫu từng nằm lẫn với vé khách thật, mỗi tấm một nút
+                 "Đưa vào ô quét" — ngày đông khách rất dễ bấm nhầm vé mẫu thay vì
+                 vé khách đưa. Nay vé khách thật hiện thẳng; vé mẫu gập vào một mục
+                 riêng, phải chủ ý mở mới thấy. */
+              (() => {
+                const veMau = todayTickets.filter((ticket) => isDemoTicketCode(ticket.ticketCode));
+                const veThat = todayTickets.filter((ticket) => !isDemoTicketCode(ticket.ticketCode));
+                const renderVe = (ticket: (typeof todayTickets)[number]) => (
                   <div
                     key={ticket.ticketCode}
                     className="flex items-center gap-3 rounded-xl bg-white/95 p-3 text-left text-[#183f34]"
@@ -462,8 +468,25 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                       </span>
                     </span>
                   </div>
-                ))}
-              </div>
+                );
+                return (
+                  <>
+                    {veThat.length > 0 ? (
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{veThat.map(renderVe)}</div>
+                    ) : (
+                      <p className="mt-3 text-xs text-white/70">Hôm nay chưa có vé khách thật nào còn hiệu lực tại cơ sở này.</p>
+                    )}
+                    {veMau.length > 0 ? (
+                      <details className="mt-3 rounded-xl border border-dashed border-white/25 p-3">
+                        <summary className="cursor-pointer text-xs font-black text-white/80">
+                          Vé mẫu để tập quét ({veMau.length}) — không phải vé của khách
+                        </summary>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{veMau.map(renderVe)}</div>
+                      </details>
+                    ) : null}
+                  </>
+                );
+              })()
             )}
           </div>
           <div className="mt-6 border-t border-white/15 pt-4">

@@ -51,6 +51,17 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
     ? await listRoleSwitchTargets(user.actingAs ? user.id : undefined)
     : [];
 
+  const adminLinks = [
+    ...(user.role === "director"
+      ? [
+          { href: "/erp/khach-hang", label: "Khách hàng", hint: "Hành trình, đơn đặt và gợi ý chăm sóc khách" },
+          { href: "/erp/marketing", label: "Kênh khách", hint: "Mã QR và nguồn khách theo từng kênh" },
+          { href: "/erp/bang-gia-quay", label: "Giá vé quầy", hint: "Đặt giá bán tại quầy của bốn cơ sở" },
+        ]
+      : []),
+    ...(systemAdmin ? [{ href: "/erp/tai-khoan", label: "Tài khoản", hint: "Người dùng và phân quyền" }] : []),
+  ];
+
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f2f4f1] text-[#17231f]">
       <header className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
@@ -109,53 +120,39 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 khi mục đích của nó là ai cũng kiểm tra được việc của mình. */}
             <Link
               href="/erp/nhat-ky"
-              className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
+              className="hidden min-h-10 items-center whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
             >
               Nhật ký
             </Link>
-            {/* ERP-DE-XUAT-01: ai cũng gửi hoặc duyệt đề xuất. Giám đốc có nhiều nút
-                hơn nên chỉ hiện từ màn rộng; ở 1024px vào qua chuông thông báo. */}
             <Link
               href="/erp/de-xuat"
-              className={`hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] ${
-                user.role === "director" ? "xl:inline-flex" : "lg:inline-flex"
-              }`}
+              className="hidden min-h-10 items-center whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
             >
               Đề xuất
             </Link>
-            {user.role === "director" ? (
-              <Link
-                href="/erp/khach-hang"
-                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
-              >
-                Khách hàng
-              </Link>
-            ) : null}
-            {user.role === "director" ? (
-              <Link
-                href="/erp/marketing"
-                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
-              >
-                Kênh khách
-              </Link>
-            ) : null}
-            {/* Chỉ hiện từ màn rộng: ở 1024px thanh đầu trang đã chật, chữ các nút bị gãy dòng.
-                Màn hẹp hơn vào qua liên kết "Sửa giá" ở quầy bán vé. */}
-            {user.role === "director" ? (
-              <Link
-                href="/erp/bang-gia-quay"
-                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] xl:inline-flex"
-              >
-                Giá vé quầy
-              </Link>
-            ) : null}
-            {systemAdmin ? (
-              <Link
-                href="/erp/tai-khoan"
-                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
-              >
-                Tài khoản
-              </Link>
+            {/* 14/09/2026: bốn công cụ riêng của giám đốc từng đứng thành bốn nút
+                ngang hàng; thêm Giá vé quầy và Đề xuất thì cả thanh gãy chữ hai
+                dòng ngay ở màn 1440px. Gom vào một menu "Quản trị", chỉ Nhật ký
+                và Đề xuất — việc ai cũng dùng — còn đứng riêng. */}
+            {adminLinks.length > 0 ? (
+              <details className="group relative hidden lg:block">
+                <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1 whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7]">
+                  Quản trị
+                  <span aria-hidden="true" className="text-xs transition group-open:rotate-180">▾</span>
+                </summary>
+                <div className="absolute right-0 z-50 mt-2 w-72 rounded-2xl border border-[#d8e0db] bg-white p-2 shadow-xl">
+                  {adminLinks.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block rounded-xl px-3 py-2.5 hover:bg-[#f3f6f4]"
+                    >
+                      <span className="block text-sm font-black text-[#20342c]">{item.label}</span>
+                      <span className="block text-xs text-[#6e7b75]">{item.hint}</span>
+                    </Link>
+                  ))}
+                </div>
+              </details>
             ) : null}
             {roleSwitchAvailable ? (
               <div className="hidden lg:block">
@@ -169,8 +166,9 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
               href={`/erp/ho-so/${user.id}`}
               className="hidden text-right md:block"
             >
-              <p className="text-sm font-bold text-[#25352f] hover:underline">{user.name}</p>
-              <p className="text-xs text-[#738078]">
+              <p className="whitespace-nowrap text-sm font-bold text-[#25352f] hover:underline">{user.name}</p>
+              {/* Dòng chức danh chỉ hiện từ màn rộng: ở 1024px thanh đầu trang của giám đốc hết chỗ. */}
+              <p className="hidden whitespace-nowrap text-xs text-[#738078] xl:block">
                 {ERP_ROLE_LABELS[user.role]} · {user.jobTitle}
               </p>
             </Link>

@@ -80,6 +80,8 @@ describe("Nhật ký không in mã máy ra màn hình", () => {
     maCanCo.add("role-switch.ended");
     // Nhánh đặt giá quầy trong hàm nhật ký ghi hằng chuỗi, không có ràng buộc bảng.
     maCanCo.add("counter-price.set");
+    // Nhánh đóng khoản trả tại điểm cũng ghi hằng chuỗi.
+    maCanCo.add("on-site-payment.no-show");
 
     expect(maCanCo.size).toBeGreaterThanOrEqual(12);
     const thieu = [...maCanCo].filter((ma) => !ERP_AUDIT_ACTION_LABELS[ma]);

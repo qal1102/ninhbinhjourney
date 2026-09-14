@@ -31,6 +31,8 @@ import {
   SHIFT_CLOSE_STATUS_TONES,
 } from "./shift-close-status";
 import { ShiftReconciliationPanel } from "./shift-reconciliation-panel";
+import { OnSiteDuePanel } from "./on-site-due-panel";
+import type { OnSiteDueWorkspace } from "@/lib/erp/on-site-due-repository";
 import { AttendancePanel } from "./attendance-panel";
 import { ShiftHandoverPanel } from "./shift-handover-panel";
 import { StaffAccessManager } from "./staff-access-manager";
@@ -71,6 +73,8 @@ type Props = {
   /** TC-21 — chỉ đọc cho module tài chính & đối soát; `null` ở mọi module khác. */
   shiftReconciliation: ShiftReconciliationView | null;
   counterSale?: CounterSaleWorkspace | null;
+  /** QA-DON-DU-LIEU-10 — đơn trả tại điểm còn chờ thu; `null` khi không phải quản lý/giám đốc ở module tài chính. */
+  onSiteDue?: OnSiteDueWorkspace | null;
   initialCameraId?: string;
 };
 
@@ -349,6 +353,7 @@ export function ModuleWorkspace({
   sopWorkspace,
   shiftReconciliation,
   counterSale = null,
+  onSiteDue = null,
   initialCameraId,
 }: Props) {
   if (module.id === "suc-chua") {
@@ -422,6 +427,13 @@ export function ModuleWorkspace({
             site={site}
             moduleId={module.id}
             view={shiftReconciliation}
+          />
+        ) : null}
+        {onSiteDue ? (
+          <OnSiteDuePanel
+            site={site}
+            workspace={onSiteDue}
+            today={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date())}
           />
         ) : null}
         <SiteFinanceSource site={site} user={user} records={shiftClosures} />

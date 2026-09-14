@@ -25,6 +25,7 @@ import {
   listWorkdayEmployeeOptions,
   listWorkdaysForUser,
 } from "@/lib/erp/workday-view";
+import { listOnSiteDueOrders } from "@/lib/erp/on-site-due-repository";
 
 type Props = {
   params: Promise<{ site: string; module: string }>;
@@ -121,6 +122,15 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         )
       : null;
 
+  // QA-DON-DU-LIEU-10 — đơn trả tại điểm còn chờ thu, chỉ cho quản lý và giám đốc.
+  const onSiteDue =
+    moduleDefinition.id === "tai-chinh-doi-soat" && (user.role === "manager" || user.role === "director")
+      ? await listOnSiteDueOrders({ siteId: site.id, viewerAccountId: user.id }).catch((error) => {
+          console.error("On-site due orders read failed", error);
+          return { available: false as const, message: "Chưa đọc được danh sách đơn trả tại điểm. Xin tải lại trang." };
+        })
+      : null;
+
   // TC-21 — đối soát cuối ca. Đọc sau `Promise.all` vì nó cần chính danh sách
   // ca vừa đọc về, và cần biết người dùng đang chọn ca nào. Bảng này chỉ đọc,
   // nên hỏng cũng không được kéo cả module tài chính xuống theo.
@@ -181,6 +191,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         sopWorkspace={sopWorkspace}
         shiftReconciliation={shiftReconciliation}
         counterSale={counterSale}
+        onSiteDue={onSiteDue}
         initialCameraId={requestedCamera}
       />
     </ErpShell>

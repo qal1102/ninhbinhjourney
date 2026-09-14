@@ -72,6 +72,9 @@ export const ERP_AUDIT_ACTION_LABELS: Readonly<Record<string, string>> = Object.
   "staff-request.cancelled": "Rút đề xuất",
   "staff-request.completed": "Hoàn tất đề xuất",
 
+  // Thu tại điểm
+  "on-site-payment.no-show": "Đóng khoản trả tại điểm vì khách không đến",
+
   // Hoá đơn nhà cung cấp
   "invoice.submitted-and-matched": "Gửi hoá đơn, đã khớp",
   "invoice.submitted-with-exception": "Gửi hoá đơn có chênh lệch",

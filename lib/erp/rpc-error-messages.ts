@@ -626,6 +626,14 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   STAFF_REQUEST_COMPLETION_NOTE_REQUIRED: "Ghi đã chi hay đã sửa thế nào, ít nhất năm ký tự.",
   STAFF_REQUEST_NOT_COMPLETABLE: "Đề xuất này chưa tới bước ghi hoàn tất.",
   STAFF_REQUEST_COMPLETE_NOT_ALLOWED: "Tạm ứng và đề xuất mua do kế toán ghi đã chi; sửa chữa do quản lý cơ sở ghi đã sửa.",
+  // QA-DON-DU-LIEU-10: đóng khoản trả tại điểm vì khách không đến.
+  ON_SITE_NO_SHOW_INPUT_INVALID: "Mã đơn hoặc thông tin đóng khoản chưa đúng.",
+  ON_SITE_NO_SHOW_REASON_REQUIRED: "Ghi lý do, ít nhất mười ký tự: đã gọi khách chưa, khách nói gì.",
+  ON_SITE_NO_SHOW_NOT_ALLOWED: "Chỉ quản lý của cơ sở này hoặc giám đốc được đóng khoản trả tại điểm.",
+  ON_SITE_NO_SHOW_ORDER_NOT_FOUND: "Không tìm thấy đơn này ở cơ sở đang xem.",
+  ON_SITE_NO_SHOW_NOTHING_DUE: "Đơn này không còn khoản nào chờ thu tại điểm.",
+  ON_SITE_NO_SHOW_TOO_EARLY: "Còn trong ngày đi, khách vẫn có thể tới. Qua hết ngày mới đóng được.",
+  ON_SITE_NO_SHOW_ALREADY_ADMITTED: "Khách đã vào cổng, không phải không đến. Xin thu tiền ở cổng.",
   STAFF_REQUEST_APPEND_ONLY: "Đề xuất đã gửi không sửa hay xoá được. Muốn đổi nội dung, xin rút rồi gửi đề xuất mới.",
 });
 

@@ -364,8 +364,9 @@ export function JourneyConcierge({ lang }: { lang: Language }) {
             </span>
           </button>
 
+          {/* z-[1350]: mở từ nút "Mục lục" khi dải quyền riêng tư (z-[1300]) còn đó thì
+              hộp này phải nằm trên dải; hộp chi tiết quyền riêng tư vẫn ở z-[1400]. */}
           {open ? (
-            {/* z-[1350]: mở từ nút "Mục lục" khi dải quyền riêng tư (z-[1300]) còn đó thì hộp này phải nằm trên dải; hộp chi tiết quyền riêng tư vẫn ở z-[1400]. */}
             <div className="pointer-events-none fixed inset-0 z-[1350]">
               <button
                 type="button"

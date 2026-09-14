@@ -219,6 +219,7 @@ test("hero package cue and journey concierge lead to real chapters", async ({
     page.locator('[data-customer-track="journey-index-mid-autumn"]'),
   ).toHaveAttribute("aria-current", "location");
 
+  await page.mouse.wheel(0, -60);
   await trigger.click();
   await page.getByRole("dialog").getByRole("link", { name: /First time in Ninh Binh/ }).click();
   await expect(page).toHaveURL(/#destinations-highlights$/);

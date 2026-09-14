@@ -303,7 +303,7 @@ test("dùng hành trình sang trang gói vẫn mang theo gói gần nhất, quay
   await page.goto("/plan");
   await page
     .getByLabel(TEXT_BOX)
-    .fill("Tôi có 6 giờ, thích thiên nhiên và nhiếp ảnh, muốn đi bộ vừa phải.");
+    .fill("Tôi đi một mình, có trọn một ngày 10 tiếng, muốn đi nhịp vừa phải, thích di sản.");
   await page.getByRole("button", { name: RUN_BUTTON }).click();
   await page.getByRole("button", { name: "Xác nhận và tạo hành trình" }).click();
   await expect(page.getByRole("heading", { name: "Lịch trình hợp lệ" })).toBeVisible();

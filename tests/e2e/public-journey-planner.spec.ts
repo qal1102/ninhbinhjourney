@@ -290,3 +290,34 @@ test("editing an unsaved itinerary recalculates it in place", async ({
   await expect(page.getByText(/Đã tính lại lịch trình/)).toBeVisible();
   await expect(stops.first().locator("h3")).not.toHaveText(before);
 });
+
+/*
+ * QA-P2-09 — lượt kiểm 12/09/2026: dựng xong lịch, bấm "Dùng hành trình này"
+ * thì về trang gói trơn, quay lại /plan là mất sạch lịch vừa dựng. Bài này ghi
+ * một hành trình qua POST /api/journeys nên chỉ chạy cục bộ.
+ */
+test("dùng hành trình sang trang gói vẫn mang theo gói gần nhất, quay lại không mất lịch vừa dựng", async ({
+  page,
+}) => {
+  test.skip(Boolean(process.env.PLAYWRIGHT_BASE_URL?.trim()), "Ghi một hành trình; chỉ chạy cục bộ.");
+  await page.goto("/plan");
+  await page
+    .getByLabel(TEXT_BOX)
+    .fill("Tôi có 6 giờ, thích thiên nhiên và nhiếp ảnh, muốn đi bộ vừa phải.");
+  await page.getByRole("button", { name: RUN_BUTTON }).click();
+  await page.getByRole("button", { name: "Xác nhận và tạo hành trình" }).click();
+  await expect(page.getByRole("heading", { name: "Lịch trình hợp lệ" })).toBeVisible();
+
+  const goiGanNhat = page.getByText(/Gói gần nhất với hành trình này:/);
+  await expect(goiGanNhat).toBeVisible();
+  const ten = await goiGanNhat.locator("strong").innerText();
+
+  await page.getByRole("link", { name: "Dùng hành trình này" }).click();
+  await expect(page).toHaveURL(/\/packages\?(.*&)?goi=/);
+  await expect(page.getByText(/Gói gần nhất với hành trình bạn vừa dựng là/)).toContainText(ten);
+  await expect(page.locator("article.ring-2")).toHaveCount(1);
+
+  await page.getByRole("link", { name: "← Quay lại hành trình" }).click();
+  await expect(page).toHaveURL(/\/plan/);
+  await expect(page.getByRole("heading", { name: "Lịch trình hợp lệ" })).toBeVisible();
+});

@@ -21,19 +21,22 @@ function PackageCard({
   checkoutAvailable,
   featured,
   reversed,
+  suggested,
 }: {
   item: PackageCatalogItem;
   journey: string | undefined;
   checkoutAvailable: boolean;
   featured?: boolean;
   reversed?: boolean;
+  suggested?: boolean;
 }) {
   const image = getPackageHeroImage(item);
   const detailHref = `/packages/${item.slug}${journey ? `?journey=${journey}` : ""}`;
 
   return (
     <article
-      className={`overflow-hidden rounded-3xl border border-[#d7d5cd] bg-white shadow-sm ${
+      id={`goi-${item.slug}`}
+      className={`scroll-mt-6 overflow-hidden rounded-3xl border bg-white shadow-sm ${suggested ? "border-[#d58c35] ring-2 ring-[#d58c35]/50" : "border-[#d7d5cd]"} ${
         featured ? "xl:grid xl:grid-cols-[1.1fr_1fr]" : `xl:flex xl:items-stretch ${reversed ? "xl:flex-row-reverse" : ""}`
       }`}
     >
@@ -116,8 +119,12 @@ export default async function PackagesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const journeyValue = (await searchParams).journey;
+  const params = await searchParams;
+  const journeyValue = params.journey;
   const journey = typeof journeyValue === "string" ? journeyValue : undefined;
+  // QA-P2-09: gói gần nhất với hành trình khách vừa dựng ở /plan.
+  const goiValue = params.goi;
+  const goiGoiY = typeof goiValue === "string" ? PACKAGES.find((item) => item.slug === goiValue) : undefined;
   const environment = readPublicEnvironment();
   const flags = getExperiencePresentationFlags(environment);
   const customerBookingEnabled = isCustomerBookingEnabled();
@@ -142,6 +149,14 @@ export default async function PackagesPage({
         <Link href={journey ? `/journey/${journey}` : "/plan"} className="text-sm font-bold text-[#356957]">
           ← Quay lại hành trình
         </Link>
+        {goiGoiY ? (
+          <p className="mt-6 max-w-2xl rounded-2xl border border-[#d58c35]/40 bg-[#fbf3e6] px-5 py-4 text-sm leading-6 text-[#4d4636]">
+            Gói gần nhất với hành trình bạn vừa dựng là <strong className="text-[#183f34]">{goiGoiY.name}</strong>.{" "}
+            <a href={`#goi-${goiGoiY.slug}`} className="font-bold text-[#356957] underline underline-offset-2">
+              Xem gói này
+            </a>
+          </p>
+        ) : null}
         <p className="mt-10 text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
           {customerBookingEnabled
             // Hai chỗ hỏng trong một dòng cũ ("Giữ chỗ 15 phút theo công suất
@@ -171,6 +186,7 @@ export default async function PackagesPage({
             journey={journey}
             checkoutAvailable={checkoutAvailable}
             featured
+            suggested={goiGoiY?.slug === featured.slug}
           />
           {rest.map((item, index) => (
             <PackageCard
@@ -179,6 +195,7 @@ export default async function PackagesPage({
               journey={journey}
               checkoutAvailable={checkoutAvailable}
               reversed={index % 2 === 1}
+              suggested={goiGoiY?.slug === item.slug}
             />
           ))}
         </div>

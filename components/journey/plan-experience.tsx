@@ -20,6 +20,9 @@ import type {
 } from "@/domain/models";
 import { ItineraryEditor } from "./itinerary-editor";
 
+const PLAN_RESULT_STORAGE_KEY = "nbj-plan-result";
+const PLAN_RESULT_STORAGE_VERSION = 1;
+
 type Language = "vi" | "en";
 
 type VoiceState =
@@ -338,6 +341,39 @@ export function PlanExperience({
     persisted: boolean;
     persistence: "browser" | "demo" | "anonymous";
   } | null>(null);
+
+  // QA-P2-09: bấm "Dùng hành trình này" sang trang gói rồi quay lại thì lịch
+  // vừa dựng mất sạch, khách phải kể lại từ đầu. Nhớ nó trong phiên của tab
+  // này; đóng tab là hết. Bấm "Chỉnh yêu cầu" thì xoá.
+  useEffect(() => {
+    try {
+      const raw = window.sessionStorage.getItem(PLAN_RESULT_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { version?: number; value?: typeof result };
+      const value = saved?.version === PLAN_RESULT_STORAGE_VERSION ? saved.value : null;
+      if (value && Array.isArray(value.itinerary?.items) && typeof value.intent?.durationMinutes === "number") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- khôi phục lịch vừa dựng sau khi dựng xong trang, tránh lệch HTML máy chủ
+        setResult(value);
+      }
+    } catch {
+      // Trình duyệt chặn bộ nhớ phiên thì khách dựng lại, không hỏng gì.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (result) {
+        window.sessionStorage.setItem(
+          PLAN_RESULT_STORAGE_KEY,
+          JSON.stringify({ version: PLAN_RESULT_STORAGE_VERSION, value: result }),
+        );
+      } else {
+        window.sessionStorage.removeItem(PLAN_RESULT_STORAGE_KEY);
+      }
+    } catch {
+      // Như trên.
+    }
+  }, [result]);
 
   // Ghép lại mỗi lần khách sửa một ô, chứ không chỉ lúc bấm "hiểu yêu cầu":
   // khách chỉnh nhịp đi hay số người là thấy danh sách gói đổi theo ngay.

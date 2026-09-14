@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { DESTINATIONS } from "@/content/destinations";
 import { rebuildItineraryWithSites } from "@/domain/journey";
+import { matchPackagesToIntent } from "@/domain/package-match";
 import type { Itinerary, JourneyIntent } from "@/domain/models";
 import { JourneyContactVault } from "./journey-contact-vault";
 
@@ -147,6 +148,22 @@ export function ItineraryEditor({
     void saveSites(next);
   }
 
+  // QA-P2-09: nút này từng dẫn về `/packages` trơn khi hành trình không lưu
+  // vào phòng trình diễn — trên production là mọi lần — nên khách sang trang gói
+  // mà không còn gì của lịch vừa dựng. Nay mang theo gói khớp nhất (cùng phép
+  // ghép với trang lập hành trình) để trang gói làm nổi đúng gói ấy.
+  const goiGanNhat = matchPackagesToIntent({
+    pace: intent.pace,
+    durationMinutes: intent.durationMinutes,
+    party: intent.party,
+    partyContext: intent.partyContext,
+    visitDate: intent.visitDate,
+  }).matches[0] ?? null;
+  const thamSoGoi = new URLSearchParams();
+  if (persisted) thamSoGoi.set("journey", itinerary.id);
+  if (goiGanNhat) thamSoGoi.set("goi", goiGanNhat.slug);
+  const huongDiGoi = thamSoGoi.size > 0 ? `/packages?${thamSoGoi.toString()}` : "/packages";
+
   return (
     <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
       <section>
@@ -284,12 +301,19 @@ export function ItineraryEditor({
         ) : null}
 
         {itinerary.validation.valid ? (
-          <Link
-            href={persisted ? `/packages?journey=${itinerary.id}` : "/packages"}
-            className="inline-flex min-h-13 w-full items-center justify-center rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17]"
-          >
-            Dùng hành trình này
-          </Link>
+          <>
+            <Link
+              href={huongDiGoi}
+              className="inline-flex min-h-13 w-full items-center justify-center rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17]"
+            >
+              Dùng hành trình này
+            </Link>
+            {goiGanNhat ? (
+              <p className="text-center text-sm text-[#4d5b55]">
+                Gói gần nhất với hành trình này: <strong className="text-[#183f34]">{goiGanNhat.name}</strong>.
+              </p>
+            ) : null}
+          </>
         ) : (
           <button
             type="button"

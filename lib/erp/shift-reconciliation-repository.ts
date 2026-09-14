@@ -119,6 +119,9 @@ function readCounterCashRow(value: unknown): ShiftCounterCash | null {
   return {
     count: Number(row.sale_count ?? 0),
     totalVnd: Number(row.total_vnd ?? 0),
+    // Trước migration 070 máy chủ chưa trả hai trường này: mọi phiếu khi ấy đều là tiền mặt.
+    qrCount: Number(row.qr_count ?? 0),
+    qrTotalVnd: Number(row.qr_total_vnd ?? 0),
     voidedCount: Number(row.voided_count ?? 0),
     voidedVnd: Number(row.voided_vnd ?? 0),
     sellers: sellers.map((entry) => {
@@ -129,6 +132,7 @@ function readCounterCashRow(value: unknown): ShiftCounterCash | null {
         displayName: String(item.display_name ?? accountId),
         count: Number(item.count ?? 0),
         totalVnd: Number(item.total_vnd ?? 0),
+        qrTotalVnd: Number(item.qr_total_vnd ?? 0),
       };
     }),
   };
@@ -281,6 +285,7 @@ export async function readShiftReconciliation(input: {
     shiftEndedAt: selected.shiftEndedAt,
     ticketsSold: selected.ticketsSold,
     cashVnd: selected.amounts.cashVnd,
+    cardVnd: selected.amounts.cardVnd,
   };
   const window = resolveShiftWindow(declaration);
 

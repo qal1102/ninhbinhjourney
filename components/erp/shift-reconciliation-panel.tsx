@@ -353,7 +353,10 @@ export function ShiftReconciliationPanel({
             <p className="mt-2 text-sm font-medium text-[#5f7068]">
               {counterCashUnavailableReason || "Chưa đọc được tiền bán tại quầy của ca này."}
             </p>
-          ) : reconciliation.counterCash.count + reconciliation.counterCash.voidedCount === 0 ? (
+          ) : reconciliation.counterCash.count +
+              reconciliation.counterCash.qrCount +
+              reconciliation.counterCash.voidedCount ===
+            0 ? (
             <p className="mt-2 text-sm font-medium text-[#5f7068]">
               Ca này chưa có phiếu bán vé tại quầy nào.
             </p>
@@ -363,11 +366,23 @@ export function ShiftReconciliationPanel({
                 {formatVnd(reconciliation.counterCash.totalVnd)}
               </p>
               <p className="mt-1 text-xs font-medium text-[#6e7b75]">
-                {formatCount(reconciliation.counterCash.count)} phiếu còn hiệu lực
-                {reconciliation.counterCash.voidedCount > 0
-                  ? ` · ${formatCount(reconciliation.counterCash.voidedCount)} phiếu đã huỷ, hoàn ${formatVnd(reconciliation.counterCash.voidedVnd)}`
-                  : ""}
+                tiền mặt phải có trong quỹ · {formatCount(reconciliation.counterCash.count)} phiếu
               </p>
+              {reconciliation.counterCash.qrCount > 0 ? (
+                <p className="mt-2 text-sm font-medium text-[#3f5048]">
+                  Chuyển khoản QR{" "}
+                  <strong className="font-black text-[#20342c]">
+                    {formatVnd(reconciliation.counterCash.qrTotalVnd)}
+                  </strong>{" "}
+                  · {formatCount(reconciliation.counterCash.qrCount)} phiếu, tiền nằm ở tài khoản ngân hàng
+                </p>
+              ) : null}
+              {reconciliation.counterCash.voidedCount > 0 ? (
+                <p className="mt-1 text-xs font-medium text-[#6e7b75]">
+                  {formatCount(reconciliation.counterCash.voidedCount)} phiếu đã huỷ, hoàn{" "}
+                  {formatVnd(reconciliation.counterCash.voidedVnd)}
+                </p>
+              ) : null}
               <ul className="mt-3 grid gap-2">
                 {reconciliation.counterCash.sellers.map((seller) => (
                   <li
@@ -376,8 +391,14 @@ export function ShiftReconciliationPanel({
                   >
                     <span className="font-bold text-[#20342c]">{seller.displayName}</span>
                     <span className="font-medium text-[#4a5a52]">
-                      {formatCount(seller.count)} phiếu ·{" "}
+                      {formatCount(seller.count)} phiếu · tiền mặt{" "}
                       <strong className="font-black text-[#20342c]">{formatVnd(seller.totalVnd)}</strong>
+                      {seller.qrTotalVnd > 0 ? (
+                        <>
+                          {" "}
+                          · QR <strong className="font-black text-[#20342c]">{formatVnd(seller.qrTotalVnd)}</strong>
+                        </>
+                      ) : null}
                     </span>
                   </li>
                 ))}

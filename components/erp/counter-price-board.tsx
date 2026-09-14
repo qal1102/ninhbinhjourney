@@ -30,6 +30,12 @@ function gioVietNam(value: string) {
   }).format(d);
 }
 
+/** Máy chủ nhận hẹn giá trước tối đa 365 ngày. */
+function ngayCuoiHenGia(today: string) {
+  const homNay = Date.parse(`${today}T00:00:00Z`);
+  return Number.isNaN(homNay) ? undefined : new Date(homNay + 365 * 86_400_000).toISOString().slice(0, 10);
+}
+
 function SiteCard({ site, today }: { site: CounterPriceBoardSite; today: string }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -200,6 +206,7 @@ function SiteCard({ site, today }: { site: CounterPriceBoardSite; today: string 
                 id={`ap-tu-${site.siteId}`}
                 type="date"
                 min={today}
+                max={ngayCuoiHenGia(today)}
                 value={effectiveFrom}
                 onChange={(event) => setEffectiveFrom(event.target.value)}
                 className="mt-1 min-h-11 w-full rounded-lg border border-[#ccd8d1] bg-white px-3 text-base font-bold text-[#20342c]"

@@ -327,5 +327,11 @@ export function validateCounterPriceInput(input: {
   if (input.effectiveFrom < input.today) {
     return { ok: false, reason: "Không đặt giá lùi ngày: phiếu đã bán phải giữ đúng giá lúc bán." };
   }
+  // Máy chủ nhận hẹn giá trước tối đa 365 ngày.
+  const homNay = Date.parse(`${input.today}T00:00:00Z`);
+  const ngayCuoi = Number.isNaN(homNay) ? null : new Date(homNay + 365 * 86_400_000).toISOString().slice(0, 10);
+  if (ngayCuoi && input.effectiveFrom > ngayCuoi) {
+    return { ok: false, reason: "Chỉ hẹn giá trước tối đa một năm." };
+  }
   return { ok: true };
 }

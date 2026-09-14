@@ -3,9 +3,12 @@ import {
   computeCounterCart,
   counterCashSuggestions,
   counterChange,
+  counterPaymentReference,
   counterSaleReadiness,
+  parseCounterPriceHistory,
   parseCounterPrices,
   parseCounterSaleReceipt,
+  validateCounterPriceInput,
   type CounterPrice,
 } from "@/domain/erp-counter-sale";
 import { reconcileShift, type ShiftCounterCash } from "@/domain/erp-shift-reconciliation";
@@ -80,6 +83,85 @@ describe("nút xác nhận bán chỉ mở khi đủ bốn điều", () => {
   });
 });
 
+describe("QA-ERP-POS-05 — khách trả bằng chuyển khoản QR", () => {
+  const cart = computeCounterCart({ adults: 2, children: 0, prices: GIA });
+
+  it("không cần nhập tiền khách đưa, nhưng vẫn phải tick đã thấy tiền về", () => {
+    expect(
+      counterSaleReadiness({ cart, cashReceivedVnd: 0, cashCountedConfirmed: false, paymentMethod: "qr-transfer" }),
+    ).toEqual({ ok: false, reason: "Mở ứng dụng ngân hàng, thấy tiền về đúng số, rồi đánh dấu xác nhận." });
+    expect(
+      counterSaleReadiness({ cart, cashReceivedVnd: 0, cashCountedConfirmed: true, paymentMethod: "qr-transfer" }),
+    ).toEqual({ ok: true });
+  });
+
+  it("tiền mặt vẫn đòi đủ tiền khách đưa như cũ", () => {
+    expect(
+      counterSaleReadiness({ cart, cashReceivedVnd: 0, cashCountedConfirmed: true, paymentMethod: "cash" }).ok,
+    ).toBe(false);
+  });
+
+  it("nội dung chuyển khoản gọn, không dấu, đúng ràng buộc của migration 070", () => {
+    const ma = counterPaymentReference("3f9a2c10-7b4e-4d2a-9c1e-0a1b2c3d4e5f");
+    expect(ma).toBe("NBJ-3F9A2C");
+    expect(ma).toMatch(/^[A-Z0-9-]{4,40}$/);
+    // Cùng một tấm phiếu thì cùng một nội dung, bấm lại không đổi mã khách đã ghi.
+    expect(counterPaymentReference("3f9a2c10-7b4e-4d2a-9c1e-0a1b2c3d4e5f")).toBe(ma);
+    expect(counterPaymentReference("")).toBe("NBJ-000000");
+    expect(counterPaymentReference("ab")).toBe("NBJ-AB0000");
+  });
+
+  it("phiếu QR đọc ra đúng phương thức và nội dung; trường lạ thì coi là tiền mặt", () => {
+    const goc = {
+      sale_code: "PT-0A1B2C3D4E5F",
+      sold_at: "2026-09-13T03:00:00Z",
+      business_date: "2026-09-13",
+      total_vnd: 500000,
+      status: "completed",
+      lines: [],
+    };
+    const qr = parseCounterSaleReceipt({ ...goc, payment_method: "qr-transfer", payment_reference: "NBJ-3F9A2C" });
+    expect(qr?.paymentMethod).toBe("qr-transfer");
+    expect(qr?.paymentReference).toBe("NBJ-3F9A2C");
+    expect(parseCounterSaleReceipt({ ...goc, payment_method: "bitcoin" })?.paymentMethod).toBe("cash");
+  });
+});
+
+describe("QA-ERP-POS-05 — giám đốc đặt giá", () => {
+  const today = "2026-09-13";
+
+  it("giá hôm nay hoặc hẹn ngày sau thì lưu được", () => {
+    expect(validateCounterPriceInput({ unitPriceVnd: 280_000, effectiveFrom: today, today })).toEqual({ ok: true });
+    expect(validateCounterPriceInput({ unitPriceVnd: 0, effectiveFrom: "2026-10-01", today })).toEqual({ ok: true });
+  });
+
+  it("không đặt giá lùi ngày, vì phiếu đã bán phải giữ giá lúc bán", () => {
+    const ketQua = validateCounterPriceInput({ unitPriceVnd: 280_000, effectiveFrom: "2026-09-12", today });
+    expect(ketQua.ok).toBe(false);
+  });
+
+  it("hẹn giá trước tối đa một năm, đúng như máy chủ", () => {
+    expect(validateCounterPriceInput({ unitPriceVnd: 1, effectiveFrom: "2027-09-13", today }).ok).toBe(true);
+    expect(validateCounterPriceInput({ unitPriceVnd: 1, effectiveFrom: "2027-09-14", today }).ok).toBe(false);
+  });
+
+  it("giá âm, lẻ, quá trần hay trống đều bị chặn", () => {
+    for (const gia of [-1, 1.5, 10_000_001, Number.NaN]) {
+      expect(validateCounterPriceInput({ unitPriceVnd: gia, effectiveFrom: today, today }).ok, String(gia)).toBe(false);
+    }
+    expect(validateCounterPriceInput({ unitPriceVnd: 1, effectiveFrom: "13/09/2026", today }).ok).toBe(false);
+  });
+
+  it("lịch sử giá không in mã máy của giá khởi tạo ra màn hình", () => {
+    const rows = parseCounterPriceHistory([
+      { price_list_id: "a", product: "adult", unit_price_vnd: 250000, effective_from: today, created_by_name: "system" },
+      { price_list_id: "b", product: "adult", unit_price_vnd: 280000, effective_from: today, created_by_name: "Trần Thu Hà", note: "Mùa lễ" },
+      { price_list_id: "c", product: "vip", unit_price_vnd: 1 },
+    ]);
+    expect(rows.map((row) => row.createdByName)).toEqual(["Hệ thống", "Trần Thu Hà"]);
+  });
+});
+
 describe("đọc phiếu và lỗi từ máy chủ", () => {
   it("đọc đúng phiếu máy chủ trả về", () => {
     const phieu = parseCounterSaleReceipt({
@@ -124,6 +206,10 @@ describe("đọc phiếu và lỗi từ máy chủ", () => {
       "COUNTER_SALE_VOID_OWN_SALE",
       "COUNTER_SALE_VOID_NOT_ALLOWED",
       "COUNTER_SALE_ALREADY_ADMITTED",
+      "COUNTER_SALE_PAYMENT_INVALID",
+      "COUNTER_PRICE_INPUT_INVALID",
+      "COUNTER_PRICE_DATE_INVALID",
+      "COUNTER_PRICE_NOT_ALLOWED",
     ]) {
       const cau = findRpcBusinessMessage({ message: `ERROR: ${ma} (SQLSTATE 22023)` });
       expect(cau, ma).toBeTruthy();
@@ -140,12 +226,14 @@ describe("đối soát cuối ca khi quầy đã ghi phiếu", () => {
     ticketsSold: 10,
     cashVnd: 1_000_000,
   };
-  const quay = (totalVnd: number, voidedVnd = 0): ShiftCounterCash => ({
+  const quay = (totalVnd: number, voidedVnd = 0, qrTotalVnd = 0): ShiftCounterCash => ({
     count: totalVnd > 0 ? 3 : 0,
     totalVnd,
+    qrCount: qrTotalVnd > 0 ? 2 : 0,
+    qrTotalVnd,
     voidedCount: voidedVnd > 0 ? 1 : 0,
     voidedVnd,
-    sellers: [{ accountId: "employee-trang-an-01", displayName: "Lê Minh Tuấn", count: 3, totalVnd }],
+    sellers: [{ accountId: "employee-trang-an-01", displayName: "Lê Minh Tuấn", count: 3, totalVnd, qrTotalVnd }],
   });
 
   it("hệ thống đếm tiền quầy vào con số tiền mặt", () => {
@@ -193,5 +281,60 @@ describe("đối soát cuối ca khi quầy đã ghi phiếu", () => {
     expect(moi.differences).toEqual(cu.differences);
     expect(moi.gaps).toEqual(cu.gaps);
     expect(moi.counterCash).toBeNull();
+  });
+});
+
+describe("QA-ERP-POS-05 — đối soát tách tiền mặt với chuyển khoản QR", () => {
+  const ca = {
+    businessDate: "2026-09-13",
+    shiftStartedAt: "2026-09-13T00:00:00Z",
+    shiftEndedAt: "2026-09-13T05:00:00Z",
+    ticketsSold: 10,
+    cashVnd: 1_000_000,
+    cardVnd: 500_000,
+  };
+  const quay = (totalVnd: number, qrTotalVnd: number): ShiftCounterCash => ({
+    count: 3,
+    totalVnd,
+    qrCount: qrTotalVnd > 0 ? 2 : 0,
+    qrTotalVnd,
+    voidedCount: 0,
+    voidedVnd: 0,
+    sellers: [],
+  });
+
+  it("tiền QR không cộng vào tiền mặt trong quỹ", () => {
+    const ketQua = reconcileShift({ shift: ca, scanCounts: null, cash: null, counterCash: quay(1_000_000, 500_000) });
+    expect(ketQua.differences.find((d) => d.id === "cash")?.counted).toBe(1_000_000);
+    expect(ketQua.gaps.map((g) => g.id)).not.toContain("cash-below-counted");
+  });
+
+  it("phiếu QR nhiều hơn phần khai thẻ và chuyển khoản thì báo đỏ", () => {
+    const ketQua = reconcileShift({ shift: ca, scanCounts: null, cash: null, counterCash: quay(1_000_000, 750_000) });
+    const canhBao = ketQua.gaps.find((g) => g.id === "counter-qr-above-declared");
+    expect(canhBao?.level).toBe("alert");
+    expect(canhBao?.title).toContain("250.000");
+    expect(ketQua.differences.find((d) => d.id === "transfer")?.delta).toBe(250_000);
+  });
+
+  it("khai thẻ nhiều hơn phiếu QR là thường gặp, không báo", () => {
+    const ketQua = reconcileShift({ shift: ca, scanCounts: null, cash: null, counterCash: quay(1_000_000, 300_000) });
+    expect(ketQua.gaps.map((g) => g.id)).not.toContain("counter-qr-above-declared");
+    expect(ketQua.differences.find((d) => d.id === "transfer")?.delta).toBe(-200_000);
+  });
+
+  it("không có phiếu QR, hoặc không truyền phần khai thẻ, thì không có dòng chuyển khoản", () => {
+    expect(
+      reconcileShift({ shift: ca, scanCounts: null, cash: null, counterCash: quay(1_000_000, 0) }).differences.map((d) => d.id),
+    ).toEqual(["cash", "entries"]);
+    const khongKhaiThe = { ...ca, cardVnd: undefined };
+    const ketQua = reconcileShift({ shift: khongKhaiThe, scanCounts: null, cash: null, counterCash: quay(1_000_000, 900_000) });
+    expect(ketQua.differences.map((d) => d.id)).toEqual(["cash", "entries"]);
+    expect(ketQua.gaps.map((g) => g.id)).not.toContain("counter-qr-above-declared");
+  });
+
+  it("ca chỉ có phiếu QR vẫn là ca có số liệu, không hiện như ca trống", () => {
+    const chiQr: ShiftCounterCash = { ...quay(0, 500_000), count: 0 };
+    expect(reconcileShift({ shift: ca, scanCounts: null, cash: null, counterCash: chiQr }).hasCountedData).toBe(true);
   });
 });

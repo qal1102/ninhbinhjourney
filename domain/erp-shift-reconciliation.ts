@@ -190,14 +190,24 @@ export type ShiftOnSiteCash = {
 export type CounterSeller = {
   accountId: string;
   displayName: string;
+  /** Mọi phiếu còn hiệu lực của người này, tiền mặt lẫn chuyển khoản. */
   count: number;
+  /** Tiền mặt người này phải nộp quỹ. */
   totalVnd: number;
+  /** QA-ERP-POS-05 — tiền khách chuyển khoản QR mà người này xác nhận đã về. */
+  qrTotalVnd: number;
 };
 
 export type ShiftCounterCash = {
-  /** Phiếu còn hiệu lực. Phiếu đã huỷ là tiền đã hoàn, không nằm trong quỹ. */
+  /** Phiếu tiền mặt còn hiệu lực. Phiếu đã huỷ là tiền đã hoàn, không nằm trong quỹ. */
   count: number;
   totalVnd: number;
+  /**
+   * QA-ERP-POS-05 — phiếu chuyển khoản QR còn hiệu lực. Tiền này nằm ở tài
+   * khoản ngân hàng chứ không nằm trong quỹ, nên không cộng vào tiền mặt.
+   */
+  qrCount: number;
+  qrTotalVnd: number;
   voidedCount: number;
   voidedVnd: number;
   sellers: readonly CounterSeller[];
@@ -213,7 +223,7 @@ export type ShiftGap = {
 };
 
 export type ShiftDifference = {
-  id: "cash" | "entries";
+  id: "cash" | "transfer" | "entries";
   label: string;
   declared: number | null;
   counted: number | null;
@@ -245,6 +255,11 @@ export type ShiftDeclaration = {
   ticketsSold: number;
   /** Tiền mặt nhân viên khai lúc chốt ca. */
   cashVnd: number;
+  /**
+   * Thẻ, QR, chuyển khoản khai lúc chốt ca. Không truyền thì bảng đối soát
+   * không so phần chuyển khoản, đúng như trước khi quầy nhận QR.
+   */
+  cardVnd?: number | null;
 };
 
 function totalsFrom(counts: ShiftScanCounts): ShiftScanTotals {
@@ -454,6 +469,20 @@ export function reconcileShift(input: {
     }
   }
 
+  const declaredCard = typeof input.shift.cardVnd === "number" ? input.shift.cardVnd : null;
+  if (counterCash && declaredCard !== null && counterCash.qrTotalVnd > declaredCard) {
+    gaps.push({
+      id: "counter-qr-above-declared",
+      level: "alert",
+      title: `Thiếu ${formatVnd(counterCash.qrTotalVnd - declaredCard)} trong tờ khai thẻ và chuyển khoản`,
+      detail:
+        `Quầy có ${counterCash.qrCount} phiếu chuyển khoản QR, tổng ${formatVnd(counterCash.qrTotalVnd)},` +
+        ` nhưng tờ chốt ca chỉ khai ${formatVnd(declaredCard)} thẻ và chuyển khoản. Mỗi phiếu QR` +
+        " ghi tên người đã xác nhận thấy tiền về và nội dung chuyển khoản, xin bạn dò" +
+        " sao kê ngân hàng theo nội dung ấy trước khi duyệt ca.",
+    });
+  }
+
   const countedCash = counterCash
     ? (cash?.totalVnd ?? 0) + counterCash.totalVnd
     : cash
@@ -478,6 +507,23 @@ export function reconcileShift(input: {
         " từng khoản, nên phần khai nhiều hơn phần đếm là chuyện bình thường —" +
         " phần đếm nhiều hơn phần khai mới là chuyện phải hỏi.",
     },
+    ...(counterCash && declaredCard !== null && counterCash.qrCount > 0
+      ? [
+          {
+            id: "transfer" as const,
+            label: "Chuyển khoản QR tại quầy",
+            declared: declaredCard,
+            counted: counterCash.qrTotalVnd,
+            delta: counterCash.qrTotalVnd - declaredCard,
+            unit: "vnd" as const,
+            caveat:
+              "Phần khai gồm cả quẹt thẻ và chuyển khoản ngoài quầy, nên khai nhiều hơn phiếu QR" +
+              " là thường gặp; phiếu QR nhiều hơn phần khai mới phải hỏi. Phiếu QR là nhân viên" +
+              " xác nhận đã thấy tiền về, hệ thống chưa nối ngân hàng, nên khớp sao kê vẫn là việc" +
+              " của kế toán.",
+          },
+        ]
+      : []),
     {
       id: "entries",
       label: "Lượt khách",
@@ -503,6 +549,6 @@ export function reconcileShift(input: {
     hasCountedData:
       Boolean(scans && scans.total > 0) ||
       Boolean(cash && cash.count > 0) ||
-      Boolean(counterCash && counterCash.count + counterCash.voidedCount > 0),
+      Boolean(counterCash && counterCash.count + counterCash.qrCount + counterCash.voidedCount > 0),
   };
 }

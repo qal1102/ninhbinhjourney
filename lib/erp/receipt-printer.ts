@@ -62,7 +62,7 @@ export function loadPrinterSettings(): PrinterSettings {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return MAC_DINH;
     const parsed = JSON.parse(raw) as Partial<PrinterSettings>;
-    const paper = parsed.paper && parsed.paper in PAPER_LABELS ? parsed.paper : MAC_DINH.paper;
+    const paper = typeof parsed.paper === "string" && Object.hasOwn(PAPER_LABELS, parsed.paper) ? parsed.paper : MAC_DINH.paper;
     const mode = parsed.mode === "bluetooth" ? "bluetooth" : "system";
     return { paper, mode };
   } catch {

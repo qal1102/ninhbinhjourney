@@ -117,7 +117,7 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     await expect(page.getByLabel(/số thẻ|thẻ tín dụng|tài khoản ngân hàng|cvv/i)).toHaveCount(0);
 
     // TC-02: ba bước ngày → giờ → số khách — nút giữ chỗ chỉ mở khi đã chọn giờ.
-    const slotButton = page.getByRole("button", { name: /Khung .*còn 12 chỗ/i });
+    const slotButton = page.getByRole("button", { name: /Khung .*còn (khoảng )?12 chỗ/i });
     await expect(slotButton).toBeVisible();
     await expect(page.getByRole("button", { name: "Giữ chỗ 15 phút" })).toBeDisabled();
     await slotButton.click();
@@ -209,7 +209,7 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     page,
   }) => {
     await page.goto("/checkout?package=heritage-day");
-    await page.getByRole("button", { name: /Khung .*còn 12 chỗ/i }).click();
+    await page.getByRole("button", { name: /Khung .*còn (khoảng )?12 chỗ/i }).click();
     await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
     await expect(page.getByRole("radio", { name: /Nhận vé ngay, chưa trừ tiền/ })).toBeVisible();
 
@@ -259,7 +259,7 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
 
     // Và cả sau khi đã giữ chỗ — khối "các điểm đã khoá" chỉ hiện ở bước đó,
     // và nó chính là chỗ "T11a" từng đứng — nay phải đọc là "Ước tính từ vận hành".
-    await page.getByRole("button", { name: /Khung .*còn 12 chỗ/i }).click();
+    await page.getByRole("button", { name: /Khung .*còn (khoảng )?12 chỗ/i }).click();
     await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
     await expect(page.getByText("Ước tính từ vận hành")).toBeVisible();
   });

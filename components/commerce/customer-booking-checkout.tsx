@@ -588,7 +588,14 @@ export function CustomerBookingCheckout({
                     ? "Đang tạm dừng nhận khách"
                     : slot.blockedReason === "full"
                       ? "Đã hết chỗ"
-                      : `Còn ${slot.remaining} chỗ`;
+                      : slot.capacitySourceKind === "estimate"
+                        // QA-P2-09: bốn khung giờ cùng hiện "Còn 800 chỗ" y hệt nhau vì
+                        // sức chứa mới là ước tính. Con số tròn trĩnh ấy trông như đếm
+                        // thật; ước tính thì nói ước tính, và chỉ nói số khi sắp hết.
+                        ? slot.remaining > 50
+                          ? "Còn nhiều chỗ"
+                          : `Còn khoảng ${slot.remaining} chỗ`
+                        : `Còn ${slot.remaining} chỗ`;
                   return (
                     <button
                       key={slot.startsAt}
@@ -612,6 +619,9 @@ export function CustomerBookingCheckout({
                 })}
               </div>
             )}
+            {slots?.some((slot) => slot.capacitySourceKind === "estimate") ? (
+              <p className="mt-2 text-xs text-[#6b786f]">Số chỗ tính theo sức chứa ước tính của điểm, chưa đếm bằng lượt khách thật.</p>
+            ) : null}
           </div>
 
           <div className="mt-7 max-w-xs">

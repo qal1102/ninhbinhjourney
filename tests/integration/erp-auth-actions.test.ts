@@ -59,6 +59,15 @@ vi.mock("@/lib/erp/visitor-group-counter-repository", () => ({
   CounterVisitorGroupRepositoryError: class extends Error {},
 }));
 
+// QA-ERP-POS-04/05: kho bán vé quầy cũng mở đầu bằng `import "server-only"`,
+// nên phải giả lập cùng lý do như kho đoàn quầy ở trên.
+vi.mock("@/lib/erp/counter-sale-repository", () => ({
+  createCounterSale: vi.fn(),
+  voidCounterSale: vi.fn(),
+  setCounterPrice: vi.fn(),
+  CounterSaleRepositoryError: class extends Error {},
+}));
+
 vi.mock("@/lib/erp/account-registry-repository", () => ({
   confirmPasswordChanged,
 }));

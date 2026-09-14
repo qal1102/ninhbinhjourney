@@ -64,6 +64,14 @@ export const ERP_AUDIT_ACTION_LABELS: Readonly<Record<string, string>> = Object.
   "counter-sale.voided": "Huỷ phiếu bán vé",
   "counter-price.set": "Đặt giá vé quầy",
 
+  // Đề xuất & phê duyệt
+  "staff-request.submitted": "Gửi đề xuất",
+  "staff-request.escalated": "Chuyển đề xuất lên giám đốc",
+  "staff-request.approved": "Duyệt đề xuất",
+  "staff-request.rejected": "Từ chối đề xuất",
+  "staff-request.cancelled": "Rút đề xuất",
+  "staff-request.completed": "Hoàn tất đề xuất",
+
   // Hoá đơn nhà cung cấp
   "invoice.submitted-and-matched": "Gửi hoá đơn, đã khớp",
   "invoice.submitted-with-exception": "Gửi hoá đơn có chênh lệch",

@@ -113,6 +113,16 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             >
               Nhật ký
             </Link>
+            {/* ERP-DE-XUAT-01: ai cũng gửi hoặc duyệt đề xuất. Giám đốc có nhiều nút
+                hơn nên chỉ hiện từ màn rộng; ở 1024px vào qua chuông thông báo. */}
+            <Link
+              href="/erp/de-xuat"
+              className={`hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] ${
+                user.role === "director" ? "xl:inline-flex" : "lg:inline-flex"
+              }`}
+            >
+              Đề xuất
+            </Link>
             {user.role === "director" ? (
               <Link
                 href="/erp/khach-hang"

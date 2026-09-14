@@ -337,6 +337,7 @@ export function ErpMobileMenu({
                 {role === "director" ? <Link href="/erp/bang-gia-quay" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Giá vé quầy <span>→</span></Link> : null}
                 {role === "director" ? <Link href="/erp/marketing" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Kênh khách <span>→</span></Link> : null}
                 <Link href="/erp/nhat-ky" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Nhật ký <span>→</span></Link>
+                <Link href="/erp/de-xuat" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Đề xuất <span>→</span></Link>
                 {systemAdmin ? <Link href="/erp/tai-khoan" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Tài khoản <span>→</span></Link> : null}
               </div>
 

@@ -66,6 +66,7 @@ describe("Nhật ký không in mã máy ra màn hình", () => {
       ["erp_employee_access_audit", "action"],
       ["erp_workday_audit_events", "event_type"],
       ["erp_counter_sale_events", "event_type"],
+      ["erp_staff_request_events", "event_type"],
     ] as const) {
       const batDau = sql.indexOf(`create table if not exists public.${bang}`);
       expect(batDau, bang).toBeGreaterThan(-1);

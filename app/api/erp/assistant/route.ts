@@ -11,6 +11,8 @@ import { listPendingProjectChangeRequests } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import { listWorkdaysForUser } from "@/lib/erp/workday-view";
+import { staffRequestWaitsOn } from "@/domain/erp-staff-requests";
+import { listStaffRequests } from "@/lib/erp/staff-request-repository";
 
 const RequestSchema = z.object({
   intent: z.enum([
@@ -535,6 +537,21 @@ export async function POST(request: Request) {
           href: firstSiteHref(projectChangeRequests[0]?.siteId, "du-an-su-kien"),
           hrefLabel: "Mở Dự án",
         });
+      }
+
+      // ERP-DE-XUAT-01: đề xuất chờ chính người này duyệt, chi hoặc ghi đã sửa.
+      // Kho đề xuất lỗi thì bỏ qua dòng này, không làm hỏng cả chuông thông báo.
+      try {
+        const viewer = { id: user.id, name: user.name, role: user.role, siteIds: user.siteIds };
+        const staffRequests = await listStaffRequests({ ...viewer, actingDirectorId: user.actingAs?.directorId ?? null });
+        items.push({
+          label: "Đề xuất chờ bạn xử lý",
+          count: staffRequests.filter((request) => staffRequestWaitsOn(viewer, request)).length,
+          href: "/erp/de-xuat",
+          hrefLabel: "Mở Đề xuất",
+        });
+      } catch (error) {
+        console.error("Inbox staff request count failed", error);
       }
 
       return NextResponse.json({

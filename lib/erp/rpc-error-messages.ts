@@ -611,6 +611,22 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   // QA-P2-09: bộ đếm đăng nhập sai. Lỗi này không bao giờ khoá người dùng —
   // `lib/erp/login-throttle.ts` ghi lỗi rồi cho qua — nhưng bảng phải đủ mã.
   LOGIN_THROTTLE_INPUT_INVALID: "Chưa ghi được lượt đăng nhập. Xin thử lại.",
+  // ERP-DE-XUAT-01: đề xuất & phê duyệt.
+  STAFF_REQUEST_INPUT_INVALID: "Đề xuất chưa đủ thông tin. Xin kiểm lại rồi gửi lại.",
+  STAFF_REQUEST_DETAILS_INVALID: "Nội dung đề xuất chưa đúng: xem lại ngày, số tiền và lý do.",
+  STAFF_REQUEST_SUBMIT_NOT_ALLOWED: "Tài khoản này chưa được gửi đề xuất ở cơ sở này.",
+  STAFF_REQUEST_DUPLICATE_VOID: "Phiếu này đã có một đề xuất huỷ đang chờ duyệt.",
+  STAFF_REQUEST_REASON_REQUIRED: "Từ chối thì ghi lý do, ít nhất năm ký tự, để người gửi biết đường sửa.",
+  STAFF_REQUEST_NOT_FOUND: "Không tìm thấy đề xuất này.",
+  STAFF_REQUEST_OWN_REQUEST: "Không ai tự duyệt hay tự chi đề xuất của chính mình.",
+  STAFF_REQUEST_DECIDE_NOT_ALLOWED: "Chỉ quản lý cơ sở hoặc giám đốc được duyệt đề xuất này.",
+  STAFF_REQUEST_DIRECTOR_ONLY: "Khoản này vượt ngưỡng, chỉ giám đốc được duyệt.",
+  STAFF_REQUEST_NOT_PENDING: "Đề xuất này đã có người xét rồi. Xin tải lại trang để xem bước mới nhất.",
+  STAFF_REQUEST_CANCEL_NOT_ALLOWED: "Chỉ người gửi được rút đề xuất.",
+  STAFF_REQUEST_COMPLETION_NOTE_REQUIRED: "Ghi đã chi hay đã sửa thế nào, ít nhất năm ký tự.",
+  STAFF_REQUEST_NOT_COMPLETABLE: "Đề xuất này chưa tới bước ghi hoàn tất.",
+  STAFF_REQUEST_COMPLETE_NOT_ALLOWED: "Tạm ứng và đề xuất mua do kế toán ghi đã chi; sửa chữa do quản lý cơ sở ghi đã sửa.",
+  STAFF_REQUEST_APPEND_ONLY: "Đề xuất đã gửi không sửa hay xoá được. Muốn đổi nội dung, xin rút rồi gửi đề xuất mới.",
 });
 
 /**

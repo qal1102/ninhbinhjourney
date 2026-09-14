@@ -46,6 +46,8 @@ test("nhập sai 5 lần thì báo khoá bằng tiếng Việt, kể cả khi l�
   await page.getByLabel("Mật khẩu").fill("sai-6");
   await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
   await expect(page).toHaveURL(/error=locked/);
-  await expect(page.getByRole("alert")).toContainText("Nhập sai quá nhiều lần");
-  await expect(page.getByRole("alert")).toContainText("phút");
+  // Next có sẵn một vùng role=alert để đọc tên trang khi chuyển trang; lọc đúng hộp báo lỗi.
+  const baoLoi = page.getByRole("alert").filter({ hasText: "Nhập sai quá nhiều lần" });
+  await expect(baoLoi).toBeVisible();
+  await expect(baoLoi).toContainText("phút");
 });

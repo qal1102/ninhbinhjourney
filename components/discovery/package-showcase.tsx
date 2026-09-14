@@ -184,7 +184,8 @@ export function PackageShowcase({
             <h3 className="font-display mt-3 text-3xl leading-tight text-[#183F34] sm:text-4xl">{featuredDisplay.name}</h3>
             <p className="mt-3 text-[#2C3B35]">{featuredDisplay.audience}</p>
             <p className="mt-5 break-words font-display text-2xl leading-tight text-[#183F34]">{featuredDisplay.priceText}</p>
-            <p className="text-xs text-[#6D756F]">{copy.pricePerGuest}</p>
+            {/* QA-P2-09: Bàn Trăng tính theo bàn hai khách; ghi thêm "mỗi người lớn" ngay dưới là tự nói ngược. */}
+            {featured.priceLabel ? null : <p className="text-xs text-[#6D756F]">{copy.pricePerGuest}</p>}
             <Link
               data-customer-track={`home-packages-${featured.slug}`}
               data-customer-content-id={featured.id}

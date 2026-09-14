@@ -202,9 +202,11 @@ const copy = {
      * day -- khong co du lieu that ve so ngay khach o lai.
      */
     indexLabel: "The rest of the map",
-    indexTitle: "Ten more, and few people get to all of them.",
+    // QA-P2-09: danh sach nay co ca Hang Mua va Co do Hoa Lu, hai noi dong
+    // khach nhat -- cau cu goi ca muoi noi la "cho bi gach dau tien" la noi sai.
+    indexTitle: "Ten more, from Hang Múa to the Cúc Phương forest.",
     indexIntro:
-      "These are the ones that get cut first when the trip is short. Which is also why they are still quiet.",
+      "Hang Múa and the Hoa Lư ancient capital are busy all year. Vân Long wetland and Am Tiên cave are usually the first to go when the trip is short, which is exactly why they are still quiet.",
     indexHint: "Move through the names. The image and journey rhythm change with each place.",
     indexOpen: "Open this place",
     zigzagLabel: "Every destination",
@@ -347,9 +349,9 @@ const copy = {
     partnersCall: "Gọi trao đổi hợp tác",
     partnersEmail: "Gửi email hợp tác",
     indexLabel: "Phần còn lại của bản đồ",
-    indexTitle: "Mười nơi nữa, ít ai kịp đi hết.",
+    indexTitle: "Mười nơi nữa, từ Hang Múa tới rừng Cúc Phương.",
     indexIntro:
-      "Đây là những chỗ bị gạch đầu tiên khi lịch trình ngắn lại. Cũng chính vì thế mà chúng còn vắng.",
+      "Hang Múa và Cố đô Hoa Lư đông khách quanh năm. Đầm Vân Long, động Am Tiên thì hay bị gạch đầu tiên khi lịch trình ngắn lại, và cũng chính vì thế mà còn vắng.",
     indexHint: "Rê qua từng tên. Ảnh và nhịp chuyến đi sẽ đổi theo từng nơi.",
     indexOpen: "Mở điểm đến",
     zigzagLabel: "Toàn bộ điểm đến",

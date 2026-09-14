@@ -63,9 +63,10 @@ function PackageCard({
           </div>
           <div className="max-w-full rounded-2xl bg-[#f4f0e7] px-4 py-3 text-left min-[280px]:text-right">
             <p className="break-words font-display text-xl leading-tight">
-              {item.demoPriceVnd.toLocaleString("vi-VN")} VND
+              {item.priceLabel ?? `${item.demoPriceVnd.toLocaleString("vi-VN")} VND`}
             </p>
-            <p className="text-xs text-[#645c4b]">mỗi người lớn · demo</p>
+            {/* QA-P2-09: gói tính theo bàn thì ghi đúng giá bàn, không ghi giá mỗi người lớn. */}
+            <p className="text-xs text-[#645c4b]">{item.priceLabel ? "giá giới thiệu mùa 2026" : "mỗi người lớn · demo"}</p>
           </div>
         </div>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">

@@ -8,6 +8,7 @@ import type { CustomerProductTimeSlot } from "@/domain/customer-booking";
 import { WEB_BOOKING_MAX_PARTY_SIZE } from "@/domain/customer-booking";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import { getOrCreateCustomerAnonymousId } from "@/lib/customer-data/browser-tracking";
+import { formatVietnameseDate } from "@/lib/vietnamese-date";
 
 type VisitorGroupApiResponse =
   | { accepted: true; group: VisitorGroupStatus }
@@ -569,6 +570,9 @@ export function CustomerBookingCheckout({
               }}
               className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal"
             />
+            {visitDate ? (
+              <span className="mt-1 block text-xs font-normal text-[#59654b]">{formatVietnameseDate(visitDate)}</span>
+            ) : null}
           </label>
 
           <div className="mt-7">

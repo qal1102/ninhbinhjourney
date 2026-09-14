@@ -19,6 +19,7 @@ import type {
   JourneyIntentDraft,
 } from "@/domain/models";
 import { ItineraryEditor } from "./itinerary-editor";
+import { formatVietnameseDate } from "@/lib/vietnamese-date";
 
 const PLAN_RESULT_STORAGE_KEY = "nbj-plan-result";
 const PLAN_RESULT_STORAGE_VERSION = 1;
@@ -743,6 +744,9 @@ export function PlanExperience({
                   onChange={(event) => setVisitDate(event.target.value)}
                   className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
                 />
+                {visitDate ? (
+                  <span className="mt-1 block text-xs font-normal text-[#59654b]">{formatVietnameseDate(visitDate)}</span>
+                ) : null}
               </label>
               <label className="text-sm font-bold">
                 Thời lượng

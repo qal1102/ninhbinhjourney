@@ -26,6 +26,7 @@ import {
   type StaffRequestType,
   type StaffRequestViewer,
 } from "@/domain/erp-staff-requests";
+import { formatVietnameseDate } from "@/lib/vietnamese-date";
 
 type Site = { id: ErpSiteId; shortName: string };
 type Loc = "cho-toi" | "cua-toi" | "tat-ca";
@@ -128,6 +129,7 @@ function TypeFields({
         onChange={(event) => set(key, event.target.value)}
         className={inputClass}
       />
+      {fields[key] ? <span className="mt-1 block text-xs text-[#5c6f67]">{formatVietnameseDate(fields[key])}</span> : null}
     </Field>
   );
   const money = (key: string, label: string) => {

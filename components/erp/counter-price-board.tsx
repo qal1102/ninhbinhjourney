@@ -11,6 +11,7 @@ import {
   type CounterProduct,
 } from "@/domain/erp-counter-sale";
 import type { CounterPriceBoard, CounterPriceBoardSite } from "@/lib/erp/counter-sale-repository";
+import { formatVietnameseDate } from "@/lib/vietnamese-date";
 
 function ngayVietNam(value: string) {
   const [y, m, d] = value.slice(0, 10).split("-");
@@ -211,6 +212,7 @@ function SiteCard({ site, today }: { site: CounterPriceBoardSite; today: string 
                 onChange={(event) => setEffectiveFrom(event.target.value)}
                 className="mt-1 min-h-11 w-full rounded-lg border border-[#ccd8d1] bg-white px-3 text-base font-bold text-[#20342c]"
               />
+              {effectiveFrom ? <span className="mt-1 block text-xs text-[#5c6f67]">{formatVietnameseDate(effectiveFrom)}</span> : null}
             </div>
           </div>
 

@@ -110,7 +110,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             ) : null}
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <ErpAppControls role={user.role} />
+            <ErpAppControls role={user.role} accountId={user.id} />
             {/* ERP-UX-01: trợ lý nay đứng trên thanh đầu trang thay vì nổi đè
                 lên nội dung. Xem chú thích trong `voice-command-center.tsx`. */}
             <VoiceCommandCenter role={user.role} siteIds={user.siteIds} currentSiteId={site?.id} />

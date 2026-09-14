@@ -9,7 +9,7 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-export function ErpAppControls({ role }: { role: ErpRole }) {
+export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: string }) {
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -51,6 +51,30 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
+    // QA-P2-09: hộp thông báo đọc sáu kho một lượt. Chuyển trang nào cũng đọc
+    // lại là tải thừa; nhớ kết quả 60 giây trong phiên, theo đúng tài khoản và vai
+    // đang xem — hai người dùng chung một tab không bao giờ thấy việc của nhau.
+    const khoaNho = `nbj-erp-inbox:${accountId}:${role}`;
+    try {
+      const nho = JSON.parse(window.sessionStorage.getItem(khoaNho) ?? "null") as {
+        at: number;
+        count: number;
+        items: { label: string; count: number; href: string; hrefLabel: string }[];
+      } | null;
+      if (nho && Date.now() - nho.at < 60_000) {
+        const hen = window.setTimeout(() => {
+          if (!active) return;
+          setInbox({ count: nho.count, items: nho.items });
+          setNoticeLoaded(true);
+        }, 0);
+        return () => {
+          active = false;
+          window.clearTimeout(hen);
+        };
+      }
+    } catch {
+      // Không đọc được bộ nhớ phiên thì hỏi máy chủ như thường.
+    }
     void fetch("/api/erp/assistant", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -70,6 +94,14 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
           count: payload.count ?? 0,
           items: payload.items ?? [],
         });
+        try {
+          window.sessionStorage.setItem(
+            khoaNho,
+            JSON.stringify({ at: Date.now(), count: payload.count ?? 0, items: payload.items ?? [] }),
+          );
+        } catch {
+          // Trình duyệt chặn lưu thì lần sau hỏi lại, không sao.
+        }
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -81,7 +113,7 @@ export function ErpAppControls({ role }: { role: ErpRole }) {
       active = false;
       controller.abort();
     };
-  }, []);
+  }, [role, accountId]);
 
   async function installApp() {
     if (!installEvent) return;

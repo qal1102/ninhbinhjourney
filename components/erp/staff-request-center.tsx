@@ -57,13 +57,19 @@ function khoaMoi() {
 function gioVietNam(value: string) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return new Intl.DateTimeFormat("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "Asia/Ho_Chi_Minh",
-  }).format(d);
+  const phan = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      day: "2-digit",
+      month: "2-digit",
+      hourCycle: "h23",
+      timeZone: "Asia/Ho_Chi_Minh",
+    })
+      .formatToParts(d)
+      .map((p) => [p.type, p.value]),
+  );
+  return `${phan.hour}:${phan.minute} ngày ${phan.day}/${phan.month}`;
 }
 
 const inputClass =
@@ -289,7 +295,7 @@ function RequestCard({
       </div>
       <p className="mt-2 text-sm leading-6 text-[#20342c]">{staffRequestSummary(request)}</p>
       <p className="mt-1 text-xs text-[#6e7b75]">
-        {request.requestedByName} · {siteName} · gửi {gioVietNam(request.createdAt)}
+        {request.requestedByName} · {siteName} · gửi lúc {gioVietNam(request.createdAt)}
       </p>
       {request.lastNote && request.status !== "submitted" ? (
         <p className="mt-2 rounded-lg bg-[#f5f7f6] px-3 py-2 text-xs leading-5 text-[#42574e]">
@@ -564,7 +570,8 @@ export function StaffRequestCenter({ viewer, sites, requests, today, storage, un
           ) : null}
         </section>
 
-        <section aria-labelledby="dx-danh-sach" className="space-y-3">
+        {/* Có việc chờ mình thì trên điện thoại đưa danh sách lên trước biểu mẫu. */}
+        <section aria-labelledby="dx-danh-sach" className={`space-y-3 ${choToi.length > 0 ? "order-first xl:order-none" : ""}`}>
           <h2 id="dx-danh-sach" className="sr-only">
             Danh sách đề xuất
           </h2>

@@ -48,6 +48,9 @@ test("tạm ứng vượt ngưỡng đi đủ bốn vai: nhân viên gửi, qu�
   await the(page, code).getByRole("button", { name: "Duyệt" }).click();
   await the(page, code).getByRole("button", { name: "Đồng ý, chuyển giám đốc" }).click();
   await expect(page.getByRole("status").filter({ hasText: "chuyển tiếp lên giám đốc" })).toBeVisible();
+  // Xét xong thì đề xuất rời khỏi "Chờ tôi xử lý"; vẫn xem được ở "Tất cả tôi thấy".
+  await expect(the(page, code)).toHaveCount(0);
+  await page.getByRole("tab", { name: /Tất cả tôi thấy/ }).click();
   await expect(the(page, code)).toContainText("Chờ giám đốc duyệt");
 
   await vaoVai(page, "giamdoc", ERP_DIRECTOR_PASSWORD);

@@ -97,7 +97,7 @@ export default async function ErpLoginPage({ searchParams }: Props) {
                 autoComplete="username"
                 required
                 className="mt-2 min-h-12 w-full rounded-xl border border-white/16 bg-white/[0.07] px-4 text-white outline-none transition placeholder:text-white/30 focus:border-[#e7c78d]"
-                placeholder="Email được cấp, hoặc vd: nv.trangan"
+                placeholder="Email hoặc tên đăng nhập được cấp"
               />
             </label>
             <label className="block">

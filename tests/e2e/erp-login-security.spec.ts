@@ -14,7 +14,8 @@ test("trang đăng nhập không liệt kê tên đăng nhập nào khi không b
   );
   await page.goto("/erp/login");
   await expect(page.getByRole("button", { name: "Mở hệ thống quản lý" })).toBeVisible();
-  const chu = await page.locator("main").innerText();
+  // Soát cả mã HTML, không chỉ chữ hiện ra: ô nhập từng lấy một tên thật làm chữ gợi ý.
+  const chu = await page.content();
   for (const ten of ["giamdoc", "nv.trangan", "ql.trangan", "ketoan"]) {
     expect(chu, ten).not.toContain(ten);
   }

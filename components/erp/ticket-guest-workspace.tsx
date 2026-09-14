@@ -618,9 +618,22 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
             thực tế. Xin báo bộ phận kỹ thuật chuyển phép đếm này vào kho dữ liệu.
           </p>
         ) : null}
+        {typeof selected.counterRevenueVnd === "number" ? (
+          <div className="mt-3 rounded-xl border border-[#d8e0db] p-4">
+            <p className="text-xs text-[#718078]">Tiền bán vé tại quầy</p>
+            <p className="mt-1 text-2xl font-black tabular-nums">{selected.counterRevenueVnd.toLocaleString("vi-VN")} đ</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#8a958f]">
+              cộng từ thành tiền chép trên phiếu lúc bán; phiếu đã huỷ tính 0 đ
+              {selected.unpricedTicketCount
+                ? ` · ${selected.unpricedTicketCount.toLocaleString("vi-VN")} tấm vé khác chưa có giá trên vé (vé web theo gói, vé mẫu)`
+                : ""}
+            </p>
+          </div>
+        ) : null}
         <p className="mt-4 text-xs text-[#8a958f]">
-          Đếm trực tiếp từ vé đã phát hành, không phải doanh thu quy đổi — hệ
-          thống chưa lưu giá bán trên từng vé.
+          {typeof selected.counterRevenueVnd === "number"
+            ? "Lượt khách và số tấm vé đếm trong kho từ mọi vé còn hiệu lực. Vé web mua theo gói gồm nhiều điểm nên chưa chia được giá cho từng cơ sở, không cộng vào ô tiền."
+            : "Đếm trực tiếp từ vé đã phát hành, không phải doanh thu quy đổi — hệ thống chưa lưu giá bán trên từng vé."}
         </p>
       </section>
 

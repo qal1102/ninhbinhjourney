@@ -33,6 +33,13 @@ export type TicketSalesPeriodStat = {
   entryCount: number;
   /** So lượt khách với kỳ liền trước. `null` khi kỳ trước bằng 0 — phần trăm so với 0 không có nghĩa. */
   changePercent: number | null;
+  /**
+   * QA-ERP-TICKET-05 — tiền bán tại quầy trong kỳ, cộng từ thành tiền chép trên
+   * dòng phiếu lúc bán. `null` khi chưa đọc được từ kho (đường đếm cũ).
+   */
+  counterRevenueVnd?: number | null;
+  /** Số tấm vé trong kỳ không có giá trên vé (vé web theo gói, vé gieo mẫu). */
+  unpricedTicketCount?: number | null;
 };
 
 export type TicketSalesProductShare = {
@@ -129,4 +136,77 @@ export function summariseProductShares(
       sharePercent: tongLuot === 0 ? 0 : Math.round((dem.entryCount / tongLuot) * 1000) / 10,
     }))
     .sort((a, b) => b.entryCount - a.entryCount);
+}
+
+/**
+ * QA-ERP-TICKET-05 — đọc kết quả `erp_ticket_sales_summary` (migration
+ * `202609140074`). Phép đếm nay chạy trong kho, không còn trần 2.000 tấm vé.
+ */
+export function parseTicketSalesRpc(value: unknown): {
+  periods: TicketSalesPeriodStat[];
+  productShares: TicketSalesProductShare[];
+  recent: Array<{
+    ticketCode: string;
+    product: string;
+    channel: string;
+    guestName: string;
+    status: string;
+    issuedAt: string;
+    priceVnd: number | null;
+  }>;
+} | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  if (!Array.isArray(row.periods)) return null;
+  const so = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+
+  const periods = TICKET_SALES_WINDOWS.map(({ period, label }) => {
+    const found = (row.periods as unknown[]).find(
+      (item) => item && typeof item === "object" && (item as Record<string, unknown>).period === period,
+    ) as Record<string, unknown> | undefined;
+    const entryCount = so(found?.entry_count);
+    return {
+      period,
+      label,
+      ticketCount: so(found?.ticket_count),
+      entryCount,
+      changePercent: phanTramThayDoi(entryCount, so(found?.previous_entry_count)),
+      counterRevenueVnd: found ? so(found.counter_revenue_vnd) : null,
+      unpricedTicketCount: found ? so(found.unpriced_ticket_count) : null,
+    };
+  });
+
+  const shares = Array.isArray(row.product_shares) ? row.product_shares : [];
+  const tongLuot = shares.reduce((tong: number, item) => tong + so((item as Record<string, unknown>)?.entry_count), 0);
+  const productShares = shares.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const r = item as Record<string, unknown>;
+    const entryCount = so(r.entry_count);
+    return [
+      {
+        product: String(r.product ?? ""),
+        ticketCount: so(r.ticket_count),
+        entryCount,
+        sharePercent: tongLuot === 0 ? 0 : Math.round((entryCount / tongLuot) * 1000) / 10,
+      },
+    ];
+  });
+
+  const recent = (Array.isArray(row.recent) ? row.recent : []).flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const r = item as Record<string, unknown>;
+    return [
+      {
+        ticketCode: String(r.ticket_code ?? ""),
+        product: String(r.product ?? ""),
+        channel: String(r.channel ?? ""),
+        guestName: String(r.guest_name ?? ""),
+        status: String(r.status ?? ""),
+        issuedAt: String(r.issued_at ?? ""),
+        priceVnd: r.price_vnd === null || r.price_vnd === undefined ? null : so(r.price_vnd),
+      },
+    ];
+  });
+
+  return { periods, productShares, recent };
 }

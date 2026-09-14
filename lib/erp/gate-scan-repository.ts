@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import type { ErpSiteId } from "@/domain/erp";
 import {
   summariseProductShares,
+  parseTicketSalesRpc,
   summariseTicketPeriods,
   type TicketSalesPeriodStat,
   type TicketSalesProductShare,
@@ -482,6 +483,8 @@ export type RecentTicketSale = {
   guestName: string;
   status: string;
   issuedAt: string;
+  /** Thành tiền của tấm vé bán tại quầy; `null` khi vé không có giá (web theo gói, gieo mẫu). */
+  priceVnd?: number | null;
 };
 
 export type TicketPeriodStat = TicketSalesPeriodStat;
@@ -570,10 +573,50 @@ async function getTicketSalesSummaryFromSupabase(
   };
 }
 
+/**
+ * QA-ERP-TICKET-05 — đếm trong kho bằng `erp_ticket_sales_summary`: không còn
+ * trần 2.000 tấm vé, có thêm tiền bán tại quầy. Kho chưa có hàm (migration
+ * `202609140074` chưa áp) thì lùi về đường đếm cũ, không để màn hình trống.
+ */
+async function getTicketSalesSummaryFromRpc(siteId: ErpSiteId): Promise<TicketSalesSummary | null> {
+  const client = createAdminClient();
+  const { data, error } = await client.rpc("erp_ticket_sales_summary", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId],
+  });
+  if (error) {
+    if (error.code === "42883" || error.code === "PGRST202") return null;
+    throw repositoryError("đọc số vé đã bán", error);
+  }
+  const parsed = parseTicketSalesRpc(data);
+  if (!parsed) return null;
+  return {
+    periods: parsed.periods,
+    productShares: parsed.productShares.map((share) => ({
+      ...share,
+      productLabel: PRODUCT_LABELS[share.product] ?? share.product,
+    })),
+    recentSales: parsed.recent.map((row) => ({
+      ticketCode: row.ticketCode,
+      product: row.product,
+      productLabel: PRODUCT_LABELS[row.product] ?? row.product,
+      channel: row.channel,
+      channelLabel: CHANNEL_LABELS[row.channel] ?? row.channel,
+      guestName: row.guestName,
+      status: row.status,
+      issuedAt: row.issuedAt,
+      priceVnd: row.priceVnd,
+    })),
+    truncated: false,
+  };
+}
+
 export async function getTicketSalesSummary(
   siteId: ErpSiteId,
 ): Promise<TicketSalesSummary> {
-  if (readMode() === "supabase") return getTicketSalesSummaryFromSupabase(siteId);
+  if (readMode() === "supabase") {
+    return (await getTicketSalesSummaryFromRpc(siteId)) ?? getTicketSalesSummaryFromSupabase(siteId);
+  }
   // Demo-cookie mode has no queryable ticket table -- the caller renders
   // the zero state, which is honest (there is nothing sold to report),
   // rather than a plausible-looking number invented for the occasion.

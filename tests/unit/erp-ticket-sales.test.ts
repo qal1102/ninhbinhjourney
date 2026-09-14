@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  parseTicketSalesRpc,
   summariseProductShares,
   summariseTicketPeriods,
   ticketEntries,
@@ -93,5 +94,33 @@ describe("cơ cấu sản phẩm xếp theo lượt khách", () => {
     expect(shares).toEqual([
       { product: "adult", ticketCount: 1, entryCount: 2, sharePercent: 100 },
     ]);
+  });
+});
+
+describe("QA-ERP-TICKET-05 — đọc kết quả đếm trong kho", () => {
+  it("giữ đúng thứ tự bốn kỳ, tính phần trăm so kỳ trước, mang tiền bán tại quầy", () => {
+    const ketQua = parseTicketSalesRpc({
+      periods: [
+        { period: "week", ticket_count: 4, entry_count: 10, previous_entry_count: 8, counter_revenue_vnd: 500000, unpriced_ticket_count: 1 },
+        { period: "day", ticket_count: 2, entry_count: 3, previous_entry_count: 0, counter_revenue_vnd: 500000, unpriced_ticket_count: 0 },
+      ],
+      product_shares: [
+        { product: "adult", ticket_count: 3, entry_count: 9 },
+        { product: "child", ticket_count: 1, entry_count: 1 },
+      ],
+      recent: [{ ticket_code: "QUAY-4D5E31C1CABC", product: "adult", channel: "quay-ve", status: "issued", issued_at: "2026-09-14T08:00:00Z", price_vnd: 500000 }],
+    });
+    expect(ketQua?.periods.map((p) => p.period)).toEqual(["day", "week", "month", "year"]);
+    expect(ketQua?.periods[0]).toMatchObject({ entryCount: 3, ticketCount: 2, changePercent: null, counterRevenueVnd: 500000 });
+    expect(ketQua?.periods[1]).toMatchObject({ entryCount: 10, changePercent: 25, unpricedTicketCount: 1 });
+    // Kỳ máy chủ không trả thì là 0 lượt, và tiền là "chưa đọc được", không phải 0 đồng.
+    expect(ketQua?.periods[2]).toMatchObject({ entryCount: 0, counterRevenueVnd: null });
+    expect(ketQua?.productShares.map((s) => s.sharePercent)).toEqual([90, 10]);
+    expect(ketQua?.recent[0].priceVnd).toBe(500000);
+  });
+
+  it("dữ liệu hỏng thì trả null để kho lùi về đường đếm cũ", () => {
+    expect(parseTicketSalesRpc(null)).toBeNull();
+    expect(parseTicketSalesRpc({ periods: "khong" })).toBeNull();
   });
 });

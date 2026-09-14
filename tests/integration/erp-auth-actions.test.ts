@@ -72,6 +72,19 @@ vi.mock("@/lib/erp/account-registry-repository", () => ({
   confirmPasswordChanged,
 }));
 
+const { checkLoginThrottle, recordLoginFailure, clearLoginFailures } = vi.hoisted(() => ({
+  checkLoginThrottle: vi.fn(),
+  recordLoginFailure: vi.fn(),
+  clearLoginFailures: vi.fn(),
+}));
+
+// QA-P2-09: bộ đếm đăng nhập sai đọc `next/headers`, không có ngoài một yêu cầu thật.
+vi.mock("@/lib/erp/login-throttle", () => ({
+  checkLoginThrottle,
+  recordLoginFailure,
+  clearLoginFailures,
+}));
+
 const { signInWithPassword, signOut, updateUser } = vi.hoisted(() => ({
   signInWithPassword: vi.fn(),
   signOut: vi.fn(),
@@ -131,6 +144,7 @@ function formOf(entries: Record<string, string>) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  checkLoginThrottle.mockResolvedValue({ allowed: true });
 });
 
 describe("loginErpAction", () => {
@@ -165,6 +179,29 @@ describe("loginErpAction", () => {
       ),
     ).rejects.toMatchObject({ url: "/erp/login?error=invalid" });
     expect(setErpSession).not.toHaveBeenCalled();
+    expect(recordLoginFailure).toHaveBeenCalledWith("long@donvi.vn");
+    expect(clearLoginFailures).not.toHaveBeenCalled();
+  });
+
+  it("QA-P2-09: bị khoá vì nhập sai nhiều lần thì dừng trước khi thử mật khẩu, ở cả hai lối", async () => {
+    checkLoginThrottle.mockResolvedValue({ allowed: false, scope: "account-ip", retryAfterMinutes: 12 });
+    await expect(
+      loginErpAction(formOf({ username: "giamdoc", password: "dung-hay-sai-cung-vay" })),
+    ).rejects.toMatchObject({ url: "/erp/login?error=locked&phut=12" });
+    await expect(
+      loginErpAction(formOf({ username: "long@donvi.vn", password: "secret123" })),
+    ).rejects.toMatchObject({ url: "/erp/login?error=locked&phut=12" });
+    expect(findDemoErpAccountByUsername).not.toHaveBeenCalled();
+    expect(signInWithPassword).not.toHaveBeenCalled();
+    expect(setErpSession).not.toHaveBeenCalled();
+  });
+
+  it("QA-P2-09: tên đăng nhập không tồn tại cũng bị đếm, để màn hình không lộ tên nào có thật", async () => {
+    vi.mocked(findDemoErpAccountByUsername).mockReturnValue(undefined as never);
+    await expect(
+      loginErpAction(formOf({ username: "khong-ai-ca", password: "x" })),
+    ).rejects.toMatchObject({ url: "/erp/login?error=invalid" });
+    expect(recordLoginFailure).toHaveBeenCalledWith("khong-ai-ca");
   });
 
   it("still signs in a legacy account by shared role password", async () => {
@@ -178,6 +215,9 @@ describe("loginErpAction", () => {
     ).rejects.toMatchObject({ url: "/erp" });
     expect(setErpSession).toHaveBeenCalledWith("manager-trang-an");
     expect(signInWithPassword).not.toHaveBeenCalled();
+    // Vào được thì xoá lượt sai cũ của tài khoản, không để lần gõ nhầm hôm qua dồn sang hôm nay.
+    expect(clearLoginFailures).toHaveBeenCalledWith("ql.trangan");
+    expect(recordLoginFailure).not.toHaveBeenCalled();
   });
 });
 

@@ -27,6 +27,7 @@ import {
   startRoleSwitch,
 } from "@/lib/erp/demo-session";
 import { confirmPasswordChanged } from "@/lib/erp/account-registry-repository";
+import { checkLoginThrottle, clearLoginFailures, recordLoginFailure } from "@/lib/erp/login-throttle";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { recordRoleSwitch } from "@/lib/erp/role-switch-audit-repository";
 import {
@@ -100,21 +101,33 @@ export async function loginErpAction(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   if (!identifier || !password) loginError("missing");
 
+  // QA-P2-09: nhập sai quá nhiều lần thì dừng trước khi thử mật khẩu, cho cả
+  // hai lối đăng nhập. Tên có tồn tại hay không đều đếm như nhau, để không ai
+  // dùng màn hình này dò ra tên đăng nhập thật.
+  const chan = await checkLoginThrottle(identifier);
+  if (!chan.allowed) redirect(`/erp/login?error=locked&phut=${chan.retryAfterMinutes}`);
+
   if (identifier.includes("@")) {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: identifier,
       password,
     });
-    if (error) loginError("invalid");
+    if (error) {
+      await recordLoginFailure(identifier);
+      loginError("invalid");
+    }
+    await clearLoginFailures(identifier);
     redirect("/erp");
   }
 
   const account = findDemoErpAccountByUsername(identifier);
   if (!account || !safePasswordEqual(password, account.password) || !isDemoErpAccountActive(account)) {
+    await recordLoginFailure(identifier);
     loginError("invalid");
   }
 
+  await clearLoginFailures(identifier);
   await setErpSession(account.id);
   redirect("/erp");
 }

@@ -7,6 +7,7 @@ import {
   areDemoPasswordsVisible,
 } from "@/lib/erp/demo-data";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { loginLockedMessage } from "@/domain/erp-login-throttle";
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -22,7 +23,9 @@ export default async function ErpLoginPage({ searchParams }: Props) {
   if (user) redirect("/erp");
   const params = (await searchParams) ?? {};
   const rawError = Array.isArray(params.error) ? params.error[0] : params.error;
-  const error = rawError ? errorMessages[rawError] : null;
+  const rawMinutes = Array.isArray(params.phut) ? params.phut[0] : params.phut;
+  const error =
+    rawError === "locked" ? loginLockedMessage(Number(rawMinutes)) : rawError ? errorMessages[rawError] : null;
   const showPasswords = areDemoPasswordsVisible();
 
   return (
@@ -121,37 +124,34 @@ export default async function ErpLoginPage({ searchParams }: Props) {
             </button>
           </form>
 
+          {/* QA-P2-09: lượt kiểm 12/09/2026 thấy trang đăng nhập công khai đủ tên
+              đăng nhập — nửa việc của kẻ dò mật khẩu đã làm sẵn. T4 từng để lộ
+              tên cho bản trình diễn dễ đi; nay danh sách chỉ hiện ở môi trường
+              bật NEXT_PUBLIC_ERP_SHOW_DEMO_PASSWORDS (bản chạy thử), đúng chỗ
+              mật khẩu vốn đã hiện. Production không bật, nên không lộ gì. */}
+          {showPasswords ? (
           <details className="mt-6 rounded-xl border border-white/12 bg-white/[0.04] p-4 text-sm">
             <summary className="cursor-pointer font-bold text-white/78">Tài khoản đăng nhập được cấp</summary>
-            {/* T4: usernames are not secret and keep the demo navigable;
-                passwords are, and appear only where NEXT_PUBLIC_ERP_SHOW_DEMO_PASSWORDS
-                is turned on. Derived from DEMO_ERP_ACCOUNTS rather than typed
-                out again, so a new account cannot be missing from this list. */}
             <div className="mt-4 grid gap-3 text-white/62 sm:grid-cols-2">
               {DEMO_ERP_ACCOUNTS.map((account) => (
                 <p key={account.id}>
                   <strong className="block text-white">{account.jobTitle}</strong>
                   {account.username}
-                  {showPasswords ? (
-                    <>
-                      <br />
-                      {account.password}
-                    </>
-                  ) : null}
+                  <br />
+                  {account.password}
                 </p>
               ))}
               <p className="sm:col-span-2">
                 <strong className="block text-white">Tương thích kịch bản cũ</strong>
                 ql.trangan vẫn đăng nhập vào tài khoản quản lý Tràng An.
               </p>
-              {showPasswords ? null : (
-                <p className="sm:col-span-2 text-white/50">
-                  Mật khẩu được bàn giao riêng cho từng người, không hiển thị
-                  trên màn hình đăng nhập.
-                </p>
-              )}
             </div>
           </details>
+          ) : (
+            <p className="mt-6 text-sm leading-6 text-white/50">
+              Quên tên đăng nhập hay mật khẩu, xin nhờ quản trị hệ thống cấp lại.
+            </p>
+          )}
 
           <Link href="/" className="mt-7 inline-flex text-sm font-bold text-white/55 underline-offset-4 hover:text-white hover:underline">
             Quay lại trang dành cho du khách

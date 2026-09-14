@@ -608,6 +608,9 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   COUNTER_PRICE_NOT_ALLOWED: "Chỉ giám đốc được đặt giá vé quầy.",
   COUNTER_SALE_APPEND_ONLY:
     "Phiếu bán và nhật ký quầy không sửa hay xoá được. Muốn đổi, xin huỷ phiếu và bán lại.",
+  // QA-P2-09: bộ đếm đăng nhập sai. Lỗi này không bao giờ khoá người dùng —
+  // `lib/erp/login-throttle.ts` ghi lỗi rồi cho qua — nhưng bảng phải đủ mã.
+  LOGIN_THROTTLE_INPUT_INVALID: "Chưa ghi được lượt đăng nhập. Xin thử lại.",
 });
 
 /**

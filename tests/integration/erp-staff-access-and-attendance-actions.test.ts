@@ -62,6 +62,14 @@ vi.mock("@/lib/erp/counter-sale-repository", () => ({
   CounterSaleRepositoryError: class extends Error {},
 }));
 
+// QA-P2-09: bộ đếm đăng nhập sai đọc `next/headers` và mở đầu bằng
+// `import "server-only"`, nên cũng phải giả lập như các kho khác.
+vi.mock("@/lib/erp/login-throttle", () => ({
+  checkLoginThrottle: vi.fn(async () => ({ allowed: true })),
+  recordLoginFailure: vi.fn(),
+  clearLoginFailures: vi.fn(),
+}));
+
 vi.mock("@/lib/erp/account-registry-repository", () => ({
   confirmPasswordChanged: vi.fn(),
 }));

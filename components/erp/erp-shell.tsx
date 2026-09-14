@@ -129,10 +129,12 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 Kênh khách
               </Link>
             ) : null}
+            {/* Chỉ hiện từ màn rộng: ở 1024px thanh đầu trang đã chật, chữ các nút bị gãy dòng.
+                Màn hẹp hơn vào qua liên kết "Sửa giá" ở quầy bán vé. */}
             {user.role === "director" ? (
               <Link
                 href="/erp/bang-gia-quay"
-                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
+                className="hidden min-h-10 items-center rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] xl:inline-flex"
               >
                 Giá vé quầy
               </Link>

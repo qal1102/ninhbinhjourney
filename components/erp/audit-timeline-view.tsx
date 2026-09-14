@@ -74,6 +74,69 @@ export function AuditTimelineView({
   ).length;
   // Mỗi lượt xem thử ghi hai dòng; gộp lại để việc thật không bị vùi.
   const rows = gopLuotXemThu(entries);
+  const rowsThat = rows.filter((entry) => !isErpTestMarkedNote(entry.note));
+  const rowsKiemThu = rows.filter((entry) => isErpTestMarkedNote(entry.note));
+  const renderRow = (entry: (typeof rows)[number], index: number) => (
+            <li
+              key={`${entry.source}-${entry.occurredAt}-${entry.entityId ?? index}`}
+              className="grid gap-1 py-3.5 sm:grid-cols-[1fr_auto] sm:gap-4"
+            >
+              <div className="min-w-0">
+                <p className="text-sm leading-6 text-[#34483f]">
+                  <Link
+                    href={`/erp/ho-so/${entry.actorAccountId}`}
+                    className="font-black text-[#183f34] underline decoration-[#b9ccc3] underline-offset-2 hover:decoration-[#183f34]"
+                  >
+                    {entry.actorDisplayName}
+                  </Link>
+                  {entry.actorJobTitle ? (
+                    <span className="text-[#75817b]"> — {entry.actorJobTitle}</span>
+                  ) : null}
+                  <span className="text-[#75817b]"> — {actorPlace(entry)}</span>
+                  {!entry.actorSnapshotAtWrite ? (
+                    <span
+                      title="Tên hiện tại, không phải tên lúc thao tác"
+                      className="ml-2 rounded bg-[#f2e6cc] px-1.5 py-0.5 text-[10px] font-black text-[#7a5a1d]"
+                    >
+                      tên hiện tại
+                    </span>
+                  ) : null}
+                </p>
+                {/* Mã hành động và mã bản ghi là chữ máy: không in ra màn
+                    hình, chỉ giữ trong chú thích khi rê chuột để người cần
+                    truy vết vẫn lần ra được. */}
+                <p
+                  className="mt-1 text-sm font-bold text-[#20342c]"
+                  title={[entry.action, entry.entityId].filter(Boolean).join(" · ")}
+                >
+                  {entry.source} · {erpAuditActionLabel(entry.action)}
+                  {isErpRoleSwitchAction(entry.action) && entry.note ? (
+                    <> {entry.note}</>
+                  ) : null}
+                  {isErpTestMarkedNote(entry.note) ? (
+                    <span className="ml-2 rounded bg-[#e8ecea] px-1.5 py-0.5 text-[10px] font-black text-[#5d6c65]">
+                      dữ liệu kiểm thử
+                    </span>
+                  ) : null}
+                </p>
+                {entry.action === ERP_ROLE_SWITCH_SESSION_ACTION && entry.endedAt ? (
+                  <p className="mt-1 text-xs leading-5 text-[#7a8781]">
+                    Từ {formatTime(entry.occurredAt)} tới {formatTime(entry.endedAt)}
+                  </p>
+                ) : entry.note && !isErpRoleSwitchAction(entry.action) ? (
+                  <p className="mt-1 text-xs leading-5 text-[#7a8781]">{entry.note}</p>
+                ) : null}
+              </div>
+              <div className="shrink-0 text-xs text-[#87938d] sm:text-right">
+                <p>{formatMoment(entry.occurredAt)}</p>
+                {entry.siteId ? (
+                  <p className="mt-1 font-bold text-[#586961]">
+                    {siteName(entry.siteId)}
+                  </p>
+                ) : null}
+              </div>
+            </li>
+  );
 
   return (
     <div className="space-y-5">
@@ -167,70 +230,22 @@ export function AuditTimelineView({
         ) : null}
 
         <ol className="mt-5 divide-y divide-[#e6ebe8]">
-          {rows.map((entry, index) => (
-            <li
-              key={`${entry.source}-${entry.occurredAt}-${entry.entityId ?? index}`}
-              className="grid gap-1 py-3.5 sm:grid-cols-[1fr_auto] sm:gap-4"
-            >
-              <div className="min-w-0">
-                <p className="text-sm leading-6 text-[#34483f]">
-                  <Link
-                    href={`/erp/ho-so/${entry.actorAccountId}`}
-                    className="font-black text-[#183f34] underline decoration-[#b9ccc3] underline-offset-2 hover:decoration-[#183f34]"
-                  >
-                    {entry.actorDisplayName}
-                  </Link>
-                  {entry.actorJobTitle ? (
-                    <span className="text-[#75817b]"> — {entry.actorJobTitle}</span>
-                  ) : null}
-                  <span className="text-[#75817b]"> — {actorPlace(entry)}</span>
-                  {!entry.actorSnapshotAtWrite ? (
-                    <span
-                      title="Tên hiện tại, không phải tên lúc thao tác"
-                      className="ml-2 rounded bg-[#f2e6cc] px-1.5 py-0.5 text-[10px] font-black text-[#7a5a1d]"
-                    >
-                      tên hiện tại
-                    </span>
-                  ) : null}
-                </p>
-                {/* Mã hành động và mã bản ghi là chữ máy: không in ra màn
-                    hình, chỉ giữ trong chú thích khi rê chuột để người cần
-                    truy vết vẫn lần ra được. */}
-                <p
-                  className="mt-1 text-sm font-bold text-[#20342c]"
-                  title={[entry.action, entry.entityId].filter(Boolean).join(" · ")}
-                >
-                  {entry.source} · {erpAuditActionLabel(entry.action)}
-                  {isErpRoleSwitchAction(entry.action) && entry.note ? (
-                    <> {entry.note}</>
-                  ) : null}
-                  {isErpTestMarkedNote(entry.note) ? (
-                    <span className="ml-2 rounded bg-[#e8ecea] px-1.5 py-0.5 text-[10px] font-black text-[#5d6c65]">
-                      dữ liệu kiểm thử
-                    </span>
-                  ) : null}
-                </p>
-                {entry.action === ERP_ROLE_SWITCH_SESSION_ACTION && entry.endedAt ? (
-                  <p className="mt-1 text-xs leading-5 text-[#7a8781]">
-                    Từ {formatTime(entry.occurredAt)} tới {formatTime(entry.endedAt)}
-                  </p>
-                ) : entry.note && !isErpRoleSwitchAction(entry.action) ? (
-                  <p className="mt-1 text-xs leading-5 text-[#7a8781]">{entry.note}</p>
-                ) : null}
-              </div>
-              <div className="shrink-0 text-xs text-[#87938d] sm:text-right">
-                <p>{formatMoment(entry.occurredAt)}</p>
-                {entry.siteId ? (
-                  <p className="mt-1 font-bold text-[#586961]">
-                    {siteName(entry.siteId)}
-                  </p>
-                ) : null}
-              </div>
-            </li>
-          ))}
+          {rowsThat.map(renderRow)}
         </ol>
 
-        {rows.length === 0 ? (
+        {/* QA-RESIDUE-02 ổ 3: dòng do bộ smoke tự đánh dấu (`QA-T10B-RT-…`) không
+            xoá được — ba bảng tài chính cấm sửa xoá — nên gập riêng xuống cuối,
+            không trộn vào việc thật. Vẫn mở ra xem được, để truy vết. */}
+        {rowsKiemThu.length > 0 ? (
+          <details className="mt-4 rounded-xl border border-[#d8e0db] bg-[#f7f9f7] p-4 text-sm">
+            <summary className="cursor-pointer font-bold text-[#42574e]">
+              Đang ẩn {rowsKiemThu.length.toLocaleString("vi-VN")} dòng do bài kiểm tự động tạo
+            </summary>
+            <ol className="mt-3 divide-y divide-[#e6ebe8]">{rowsKiemThu.map(renderRow)}</ol>
+          </details>
+        ) : null}
+
+        {rowsThat.length === 0 ? (
           <p className="rounded-xl border border-dashed border-[#b8c6bf] px-5 py-10 text-center text-sm text-[#75817b]">
             {emptyMessage}
           </p>

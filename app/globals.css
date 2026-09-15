@@ -11,6 +11,7 @@
   --paper: #f6f1e7;
   --mist: #fbfaf6;
   --stone: #6d756f;
+  --motion-editorial-ease: cubic-bezier(0.22, 1, 0.36, 1);
   /*
    * "Fraunces Variable" và "Manrope Variable" là hai font DUY NHẤT được cài
    * (@fontsource-variable, tự host). Trước 04/08 hai biến này trỏ tới
@@ -1133,6 +1134,296 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     rgba(20, 34, 46, 0.36) 44%,
     rgba(10, 18, 26, 0.62)
   );
+}
+
+/*
+ * MOTION-SYSTEM-10 / HERO-CONTINUITY-11
+ *
+ * This scene is intentionally geometry-locked. JavaScript writes only the
+ * unitless `--hero-progress` value; every moving layer below consumes it as a
+ * transform or opacity. Never animate font axes, line-height, spacing, height
+ * or any other metric here -- the previous global font-axis effect proved
+ * that those changes alter document height and trigger scroll anchoring.
+ */
+.hero-identity-scene {
+  --hero-progress: 0;
+  contain: layout paint;
+  height: 100vh;
+  height: max(44rem, 100svh);
+  isolation: isolate;
+}
+
+.hero-scene-image {
+  filter: saturate(0.92) contrast(1.04);
+  opacity: calc(0.86 - var(--hero-progress) * 0.12);
+  transform: translate3d(0, calc(var(--hero-progress) * -1.75rem), 0)
+    scale(calc(1.035 + var(--hero-progress) * 0.025));
+  transform-origin: 50% 42%;
+  will-change: transform, opacity;
+}
+
+.hero-scene-scrim {
+  background:
+    linear-gradient(90deg, rgba(8, 24, 20, 0.79) 0%, rgba(8, 24, 20, 0.52) 47%, rgba(8, 24, 20, 0.1) 76%),
+    linear-gradient(180deg, rgba(24, 63, 52, 0.12), rgba(24, 63, 52, 0.45) 48%, rgba(16, 34, 29, 0.94));
+}
+
+.hero-depth-window,
+.hero-depth-lines {
+  bottom: -1px;
+  filter: saturate(0.82) contrast(1.08) brightness(0.94);
+  height: min(88%, 880px);
+  opacity: calc(0.94 - var(--hero-progress) * 0.24);
+  right: clamp(-5rem, -2vw, -1rem);
+  transform: translate3d(0, calc(var(--hero-progress) * -2.5rem), 0)
+    scale(calc(1 + var(--hero-progress) * 0.035));
+  transform-origin: 72% 100%;
+  width: min(54vw, 780px);
+  will-change: transform, opacity;
+}
+
+.hero-depth-window {
+  clip-path: polygon(10% 100%, 10% 43%, 14% 31%, 22% 22%, 30% 21%, 38% 30%, 43% 16%, 55% 5%, 68% 2%, 75% 8%, 82% 20%, 88% 37%, 91% 52%, 91% 100%);
+  overflow: hidden;
+  position: absolute;
+}
+
+.hero-depth-image {
+  transform: scale(1.025);
+}
+
+.hero-depth-grade {
+  background: linear-gradient(135deg, rgba(168, 206, 193, 0.28), rgba(24, 63, 52, 0.04) 58%, rgba(231, 185, 106, 0.32));
+  inset: 0;
+  mix-blend-mode: color;
+  position: absolute;
+}
+
+.hero-depth-contour {
+  opacity: 0.82;
+  stroke: rgba(251, 250, 246, 0.68);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-depth-river {
+  opacity: calc(0.78 - var(--hero-progress) * 0.28);
+  stroke: #e7b96a;
+  stroke-linecap: round;
+  stroke-width: 2;
+  transform: translate3d(calc(var(--hero-progress) * 1.5rem), 0, 0);
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-scene-content {
+  opacity: calc(1 - var(--hero-progress) * 0.32);
+  transform: translate3d(0, calc(var(--hero-progress) * -1rem), 0);
+  width: 100%;
+  will-change: transform, opacity;
+}
+
+.hero-signature-title {
+  color: #fbfaf6;
+  isolation: isolate;
+  max-width: 100%;
+  position: relative;
+  text-shadow: 0 24px 70px rgba(3, 14, 11, 0.36);
+  width: fit-content;
+}
+
+.hero-signature-title > span {
+  position: relative;
+  z-index: 2;
+}
+
+/* A limestone-cut lower face: one title, one metric, two painted planes. */
+.hero-signature-title::before,
+.hero-signature-title::after {
+  content: attr(data-hero-title);
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.hero-signature-title::before {
+  color: transparent;
+  opacity: calc(0.72 - var(--hero-progress) * 0.18);
+  transform: translate3d(calc(-0.08rem - var(--hero-progress) * 0.45rem), -0.08rem, 0);
+  -webkit-text-stroke: 1px rgba(168, 206, 193, 0.76);
+  z-index: 1;
+}
+
+.hero-signature-title::after {
+  clip-path: polygon(0 58%, 100% 43%, 100% 100%, 0 100%);
+  color: #e7b96a;
+  mix-blend-mode: screen;
+  opacity: calc(0.72 - var(--hero-progress) * 0.2);
+  transform: translate3d(calc(0.12rem + var(--hero-progress) * 0.9rem), calc(0.1rem + var(--hero-progress) * 0.25rem), 0);
+  z-index: 3;
+}
+
+.hero-copy-safe {
+  max-width: min(44rem, 76vw);
+  position: relative;
+  z-index: 4;
+}
+
+.hero-handoff {
+  align-items: center;
+  bottom: clamp(1rem, 2.4vh, 1.75rem);
+  display: flex;
+  gap: 0.7rem;
+  left: max(50%, calc((100vw - 80rem) / 2 + 47rem));
+  opacity: calc(0.58 + var(--hero-progress) * 0.3);
+  pointer-events: none;
+  position: absolute;
+  right: clamp(1.25rem, 4vw, 4.5rem);
+  transform: translate3d(calc(var(--hero-progress) * -1.5rem), 0, 0);
+  z-index: 12;
+}
+
+.hero-handoff > span,
+.hero-handoff > i {
+  background: #e7b96a;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  height: 0.35rem;
+  width: 0.35rem;
+}
+
+.hero-handoff > i {
+  background: #a8cec1;
+}
+
+.hero-handoff svg {
+  height: 2rem;
+  overflow: visible;
+  width: 100%;
+}
+
+.hero-handoff path {
+  fill: none;
+  stroke: rgba(251, 250, 246, 0.62);
+  stroke-linecap: round;
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-cinematic-handoff {
+  background: #06120f;
+  position: relative;
+}
+
+.hero-cinematic-handoff::before {
+  background: linear-gradient(180deg, rgba(24, 63, 52, 0.72), rgba(6, 18, 15, 0));
+  clip-path: polygon(0 0, 100% 0, 100% 28%, 72% 58%, 49% 33%, 23% 72%, 0 38%);
+  content: "";
+  height: clamp(5rem, 11vw, 10rem);
+  inset: 0 0 auto;
+  pointer-events: none;
+  position: absolute;
+  z-index: 4;
+}
+
+.hero-cinematic-handoff::after {
+  background: linear-gradient(90deg, transparent, rgba(231, 185, 106, 0.7), rgba(168, 206, 193, 0.54), transparent);
+  content: "";
+  height: 1px;
+  inset: 0 6vw auto;
+  pointer-events: none;
+  position: absolute;
+  z-index: 5;
+}
+
+@media (max-width: 767px) {
+  .hero-identity-scene {
+    height: 100vh;
+    height: max(43rem, 100svh);
+  }
+
+  .hero-scene-scrim {
+    background:
+      linear-gradient(90deg, rgba(8, 24, 20, 0.7), rgba(8, 24, 20, 0.24)),
+      linear-gradient(180deg, rgba(24, 63, 52, 0.16), rgba(16, 34, 29, 0.93) 66%);
+  }
+
+  .hero-depth-window,
+  .hero-depth-lines {
+    height: 72%;
+    opacity: calc(0.4 - var(--hero-progress) * 0.08);
+    right: -42vw;
+    top: 8%;
+    width: 118vw;
+  }
+
+  .hero-depth-contour,
+  .hero-depth-river,
+  .hero-handoff {
+    display: none;
+  }
+
+  .hero-signature-title::before {
+    opacity: 0.48;
+  }
+
+  .hero-signature-title::after {
+    opacity: 0.62;
+    transform: translate3d(0.08rem, 0.08rem, 0);
+  }
+
+  .hero-copy-safe {
+    max-width: 100%;
+  }
+
+  /* Reserve the lower-right fixed concierge footprint at both sides of the
+     handoff so neither the tertiary hero cue nor the cinematic title sits
+     underneath it on a 390px viewport. */
+  .hero-scene-content {
+    padding-bottom: 6.75rem;
+  }
+
+  .hero-cinematic-handoff .cinematic-copy {
+    padding-bottom: 12rem;
+    padding-right: 7.5rem;
+  }
+
+  .hero-cinematic-handoff::before {
+    clip-path: polygon(0 0, 100% 0, 100% 35%, 63% 70%, 0 38%);
+    height: 5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scene-image,
+  .hero-depth-window,
+  .hero-depth-lines,
+  .hero-depth-river,
+  .hero-scene-content,
+  .hero-handoff,
+  .hero-signature-title::before {
+    opacity: 1;
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .hero-scene-image {
+    opacity: 0.86;
+  }
+
+  .hero-depth-window {
+    opacity: 0.86;
+  }
+
+  .hero-signature-title::before {
+    opacity: 0.72;
+    transform: translate3d(-0.08rem, -0.08rem, 0) !important;
+  }
+
+  .hero-signature-title::after {
+    opacity: 0.72;
+    transform: translate3d(0.12rem, 0.1rem, 0) !important;
+  }
 }
 
 /*

@@ -276,7 +276,7 @@ export function CinematicVideo({
       {/* Lop 3 -- scrim + chu. */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(6,18,15,.34),rgba(6,18,15,.12)_38%,rgba(6,18,15,.86))]" />
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-14 text-white sm:px-10 sm:pb-20">
+      <div className="cinematic-copy pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-14 text-white sm:px-10 sm:pb-20">
         <div className="mx-auto max-w-5xl">
           <p className="text-xs font-extrabold uppercase tracking-[0.28em] text-[#E7B96A]">
             {clip.eyebrow}

@@ -271,6 +271,18 @@ Sáu kỹ thuật rút ra, dùng được ngay:
 3. **Lịch âm + lễ hội theo ngày.** Cần tra nguồn thật cho từng lễ hội trước khi viết.
 4. **Cảm nhận du khách** — chỉ khi có cảm nhận THẬT. Bịa là vi phạm nguyên tắc không-dữ-liệu-giả của dự án.
 
+## Reference scan — 15/09/2026, cho kiến trúc nhiều “thế giới”
+
+Chủ dự án yêu cầu agent chính làm creative director và học cách các website mạnh tạo ra **những route có cá tính khác nhau**, thay vì rải cùng một fade/reveal lên một trang cuộn dài. Lượt rà Awwwards ngày 15/09 chọn nguyên lý, không sao chép giao diện hay mã:
+
+- [Impronta — Homepage](https://www.awwwards.com/inspiration/impronta-homepage-impronta): typography, transition, menu và product list được coi như bốn nhịp thiết kế riêng. Áp dụng: cổng bốn thế giới phải là một tương tác editorial thật, không phải bốn pill kiểu dashboard.
+- [Luzia con Zeta — Page transition](https://www.awwwards.com/inspiration/page-transition-luzia-con-zeta-2025): loader chuyển thành slider và chuyển trang có continuity. Áp dụng: hình khách vừa chọn tiếp tục sang route kế, không cắt trắng rồi dựng lại từ đầu.
+- [Fourmeta — Interactive site navigation](https://www.awwwards.com/inspiration/interactive-site-navigation-fourmeta-agency): navigation tự nó là một scene, nối menu, services và case studies. Áp dụng: Hợp tác/Seasonal/Booking phải hé đúng chất liệu của đích khi hover/focus, rồi mới mở route.
+- [Nueve Apartments — Experiences page](https://www.awwwards.com/inspiration/experiences-page-nueve-apartments): trang trải nghiệm dùng parallax/GSAP, vertical menu và booking form như các ngữ pháp khác nhau trong cùng hệ. Áp dụng: Du lịch có scrollytelling; Booking giữ nhịp dẫn việc riêng, không bê spectacle của hero vào form.
+- [Goldust Spa — Scroll animations and custom booking](https://www.awwwards.com/inspiration/scroll-animations-goldust-spa): scroll, hover text, help/search, gift-card builder và step booking được thiết kế theo đúng công việc của từng bề mặt. Áp dụng: microinteraction phải giải thích lựa chọn hoặc trạng thái, không chỉ “cho chuyển động”.
+
+Điểm rút ra cho Ninh Bình Journey: một hệ thương hiệu chung vẫn cần **nhiều choreography**. Trang chủ = không gian/địa hình; Collaborations = tạp chí/chương; Seasonal = lịch–quỹ đạo–vật liệu; Booking = tiến độ–tuyến đi–continuity; Explore = bản đồ–camera–focus. Danh sách đầy đủ và tiêu chí nghiệm thu nằm ở `UI_UX_RULES.md#creative-direction-matrix--chốt-15092026`.
+
 ## Implementation Notes
 
 - Prefer CSS or Motion-style timing for lightweight hero intro.

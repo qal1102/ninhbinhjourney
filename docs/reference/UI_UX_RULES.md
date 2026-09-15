@@ -67,6 +67,23 @@ Map, canvas, iframe and third-party widgets often create high stacking contexts.
 - Always support `prefers-reduced-motion`.
 - Do not block core interactions with long decorative animation.
 
+## Creative Direction Matrix — chốt 15/09/2026
+
+Chủ dự án không nghiệm thu một website chỉ vì có nhiều `Reveal`, fade hay parallax rải đều. Web công khai phải đọc như **nhiều thế giới có mục đích khác nhau**, mỗi thế giới có một kỹ năng chủ đạo và một nhịp thị giác riêng. Cấu trúc điều hướng cấp một là: **Du lịch Ninh Bình · Hợp tác thương hiệu · Sự kiện theo mùa · Đặt chỗ**. Du lịch là cửa mặc định; các chương còn lại chỉ mở khi khách chủ động chọn.
+
+| Bề mặt | Vibe và vật liệu | Kỹ năng/chuyển động chủ đạo | Không được làm |
+| --- | --- | --- | --- |
+| Trang chủ / Du lịch Ninh Bình | Đá vôi, mặt nước, sương, xanh rêu và vàng nắng; nhịp phim tài liệu du lịch | Spatial mask/aperture, cinematic handoff, pinned route story và camera ảnh đổi theo địa danh | Biến toàn trang thành một dãy card; dùng cùng một fade cho mọi khối |
+| Hợp tác thương hiệu | Tạp chí thời trang cao cấp: ảnh dọc lớn, khoảng trắng rộng, nhịp bất đối xứng, finale có chủ đích | Chuyển chương ngang–dọc, shared-image/page transition, hover typography và chapter index | Tự động đổ toàn bộ logo/ảnh lên trang chủ; viết một đề xuất thành quan hệ hợp tác đã xác nhận |
+| Sự kiện theo mùa | Mùa, lịch, giấy hộp quà, ánh trăng và bàn tiệc; ấm hơn trang du lịch | Lunar/orbit navigation, editorial shelf, reveal theo lớp vật liệu và timeline theo ngày | Dùng nguyên motion của trang thương hiệu; giấu giá/lịch/CTA trong hiệu ứng |
+| Packages / Booking | Điềm tĩnh, rõ, được một concierge dẫn đường; cảm giác dịch vụ hơn biểu mẫu | Shared-element continuity, route/timeline draw và microinteraction báo tiến độ có nguyên nhân | Dùng spectacle làm chậm thao tác; thay đổi số liệu hay trạng thái chỉ để trang trí |
+| Explore / bản đồ | Bản đồ sống, định hướng và khoảng cách; ưu tiên cảm giác đang di chuyển trong không gian | Marker–card–camera đồng bộ, FLIP ảnh sang detail và focus handoff | Hai state riêng cho card và map; cuộn lồng hoặc canvas ăn thao tác một ngón |
+| Trang điểm đến | Một khung editorial chung nhưng motif lấy từ chính địa điểm: nước, hang, núi hoặc di sản | Một signature transition theo `visual motif` của địa điểm, cộng timeline/dữ kiện thật | Nhân bản mười lăm trang giống hệt nhau rồi chỉ đổi ảnh và tên |
+
+Mỗi route/chương mới phải có tối thiểu: **một macro-transition nhận ra ngay, một microinteraction phục vụ thao tác, một lối vào/ra có continuity**, cùng fallback reduced-motion đầy đủ. Có thể dùng chung primitives kỹ thuật nhưng không dùng chung toàn bộ choreography. Reference chỉ dùng để học nguyên lý — interactive navigation, page transition, parallax experience và custom step booking — không sao chép nguyên thương hiệu, layout hay code của website khác.
+
+Nghiệm thu hai tầng: (1) hàng rào kỹ thuật về overflow, focus, scroll geometry, reduced-motion; (2) agent chính tự xem ảnh và chuyển động thật ở desktop/mobile. Tầng (1) xanh không được dùng để tự tuyên bố tầng (2) đạt. Nếu người xem khó chỉ ra trang này khác bản trước ở đâu, phase chưa đạt.
+
 ## Mobile Rules
 
 - Build mobile first.

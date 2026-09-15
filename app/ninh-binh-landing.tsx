@@ -875,6 +875,7 @@ export default function NinhBinhLanding({
   const [detailId, setDetailId] = useState<DestinationId | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [introVisible, setIntroVisible] = useState(true);
+  const heroSceneRef = useRef<HTMLElement>(null);
   const introAlreadyPlayed = useSyncExternalStore(
     subscribeIntroPlayedNoop,
     hasIntroPlayedThisSession,
@@ -883,6 +884,39 @@ export default function NinhBinhLanding({
   const showIntro = introVisible && !introAlreadyPlayed;
   const modalOpen = Boolean(detailId || checkoutOpen);
   const ninhBinhHour = useNinhBinhHour();
+
+  /* HERO-CONTINUITY-11: local transform/opacity-only scroll state. */
+  useEffect(() => {
+    const scene = heroSceneRef.current;
+    if (!scene) return;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let frame = 0;
+    const paint = () => {
+      frame = 0;
+      if (media.matches) {
+        scene.dataset.motion = "reduced";
+        scene.style.setProperty("--hero-progress", "0");
+        return;
+      }
+      const rect = scene.getBoundingClientRect();
+      const progress = Math.max(0, Math.min(1, -rect.top / Math.max(rect.height, 1)));
+      scene.dataset.motion = "full";
+      scene.style.setProperty("--hero-progress", progress.toFixed(4));
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(paint);
+    };
+    paint();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    media.addEventListener("change", paint);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      media.removeEventListener("change", paint);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   /*
    * Hieu ung "anh no ra": tam anh khach vua bam bay tu cho cu toi dung vi
@@ -1257,16 +1291,25 @@ export default function NinhBinhLanding({
           </div>
         </div>
       ) : null}
-      <section data-customer-section="home-hero" className="relative min-h-screen overflow-hidden bg-[#183F34] text-[#FBFAF6]">
+      <section ref={heroSceneRef} data-customer-section="home-hero" data-hero-scene data-motion="static" className="hero-identity-scene relative overflow-hidden bg-[#183F34] text-[#FBFAF6]">
         <Image
           src="/images/destinations/trang-an.jpg"
           alt={lang === "en" ? "Ninh Binh limestone landscape" : "Phong cảnh núi đá vôi Ninh Bình"}
           fill
           priority
           sizes="100vw"
-          className="float-slow object-cover opacity-80"
+          className="hero-scene-image object-cover"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(24,63,52,.16),rgba(24,63,52,.58)_48%,rgba(29,41,37,.9))]" />
+        <div className="hero-scene-scrim absolute inset-0" />
+        {/* The opening rain frame returns as a clipped limestone aperture. */}
+        <div className="hero-depth-window pointer-events-none absolute" data-hero-depth-window aria-hidden="true">
+          <Image src="/images/destinations/intro-trang-an-rain.png" alt="" fill sizes="(max-width: 767px) 118vw, 54vw" className="hero-depth-image object-cover" />
+          <span className="hero-depth-grade" />
+        </div>
+        <svg className="hero-depth-lines pointer-events-none absolute" aria-hidden="true" viewBox="0 0 720 900" preserveAspectRatio="xMidYMid slice">
+          <path className="hero-depth-contour" d="M71 900V386c0-84 29-148 86-192 49-38 98-40 146-8 28-91 92-146 191-166 85-17 150 13 195 90" fill="none" />
+          <path className="hero-depth-river" d="M134 716c126-82 212-27 289-75 78-49 127-164 243-168" fill="none" />
+        </svg>
         {/*
           Tong mau anh mo dau doi theo GIO THAT o Ninh Binh: hung vang luc
           rang, trong luc trua, ho phach luc chieu, cham luc dem. Khong bia
@@ -1325,7 +1368,7 @@ export default function NinhBinhLanding({
           </div>
           </div>
         </div>
-        <div id="top" className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-offset,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-offset,0px))]">
+        <div id="top" className="hero-scene-content relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-offset,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-offset,0px))]">
           {/*
             Nhan "Client demonstration · Supabase shared core" da GO HAN
             05/08. Day la ngon ngu KY THUAT NOI BO lot thang ra mat khach
@@ -1335,8 +1378,9 @@ export default function NinhBinhLanding({
             Binh tourism core", "Intent -> rules -> validated itinerary",
             "Trang thai: idle") -- lan nay la cho con sot lai.
           */}
-          <h1 className="fade-up break-words font-display text-[clamp(3.25rem,14vw,9rem)] leading-[0.9] text-[#FBFAF6]">{t.title}</h1>
-          <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
+          <h1 className="hero-signature-title fade-up break-words font-display text-[clamp(3.25rem,14vw,9rem)] leading-[0.9]" data-hero-title={t.title}><span>{t.title}</span></h1>
+          <div className="hero-copy-safe">
+            <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
           {/*
             Gio that tai Ninh Binh. Bien trang tu mot to roi thanh mot noi
             DANG TON TAI -- va vi moi khung gio keo theo mot chi tiet rieng
@@ -1364,6 +1408,12 @@ export default function NinhBinhLanding({
           >
             {bookingEnabled ? t.heroPackagesCue : t.heroPackagesCuePlain} <span aria-hidden="true">↓</span>
           </a>
+          </div>
+        </div>
+        <div className="hero-handoff" data-hero-handoff aria-hidden="true">
+          <span />
+          <svg viewBox="0 0 520 50" preserveAspectRatio="none"><path d="M0 31C77 31 93 9 151 9c62 0 68 31 132 31 69 0 87-29 155-29 34 0 58 7 82 18" /></svg>
+          <i />
         </div>
       </section>
 
@@ -1375,7 +1425,9 @@ export default function NinhBinhLanding({
         video dau nen hai bang do da bi bo, xem chu thich o dinh nghia
         `cinematicClip` phia tren.
       */}
-      <CinematicVideo clip={cinematicClip[lang]} eager />
+      <div className="hero-cinematic-handoff" data-hero-cinematic-handoff>
+        <CinematicVideo clip={cinematicClip[lang]} eager />
+      </div>
 
       <TrangAnScrollStory {...trangAnStory[lang]} />
 

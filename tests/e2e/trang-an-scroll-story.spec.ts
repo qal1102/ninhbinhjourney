@@ -114,6 +114,76 @@ test("desktop motion keeps the Tràng An story in the viewport without horizonta
   }
 });
 
+// A15-LOI-01 (audit 15/09/2026): the section title stayed fully opaque over all
+// five chapters, and at 1920px it broke into six lines straight through each
+// chapter headline. Geometry alone is not enough — the title must also leave.
+test("the section title never sits on a chapter headline and returns when scrolling back", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  for (const [width, height] of [
+    [1920, 1080],
+    [1024, 768],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    const story = await openStory(page, "vi");
+
+    const measure = async (progress: number) => {
+      // Two passes: the hero above may still settle after the first scroll,
+      // which would land a few px past the pin start and read a mid-fade.
+      for (let pass = 0; pass < 2; pass += 1) {
+        await story.evaluate((element, nextProgress) => {
+          const rect = element.getBoundingClientRect();
+          const top = window.scrollY + rect.top;
+          window.scrollTo(0, top + Math.max(0, rect.height - window.innerHeight) * nextProgress);
+        }, progress);
+        await page.waitForTimeout(pass === 0 ? 300 : 900);
+      }
+      return story.evaluate((element) => {
+        const opacity = (node: Element) => {
+          let value = 1;
+          for (let current: Element | null = node; current && current !== element.parentElement; current = current.parentElement) {
+            value *= Number(getComputedStyle(current).opacity);
+          }
+          return value;
+        };
+        const title = element.querySelector("[data-story-intro] h2");
+        if (!title) throw new Error("Story is missing its section title");
+        const titleBox = title.getBoundingClientRect();
+        const titleOpacity = opacity(title);
+        const collisions = Array.from(element.querySelectorAll("[data-story-copy] > *")).filter((line) => {
+          if (titleOpacity <= 0.05 || opacity(line) <= 0.05) return false;
+          const box = line.getBoundingClientRect();
+          return box.left < titleBox.right && box.right > titleBox.left && box.top < titleBox.bottom && box.bottom > titleBox.top;
+        });
+        const lineHeight = Number.parseFloat(getComputedStyle(title).lineHeight);
+        return {
+          titleOpacity,
+          titleLines: Math.round(titleBox.height / lineHeight),
+          collisions: collisions.length,
+        };
+      });
+    };
+
+    const start = await measure(0);
+    expect(start.titleOpacity).toBeGreaterThan(0.95);
+    expect(start.titleLines).toBeLessThanOrEqual(2);
+    expect(start.collisions).toBe(0);
+
+    for (const progress of [0.125, 0.35, 0.57, 0.8, 0.99, 0.35]) {
+      const state = await measure(progress);
+      expect(state.collisions, `${width}px at ${progress}`).toBe(0);
+      expect(state.titleOpacity, `${width}px at ${progress}`).toBeLessThan(0.05);
+    }
+
+    const back = await measure(0);
+    expect(back.titleOpacity).toBeGreaterThan(0.95);
+    expect(back.collisions).toBe(0);
+  }
+});
+
 test("mobile uses five readable story beats in ordinary one-finger vertical flow", async ({
   page,
 }) => {

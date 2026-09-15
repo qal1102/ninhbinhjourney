@@ -51,6 +51,7 @@ export function TrangAnScrollStory({
     const context = gsap.context(() => {
       media.add("(min-width: 768px)", () => {
         const scene = root.querySelector<HTMLElement>("[data-story-scene]");
+        const intro = root.querySelector<HTMLElement>("[data-story-intro]");
         const beatNodes = Array.from(root.querySelectorAll<HTMLElement>("[data-story-beat]"));
         const routeProgress = root.querySelector<SVGPathElement>("[data-story-route-progress]");
         const progressCurrent = root.querySelector<HTMLElement>("[data-story-current]");
@@ -98,24 +99,32 @@ export function TrangAnScrollStory({
           // Opacity keeps every article in the accessibility tree. `autoAlpha`
           // would also set visibility:hidden, leaving screen-reader users with
           // only one of the five beats and no semantic control to reveal the rest.
-          gsap.set(copy.children, { opacity: index === 0 ? 1 : 0, y: index === 0 ? 0 : 18 });
+          // A15-LOI-01: chapter 01 copy waits for the section title to leave,
+          // so the title and a headline are never readable at the same time.
+          gsap.set(copy.children, { opacity: 0, y: 18 });
           gsap.set(image, { scale: 1.1, yPercent: index === 0 ? 0 : 3 });
         });
         setActive(0);
+
+        const segment = 1 / (beatNodes.length - 1);
+        // Scroll room for the title card before chapter 01, in timeline units.
+        const lead = segment * 0.4;
 
         const timeline = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
             trigger: root,
             start: "top top",
-            end: () => `+=${Math.max(1800, (beatNodes.length - 1) * window.innerHeight * 1.18)}`,
+            end: () => `+=${Math.max(1800, (beatNodes.length - 1 + 0.4) * window.innerHeight * 1.18)}`,
             pin: scene,
             scrub: 0.65,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
+              const total = self.animation?.duration() || 1 + lead;
+              const beatProgress = (self.progress * total - lead) / segment;
               const nextActiveIndex = Math.min(
                 beatNodes.length - 1,
-                Math.max(0, Math.round(self.progress * (beatNodes.length - 1))),
+                Math.max(0, Math.round(beatProgress)),
               );
               setActive(nextActiveIndex);
             },
@@ -125,17 +134,24 @@ export function TrangAnScrollStory({
         // A restrained, continuous camera drift prevents the scene becoming a static slideshow.
         beatNodes.forEach((node) => {
           const image = node.querySelector("[data-story-media] img");
-          if (image) timeline.to(image, { scale: 1.015, duration: 1 }, 0);
+          if (image) timeline.to(image, { scale: 1.015, duration: 1 + lead }, 0);
         });
 
-        const segment = 1 / (beatNodes.length - 1);
+        const firstCopy = beatNodes[0].querySelector<HTMLElement>("[data-story-copy]");
+        if (intro) {
+          timeline.to(intro.children, { opacity: 0, y: -24, duration: lead * 0.3, stagger: 0.004 }, lead * 0.3);
+        }
+        if (firstCopy) {
+          timeline.to(firstCopy.children, { opacity: 1, y: 0, duration: lead * 0.3, stagger: 0.006 }, lead * 0.65);
+        }
+
         beatNodes.slice(1).forEach((node, index) => {
           const previous = beatNodes[index];
           const previousCopy = previous.querySelector<HTMLElement>("[data-story-copy]");
           const currentCopy = node.querySelector<HTMLElement>("[data-story-copy]");
           const currentMedia = node.querySelector<HTMLElement>("[data-story-media]");
           const currentImage = currentMedia?.querySelector("img");
-          const position = index * segment;
+          const position = lead + index * segment;
 
           if (!previousCopy || !currentCopy || !currentMedia || !currentImage) return;
 
@@ -180,7 +196,7 @@ export function TrangAnScrollStory({
       data-motion={reducedMotion ? "reduced" : "full"}
     >
       <div className={styles.scene} data-story-scene>
-        <header className={styles.intro}>
+        <header className={styles.intro} data-story-intro>
           <p className={styles.sectionLabel}>{sectionLabel}</p>
           <h2 className={styles.title}>{title}</h2>
         </header>

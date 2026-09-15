@@ -243,6 +243,36 @@
   }
 }
 
+/*
+ * A15-LOI-01: from 900px the column widths add the vw-based side padding back
+ * on. Written as plain border-box widths they shrank whenever that padding
+ * grew — at 1920px the title had 240px and broke into six lines on top of the
+ * chapter headline, and the headline had 464px and pushed its body below the
+ * fold. (`content-box` would also have added the padding to `min-height`.)
+ * The 12rem reserve keeps both columns clear of the counter and route rail.
+ */
+@media (min-width: 900px) {
+  .intro {
+    max-width: calc(
+      min(40rem, 100vw - 2 * clamp(2.5rem, 8vw, 9rem) - 12rem) + 2 * clamp(2.5rem, 8vw, 9rem)
+    );
+  }
+
+  .copy {
+    max-width: calc(
+      min(46rem, 100vw - 2 * clamp(2.5rem, 8vw, 9rem) - 12rem) + 2 * clamp(2.5rem, 8vw, 9rem)
+    );
+  }
+
+  .title {
+    max-width: 22ch;
+  }
+
+  .headline {
+    font-size: clamp(3.8rem, min(7.1vw, 12svh), 8.25rem);
+  }
+}
+
 @media (min-width: 768px) and (max-width: 899px) {
   .copy {
     max-width: calc(100% - 12.5rem);

@@ -66,3 +66,29 @@ export function loginLockedMessage(retryAfterMinutes: number): string {
   const phut = Number.isFinite(retryAfterMinutes) ? Math.min(15, Math.max(1, Math.round(retryAfterMinutes))) : 15;
   return `Nhập sai quá nhiều lần. Xin thử lại sau khoảng ${phut} phút; cần vào gấp thì nhờ quản trị hệ thống kiểm tra tài khoản.`;
 }
+
+/**
+ * A15-ACC-02 (audit 15/09/2026, LOI-05) — đọc địa chỉ máy để đếm lượt sai.
+ *
+ * Header IP chỉ đáng tin khi có một tầng mạng đứng trước ghi đè nó. Trên
+ * Vercel là vậy: tài liệu của Vercel ghi họ ghi đè `x-forwarded-for` và không
+ * chuyển IP từ bên ngoài vào, `x-real-ip` và `x-vercel-forwarded-for` giống
+ * hệt. Ngoài Vercel (máy cục bộ, bản chạy thử) khách tự gửi header này được,
+ * đổi mỗi lần là thoát khoá theo máy — nên coi như không rõ máy, và lớp gọi
+ * sẽ khoá theo tên thay vì theo máy.
+ */
+export const LOGIN_UNKNOWN_CLIENT = "khong-ro";
+
+export function resolveLoginClientIp(
+  headers: { get(name: string): string | null },
+  behindTrustedProxy: boolean,
+): string {
+  if (!behindTrustedProxy) return LOGIN_UNKNOWN_CLIENT;
+  const dauTien = (value: string | null) => value?.split(",")[0]?.trim() || "";
+  return (
+    dauTien(headers.get("x-vercel-forwarded-for")) ||
+    dauTien(headers.get("x-real-ip")) ||
+    dauTien(headers.get("x-forwarded-for")) ||
+    LOGIN_UNKNOWN_CLIENT
+  );
+}

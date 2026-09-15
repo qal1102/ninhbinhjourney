@@ -5,8 +5,10 @@ import { headers } from "next/headers";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   LOGIN_THROTTLE_WINDOW_MS,
+  LOGIN_UNKNOWN_CLIENT,
   decideLoginThrottle,
   normalizeLoginIdentifier,
+  resolveLoginClientIp,
   type LoginThrottleDecision,
   type LoginThrottleScope,
 } from "@/domain/erp-login-throttle";
@@ -43,11 +45,10 @@ function createAdminClient(): SupabaseClient | null {
 
 async function diaChiMay(): Promise<string> {
   try {
-    const h = await headers();
-    const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-    return forwarded || h.get("x-real-ip")?.trim() || "khong-ro";
+    // `VERCEL` do chính nền tảng đặt; xem `resolveLoginClientIp` vì sao chỉ tin header khi có nó.
+    return resolveLoginClientIp(await headers(), Boolean(process.env.VERCEL));
   } catch {
-    return "khong-ro";
+    return LOGIN_UNKNOWN_CLIENT;
   }
 }
 
@@ -62,7 +63,7 @@ async function taoKhoa(identifier: string): Promise<Keys> {
     "account-ip": bam(`account-ip:${ten}|${ip}`),
     // Không đọc được địa chỉ máy thì không gộp mọi người vào chung một khoá
     // "máy lạ" — gộp vậy thì hai mươi lần sai của ai đó khoá chân cả công ty.
-    ip: bam(ip === "khong-ro" ? `ip:khong-ro|${ten}` : `ip:${ip}`),
+    ip: bam(ip === LOGIN_UNKNOWN_CLIENT ? `ip:${LOGIN_UNKNOWN_CLIENT}|${ten}` : `ip:${ip}`),
     account: bam(`account:${ten}`),
   };
 }

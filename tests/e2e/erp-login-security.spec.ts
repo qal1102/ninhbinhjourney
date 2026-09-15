@@ -25,13 +25,14 @@ test("trang đăng nhập không liệt kê tên đăng nhập nào khi không b
 test("nhập sai 5 lần thì báo khoá bằng tiếng Việt, kể cả khi lần thứ sáu gõ gì", async ({ page }, testInfo) => {
   // Bài này ghi lượt sai vào bộ đếm, nên không chạy trên production.
   test.skip(Boolean(process.env.PLAYWRIGHT_BASE_URL?.trim()), "Ghi lượt đăng nhập sai; chỉ chạy cục bộ.");
-  // Mỗi lượt chạy giả một địa chỉ máy riêng, để bộ đếm theo máy không khoá
-  // chân các bài đăng nhập khác của cả bộ kiểm đang dùng chung 127.0.0.1.
-  const may = `198.51.100.${(Date.now() % 200) + (testInfo.project.name.startsWith("mobile") ? 1 : 50)}`;
-  await page.setExtraHTTPHeaders({ "x-forwarded-for": may });
+  // A15-ACC-02: ngoài Vercel máy chủ không tin header IP khách gửi, nên mọi lượt
+  // cục bộ là "không rõ máy" và bộ đếm theo máy khoá theo tên. Tên riêng cho
+  // từng lượt vì thế đủ để bài này không khoá chân các bài đăng nhập khác.
+  // Mỗi lượt giả một IP khác nhau: header đó phải KHÔNG cứu được lượt thứ sáu (lỗ LOI-05).
   const ten = `khong-co-that-${testInfo.project.name}-${Date.now()}`;
 
   for (let lan = 1; lan <= 5; lan++) {
+    await page.setExtraHTTPHeaders({ "x-forwarded-for": `198.51.100.${lan}` });
     await page.goto("/erp/login");
     // Chờ trang gắn xong trình xử lý, để không mất cú bấm (xem tests/e2e/support/erp-login.ts).
     await page.waitForLoadState("networkidle");
@@ -41,6 +42,7 @@ test("nhập sai 5 lần thì báo khoá bằng tiếng Việt, kể cả khi l�
     await expect(page).toHaveURL(/error=invalid/);
   }
 
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": "198.51.100.6" });
   await page.goto("/erp/login");
   await page.waitForLoadState("networkidle");
   await page.getByLabel(/Email hoặc tên đăng nhập/).fill(ten);

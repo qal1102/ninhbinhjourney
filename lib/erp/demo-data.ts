@@ -70,18 +70,49 @@ export type DemoErpAccount = {
   workforceProfile?: DemoWorkforceProfile;
 };
 
-const directorPassword =
-  process.env.ERP_DEMO_DIRECTOR_PASSWORD ?? "Giamdoc@2026";
-const managerPassword =
-  process.env.ERP_DEMO_MANAGER_PASSWORD ?? "Quanly@2026";
-const employeePassword =
-  process.env.ERP_DEMO_EMPLOYEE_PASSWORD ?? "Nhanvien@2026";
-const accountantPassword =
-  process.env.ERP_DEMO_ACCOUNTANT_PASSWORD ?? "Ketoan@2026";
-const chiefAccountantPassword =
-  process.env.ERP_DEMO_CHIEF_ACCOUNTANT_PASSWORD ?? "Ketoantruong@2026";
-const seasonalPassword =
-  process.env.ERP_DEMO_SEASONAL_PASSWORD ?? "Thoivu@2026";
+/**
+ * A15-ACC-02 (audit 15/09/2026, TK-08). The defaults below sit in a public
+ * repository next to every username, so they may only ever unlock a local
+ * run. On a Vercel deployment a missing variable used to fall back to them
+ * silently; now that role's shared-password login is simply closed (an empty
+ * password never matches, see `loginErpAction`) and the server logs why.
+ * Production has had all six variables set since 22/08/2026, so nothing that
+ * works today stops working — this only removes the silent failure mode.
+ */
+export function resolveDemoPassword(
+  envName: string,
+  envValue: string | undefined,
+  localDefault: string,
+  onVercel: boolean,
+): string {
+  // Returned untrimmed: the deployed value is compared exactly, as before.
+  if (envValue?.trim()) return envValue;
+  if (!onVercel) return localDefault;
+  console.error(
+    `[erp] ${envName} is not set on this deployment; that role's shared-password login is closed.`,
+  );
+  return "";
+}
+
+const onVercel = Boolean(process.env.VERCEL);
+const directorPassword = resolveDemoPassword(
+  "ERP_DEMO_DIRECTOR_PASSWORD", process.env.ERP_DEMO_DIRECTOR_PASSWORD, "Giamdoc@2026", onVercel,
+);
+const managerPassword = resolveDemoPassword(
+  "ERP_DEMO_MANAGER_PASSWORD", process.env.ERP_DEMO_MANAGER_PASSWORD, "Quanly@2026", onVercel,
+);
+const employeePassword = resolveDemoPassword(
+  "ERP_DEMO_EMPLOYEE_PASSWORD", process.env.ERP_DEMO_EMPLOYEE_PASSWORD, "Nhanvien@2026", onVercel,
+);
+const accountantPassword = resolveDemoPassword(
+  "ERP_DEMO_ACCOUNTANT_PASSWORD", process.env.ERP_DEMO_ACCOUNTANT_PASSWORD, "Ketoan@2026", onVercel,
+);
+const chiefAccountantPassword = resolveDemoPassword(
+  "ERP_DEMO_CHIEF_ACCOUNTANT_PASSWORD", process.env.ERP_DEMO_CHIEF_ACCOUNTANT_PASSWORD, "Ketoantruong@2026", onVercel,
+);
+const seasonalPassword = resolveDemoPassword(
+  "ERP_DEMO_SEASONAL_PASSWORD", process.env.ERP_DEMO_SEASONAL_PASSWORD, "Thoivu@2026", onVercel,
+);
 
 /**
  * T4. The login screen used to print every username *and* password in the

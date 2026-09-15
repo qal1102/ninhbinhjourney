@@ -122,7 +122,13 @@ export async function loginErpAction(formData: FormData) {
   }
 
   const account = findDemoErpAccountByUsername(identifier);
-  if (!account || !safePasswordEqual(password, account.password) || !isDemoErpAccountActive(account)) {
+  // An empty configured password means the role is closed on this deployment (A15-ACC-02).
+  if (
+    !account ||
+    !account.password ||
+    !safePasswordEqual(password, account.password) ||
+    !isDemoErpAccountActive(account)
+  ) {
     await recordLoginFailure(identifier);
     loginError("invalid");
   }

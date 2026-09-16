@@ -21,8 +21,8 @@ import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 import type { ExperienceSurfaceAttributes } from "@/config/experience";
 import {
+  DESTINATION_PAGE_SLUGS,
   destinationFacts,
-  destinationPageHref,
   destinations,
   type Destination,
   type DestinationId,
@@ -32,6 +32,7 @@ import {
 
 // Giữ đường nhập cũ cho các tệp đang lấy kiểu từ trang chủ.
 export type { Destination, DestinationId, Language } from "@/content/landing-destinations";
+import { destinationFromHomeHref } from "@/lib/page-continuity";
 
 export type MapCopy = {
   add: string;
@@ -1335,14 +1336,15 @@ export default function NinhBinhLanding({
                 ["booking", t.portalBooking],
               ] as const
             ).map(([destination, label]) => (
-              <a
+              <Link
                 key={destination}
                 data-experience-portal={destination}
                 href={experiencePortalHref(destination, lang, source)}
+                transitionTypes={destination === "travel" ? undefined : ["portal-enter"]}
                 className="border-b border-transparent pb-1 transition hover:border-[#E7B96A] hover:text-[#E7B96A]"
               >
                 {label}
-              </a>
+              </Link>
             ))}
           </nav>
           <div className="flex items-center gap-2">
@@ -1382,15 +1384,16 @@ export default function NinhBinhLanding({
               ["booking", t.portalBooking],
             ] as const
           ).map(([destination, label], index) => (
-            <a
+            <Link
               key={destination}
               data-experience-portal={destination}
               href={experiencePortalHref(destination, lang, source)}
+              transitionTypes={destination === "travel" ? undefined : ["portal-enter"]}
               className={`group flex min-h-11 items-center justify-between gap-2 px-3 py-2 text-[0.66rem] font-extrabold uppercase leading-4 tracking-[0.08em] transition hover:bg-white/10 hover:text-[#E7B96A] motion-reduce:transition-none ${index % 2 === 0 ? "border-r border-white/15" : ""} ${index < 2 ? "border-b border-white/15" : ""}`}
             >
               <span>{label}</span>
               <span aria-hidden="true" className="text-sm transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none">↗</span>
-            </a>
+            </Link>
           ))}
         </nav>
         <div id="top" className="hero-scene-content relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-offset,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-offset,0px))]">
@@ -2008,7 +2011,11 @@ export default function NinhBinhLanding({
                       nhanh ngay trên trang chủ, còn trang riêng là địa chỉ để
                       chia sẻ và để máy tìm kiếm lập chỉ mục. */}
                   <Link
-                    href={destinationPageHref(detailDestination.id)}
+                    href={destinationFromHomeHref(
+                      DESTINATION_PAGE_SLUGS[detailDestination.id],
+                      { lang, ...(source ? { source } : {}) },
+                    )}
+                    transitionTypes={["nav-forward"]}
                     className="rounded-full px-5 py-3 text-center font-semibold text-[#183F34] underline decoration-[#A8CEC1] underline-offset-4 hover:decoration-[#183F34]"
                   >
                     {t.destinationPage}

@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { ExploreExperience } from "@/components/discovery/explore-experience";
 import { readPublicEnvironment } from "@/config/experience";
+import {
+  readContinuityContext,
+  withContinuityContext,
+} from "@/lib/page-continuity";
 
 export const metadata = {
   title: "Khám phá Ninh Bình | Ninh Bình Journey",
@@ -9,7 +13,12 @@ export const metadata = {
   alternates: { canonical: "/explore" },
 };
 
-export default function ExplorePage() {
+export default async function ExplorePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const navigationContext = readContinuityContext(await searchParams);
   const environment = readPublicEnvironment();
   const clientDemo =
     environment.status === "ready" &&
@@ -19,13 +28,24 @@ export default function ExplorePage() {
       <header className="border-b border-[#d7d5cd] bg-[#fbfaf6]">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <Link
-            href="/"
+            href={withContinuityContext("/", navigationContext, {
+              from: undefined,
+              package: undefined,
+              parent: undefined,
+            })}
             className="font-display text-lg tracking-[0.12em] text-[#183f34]"
           >
             NINH BÌNH
           </Link>
           <nav className="flex items-center gap-2 text-sm font-bold">
-            <Link href="/plan" className="rounded-full px-4 py-2">
+            <Link
+              href={withContinuityContext("/plan", navigationContext, {
+                from: undefined,
+                package: undefined,
+                parent: undefined,
+              })}
+              className="rounded-full px-4 py-2"
+            >
               Lập hành trình
             </Link>
             {clientDemo ? (
@@ -53,7 +73,7 @@ export default function ExplorePage() {
           </p>
         </div>
         <div className="mt-10">
-          <ExploreExperience />
+          <ExploreExperience navigationContext={navigationContext} />
         </div>
       </section>
     </main>

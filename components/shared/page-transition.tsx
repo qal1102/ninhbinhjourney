@@ -1,16 +1,16 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, ViewTransition, type ReactNode } from "react";
 
 /**
  * Chuyen trang mem: moi lan doi duong dan, noi dung moi mo dan len mot
  * chut thay vi nhay cai bup.
  *
- * Co tinh KHONG dung View Transitions API hay co experimental cua Next:
- * ca hai deu con thay doi va chi chay tren mot so trinh duyet. Cach nay
- * la CSS thuan + mot lop class, chay o moi noi, va neu JS chet thi trang
- * van hien binh thuong (khong bao gio ket o trang thai mo).
+ * Lop opacity nay chi la fallback cho trinh duyet khong co View Transitions.
+ * Trinh duyet co ho tro dung shared-image morph; CSS trong globals se tat
+ * animation fallback de hai hieu ung khong chong len nhau. Neu JS chet thi
+ * noi dung van hien binh thuong, khong bao gio ket o trang thai mo.
  *
  * prefers-reduced-motion: bo qua hoan toan, khong dung tay vao DOM.
  */
@@ -18,6 +18,13 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const ref = useRef<HTMLDivElement>(null);
   const first = useRef(true);
+
+  useEffect(() => {
+    // A real route morph can only start after the App Router has hydrated.
+    // Expose that boundary for browser tests instead of racing a server-rendered
+    // <Link>, which would legitimately fall back to a full document navigation.
+    document.documentElement.dataset.nbjRouterReady = "true";
+  }, []);
 
   useEffect(() => {
     // Lan dau tai trang da co man intro roi, khong chen them chuyen dong.
@@ -37,8 +44,25 @@ export function PageTransition({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <div ref={ref} className="page-enter">
-      {children}
-    </div>
+    <ViewTransition
+      key={pathname}
+      enter={{
+        "nav-forward": "route-forward",
+        "nav-back": "route-back",
+        "portal-enter": "portal-page",
+        default: "none",
+      }}
+      exit={{
+        "nav-forward": "route-forward",
+        "nav-back": "route-back",
+        "portal-enter": "portal-page",
+        default: "none",
+      }}
+      default="none"
+    >
+      <div ref={ref} className="page-enter">
+        {children}
+      </div>
+    </ViewTransition>
   );
 }

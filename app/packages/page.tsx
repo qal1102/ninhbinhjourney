@@ -8,6 +8,15 @@ import {
   readPublicEnvironment,
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
+import { SharedImageTransition } from "@/components/shared/shared-image-transition";
+import {
+  checkoutHref,
+  packageCatalogBackHref,
+  packageDetailHref,
+  packageImageTransitionName,
+  readContinuityContext,
+  type ContinuityContext,
+} from "@/lib/page-continuity";
 
 export const metadata = {
   title: "Gói hành trình | Ninh Bình Journey",
@@ -17,21 +26,21 @@ export const metadata = {
 
 function PackageCard({
   item,
-  journey,
+  navigationContext,
   checkoutAvailable,
   featured,
   reversed,
   suggested,
 }: {
   item: PackageCatalogItem;
-  journey: string | undefined;
+  navigationContext: ContinuityContext;
   checkoutAvailable: boolean;
   featured?: boolean;
   reversed?: boolean;
   suggested?: boolean;
 }) {
   const image = getPackageHeroImage(item);
-  const detailHref = `/packages/${item.slug}${journey ? `?journey=${journey}` : ""}`;
+  const detailHref = packageDetailHref(item.slug, navigationContext, "catalog");
 
   return (
     <article
@@ -40,7 +49,8 @@ function PackageCard({
         featured ? "xl:grid xl:grid-cols-[1.1fr_1fr]" : `xl:flex xl:items-stretch ${reversed ? "xl:flex-row-reverse" : ""}`
       }`}
     >
-      <div
+      <SharedImageTransition
+        name={packageImageTransitionName(item.slug)}
         className={`relative ${
           featured ? "aspect-[16/10] xl:aspect-auto" : "aspect-[16/10] xl:aspect-auto xl:w-2/5 xl:shrink-0"
         }`}
@@ -52,7 +62,7 @@ function PackageCard({
           sizes={featured ? "(min-width: 1280px) 55vw, 100vw" : "(min-width: 1280px) 40vw, 100vw"}
           className="object-cover"
         />
-      </div>
+      </SharedImageTransition>
       <div className={featured ? "min-w-0 p-5 min-[280px]:p-6 sm:p-8 xl:p-10" : "min-w-0 p-5 min-[280px]:p-6 sm:p-8 xl:flex-1"}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1 basis-[16rem]">
@@ -96,13 +106,14 @@ function PackageCard({
             data-customer-content-id={item.id}
             data-customer-content-type="package"
             href={detailHref}
+            transitionTypes={["nav-forward"]}
             className="inline-flex min-h-11 items-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
           >
             Xem chi tiết
           </Link>
           {checkoutAvailable ? (
             <Link
-              href={`/checkout?package=${item.slug}${journey ? `&journey=${journey}` : ""}`}
+              href={checkoutHref(item.slug, navigationContext)}
               className="inline-flex min-h-11 items-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
               Chọn gói
@@ -120,8 +131,7 @@ export default async function PackagesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const journeyValue = params.journey;
-  const journey = typeof journeyValue === "string" ? journeyValue : undefined;
+  const navigationContext = readContinuityContext(params);
   // QA-P2-09: gói gần nhất với hành trình khách vừa dựng ở /plan.
   const goiValue = params.goi;
   const goiGoiY = typeof goiValue === "string" ? PACKAGES.find((item) => item.slug === goiValue) : undefined;
@@ -146,7 +156,11 @@ export default async function PackagesPage({
       className="min-h-screen bg-[#f4f0e7] px-4 py-10 text-[#151a17] min-[280px]:px-5 sm:px-8 lg:py-16"
     >
       <div className="mx-auto max-w-7xl">
-        <Link href={journey ? `/journey/${journey}` : "/plan"} className="text-sm font-bold text-[#356957]">
+        <Link
+          href={packageCatalogBackHref(navigationContext)}
+          transitionTypes={["nav-back"]}
+          className="text-sm font-bold text-[#356957]"
+        >
           ← Quay lại hành trình
         </Link>
         {goiGoiY ? (
@@ -183,7 +197,7 @@ export default async function PackagesPage({
         <div className="mt-10 flex flex-col gap-6 lg:gap-8">
           <PackageCard
             item={featured}
-            journey={journey}
+            navigationContext={navigationContext}
             checkoutAvailable={checkoutAvailable}
             featured
             suggested={goiGoiY?.slug === featured.slug}
@@ -192,7 +206,7 @@ export default async function PackagesPage({
             <PackageCard
               key={item.id}
               item={item}
-              journey={journey}
+              navigationContext={navigationContext}
               checkoutAvailable={checkoutAvailable}
               reversed={index % 2 === 1}
               suggested={goiGoiY?.slug === item.slug}

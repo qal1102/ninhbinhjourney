@@ -2,11 +2,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { MiniRouteMap } from "@/components/discovery/mini-route-map";
 import {
-  destinationPageHref,
+  DESTINATION_PAGE_SLUGS,
   destinations,
   type Destination,
   type DestinationFacts,
 } from "@/content/landing-destinations";
+import { SharedImageTransition } from "@/components/shared/shared-image-transition";
+import {
+  destinationBackHref,
+  destinationImageTransitionName,
+  destinationRelatedHref,
+  packageCatalogHref,
+  withContinuityContext,
+  type ContinuityContext,
+} from "@/lib/page-continuity";
 
 /**
  * Trang riêng cho những điểm đến chưa có hồ sơ sâu trong
@@ -20,9 +29,11 @@ import {
 export function LandingDestinationPage({
   destination,
   facts,
+  navigationContext,
 }: {
   destination: Destination;
   facts: DestinationFacts;
+  navigationContext: ContinuityContext;
 }) {
   const [latitude, longitude] = destination.position;
   const pairs = facts.pairWith
@@ -43,7 +54,8 @@ export function LandingDestinationPage({
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 text-white sm:px-8">
           <Link
-            href="/explore"
+            href={destinationBackHref(navigationContext)}
+            transitionTypes={["nav-back"]}
             className="rounded-full bg-black/25 px-4 py-2 text-sm font-bold backdrop-blur"
           >
             ← Khám phá
@@ -58,15 +70,22 @@ export function LandingDestinationPage({
         data-customer-section="destination-hero"
         className="relative min-h-[68vh] overflow-hidden bg-[#183f34]"
       >
-        <Image
-          src={destination.image}
-          alt={destination.name.vi}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-          style={{ objectPosition: destination.imagePosition }}
-        />
+        <SharedImageTransition
+          name={destinationImageTransitionName(
+            DESTINATION_PAGE_SLUGS[destination.id],
+          )}
+          className="absolute inset-0"
+        >
+          <Image
+            src={destination.image}
+            alt={destination.name.vi}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+            style={{ objectPosition: destination.imagePosition }}
+          />
+        </SharedImageTransition>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,28,23,.12),rgba(12,28,23,.84))]" />
         <div className="relative z-10 mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-end px-5 pb-12 text-white sm:px-8 sm:pb-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#e7c78d]">
@@ -170,13 +189,17 @@ export function LandingDestinationPage({
           </dl>
           <div className="mt-7 grid gap-3">
             <Link
-              href="/plan"
+              href={withContinuityContext("/plan", navigationContext, {
+                from: undefined,
+                package: undefined,
+                parent: undefined,
+              })}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
               Lập hành trình
             </Link>
             <Link
-              href="/packages"
+              href={packageCatalogHref(navigationContext)}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
             >
               Xem các gói đi sẵn
@@ -198,7 +221,10 @@ export function LandingDestinationPage({
               {pairs.map((item) => (
                 <Link
                   key={item.id}
-                  href={destinationPageHref(item.id)}
+                  href={destinationRelatedHref(
+                    DESTINATION_PAGE_SLUGS[item.id],
+                    navigationContext,
+                  )}
                   className="rounded-2xl border border-white/15 bg-white/8 p-5 transition hover:bg-white/12"
                 >
                   <p className="font-display text-2xl">{item.name.vi}</p>

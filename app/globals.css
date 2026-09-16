@@ -1660,6 +1660,116 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   animation: page-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/*
+ * Native route continuity owns the transition on supporting browsers. The
+ * old opacity entrance remains only as a progressively enhanced fallback, so
+ * one navigation never stacks a document fade on top of the shared-image
+ * morph. Root snapshots are intentionally static: only named media moves.
+ */
+@supports (view-transition-name: none) {
+  .page-enter {
+    animation: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+
+  ::view-transition-group(.page-continuity-morph),
+  ::view-transition-old(.page-continuity-morph),
+  ::view-transition-new(.page-continuity-morph) {
+    animation-duration: 460ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-old(.page-continuity-morph),
+  ::view-transition-new(.page-continuity-morph) {
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-group(.route-forward),
+  ::view-transition-group(.route-back),
+  ::view-transition-group(.portal-page) {
+    z-index: 2147483000;
+  }
+
+  ::view-transition-old(.route-forward),
+  ::view-transition-old(.route-back) {
+    animation: 420ms cubic-bezier(0.22, 1, 0.36, 1) both route-root-old;
+  }
+
+  ::view-transition-old(.route-forward) {
+    --root-route-offset: -0.8rem;
+  }
+
+  ::view-transition-old(.route-back) {
+    --root-route-offset: 0.8rem;
+  }
+
+  ::view-transition-new(.route-forward) {
+    --root-route-offset: 1.5rem;
+    animation: 420ms cubic-bezier(0.22, 1, 0.36, 1) both route-root-new;
+  }
+
+  ::view-transition-new(.route-back) {
+    --root-route-offset: -1.5rem;
+    animation: 420ms cubic-bezier(0.22, 1, 0.36, 1) both route-root-new;
+  }
+
+  ::view-transition-old(.portal-page) {
+    animation: 640ms cubic-bezier(0.76, 0, 0.24, 1) both portal-root-old;
+  }
+
+  ::view-transition-new(.portal-page) {
+    animation: 640ms cubic-bezier(0.76, 0, 0.24, 1) both portal-root-reveal;
+  }
+}
+
+@keyframes portal-root-old {
+  from {
+    filter: brightness(1) saturate(1);
+    scale: 1;
+  }
+  to {
+    filter: brightness(0.68) saturate(0.74);
+    scale: 0.992;
+  }
+}
+
+@keyframes portal-root-reveal {
+  from {
+    clip-path: inset(0 0 0 100%);
+    filter: saturate(0.72);
+  }
+  to {
+    clip-path: inset(0);
+    filter: saturate(1);
+  }
+}
+
+@keyframes route-root-old {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0.34;
+    translate: var(--root-route-offset) 0;
+  }
+}
+
+@keyframes route-root-new {
+  from {
+    opacity: 0;
+    translate: var(--root-route-offset) 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
 @keyframes page-enter {
   from {
     opacity: 0;
@@ -1684,5 +1794,12 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
 @media (prefers-reduced-motion: reduce) {
   .page-enter {
     animation: none;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

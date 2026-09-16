@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_BUILD_DIST_DIR ?? ".next",
+  experimental: {
+    viewTransition: true,
+  },
   async headers() {
     return [
       {

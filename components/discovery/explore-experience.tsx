@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "@/components/shared/use-reduced-motion";
+import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import {
   DESTINATIONS,
   destinationInterests,
@@ -12,6 +13,12 @@ import {
   type DestinationInterest,
   type MobilityLevel,
 } from "@/content/destinations";
+import {
+  destinationFromExploreHref,
+  destinationImageTransitionName,
+  planDestinationHref,
+  type ContinuityContext,
+} from "@/lib/page-continuity";
 
 type ViewMode = "map" | "list";
 type FamilyFilter = "all" | "children" | "seniors";
@@ -52,9 +59,11 @@ const ExploreMap = dynamic(() => import("./explore-map"), {
 function DestinationSheet({
   destination,
   onClose,
+  navigationContext,
 }: {
   destination: DestinationCatalogItem;
   onClose: () => void;
+  navigationContext: ContinuityContext;
 }) {
   const closeButton = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLElement>(null);
@@ -114,7 +123,10 @@ function DestinationSheet({
         data-testid="explore-detail-sheet"
         className="max-h-[88vh] w-full overflow-y-auto rounded-3xl bg-[#fbfaf6] shadow-2xl lg:max-w-md"
       >
-        <div className="relative aspect-[16/10]">
+        <SharedImageTransition
+          name={destinationImageTransitionName(destination.slug)}
+          className="relative aspect-[16/10]"
+        >
           <Image
             src={destination.image}
             alt={destination.imageAlt.vi}
@@ -131,7 +143,7 @@ function DestinationSheet({
           >
             ×
           </button>
-        </div>
+        </SharedImageTransition>
         <div className="p-6">
           <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#356957]">
             {destination.suggestedMinutes} phút ·{" "}
@@ -148,13 +160,21 @@ function DestinationSheet({
           </p>
           <div className="mt-6 flex gap-3">
             <Link
-              href={`/destination/${destination.slug}`}
+              href={destinationFromExploreHref(
+                destination.slug,
+                navigationContext,
+              )}
+              transitionTypes={["nav-forward"]}
               className="inline-flex min-h-12 items-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
               Xem câu chuyện
             </Link>
             <Link
-              href={`/plan?add=${destination.id}`}
+              href={planDestinationHref(
+                "add",
+                destination.id,
+                navigationContext,
+              )}
               className="inline-flex min-h-12 items-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
             >
               Thêm vào hành trình
@@ -166,7 +186,11 @@ function DestinationSheet({
   );
 }
 
-export function ExploreExperience() {
+export function ExploreExperience({
+  navigationContext,
+}: {
+  navigationContext: ContinuityContext;
+}) {
   const [viewMode, setViewMode] = useState<ViewMode>("map");
   const [interest, setInterest] = useState<DestinationInterest | "all">("all");
   const [maxMinutes, setMaxMinutes] = useState(240);
@@ -688,7 +712,11 @@ export function ExploreExperience() {
       </div>
 
       {detailDestination ? (
-        <DestinationSheet destination={detailDestination} onClose={closeSheet} />
+        <DestinationSheet
+          destination={detailDestination}
+          onClose={closeSheet}
+          navigationContext={navigationContext}
+        />
       ) : null}
     </div>
   );

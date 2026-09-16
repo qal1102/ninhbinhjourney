@@ -175,10 +175,10 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
     <main ref={rootRef} data-collaboration-dossier data-dossier-active={activeId} className="min-h-screen bg-[#e9e4d9] text-[#1a2922]">
       <header className="sticky top-0 z-50 border-b border-[#1a2922]/15 bg-[#e9e4d9]/92 backdrop-blur">
         <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <Link href={href("/", lang, source)} className="font-display text-lg tracking-[0.1em] text-[#183f34]">NINH BÌNH</Link>
+          <Link href={href("/", lang, source)} transitionTypes={["nav-back"]} className="font-display text-lg tracking-[0.1em] text-[#183f34]">NINH BÌNH</Link>
           <nav aria-label={lang === "vi" ? "Điều hướng dossier" : "Dossier navigation"} className="flex items-center gap-4 text-xs font-bold sm:gap-6 sm:text-sm">
-            <Link href={href("/", lang, source)} className="underline underline-offset-4">{t.back}</Link>
-            <Link href={href("/packages", lang, source)} className="hidden underline underline-offset-4 sm:inline">{t.booking}</Link>
+            <Link href={href("/", lang, source)} transitionTypes={["nav-back"]} className="underline underline-offset-4">{t.back}</Link>
+            <Link href={href("/packages", lang, source)} transitionTypes={["portal-enter"]} className="hidden underline underline-offset-4 sm:inline">{t.booking}</Link>
           </nav>
         </div>
       </header>
@@ -218,7 +218,7 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
         </div>
       </section>
 
-      <section className="bg-[#183f34] px-5 py-16 text-white sm:px-8 sm:py-24"><div className="mx-auto grid max-w-[90rem] gap-8 lg:grid-cols-[1fr_auto] lg:items-end"><div className="max-w-3xl"><p className="text-[0.62rem] font-extrabold uppercase tracking-[0.28em] text-[#e7c78d]">Ninh Binh Journey</p><h2 className="font-display mt-5 text-4xl leading-[0.95] sm:text-6xl">{t.closing}</h2></div><div className="flex flex-col gap-3 sm:flex-row lg:flex-col"><ProtectedMailLink subject={lang === "vi" ? "Trao đổi dossier sáng tạo Ninh Bình" : "Ninh Binh creative dossier"} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#e7c78d] px-6 text-sm font-bold text-[#183f34] transition hover:bg-[#f0d39c]">{t.contact}</ProtectedMailLink><a href={contact.phoneHref} className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/35 px-6 text-sm font-bold transition hover:bg-white/10">{t.call} · {contact.phoneLabel}</a></div></div><div className="mx-auto mt-10 max-w-[90rem] border-t border-white/15 pt-5 text-sm text-white/70"><Link href={href("/seasonal/mid-autumn", lang, source)} className="underline underline-offset-4">{t.seasonal}</Link></div></section>
+      <section className="bg-[#183f34] px-5 py-16 text-white sm:px-8 sm:py-24"><div className="mx-auto grid max-w-[90rem] gap-8 lg:grid-cols-[1fr_auto] lg:items-end"><div className="max-w-3xl"><p className="text-[0.62rem] font-extrabold uppercase tracking-[0.28em] text-[#e7c78d]">Ninh Binh Journey</p><h2 className="font-display mt-5 text-4xl leading-[0.95] sm:text-6xl">{t.closing}</h2></div><div className="flex flex-col gap-3 sm:flex-row lg:flex-col"><ProtectedMailLink subject={lang === "vi" ? "Trao đổi dossier sáng tạo Ninh Bình" : "Ninh Binh creative dossier"} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#e7c78d] px-6 text-sm font-bold text-[#183f34] transition hover:bg-[#f0d39c]">{t.contact}</ProtectedMailLink><a href={contact.phoneHref} className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/35 px-6 text-sm font-bold transition hover:bg-white/10">{t.call} · {contact.phoneLabel}</a></div></div><div className="mx-auto mt-10 max-w-[90rem] border-t border-white/15 pt-5 text-sm text-white/70"><Link href={href("/seasonal/mid-autumn", lang, source)} transitionTypes={["portal-enter"]} className="underline underline-offset-4">{t.seasonal}</Link></div></section>
     </main>
   );
 }

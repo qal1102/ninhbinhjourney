@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { FLOATING_YIELD_CLASS, useFloatingYield } from "@/lib/use-floating-yield";
 
 /** Nút "Mục lục" ở đầu trang bắn sự kiện này để mở hộp thoại mục lục. */
@@ -494,9 +495,10 @@ export function JourneyConcierge({ lang, source = "" }: { lang: Language; source
                   </p>
                   <div className="mt-3 grid gap-2">
                     {copy.worlds.map((world, index) => (
-                      <a
+                      <Link
                         key={world.id}
                         href={worldHref(world.pathname, lang, source)}
+                        transitionTypes={["portal-enter"]}
                         onClick={() => {
                           if (open) closeDialog();
                         }}
@@ -512,7 +514,7 @@ export function JourneyConcierge({ lang, source = "" }: { lang: Language; source
                           <span className="mt-0.5 block text-xs leading-5 text-[#6D756F]">{world.description}</span>
                         </span>
                         <ChapterArrow />
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>

@@ -14,6 +14,14 @@ import {
   getLandingDestinationBySlug,
 } from "@/content/landing-destinations";
 import { absoluteUrl } from "@/lib/site-url";
+import { SharedImageTransition } from "@/components/shared/shared-image-transition";
+import {
+  destinationBackHref,
+  destinationImageTransitionName,
+  destinationRelatedHref,
+  planDestinationHref,
+  readContinuityContext,
+} from "@/lib/page-continuity";
 
 type DestinationPageProps = {
   params: Promise<{ slug: string }>;
@@ -68,14 +76,21 @@ export default async function DestinationPage({
   searchParams,
 }: DestinationPageProps) {
   const slug = (await params).slug;
+  const query = await searchParams;
+  const navigationContext = readContinuityContext(query);
   const destination = getDestinationBySlug(slug);
   if (!destination) {
     const landing = getLandingDestinationBySlug(slug);
     if (!landing) notFound();
-    return <LandingDestinationPage destination={landing.destination} facts={landing.facts} />;
+    return (
+      <LandingDestinationPage
+        destination={landing.destination}
+        facts={landing.facts}
+        navigationContext={navigationContext}
+      />
+    );
   }
-  const query = await searchParams;
-  const fromJourney = typeof query.journey === "string";
+  const fromJourney = Boolean(navigationContext.journey);
   const fit = typeof query.fit === "string" ? query.fit : null;
   const related = destination.relatedSlugs
     .map(getDestinationBySlug)
@@ -86,7 +101,8 @@ export default async function DestinationPage({
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 text-white sm:px-8">
           <Link
-            href="/explore"
+            href={destinationBackHref(navigationContext)}
+            transitionTypes={["nav-back"]}
             className="rounded-full bg-black/25 px-4 py-2 text-sm font-bold backdrop-blur"
           >
             ← Khám phá
@@ -97,14 +113,19 @@ export default async function DestinationPage({
         </div>
       </header>
       <section data-customer-section="destination-hero" className="relative min-h-[68vh] overflow-hidden bg-[#183f34]">
-        <Image
-          src={destination.image}
-          alt={destination.imageAlt.vi}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
+        <SharedImageTransition
+          name={destinationImageTransitionName(destination.slug)}
+          className="absolute inset-0"
+        >
+          <Image
+            src={destination.image}
+            alt={destination.imageAlt.vi}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        </SharedImageTransition>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,28,23,.12),rgba(12,28,23,.84))]" />
         <div className="relative z-10 mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-end px-5 pb-12 text-white sm:px-8 sm:pb-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#e7c78d]">
@@ -321,7 +342,11 @@ export default async function DestinationPage({
               data-customer-track="destination-add-to-plan"
               data-customer-content-id={destination.id}
               data-customer-content-type="destination"
-              href={`/plan?add=${destination.id}`}
+              href={planDestinationHref(
+                "add",
+                destination.id,
+                navigationContext,
+              )}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
               Thêm vào hành trình
@@ -329,13 +354,21 @@ export default async function DestinationPage({
             {fromJourney ? (
               <>
                 <Link
-                  href={`/plan?replace=${destination.id}&journey=${query.journey}`}
+                  href={planDestinationHref(
+                    "replace",
+                    destination.id,
+                    navigationContext,
+                  )}
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
                 >
                   Thay điểm hiện tại
                 </Link>
                 <Link
-                  href={`/plan?remove=${destination.id}&journey=${query.journey}`}
+                  href={planDestinationHref(
+                    "remove",
+                    destination.id,
+                    navigationContext,
+                  )}
                   className="inline-flex min-h-12 items-center justify-center rounded-full px-5 font-bold text-[#8f2f2c]"
                 >
                   Xóa khỏi hành trình
@@ -355,7 +388,7 @@ export default async function DestinationPage({
             {related.map((item) => (
               <Link
                 key={item.id}
-                href={`/destination/${item.slug}`}
+                href={destinationRelatedHref(item.slug, navigationContext)}
                 className="rounded-2xl border border-white/15 bg-white/8 p-5 transition hover:bg-white/12"
               >
                 <p className="font-display text-2xl">{item.name.vi}</p>

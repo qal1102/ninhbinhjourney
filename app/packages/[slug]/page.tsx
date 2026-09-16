@@ -10,6 +10,15 @@ import {
   readPublicEnvironment,
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
+import { SharedImageTransition } from "@/components/shared/shared-image-transition";
+import {
+  checkoutHref,
+  destinationFromPackageHref,
+  destinationImageTransitionName,
+  packageDetailBackHref,
+  packageImageTransitionName,
+  readContinuityContext,
+} from "@/lib/page-continuity";
 
 export function generateStaticParams() {
   return PACKAGES.map((item) => ({ slug: item.slug }));
@@ -25,10 +34,7 @@ export default async function PackageDetailPage({
   const item = getPackageBySlug((await params).slug);
   if (!item) notFound();
   const query = await searchParams;
-  const journeyValue = query.journey;
-  const journey = typeof journeyValue === "string" ? journeyValue : undefined;
-  const source = typeof query.source === "string" ? query.source : undefined;
-  const lang = query.lang === "en" ? "en" : "vi";
+  const navigationContext = readContinuityContext(query);
   const flags = getExperiencePresentationFlags(readPublicEnvironment());
   const customerBookingEnabled = isCustomerBookingEnabled();
   const checkoutAvailable = flags.sandboxCheckout || customerBookingEnabled;
@@ -41,12 +47,16 @@ export default async function PackageDetailPage({
     <main data-customer-section="package-detail" className="min-h-screen bg-[#183f34] px-5 py-10 text-white sm:px-8 lg:py-16">
       <div className="mx-auto max-w-6xl">
         <Link
-          href={`/packages${journey ? `?journey=${journey}` : ""}`}
+          href={packageDetailBackHref(navigationContext)}
+          transitionTypes={["nav-back"]}
           className="text-sm font-bold text-[#e7c78d]"
         >
           ← So sánh gói
         </Link>
-        <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-3xl sm:aspect-[21/9]">
+        <SharedImageTransition
+          name={packageImageTransitionName(item.slug)}
+          className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-3xl sm:aspect-[21/9]"
+        >
           <Image
             src={hero.src}
             alt={hero.alt}
@@ -55,7 +65,7 @@ export default async function PackageDetailPage({
             sizes="(min-width: 1024px) 1152px, 100vw"
             className="object-cover"
           />
-        </div>
+        </SharedImageTransition>
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_0.72fr]">
           <section>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
@@ -78,10 +88,18 @@ export default async function PackageDetailPage({
                   data-customer-track="package-destination"
                   data-customer-content-id={site.id}
                   data-customer-content-type="destination"
-                  href={`/destination/${site.slug}?journey=${journey ?? ""}`}
+                  href={destinationFromPackageHref(
+                    site.slug,
+                    item.slug,
+                    navigationContext,
+                  )}
+                  transitionTypes={["nav-forward"]}
                   className="overflow-hidden rounded-2xl border border-white/15 bg-white/7"
                 >
-                  <div className="relative aspect-[16/10]">
+                  <SharedImageTransition
+                    name={destinationImageTransitionName(site.slug)}
+                    className="relative aspect-[16/10]"
+                  >
                     <Image
                       src={site.image}
                       alt={site.imageAlt.vi}
@@ -89,7 +107,7 @@ export default async function PackageDetailPage({
                       sizes="(min-width: 640px) 22vw, 100vw"
                       className="object-cover"
                     />
-                  </div>
+                  </SharedImageTransition>
                   <div className="p-5">
                     <p className="font-display text-2xl">{site.name.vi}</p>
                     <p className="mt-2 text-sm leading-6 text-white/58">
@@ -142,7 +160,7 @@ export default async function PackageDetailPage({
                   data-customer-track="package-checkout"
                   data-customer-content-id={item.id}
                   data-customer-content-type="package"
-                  href={`/checkout?package=${item.slug}&lang=${lang}${journey ? `&journey=${journey}` : ""}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
+                  href={checkoutHref(item.slug, navigationContext)}
                   className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#d58c35] px-6 font-extrabold"
                 >
                   {customerBookingEnabled ? "Giữ chỗ 15 phút" : "Tiếp tục bản trình diễn"}

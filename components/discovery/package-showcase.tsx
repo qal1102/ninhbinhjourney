@@ -2,11 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "@/components/shared/reveal";
 import { RevealHeading } from "@/components/shared/reveal-heading";
+import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import { PACE_LABEL, PACKAGES, type PackageCatalogItem } from "@/content/packages";
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGE_IMAGE_SITE_ID } from "@/content/package-images";
 import { CONTACT } from "@/content/contact";
 import { ProtectedMailLink } from "@/components/discovery/protected-mail-link";
+import {
+  packageCatalogHref,
+  packageDetailHref,
+  packageImageTransitionName,
+  type ContinuityContext,
+} from "@/lib/page-continuity";
 
 type Language = "en" | "vi";
 
@@ -88,10 +95,6 @@ function packageDisplay(item: PackageCatalogItem, lang: Language) {
   return { name, audience, durationLabel, paceLabel, priceText, image, imageAlt };
 }
 
-function packageHref(slug: string, lang: Language, source: string) {
-  return `/packages/${slug}?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`;
-}
-
 /**
  * Khoi "gói trải nghiệm" tren trang chu.
  *
@@ -119,9 +122,17 @@ export function PackageShowcase({
   copy: PackageShowcaseCopy;
 }) {
   const [featured, ...rest] = PACKAGES;
+  const navigationContext: ContinuityContext = {
+    lang,
+    ...(source ? { source } : {}),
+  };
   const featuredDisplay = packageDisplay(featured, lang);
-  const featuredHref = packageHref(featured.slug, lang, source);
-  const viewAllHref = `/packages?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`;
+  const featuredHref = packageDetailHref(
+    featured.slug,
+    navigationContext,
+    "home",
+  );
+  const viewAllHref = packageCatalogHref(navigationContext, "home");
   const contactSubject =
     lang === "vi"
       ? "Hỏi về gói trải nghiệm — Ninh Bình Journey"
@@ -168,7 +179,10 @@ export function PackageShowcase({
           delayMs={80}
           className="mt-12 grid overflow-hidden rounded-[10px] border border-[#A8CEC1]/60 bg-white shadow-xl shadow-[#183F34]/10 xl:grid-cols-[1.1fr_1fr]"
         >
-          <div className="relative aspect-[4/3] xl:aspect-auto">
+          <SharedImageTransition
+            name={packageImageTransitionName(featured.slug)}
+            className="relative aspect-[4/3] xl:aspect-auto"
+          >
             <Image
               src={featuredDisplay.image}
               alt={featuredDisplay.imageAlt}
@@ -176,7 +190,7 @@ export function PackageShowcase({
               sizes="(min-width: 1280px) 46vw, 100vw"
               className="object-cover"
             />
-          </div>
+          </SharedImageTransition>
           <div className="flex flex-col justify-center p-7 sm:p-10">
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#3F7568]">
               {featuredDisplay.durationLabel} · {featuredDisplay.paceLabel}
@@ -191,6 +205,7 @@ export function PackageShowcase({
               data-customer-content-id={featured.id}
               data-customer-content-type="package"
               href={featuredHref}
+              transitionTypes={["nav-forward"]}
               className="mt-6 inline-flex min-h-11 max-w-full w-fit items-center justify-center rounded-full bg-[#183F34] px-6 text-center font-semibold leading-5 text-white transition hover:bg-[#2C5F4F]"
             >
               {copy.cta}
@@ -201,7 +216,7 @@ export function PackageShowcase({
         <div className="mt-8 grid grid-cols-1 items-start gap-5 sm:gap-6 md:grid-cols-2 xl:grid-cols-12">
           {rest.map((item, index) => {
             const display = packageDisplay(item, lang);
-            const href = packageHref(item.slug, lang, source);
+            const href = packageDetailHref(item.slug, navigationContext, "home");
             // Hang 1 = [lon, nho], hang 2 = [nho, lon], hang 3 lai ve [lon, nho]...
             // -- nhip zigzag that su doi ben moi hang, khong phai "lon luon o
             // trai" lap lai. `row` la hang thu may (0, 1, 2...), `position` la
@@ -220,7 +235,10 @@ export function PackageShowcase({
                   big ? "xl:col-span-7" : "xl:col-span-5"
                 }`}
               >
-                <div className={`relative w-full aspect-[16/10] ${big ? "xl:aspect-[7/6]" : "xl:aspect-[4/5]"}`}>
+                <SharedImageTransition
+                  name={packageImageTransitionName(item.slug)}
+                  className={`relative w-full aspect-[16/10] ${big ? "xl:aspect-[7/6]" : "xl:aspect-[4/5]"}`}
+                >
                   <Image
                     src={display.image}
                     alt={display.imageAlt}
@@ -228,7 +246,7 @@ export function PackageShowcase({
                     sizes={big ? "(min-width: 1280px) 58vw, 100vw" : "(min-width: 1280px) 40vw, 100vw"}
                     className="object-cover"
                   />
-                </div>
+                </SharedImageTransition>
                 <div className="flex min-w-0 flex-col gap-5 p-5 sm:p-6">
                   <div className="min-w-0">
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#3F7568]">
@@ -246,6 +264,7 @@ export function PackageShowcase({
                       data-customer-content-id={item.id}
                       data-customer-content-type="package"
                       href={href}
+                      transitionTypes={["nav-forward"]}
                       className="inline-flex min-h-10 max-w-full items-center justify-center rounded-full border border-[#183F34]/40 px-5 text-center text-sm font-semibold leading-5 text-[#183F34] transition hover:bg-[#183F34] hover:text-white"
                     >
                       {copy.cta}

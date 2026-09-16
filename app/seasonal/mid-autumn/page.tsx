@@ -29,10 +29,10 @@ export default async function MidAutumnPage({
     <main className="min-h-screen bg-[#17231f]">
       <header className="border-b border-white/15 bg-[#13251f] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-4 sm:px-8">
-          <Link href={`/?${homeParams.toString()}`} className="font-display text-lg tracking-[0.1em]">NINH BÌNH</Link>
+          <Link href={`/?${homeParams.toString()}`} transitionTypes={["nav-back"]} className="font-display text-lg tracking-[0.1em]">NINH BÌNH</Link>
           <nav aria-label={lang === "vi" ? "Điều hướng mùa" : "Season navigation"} className="flex gap-5 text-sm font-bold text-white/82">
-            <Link href={`/collaborations?${homeParams.toString()}`} className="hidden underline underline-offset-4 sm:inline">{lang === "vi" ? "Hợp tác thương hiệu" : "Brand collaborations"}</Link>
-            <Link href={`/packages?${homeParams.toString()}`} className="underline underline-offset-4">{lang === "vi" ? "Đặt chỗ" : "Reserve"}</Link>
+            <Link href={`/collaborations?${homeParams.toString()}`} transitionTypes={["portal-enter"]} className="hidden underline underline-offset-4 sm:inline">{lang === "vi" ? "Hợp tác thương hiệu" : "Brand collaborations"}</Link>
+            <Link href={`/packages?${homeParams.toString()}`} transitionTypes={["portal-enter"]} className="underline underline-offset-4">{lang === "vi" ? "Đặt chỗ" : "Reserve"}</Link>
           </nav>
         </div>
       </header>

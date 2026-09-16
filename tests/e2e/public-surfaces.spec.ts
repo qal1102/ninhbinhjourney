@@ -51,7 +51,7 @@ async function waitForHomeLayout(page: import("@playwright/test").Page) {
     // intro shell before it reads the already-seen session flag.
     timeout: 12000,
   });
-  await expect(page.locator("#seasonal-collaborations")).toHaveCount(1);
+  await expect(page.locator('[data-experience-portal="travel"]')).toHaveCount(2);
   await page.waitForLoadState("load");
   await page.evaluate(async () => {
     await document.fonts.ready;
@@ -135,7 +135,7 @@ test("home intro does not replay on reload or back-navigation within the same ta
   await expect(page.getByTestId("opening-intro")).toHaveCount(0);
 });
 
-test("home keeps tourism first and places seasonal brand stories after the journey tools", async ({
+test("home keeps tourism complete by default and moves seasonal material to its own route", async ({
   page,
 }) => {
   await prepareReadOnlyHome(page);
@@ -148,7 +148,7 @@ test("home keeps tourism first and places seasonal brand stories after the journ
 
   const sectionOrder = await page
     .locator(
-      "#destinations-highlights, #all-destinations, #destination-index, #curated-routes, #packages, #ai, #itinerary, #partnerships, #mid-autumn",
+      "#destinations-highlights, #all-destinations, #destination-index, #curated-routes, #packages, #ai, #itinerary",
     )
     .evaluateAll((sections) => sections.map((section) => section.id));
   expect(sectionOrder).toEqual([
@@ -159,32 +159,81 @@ test("home keeps tourism first and places seasonal brand stories after the journ
     "packages",
     "ai",
     "itinerary",
-    "partnerships",
-    "mid-autumn",
   ]);
   await expect(page.locator("#curated-routes .route-progress-track")).toHaveCount(1);
+  await expect(page.locator("#mid-autumn")).toHaveCount(0);
 });
 
-test("hero package cue and journey concierge lead to real chapters", async ({
+test("top experience portal keeps tourism closed by default and preserves language and source", async ({ page }) => {
+  await prepareReadOnlyHome(page);
+  await page.goto("/?lang=en&source=editorial-invite", { waitUntil: "domcontentloaded" });
+  await waitForHomeLayout(page);
+
+  const portals = page.locator('[data-experience-portal]');
+  await expect(portals).toHaveCount(2 * 4);
+  const visiblePortalDestinations = await portals.evaluateAll((links) =>
+    links
+      .filter((link) => {
+        const rect = link.getBoundingClientRect();
+        const style = window.getComputedStyle(link);
+        return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
+      })
+      .map((link) => link.getAttribute("data-experience-portal"))
+      .sort(),
+  );
+  expect(visiblePortalDestinations).toEqual(["booking", "collaboration", "seasonal", "travel"]);
+  await expect(portals.filter({ hasText: "Ninh Binh travel" }).first()).toHaveAttribute("href", "#destinations-highlights");
+  await expect(portals.filter({ hasText: "Brand collaborations" }).first()).toHaveAttribute(
+    "href",
+    "/collaborations?lang=en&source=editorial-invite",
+  );
+  await expect(portals.filter({ hasText: "Seasonal occasions · Mid-Autumn" }).first()).toHaveAttribute(
+    "href",
+    "/seasonal/mid-autumn?lang=en&source=editorial-invite",
+  );
+  await expect(portals.filter({ hasText: "Reserve" }).first()).toHaveAttribute(
+    "href",
+    "/packages?lang=en&source=editorial-invite",
+  );
+
+  await page.getByRole("link", { name: "Brand collaborations" }).first().click();
+  await expect(page).toHaveURL(/\/collaborations\?lang=en&source=editorial-invite/);
+  await expect(page.locator("[data-collaboration-disclaimer]")).toContainText("independent creative study");
+  await expect(page.locator("[data-collaboration-dossier]")).toHaveAttribute("data-dossier-active", "celine");
+  await expect(page.locator("[data-dossier-chapter]")).toHaveCount(5);
+  await expect(page.locator("[data-dossier-final]")).toHaveAttribute("data-dossier-chapter", "hermes");
+  await expect(page.locator("[data-luxury-contact-sheet] [data-archive-frame]")).toHaveCount(12);
+  for (const brand of ["Celine", "Chanel", "Prada", "Bottega Veneta", "Hermès", "BVLGARI", "Cartier", "Dior", "Gucci", "Rolex", "Vacheron Constantin"]) {
+    await expect(page.locator("[data-collaboration-dossier]")).toContainText(brand);
+  }
+  await page.locator("#dossier-prada").scrollIntoViewIfNeeded();
+  await expect(page.locator("[data-collaboration-dossier]")).toHaveAttribute("data-dossier-active", "prada");
+  const pradaCopyOpacity = await page.locator("#dossier-prada [data-dossier-copy]").evaluate((copyBlock) =>
+    [copyBlock, ...Array.from(copyBlock.children)].map((element) => Number(window.getComputedStyle(element).opacity)),
+  );
+  expect(pradaCopyOpacity.every((opacity) => opacity >= 0.99)).toBe(true);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.locator("#dossier-hermes").scrollIntoViewIfNeeded();
+  await expect(page.locator("[data-collaboration-dossier]")).toHaveAttribute("data-dossier-active", "hermes");
+  await expect
+    .poll(() => page.locator("#dossier-hermes [data-dossier-copy]").evaluate((copyBlock) => window.getComputedStyle(copyBlock).transform))
+    .toBe("none");
+  await expect(page.locator("body")).not.toContainText("Moonrise over the Ngo Dong River");
+
+  await page.goto("/?lang=en&source=editorial-invite", { waitUntil: "domcontentloaded" });
+  await waitForHomeLayout(page);
+  await page.getByRole("link", { name: "Seasonal occasions · Mid-Autumn" }).first().click();
+  await expect(page).toHaveURL(/\/seasonal\/mid-autumn\?lang=en&source=editorial-invite/);
+  await expect(page.locator("#mid-autumn")).toBeVisible();
+});
+
+test("journey concierge leads to real tourism chapters", async ({
   page,
 }) => {
   await prepareReadOnlyHome(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
   await waitForHomeLayout(page);
-
-  const cue = page.locator('[data-customer-track="home-hero-packages"]');
-  await expect(cue).toHaveAttribute("href", "#packages");
-  await cue.click();
-  await expect(page).toHaveURL(/#packages$/);
-  await expect
-    .poll(() =>
-      page.locator("#packages").evaluate((element) => {
-        const rect = element.getBoundingClientRect();
-        return rect.top >= -2 && rect.top < window.innerHeight * 0.3;
-      }),
-    )
-    .toBe(true);
 
   // QA-P2-09: nút nổi nhường chỗ khi vừa cuộn xuống; nhích lên một chút là nó
   // hiện lại — đúng như người đọc thật làm khi muốn tìm mục lục.
@@ -202,22 +251,22 @@ test("hero package cue and journey concierge lead to real chapters", async ({
     "href",
     "#packages",
   );
-  await expect(dialog.getByRole("link", { name: /Moon gifts and dinner/ })).toHaveAttribute(
+  await expect(dialog.getByRole("link", { name: /Brand dossier/ })).toHaveAttribute(
     "href",
-    "#mid-autumn",
+    "/collaborations?lang=en",
   );
-  await expect(dialog.getByRole("link", { name: /Concepts for brands/ })).toHaveCount(0);
+  await expect(dialog.getByRole("link", { name: /Moon Season 2026/ })).toHaveAttribute(
+    "href",
+    "/seasonal/mid-autumn?lang=en",
+  );
+  await expect(dialog.getByRole("link", { name: /Reservations/ })).toHaveAttribute(
+    "href",
+    "/packages?lang=en",
+  );
 
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(trigger).toBeFocused();
-
-  await page.locator("#mid-autumn").evaluate((element) =>
-    element.scrollIntoView({ block: "start" }),
-  );
-  await expect(
-    page.locator('[data-customer-track="journey-index-mid-autumn"]'),
-  ).toHaveAttribute("aria-current", "location");
 
   await page.mouse.wheel(0, -60);
   await trigger.click();
@@ -243,13 +292,8 @@ test("home typography, package actions and animated chapters stay inside exact v
     );
     expect(overflow, `horizontal overflow at ${width}px`).toBeLessThanOrEqual(1);
 
-    const chapterOrder = await page
-      .locator("#packages, #mid-autumn")
-      .evaluateAll((sections) => sections.map((section) => section.id));
-    expect(chapterOrder).toEqual([
-      "packages",
-      "mid-autumn",
-    ]);
+    const chapterOrder = await page.locator("#packages").evaluateAll((sections) => sections.map((section) => section.id));
+    expect(chapterOrder).toEqual(["packages"]);
 
     if (width === 1023 || width === 1574) {
       const actions = page.locator(
@@ -274,7 +318,7 @@ test("home typography, package actions and animated chapters stay inside exact v
   }
 });
 
-test("Mid-Autumn campaign publishes distinct service layouts and no third-party brand", async ({
+test("Mid-Autumn campaign is a dedicated seasonal route with its own service layouts", async ({
   page,
 }) => {
   test.slow();
@@ -285,7 +329,7 @@ test("Mid-Autumn campaign publishes distinct service layouts and no third-party 
       policy_version: "xuan-truong-analytics-draft-v1",
     }));
   });
-  await page.goto("/?lang=en&presentation=1", { waitUntil: "domcontentloaded" });
+  await page.goto("/seasonal/mid-autumn?lang=en", { waitUntil: "domcontentloaded" });
 
   const campaign = page.locator("#mid-autumn");
   await expect(campaign.getByRole("heading", { name: /Moonrise over the Ngo Dong River/i })).toBeVisible();

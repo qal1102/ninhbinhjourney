@@ -3,60 +3,89 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /*
- * BRAND-LEGAL-01 · 13/09/2026.
+ * BRAND-DOSSIER-03 · 15/09/2026.
  *
- * Khối Trung thu từng có mười một chương mang tên và **ảnh in thẳng logo** của
- * các thương hiệu thời trang, trang sức, đồng hồ (Rolex, Chanel, Hermès…), đặt
- * sát khối "Hợp tác" trên một trang có bán vé. Dự án không có hợp đồng với
- * thương hiệu nào trong số đó. Chủ dự án giao quyết định; đã gỡ cả chữ lẫn ảnh.
- *
- * Bài này canh ở tầng mã nguồn: không tên thương hiệu nào nằm trong mã hiện
- * ra cho khách, và không tệp ảnh công khai nào mang tên ấy. Bài giao diện
- * trong `public-surfaces.spec.ts` canh thêm HTML thật của trang chủ.
- *
- * Muốn đưa một thương hiệu trở lại thì phải có hợp đồng trước — và khi ấy sửa
- * danh sách dưới đây kèm số hợp đồng, đừng tắt bài.
+ * Brand names and logo-bearing visual studies are deliberately quarantined in
+ * the opt-in collaboration dossier. They must never leak into the tourism
+ * homepage, seasonal route, or other public source files.
  */
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
-const THUONG_HIEU =
+const THIRD_PARTY_BRAND =
   /celine|chanel|prada|bottega|herm[eè]s|bvlgari|bulgari|cartier|\bdior\b|gucci|rolex|vacheron|louis vuitton/i;
+const COLLABORATION_SOURCE = "components/discovery/collaboration-editorial.tsx";
+const COLLABORATION_ASSET_ALLOWLIST = [
+  "/images/campaigns/mid-autumn-2026/brand-proposals/celine-concept.webp",
+  "/images/campaigns/mid-autumn-2026/brand-proposals/chanel-concept.webp",
+  "/images/campaigns/mid-autumn-2026/brand-proposals/prada-concept.webp",
+  "/images/campaigns/mid-autumn-2026/brand-proposals/bottega-veneta-concept.webp",
+  "/images/campaigns/mid-autumn-2026/brand-proposals/hermes-concept.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/bottega-kim-son-craft.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/bvlgari-night-salon.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/cartier-heritage-watch.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/cartier-night-gala.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/dior-lotus-atelier.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/dior-lotus-beauty.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/gucci-evening-gala.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/gucci-sunset-music.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/hermes-golden-pavilion.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/hermes-on-the-river.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/rolex-river-explorer.webp",
+  "/images/campaigns/mid-autumn-2026/luxury-editorial/vacheron-constantin-heritage.webp",
+] as const;
 
-function gom(thuMuc: string, loc: RegExp): string[] {
-  const ra: string[] = [];
-  const di = (d: string) => {
-    for (const muc of readdirSync(d, { withFileTypes: true })) {
-      if (muc.name === "node_modules" || muc.name === ".next") continue;
-      const p = path.join(d, muc.name);
-      if (muc.isDirectory()) di(p);
-      else if (loc.test(muc.name)) ra.push(p);
+function collect(directory: string, matcher: RegExp): string[] {
+  const files: string[] = [];
+  const visit = (directoryPath: string) => {
+    for (const entry of readdirSync(directoryPath, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === ".next") continue;
+      const entryPath = path.join(directoryPath, entry.name);
+      if (entry.isDirectory()) visit(entryPath);
+      else if (matcher.test(entry.name)) files.push(entryPath);
     }
   };
-  di(path.join(REPO_ROOT, thuMuc));
-  return ra;
+  visit(path.join(REPO_ROOT, directory));
+  return files;
 }
 
-describe("trang công khai không mang tên hay ảnh thương hiệu bên thứ ba", () => {
-  it("mã giao diện và nội dung không nhắc tên thương hiệu nào", () => {
-    const tep = [
-      ...gom("app", /\.(ts|tsx|css)$/),
-      ...gom("components", /\.(ts|tsx)$/),
-      ...gom("content", /\.(ts|tsx|json)$/),
-    ];
-    expect(tep.length).toBeGreaterThan(50);
-    const dinh = tep.flatMap((p) => {
-      const trung = readFileSync(p, "utf8").match(THUONG_HIEU);
-      return trung ? [`${path.relative(REPO_ROOT, p)}: ${trung[0]}`] : [];
-    });
-    expect(dinh).toEqual([]);
+describe("opt-in luxury collaboration dossier contract", () => {
+  it("keeps brand names and image imports out of the homepage", () => {
+    const homepage = readFileSync(path.join(REPO_ROOT, "app", "ninh-binh-landing.tsx"), "utf8");
+    expect(homepage).not.toMatch(THIRD_PARTY_BRAND);
+    expect(homepage).not.toContain('from "@/components/discovery/mid-autumn-campaign"');
+    expect(homepage).toContain('href={experiencePortalHref(destination, lang, source)}');
   });
 
-  it("không tệp nào trong thư mục web công khai mang tên thương hiệu", () => {
-    const tep = gom("public", /./);
-    expect(tep.length).toBeGreaterThan(20);
-    const dinh = tep
-      .map((p) => path.relative(REPO_ROOT, p).replace(/\\/g, "/"))
-      .filter((p) => THUONG_HIEU.test(p));
-    expect(dinh).toEqual([]);
+  it("allows brand wording in the dossier source only", () => {
+    const publicSourceFiles = [
+      ...collect("app", /\.(ts|tsx|css)$/),
+      ...collect("components", /\.(ts|tsx)$/),
+      ...collect("content", /\.(ts|tsx|json)$/),
+    ];
+    const offenders = publicSourceFiles
+      .filter((file) => THIRD_PARTY_BRAND.test(readFileSync(file, "utf8")))
+      .map((file) => path.relative(REPO_ROOT, file).replace(/\\/g, "/"));
+    expect(offenders).toEqual([COLLABORATION_SOURCE]);
+  });
+
+  it("keeps every restored luxury visual in the explicit dossier allowlist", () => {
+    const editorial = readFileSync(path.join(REPO_ROOT, COLLABORATION_SOURCE), "utf8");
+    for (const asset of COLLABORATION_ASSET_ALLOWLIST) {
+      expect(editorial).toContain(asset);
+      expect(readFileSync(path.join(REPO_ROOT, "public", asset), "utf8").length).toBeGreaterThan(0);
+    }
+    const publicBrandAssets = collect("public", THIRD_PARTY_BRAND)
+      .map((file) => `/${path.relative(path.join(REPO_ROOT, "public"), file).replace(/\\/g, "/")}`)
+      .sort();
+    expect(publicBrandAssets).toEqual([...COLLABORATION_ASSET_ALLOWLIST].sort());
+  });
+
+  it("requires bilingual independent-study wording and an Hermès finale", () => {
+    const editorial = readFileSync(path.join(REPO_ROOT, COLLABORATION_SOURCE), "utf8");
+    expect(editorial).toContain("independent creative study / uncommissioned concept / no affiliation or endorsement");
+    expect(editorial).toContain("Không có hợp tác, tài trợ, chấp thuận hay chứng thực nào được xác nhận");
+    expect(editorial).toContain('data-dossier-final={finale || undefined}');
+    expect(editorial).toContain('id: "hermes"');
+    expect(editorial).not.toMatch(/official partner|our partner|confirmed collaborator|sponsored by/i);
   });
 });

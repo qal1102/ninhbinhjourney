@@ -16,13 +16,10 @@ import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
 import { JOURNEY_CONCIERGE_OPEN_EVENT, JourneyConcierge } from "@/components/discovery/journey-concierge";
-import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 import type { ExperienceSurfaceAttributes } from "@/config/experience";
-import { CONTACT as contactInfo } from "@/content/contact";
-import { ProtectedMailLink } from "@/components/discovery/protected-mail-link";
 import {
   destinationFacts,
   destinationPageHref,
@@ -81,7 +78,11 @@ const copy = {
   en: {
     // Nhan thu hai tung la "Stories", tro toi khoi `#stories` da xoa.
     // Gio no tro toi danh muc diem den, nen phai goi dung ten.
-    nav: ["Places", "Routes", "Packages", "Moon season"],
+    portalTravel: "Ninh Binh travel",
+    portalCollaboration: "Brand collaborations",
+    portalSeasonal: "Seasonal occasions · Mid-Autumn",
+    portalBooking: "Reserve",
+    portalEyebrow: "Choose a way into Ninh Binh",
     introTop: "Ninh Binh",
     introWords: ["Nature.", "Heritage.", "Wonder."],
     title: "Ninh Binh",
@@ -181,23 +182,6 @@ const copy = {
     featuredCta: "See all fifteen destinations",
     destinationPage: "Open this place's own page",
     /*
-     * WEB-STRUCT-02: loi moi hop tac cho nhan hang/doanh nghiep. Khong nhac
-     * ten thuong hieu nao o day. Tu 13/09/2026 trang cung khong con khoi
-     * thuong hieu nao (BRAND-LEGAL-01 trong docs/HANDOFF.md).
-     */
-    partnersLabel: "For brands & businesses",
-    partnersTitle: "Want to film at Trang An, or host dinner by the Ngô Đồng?",
-    partnersBody:
-      "Ninh Bình Journey works directly with brands and businesses that want to hold an event, shoot commercial footage or partner with us for a season here in Ninh Bình — from the still water of Trang An to the rice-lined banks of Tam Cốc. Call Xuân Trường directly, and the team will work out the location, schedule and scale before anything is booked.",
-    partnersCategory1Title: "Private events",
-    partnersCategory1Body: "A wedding, a launch or a gathering right on the water at Trang An.",
-    partnersCategory2Title: "Commercial shoots",
-    partnersCategory2Body: "Film and photo crews that need limestone peaks, caves and river settings.",
-    partnersCategory3Title: "Seasonal partnership",
-    partnersCategory3Body: "Shape a seasonal programme for Ninh Bình.",
-    partnersCall: "Call to discuss",
-    partnersEmail: "Send a partnership email",
-    /*
      * `zigzag*` gio chi con dung cho VAI DIEM DAU (xem `ZIGZAG_FEATURED`).
      * `index*` la khoi danh sach cho phan con lai. Khong bia con so nao o
      * day -- khong co du lieu that ve so ngay khach o lai.
@@ -273,7 +257,11 @@ const copy = {
     locationDenied: "Location permission was not granted.",
   },
   vi: {
-    nav: ["Điểm đến", "Tuyến đi", "Gói có sẵn", "Mùa Trăng"],
+    portalTravel: "Du lịch Ninh Bình",
+    portalCollaboration: "Hợp tác thương hiệu",
+    portalSeasonal: "Sự kiện theo mùa · Trung thu",
+    portalBooking: "Đặt chỗ",
+    portalEyebrow: "Bốn lối vào, cùng một vùng đất",
     introTop: "Ninh Bình",
     introWords: ["Thiên nhiên.", "Di sản.", "Kỳ quan."],
     title: "Ninh Bình",
@@ -337,18 +325,6 @@ const copy = {
       "Tràng An mở đầu bằng thuyền, Hang Múa khép bằng 486 bậc đá, Phố cổ Hoa Lư giữ lại ánh đèn lồng cho lúc trời tối. Đây là sáu cái tên khách nào cũng nhắc tới khi rời Ninh Bình — muốn xem trọn cả mười lăm nơi, danh mục đầy đủ nằm ngay bên dưới.",
     featuredCta: "Xem toàn bộ mười lăm điểm đến",
     destinationPage: "Mở trang riêng của điểm này",
-    partnersLabel: "Dành cho doanh nghiệp",
-    partnersTitle: "Muốn quay hình ở Tràng An, hay đặt tiệc bên sông Ngô Đồng?",
-    partnersBody:
-      "Ninh Bình Journey làm việc trực tiếp với nhãn hàng và doanh nghiệp muốn tổ chức sự kiện, quay hình thương mại hoặc đồng hành theo mùa tại Ninh Bình — từ mặt nước Tràng An tới triền lúa Tam Cốc. Gọi thẳng cho Xuân Trường, đội ngũ sẽ bàn địa điểm, lịch trình và quy mô phù hợp trước khi triển khai.",
-    partnersCategory1Title: "Sự kiện riêng",
-    partnersCategory1Body: "Tiệc, lễ ra mắt hoặc buổi họp mặt ngay bên mặt nước Tràng An.",
-    partnersCategory2Title: "Quay chụp thương mại",
-    partnersCategory2Body: "Đoàn phim và ê-kíp ảnh cần bối cảnh núi đá vôi, hang động, sông nước.",
-    partnersCategory3Title: "Tài trợ theo mùa",
-    partnersCategory3Body: "Cùng xây dựng một chương trình theo mùa tại Ninh Bình.",
-    partnersCall: "Gọi trao đổi hợp tác",
-    partnersEmail: "Gửi email hợp tác",
     indexLabel: "Phần còn lại của bản đồ",
     indexTitle: "Mười nơi nữa, từ Hang Múa tới rừng Cúc Phương.",
     indexIntro:
@@ -777,6 +753,23 @@ function languageUrl(lang: Language, source: string, presentationMode: boolean) 
   if (presentationMode) params.set("presentation", "1");
 
   return `/?${params.toString()}${window.location.hash}`;
+}
+
+function experiencePortalHref(
+  destination: "travel" | "collaboration" | "seasonal" | "booking",
+  lang: Language,
+  source: string,
+) {
+  if (destination === "travel") return "#destinations-highlights";
+  const params = new URLSearchParams({ lang });
+  if (source) params.set("source", source);
+  const pathname =
+    destination === "collaboration"
+      ? "/collaborations"
+      : destination === "seasonal"
+        ? "/seasonal/mid-autumn"
+        : "/packages";
+  return `${pathname}?${params.toString()}`;
 }
 
 function scrollToId(id: string) {
@@ -1333,13 +1326,22 @@ export default function NinhBinhLanding({
               Ninh Bình
             </span>
           </a>
-          <nav aria-label="Primary" className="hidden gap-6 text-sm text-[#FBFAF6]/82 md:flex">
-            {(t.nav as string[]).map((item, index) => (
-              // Neo thu hai truoc day tro toi `#stories` -- khoi do da xoa
-              // han 05/08 nen lien ket roi vao hu khong. Gio tro toi danh
-              // muc diem den, dung voi nhan moi cua no.
-              <a key={item} href={`#${["destinations-highlights", "curated-routes", "packages", "mid-autumn"][index]}`} className="transition hover:text-[#E7B96A]">
-                {item}
+          <nav aria-label={t.portalEyebrow as string} className="hidden items-center gap-5 text-sm text-[#FBFAF6]/82 lg:flex">
+            {(
+              [
+                ["travel", t.portalTravel],
+                ["collaboration", t.portalCollaboration],
+                ["seasonal", t.portalSeasonal],
+                ["booking", t.portalBooking],
+              ] as const
+            ).map(([destination, label]) => (
+              <a
+                key={destination}
+                data-experience-portal={destination}
+                href={experiencePortalHref(destination, lang, source)}
+                className="border-b border-transparent pb-1 transition hover:border-[#E7B96A] hover:text-[#E7B96A]"
+              >
+                {label}
               </a>
             ))}
           </nav>
@@ -1368,6 +1370,29 @@ export default function NinhBinhLanding({
           </div>
           </div>
         </div>
+        <nav
+          aria-label={t.portalEyebrow as string}
+          className="absolute inset-x-5 top-[4.8rem] z-20 grid grid-cols-2 overflow-hidden rounded-[1.1rem] border border-white/20 bg-[#0b211b]/58 text-[#FBFAF6] shadow-[0_18px_52px_rgba(3,16,12,.24)] backdrop-blur-md lg:hidden"
+        >
+          {(
+            [
+              ["travel", t.portalTravel],
+              ["collaboration", t.portalCollaboration],
+              ["seasonal", t.portalSeasonal],
+              ["booking", t.portalBooking],
+            ] as const
+          ).map(([destination, label], index) => (
+            <a
+              key={destination}
+              data-experience-portal={destination}
+              href={experiencePortalHref(destination, lang, source)}
+              className={`group flex min-h-11 items-center justify-between gap-2 px-3 py-2 text-[0.66rem] font-extrabold uppercase leading-4 tracking-[0.08em] transition hover:bg-white/10 hover:text-[#E7B96A] motion-reduce:transition-none ${index % 2 === 0 ? "border-r border-white/15" : ""} ${index < 2 ? "border-b border-white/15" : ""}`}
+            >
+              <span>{label}</span>
+              <span aria-hidden="true" className="text-sm transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none">↗</span>
+            </a>
+          ))}
+        </nav>
         <div id="top" className="hero-scene-content relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-offset,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-offset,0px))]">
           {/*
             Nhan "Client demonstration · Supabase shared core" da GO HAN
@@ -1431,7 +1456,7 @@ export default function NinhBinhLanding({
 
       <TrangAnScrollStory {...trangAnStory[lang]} />
 
-      <JourneyConcierge lang={lang} />
+      <JourneyConcierge lang={lang} source={source} />
 
       <section id="map" data-customer-section="home-map" className="scroll-mt-20 px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
@@ -1866,65 +1891,6 @@ export default function NinhBinhLanding({
           </aside>
         </div>
       </section>
-
-      {/*
-        WEB-STRUCT-02 (31/08): loi moi hop tac cho nhan hang/doanh nghiep
-        -- chu du an yeu cau "liên hệ hợp tác với các nhãn hàng bla bla".
-        Khoi nay khong nhac ten thuong hieu nao; tu 13/09/2026 trang cung
-        khong con khoi thuong hieu nao (BRAND-LEGAL-01 trong docs/HANDOFF.md), chi moi nhan hang/doanh nghiep that lien he qua dung so dien
-        thoai/email o `content/contact.ts`.
-      */}
-      <section
-        id="partnerships"
-        data-customer-section="home-business-partnerships"
-        className="scroll-mt-20 bg-[#183F34] px-4 py-16 text-white min-[280px]:px-5 sm:px-8 lg:py-20"
-      >
-        <div className="mx-auto max-w-6xl">
-          <Reveal className="max-w-3xl">
-            <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#A8CEC1]">{t.partnersLabel}</p>
-            <RevealHeading
-              as="h2"
-              text={t.partnersTitle as string}
-              className="font-display mt-4 text-4xl leading-tight sm:text-6xl"
-            />
-            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/78">{t.partnersBody}</p>
-          </Reveal>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            {[
-              [t.partnersCategory1Title, t.partnersCategory1Body],
-              [t.partnersCategory2Title, t.partnersCategory2Body],
-              [t.partnersCategory3Title, t.partnersCategory3Body],
-            ].map(([title, body]) => (
-              <div key={title as string} className="rounded-[10px] border border-white/15 bg-white/6 p-5">
-                <p className="font-display text-xl">{title}</p>
-                <p className="mt-2 text-sm leading-6 text-white/72">{body}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a
-              href={contactInfo.phoneHref}
-              data-customer-track="home-partnerships-call"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#E7B96A] px-6 font-semibold text-[#183F34] transition hover:bg-[#f0c87c]"
-            >
-              {t.partnersCall} · {contactInfo.phoneLabel}
-            </a>
-            <ProtectedMailLink
-              subject={
-                lang === "vi"
-                  ? "Hợp tác cùng Ninh Bình Journey"
-                  : "Partnership enquiry — Ninh Binh Journey"
-              }
-              track="home-partnerships-email"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/35 px-6 font-semibold text-white transition hover:bg-white/12"
-            >
-              {t.partnersEmail}
-            </ProtectedMailLink>
-          </div>
-        </div>
-      </section>
-
-      <MidAutumnCampaign lang={lang} source={source} />
 
       <footer className="border-t border-[#e2ded2] bg-[#FBFAF6] px-5 py-10 text-center sm:px-8">
         <p className="font-display text-lg text-[#183F34]">{t.footerNote}</p>

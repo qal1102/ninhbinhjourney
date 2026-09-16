@@ -20,15 +20,20 @@ type ChapterId =
   | "destinations-highlights"
   | "curated-routes"
   | "packages"
-  | "ai"
-  | "mid-autumn"
-  | "partnerships";
+  | "ai";
 
 type Chapter = {
   id: ChapterId;
   label: string;
   shortLabel: string;
   description: string;
+};
+
+type WorldLink = {
+  id: "collaboration" | "seasonal" | "booking";
+  label: string;
+  description: string;
+  pathname: "/collaborations" | "/seasonal/mid-autumn" | "/packages";
 };
 
 type ConciergeCopy = {
@@ -42,6 +47,8 @@ type ConciergeCopy = {
   current: string;
   navigationAria: string;
   chapters: Chapter[];
+  worldsLabel: string;
+  worlds: WorldLink[];
 };
 
 const COPY: Record<Language, ConciergeCopy> = {
@@ -53,9 +60,10 @@ const COPY: Record<Language, ConciergeCopy> = {
     eyebrow: "Gợi ý nhanh",
     title: "Bạn muốn xem phần nào?",
     introduction:
-      "Đi thẳng tới điểm đến, gói có sẵn, mùa Trăng hoặc câu chuyện dành cho thương hiệu.",
+      "Đi thẳng tới điểm đến, tuyến đi, gói có sẵn hoặc tự lập hành trình.",
     current: "Đang xem",
     navigationAria: "Các phần được gợi ý",
+    worldsLabel: "Mở một thế giới khác",
     chapters: [
       {
         id: "destinations-highlights",
@@ -81,17 +89,25 @@ const COPY: Record<Language, ConciergeCopy> = {
         shortLabel: "Lập hành trình",
         description: "Chọn thời lượng, nhịp đi và điều bạn muốn ưu tiên.",
       },
+    ],
+    worlds: [
       {
-        id: "partnerships",
-        label: "Trao đổi một cơ hội hợp tác",
-        shortLabel: "Hợp tác",
-        description: "Liên hệ về sự kiện, ghi hình hoặc một mùa đồng hành tại Ninh Bình.",
+        id: "collaboration",
+        label: "Hồ sơ thương hiệu",
+        description: "Mở dossier biên tập và đề xuất kết nối độc lập.",
+        pathname: "/collaborations",
       },
       {
-        id: "mid-autumn",
-        label: "Quà và bàn tiệc mùa Trăng",
-        shortLabel: "Mùa Trăng",
-        description: "Khám phá hộp bánh, bàn tiệc và những trải nghiệm theo mùa.",
+        id: "seasonal",
+        label: "Mùa Trăng 2026",
+        description: "Xem hộp bánh, bàn tối và lịch sự kiện Trung thu.",
+        pathname: "/seasonal/mid-autumn",
+      },
+      {
+        id: "booking",
+        label: "Đặt chỗ",
+        description: "Đi thẳng tới các gói đã có tuyến và mức giá.",
+        pathname: "/packages",
       },
     ],
   },
@@ -103,9 +119,10 @@ const COPY: Record<Language, ConciergeCopy> = {
     eyebrow: "A quick guide",
     title: "Where would you like to go?",
     introduction:
-      "Go straight to the places, ready-made packages, moon season or stories for brands.",
+      "Go straight to the places, signature routes, ready-made packages or your own journey.",
     current: "Now viewing",
     navigationAria: "Suggested chapters",
+    worldsLabel: "Open another world",
     chapters: [
       {
         id: "destinations-highlights",
@@ -131,17 +148,25 @@ const COPY: Record<Language, ConciergeCopy> = {
         shortLabel: "Journey builder",
         description: "Choose your time, pace and the things that matter most.",
       },
+    ],
+    worlds: [
       {
-        id: "partnerships",
-        label: "Discuss a partnership",
-        shortLabel: "Partnerships",
-        description: "Talk to the team about an event, production or a season in Ninh Binh.",
+        id: "collaboration",
+        label: "Brand dossier",
+        description: "Enter the independent editorial collaboration study.",
+        pathname: "/collaborations",
       },
       {
-        id: "mid-autumn",
-        label: "Moon gifts and dinner",
-        shortLabel: "Moon season",
-        description: "Explore mooncakes, seasonal tables and experiences after dark.",
+        id: "seasonal",
+        label: "Moon Season 2026",
+        description: "Browse mooncakes, evening tables and seasonal dates.",
+        pathname: "/seasonal/mid-autumn",
+      },
+      {
+        id: "booking",
+        label: "Reservations",
+        description: "Go straight to journeys with routes and prices.",
+        pathname: "/packages",
       },
     ],
   },
@@ -156,6 +181,12 @@ function subscribeNothing() {
 
 function chapterHref(id: ChapterId) {
   return `#${id}`;
+}
+
+function worldHref(pathname: WorldLink["pathname"], lang: Language, source: string) {
+  const params = new URLSearchParams({ lang });
+  if (source) params.set("source", source);
+  return `${pathname}?${params.toString()}`;
 }
 
 function ChapterArrow() {
@@ -184,7 +215,7 @@ function ChapterArrow() {
  * while the client layer only adds current-section context and an accessible
  * sheet for small screens or long pages.
  */
-export function JourneyConcierge({ lang }: { lang: Language }) {
+export function JourneyConcierge({ lang, source = "" }: { lang: Language; source?: string }) {
   const copy = COPY[lang];
   const [activeId, setActiveId] = useState<ChapterId>(copy.chapters[0].id);
   const [open, setOpen] = useState(false);
@@ -456,6 +487,35 @@ export function JourneyConcierge({ lang }: { lang: Language }) {
                     })}
                   </ul>
                 </nav>
+
+                <div className="mt-5 border-t border-[#183F34]/14 pt-4">
+                  <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.2em] text-[#7C673E]">
+                    {copy.worldsLabel}
+                  </p>
+                  <div className="mt-3 grid gap-2">
+                    {copy.worlds.map((world, index) => (
+                      <a
+                        key={world.id}
+                        href={worldHref(world.pathname, lang, source)}
+                        onClick={() => {
+                          if (open) closeDialog();
+                        }}
+                        data-concierge-world={world.id}
+                        data-customer-track={`journey-concierge-world-${world.id}`}
+                        data-customer-content-id={world.id}
+                        data-customer-content-type="world-navigation"
+                        className="group grid min-h-16 grid-cols-[2rem_1fr_auto] items-center gap-3 rounded-[14px] border border-[#183F34]/12 bg-white/55 px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-[#B5863E]/55 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3F7568] motion-reduce:transform-none motion-reduce:transition-none"
+                      >
+                        <span className="font-display text-xl text-[#B5863E]">{String(index + 1).padStart(2, "0")}</span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-extrabold text-[#183F34]">{world.label}</span>
+                          <span className="mt-0.5 block text-xs leading-5 text-[#6D756F]">{world.description}</span>
+                        </span>
+                        <ChapterArrow />
+                      </a>
+                    ))}
+                  </div>
+                </div>
               </section>
             </div>
           ) : null}

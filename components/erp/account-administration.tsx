@@ -1,18 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ERP_SITES } from "@/domain/erp";
 import {
   ERP_ACCOUNT_STATUS_LABELS,
+  ERP_LOGIN_STATE_LABELS,
   ERP_REGISTRY_ROLES,
   ERP_REGISTRY_ROLE_LABELS,
+  erpLoginState,
 } from "@/domain/erp-account-roles";
+import { erpAuditActionLabel } from "@/domain/erp-audit-labels";
 import {
   grantLoginAction,
+  resetLoginPasswordAction,
   setAccountStatusAction,
   setRoleAssignmentAction,
+  unlinkLoginAction,
   upsertAccountAction,
 } from "@/app/erp/account-actions";
 import type {
@@ -33,6 +38,7 @@ const SITE_NAME_BY_ID = new Map(ERP_SITES.map((site) => [site.id, site.shortName
 type AccountActionState = {
   status: "idle" | "success" | "error";
   message: string;
+  temporaryPassword?: string;
 };
 
 const INITIAL_ACCOUNT_ACTION_STATE: AccountActionState = {
@@ -166,51 +172,133 @@ function CreateAccountForm() {
   );
 }
 
-function GrantLoginForm({ account }: { account: ErpRegistryAccount }) {
-  const [state, action] = useActionState(
-    grantLoginAction,
-    INITIAL_ACCOUNT_ACTION_STATE,
-  );
-  if (account.hasAuthUser) {
+/**
+ * A15-ACC-01 (audit TK-04/TK-05): the temporary password sits in its own box,
+ * not inside a sentence, with a copy button and a way to hide it once copied.
+ * It lives only in this component's state; reloading the page clears it.
+ */
+function TemporaryPassword({ value }: { value: string }) {
+  const [hidden, setHidden] = useState(false);
+  const [copied, setCopied] = useState(false);
+  if (hidden) {
     return (
-      <div className="space-y-2">
-        {/* The one-time temporary password lives in `state.message` from the
-            action that just ran. `account.hasAuthUser` flips to true as soon
-            as revalidatePath refetches, which -- without this check --
-            replaced the success message with the plain "already granted"
-            line before a director had any real chance to read or copy the
-            password. `state` is local client state, untouched by that
-            server refetch, so it still holds the message here. */}
-        {state.status === "success" ? <ActionMessage state={state} /> : null}
-        <p className="text-sm font-bold text-[#245e48]">
-          Đã cấp đăng nhập · {account.email}
-          {account.mustChangePassword ? (
-            <span className="ml-2 rounded-full bg-[#fff2df] px-2 py-0.5 text-xs font-black text-[#8a5a12]">
-              Đang chờ đổi mật khẩu lần đầu
-            </span>
-          ) : null}
-        </p>
-      </div>
+      <p className="mt-2 text-xs font-bold text-[#5f7068]">
+        Đã ẩn mật khẩu tạm. Nếu chưa kịp gửi, bấm “Cấp lại mật khẩu tạm” để lấy mật khẩu mới.
+      </p>
     );
   }
   return (
-    <form action={action} className="grid gap-2 sm:grid-cols-[1fr_auto]">
-      <input type="hidden" name="accountId" value={account.accountId} />
-      <label className="grid gap-1 text-xs font-bold text-[#5f7068]">
-        Email đăng nhập
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder="ten.nguoi@donvi.vn"
-          className="min-h-11 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
-        />
-      </label>
-      <SubmitButton tone="secondary">Cấp đăng nhập</SubmitButton>
-      <div className="sm:col-span-2">
-        <ActionMessage state={state} />
+    <div className="mt-2 rounded-xl border border-[#e7cf9f] bg-[#fff8ea] p-3">
+      <p className="text-xs font-bold text-[#7a5a1f]">
+        Mật khẩu tạm — chỉ hiện ở đây một lần, không lưu ở đâu khác
+      </p>
+      <p className="mt-2 break-all font-mono text-base font-black tracking-wide text-[#2c3e36]" data-testid="temporary-password">
+        {value}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            void navigator.clipboard?.writeText(value).then(
+              () => setCopied(true),
+              () => setCopied(false),
+            );
+          }}
+          className="min-h-11 rounded-xl border border-[#b9c8c1] bg-white px-4 text-sm font-black text-[#385047]"
+        >
+          {copied ? "Đã chép" : "Chép mật khẩu"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setHidden(true)}
+          className="min-h-11 rounded-xl bg-[#183f34] px-4 text-sm font-black text-white"
+        >
+          Đã gửi xong, ẩn mật khẩu
+        </button>
       </div>
-    </form>
+    </div>
+  );
+}
+
+function LoginResult({ state }: { state: AccountActionState }) {
+  if (state.status === "idle") return null;
+  return (
+    <div>
+      <ActionMessage state={state} />
+      {state.status === "success" && state.temporaryPassword ? (
+        <TemporaryPassword key={state.temporaryPassword} value={state.temporaryPassword} />
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * All three login actions keep their state here, above the branch on
+ * `account.hasAuthUser`: that flag flips as soon as revalidatePath refetches,
+ * and a result kept inside the branch that just disappeared would vanish with
+ * it -- which is how the one-time password used to be lost before anyone had
+ * a real chance to copy it.
+ */
+function LoginPanel({ account }: { account: ErpRegistryAccount }) {
+  const [grantState, grantAction] = useActionState(grantLoginAction, INITIAL_ACCOUNT_ACTION_STATE);
+  const [resetState, resetAction] = useActionState(resetLoginPasswordAction, INITIAL_ACCOUNT_ACTION_STATE);
+  const [unlinkState, unlinkAction] = useActionState(unlinkLoginAction, INITIAL_ACCOUNT_ACTION_STATE);
+
+  if (!account.hasAuthUser) {
+    return (
+      <div className="space-y-2">
+        <LoginResult state={unlinkState} />
+        <form action={grantAction} className="grid gap-2 sm:grid-cols-[1fr_auto]">
+          <input type="hidden" name="accountId" value={account.accountId} />
+          <label className="grid gap-1 text-xs font-bold text-[#5f7068]">
+            Email đăng nhập
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="ten.nguoi@donvi.vn"
+              className="min-h-11 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
+            />
+          </label>
+          <SubmitButton tone="secondary">Cấp đăng nhập</SubmitButton>
+        </form>
+        <LoginResult state={grantState} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <LoginResult state={grantState} />
+      <p className="text-sm font-bold text-[#245e48]">Email đăng nhập · {account.email}</p>
+      <div className="flex flex-wrap items-start gap-2">
+        <form action={resetAction}>
+          <input type="hidden" name="accountId" value={account.accountId} />
+          <SubmitButton tone="secondary">Cấp lại mật khẩu tạm</SubmitButton>
+        </form>
+        <details>
+          <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-xl border border-[#e0b8ae] bg-white px-4 text-sm font-black text-[#934336]">
+            Gỡ đăng nhập…
+          </summary>
+          <form action={unlinkAction} className="mt-2 max-w-md rounded-xl border border-[#f0d3cb] bg-[#fff6f3] p-3">
+            <input type="hidden" name="accountId" value={account.accountId} />
+            <p className="text-xs leading-5 text-[#7d4a3f]">
+              Người này sẽ không đăng nhập được nữa, người dùng bên Supabase Auth bị xoá.
+              Hồ sơ, vai trò và nhật ký của tài khoản vẫn giữ nguyên; cấp lại đăng nhập được bất cứ lúc nào.
+            </p>
+            <label className="mt-2 flex min-h-11 items-center gap-2 text-sm font-bold text-[#7d4a3f]">
+              <input type="checkbox" name="confirm" value="yes" required className="h-5 w-5" />
+              Tôi hiểu, gỡ đăng nhập của {account.displayName}
+            </label>
+            <div className="mt-2">
+              <SubmitButton tone="danger">Gỡ đăng nhập</SubmitButton>
+            </div>
+          </form>
+        </details>
+      </div>
+      <LoginResult state={resetState} />
+      <LoginResult state={unlinkState} />
+    </div>
   );
 }
 
@@ -328,7 +416,7 @@ export function AccountAdministration({ accounts, audit }: Props) {
                   {account.jobTitle} · <span className="font-mono">{account.accountId}</span>
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-black ${
                     account.status === "active"
@@ -338,9 +426,21 @@ export function AccountAdministration({ accounts, audit }: Props) {
                 >
                   {ERP_ACCOUNT_STATUS_LABELS[account.status]}
                 </span>
+                <span
+                  data-testid="login-state"
+                  className={`rounded-full px-3 py-1 text-xs font-black ${
+                    erpLoginState(account) === "in-use"
+                      ? "bg-[#e3eef8] text-[#28506f]"
+                      : erpLoginState(account) === "awaiting-first-change"
+                        ? "bg-[#fff2df] text-[#8a5a12]"
+                        : "bg-[#eef0ef] text-[#5c6863]"
+                  }`}
+                >
+                  {ERP_LOGIN_STATE_LABELS[erpLoginState(account)]}
+                </span>
                 <Link
                   href={`/erp/ho-so/${account.accountId}`}
-                  className="inline-flex min-h-11 items-center rounded-full border border-[#ced8d1] bg-white px-3 text-xs font-black text-[#385047] hover:border-[#8fa99f]"
+                  className="rounded-full border border-[#ced8d1] bg-white px-3 py-1 text-xs font-black text-[#385047] hover:border-[#8fa99f]"
                 >
                   Xem hồ sơ
                 </Link>
@@ -369,7 +469,7 @@ export function AccountAdministration({ accounts, audit }: Props) {
 
             <GrantForm account={account} />
             <div className="mt-3 border-t border-[#eaefec] pt-3">
-              <GrantLoginForm account={account} />
+              <LoginPanel account={account} />
             </div>
             <div className="mt-3 border-t border-[#eaefec] pt-3">
               <StatusForm account={account} />
@@ -392,7 +492,7 @@ export function AccountAdministration({ accounts, audit }: Props) {
                   {event.actorAccountId} → {event.targetAccountId}
                 </p>
                 <p className="text-[#6e7b75]">
-                  {event.action} ·{" "}
+                  {erpAuditActionLabel(event.action)} ·{" "}
                   {new Date(event.createdAt).toLocaleString("vi-VN", {
                     timeZone: "Asia/Ho_Chi_Minh",
                   })}

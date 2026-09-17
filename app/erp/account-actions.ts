@@ -10,11 +10,18 @@ import {
 } from "@/domain/erp-account-roles";
 import {
   AccountRegistryError,
+  AuthEmailAlreadyRegisteredError,
   createAuthUserForAccount,
+  deleteAuthUser,
+  findLoginByEmail,
   generateTemporaryPassword,
+  getLinkedAuthUserId,
   getRegistryAccount,
   hasSystemAdmin,
   linkAuthUser,
+  markLoginPasswordReset,
+  setAuthUserPassword,
+  unlinkAuthUser,
   listRegistryAccounts,
   setRegistryAccountStatus,
   setRegistryRoleAssignment,
@@ -36,6 +43,12 @@ import { getCurrentErpUser } from "@/lib/erp/demo-session";
 type AccountActionState = {
   status: "idle" | "success" | "error";
   message: string;
+  /**
+   * One-time temporary password, kept out of `message` so the screen can hide
+   * it once copied (A15-ACC-01, audit TK-05). It still travels once in this
+   * action's response: there is no out-of-band channel to send it through.
+   */
+  temporaryPassword?: string;
 };
 
 /**
@@ -217,13 +230,22 @@ const GrantLoginSchema = z.object({
  * T6b: the one step that turns a registry row into an account someone can
  * actually sign into. Creates the real `auth.users` row (only the Supabase
  * Auth admin API can do that -- no migration can), links it, and returns a
- * one-time temporary password in the success message for the system-admin
- * to relay out of band. There is no email delivery here on purpose: this
- * project has no transactional-email sender, and bolting one on to mail a
- * password is a bigger, separate decision than this action should make.
- * Whoever holds the temporary password must change it before doing anything
- * else -- enforced by `must_change_password` and the `/erp/doi-mat-khau`
- * redirect, not by convention.
+ * one-time temporary password for the system-admin to relay out of band.
+ * There is no email delivery here on purpose: this project has no
+ * transactional-email sender, and bolting one on to mail a password is a
+ * bigger, separate decision than this action should make. Whoever holds the
+ * temporary password must change it before doing anything else -- enforced by
+ * `must_change_password` and the `/erp/doi-mat-khau` redirect.
+ *
+ * A15-ACC-01 (audit 15/09/2026, TK-01/TK-02): the two steps live in two
+ * systems and cannot share a transaction, so each failure has a way back.
+ * - Linking fails after this call created the Auth user: that user is
+ *   deleted again before the error is shown.
+ * - Auth already has this email: look it up instead of guessing. An orphan
+ *   this ERP created earlier (a grant that died between the two steps, or a
+ *   cleanup that failed) is reused with a fresh password; an email already
+ *   wired to this or another account gets a message that says which; an Auth
+ *   user this ERP never created is left alone.
  */
 export async function grantLoginAction(
   _previous: AccountActionState,
@@ -236,21 +258,156 @@ export async function grantLoginAction(
       email: formData.get("email"),
     });
     const temporaryPassword = generateTemporaryPassword();
-    const authUserId = await createAuthUserForAccount({
-      accountId: input.accountId,
-      email: input.email,
-      temporaryPassword,
-    });
-    await linkAuthUser({
-      actorAccountId: actor.id,
-      accountId: input.accountId,
-      authUserId,
-      email: input.email,
-    });
+
+    let authUserId: string;
+    let createdHere = false;
+    try {
+      authUserId = await createAuthUserForAccount({
+        accountId: input.accountId,
+        email: input.email,
+        temporaryPassword,
+      });
+      createdHere = true;
+    } catch (error) {
+      if (!(error instanceof AuthEmailAlreadyRegisteredError)) throw error;
+      const existing = await findLoginByEmail({ actorAccountId: actor.id, email: input.email });
+      if (!existing) throw error;
+      if (existing.linkedAccountId === input.accountId) {
+        throw new AccountRegistryError(
+          "Email này đã là email đăng nhập của chính tài khoản này. Cần mật khẩu mới thì bấm “Cấp lại mật khẩu tạm”.",
+        );
+      }
+      if (existing.linkedAccountId) {
+        throw new AccountRegistryError(
+          `Email này đang dùng để đăng nhập cho tài khoản ${existing.linkedAccountId}. Chọn email khác, hoặc gỡ đăng nhập ở tài khoản đó trước.`,
+        );
+      }
+      if (!existing.createdForAccountId) {
+        // Not created by this ERP: never take over an Auth user it does not own.
+        throw new AccountRegistryError(
+          "Email này đã có người dùng đăng nhập không do hệ thống quản lý tạo ra. Chọn email khác, hoặc nhờ người quản trị Supabase kiểm tra trước.",
+        );
+      }
+      await setAuthUserPassword(existing.authUserId, temporaryPassword);
+      authUserId = existing.authUserId;
+    }
+
+    try {
+      await linkAuthUser({
+        actorAccountId: actor.id,
+        accountId: input.accountId,
+        authUserId,
+        email: input.email,
+      });
+    } catch (error) {
+      if (createdHere) {
+        try {
+          await deleteAuthUser(authUserId);
+        } catch (cleanupError) {
+          // Left as an orphan; the next grant with this email reuses it.
+          console.error("Grant login: could not delete the Auth user after a failed link", cleanupError);
+        }
+      }
+      throw error;
+    }
+
     revalidateAccounts();
     return {
       status: "success",
-      message: `Đã cấp đăng nhập cho ${input.accountId}. Mật khẩu tạm (chỉ hiện một lần, hãy sao chép ngay): ${temporaryPassword} — gửi riêng cho người này qua kênh khác, không dán vào đây. Họ bắt buộc phải đổi mật khẩu ngay lần đăng nhập đầu tiên.`,
+      message: `Đã cấp đăng nhập cho ${input.accountId}. Gửi mật khẩu tạm dưới đây riêng cho người này qua kênh khác; họ phải đổi mật khẩu ngay lần đăng nhập đầu tiên.`,
+      temporaryPassword,
+    };
+  } catch (error) {
+    return errorState(error);
+  }
+}
+
+const AccountIdSchema = z.object({
+  accountId: z.string().trim().min(2).max(100),
+});
+
+/**
+ * A15-ACC-01 (audit TK-04): a temporary password lost before it was copied
+ * used to mean deleting the Auth user by hand. Auth changes the password
+ * first; only then does the registry raise the forced-change flag and write
+ * the audit line. If Auth fails, nothing claims a reset happened; if the
+ * registry step fails, the new password is known to nobody and pressing the
+ * button again finishes the job.
+ */
+export async function resetLoginPasswordAction(
+  _previous: AccountActionState,
+  formData: FormData,
+): Promise<AccountActionState> {
+  try {
+    const actor = await requireSystemAdmin();
+    const { accountId } = AccountIdSchema.parse({ accountId: formData.get("accountId") });
+    if (accountId === actor.id) {
+      throw new AccountRegistryError(
+        "Mật khẩu của chính bạn đổi ở trang Đổi mật khẩu, không cấp lại ở đây.",
+      );
+    }
+    const authUserId = await getLinkedAuthUserId(accountId);
+    if (!authUserId) {
+      throw new AccountRegistryError(
+        "Tài khoản này chưa được cấp đăng nhập — bấm “Cấp đăng nhập” trước.",
+      );
+    }
+    const temporaryPassword = generateTemporaryPassword();
+    await setAuthUserPassword(authUserId, temporaryPassword);
+    try {
+      await markLoginPasswordReset({ actorAccountId: actor.id, accountId });
+    } catch (error) {
+      throw new AccountRegistryError(
+        "Mật khẩu đã đổi bên Supabase Auth nhưng hệ thống chưa ghi nhận xong, và mật khẩu mới chưa hiện cho ai. Bấm “Cấp lại mật khẩu tạm” thêm một lần.",
+        { cause: error },
+      );
+    }
+    revalidateAccounts();
+    return {
+      status: "success",
+      message: `Đã cấp lại mật khẩu tạm cho ${accountId}. Mật khẩu cũ không dùng được nữa; người này phải đổi mật khẩu ngay lần đăng nhập tới.`,
+      temporaryPassword,
+    };
+  } catch (error) {
+    return errorState(error);
+  }
+}
+
+/**
+ * A15-ACC-01 (audit TK-03): release a login from the screen instead of from
+ * the Supabase dashboard. The registry lets go first, so the person loses ERP
+ * access immediately even if deleting the Auth user then fails; that leftover
+ * is reported, and a later grant with the same email reuses it.
+ */
+export async function unlinkLoginAction(
+  _previous: AccountActionState,
+  formData: FormData,
+): Promise<AccountActionState> {
+  try {
+    const actor = await requireSystemAdmin();
+    const { accountId } = AccountIdSchema.parse({ accountId: formData.get("accountId") });
+    if (formData.get("confirm") !== "yes") {
+      throw new AccountRegistryError("Đánh dấu ô xác nhận trước khi gỡ đăng nhập.");
+    }
+    if (accountId === actor.id) {
+      throw new AccountRegistryError(
+        "Không tự gỡ đăng nhập của chính mình được — sẽ không còn đường vào lại.",
+      );
+    }
+    const authUserId = await unlinkAuthUser({ actorAccountId: actor.id, accountId });
+    revalidateAccounts();
+    try {
+      await deleteAuthUser(authUserId);
+    } catch (error) {
+      console.error("Unlink login: registry released but the Auth user was not deleted", error);
+      return {
+        status: "success",
+        message: `Đã gỡ đăng nhập của ${accountId}: người này không vào hệ thống được nữa. Bản ghi bên Supabase Auth chưa xoá được; sau này cấp lại cùng email, hệ thống tự dùng lại bản ghi đó.`,
+      };
+    }
+    return {
+      status: "success",
+      message: `Đã gỡ đăng nhập của ${accountId} và xoá người dùng bên Supabase Auth. Email cũ dùng lại được để cấp đăng nhập mới.`,
     };
   } catch (error) {
     return errorState(error);

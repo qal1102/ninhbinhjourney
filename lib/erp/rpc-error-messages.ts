@@ -386,6 +386,10 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Không tự khoá hoặc tự thu hồi quyền quản trị của chính mình được — sẽ không còn đường mở lại.",
   ACCOUNT_ADMIN_EMAIL_ALREADY_LINKED:
     "Email này đã được dùng để đăng nhập cho một tài khoản khác.",
+  ACCOUNT_ADMIN_SELF_LOGIN_CHANGE:
+    "Không tự cấp lại mật khẩu hay tự gỡ đăng nhập của chính mình ở đây được. Mật khẩu của bạn đổi ở trang Đổi mật khẩu.",
+  ACCOUNT_ADMIN_LOGIN_NOT_LINKED:
+    "Tài khoản này chưa được cấp đăng nhập, nên chưa có mật khẩu để cấp lại hay đăng nhập để gỡ.",
   PROFILE_MANAGER_SCOPE_REQUIRED:
     "Bạn chỉ sửa được hồ sơ của nhân sự thuộc cơ sở mình quản lý.",
   PROFILE_INPUT_INVALID: "Thông tin hồ sơ chưa hợp lệ.",

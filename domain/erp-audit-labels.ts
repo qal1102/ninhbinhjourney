@@ -24,6 +24,9 @@ export const ERP_AUDIT_ACTION_LABELS: Readonly<Record<string, string>> = Object.
   "account.role.granted": "Cấp vai trò",
   "account.role.revoked": "Thu hồi vai trò",
   "account.auth.linked": "Cấp đăng nhập",
+  "account.auth.password_changed": "Tự đổi mật khẩu",
+  "account.auth.password_reset": "Cấp lại mật khẩu tạm",
+  "account.auth.unlinked": "Gỡ đăng nhập",
   "employee.access.updated": "Đổi quyền nghiệp vụ",
   "employee.site.revoked": "Thu hồi quyền tại cơ sở",
 

@@ -92,3 +92,24 @@ export function isErpAccountStatus(value: string): value is ErpAccountStatus {
 export function canAccountSignIn(status: ErpAccountStatus): boolean {
   return status === "active";
 }
+
+/**
+ * A15-ACC-01 (audit 15/09/2026, TK-06): an account that is "Đang hoạt động"
+ * but was never granted a login looked exactly like one people sign into.
+ * Three states, read from the two registry facts that decide them.
+ */
+export type ErpLoginState = "no-login" | "awaiting-first-change" | "in-use";
+
+export const ERP_LOGIN_STATE_LABELS: Readonly<Record<ErpLoginState, string>> = Object.freeze({
+  "no-login": "Chưa cấp đăng nhập",
+  "awaiting-first-change": "Đã cấp, chưa đổi mật khẩu",
+  "in-use": "Đang dùng đăng nhập",
+});
+
+export function erpLoginState(account: {
+  hasAuthUser: boolean;
+  mustChangePassword: boolean;
+}): ErpLoginState {
+  if (!account.hasAuthUser) return "no-login";
+  return account.mustChangePassword ? "awaiting-first-change" : "in-use";
+}

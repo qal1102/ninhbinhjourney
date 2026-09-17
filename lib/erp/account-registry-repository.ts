@@ -419,13 +419,31 @@ export async function updateRegistryProfile(input: UpdateProfileInput) {
   if (result.error) throw registryError("lưu hồ sơ", result.error);
 }
 
-/** 16 random characters from an alphabet with no visually ambiguous glyphs. */
-export function generateTemporaryPassword(): string {
-  const alphabet =
-    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+export const TEMPORARY_PASSWORD_ALPHABET =
+  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
+
+/**
+ * 16 random characters from an alphabet with no visually ambiguous glyphs.
+ *
+ * A15-ACC-01 (audit TK-07): `byte % 59` made the first 20 characters of the
+ * alphabet more likely than the rest, because 256 is not a multiple of 59.
+ * Bytes at or above the largest multiple of the alphabet size are discarded
+ * instead (rejection sampling), so every character is equally likely.
+ */
+export function generateTemporaryPassword(
+  randomBytes: (size: number) => Uint8Array = (size) => crypto.getRandomValues(new Uint8Array(size)),
+): string {
+  const alphabet = TEMPORARY_PASSWORD_ALPHABET;
+  const limit = 256 - (256 % alphabet.length);
+  let password = "";
+  while (password.length < 16) {
+    for (const byte of randomBytes(32)) {
+      if (byte >= limit) continue;
+      password += alphabet[byte % alphabet.length];
+      if (password.length === 16) break;
+    }
+  }
+  return password;
 }
 
 /**
@@ -435,6 +453,19 @@ export function generateTemporaryPassword(): string {
  * safely. Returns the new auth user's id, to be handed straight to
  * `linkAuthUser`.
  */
+/**
+ * Supabase Auth already holds a user with this email. Deliberately NOT turned
+ * into a message here: the caller looks the email up first, because "already
+ * registered" covers three different situations that need three different
+ * answers (A15-ACC-01, audit TK-02).
+ */
+export class AuthEmailAlreadyRegisteredError extends AccountRegistryError {
+  constructor(options?: ErrorOptions) {
+    super("Email này đã có người dùng đăng nhập.", options);
+    this.name = "AuthEmailAlreadyRegisteredError";
+  }
+}
+
 export async function createAuthUserForAccount(input: {
   email: string;
   temporaryPassword: string;
@@ -448,17 +479,120 @@ export async function createAuthUserForAccount(input: {
     user_metadata: { erp_account_id: input.accountId },
   });
   if (result.error || !result.data.user) {
-    const alreadyRegistered = result.error?.message
-      ?.toLowerCase()
-      .includes("already been registered");
+    const message = result.error?.message?.toLowerCase() ?? "";
+    if (message.includes("already been registered") || result.error?.code === "email_exists") {
+      throw new AuthEmailAlreadyRegisteredError({ cause: result.error ?? undefined });
+    }
     throw new AccountRegistryError(
-      alreadyRegistered
-        ? "Email này đã được dùng cho một tài khoản đăng nhập khác."
-        : "Không tạo được tài khoản đăng nhập trên Supabase Auth.",
+      "Không tạo được tài khoản đăng nhập trên Supabase Auth.",
       { cause: result.error ?? undefined },
     );
   }
   return result.data.user.id;
+}
+
+/** Sets a new password on an existing Supabase Auth user (A15-ACC-01). */
+export async function setAuthUserPassword(authUserId: string, password: string) {
+  const client = createAdminClient();
+  const result = await client.auth.admin.updateUserById(authUserId, { password });
+  if (result.error) {
+    throw new AccountRegistryError(
+      "Supabase Auth chưa nhận mật khẩu mới. Mật khẩu cũ vẫn giữ nguyên; bấm lại để thử lần nữa.",
+      { cause: result.error },
+    );
+  }
+}
+
+/**
+ * Deletes a Supabase Auth user. Only ever called for a user this server just
+ * created and failed to link, or one the registry has just released.
+ */
+export async function deleteAuthUser(authUserId: string) {
+  const client = createAdminClient();
+  const result = await client.auth.admin.deleteUser(authUserId);
+  if (result.error) {
+    throw new AccountRegistryError("Supabase Auth chưa xoá được người dùng đăng nhập.", {
+      cause: result.error,
+    });
+  }
+}
+
+export type AuthLoginLookup = {
+  authUserId: string;
+  /** Registry account the Auth user is wired to; `null` = not wired to any account. */
+  linkedAccountId: string | null;
+  /** `erp_account_id` written into Auth metadata when this server created the user. */
+  createdForAccountId: string | null;
+};
+
+export async function findLoginByEmail(input: {
+  actorAccountId: string;
+  email: string;
+}): Promise<AuthLoginLookup | null> {
+  const client = createAdminClient();
+  const result = await client.rpc("erp_admin_find_login_by_email", {
+    p_tenant_id: TENANT_ID,
+    p_actor_account_id: input.actorAccountId,
+    p_email: input.email,
+  });
+  if (result.error) throw registryError("tra email đăng nhập", result.error);
+  const row = (Array.isArray(result.data) ? result.data[0] : result.data) as
+    | { auth_user_id?: unknown; linked_account_id?: unknown; created_for_account_id?: unknown }
+    | null
+    | undefined;
+  if (!row?.auth_user_id) return null;
+  return {
+    authUserId: String(row.auth_user_id),
+    linkedAccountId: row.linked_account_id ? String(row.linked_account_id) : null,
+    createdForAccountId: row.created_for_account_id ? String(row.created_for_account_id) : null,
+  };
+}
+
+/** Server-only: the Auth user behind an account, never sent to the browser. */
+export async function getLinkedAuthUserId(accountId: string): Promise<string | null> {
+  if (readMode() !== "supabase") return null;
+  const client = createAdminClient();
+  const result = await client
+    .from("erp_account_registry")
+    .select("auth_user_id")
+    .eq("tenant_id", TENANT_ID)
+    .eq("account_id", accountId)
+    .maybeSingle();
+  if (result.error) throw registryError("tra đăng nhập của tài khoản", result.error);
+  return result.data?.auth_user_id ? String(result.data.auth_user_id) : null;
+}
+
+export async function markLoginPasswordReset(input: {
+  actorAccountId: string;
+  accountId: string;
+}) {
+  const client = createAdminClient();
+  const result = await client.rpc("erp_admin_mark_login_password_reset", {
+    p_tenant_id: TENANT_ID,
+    p_actor_account_id: input.actorAccountId,
+    p_account_id: input.accountId,
+  });
+  if (result.error) throw registryError("ghi nhận cấp lại mật khẩu", result.error);
+}
+
+/** Releases the registry's link and returns the Auth user id that was released. */
+export async function unlinkAuthUser(input: {
+  actorAccountId: string;
+  accountId: string;
+}): Promise<string> {
+  if (readMode() !== "supabase") {
+    throw new AccountRegistryError(
+      "Chế độ demo cục bộ không có đăng nhập thật để gỡ. Bật ERP_PERSISTENCE_MODE=supabase.",
+    );
+  }
+  const client = createAdminClient();
+  const result = await client.rpc("erp_admin_unlink_auth_user", {
+    p_tenant_id: TENANT_ID,
+    p_actor_account_id: input.actorAccountId,
+    p_account_id: input.accountId,
+  });
+  if (result.error) throw registryError("gỡ đăng nhập", result.error);
+  return String(result.data);
 }
 
 export async function linkAuthUser(input: {

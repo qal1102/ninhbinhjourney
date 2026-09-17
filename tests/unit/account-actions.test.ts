@@ -26,9 +26,16 @@ vi.mock("@/lib/erp/account-registry-repository", () => {
     listRegistryAccounts: mocks.listRegistryAccounts,
     upsertRegistryAccount: mocks.upsertRegistryAccount,
     // Not exercised by these tests, but the module under test imports them.
+    AuthEmailAlreadyRegisteredError: AccountRegistryError,
     createAuthUserForAccount: vi.fn(),
+    deleteAuthUser: vi.fn(),
+    findLoginByEmail: vi.fn(),
     generateTemporaryPassword: vi.fn(),
+    getLinkedAuthUserId: vi.fn(),
     linkAuthUser: vi.fn(),
+    markLoginPasswordReset: vi.fn(),
+    setAuthUserPassword: vi.fn(),
+    unlinkAuthUser: vi.fn(),
     setRegistryAccountStatus: vi.fn(),
     setRegistryRoleAssignment: vi.fn(),
   };

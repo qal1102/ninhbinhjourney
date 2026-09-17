@@ -1202,6 +1202,32 @@ test("giám đốc dùng điện thoại vẫn mở được tài khoản và h�
   ).toBeLessThanOrEqual(1);
 });
 
+// A15-ACC-01 (audit 15/09/2026, TK-06): "Đang hoạt động" từng trông y hệt nhau
+// dù tài khoản chưa hề được cấp đăng nhập. Chạy cục bộ không có Supabase Auth,
+// nên mọi thẻ phải nói thật là chưa cấp — và không thẻ nào hiện nút cấp lại
+// mật khẩu hay gỡ đăng nhập cho một đăng nhập không tồn tại.
+test("mỗi thẻ tài khoản nói rõ trạng thái đăng nhập, nhật ký không in mã máy", async ({ page }) => {
+  await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
+  await page.goto("/erp/tai-khoan");
+  await expect(page.getByRole("heading", { name: "Tài khoản & phân quyền" })).toBeVisible();
+
+  const trangThai = page.getByTestId("login-state");
+  const soThe = await page.getByRole("main").locator("article").count();
+  expect(soThe).toBeGreaterThan(0);
+  await expect(trangThai).toHaveCount(soThe);
+  for (const chu of await trangThai.allInnerTexts()) {
+    expect(["Chưa cấp đăng nhập", "Đã cấp, chưa đổi mật khẩu", "Đang dùng đăng nhập"]).toContain(chu.trim());
+  }
+  const chuaCap = await trangThai.filter({ hasText: "Chưa cấp đăng nhập" }).count();
+  await expect(page.getByRole("button", { name: "Cấp đăng nhập", exact: true })).toHaveCount(chuaCap);
+  await expect(page.getByRole("button", { name: "Cấp lại mật khẩu tạm", exact: true })).toHaveCount(soThe - chuaCap);
+
+  await expect(page.getByRole("main")).not.toContainText(/account\.(auth|role|status|created|updated)/);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+  ).toBeLessThanOrEqual(1);
+});
+
 /**
  * Lượt đi tiếp theo cùng con đường, 10/09/2026.
  *

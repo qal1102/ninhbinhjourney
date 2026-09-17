@@ -3,13 +3,27 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
 import {
-  changePercent,
-  rollingWindow,
-  vietnamTodayWindow,
-  vietnamYesterdayWindow,
-  type TicketWindow,
-} from "@/domain/ticket-window";
+  DIRECTOR_TICKET_CHANNELS,
+  buildDirectorTicketOverview,
+  directorTicketWindows,
+  directorTicketWindowsForRpc,
+  emptyDirectorTicketCounts,
+  parseDirectorTicketOverviewRpc,
+  type DirectorTicketCounts,
+  type DirectorTicketOverview,
+  type DirectorTicketWindows,
+  type TicketTally,
+} from "@/domain/erp-director-ticket-overview";
+import type { TicketWindow } from "@/domain/ticket-window";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
+
+export type {
+  ChannelTicketCount,
+  DirectorTicketOverview,
+  SiteTicketCount,
+  TicketMeasure,
+  TicketWindowCount,
+} from "@/domain/erp-director-ticket-overview";
 
 /**
  * ERP-UX-06d — vé đã bán, đọc thẳng từ vé thật, gộp cả bốn cơ sở.
@@ -20,64 +34,18 @@ import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-reposit
  * đã đi vào từng cơ sở rồi mở đúng một nghiệp vụ — nên chủ dự án đăng nhập
  * giám đốc, nhìn quanh, và không thấy hôm nay bán được bao nhiêu vé.
  *
- * Ở đây đếm bằng `count: "exact", head: true`: máy chủ đếm rồi trả về một con
- * số, không kéo hàng nào về. Cách này đúng ở mọi khối lượng — kéo hàng về rồi
- * đếm trong JavaScript thì tới ngày đông khách sẽ chạm trần `limit` và **âm
- * thầm báo thiếu**, đúng loại sai mà không ai phát hiện ra.
+ * A15-ERP-04 — đếm **lượt khách** trong kho bằng hàm chỉ đọc
+ * `erp_director_ticket_overview` (migration `202609170075`): máy chủ cộng rồi
+ * trả về vài con số, không kéo hàng nào về. Kéo hàng về rồi đếm trong
+ * JavaScript thì tới ngày đông khách sẽ chạm trần `limit` và **âm thầm báo
+ * thiếu**, đúng loại sai mà không ai phát hiện ra.
+ *
+ * Kho chưa có hàm ấy (migration chưa áp) thì lùi về lệnh đếm cũ
+ * `count: "exact", head: true`. Lệnh ấy chỉ đếm được tấm vé, nên kết quả mang
+ * `measure: "tickets"` và màn hình giữ nguyên chữ "tấm vé".
  */
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
-
-const CHANNEL_LABELS: Readonly<Record<string, string>> = Object.freeze({
-  "quay-ve": "Quầy vé",
-  website: "Website",
-  "doi-tac": "Đối tác",
-  moi: "Khách mời",
-});
-
-const CHANNELS = Object.keys(CHANNEL_LABELS);
-
-export type TicketWindowCount = {
-  label: string;
-  current: number;
-  previous: number;
-  /** null khi kỳ trước bằng 0 — chia cho không thì phần trăm không có nghĩa. */
-  changePercent: number | null;
-};
-
-export type SiteTicketCount = {
-  siteId: ErpSiteId;
-  shortName: string;
-  today: number;
-  month: number;
-};
-
-export type ChannelTicketCount = {
-  channel: string;
-  channelLabel: string;
-  count: number;
-  sharePercent: number;
-};
-
-export type DirectorTicketOverview = {
-  /** false khi chạy chế độ demo cục bộ: không có bảng vé nào để hỏi. */
-  available: boolean;
-  windows: TicketWindowCount[];
-  bySite: SiteTicketCount[];
-  byChannel: ChannelTicketCount[];
-  /** Doanh thu thật, chỉ của đơn đặt qua web đã xác nhận. Vé bán tại quầy chưa lưu giá ở đâu cả. */
-  webRevenue30dVnd: number;
-  webOrders30d: number;
-  /**
-   * Vé gieo mẫu trong ba mươi ngày, đã bị loại khỏi mọi con số phía trên.
-   *
-   * Không giấu đi: giám đốc mở màn hình thấy 0 vé mà kho lại có 8 tấm thì
-   * chính sự vênh ấy làm người ta nghi màn hình hỏng. Nói thẳng có bao nhiêu
-   * tấm mẫu và chúng không được tính, thì con số 0 kia mới đọc được.
-   */
-  demoSeedTickets30d: number;
-  generatedAt: string;
-};
 
 export class TicketOverviewError extends Error {
   constructor(message: string, options?: ErrorOptions) {
@@ -123,25 +91,38 @@ async function readWebOrders(client: SupabaseClient, range: TicketWindow) {
   };
 }
 
-export async function getDirectorTicketOverview(
-  siteIds: readonly ErpSiteId[],
-): Promise<DirectorTicketOverview> {
-  const generatedAt = new Date().toISOString();
-  const empty: DirectorTicketOverview = {
-    available: false,
-    windows: [],
-    bySite: [],
-    byChannel: [],
-    webRevenue30dVnd: 0,
-    webOrders30d: 0,
-    demoSeedTickets30d: 0,
-    generatedAt,
-  };
-  if (process.env.ERP_PERSISTENCE_MODE?.trim() !== "supabase") return empty;
-  if (siteIds.length === 0) return { ...empty, available: true };
+type SiteRef = { siteId: ErpSiteId; shortName: string; uuid: string };
 
-  const client = createAdminClient();
-  const siteUuids = siteIds.map((id) => ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[id]);
+/**
+ * Đếm trong kho, cả lượt khách lẫn tấm vé. Trả `null` khi kho chưa có hàm
+ * (`42883` / `PGRST202`) hoặc kết quả không đúng hình dạng — khi đó dùng lệnh
+ * đếm cũ. Mọi lỗi khác vẫn ném ra: im lặng nuốt lỗi kho dữ liệu là cách để một
+ * màn hình sai trông y như một màn hình đúng.
+ */
+async function readCountsFromRpc(
+  client: SupabaseClient,
+  sites: readonly SiteRef[],
+  windows: DirectorTicketWindows,
+): Promise<DirectorTicketCounts | null> {
+  const { data, error } = await client.rpc("erp_director_ticket_overview", {
+    p_tenant_id: TENANT_ID,
+    p_site_ids: sites.map((site) => site.uuid),
+    p_windows: directorTicketWindowsForRpc(windows),
+  });
+  if (error) {
+    if (error.code === "42883" || error.code === "PGRST202") return null;
+    throw new TicketOverviewError("Không đọc được số vé đã bán.", { cause: error });
+  }
+  return parseDirectorTicketOverviewRpc(data);
+}
+
+/** Lệnh đếm cũ: chỉ đếm được tấm vé. Giữ nguyên để trang chủ không trắng khi kho chưa có hàm. */
+async function readTicketCountsByHead(
+  client: SupabaseClient,
+  sites: readonly SiteRef[],
+  windows: DirectorTicketWindows,
+): Promise<DirectorTicketCounts> {
+  const siteUuids = sites.map((site) => site.uuid);
 
   /**
    * Cột `data_origin` đã có chưa?
@@ -199,16 +180,9 @@ export async function getDirectorTicketOverview(
     return count ?? 0;
   }
 
-  // Một mốc "bây giờ" duy nhất cho cả mười sáu câu đếm. Gọi `new Date()`
-  // nhiều lần thì các cửa sổ lệch nhau vài mili giây, và một tấm vé phát
-  // hành đúng lúc ấy có thể lọt vào hai cửa sổ hoặc rơi ra ngoài cả hai.
-  const at = new Date();
-  const today = vietnamTodayWindow(at);
-  const yesterday = vietnamYesterdayWindow(at);
-  const week = rollingWindow(at, 7);
-  const weekBefore = rollingWindow(at, 7, 1);
-  const month = rollingWindow(at, 30);
-  const monthBefore = rollingWindow(at, 30, 1);
+  const tam = (tickets: number): TicketTally => ({ tickets, entries: null });
+  const theoKhoa = (keys: readonly string[], values: readonly number[]) =>
+    Object.fromEntries(keys.map((key, index) => [key, tam(values[index] ?? 0)]));
 
   const [
     todayCount,
@@ -220,80 +194,86 @@ export async function getDirectorTicketOverview(
     siteTodayCounts,
     siteMonthCounts,
     channelCounts,
-    webOrders,
     demoSeedTickets30d,
   ] = await Promise.all([
-    countTickets(today),
-    countTickets(yesterday),
-    countTickets(week),
-    countTickets(weekBefore),
-    countTickets(month),
-    countTickets(monthBefore),
-    Promise.all(
-      siteIds.map((id) =>
-        countTickets(today, { siteUuid: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[id] }),
-      ),
-    ),
-    Promise.all(
-      siteIds.map((id) =>
-        countTickets(month, { siteUuid: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[id] }),
-      ),
-    ),
-    Promise.all(CHANNELS.map((channel) => countTickets(month, { channel }))),
-    readWebOrders(client, month),
-    countTickets(month, { origin: "demo-seed" }),
+    countTickets(windows.today),
+    countTickets(windows.yesterday),
+    countTickets(windows.week),
+    countTickets(windows.week_before),
+    countTickets(windows.month),
+    countTickets(windows.month_before),
+    Promise.all(sites.map((site) => countTickets(windows.today, { siteUuid: site.uuid }))),
+    Promise.all(sites.map((site) => countTickets(windows.month, { siteUuid: site.uuid }))),
+    Promise.all(DIRECTOR_TICKET_CHANNELS.map((channel) => countTickets(windows.month, { channel }))),
+    countTickets(windows.month, { origin: "demo-seed" }),
   ]);
 
-  const windows: TicketWindowCount[] = [
-    {
-      label: "Hôm nay",
-      current: todayCount,
-      previous: yesterdayCount,
-      changePercent: changePercent(todayCount, yesterdayCount),
-    },
-    {
-      label: "7 ngày",
-      current: weekCount,
-      previous: weekBeforeCount,
-      changePercent: changePercent(weekCount, weekBeforeCount),
-    },
-    {
-      label: "30 ngày",
-      current: monthCount,
-      previous: monthBeforeCount,
-      changePercent: changePercent(monthCount, monthBeforeCount),
-    },
-  ];
-
-  const bySite: SiteTicketCount[] = siteIds
-    .map((siteId, index) => ({
-      siteId,
-      shortName: ERP_SITES.find((site) => site.id === siteId)?.shortName ?? siteId,
-      today: siteTodayCounts[index] ?? 0,
-      month: siteMonthCounts[index] ?? 0,
-    }))
-    .sort((a, b) => b.month - a.month);
-
-  const byChannel: ChannelTicketCount[] = CHANNELS.map((channel, index) => ({
-    channel,
-    channelLabel: CHANNEL_LABELS[channel] ?? channel,
-    count: channelCounts[index] ?? 0,
-    sharePercent:
-      monthCount === 0
-        ? 0
-        : Math.round(((channelCounts[index] ?? 0) / monthCount) * 1000) / 10,
-  }))
-    .filter((item) => item.count > 0)
-    .sort((a, b) => b.count - a.count);
-
   return {
-    available: true,
-    windows,
-    bySite,
-    byChannel,
+    measure: "tickets",
+    windows: {
+      today: tam(todayCount),
+      yesterday: tam(yesterdayCount),
+      week: tam(weekCount),
+      week_before: tam(weekBeforeCount),
+      month: tam(monthCount),
+      month_before: tam(monthBeforeCount),
+    },
+    siteToday: theoKhoa(siteUuids, siteTodayCounts),
+    siteMonth: theoKhoa(siteUuids, siteMonthCounts),
+    channelMonth: theoKhoa(DIRECTOR_TICKET_CHANNELS, channelCounts),
+    demoSeedTickets30d,
+  };
+}
+
+export async function getDirectorTicketOverview(
+  siteIds: readonly ErpSiteId[],
+): Promise<DirectorTicketOverview> {
+  const generatedAt = new Date().toISOString();
+  if (process.env.ERP_PERSISTENCE_MODE?.trim() !== "supabase") {
+    return {
+      available: false,
+      measure: "tickets",
+      windows: [],
+      bySite: [],
+      byChannel: [],
+      webRevenue30dVnd: 0,
+      webOrders30d: 0,
+      demoSeedTickets30d: 0,
+      generatedAt,
+    };
+  }
+
+  const sites: SiteRef[] = siteIds.map((siteId) => ({
+    siteId,
+    shortName: ERP_SITES.find((site) => site.id === siteId)?.shortName ?? siteId,
+    uuid: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId],
+  }));
+  if (sites.length === 0) {
+    return buildDirectorTicketOverview(emptyDirectorTicketCounts(), {
+      sites,
+      webRevenue30dVnd: 0,
+      webOrders30d: 0,
+      generatedAt,
+    });
+  }
+
+  const client = createAdminClient();
+  // Một mốc "bây giờ" duy nhất cho mọi khung đếm và cho tiền đơn web. Gọi
+  // `new Date()` nhiều lần thì các cửa sổ lệch nhau vài mili giây, và một tấm
+  // vé phát hành đúng lúc ấy có thể lọt vào hai cửa sổ hoặc rơi ra ngoài cả hai.
+  const windows = directorTicketWindows(new Date());
+
+  const [counts, webOrders] = await Promise.all([
+    readCountsFromRpc(client, sites, windows).then(
+      (fromRpc) => fromRpc ?? readTicketCountsByHead(client, sites, windows),
+    ),
+    readWebOrders(client, windows.month),
+  ]);
+
+  return buildDirectorTicketOverview(counts, {
+    sites,
     webRevenue30dVnd: webOrders.revenueVnd,
     webOrders30d: webOrders.orderCount,
-    demoSeedTickets30d,
     generatedAt,
-  };
+  });
 }

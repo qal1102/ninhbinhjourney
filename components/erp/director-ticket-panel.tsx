@@ -1,11 +1,19 @@
 import Link from "next/link";
-import type { DirectorTicketOverview } from "@/lib/erp/ticket-overview-repository";
+import type {
+  DirectorTicketOverview,
+  TicketMeasure,
+} from "@/lib/erp/ticket-overview-repository";
 
 /**
  * ERP-UX-06d — "hôm nay bán được bao nhiêu vé" phải trả lời được ngay ở trang
  * đầu, không bắt giám đốc đi vào từng cơ sở rồi mở đúng một nghiệp vụ mới
  * thấy. Số ở đây đếm từ vé đã phát hành thật, không phải con số người trực tự
  * khai trong hồ sơ chốt ca.
+ *
+ * A15-ERP-04 — con số chính là **lượt khách** khi kho cộng được
+ * (`overview.measure === "entries"`), số tấm vé lùi xuống làm dòng phụ. Kho
+ * chưa có hàm cộng thì chỉ có tấm vé, và mọi chữ ở đây giữ nguyên "tấm vé":
+ * gọi số tấm vé là lượt khách là báo thiếu mà trông như đúng.
  */
 
 function formatVnd(value: number) {
@@ -16,12 +24,14 @@ function formatVnd(value: number) {
   }).format(value);
 }
 
-function formatChange(percent: number | null, previous: number, unit: string) {
+function formatChange(percent: number | null, previous: number, measure: TicketMeasure) {
   if (percent === null) {
-    return previous === 0 ? `Kỳ trước chưa bán ${unit} nào` : "Chưa so sánh được";
+    // Kỳ trước 0 lượt khách cũng chính là 0 tấm vé, nên một câu dùng được cho cả hai.
+    return previous === 0 ? "Kỳ trước chưa bán tấm vé nào" : "Chưa so sánh được";
   }
   const sign = percent > 0 ? "+" : "";
-  return `${sign}${percent.toLocaleString("vi-VN")}% so với kỳ trước (${previous.toLocaleString("vi-VN")})`;
+  const unit = measure === "entries" ? " lượt khách" : "";
+  return `${sign}${percent.toLocaleString("vi-VN")}% so với kỳ trước (${previous.toLocaleString("vi-VN")}${unit})`;
 }
 
 export function DirectorTicketPanel({
@@ -66,6 +76,7 @@ export function DirectorTicketPanel({
 
   const [today, week, month] = overview.windows;
   const busiest = overview.bySite[0];
+  const theoLuot = overview.measure === "entries";
 
   return (
     <section
@@ -78,19 +89,27 @@ export function DirectorTicketPanel({
             Vé đã bán · cả bốn cơ sở
           </p>
           <h2 className="mt-2 text-2xl font-black text-[#20342c]">
-            Hôm nay {today.current.toLocaleString("vi-VN")} tấm vé
+            Hôm nay {today.current.toLocaleString("vi-VN")}{" "}
+            {theoLuot ? "lượt khách" : "tấm vé"}
           </h2>
         </div>
-        {/* Bảng này đếm TẤM VÉ bằng lệnh đếm của kho dữ liệu, nên không cộng
-            được số lượt ghi trên từng vé. Một vé đoàn vài chục người vẫn là
-            một tấm. Nói thẳng ra ở đây để không ai đọc nó thành số khách —
-            lượt kiểm tay 12/09/2026 đã đọc nhầm đúng như vậy. Cộng lượt khách
-            tại chỗ cần một hàm cộng trong kho dữ liệu, xem QA-ERP-TICKET-05. */}
-        <p className="text-xs text-[#7c8882]">
-          Đếm tấm vé đã phát, không phải số người trực tự khai lúc chốt ca. Một
-          vé đoàn tính một tấm dù cho nhiều người vào; số lượt khách xem ở màn
-          hình Vé của từng cơ sở.
-        </p>
+        {theoLuot ? (
+          <p className="text-xs text-[#7c8882]">
+            Đếm từ vé đã phát, không phải số người trực tự khai lúc chốt ca. Tấm
+            vé cho bao nhiêu người vào thì cộng bấy nhiêu lượt khách, vé đoàn
+            cũng thế. Vé đã huỷ không tính.
+          </p>
+        ) : (
+          /* Kho chưa có hàm cộng lượt (migration 202609170075 chưa áp): lệnh
+             đếm cũ chỉ ra số TẤM VÉ, một vé đoàn vài chục người vẫn là một
+             tấm. Nói thẳng ra để không ai đọc nó thành số khách — lượt kiểm
+             tay 12/09/2026 đã đọc nhầm đúng như vậy. */
+          <p className="text-xs text-[#7c8882]">
+            Đếm tấm vé đã phát, không phải số người trực tự khai lúc chốt ca. Một
+            vé đoàn tính một tấm dù cho nhiều người vào; số lượt khách xem ở màn
+            hình Vé của từng cơ sở.
+          </p>
+        )}
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -103,6 +122,11 @@ export function DirectorTicketPanel({
             <p className="mt-2 text-3xl font-black tracking-[-0.03em] text-[#1e3229]">
               {window.current.toLocaleString("vi-VN")}
             </p>
+            {theoLuot && window.tickets !== null ? (
+              <p className="mt-1 text-xs text-[#6d7c74]">
+                lượt khách · {window.tickets.toLocaleString("vi-VN")} tấm vé
+              </p>
+            ) : null}
             <p
               className={`mt-2 text-xs font-bold ${
                 window.changePercent === null
@@ -112,7 +136,7 @@ export function DirectorTicketPanel({
                     : "text-[#8b3d31]"
               }`}
             >
-              {formatChange(window.changePercent, window.previous, "tấm vé")}
+              {formatChange(window.changePercent, window.previous, overview.measure)}
             </p>
           </article>
         ))}
@@ -121,7 +145,7 @@ export function DirectorTicketPanel({
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.15em] text-[#607b70]">
-            Từng cơ sở · 30 ngày
+            {theoLuot ? "Lượt khách từng cơ sở" : "Từng cơ sở · 30 ngày"}
           </p>
           {overview.bySite.length === 0 ? (
             <p className="mt-3 text-sm text-[#7b8881]">
@@ -133,20 +157,30 @@ export function DirectorTicketPanel({
                 <li key={site.siteId}>
                   <Link
                     href={`/erp/${site.siteId}/ve-dat-cho`}
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[#e3e9e5] px-4 text-sm transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-[#e3e9e5] px-4 py-2 text-sm transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
                   >
                     <span className="font-bold text-[#33483f]">
                       {site.shortName}
                     </span>
-                    <span className="text-[#66756e]">
-                      hôm nay{" "}
-                      <strong className="text-[#1e3229]">
-                        {site.today.toLocaleString("vi-VN")}
-                      </strong>{" "}
-                      · 30 ngày{" "}
-                      <strong className="text-[#1e3229]">
-                        {site.month.toLocaleString("vi-VN")}
-                      </strong>
+                    <span className="text-right text-[#66756e]">
+                      <span className="block">
+                        hôm nay{" "}
+                        <strong className="text-[#1e3229]">
+                          {site.today.toLocaleString("vi-VN")}
+                        </strong>{" "}
+                        · 30 ngày{" "}
+                        <strong className="text-[#1e3229]">
+                          {site.month.toLocaleString("vi-VN")}
+                        </strong>
+                      </span>
+                      {theoLuot &&
+                      site.todayTickets !== null &&
+                      site.monthTickets !== null ? (
+                        <span className="block text-xs text-[#7c8882]">
+                          {site.todayTickets.toLocaleString("vi-VN")} tấm vé ·{" "}
+                          {site.monthTickets.toLocaleString("vi-VN")} tấm vé
+                        </span>
+                      ) : null}
                     </span>
                   </Link>
                 </li>
@@ -155,8 +189,10 @@ export function DirectorTicketPanel({
           )}
           {busiest && busiest.month > 0 ? (
             <p className="mt-3 text-xs leading-5 text-[#7c8882]">
-              Ba mươi ngày qua {busiest.shortName} bán được nhiều vé nhất. Bấm
-              vào tên cơ sở để xem từng tấm vé và lượt quét ở cổng.
+              {theoLuot
+                ? `Ba mươi ngày qua ${busiest.shortName} bán vé cho nhiều lượt khách nhất.`
+                : `Ba mươi ngày qua ${busiest.shortName} bán được nhiều vé nhất.`}{" "}
+              Bấm vào tên cơ sở để xem từng tấm vé và lượt quét ở cổng.
             </p>
           ) : null}
         </div>
@@ -177,10 +213,20 @@ export function DirectorTicketPanel({
                     <span className="font-bold text-[#33483f]">
                       {channel.channelLabel}
                     </span>
-                    <span className="text-[#66756e]">
-                      {channel.count.toLocaleString("vi-VN")} vé ·{" "}
-                      {channel.sharePercent.toLocaleString("vi-VN")}%
-                    </span>
+                    {theoLuot && channel.tickets !== null ? (
+                      <span className="text-right text-[#66756e]">
+                        {channel.count.toLocaleString("vi-VN")} lượt khách{" "}
+                        <span className="text-xs text-[#7c8882]">
+                          ({channel.tickets.toLocaleString("vi-VN")} tấm vé)
+                        </span>{" "}
+                        · {channel.sharePercent.toLocaleString("vi-VN")}%
+                      </span>
+                    ) : (
+                      <span className="text-[#66756e]">
+                        {channel.count.toLocaleString("vi-VN")} vé ·{" "}
+                        {channel.sharePercent.toLocaleString("vi-VN")}%
+                      </span>
+                    )}
                   </div>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#edf1ee]">
                     <div

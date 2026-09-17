@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import {
@@ -15,6 +15,7 @@ import { MIN_SCANNED_CODE_LENGTH } from "@/domain/erp-camera-scan";
 import type { ErpSite } from "@/domain/erp";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import { isDemoTicketCode } from "@/domain/erp-ticket-code";
+import { ticketStatusLabel } from "@/domain/erp-ticket-sales";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import { useGateCameraScanner } from "@/lib/erp/use-gate-camera-scanner";
@@ -27,6 +28,8 @@ import { ShiftCloseSiteWorkflow } from "./shift-close-workflow";
 import { OfflineGateConsole } from "./offline-gate-console";
 import { CounterSalePanel } from "./counter-sale-panel";
 import type { CounterSaleWorkspace } from "@/lib/erp/counter-sale-repository";
+import { buildTicketSalesReport, ticketSalesHasData } from "@/lib/export/ticket-sales-report";
+import { ReportExportBar } from "./report-export-bar";
 
 type Props = {
   site: ErpSite;
@@ -133,6 +136,11 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   }, [zoomedQr]);
   const sales = ticketSales ?? EMPTY_TICKET_SALES;
   const selected = sales.periods.find((item) => item.period === period) ?? sales.periods[0];
+  // A15-ERP-02: tệp Excel và bản in dựng từ đúng `sales` mà khối "Vé đã bán" vẽ.
+  const salesReport = useMemo(
+    () => (ticketSalesHasData(sales) ? buildTicketSalesReport({ siteName: site.shortName, sales }) : null),
+    [sales, site.shortName],
+  );
 
   const loadTodayTickets = useCallback(async () => {
     setTodayTicketsPending(true);
@@ -594,6 +602,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
             ))}
           </div>
         </div>
+        {salesReport ? <ReportExportBar report={salesReport} className="mt-4" /> : null}
         <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
           <article className="rounded-xl bg-[#f3f6f4] p-4">
             <p className="text-xs text-[#718078]">Lượt khách được vào</p>
@@ -683,7 +692,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                     </div>
                   </summary>
                   <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-[#e6ebe8] pt-3 text-xs">
-                    <div><dt className="text-[#849089]">Trạng thái</dt><dd className="mt-1 font-bold">{item.status}</dd></div>
+                    <div><dt className="text-[#849089]">Trạng thái</dt><dd className="mt-1 font-bold">{ticketStatusLabel(item.status)}</dd></div>
                     <div><dt className="text-[#849089]">Khách</dt><dd className="mt-1 font-bold">{item.guestName || "Không có tên"}</dd></div>
                   </dl>
                 </details>

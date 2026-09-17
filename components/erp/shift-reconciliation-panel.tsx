@@ -9,6 +9,8 @@ import {
   type ShiftGapLevel,
 } from "@/domain/erp-shift-reconciliation";
 import type { ShiftReconciliationView } from "@/lib/erp/shift-reconciliation-repository";
+import { buildShiftReconciliationReport } from "@/lib/export/shift-reconciliation-report";
+import { ReportExportBar } from "./report-export-bar";
 
 /**
  * TC-21 — bảng đối soát cuối ca.
@@ -159,6 +161,17 @@ export function ShiftReconciliationPanel({
   const { shift, reconciliation, scanUnavailableReason, cashUnavailableReason, counterCashUnavailableReason } =
     view.selected;
   const { window, scans, scanBreakdown, cash, differences, gaps } = reconciliation;
+  // A15-ERP-02: tệp Excel và bản in dựng từ đúng `view.selected` đang vẽ dưới đây.
+  const report = buildShiftReconciliationReport({
+    siteName: site.shortName,
+    source: view.selected,
+    statusLabel: STATUS_LABELS[shift.status],
+    gapLevelLabels: {
+      alert: GAP_STYLE.alert.label,
+      watch: GAP_STYLE.watch.label,
+      info: GAP_STYLE.info.label,
+    },
+  });
 
   return (
     <section className="grid gap-4">
@@ -219,6 +232,7 @@ export function ShiftReconciliationPanel({
             Việt Nam)
           </p>
         ) : null}
+        <ReportExportBar report={report} className="mt-3" />
       </div>
 
       <div className="grid gap-3">

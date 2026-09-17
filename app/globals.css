@@ -1803,3 +1803,133 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     animation-delay: 0s !important;
   }
 }
+
+/*
+ * A15-ERP-02 — bản in báo cáo ERP (nút "In / Lưu PDF").
+ *
+ * `components/erp/report-export-bar.tsx` dựng bản in vào thẳng <body> rồi gắn
+ * cờ `data-erp-printing` lên <html> đúng lúc gọi hộp thoại in. Mọi luật dưới
+ * đây đều bám vào cờ ấy hoặc vào `[data-erp-print-root]`, nên Ctrl+P ở bất kỳ
+ * trang nào khác vẫn in như cũ. Khi in, mọi thứ khác trong <body> — thanh điều
+ * hướng, trợ lý, nút nổi — bị ẩn; chỉ còn bảng báo cáo.
+ */
+[data-erp-print-root] {
+  display: none;
+}
+
+@page erp-report {
+  size: A4 portrait;
+  margin: 12mm 10mm 14mm;
+}
+
+@media print {
+  html[data-erp-printing] body > :not([data-erp-print-root]) {
+    display: none !important;
+  }
+
+  html[data-erp-printing],
+  html[data-erp-printing] body {
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  html[data-erp-printing] [data-erp-print-root] {
+    color: #111;
+    display: block;
+    font-family: var(--font-body);
+    font-size: 8pt;
+    line-height: 1.35;
+    page: erp-report;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  [data-erp-print-root] .erp-print-heading {
+    border-bottom: 1pt solid #183f34;
+    margin-bottom: 6pt;
+    padding-bottom: 4pt;
+  }
+
+  [data-erp-print-root] h1 {
+    font-size: 14pt;
+    font-weight: 800;
+    margin: 0 0 2pt;
+  }
+
+  [data-erp-print-root] .erp-print-heading p {
+    color: #333;
+    margin: 0;
+  }
+
+  [data-erp-print-root] .erp-print-section {
+    margin-top: 9pt;
+  }
+
+  [data-erp-print-root] h2 {
+    break-after: avoid;
+    font-size: 10.5pt;
+    font-weight: 800;
+    margin: 0 0 3pt;
+  }
+
+  [data-erp-print-root] .erp-print-note,
+  [data-erp-print-root] .erp-print-empty {
+    break-after: avoid;
+    color: #444;
+    margin: 0 0 4pt;
+  }
+
+  [data-erp-print-root] table {
+    border-collapse: collapse;
+    table-layout: auto;
+    width: 100%;
+  }
+
+  /* Tiêu đề cột lặp lại ở đầu mỗi trang giấy. */
+  [data-erp-print-root] thead {
+    display: table-header-group;
+  }
+
+  [data-erp-print-root] tr {
+    break-inside: avoid;
+  }
+
+  /*
+   * `break-word` chứ không `anywhere`: `anywhere` cho phép bảng bóp một cột
+   * xuống còn một ký tự ("đồ/ng", "Ta/m Ch/úc") để nhường chỗ cho cột dài.
+   * `break-word` giữ nguyên từng từ, chỉ bẻ khi một từ dài hơn cả cột.
+   */
+  [data-erp-print-root] th,
+  [data-erp-print-root] td {
+    border: 0.5pt solid #9aa9a2;
+    overflow-wrap: break-word;
+    padding: 1.5pt 2.5pt;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  [data-erp-print-root] th {
+    background: #e8efeb;
+    font-weight: 700;
+  }
+
+  [data-erp-print-root] th[data-kind="number"] {
+    text-align: right;
+  }
+
+  /* Số và ngày không bao giờ gãy giữa chừng; cột chữ co lại nhường chỗ. */
+  [data-erp-print-root] td[data-kind="number"],
+  [data-erp-print-root] td[data-kind="date"] {
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: normal;
+    white-space: nowrap;
+  }
+
+  [data-erp-print-root] td[data-kind="number"] {
+    text-align: right;
+  }
+
+  [data-erp-print-root] tr[data-total] td {
+    font-weight: 800;
+  }
+}

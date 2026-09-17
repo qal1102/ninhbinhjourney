@@ -210,3 +210,22 @@ export function parseTicketSalesRpc(value: unknown): {
 
   return { periods, productShares, recent };
 }
+
+/**
+ * A15-ERP-02 — tên tiếng Việt của trạng thái vé, đúng bốn giá trị ràng buộc
+ * `erp_tickets.status` cho phép (migration `202608020028`). Trước đây danh
+ * sách "Vé phát hành gần nhất" in thẳng mã lưu trong kho như `issued`.
+ */
+export const TICKET_STATUS_LABELS: Readonly<Record<string, string>> = Object.freeze({
+  issued: "Chưa dùng",
+  "partially-used": "Đã dùng một phần",
+  used: "Đã dùng hết lượt",
+  void: "Đã huỷ",
+});
+
+/** Trạng thái lạ thì hiện nguyên mã, còn hơn giấu đi. */
+export function ticketStatusLabel(status: string): string {
+  return Object.prototype.hasOwnProperty.call(TICKET_STATUS_LABELS, status)
+    ? TICKET_STATUS_LABELS[status]
+    : status;
+}

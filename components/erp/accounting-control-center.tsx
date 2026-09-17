@@ -9,6 +9,8 @@ import {
   reverseAccountingJournalAction,
 } from "@/app/erp/accounting-actions";
 import {
+  accountingJournalSourceLabel,
+  summarisePostedTrialBalance,
   type AccountingJournal,
   type AccountingJournalLine,
   type AccountingPeriod,
@@ -28,7 +30,9 @@ import type {
   SupplierApSupplier,
 } from "@/domain/erp-supplier-ap";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { buildAccountingLedgerReport } from "@/lib/export/accounting-report";
 import { DataOriginTag } from "./data-origin-tag";
+import { ReportExportBar } from "./report-export-bar";
 import { CashDepositReconciliationCenter } from "./cash-deposit-reconciliation-center";
 import { ShiftCloseAccountingQueue } from "./shift-close-workflow";
 import { SupplierApControlCenter } from "./supplier-ap-control-center";
@@ -324,44 +328,17 @@ function PeriodControl({ period }: { period: AccountingPeriod }) {
   );
 }
 
-type LedgerAccount = {
-  accountCode: string;
-  accountName: string;
-  debitVnd: number;
-  creditVnd: number;
-};
-
 function TrialBalance({
   journals,
+  actions,
 }: {
   journals: readonly AccountingJournal[];
+  actions?: ReactNode;
 }) {
-  const rows = useMemo(() => {
-    const accounts = new Map<string, LedgerAccount>();
-    for (const journal of journals) {
-      if (journal.status !== "posted") continue;
-      for (const line of journal.lines) {
-        const current = accounts.get(line.accountCode) ?? {
-          accountCode: line.accountCode,
-          accountName: line.accountName,
-          debitVnd: 0,
-          creditVnd: 0,
-        };
-        current.debitVnd += line.debitVnd;
-        current.creditVnd += line.creditVnd;
-        accounts.set(line.accountCode, current);
-      }
-    }
-    return [...accounts.values()].sort((left, right) =>
-      left.accountCode.localeCompare(right.accountCode, "vi"),
-    );
-  }, [journals]);
-  const totals = rows.reduce(
-    (value, row) => ({
-      debitVnd: value.debitVnd + row.debitVnd,
-      creditVnd: value.creditVnd + row.creditVnd,
-    }),
-    { debitVnd: 0, creditVnd: 0 },
+  // A15-ERP-02: cùng một phép cộng với tệp Excel "Sổ kế toán".
+  const { rows, totals } = useMemo(
+    () => summarisePostedTrialBalance(journals),
+    [journals],
   );
 
   return (
@@ -383,6 +360,7 @@ function TrialBalance({
             {formatVnd(totals.debitVnd)} / {formatVnd(totals.creditVnd)}
           </p>
         </div>
+        {actions ? <div className="mt-4">{actions}</div> : null}
       </div>
       {rows.length ? (
         <>
@@ -471,11 +449,7 @@ function JournalCard({
 }) {
   const status = journalStatus(journal.status);
   const totals = journalTotal(journal.lines);
-  const sourceLabel = journal.reversalOfJournalId
-    ? "Đảo bút toán"
-    : journal.sourceType === "supplier-invoice"
-      ? "Hóa đơn nhà cung cấp"
-      : "Doanh thu ca";
+  const sourceLabel = accountingJournalSourceLabel(journal);
   const sourceReference =
     journal.sourceType === "supplier-invoice"
       ? journal.sourceSupplierInvoiceId
@@ -728,6 +702,14 @@ export function AccountingControlCenter({
             formatCompactVnd(postedTotal),
           ],
         ];
+  // A15-ERP-02: cân đối phát sinh và sổ nhật ký, đúng mảng `journals` màn hình
+  // đang vẽ. Chưa có bút toán nào thì không hiện nút xuất.
+  const ledgerReport = journals.length
+    ? buildAccountingLedgerReport({
+        journals,
+        journalStatusLabel: (status) => journalStatus(status).label,
+      })
+    : null;
   const roleTitle =
     user.role === "chief-accountant"
       ? "Kiểm soát & sổ cái"
@@ -886,7 +868,12 @@ export function AccountingControlCenter({
         </section>
       ) : null}
 
-      <TrialBalance journals={journals} />
+      <TrialBalance
+        journals={journals}
+        actions={
+          ledgerReport ? <ReportExportBar report={ledgerReport} /> : null
+        }
+      />
 
       <section className="space-y-3" aria-label="Sổ nhật ký kế toán">
         <div className="flex flex-wrap items-end justify-between gap-3">

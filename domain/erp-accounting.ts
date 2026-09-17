@@ -297,3 +297,56 @@ export function isAccountingPeriodStatus(
     PERIOD_STATUSES.includes(value as AccountingPeriodStatus)
   );
 }
+
+export type TrialBalanceRow = {
+  accountCode: string;
+  accountName: string;
+  debitVnd: number;
+  creditVnd: number;
+};
+
+/**
+ * A15-ERP-02 — bảng cân đối phát sinh: cộng Nợ/Có theo tài khoản, chỉ trên
+ * bút toán đã ghi sổ. Tách khỏi màn hình để tệp Excel và bảng trên màn hình
+ * dùng chung đúng một phép cộng, không thể lệch nhau.
+ */
+export function summarisePostedTrialBalance(
+  journals: readonly Pick<AccountingJournal, "status" | "lines">[],
+): { rows: TrialBalanceRow[]; totals: { debitVnd: number; creditVnd: number } } {
+  const accounts = new Map<string, TrialBalanceRow>();
+  for (const journal of journals) {
+    if (journal.status !== "posted") continue;
+    for (const line of journal.lines) {
+      const current = accounts.get(line.accountCode) ?? {
+        accountCode: line.accountCode,
+        accountName: line.accountName,
+        debitVnd: 0,
+        creditVnd: 0,
+      };
+      current.debitVnd += line.debitVnd;
+      current.creditVnd += line.creditVnd;
+      accounts.set(line.accountCode, current);
+    }
+  }
+  const rows = [...accounts.values()].sort((left, right) =>
+    left.accountCode.localeCompare(right.accountCode, "vi"),
+  );
+  const totals = rows.reduce(
+    (value, row) => ({
+      debitVnd: value.debitVnd + row.debitVnd,
+      creditVnd: value.creditVnd + row.creditVnd,
+    }),
+    { debitVnd: 0, creditVnd: 0 },
+  );
+  return { rows, totals };
+}
+
+/** Tên loại nguồn của một bút toán, như hiện trên thẻ bút toán. */
+export function accountingJournalSourceLabel(
+  journal: Pick<AccountingJournal, "reversalOfJournalId" | "sourceType">,
+): string {
+  if (journal.reversalOfJournalId) return "Đảo bút toán";
+  return journal.sourceType === "supplier-invoice"
+    ? "Hóa đơn nhà cung cấp"
+    : "Doanh thu ca";
+}

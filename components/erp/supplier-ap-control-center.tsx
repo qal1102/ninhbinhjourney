@@ -20,7 +20,9 @@ import {
   type SupplierApSupplier,
 } from "@/domain/erp-supplier-ap";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
+import { buildSupplierApReport } from "@/lib/export/accounting-report";
 import { DataOriginTag } from "./data-origin-tag";
+import { ReportExportBar } from "./report-export-bar";
 
 const INITIAL_ACTION_STATE: SupplierApActionState = {
   status: "idle",
@@ -1002,6 +1004,14 @@ export function SupplierApControlCenter({
             "chưa được tính vào công nợ",
           ],
         ];
+  // A15-ERP-02: chỉ xuất đúng `visible` — những hồ sơ vai này đang nhìn thấy.
+  const apReport = visible.length
+    ? buildSupplierApReport({
+        siteName: site?.shortName,
+        invoices: visible,
+        statusLabel: (status) => statusMeta(status).label,
+      })
+    : null;
   const siteSuppliers = site
     ? suppliers.filter(
         (supplier) =>
@@ -1064,9 +1074,12 @@ export function SupplierApControlCenter({
               {visible.length} hồ sơ có dữ liệu nguồn
             </h2>
           </div>
-          <p className="text-xs font-bold text-[#718078]">
-            Mở từng hồ sơ để xem PO, nghiệm thu, hóa đơn và bút toán
-          </p>
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <p className="text-xs font-bold text-[#718078]">
+              Mở từng hồ sơ để xem PO, nghiệm thu, hóa đơn và bút toán
+            </p>
+            {apReport ? <ReportExportBar report={apReport} /> : null}
+          </div>
         </div>
         {visible.map((invoice) => (
           <InvoiceCard key={invoice.id} invoice={invoice} user={user} />

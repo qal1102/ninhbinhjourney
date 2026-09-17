@@ -23,13 +23,14 @@ Quản lý phải giao đúng người/đúng cơ sở/đúng nghiệp vụ, th�
 - Mỗi vị trí có tọa độ, độ chính xác, thời gian, khoảng cách đến geofence và cờ trong/ngoài vùng. Quản lý phải thấy độ mới; không dùng một chấm không có timestamp.
 - Ảnh dùng vị trí mới tối đa 10 phút, độ chính xác trong `1–250 m` và được máy chủ/trigger tính lại khoảng cách. Đây là vị trí thiết bị lúc gửi, không phải chứng thực tuyệt đối thời điểm chụp hoặc chống giả GPS.
 - Sơ đồ vị trí được vẽ trong hệ thống; không nhúng bản đồ bên thứ ba chứa tọa độ chính xác của nhân viên.
-- Trước mở người dùng thật phải chốt với khách hàng: nội dung đồng ý, mục đích xử lý, thời gian lưu GPS/ảnh, vai trò được xem, quy trình rút lại quyền và xóa dữ liệu theo Nghị định 13/2023/NĐ-CP.
+- Trước mở người dùng thật phải chốt với khách hàng: nội dung đồng ý, mục đích xử lý, thời gian lưu GPS/ảnh, vai trò được xem, quy trình rút lại quyền và xóa dữ liệu theo Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 và Nghị định 356/2025/NĐ-CP.
 
 Nguồn chuẩn:
 
 - W3C Geolocation API: https://www.w3.org/TR/geolocation/
 - MDN `watchPosition`: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition
-- Nghị định 13/2023/NĐ-CP: https://vanban.chinhphu.vn/?pageid=27160&docid=207759
+- Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 (hiệu lực 01/01/2026): https://vanban.chinhphu.vn/?pageid=27160&docid=214590
+- Nghị định 356/2025/NĐ-CP quy định chi tiết Luật Bảo vệ dữ liệu cá nhân (ban hành 31/12/2025, hiệu lực 01/01/2026): https://vanban.chinhphu.vn/?pageid=27160&docid=216387
 
 ## 3. Công việc phải đúng mô hình từng cơ sở
 

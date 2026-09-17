@@ -1,6 +1,44 @@
 import { expect, test } from "@playwright/test";
+import { CONTACT, contactMailto } from "@/content/contact";
 
 const enabled = process.env.NBJ_E2E_CUSTOMER_IDENTITY === "1";
+
+// A15-PHAP-LY-01 (17/09/2026): bài này chỉ đọc, không cần cờ CUS-05, nên được
+// để ngoài khối `test.skip` bên dưới và chạy an toàn cả trên production. Chặn
+// `/api/customer-events` chỉ là lớp phòng thủ thứ hai: chưa ai bấm đồng ý thì
+// trình theo dõi vốn không gửi gì.
+test.describe("A15-PHAP-LY-01 privacy notice legal basis", () => {
+  test("cites the law in force, names the request channel and keeps the email out of served HTML", async ({ page, request }) => {
+    const response = await request.get("/quyen-rieng-tu");
+    expect(response.ok()).toBe(true);
+    const served = await response.text();
+    expect(served).toContain("91/2025/QH15");
+    expect(served).toContain("356/2025/NĐ-CP");
+    expect(served).not.toContain([CONTACT.emailUser, CONTACT.emailDomain].join("@"));
+    expect(served).not.toContain(CONTACT.emailDomain);
+
+    await page.route("**/api/customer-events", async (route) => {
+      await route.fulfill({ status: 204 });
+    });
+    await page.goto("/quyen-rieng-tu", { waitUntil: "domcontentloaded" });
+
+    await expect(page.getByRole("heading", { name: "Hai văn bản làm căn cứ" })).toBeVisible();
+    await expect(page.getByText("Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15", { exact: true })).toBeVisible();
+    await expect(page.getByText("Nghị định 356/2025/NĐ-CP", { exact: true })).toBeVisible();
+
+    await expect(page.getByRole("heading", { name: "Gửi yêu cầu về dữ liệu" })).toBeVisible();
+    // Địa chỉ thư chỉ được ghép sau khi trang chạy trên trình duyệt.
+    await expect(page.getByRole("link", { name: "Gửi thư yêu cầu" })).toHaveAttribute(
+      "href",
+      contactMailto("Yêu cầu về dữ liệu cá nhân"),
+    );
+    await expect(page.getByRole("link", { name: `Gọi ${CONTACT.phoneLabel}` })).toHaveAttribute("href", CONTACT.phoneHref);
+
+    await expect(page.getByText("Tokyo, Nhật Bản", { exact: true })).toBeVisible();
+    await expect(page.getByText("02 ngày làm việc", { exact: false })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+});
 
 test.describe("CUS-05 progressive identity and consent", () => {
   test.skip(!enabled, "Run with NBJ_E2E_CUSTOMER_IDENTITY=1.");

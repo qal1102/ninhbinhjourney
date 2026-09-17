@@ -317,9 +317,9 @@ Luật lưu trú yêu cầu ghi đúng danh tính khách, nên phần này khôn
 
 **Đồng ý phục vụ** — khách mua vé, mình ghi lại họ đã vào cổng nào bằng chính tấm vé đó. Cái này **không cần hỏi**, và hỏi thì vô duyên. Khách trả tiền mua dịch vụ, việc ghi nhận để phục vụ chính chuyến đi đó là chuyện đương nhiên.
 
-**Đồng ý tiếp thị** — gửi thông báo, gửi gợi ý, gửi thư. Cái này **là chuyện khác**, và luật Việt Nam (Nghị định 13/2023) coi nó khác.
+**Đồng ý tiếp thị** — gửi thông báo, gửi gợi ý, gửi thư. Cái này **là chuyện khác**, và luật Việt Nam (Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15, Điều 9: đồng ý theo từng mục đích, không được buộc đồng ý kèm mục đích khác) coi nó khác.
 
-Chủ dự án đề nghị tích sẵn ô đồng ý cho nhanh. Nhưng luật quy định sự đồng ý phải là **hành động khẳng định** — im lặng hoặc không thao tác không tính là đồng ý. Ô tích sẵn vì thế không có giá trị: khi có khiếu nại, mình không chứng minh được khách đã đồng ý.
+Chủ dự án đề nghị tích sẵn ô đồng ý cho nhanh. Nhưng luật quy định sự đồng ý phải **thể hiện rõ ràng, cụ thể** — im lặng hoặc không phản hồi không tính là đồng ý, và Nghị định 356/2025/NĐ-CP (khoản 3 Điều 6) cấm thiết lập phương thức mặc định đồng ý. Ô tích sẵn vì thế không có giá trị: khi có khiếu nại, mình không chứng minh được khách đã đồng ý.
 
 Cách làm được mà vẫn cao tỉ lệ: một dòng duy nhất lúc đặt chỗ, **nói thẳng khách được gì** — *"Cho phép chúng tôi nhắn khi có khung giờ đẹp hoặc chỗ vắng gần bạn."* Ô để trống, khách tự tick. Người ta tick khi thấy có lợi cho mình, không phải khi bị tick hộ.
 

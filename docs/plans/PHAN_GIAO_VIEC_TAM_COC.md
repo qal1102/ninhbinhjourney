@@ -366,7 +366,7 @@ Sáu nhiệm vụ dưới đây sinh ra từ một buổi bàn với chủ dự 
 
 **⛔ Điểm chủ dự án phải quyết — chưa làm cho tới khi có câu trả lời**
 
-Chủ dự án đề nghị **tích sẵn ô đồng ý** lúc khách đăng ký. Nghị định 13/2023/NĐ-CP quy định sự đồng ý phải là hành động khẳng định; **im lặng hoặc không thao tác không được coi là đồng ý**. Ô tích sẵn cho phần **tiếp thị** vì thế không có giá trị pháp lý — và khi có khiếu nại thì bằng chứng "khách đã đồng ý" cũng không đứng vững.
+Chủ dự án đề nghị **tích sẵn ô đồng ý** lúc khách đăng ký. Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 (Điều 9) quy định sự đồng ý phải thể hiện bằng phương thức rõ ràng, cụ thể; **im lặng hoặc không phản hồi không được coi là đồng ý** (điểm d khoản 4 Điều 9). Nghị định 356/2025/NĐ-CP (khoản 3 Điều 6) còn cấm thiết lập phương thức mặc định đồng ý. Ô tích sẵn cho phần **tiếp thị** vì thế không có giá trị pháp lý — và khi có khiếu nại thì bằng chứng "khách đã đồng ý" cũng không đứng vững.
 
 Phần **phục vụ** thì khác hẳn: khách trả tiền mua dịch vụ, việc ghi lại họ đã vào cổng nào bằng vé của chính họ là **thực hiện hợp đồng**. Không cần hỏi, và không nên hỏi.
 

@@ -17,7 +17,7 @@ export function DataOriginTag({ origin }: { origin: ErpDataOrigin }) {
   const label = erpDataOriginLabel(origin);
   if (!label) return null;
   return (
-    <span className="rounded-full bg-[#fdf0dd] px-2 py-0.5 text-[10px] font-black text-[#8a5e30]">
+    <span className="rounded-full bg-[#fdf0dd] px-2 py-0.5 text-xs font-black text-[#8a5e30]">
       {label}
     </span>
   );

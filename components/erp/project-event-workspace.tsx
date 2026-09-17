@@ -174,7 +174,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                             <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
                               <span className="font-mono text-xs font-black text-[#7a8781]">{item.code}</span>
                               <strong className="text-sm text-[#2c3e36]">{item.title}</strong>
-                              <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-black ${statusTone[item.status]}`}>
+                              <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-black ${statusTone[item.status]}`}>
                                 {statusLabel[item.status]}
                               </span>
                             </div>
@@ -412,7 +412,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-black text-[#30443b]">{request.summary}</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                      className={`rounded-full px-2 py-0.5 text-xs font-black ${
                         request.status === "pending"
                           ? "bg-[#fff0ce] text-[#77531c]"
                           : request.status === "approved"
@@ -438,7 +438,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                             }),
                           )
                         }
-                        className="min-h-8 rounded-md bg-[#183f34] px-3 text-[11px] font-black text-white disabled:opacity-60"
+                        className="min-h-8 rounded-md bg-[#183f34] px-3 text-xs font-black text-white disabled:opacity-60"
                       >
                         Duyệt
                       </button>
@@ -454,7 +454,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                             }),
                           )
                         }
-                        className="min-h-8 rounded-md border border-[#d6dfd9] px-3 text-[11px] font-black text-[#4a5952] disabled:opacity-60"
+                        className="min-h-8 rounded-md border border-[#d6dfd9] px-3 text-xs font-black text-[#4a5952] disabled:opacity-60"
                       >
                         Từ chối
                       </button>

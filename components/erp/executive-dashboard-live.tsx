@@ -370,11 +370,11 @@ export function ExecutiveDashboard({
               key={label}
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
-              <p className="text-[11px] leading-4 text-white/50">{label}</p>
+              <p className="text-xs leading-4 text-white/50">{label}</p>
               <p className="mt-2 break-words text-xl font-black tracking-[-0.03em] sm:text-2xl">
                 {value}
               </p>
-              <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">
+              <p className="mt-2 text-xs leading-4 text-[#b5d6ca]">
                 {note}
               </p>
             </article>
@@ -384,7 +384,7 @@ export function ExecutiveDashboard({
         {/* Không giấu phần dữ liệu mẫu đi — xem `describeSampleRows` ở trên
             cho lý do. Cùng lối diễn đạt với bảng vé ngay bên dưới. */}
         {sampleNote ? (
-          <p className="mt-4 rounded-xl border border-white/15 bg-white/[0.06] p-4 text-[11px] leading-5 text-[#d3e5dd]">
+          <p className="mt-4 rounded-xl border border-white/15 bg-white/[0.06] p-4 text-xs leading-5 text-[#d3e5dd]">
             Sổ còn <strong className="text-white">{sampleNote}</strong> gieo sẵn
             từ lúc dựng hệ thống. Chúng không được tính vào con số nào ở trên,
             cũng không lọt vào khối cần bạn quyết định. Nhân viên vẫn mở được để
@@ -557,7 +557,7 @@ export function ExecutiveDashboard({
                       </p>
                     </div>
                     <span
-                      className={`w-fit shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                      className={`w-fit shrink-0 rounded-full px-2.5 py-1 text-xs font-black ${
                         assessment.criticalFailures > 0
                           ? "bg-[#ffe4de] text-[#934336]"
                           : "bg-[#fff3d7] text-[#7a5923]"
@@ -630,7 +630,7 @@ export function ExecutiveDashboard({
                         thoát. Luật ERP: đếm ngược phải đi kèm nút bấm. */}
                     <span className="flex shrink-0 items-center gap-2">
                       <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        className={`rounded-full px-2.5 py-1 text-xs font-black ${
                           incident.elapsedMinutes >= incident.slaMinutes
                             ? "bg-[#ffe4de] text-[#934336]"
                             : "bg-[#f3e6c8] text-[#7a5923]"
@@ -768,7 +768,7 @@ export function ExecutiveDashboard({
                     {site.shortName}
                   </h3>
                   <span
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                    className={`rounded-full px-2.5 py-1 text-xs font-black ${
                       siteOverdue > 0 ||
                       siteDifference > 0 ||
                       siteSupplierExceptions > 0

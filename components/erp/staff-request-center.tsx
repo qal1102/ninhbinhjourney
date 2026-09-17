@@ -283,10 +283,10 @@ function RequestCard({
     <li className="rounded-2xl border border-[#dde5e0] bg-white p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono text-xs font-bold text-[#42574e]">{request.code}</span>
-        <span className="rounded-full bg-[#183f34] px-2 py-0.5 text-[11px] font-black text-white">
+        <span className="rounded-full bg-[#183f34] px-2 py-0.5 text-xs font-black text-white">
           {STAFF_REQUEST_TYPE_LABELS[request.type]}
         </span>
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${STATUS_TONE[request.status]}`}>
+        <span className={`rounded-full px-2 py-0.5 text-xs font-black ${STATUS_TONE[request.status]}`}>
           {STAFF_REQUEST_STATUS_LABELS[request.status]}
         </span>
         {request.amountVnd ? (

@@ -293,7 +293,7 @@ export function ReceiptPrinterSettings({
         In thử
       </button>
 
-      <p className="mt-2 text-[11px] leading-4 text-[#6e7b75]">
+      <p className="mt-2 text-xs leading-4 text-[#6e7b75]">
         Máy này nhớ lựa chọn riêng. Trang web không tự dò được máy in trên mạng Wi-Fi; máy in đã cài trên máy tính
         hoặc điện thoại sẽ hiện ngay trong hộp thoại in.
       </p>
@@ -322,7 +322,7 @@ export function TestPrintSheet({ id, siteName, paper }: { id: string; siteName: 
       <p className="mt-2 border-t border-dashed border-black pt-2 text-sm">
         Tiếng Việt có dấu: Tràng An, Bái Đính, Tam Cốc, Tam Chúc.
       </p>
-      <p className="mt-2 border-t border-dashed border-black pt-2 text-center text-[11px]">
+      <p className="mt-2 border-t border-dashed border-black pt-2 text-center text-xs">
         Hai đầu đường gạch không bị cắt là khổ giấy đúng.
       </p>
     </article>

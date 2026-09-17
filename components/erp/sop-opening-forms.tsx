@@ -87,7 +87,7 @@ export function SopOpeningSubmissionForm({
             <legend className="px-1 text-sm font-black text-[#2f493e]">
               {item.sortOrder}. {item.title}
             </legend>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-black">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-black">
               <span className="rounded-full bg-[#edf3f0] px-2.5 py-1 text-[#49675a]">
                 {item.sopCode}
               </span>

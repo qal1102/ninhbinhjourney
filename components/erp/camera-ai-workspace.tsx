@@ -132,7 +132,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
     <div className="min-w-0 space-y-5">
       <section className="rounded-2xl border border-[#e0cfa8] bg-[#fffaef] p-4 shadow-sm sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-md bg-[#8a5c1a] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+          <span className="rounded-md bg-[#8a5c1a] px-2 py-1 text-xs font-black uppercase tracking-[0.14em] text-white">
             Kịch bản mô phỏng
           </span>
           <p className="text-xs font-bold text-[#7a5a1d]">
@@ -199,7 +199,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                 key={value}
                 type="button"
                 onClick={() => setFilter(value)}
-                className={`min-h-9 rounded-lg px-2 text-[11px] font-black transition sm:px-3 ${filter === value ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}
+                className={`min-h-9 rounded-lg px-2 text-xs font-black transition sm:px-3 ${filter === value ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}
               >
                 {value === "all" ? "Tất cả" : statusStyle[value].label}
               </button>
@@ -235,11 +235,11 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                   <div className="absolute inset-x-0 top-1/2 h-px animate-pulse bg-[#8ff0c1]/35" />
                 ) : null}
                 <div className="absolute left-3 top-3 flex items-center gap-2">
-                  <span className="rounded-md bg-black/55 px-2 py-1 text-[10px] font-black text-white">
+                  <span className="rounded-md bg-black/55 px-2 py-1 text-xs font-black text-white">
                     {feed.name}
                   </span>
                   <span
-                    className={`rounded-md px-2 py-1 text-[10px] font-black ${statusStyle[feed.status].className}`}
+                    className={`rounded-md px-2 py-1 text-xs font-black ${statusStyle[feed.status].className}`}
                   >
                     {statusStyle[feed.status].label}
                   </span>
@@ -252,7 +252,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                   {feed.status !== "offline" ? (
                     <div className="shrink-0 text-right">
                       <p className="text-xl font-black">{feed.simulatedPeople}</p>
-                      <p className="text-[10px] text-white/55">
+                      <p className="text-xs text-white/55">
                         người · mô phỏng {percent(feed.loadRatio)}
                       </p>
                     </div>
@@ -301,7 +301,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                 <div>
                   <p className="font-black text-[#34483f]">{event.headline}</p>
                   <p className="mt-1 text-xs leading-5 text-[#7a8781]">{event.detail}</p>
-                  <p className="mt-1.5 text-[11px] font-bold text-[#9aa39e]">
+                  <p className="mt-1.5 text-xs font-bold text-[#9aa39e]">
                     {event.cameraName} · kịch bản, không tạo hồ sơ sự cố
                   </p>
                 </div>

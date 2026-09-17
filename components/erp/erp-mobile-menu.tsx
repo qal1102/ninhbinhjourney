@@ -329,7 +329,7 @@ export function ErpMobileMenu({
             </div>
 
             <nav className="min-h-0 flex-1 overflow-y-auto p-4" aria-label="Điều hướng trên điện thoại">
-              <p className="px-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#718078]">Đi nhanh</p>
+              <p className="px-2 text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Đi nhanh</p>
               <div className="mt-2 space-y-1">
                 <Link href="/erp" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl bg-white px-4 text-sm font-black text-[#294139]">Tổng quan <span>→</span></Link>
                 {role === "director" || role === "accountant" || role === "chief-accountant" ? <Link href="/erp/finance" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">{role === "director" ? "Tài chính toàn vùng" : role === "chief-accountant" ? "Kiểm soát & sổ cái" : "Đối soát & lập bút toán"} <span>→</span></Link> : null}
@@ -341,14 +341,14 @@ export function ErpMobileMenu({
                 {systemAdmin ? <Link href="/erp/tai-khoan" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Tài khoản <span>→</span></Link> : null}
               </div>
 
-              <p className="mt-6 px-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#718078]">Cơ sở</p>
+              <p className="mt-6 px-2 text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Cơ sở</p>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 {visibleSites.map((site) => <Link key={site.id} href={`/erp/${site.id}`} onClick={closeDrawer} className={`rounded-xl border px-3 py-3 text-sm font-black ${site.id === currentSiteId ? "border-[#183f34] bg-[#183f34] text-white" : "border-[#dbe2de] bg-white text-[#42574e]"}`}>{site.shortName}</Link>)}
               </div>
 
               {currentSiteId && modules.length ? (
                 <>
-                  <p className="mt-6 px-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#718078]">Nghiệp vụ tại {ERP_SITES.find((site) => site.id === currentSiteId)?.shortName}</p>
+                  <p className="mt-6 px-2 text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Nghiệp vụ tại {ERP_SITES.find((site) => site.id === currentSiteId)?.shortName}</p>
                   <div className="mt-2 space-y-3">
                     {visibleGroups.map((group) => (
                       <section key={group.id} className="rounded-xl bg-white p-2">
@@ -364,7 +364,7 @@ export function ErpMobileMenu({
                           >
                             <span>{module.name}</span>
                             {module.status === "planned" ? (
-                              <span className="rounded-full bg-[#f6ecd8] px-2 py-0.5 text-[10px] font-black text-[#8a6b27]">
+                              <span className="rounded-full bg-[#f6ecd8] px-2 py-0.5 text-xs font-black text-[#8a6b27]">
                                 Sau
                               </span>
                             ) : (
@@ -396,7 +396,7 @@ export function ErpMobileMenu({
               */}
               {roleSwitchEnabled ? (
                 <div className="mt-6 border-t border-[#dce3de] pt-4">
-                  <p className="px-2 pb-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#718078]">
+                  <p className="px-2 pb-2 text-xs font-black uppercase tracking-[0.16em] text-[#718078]">
                     Xem thử theo vai trò
                   </p>
                   <RoleSwitchControl

@@ -153,10 +153,10 @@ export function SopWorkspace({
           <div className="grid gap-4 border-b border-[#e4eae7] p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-start">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-[#edf3f0] px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[#526b60]">
+                <span className="rounded-full bg-[#edf3f0] px-2.5 py-1 text-xs font-black uppercase tracking-[0.12em] text-[#526b60]">
                   {assessment.assessmentCode}
                 </span>
-                <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${STATUS_STYLE[assessment.status]}`}>
+                <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${STATUS_STYLE[assessment.status]}`}>
                   {STATUS_LABEL[assessment.status]}
                 </span>
               </div>
@@ -169,13 +169,13 @@ export function SopWorkspace({
             </div>
             <dl className="grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-[#f3f6f4] p-3 text-center">
-                <dt className="text-[11px] text-[#6d7b74]">Không đạt</dt>
+                <dt className="text-xs text-[#6d7b74]">Không đạt</dt>
                 <dd className="mt-1 text-2xl font-black text-[#8e493b]">
                   {counts.totalFailures}
                 </dd>
               </div>
               <div className="rounded-xl bg-[#fff0ec] p-3 text-center">
-                <dt className="text-[11px] text-[#7d5d55]">Trọng yếu</dt>
+                <dt className="text-xs text-[#7d5d55]">Trọng yếu</dt>
                 <dd className="mt-1 text-2xl font-black text-[#a14234]">
                   {counts.criticalFailures}
                 </dd>
@@ -193,11 +193,11 @@ export function SopWorkspace({
                       <p className="font-black text-[#2e463b]">
                         {item.sortOrder}. {item.title}
                       </p>
-                      <span className="rounded-full bg-[#edf3f0] px-2 py-0.5 text-[10px] font-black text-[#526b60]">
+                      <span className="rounded-full bg-[#edf3f0] px-2 py-0.5 text-xs font-black text-[#526b60]">
                         {item.sopCode}
                       </span>
                       {item.isCritical ? (
-                        <span className="rounded-full bg-[#ffebe7] px-2 py-0.5 text-[10px] font-black text-[#943c2d]">
+                        <span className="rounded-full bg-[#ffebe7] px-2 py-0.5 text-xs font-black text-[#943c2d]">
                           Trọng yếu
                         </span>
                       ) : null}
@@ -355,7 +355,7 @@ export function SopWorkspace({
                 <span className="font-bold text-[#334b40]">
                   {formatDate(entry.businessDate)} · {entry.assessmentCode}
                 </span>
-                <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${STATUS_STYLE[entry.status]}`}>
+                <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${STATUS_STYLE[entry.status]}`}>
                   {STATUS_LABEL[entry.status]}
                 </span>
               </div>

@@ -199,7 +199,7 @@ function SiteFinanceSource({
                     gọi cùng một trạng thái bằng hai cái tên. */}
                 <p className="mt-1 flex items-center gap-2 text-xs font-bold text-[#65776e] sm:justify-end">
                   <span
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-black ${SHIFT_CLOSE_STATUS_TONES[record.status]}`}
+                    className={`rounded-full px-2.5 py-1 text-xs font-black ${SHIFT_CLOSE_STATUS_TONES[record.status]}`}
                   >
                     {SHIFT_CLOSE_STATUS_LABELS[record.status]}
                   </span>
@@ -207,7 +207,7 @@ function SiteFinanceSource({
                       không có chữ và mũi tên thì hàng này nhìn như một dòng
                       đứng yên — người gửi, số vé và chênh lệch nằm bên trong
                       coi như không tồn tại. */}
-                  <span className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-black text-[#5f7268]">
+                  <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-black text-[#5f7268]">
                     <span className="group-open:hidden">Xem hồ sơ</span>
                     <span className="hidden group-open:inline">Thu gọn</span>
                     <svg

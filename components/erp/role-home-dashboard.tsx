@@ -285,10 +285,10 @@ function ManagerDashboard({
               key={label}
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
-              <p className="text-[11px] leading-4 text-white/50">{label}</p>
+              <p className="text-xs leading-4 text-white/50">{label}</p>
               <p className="mt-2 break-words text-2xl font-black">{value}</p>
               {note ? (
-                <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">
+                <p className="mt-2 text-xs leading-4 text-[#b5d6ca]">
                   {note}
                 </p>
               ) : null}
@@ -475,7 +475,7 @@ function EmployeeDashboard({
               key={label}
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
-              <p className="text-[11px] leading-4 text-white/50">{label}</p>
+              <p className="text-xs leading-4 text-white/50">{label}</p>
               <p className="mt-2 break-words text-lg font-black sm:text-xl">
                 {value}
               </p>
@@ -771,12 +771,12 @@ function AccountantDashboard({
               key={label}
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
-              <p className="text-[11px] leading-4 text-white/50">{label}</p>
+              <p className="text-xs leading-4 text-white/50">{label}</p>
               <p className="mt-2 whitespace-nowrap text-[clamp(1rem,4.5vw,1.25rem)] font-black tracking-[-0.025em] sm:text-2xl">
                 <span className="sm:hidden">{mobileValue ?? value}</span>
                 <span className="hidden sm:inline">{value}</span>
               </p>
-              <p className="mt-2 text-[11px] leading-4 text-[#b5d6ca]">
+              <p className="mt-2 text-xs leading-4 text-[#b5d6ca]">
                 {note}
               </p>
             </article>

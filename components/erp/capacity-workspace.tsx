@@ -153,7 +153,7 @@ export function CapacityWorkspace({
               <dd className="mt-1 text-3xl font-black">
                 {primaryCapacity?.toLocaleString("vi-VN") ?? "—"}
               </dd>
-              <p className="mt-1 text-[11px] text-[#c9ddd5]">khách/giờ</p>
+              <p className="mt-1 text-xs text-[#c9ddd5]">khách/giờ</p>
             </div>
           </dl>
         </div>
@@ -196,14 +196,14 @@ export function CapacityWorkspace({
                 <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-start">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-[#edf3f0] px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[#526b60]">
+                      <span className="rounded-full bg-[#edf3f0] px-2.5 py-1 text-xs font-black uppercase tracking-[0.12em] text-[#526b60]">
                         {threshold.thresholdCode}
                       </span>
-                      <span className="rounded-full border border-[#c4d4cc] px-2.5 py-1 text-[11px] font-black text-[#49675a]">
+                      <span className="rounded-full border border-[#c4d4cc] px-2.5 py-1 text-xs font-black text-[#49675a]">
                         nguồn: {SOURCE_LABEL[threshold.sourceKind]}
                       </span>
                       <span
-                        className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${activeStyle.badge}`}
+                        className={`rounded-full border px-2.5 py-1 text-xs font-black ${activeStyle.badge}`}
                       >
                         {LEVEL_LABEL[activeLevel]}
                       </span>
@@ -259,7 +259,7 @@ export function CapacityWorkspace({
                       style={{ width: `${Math.min(loadPercent, 100)}%` }}
                     />
                   </div>
-                  <div className="mt-2 grid grid-cols-3 text-[11px] font-bold text-[#697970]">
+                  <div className="mt-2 grid grid-cols-3 text-xs font-bold text-[#697970]">
                     <span>{threshold.watchPercent}% · chuẩn bị</span>
                     <span className="text-center">
                       {threshold.restrictPercent}% · hạn chế

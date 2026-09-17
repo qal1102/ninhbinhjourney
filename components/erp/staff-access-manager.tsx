@@ -83,7 +83,7 @@ export function StaffAccessManager({
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-black text-[#293a33]">{manager.displayName}</p>
-                        <span className="rounded-full bg-[#e8edf5] px-2 py-0.5 text-[11px] font-black text-[#49617d]">Quản lý cơ sở</span>
+                        <span className="rounded-full bg-[#e8edf5] px-2 py-0.5 text-xs font-black text-[#49617d]">Quản lý cơ sở</span>
                       </div>
                       <p className="mt-1 truncate text-sm text-[#75817b]">{manager.jobTitle} · {manager.email ?? manager.username ?? manager.accountId}</p>
                     </div>
@@ -157,10 +157,10 @@ export function StaffAccessManager({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-black text-[#293a33]">{employee.displayName}</p>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${assignedHere ? "bg-[#dcefe7] text-[#236148]" : "bg-[#edf0ee] text-[#6f7b75]"}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-black ${assignedHere ? "bg-[#dcefe7] text-[#236148]" : "bg-[#edf0ee] text-[#6f7b75]"}`}>
                         {assignedHere ? "Đã phân công" : otherSite ? `Thuộc ${otherSite.shortName}` : "Chưa phân công"}
                       </span>
-                      {profile ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${profile.employmentType === "seasonal" ? "bg-[#fff0ce] text-[#77531c]" : "bg-[#e8edf5] text-[#49617d]"}`}>{profile.employmentType === "seasonal" ? "Thời vụ" : "Chính thức"}</span> : null}
+                      {profile ? <span className={`rounded-full px-2 py-0.5 text-xs font-black ${profile.employmentType === "seasonal" ? "bg-[#fff0ce] text-[#77531c]" : "bg-[#e8edf5] text-[#49617d]"}`}>{profile.employmentType === "seasonal" ? "Thời vụ" : "Chính thức"}</span> : null}
                     </div>
                     <p className="mt-1 truncate text-sm text-[#75817b]">{employee.jobTitle} · {employee.email ?? employee.username ?? employee.accountId}</p>
                     {profile ? <p className="mt-1 text-xs text-[#8a958f]">{profile.primaryStation} · Ca {profile.shiftLabel}{profile.accessEndsAt ? ` · Quyền đến ${formatDate(profile.accessEndsAt)}` : ""}</p> : null}

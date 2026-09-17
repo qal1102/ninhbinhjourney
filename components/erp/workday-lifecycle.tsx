@@ -239,7 +239,7 @@ function WorkdaySteps({ record }: { record: WorkdayRecord }) {
             }`}
           />
           <p
-            className={`mt-2 truncate text-[10px] font-bold sm:text-xs ${
+            className={`mt-2 truncate text-xs font-bold ${
               index <= current ? "text-[#315e4d]" : "text-[#8b9691]"
             }`}
           >
@@ -1063,13 +1063,13 @@ function ManagerWorkdays({
                       {record.employee.name}
                     </p>
                     <span
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-black ${statusClasses[record.status]}`}
+                      className={`rounded-full px-2.5 py-1 text-xs font-black ${statusClasses[record.status]}`}
                     >
                       {statusLabels[record.status]}
                     </span>
                     {record.latestLocation &&
                     !record.latestLocation.insideGeofence ? (
-                      <span className="rounded-full bg-[#ffe5df] px-2.5 py-1 text-[11px] font-black text-[#934336]">
+                      <span className="rounded-full bg-[#ffe5df] px-2.5 py-1 text-xs font-black text-[#934336]">
                         Ngoài vùng làm việc
                       </span>
                     ) : null}

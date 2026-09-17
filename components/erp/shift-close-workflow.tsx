@@ -215,10 +215,10 @@ function ShiftCloseDetails({
             có dấu hiệu mở là việc chính của giám đốc bị giấu. Thêm chữ và mũi
             tên để thấy ngay là bấm được. */}
         <span className="flex w-fit items-center gap-2">
-          <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-black ${STATUS_TONES[record.status]}`}>
+          <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-black ${STATUS_TONES[record.status]}`}>
             {STATUS_LABELS[record.status]}
           </span>
-          <span className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-black text-[#5f7268]">
+          <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-black text-[#5f7268]">
             <span className="group-open:hidden">
               {action ? "Mở để quyết định" : "Xem hồ sơ"}
             </span>

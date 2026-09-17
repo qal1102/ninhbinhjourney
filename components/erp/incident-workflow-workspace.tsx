@@ -250,7 +250,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                           viên còn cái mà tập, nhưng phải nhìn ra ngay. Chúng
                           đã bị loại khỏi khối "Cần giám đốc quyết định". */}
                       {incident.dataOrigin !== "real" ? (
-                        <span className="rounded-full bg-[#fdf0dd] px-2 py-0.5 text-[10px] font-black text-[#8a5e30]">
+                        <span className="rounded-full bg-[#fdf0dd] px-2 py-0.5 text-xs font-black text-[#8a5e30]">
                           {incident.dataOrigin === "demo-seed"
                             ? "hồ sơ mẫu"
                             : "cặn chạy thử"}
@@ -267,7 +267,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                     </div>
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-black ${statusTone[incident.status]}`}
+                        className={`rounded-full px-2.5 py-1 text-xs font-black ${statusTone[incident.status]}`}
                       >
                         {statusLabel[incident.status]}
                       </span>
@@ -279,7 +279,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                           đếm ngược — lý do chuyển cấp, người phụ trách, việc
                           tiếp theo và cả nút xử lý đều nằm bên trong mà không
                           có dấu hiệu nào nói là bấm mở được. */}
-                      <span className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-black text-[#5f7268]">
+                      <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-black text-[#5f7268]">
                         <span className="group-open:hidden">Mở hồ sơ</span>
                         <span className="hidden group-open:inline">
                           Thu gọn
@@ -410,7 +410,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                                 <span className="text-xs font-black text-[#477565]">
                                   {evidence.kind}
                                 </span>
-                                <span className="text-[11px] text-[#839089]">
+                                <span className="text-xs text-[#839089]">
                                   {evidence.addedAt}
                                 </span>
                               </div>

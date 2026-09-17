@@ -75,10 +75,10 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
                     : "rounded-xl border border-white/20 bg-black/15 p-3 backdrop-blur-sm"
                 }
               >
-                <p className={kpi.noSource ? "text-[11px] text-white/35" : "text-[11px] text-white/60"}>{kpi.label}</p>
+                <p className={kpi.noSource ? "text-xs text-white/35" : "text-xs text-white/60"}>{kpi.label}</p>
                 <p className={kpi.noSource ? "mt-1 text-base font-bold text-white/45" : "mt-1 text-2xl font-black"}>{kpi.value}</p>
                 {kpi.noSource ? (
-                  <p className="mt-1 text-[10px] leading-4 text-white/35">Chưa có nguồn dữ liệu</p>
+                  <p className="mt-1 text-xs leading-4 text-white/35">Chưa có nguồn dữ liệu</p>
                 ) : null}
               </div>
             ))}
@@ -127,7 +127,7 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
                       {/* T3: một module chưa có nghiệp vụ phải nói trước khi
                           người dùng mở ra, không phải sau. */}
                       {module.status === "planned" ? (
-                        <span className="shrink-0 rounded-full bg-[#f6ecd8] px-3 py-1 text-[11px] font-black text-[#8a6b27]">
+                        <span className="shrink-0 rounded-full bg-[#f6ecd8] px-3 py-1 text-xs font-black text-[#8a6b27]">
                           Giai đoạn sau
                         </span>
                       ) : (

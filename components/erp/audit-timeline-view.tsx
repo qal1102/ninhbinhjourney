@@ -96,7 +96,7 @@ export function AuditTimelineView({
                   {!entry.actorSnapshotAtWrite ? (
                     <span
                       title="Tên hiện tại, không phải tên lúc thao tác"
-                      className="ml-2 rounded bg-[#f2e6cc] px-1.5 py-0.5 text-[10px] font-black text-[#7a5a1d]"
+                      className="ml-2 rounded bg-[#f2e6cc] px-1.5 py-0.5 text-xs font-black text-[#7a5a1d]"
                     >
                       tên hiện tại
                     </span>
@@ -114,7 +114,7 @@ export function AuditTimelineView({
                     <> {entry.note}</>
                   ) : null}
                   {isErpTestMarkedNote(entry.note) ? (
-                    <span className="ml-2 rounded bg-[#e8ecea] px-1.5 py-0.5 text-[10px] font-black text-[#5d6c65]">
+                    <span className="ml-2 rounded bg-[#e8ecea] px-1.5 py-0.5 text-xs font-black text-[#5d6c65]">
                       dữ liệu kiểm thử
                     </span>
                   ) : null}

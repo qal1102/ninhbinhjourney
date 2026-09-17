@@ -126,7 +126,7 @@ export function ErpDesktopNavigation({ site, modules, activeModuleId }: Props) {
                   group.id === "finance-reports" ? "right-0" : "left-0"
                 }`}
               >
-                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#87938d]">
+                <p className="px-3 pb-1 pt-2 text-xs font-black uppercase tracking-[0.14em] text-[#87938d]">
                   {group.name}
                 </p>
                 {group.modules.map((module) => (
@@ -142,7 +142,7 @@ export function ErpDesktopNavigation({ site, modules, activeModuleId }: Props) {
                     <span className="flex items-center justify-between gap-2">
                       <span>{module.name}</span>
                       {module.status === "planned" ? (
-                        <span className="shrink-0 rounded-full bg-[#f6ecd8] px-2 py-0.5 text-[10px] font-black text-[#8a6b27]">
+                        <span className="shrink-0 rounded-full bg-[#f6ecd8] px-2 py-0.5 text-xs font-black text-[#8a6b27]">
                           Sau
                         </span>
                       ) : null}

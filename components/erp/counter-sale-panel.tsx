@@ -236,7 +236,7 @@ function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receip
         </p>
       )}
 
-      <p className="mt-4 border-t border-dashed border-[#b8c6bf] pt-2 text-center text-[11px] leading-4 text-[#5c6f67]">
+      <p className="mt-4 border-t border-dashed border-[#b8c6bf] pt-2 text-center text-xs leading-4 text-[#5c6f67]">
         Phiếu thu bán vé, không phải hoá đơn giá trị gia tăng. Vé chỉ dùng trong
         ngày ghi trên phiếu. Cảm ơn quý khách.
       </p>

@@ -107,7 +107,7 @@ function Stepper({
               key={n}
               type="button"
               onClick={() => onChange(n)}
-              className={`h-9 min-w-9 flex-1 rounded-lg px-2 text-sm font-black sm:flex-none ${
+              className={`h-11 min-w-11 flex-1 rounded-lg px-2 text-sm font-black sm:flex-none ${
                 value === n ? "bg-[#183f34] text-white" : "bg-white text-[#42574e] ring-1 ring-[#dfe6e2]"
               }`}
             >
@@ -425,7 +425,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                       key={goiY}
                       type="button"
                       onClick={() => doiSo(() => setCashText(String(goiY)))}
-                      className="min-h-9 rounded-lg bg-[#eef3f0] px-3 text-sm font-black text-[#35594b]"
+                      className="min-h-11 rounded-lg bg-[#eef3f0] px-3 text-sm font-black text-[#35594b]"
                     >
                       {goiY === cart.totalVnd ? "Đủ tiền" : formatVnd(goiY)}
                     </button>

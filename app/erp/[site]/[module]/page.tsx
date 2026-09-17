@@ -152,7 +152,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
       <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#668078]">
-            <Link href={`/erp/${site.id}`} className="hover:text-[#183f34]">{site.shortName}</Link>
+            <Link href={`/erp/${site.id}`} className="inline-flex min-h-11 items-center hover:text-[#183f34]">{site.shortName}</Link>
             <span>/</span>
             <span>{moduleDefinition.shortName}</span>
           </div>

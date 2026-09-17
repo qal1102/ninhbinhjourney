@@ -114,7 +114,7 @@ export function StaffPerformanceWorkspace({ site, directory, attendance }: Props
                   <div>
                     <Link
                       href={`/erp/ho-so/${row.accountId}`}
-                      className="font-black text-[#2d4138] underline-offset-2 hover:underline"
+                      className="inline-flex min-h-11 items-center font-black text-[#2d4138] underline-offset-2 hover:underline"
                     >
                       {row.displayName}
                     </Link>

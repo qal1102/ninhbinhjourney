@@ -223,7 +223,10 @@ test("explore sheet hands its destination image to the route without duplicate n
   );
   await waitForClientRouter(page);
   await page.getByRole("button", { name: "Danh sách" }).click();
-  await page.getByTestId("explore-detail-trang-an").click();
+  await page
+    .locator('[data-testid="explore-detail-trang-an"]:visible')
+    .first()
+    .click();
   await expect(page.getByTestId("explore-detail-sheet")).toBeVisible();
   await expectOneSharedImage(page, "destination-image-trang-an");
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");

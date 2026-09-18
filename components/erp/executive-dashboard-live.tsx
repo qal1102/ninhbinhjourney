@@ -441,7 +441,7 @@ export function ExecutiveDashboard({
             <Link
               key={site.id}
               href={`/erp/${site.id}`}
-              className="inline-flex min-h-10 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+              className="inline-flex min-h-11 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
             >
               {site.shortName}
             </Link>
@@ -461,13 +461,13 @@ export function ExecutiveDashboard({
             </span>
             <Link
               href={`/erp/${sites[0].id}/check-in-khach`}
-              className="inline-flex min-h-10 items-center rounded-lg bg-[#183f34] px-3 text-sm font-bold text-white transition hover:bg-[#12332a]"
+              className="inline-flex min-h-11 items-center rounded-lg bg-[#183f34] px-3 text-sm font-bold text-white transition hover:bg-[#12332a]"
             >
               Quét mã ở cổng →
             </Link>
             <Link
               href={`/erp/${sites[0].id}/ve-dat-cho`}
-              className="inline-flex min-h-10 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+              className="inline-flex min-h-11 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
             >
               Bán vé, lập phiếu đoàn →
             </Link>
@@ -525,7 +525,7 @@ export function ExecutiveDashboard({
           </div>
           <Link
             href="/erp/finance"
-            className="text-sm font-black text-[#76551f]"
+            className="inline-flex min-h-11 items-center text-sm font-black text-[#76551f]"
           >
             Mở sổ đối soát →
           </Link>
@@ -697,7 +697,7 @@ export function ExecutiveDashboard({
           </div>
           <Link
             href="/erp/finance"
-            className="text-sm font-black text-[#286655]"
+            className="inline-flex min-h-11 items-center text-sm font-black text-[#286655]"
           >
             Mở kiểm soát kế toán →
           </Link>

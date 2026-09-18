@@ -645,7 +645,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
                 <Image src="/brand/ninh-binh-mark.png" alt="" width={42} height={42} className="h-10 w-10 shrink-0 rounded-full object-cover" />
                 <div className="min-w-0"><p className="text-xs font-bold text-[#477565]">TRỢ LÝ ĐIỀU HÀNH</p><h2 id="voice-title" className="truncate text-lg font-black text-[#20342c]">Bạn cần mở màn hình nào?</h2></div>
               </div>
-              <button type="button" onClick={closeDialog} aria-label="Đóng" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#d4ddd7] bg-white text-xl text-[#42554c]">×</button>
+              <button type="button" onClick={closeDialog} aria-label="Đóng" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d4ddd7] bg-white text-xl text-[#42554c]">×</button>
             </div>
 
             <div
@@ -672,7 +672,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
                       <button
                         type="button"
                         onClick={() => navigate(entry.href!)}
-                        className="mt-2.5 min-h-10 w-full rounded-xl bg-white px-4 text-sm font-black text-[#183f34]"
+                        className="mt-2.5 min-h-11 w-full rounded-xl bg-white px-4 text-sm font-black text-[#183f34]"
                       >
                         {entry.hrefLabel}
                       </button>
@@ -750,7 +750,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
                 ) : null}
               </div>
               <div className="mt-2 grid grid-cols-2 gap-2">
-                {suggestionsByRole[role].map((suggestion) => <button key={suggestion} type="button" onClick={() => execute(suggestion)} className="min-h-10 rounded-xl border border-[#d5ded8] bg-white px-3 py-2 text-left text-xs font-bold leading-4 text-[#53675e] transition hover:border-[#8ba99c]">{suggestion}</button>)}
+                {suggestionsByRole[role].map((suggestion) => <button key={suggestion} type="button" onClick={() => execute(suggestion)} className="min-h-11 rounded-xl border border-[#d5ded8] bg-white px-3 py-2 text-left text-xs font-bold leading-4 text-[#53675e] transition hover:border-[#8ba99c]">{suggestion}</button>)}
               </div>
             </div>
           </section>

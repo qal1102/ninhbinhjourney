@@ -146,7 +146,7 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
       ) : null}
 
       <details className="group relative">
-        <summary aria-label="Mở trung tâm thông báo" className="relative grid h-10 w-10 cursor-pointer list-none place-items-center rounded-xl border border-[#ced8d1] bg-white text-[#385047] transition hover:bg-[#f4f7f5]">
+        <summary aria-label="Mở trung tâm thông báo" className="relative grid h-11 w-11 cursor-pointer list-none place-items-center rounded-xl border border-[#ced8d1] bg-white text-[#385047] transition hover:bg-[#f4f7f5]">
           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-none" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
             <path d="M10 21h4" />
@@ -200,7 +200,7 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
             </p>
           )}
           {notificationState === "default" ? (
-            <button type="button" onClick={enableNotifications} className="mt-3 min-h-10 w-full rounded-xl bg-[#183f34] px-4 text-sm font-black text-white">Bật thông báo trên thiết bị</button>
+            <button type="button" onClick={enableNotifications} className="mt-3 min-h-11 w-full rounded-xl bg-[#183f34] px-4 text-sm font-black text-white">Bật thông báo trên thiết bị</button>
           ) : null}
           {notificationState === "granted" ? <p className="mt-3 text-center text-xs font-bold text-[#34715b]">Thiết bị đã cho phép thông báo</p> : null}
           {notificationState === "denied" ? <p className="mt-3 text-xs leading-5 text-[#8b4a3e]">Thông báo đang bị chặn trong cài đặt trình duyệt.</p> : null}

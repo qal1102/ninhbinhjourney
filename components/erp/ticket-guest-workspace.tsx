@@ -462,14 +462,14 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                         <button
                           type="button"
                           onClick={() => setScanCode(ticket.ticketCode)}
-                          className="min-h-9 rounded-lg bg-[#183f34] px-3 text-xs font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-[#183f34]"
+                          className="min-h-11 rounded-lg bg-[#183f34] px-3 text-xs font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-[#183f34]"
                         >
                           Đưa vào ô quét
                         </button>
                         <button
                           type="button"
                           onClick={() => void openTicketQrZoom(ticket.ticketCode)}
-                          className="min-h-9 rounded-lg border border-[#c3d2cb] px-3 text-xs font-black text-[#2c463c] outline-none focus-visible:ring-2 focus-visible:ring-[#183f34]"
+                          className="min-h-11 rounded-lg border border-[#c3d2cb] px-3 text-xs font-black text-[#2c463c] outline-none focus-visible:ring-2 focus-visible:ring-[#183f34]"
                         >
                           Phóng to QR
                         </button>

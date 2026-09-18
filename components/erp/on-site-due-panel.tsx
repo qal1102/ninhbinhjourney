@@ -51,7 +51,7 @@ function DongDon({ order, site, today }: { order: OnSiteDueOrder; site: ErpSite;
         <button
           type="button"
           onClick={() => setMo(!mo)}
-          className="mt-2 min-h-9 rounded-lg border border-[#e3b8b0] bg-white px-3 text-xs font-black text-[#8b3d31]"
+          className="mt-2 min-h-11 rounded-lg border border-[#e3b8b0] bg-white px-3 text-xs font-black text-[#8b3d31]"
         >
           Khách không đến
         </button>
@@ -76,7 +76,7 @@ function DongDon({ order, site, today }: { order: OnSiteDueOrder; site: ErpSite;
             type="button"
             disabled={pending || lyDo.trim().length < 10}
             onClick={xacNhan}
-            className="mt-2 min-h-9 rounded-lg bg-[#8b3d31] px-3 text-xs font-black text-white disabled:opacity-50"
+            className="mt-2 min-h-11 rounded-lg bg-[#8b3d31] px-3 text-xs font-black text-white disabled:opacity-50"
           >
             {pending ? "Đang lưu…" : "Đóng khoản và huỷ vé chưa dùng"}
           </button>

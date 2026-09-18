@@ -209,7 +209,7 @@ export function ReceiptPrinterSettings({
   const { settings } = printer;
   return (
     <details className="rounded-xl border border-[#d8e0db] bg-[#f7f9f7] p-3 text-sm">
-      <summary className="cursor-pointer font-black text-[#20342c]">
+      <summary className="flex min-h-11 cursor-pointer items-center font-black text-[#20342c]">
         Máy in phiếu thu · {PAPER_LABELS[settings.paper]} ·{" "}
         {settings.mode === "bluetooth" ? printer.bluetoothName ?? "Bluetooth chưa nối" : "hộp thoại in của máy"}
       </summary>
@@ -220,7 +220,7 @@ export function ReceiptPrinterSettings({
           {(Object.keys(PAPER_LABELS) as PaperSize[]).map((paper) => (
             <label
               key={paper}
-              className={`flex min-h-10 cursor-pointer items-center justify-center rounded-lg border px-2 text-center text-xs font-black ${
+              className={`flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-2 text-center text-xs font-black ${
                 settings.paper === paper ? "border-[#183f34] bg-[#183f34] text-white" : "border-[#ccd8d1] bg-white text-[#42574e]"
               }`}
             >
@@ -278,7 +278,7 @@ export function ReceiptPrinterSettings({
           type="button"
           onClick={() => void printer.connect()}
           disabled={printer.busy}
-          className="mt-3 min-h-10 w-full rounded-lg border border-[#183f34] bg-white px-3 text-xs font-black text-[#183f34] disabled:opacity-50"
+          className="mt-3 min-h-11 w-full rounded-lg border border-[#183f34] bg-white px-3 text-xs font-black text-[#183f34] disabled:opacity-50"
         >
           {printer.bluetoothName ? `Đang nối ${printer.bluetoothName} · tìm máy khác` : "Tìm máy in Bluetooth gần đây"}
         </button>
@@ -288,7 +288,7 @@ export function ReceiptPrinterSettings({
         type="button"
         onClick={onTestPrint}
         disabled={printer.busy}
-        className="mt-2 min-h-10 w-full rounded-lg bg-[#183f34] px-3 text-xs font-black text-white disabled:opacity-50"
+        className="mt-2 min-h-11 w-full rounded-lg bg-[#183f34] px-3 text-xs font-black text-white disabled:opacity-50"
       >
         In thử
       </button>

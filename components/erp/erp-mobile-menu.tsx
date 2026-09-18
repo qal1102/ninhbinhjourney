@@ -293,7 +293,7 @@ export function ErpMobileMenu({
 
   return (
     <div className="lg:hidden">
-      <button type="button" onClick={openDrawer} aria-label="Mở menu" className="grid h-10 w-10 place-items-center rounded-xl border border-[#ced8d1] bg-white text-[#385047]">
+      <button type="button" onClick={openDrawer} aria-label="Mở menu" className="grid h-11 w-11 place-items-center rounded-xl border border-[#ced8d1] bg-white text-[#385047]">
         <span aria-hidden="true" className="space-y-1"><i className="block h-0.5 w-5 rounded bg-current" /><i className="block h-0.5 w-5 rounded bg-current" /><i className="block h-0.5 w-5 rounded bg-current" /></span>
       </button>
 
@@ -325,7 +325,7 @@ export function ErpMobileMenu({
           >
             <div className="flex items-start justify-between gap-4 bg-[#183f34] p-5 text-white">
               <Link href={`/erp/ho-so/${accountId}`} onClick={closeDrawer} className="min-w-0"><p className="truncate font-black underline-offset-4 hover:underline">{name}</p><p className="mt-1 truncate text-xs text-white/60">{jobTitle} · Xem hồ sơ</p></Link>
-              <button type="button" onClick={closeDrawer} aria-label="Đóng" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-xl">×</button>
+              <button type="button" onClick={closeDrawer} aria-label="Đóng" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/10 text-xl">×</button>
             </div>
 
             <nav className="min-h-0 flex-1 overflow-y-auto p-4" aria-label="Điều hướng trên điện thoại">

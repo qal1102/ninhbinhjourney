@@ -41,7 +41,7 @@ export function RoleSwitchControl({ currentUserId, targets, variant = "dropdown"
   return (
     <details className={inline ? undefined : "relative"}>
       <summary
-        className={`flex min-h-10 cursor-pointer list-none items-center whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] ${
+        className={`flex min-h-11 cursor-pointer list-none items-center whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] ${
           inline ? "justify-between" : ""
         }`}
       >
@@ -70,7 +70,7 @@ export function RoleSwitchControl({ currentUserId, targets, variant = "dropdown"
             name="targetUserId"
             required
             defaultValue=""
-            className="mt-2 min-h-10 w-full rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
+            className="mt-2 min-h-11 w-full rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
           >
             <option value="" disabled>
               Chọn một tài khoản…
@@ -90,7 +90,7 @@ export function RoleSwitchControl({ currentUserId, targets, variant = "dropdown"
         <button
           type="submit"
           disabled={targets.length === 0}
-          className="mt-3 min-h-10 w-full rounded-lg bg-[#183f34] text-sm font-black text-white transition hover:bg-[#122e26] disabled:cursor-not-allowed disabled:bg-[#9aada4]"
+          className="mt-3 min-h-11 w-full rounded-lg bg-[#183f34] text-sm font-black text-white transition hover:bg-[#122e26] disabled:cursor-not-allowed disabled:bg-[#9aada4]"
         >
           Xem thử
         </button>

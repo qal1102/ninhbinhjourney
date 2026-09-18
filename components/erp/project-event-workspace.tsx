@@ -219,7 +219,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                                     }),
                                   )
                                 }
-                                className="min-h-10 rounded-lg bg-[#183f34] px-4 text-xs font-black text-white disabled:opacity-60"
+                                className="min-h-11 rounded-lg bg-[#183f34] px-4 text-xs font-black text-white disabled:opacity-60"
                               >
                                 Bắt đầu xử lý
                               </button>
@@ -244,12 +244,12 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                                     );
                                   }}
                                 >
-                                  <select name="progress" defaultValue={item.progressPercent} className="min-h-9 rounded-lg border border-[#ced8d1] bg-white px-2 text-xs">
+                                  <select name="progress" defaultValue={item.progressPercent} className="min-h-11 rounded-lg border border-[#ced8d1] bg-white px-2 text-xs">
                                     {[10, 25, 50, 75, 90, 100].map((value) => (
                                       <option key={value} value={value}>{value}%</option>
                                     ))}
                                   </select>
-                                  <button type="submit" disabled={pending} className="min-h-9 rounded-lg bg-[#183f34] px-3 text-xs font-black text-white disabled:opacity-60">
+                                  <button type="submit" disabled={pending} className="min-h-11 rounded-lg bg-[#183f34] px-3 text-xs font-black text-white disabled:opacity-60">
                                     Cập nhật tiến độ
                                   </button>
                                 </form>
@@ -266,7 +266,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                                         }),
                                       )
                                     }
-                                    className="min-h-9 rounded-lg bg-[#397a62] px-3 text-xs font-black text-white disabled:opacity-60"
+                                    className="min-h-11 rounded-lg bg-[#397a62] px-3 text-xs font-black text-white disabled:opacity-60"
                                   >
                                     Gửi nghiệm thu
                                   </button>
@@ -290,9 +290,9 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                                       setBlockReasons((current) => ({ ...current, [item.code]: inputEvent.target.value }))
                                     }
                                     placeholder="Lý do chặn"
-                                    className="min-h-9 rounded-lg border border-[#ced8d1] px-2 text-xs"
+                                    className="min-h-11 rounded-lg border border-[#ced8d1] px-2 text-xs"
                                   />
-                                  <button type="submit" disabled={pendingKey === `${item.code}-block`} className="min-h-9 rounded-lg bg-[#a34637] px-3 text-xs font-black text-white disabled:opacity-60">
+                                  <button type="submit" disabled={pendingKey === `${item.code}-block`} className="min-h-11 rounded-lg bg-[#a34637] px-3 text-xs font-black text-white disabled:opacity-60">
                                     Báo chặn
                                   </button>
                                 </form>
@@ -308,7 +308,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                                     reportProjectBlockerAction({ siteId: site.id, workItemCode: item.code }),
                                   )
                                 }
-                                className="min-h-10 rounded-lg bg-[#183f34] px-4 text-xs font-black text-white disabled:opacity-60"
+                                className="min-h-11 rounded-lg bg-[#183f34] px-4 text-xs font-black text-white disabled:opacity-60"
                               >
                                 Gỡ chặn
                               </button>
@@ -329,7 +329,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                                         }),
                                       )
                                     }
-                                    className="min-h-10 rounded-lg bg-[#183f34] px-4 text-xs font-black text-white disabled:opacity-60"
+                                    className="min-h-11 rounded-lg bg-[#183f34] px-4 text-xs font-black text-white disabled:opacity-60"
                                   >
                                     Xác nhận hoàn thành
                                   </button>
@@ -345,7 +345,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                                         }),
                                       )
                                     }
-                                    className="min-h-10 rounded-lg border border-[#d6dfd9] px-4 text-xs font-black text-[#4a5952] disabled:opacity-60"
+                                    className="min-h-11 rounded-lg border border-[#d6dfd9] px-4 text-xs font-black text-[#4a5952] disabled:opacity-60"
                                   >
                                     Trả lại yêu cầu làm thêm
                                   </button>
@@ -391,16 +391,16 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                   ).then(() => form.reset());
                 }}
               >
-                <select name="kind" className="min-h-10 w-full rounded-lg border border-[#ced8d1] bg-white px-2 text-sm">
+                <select name="kind" className="min-h-11 w-full rounded-lg border border-[#ced8d1] bg-white px-2 text-sm">
                   <option value="budget">Đổi ngân sách</option>
                   <option value="deadline">Đổi ngày tổ chức</option>
                   <option value="scope">Đổi phạm vi</option>
                 </select>
-                <input name="summary" required placeholder="Tóm tắt yêu cầu" className="min-h-10 w-full rounded-lg border border-[#ced8d1] px-2 text-sm" />
-                <input name="proposedBudgetBillion" type="number" step="0.1" placeholder="Ngân sách đề xuất (tỷ)" className="min-h-10 w-full rounded-lg border border-[#ced8d1] px-2 text-sm" />
-                <input name="proposedEventDate" type="date" className="min-h-10 w-full rounded-lg border border-[#ced8d1] px-2 text-sm" />
+                <input name="summary" required placeholder="Tóm tắt yêu cầu" className="min-h-11 w-full rounded-lg border border-[#ced8d1] px-2 text-sm" />
+                <input name="proposedBudgetBillion" type="number" step="0.1" placeholder="Ngân sách đề xuất (tỷ)" className="min-h-11 w-full rounded-lg border border-[#ced8d1] px-2 text-sm" />
+                <input name="proposedEventDate" type="date" className="min-h-11 w-full rounded-lg border border-[#ced8d1] px-2 text-sm" />
                 <textarea name="note" rows={2} placeholder="Ghi chú thêm" className="w-full rounded-lg border border-[#ced8d1] p-2 text-sm" />
-                <button type="submit" disabled={pendingKey === "submit-change"} className="min-h-10 w-full rounded-lg bg-[#183f34] text-sm font-black text-white disabled:opacity-60">
+                <button type="submit" disabled={pendingKey === "submit-change"} className="min-h-11 w-full rounded-lg bg-[#183f34] text-sm font-black text-white disabled:opacity-60">
                   Gửi yêu cầu
                 </button>
               </form>
@@ -493,11 +493,11 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                   >
                     <p className="text-xs font-black text-[#30443b]">{item.code} · {item.title}</p>
                     <div className="flex gap-2">
-                      <input name="amountBillion" type="number" step="0.01" required placeholder="Số tiền (tỷ)" className="min-h-9 w-full rounded-lg border border-[#ced8d1] px-2 text-xs" />
-                      <input name="financeCode" required placeholder="Mã hạch toán" className="min-h-9 w-full rounded-lg border border-[#ced8d1] px-2 text-xs" />
+                      <input name="amountBillion" type="number" step="0.01" required placeholder="Số tiền (tỷ)" className="min-h-11 w-full rounded-lg border border-[#ced8d1] px-2 text-xs" />
+                      <input name="financeCode" required placeholder="Mã hạch toán" className="min-h-11 w-full rounded-lg border border-[#ced8d1] px-2 text-xs" />
                     </div>
-                    <input name="note" required placeholder="Ghi chú" className="min-h-9 w-full rounded-lg border border-[#ced8d1] px-2 text-xs" />
-                    <button type="submit" disabled={pendingKey === `settle-${item.code}`} className="min-h-9 w-full rounded-lg bg-[#183f34] text-xs font-black text-white disabled:opacity-60">
+                    <input name="note" required placeholder="Ghi chú" className="min-h-11 w-full rounded-lg border border-[#ced8d1] px-2 text-xs" />
+                    <button type="submit" disabled={pendingKey === `settle-${item.code}`} className="min-h-11 w-full rounded-lg bg-[#183f34] text-xs font-black text-white disabled:opacity-60">
                       Ghi nhận quyết toán
                     </button>
                   </form>

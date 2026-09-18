@@ -74,7 +74,7 @@ function SubmitButton({
     <button
       type="submit"
       disabled={pending}
-      className={`min-h-10 rounded-xl px-4 text-sm font-black disabled:cursor-wait disabled:opacity-60 ${className}`}
+      className={`min-h-11 rounded-xl px-4 text-sm font-black disabled:cursor-wait disabled:opacity-60 ${className}`}
     >
       {pending ? "Đang xử lý…" : children}
     </button>
@@ -203,7 +203,7 @@ function GrantLoginForm({ account }: { account: ErpRegistryAccount }) {
           type="email"
           required
           placeholder="ten.nguoi@donvi.vn"
-          className="min-h-10 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
+          className="min-h-11 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
         />
       </label>
       <SubmitButton tone="secondary">Cấp đăng nhập</SubmitButton>
@@ -246,7 +246,7 @@ function GrantForm({ account }: { account: ErpRegistryAccount }) {
           name="role"
           required
           defaultValue="regional-manager"
-          className="min-h-10 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
+          className="min-h-11 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
         >
           {ERP_REGISTRY_ROLES.map((role) => (
             <option key={role} value={role}>
@@ -260,7 +260,7 @@ function GrantForm({ account }: { account: ErpRegistryAccount }) {
         <select
           name="siteId"
           defaultValue=""
-          className="min-h-10 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
+          className="min-h-11 min-w-0 rounded-lg border border-[#ced8d1] bg-white px-2 text-sm"
         >
           <option value="">Toàn vùng</option>
           {ERP_SITES.map((site) => (
@@ -274,7 +274,7 @@ function GrantForm({ account }: { account: ErpRegistryAccount }) {
         type="submit"
         name="active"
         value="true"
-        className="min-h-10 self-end rounded-lg bg-[#183f34] px-3 text-sm font-black text-white"
+        className="min-h-11 self-end rounded-lg bg-[#183f34] px-3 text-sm font-black text-white"
       >
         Cấp
       </button>
@@ -282,7 +282,7 @@ function GrantForm({ account }: { account: ErpRegistryAccount }) {
         type="submit"
         name="active"
         value="false"
-        className="min-h-10 self-end rounded-lg border border-[#b9c8c1] bg-white px-3 text-sm font-black text-[#385047]"
+        className="min-h-11 self-end rounded-lg border border-[#b9c8c1] bg-white px-3 text-sm font-black text-[#385047]"
       >
         Thu hồi
       </button>
@@ -340,7 +340,7 @@ export function AccountAdministration({ accounts, audit }: Props) {
                 </span>
                 <Link
                   href={`/erp/ho-so/${account.accountId}`}
-                  className="rounded-full border border-[#ced8d1] bg-white px-3 py-1 text-xs font-black text-[#385047] hover:border-[#8fa99f]"
+                  className="inline-flex min-h-11 items-center rounded-full border border-[#ced8d1] bg-white px-3 text-xs font-black text-[#385047] hover:border-[#8fa99f]"
                 >
                   Xem hồ sơ
                 </Link>

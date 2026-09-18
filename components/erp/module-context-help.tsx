@@ -160,7 +160,7 @@ export function ModuleContextHelp({ module, role, site }: Props) {
                 type="button"
                 aria-label="Đóng trợ giúp"
                 onClick={() => setOpen(false)}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#eef3f0] text-xl text-[#315346]"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eef3f0] text-xl text-[#315346]"
               >
                 ×
               </button>

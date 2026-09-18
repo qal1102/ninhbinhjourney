@@ -204,7 +204,7 @@ function TypeFields({
               {(["thuong", "gap"] as const).map((muc) => (
                 <label
                   key={muc}
-                  className={`flex min-h-10 cursor-pointer items-center justify-center rounded-lg border text-sm font-black ${
+                  className={`flex min-h-11 cursor-pointer items-center justify-center rounded-lg border text-sm font-black ${
                     fields.urgency === muc ? "border-[#183f34] bg-[#183f34] text-white" : "border-[#ccd8d1] bg-white text-[#42574e]"
                   }`}
                 >
@@ -315,14 +315,14 @@ function RequestCard({
               <button
                 type="button"
                 onClick={() => setMode(mode === "approve" ? null : "approve")}
-                className="min-h-10 rounded-lg bg-[#183f34] px-4 text-sm font-black text-white"
+                className="min-h-11 rounded-lg bg-[#183f34] px-4 text-sm font-black text-white"
               >
                 Duyệt
               </button>
               <button
                 type="button"
                 onClick={() => setMode(mode === "reject" ? null : "reject")}
-                className="min-h-10 rounded-lg border border-[#e3b8b0] bg-white px-4 text-sm font-black text-[#8b3d31]"
+                className="min-h-11 rounded-lg border border-[#e3b8b0] bg-white px-4 text-sm font-black text-[#8b3d31]"
               >
                 Từ chối
               </button>
@@ -332,7 +332,7 @@ function RequestCard({
             <button
               type="button"
               onClick={() => setMode(mode === "complete" ? null : "complete")}
-              className="min-h-10 rounded-lg bg-[#183f34] px-4 text-sm font-black text-white"
+              className="min-h-11 rounded-lg bg-[#183f34] px-4 text-sm font-black text-white"
             >
               {actions.completeLabel}
             </button>
@@ -341,7 +341,7 @@ function RequestCard({
             <button
               type="button"
               onClick={() => setMode(mode === "cancel" ? null : "cancel")}
-              className="min-h-10 rounded-lg border border-[#ccd8d1] bg-white px-4 text-sm font-black text-[#42574e]"
+              className="min-h-11 rounded-lg border border-[#ccd8d1] bg-white px-4 text-sm font-black text-[#42574e]"
             >
               Rút đề xuất
             </button>
@@ -383,7 +383,7 @@ function RequestCard({
             type="button"
             onClick={xacNhan}
             disabled={pending || ((mode === "reject" || mode === "complete") && note.trim().length < 5)}
-            className={`mt-2 min-h-10 rounded-lg px-4 text-sm font-black text-white disabled:opacity-50 ${
+            className={`mt-2 min-h-11 rounded-lg px-4 text-sm font-black text-white disabled:opacity-50 ${
               mode === "reject" ? "bg-[#8b3d31]" : "bg-[#183f34]"
             }`}
           >
@@ -585,7 +585,7 @@ export function StaffRequestCenter({ viewer, sites, requests, today, storage, un
                 role="tab"
                 aria-selected={loc === tab.id}
                 onClick={() => setLoc(tab.id)}
-                className={`min-h-10 rounded-full px-4 text-sm font-black ${
+                className={`min-h-11 rounded-full px-4 text-sm font-black ${
                   loc === tab.id ? "bg-[#183f34] text-white" : "border border-[#ccd8d1] bg-white text-[#42574e]"
                 }`}
               >

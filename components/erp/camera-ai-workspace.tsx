@@ -199,7 +199,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                 key={value}
                 type="button"
                 onClick={() => setFilter(value)}
-                className={`min-h-9 rounded-lg px-2 text-xs font-black transition sm:px-3 ${filter === value ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}
+                className={`min-h-11 rounded-lg px-2 text-xs font-black transition sm:px-3 ${filter === value ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}
               >
                 {value === "all" ? "Tất cả" : statusStyle[value].label}
               </button>
@@ -337,7 +337,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                     type="button"
                     onClick={() => setSelected(null)}
                     aria-label="Đóng"
-                    className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-xl"
+                    className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-xl"
                   >
                     ×
                   </button>

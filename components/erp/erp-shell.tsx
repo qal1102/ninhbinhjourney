@@ -85,7 +85,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
               roleSwitchTargets={roleSwitchTargets}
               actingAsUserId={user.actingAs ? user.id : undefined}
             />
-            <Link href="/erp" className="flex shrink-0 items-center gap-2" aria-label="ERP Ninh Bình">
+            <Link href="/erp" className="flex min-h-11 min-w-11 shrink-0 items-center gap-2" aria-label="ERP Ninh Bình">
               <Image
                 src="/brand/ninh-binh-mark.png"
                 alt=""
@@ -102,7 +102,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 <span className="text-[#bdc5c0]">/</span>
                 <Link
                   href={`/erp/${site.id}`}
-                  className="truncate text-sm font-bold text-[#34453e] hover:text-[#183f34]"
+                  className="flex min-h-11 items-center truncate text-sm font-bold text-[#34453e] hover:text-[#183f34]"
                 >
                   {site.shortName}
                 </Link>

@@ -603,7 +603,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                             type="button"
                             disabled={pending || voidReason.trim().length < 10}
                             onClick={() => xacNhanHuy(sale.saleCode)}
-                            className="mt-2 min-h-10 rounded-lg bg-[#8b3d31] px-4 text-sm font-black text-white disabled:opacity-50"
+                            className="mt-2 min-h-11 rounded-lg bg-[#8b3d31] px-4 text-sm font-black text-white disabled:opacity-50"
                           >
                             {pending ? "Đang huỷ…" : `Huỷ phiếu và hoàn ${formatVnd(sale.totalVnd)}`}
                           </button>

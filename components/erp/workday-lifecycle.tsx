@@ -312,7 +312,7 @@ function LocationMapDialog({
           <button
             type="button"
             onClick={onClose}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#eef3f0] text-xl font-black text-[#29483b]"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eef3f0] text-xl font-black text-[#29483b]"
             aria-label="Đóng sơ đồ vị trí"
           >
             ×
@@ -670,7 +670,7 @@ function EmployeeWorkday({
                 <select
                   name="progressPercent"
                   defaultValue={Math.max(25, record.progressPercent)}
-                  className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-2.5 text-sm text-[#263d33]"
+                  className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-3 text-sm text-[#263d33]"
                 >
                   {[25, 50, 75, 90]
                     .filter((value) => value >= record.progressPercent)
@@ -688,7 +688,7 @@ function EmployeeWorkday({
                   required
                   minLength={4}
                   rows={3}
-                  className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] px-3 py-2.5 text-sm text-[#263d33]"
+                  className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] px-3 py-3 text-sm text-[#263d33]"
                 />
               </label>
               <label className="mt-3 block text-xs font-bold text-[#65756d]">
@@ -734,7 +734,7 @@ function EmployeeWorkday({
                   required
                   minLength={4}
                   rows={3}
-                  className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-2.5 text-sm text-[#263d33]"
+                  className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-3 text-sm text-[#263d33]"
                 />
               </label>
               <label className="mt-3 block text-xs font-bold text-[#65756d]">
@@ -783,7 +783,7 @@ function EmployeeWorkday({
                 required
                 minLength={4}
                 rows={3}
-                className="mt-1.5 w-full rounded-lg border border-[#dfbcb4] bg-white px-3 py-2.5 text-sm"
+                className="mt-1.5 w-full rounded-lg border border-[#dfbcb4] bg-white px-3 py-3 text-sm"
               />
             </label>
             <label className="mt-3 block text-xs font-bold text-[#6f4a43]">
@@ -945,7 +945,7 @@ function ManagerWorkdays({
                   setSiteId(event.target.value);
                   setEmployeeId("");
                 }}
-                className="mt-1 block rounded-lg border border-[#d4ddd8] bg-white px-3 py-2.5 text-sm font-black text-[#294338]"
+                className="mt-1 block rounded-lg border border-[#d4ddd8] bg-white px-3 py-3 text-sm font-black text-[#294338]"
               >
                 {sites.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -972,7 +972,7 @@ function ManagerWorkdays({
               required
               value={employeeId}
               onChange={(event) => setEmployeeId(event.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-2.5 text-sm text-[#263d33]"
+              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-3 text-sm text-[#263d33]"
             >
               <option value="">Chọn người nhận việc</option>
               {siteEmployees.map((employee) => (
@@ -987,7 +987,7 @@ function ManagerWorkdays({
             <select
               name="templateId"
               required
-              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-2.5 text-sm text-[#263d33]"
+              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-3 text-sm text-[#263d33]"
             >
               <option value="">Chọn công việc</option>
               {allowedTemplates.map((template: WorkdayTaskTemplate) => (
@@ -1004,7 +1004,7 @@ function ManagerWorkdays({
               name="dueTime"
               required
               defaultValue="17:00"
-              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] px-3 py-2.5 text-sm"
+              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] px-3 py-3 text-sm"
             />
           </label>
           <label className="text-xs font-bold text-[#65756d]">
@@ -1012,7 +1012,7 @@ function ManagerWorkdays({
             <select
               name="priority"
               defaultValue="normal"
-              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-2.5 text-sm"
+              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-3 text-sm"
             >
               <option value="normal">Bình thường</option>
               <option value="high">Cần ưu tiên</option>
@@ -1025,7 +1025,7 @@ function ManagerWorkdays({
               name="managerNote"
               maxLength={500}
               placeholder="Ví dụ: kiểm tra thêm làn đoàn trước 10:30"
-              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] px-3 py-2.5 text-sm"
+              className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] px-3 py-3 text-sm"
             />
           </label>
           <button
@@ -1179,7 +1179,7 @@ function ManagerWorkdays({
                         required
                         minLength={2}
                         placeholder="Nêu kết quả hoặc phần cần bổ sung"
-                        className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-2.5 text-sm"
+                        className="mt-1.5 w-full rounded-lg border border-[#d4ddd8] bg-white px-3 py-3 text-sm"
                       />
                     </label>
                     <button

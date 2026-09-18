@@ -23,7 +23,7 @@ export function RoleSwitchBanner({ user }: Props) {
       <form action={endRoleSwitchAction}>
         <button
           type="submit"
-          className="min-h-9 rounded-lg bg-[#e7c78d] px-4 text-xs font-black text-[#17352c] transition hover:bg-[#f2d69f]"
+          className="min-h-11 rounded-lg bg-[#e7c78d] px-4 text-xs font-black text-[#17352c] transition hover:bg-[#f2d69f]"
         >
           Quay lại giám đốc
         </button>

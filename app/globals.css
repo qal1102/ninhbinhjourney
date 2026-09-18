@@ -1822,6 +1822,11 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   margin: 12mm 10mm 14mm;
 }
 
+@page erp-report-wide {
+  size: A4 landscape;
+  margin: 10mm 10mm 12mm;
+}
+
 @media print {
   html[data-erp-printing] body > :not([data-erp-print-root]) {
     display: none !important;
@@ -1842,6 +1847,10 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     page: erp-report;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+  }
+
+  html[data-erp-printing] [data-erp-print-root][data-orientation="landscape"] {
+    page: erp-report-wide;
   }
 
   [data-erp-print-root] .erp-print-heading {

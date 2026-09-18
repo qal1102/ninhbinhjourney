@@ -211,7 +211,7 @@ export function ShiftReconciliationPanel({
             {shift.shiftCode} · {shift.shiftLabel} · {shift.station}
           </span>
           {erpDataOriginLabel(shift.dataOrigin) ? (
-            <span className="rounded-full bg-[#e8eae2] px-2 py-1 text-[11px] font-black text-[#5c6250]">
+            <span className="rounded-full bg-[#e8eae2] px-2 py-1 text-xs font-black text-[#5c6250]">
               {erpDataOriginLabel(shift.dataOrigin)}
             </span>
           ) : null}
@@ -252,7 +252,7 @@ export function ShiftReconciliationPanel({
               <li key={gap.id} className={`rounded-2xl border p-4 ${style.box}`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-full px-2 py-1 text-[11px] font-black ${style.tag}`}
+                    className={`rounded-full px-2 py-1 text-xs font-black ${style.tag}`}
                   >
                     {style.label}
                   </span>

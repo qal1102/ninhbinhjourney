@@ -487,12 +487,12 @@ function JournalCard({
         </div>
         <div className="flex flex-wrap gap-2">
           <span
-            className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-black ${status.tone}`}
+            className={`w-fit rounded-full px-2.5 py-1 text-xs font-black ${status.tone}`}
           >
             {status.label}
           </span>
           {hasReversal ? (
-            <span className="rounded-full bg-[#edf0ee] px-2.5 py-1 text-[11px] font-black text-[#607068]">
+            <span className="rounded-full bg-[#edf0ee] px-2.5 py-1 text-xs font-black text-[#607068]">
               Đã có bút toán đảo
             </span>
           ) : null}
@@ -820,7 +820,7 @@ export function AccountingControlCenter({
                     <h3 className="font-black text-[#293f35]">
                       {record.shiftCode}
                     </h3>
-                    <span className="rounded-full bg-[#e7e6f4] px-2.5 py-1 text-[11px] font-black text-[#5c5486]">
+                    <span className="rounded-full bg-[#e7e6f4] px-2.5 py-1 text-xs font-black text-[#5c5486]">
                       {siteName(record.siteId)}
                     </span>
                   </div>

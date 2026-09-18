@@ -693,7 +693,7 @@ function InvoiceCard({
           </p>
         </div>
         <span
-          className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-black ${meta.className}`}
+          className={`w-fit rounded-full px-2.5 py-1 text-xs font-black ${meta.className}`}
         >
           {meta.label}
         </span>

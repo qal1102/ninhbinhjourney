@@ -40,8 +40,19 @@ function cellKind(value: ReportValue, kind: ReportColumnKind): "number" | "date"
 
 export function ReportPrintSheet({ report, exportedAt }: { report: ErpReport; exportedAt: Date }) {
   const heading = reportHeading(report, exportedAt);
+  // Bảng công nợ NCC có 12 cột: in khổ dọc thì cột tên nhà cung cấp bị ép còn
+  // một chữ mỗi dòng. Từ 8 cột trở lên in khổ ngang.
+  const widestTable = Math.max(
+    0,
+    ...report.sheets.flatMap((sheet) => sheet.tables.map((table) => table.columns.length)),
+  );
   return (
-    <div data-erp-print-root="" className="erp-print-sheet" lang="vi">
+    <div
+      data-erp-print-root=""
+      data-orientation={widestTable >= 8 ? "landscape" : undefined}
+      className="erp-print-sheet"
+      lang="vi"
+    >
       <header className="erp-print-heading">
         <h1>{heading.title}</h1>
         {heading.lines.map((line) => (

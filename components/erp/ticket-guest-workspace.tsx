@@ -379,7 +379,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                   type="button"
                   onClick={handleRefreshDemoTickets}
                   disabled={refreshPending}
-                  className="min-h-9 rounded-lg border border-white/25 px-3 text-xs font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34] disabled:cursor-wait disabled:opacity-60"
+                  className="min-h-11 rounded-lg border border-white/25 px-3 text-xs font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#183f34] disabled:cursor-wait disabled:opacity-60"
                 >
                   {refreshPending ? "Đang làm mới…" : "Làm mới vé mẫu"}
                 </button>
@@ -445,16 +445,16 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                         // eslint-disable-next-line @next/next/no-img-element -- QR is a generated data URL, not an optimizable asset
                         <img src={qrDataUrls[ticket.ticketCode]} alt={`Phóng to mã QR của vé ${ticket.ticketCode}`} className="h-16 w-16 rounded-md" />
                       ) : (
-                        <span className="grid h-16 w-16 place-items-center rounded-md bg-[#eef3f0] text-[10px] text-[#7b8881]">Đang tạo QR…</span>
+                        <span className="grid h-16 w-16 place-items-center rounded-md bg-[#eef3f0] text-xs text-[#7b8881]">Đang tạo QR…</span>
                       )}
                     </button>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
                         <span className="truncate font-mono text-sm font-black">{ticket.ticketCode}</span>
                         {isDemoTicketCode(ticket.ticketCode) ? (
-                          <span className="shrink-0 rounded-full bg-[#fdf0dd] px-2 py-0.5 text-[10px] font-black text-[#8a5e30]">mẫu</span>
+                          <span className="shrink-0 rounded-full bg-[#fdf0dd] px-2 py-0.5 text-xs font-black text-[#8a5e30]">mẫu</span>
                         ) : (
-                          <span className="shrink-0 rounded-full bg-[#dff1e8] px-2 py-0.5 text-[10px] font-black text-[#246249]">khách thật</span>
+                          <span className="shrink-0 rounded-full bg-[#dff1e8] px-2 py-0.5 text-xs font-black text-[#246249]">khách thật</span>
                         )}
                       </span>
                       <span className="mt-1 block text-xs text-[#5c6f67]">{TICKET_PRODUCT_LABELS[ticket.product] ?? ticket.product} · còn {ticket.entriesAllowed - ticket.entriesUsed} lượt</span>
@@ -596,7 +596,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           </div>
           <div className="grid grid-cols-4 rounded-xl bg-[#f0f4f1] p-1">
             {(["day", "week", "month", "year"] as const).map((item) => (
-              <button key={item} type="button" onClick={() => setPeriod(item)} className={`min-h-9 rounded-lg px-2 text-xs font-black ${period === item ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}>
+              <button key={item} type="button" onClick={() => setPeriod(item)} className={`min-h-11 rounded-lg px-2 text-xs font-black ${period === item ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}>
                 {item === "day" ? "Ngày" : item === "week" ? "Tuần" : item === "month" ? "Tháng" : "Năm"}
               </button>
             ))}
@@ -607,12 +607,12 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           <article className="rounded-xl bg-[#f3f6f4] p-4">
             <p className="text-xs text-[#718078]">Lượt khách được vào</p>
             <p className="mt-2 text-2xl font-black">{selected.entryCount.toLocaleString("vi-VN")}</p>
-            <p className="mt-1 text-[11px] leading-4 text-[#8a958f]">cộng số lượt ghi trên từng vé</p>
+            <p className="mt-1 text-xs leading-4 text-[#8a958f]">cộng số lượt ghi trên từng vé</p>
           </article>
           <article className="rounded-xl bg-[#f3f6f4] p-4">
             <p className="text-xs text-[#718078]">Tấm vé đã phát</p>
             <p className="mt-2 text-2xl font-black">{selected.ticketCount.toLocaleString("vi-VN")}</p>
-            <p className="mt-1 text-[11px] leading-4 text-[#8a958f]">một vé đoàn là một tấm, dù cho nhiều người vào</p>
+            <p className="mt-1 text-xs leading-4 text-[#8a958f]">một vé đoàn là một tấm, dù cho nhiều người vào</p>
           </article>
           <article className="col-span-2 rounded-xl bg-[#f3f6f4] p-4 lg:col-span-1">
             <p className="text-xs text-[#718078]">Lượt khách so kỳ liền trước</p>
@@ -631,7 +631,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           <div className="mt-3 rounded-xl border border-[#d8e0db] p-4">
             <p className="text-xs text-[#718078]">Tiền bán vé tại quầy</p>
             <p className="mt-1 text-2xl font-black tabular-nums">{selected.counterRevenueVnd.toLocaleString("vi-VN")} đ</p>
-            <p className="mt-1 text-[11px] leading-4 text-[#8a958f]">
+            <p className="mt-1 text-xs leading-4 text-[#8a958f]">
               cộng từ thành tiền chép trên phiếu lúc bán; phiếu đã huỷ tính 0 đ
               {selected.unpricedTicketCount
                 ? ` · ${selected.unpricedTicketCount.toLocaleString("vi-VN")} tấm vé khác chưa có giá trên vé (vé web theo gói, vé mẫu)`

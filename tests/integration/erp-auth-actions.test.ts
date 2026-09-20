@@ -68,6 +68,14 @@ vi.mock("@/lib/erp/counter-sale-repository", () => ({
   CounterSaleRepositoryError: class extends Error {},
 }));
 
+// TC-12: kho kiểm duyệt đánh giá cũng mở đầu bằng `import "server-only"`, nên
+// phải giả lập cùng lý do như các kho ở trên.
+vi.mock("@/lib/erp/visit-review-moderation-repository", () => ({
+  hideVisitReview: vi.fn(),
+  unhideVisitReview: vi.fn(),
+  hideQuotaUsed: vi.fn(),
+}));
+
 vi.mock("@/lib/erp/account-registry-repository", () => ({
   confirmPasswordChanged,
 }));

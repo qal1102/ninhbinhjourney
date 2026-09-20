@@ -17,6 +17,8 @@
  */
 
 export type SiteReviewOverviewVoice = {
+  /** Mã lời, chỉ có ở bề mặt ERP sau đăng nhập — để ẩn được thì phải gọi tên được. */
+  id: string;
   rating: number;
   comment: string;
   createdAt: string;
@@ -87,8 +89,8 @@ export function siteReviewOverviewsFrom(value: unknown): SiteReviewOverview[] {
             const v = item2 as Record<string, unknown>;
             const rating = ratingFrom(v.rating);
             const comment = String(v.comment ?? "").trim();
-            if (rating === 0 || comment.length === 0) return null;
-            return { rating, comment, createdAt: String(v.created_at ?? "") };
+            if (rating === 0 || comment.length === 0 || !v.id) return null;
+            return { id: String(v.id), rating, comment, createdAt: String(v.created_at ?? "") };
           })
           .filter((v): v is SiteReviewOverviewVoice => v !== null),
       };

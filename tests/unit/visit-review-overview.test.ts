@@ -44,9 +44,10 @@ describe("TC-12 mục 2: đọc bảng điểm cho người điều hành", () =
         pho_diem: { "4": 1, "5": 1 },
         so_luot_vao: 10,
         loi_gan_day: [
-          { rating: 5, comment: "Đáng đi", created_at: "2026-09-19T01:00:00Z" },
-          { rating: 4, comment: "   ", created_at: "2026-09-19T02:00:00Z" },
-          { rating: 0, comment: "sao hỏng", created_at: "2026-09-19T03:00:00Z" },
+          { id: "r1", rating: 5, comment: "Đáng đi", created_at: "2026-09-19T01:00:00Z" },
+          { id: "r2", rating: 4, comment: "   ", created_at: "2026-09-19T02:00:00Z" },
+          { id: "r3", rating: 0, comment: "sao hỏng", created_at: "2026-09-19T03:00:00Z" },
+          { rating: 5, comment: "thiếu mã nên không ẩn được", created_at: "2026-09-19T04:00:00Z" },
         ],
       },
     ]);

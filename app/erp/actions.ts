@@ -2,6 +2,8 @@
 
 import { createHash, timingSafeEqual } from "node:crypto";
 import { DEMO_TICKETS_DISABLED_MESSAGE, resolveDemoTicketsEnabled } from "@/domain/erp-demo-tickets";
+import { canModerateReviews, MODERATION_COPY } from "@/domain/visit-review-moderation";
+import { hideVisitReview, unhideVisitReview } from "@/lib/erp/visit-review-moderation-repository";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -1133,4 +1135,45 @@ export async function setCounterPriceAction(input: {
     if (error instanceof CounterSaleRepositoryError) return { ok: false, message: error.message };
     return { ok: false, message: "Chưa lưu được giá mới. Xin thử lại; nếu vẫn vậy thì báo bộ phận kỹ thuật." };
   }
+}
+
+/**
+ * TC-12 mục 3–4 — ẩn một lời khách, hoặc hiện lại lời đã ẩn.
+ *
+ * Lệnh này KHÔNG tự quyết ai được làm: nó chuyển thẳng vai của người đang đăng
+ * nhập xuống `erp_hide_visit_review`, nơi hạn mức, giới hạn "không được ẩn tới
+ * mức toàn 5 sao" và nhật ký cùng nằm trong một giao dịch. Chặn ở đây chỉ để
+ * đỡ một vòng đi xuống kho khi vai rõ ràng không có quyền.
+ */
+export async function moderateVisitReviewAction(
+  formData: FormData,
+): Promise<{ ok: boolean; message: string }> {
+  const actor = await getCurrentErpUser();
+  if (!actor) return { ok: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!canModerateReviews(actor.role)) {
+    return { ok: false, message: MODERATION_COPY.khongCoQuyen };
+  }
+
+  const reviewId = String(formData.get("reviewId") ?? "").trim();
+  const reason = String(formData.get("reason") ?? "").trim();
+  const action = String(formData.get("action") ?? "hide");
+  if (!reviewId) return { ok: false, message: "Thiếu mã đánh giá." };
+  if (reason.length < 5) return { ok: false, message: MODERATION_COPY.thieuLyDo };
+
+  const ket_qua =
+    action === "unhide"
+      ? await unhideVisitReview({ actorAccountId: actor.id, actorRole: actor.role, reviewId, reason })
+      : await hideVisitReview({ actorAccountId: actor.id, actorRole: actor.role, reviewId, reason });
+
+  if (!ket_qua.ok) return { ok: false, message: ket_qua.message };
+  revalidatePath("/erp/khach-hang");
+  return {
+    ok: true,
+    message:
+      action === "unhide"
+        ? "Đã hiện lại lời này ạ."
+        : `Đã ẩn lời này ạ. ${MODERATION_COPY.conLai(
+            ket_qua.quotaLimit === null ? null : Math.max(0, ket_qua.quotaLimit - (ket_qua.quotaUsed ?? 0)),
+          )}`,
+  };
 }

@@ -1,4 +1,7 @@
 import { DESTINATIONS } from "@/content/destinations";
+import { VisitReviewModerationAction } from "@/components/erp/visit-review-moderation-action";
+import { canModerateReviews, MODERATION_COPY, remainingQuota } from "@/domain/visit-review-moderation";
+import type { ErpRole } from "@/domain/erp";
 import {
   duLoiDeKetLuan,
   noiDangTut,
@@ -33,11 +36,18 @@ export function VisitReviewOverviewPanel({
   rows,
   fromLabel,
   toLabel,
+  viewerRole,
+  hidesUsedIn30Days = 0,
 }: {
   rows: SiteReviewOverview[];
   fromLabel: string;
   toLabel: string;
+  /** TC-12 mục 3 — vai người đang xem, quyết định có nút ẩn hay không. */
+  viewerRole?: ErpRole;
+  hidesUsedIn30Days?: number;
 }) {
+  const duocKiemDuyet = viewerRole ? canModerateReviews(viewerRole) : false;
+  const conLai = viewerRole ? remainingQuota(viewerRole, hidesUsedIn30Days) : 0;
   const coLoi = rows.filter((row) => row.reviewCount > 0);
   const dangTut = noiDangTut(rows);
   const itNguoiBiet = noiHayMaItNguoiBiet(rows);
@@ -102,7 +112,31 @@ export function VisitReviewOverviewPanel({
             </div>
           ) : null}
 
-          <div className="mt-4 overflow-x-auto">
+          {/*
+            Trên điện thoại, bảng bốn cột bị cắt mất cột cuối — nhìn tưởng lỗi.
+            Khổ hẹp xếp chồng từng cơ sở, khổ rộng mới dựng bảng.
+          */}
+          <ul data-testid="visit-review-overview-list" className="mt-4 space-y-2 sm:hidden">
+            {rows.map((row) => (
+              <li
+                key={row.siteId}
+                className="flex items-baseline justify-between gap-3 border-b border-[#eef2ef] pb-2"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate font-bold text-[#1f2f2a]">{tenCoSo(row.siteId)}</span>
+                  <span className="mt-0.5 block text-xs text-[#5f7068]">
+                    {row.reviewCount.toLocaleString("vi-VN")} lời ·{" "}
+                    {row.entryCount.toLocaleString("vi-VN")} lượt vào
+                  </span>
+                </span>
+                <span className="shrink-0 text-sm font-black tabular-nums text-[#1f2f2a]">
+                  {duLoiDeKetLuan(row) ? `${vietDiem(row.average)}/5` : "chưa đủ"}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-4 hidden overflow-x-auto sm:block">
             <table className="w-full min-w-[34rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-[#dbe2de] text-left text-xs uppercase tracking-[0.12em] text-[#5f7068]">
@@ -136,6 +170,11 @@ export function VisitReviewOverviewPanel({
               <p className="text-xs font-black uppercase tracking-[0.15em] text-[#5f7068]">
                 Lời gần đây
               </p>
+              {duocKiemDuyet ? (
+                <p className="mt-1 text-xs text-[#6b786f]">
+                  {MODERATION_COPY.conLai(conLai)} Lời đã ẩn vẫn nằm trong kho và truy lại được; không ai xoá hẳn được một lời khách.
+                </p>
+              ) : null}
               <ul className="mt-2 space-y-3">
                 {coLoi.flatMap((row) =>
                   row.recentVoices.slice(0, 3).map((voice, index) => (
@@ -143,6 +182,7 @@ export function VisitReviewOverviewPanel({
                       <p className="text-xs font-bold text-[#5f7068]">{tenCoSo(row.siteId)}</p>
                       <Sao rating={voice.rating} />
                       <p className="mt-1 text-sm leading-6 text-[#2f3d37]">{voice.comment}</p>
+                      {duocKiemDuyet ? <VisitReviewModerationAction reviewId={voice.id} /> : null}
                     </li>
                   )),
                 )}

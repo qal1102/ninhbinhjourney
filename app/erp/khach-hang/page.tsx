@@ -4,6 +4,8 @@ import { VisitReviewOverviewPanel } from "@/components/erp/visit-review-overview
 import { TRIP_PASSPORT_PLACE_IDS } from "@/domain/trip-passport";
 import type { SiteReviewOverview } from "@/domain/visit-review-overview";
 import { listSiteReviewOverview } from "@/lib/customer-data/visit-review-overview-repository";
+import { hideQuotaUsed } from "@/lib/erp/visit-review-moderation-repository";
+import { canModerateReviews } from "@/domain/visit-review-moderation";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { canViewCustomer360 } from "@/domain/customer-journey";
@@ -83,12 +85,15 @@ export default async function Customer360Page() {
   const ngay = (d: Date) => d.toISOString().slice(0, 10);
   const doc = (d: Date) => d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
   let reviewRows: SiteReviewOverview[] = [];
+  let hidesUsed = 0;
   if (bookingEnabled) {
     reviewRows = await listSiteReviewOverview({
       siteIds: [...TRIP_PASSPORT_PLACE_IDS],
       from: ngay(batDau),
       to: ngay(homNay),
     });
+    // Hạn mức đã dùng: chỉ hỏi khi vai thật sự ẩn được, đỡ một lượt đọc thừa.
+    if (canModerateReviews(user.role)) hidesUsed = await hideQuotaUsed(user.id);
   }
 
   return (
@@ -97,7 +102,7 @@ export default async function Customer360Page() {
       <Customer360Dashboard status={status} journeys={journeys} orders={orders} recommendations={recommendations} outboundActions={outboundActions} />
       {reviewRows.length > 0 ? (
         <div className="mt-6">
-          <VisitReviewOverviewPanel rows={reviewRows} fromLabel={doc(batDau)} toLabel={doc(homNay)} />
+          <VisitReviewOverviewPanel rows={reviewRows} fromLabel={doc(batDau)} toLabel={doc(homNay)} viewerRole={user.role} hidesUsedIn30Days={hidesUsed} />
         </div>
       ) : null}
     </ErpShell>

@@ -467,6 +467,22 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   FORECAST_TOO_MANY_SITES:
     "Hỏi quá nhiều cơ sở trong một lượt.",
 
+  // TC-12 muc 3-4 — kiem duyet danh gia.
+  REVIEW_MODERATION_INPUT_INVALID:
+    "Yêu cầu ẩn đánh giá chưa hợp lệ.",
+  REVIEW_MODERATION_REASON_REQUIRED:
+    "Xin ghi rõ lý do ẩn (ít nhất 5 ký tự), vì mỗi lượt ẩn đều lưu lại tên người ẩn.",
+  REVIEW_MODERATION_ROLE_REQUIRED:
+    "Vai của bạn không ẩn được đánh giá của khách.",
+  REVIEW_MODERATION_QUOTA_EXHAUSTED:
+    "Bạn đã dùng hết hạn mức ẩn trong 30 ngày. Việc còn lại xin chuyển giám đốc.",
+  REVIEW_MODERATION_TOAN_NAM_SAO:
+    "Ẩn lời này thì nơi ấy chỉ còn toàn 5 sao. Một bảng điểm toàn năm sao trông giả, nên hệ thống giữ lại lời này.",
+  REVIEW_MODERATION_ALREADY_HIDDEN:
+    "Lời này đã được ẩn trước đó.",
+  REVIEW_MODERATION_NOT_FOUND:
+    "Không tìm thấy đánh giá này.",
+
   // TC-18 — doan mua tai quay.
   GROUP_COUNTER_INPUT_INVALID:
     "Số người hoặc nhãn đoàn chưa hợp lệ.",

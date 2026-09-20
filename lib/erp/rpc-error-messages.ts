@@ -461,6 +461,12 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   REVIEW_TOO_MANY_SITES:
     "Hỏi quá nhiều nơi trong một lượt.",
 
+  // TC-11 — du bao gio cham tran.
+  FORECAST_INPUT_INVALID:
+    "Ngày hoặc danh sách cơ sở gửi lên chưa hợp lệ.",
+  FORECAST_TOO_MANY_SITES:
+    "Hỏi quá nhiều cơ sở trong một lượt.",
+
   // TC-18 — doan mua tai quay.
   GROUP_COUNTER_INPUT_INVALID:
     "Số người hoặc nhãn đoàn chưa hợp lệ.",

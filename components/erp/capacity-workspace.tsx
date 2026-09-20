@@ -8,6 +8,7 @@ import {
   type CapacitySourceKind,
   type CapacityWorkspaceData,
 } from "@/domain/erp-capacity";
+import type { SiteCapacityForecast } from "@/lib/erp/capacity-forecast-repository";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import { CapacityThresholdCreate } from "./capacity-threshold-create";
 import { CapacityThresholdEditor } from "./capacity-threshold-editor";
@@ -109,12 +110,38 @@ export function CapacityWorkspace({
   site,
   user,
   data,
+  forecast = null,
 }: {
   site: ErpSite;
   user: CurrentErpUser;
   data: CapacityWorkspaceData | null;
+  /** TC-11 — một câu, một con số. Null thì màn hình giữ nguyên như trước. */
+  forecast?: SiteCapacityForecast | null;
 }) {
-  if (!data) return <MissingCapacityStore site={site} />;
+  /*
+   * Dự báo và kho sức chứa là hai lượt đọc khác nhau. Kho hỏng mà kéo luôn
+   * dòng dự báo đi là lấy mất thứ vẫn còn đọc được — nên nó nằm ngoài lối
+   * thoát sớm này.
+   */
+  const khoiDuBao = forecast ? (
+    <section
+      data-testid="capacity-forecast"
+      data-forecast-kind={forecast.forecast.kind}
+      className="rounded-2xl border border-[#dbe2de] bg-white p-5 shadow-sm"
+    >
+      <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Hôm nay còn chỗ tới lúc nào</p>
+      <p className="mt-2 text-base font-bold leading-6 text-[#1f2f2a]">{forecast.cau}</p>
+    </section>
+  ) : null;
+
+  if (!data) {
+    return (
+      <div className="space-y-5">
+        {khoiDuBao}
+        <MissingCapacityStore site={site} />
+      </div>
+    );
+  }
 
   const primaryCapacity = data.thresholds.reduce(
     (smallest, threshold) =>
@@ -126,7 +153,8 @@ export function CapacityWorkspace({
 
   return (
     <div className="space-y-5">
-      <header className="overflow-hidden rounded-3xl bg-[#173f34] text-white shadow-[0_20px_55px_rgba(23,63,52,0.16)]">
+      {khoiDuBao}
+            <header className="overflow-hidden rounded-3xl bg-[#173f34] text-white shadow-[0_20px_55px_rgba(23,63,52,0.16)]">
         <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b8d8cb]">

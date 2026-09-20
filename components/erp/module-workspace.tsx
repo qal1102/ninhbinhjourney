@@ -43,6 +43,7 @@ import { ProjectEventWorkspace } from "./project-event-workspace";
 import { FieldReportWorkspace } from "./field-report-workspace";
 import { TicketGuestWorkspace } from "./ticket-guest-workspace";
 import { resolveDemoTicketsEnabled } from "@/domain/erp-demo-tickets";
+import type { SiteCapacityForecast } from "@/lib/erp/capacity-forecast-repository";
 import { SupplierApControlCenter } from "./supplier-ap-control-center";
 import { StaffPerformanceWorkspace } from "./staff-performance-workspace";
 import { IncidentWorkflowWorkspace } from "./incident-workflow-workspace";
@@ -77,6 +78,8 @@ type Props = {
   /** QA-DON-DU-LIEU-10 — đơn trả tại điểm còn chờ thu; `null` khi không phải quản lý/giám đốc ở module tài chính. */
   onSiteDue?: OnSiteDueWorkspace | null;
   initialCameraId?: string;
+  /** TC-11 — dự báo giờ chạm trần của chính cơ sở này, null khi chưa đọc được. */
+  capacityForecast?: SiteCapacityForecast | null;
 };
 
 function formatVnd(value: number) {
@@ -356,10 +359,11 @@ export function ModuleWorkspace({
   counterSale = null,
   onSiteDue = null,
   initialCameraId,
+  capacityForecast = null,
 }: Props) {
   if (module.id === "suc-chua") {
     return (
-      <CapacityWorkspace site={site} user={user} data={capacityWorkspace} />
+      <CapacityWorkspace site={site} user={user} data={capacityWorkspace} forecast={capacityForecast} />
     );
   }
   if (module.id === "sop-dien-tap") {

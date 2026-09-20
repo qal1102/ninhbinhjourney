@@ -6,6 +6,7 @@ import { ModuleContextHelp } from "@/components/erp/module-context-help";
 import { ModuleWorkspace } from "@/components/erp/module-workspace";
 import { getErpModule, getErpSite } from "@/domain/erp";
 import { accountCanAccessModule, getCurrentErpUser } from "@/lib/erp/demo-session";
+import { forecastSiteCapacity } from "@/lib/erp/capacity-forecast-repository";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { getAttendanceState } from "@/lib/erp/attendance-repository";
 import { listCapacityWorkspace } from "@/lib/erp/capacity-repository";
@@ -32,6 +33,19 @@ type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+/**
+ * TC-11 — dự báo giờ chạm trần, chỉ đọc khi thật sự mở màn Sức chứa. Đọc lỗi
+ * thì trả rỗng ở trong kho, nên màn hình vẫn sống như cũ.
+ */
+async function docDuBao(siteId: string, siteName: string) {
+  const homNay = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+  return forecastSiteCapacity({
+    siteIds: [siteId],
+    visitDate: homNay.toISOString().slice(0, 10),
+    siteNames: { [siteId]: siteName },
+  });
+}
+
 export default async function ErpModulePage({ params, searchParams }: Props) {
   const { site: siteId, module: moduleId } = await params;
   const site = getErpSite(siteId);
@@ -45,7 +59,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   }
   const isTicketModule =
     moduleDefinition.id === "check-in-khach" || moduleDefinition.id === "ve-dat-cho";
-  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory, capacityWorkspace, sopWorkspace] =
+  const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory, capacityWorkspace, sopWorkspace, capacityForecast] =
     await Promise.all([
     getAccessState(),
     // Chỉ Nhân sự và Chấm công dùng nhật ký chấm công. Ngày 13/09/2026 một
@@ -100,6 +114,12 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
             return null;
           })
         : Promise.resolve(null),
+      moduleDefinition.id === "suc-chua"
+        ? docDuBao(site.id, site.name).catch((error) => {
+            console.error("Capacity forecast read failed", error);
+            return [];
+          })
+        : Promise.resolve([]),
     ]);
   const query = (await searchParams) ?? {};
   const requestedCamera = Array.isArray(query.camera) ? query.camera[0] : query.camera;
@@ -188,6 +208,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         shiftHandovers={shiftHandovers}
         staffDirectory={staffDirectory}
         capacityWorkspace={capacityWorkspace}
+        capacityForecast={capacityForecast[0] ?? null}
         sopWorkspace={sopWorkspace}
         shiftReconciliation={shiftReconciliation}
         counterSale={counterSale}

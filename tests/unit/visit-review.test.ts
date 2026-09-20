@@ -116,3 +116,27 @@ describe("TC-12: chữ nói với khách", () => {
     expect(VISIT_REVIEW_COPY.en.stars).toHaveLength(5);
   });
 });
+
+describe("TC-12: hai bộ đọc, hai dạng dữ liệu, không lẫn nhau", () => {
+  const dangApi = [
+    {
+      siteId: SITE,
+      count: 12,
+      average: 4.58,
+      spread: { "5": 8, "4": 2 },
+      recentVoices: [{ rating: 5, comment: "Thuyền vắng", createdAt: "2026-09-19T01:00:00Z" }],
+    },
+  ];
+
+  it("bộ đọc dạng API đọc được dữ liệu API", async () => {
+    const { siteReviewSummariesFromApi } = await import("@/domain/visit-review");
+    const ra = siteReviewSummariesFromApi(dangApi);
+    expect(ra).toHaveLength(1);
+    expect(ra[0].count).toBe(12);
+    expect(ra[0].recentVoices[0].comment).toBe("Thuyền vắng");
+  });
+
+  it("bộ đọc dạng thô KHÔNG đọc được dữ liệu API — đây là lỗi đã mắc một lần", () => {
+    expect(siteReviewSummariesFrom(dangApi)).toEqual([]);
+  });
+});

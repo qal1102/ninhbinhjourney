@@ -118,6 +118,49 @@ export function siteReviewSummariesFrom(value: unknown): SiteReviewSummary[] {
 }
 
 /**
+ * Đọc bảng điểm ở dạng API ĐÃ đổi tên trường (camelCase).
+ *
+ * Tách hẳn khỏi `siteReviewSummariesFrom` — bộ ấy đọc dạng thô của cơ sở dữ
+ * liệu (`site_id`, `so_luot`, `pho_diem`). Đã có một lần nhầm: trang gọi API
+ * rồi đem kết quả đã đổi tên đưa lại vào bộ đọc dạng thô, và bảng điểm im
+ * lặng biến mất chứ không báo gì.
+ */
+export function siteReviewSummariesFromApi(value: unknown): SiteReviewSummary[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const hang = item as Record<string, unknown>;
+      const count = Number(hang.count);
+      const average = Number(hang.average);
+      if (!hang.siteId || !Number.isFinite(count) || count <= 0) return null;
+      const pho = (hang.spread ?? {}) as Record<string, unknown>;
+      const dem = (muc: string) => {
+        const so = Number(pho[muc]);
+        return Number.isFinite(so) && so > 0 ? Math.round(so) : 0;
+      };
+      const loi = Array.isArray(hang.recentVoices) ? hang.recentVoices : [];
+      return {
+        siteId: String(hang.siteId),
+        count: Math.round(count),
+        average: Number.isFinite(average) ? average : 0,
+        spread: { "1": dem("1"), "2": dem("2"), "3": dem("3"), "4": dem("4"), "5": dem("5") },
+        recentVoices: loi
+          .map((item2) => {
+            if (!item2 || typeof item2 !== "object") return null;
+            const v = item2 as Record<string, unknown>;
+            const rating = ratingFrom(v.rating);
+            const comment = String(v.comment ?? "").trim();
+            if (rating === 0 || comment.length === 0) return null;
+            return { rating, comment, createdAt: String(v.createdAt ?? "") };
+          })
+          .filter((v): v is VisitReviewVoice => v !== null),
+      };
+    })
+    .filter((s): s is SiteReviewSummary => s !== null);
+}
+
+/**
  * Điểm trung bình đọc theo lối người Việt viết số: dấu phẩy, một chữ số lẻ.
  */
 export function formatAverage(average: number): string {

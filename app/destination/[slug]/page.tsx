@@ -9,6 +9,7 @@ import {
 import { DestinationTimeline } from "@/components/discovery/destination-timeline";
 import { LandingDestinationPage } from "@/components/discovery/landing-destination-page";
 import { MiniRouteMap } from "@/components/discovery/mini-route-map";
+import { VerifiedRatingPanel } from "@/components/discovery/verified-rating-panel";
 import {
   DESTINATION_PAGE_SLUGS,
   getLandingDestinationBySlug,
@@ -164,6 +165,8 @@ export default async function DestinationPage({
           <p className="mt-5 text-lg leading-8 text-[#4d5b55]">
             {destination.story.vi}
           </p>
+          {/* TC-12 — lời của người đã qua cổng nơi này. Chưa ai kể thì khối tự ẩn. */}
+          <VerifiedRatingPanel siteId={destination.id} />
           <div className="mt-8 flex flex-wrap gap-2">
             {destination.interests.map((interest) => (
               <span

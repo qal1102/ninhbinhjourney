@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { TripPassport } from "@/components/commerce/trip-passport";
 import { DESTINATIONS } from "@/content/destinations";
 import {
   GROUP_ATTENDANCE_ALERT_THRESHOLD_MINUTES,
@@ -8,6 +9,12 @@ import {
   pickCurrentAttendanceSiteId,
   type GroupAttendanceResult,
 } from "@/domain/erp-group-attendance";
+import {
+  buildTripPassport,
+  groupTripPassportEntries,
+  litPlaceIds,
+  newlyLitPlaceIds,
+} from "@/domain/trip-passport";
 import {
   VISITOR_GROUP_CODE_PATTERN,
   type VisitorGroupStatus,
@@ -51,7 +58,7 @@ type LoadState =
   | { kind: "loading" }
   | { kind: "not-found" }
   | { kind: "network-error" }
-  | { kind: "ready"; group: VisitorGroupStatus };
+  | { kind: "ready"; group: VisitorGroupStatus; freshIds: string[] };
 
 /**
  * TC-19 + TC-20 — màn hình của trưởng đoàn.
@@ -78,6 +85,8 @@ export function VisitorGroupLeaderExperience({ groupCode }: { groupCode: string 
   useEffect(() => {
     if (!validFormat) return;
     let alive = true;
+    // TC-10: nơi nào vừa sáng kể từ lượt trước thì mới có nhịp chuyển nhẹ.
+    let previousLit: Set<string> | null = null;
     async function load(firstRun: boolean) {
       try {
         const response = await fetch(
@@ -95,7 +104,10 @@ export function VisitorGroupLeaderExperience({ groupCode }: { groupCode: string 
           }
           return;
         }
-        setState({ kind: "ready", group: payload.group });
+        const passport = buildTripPassport(groupTripPassportEntries(payload.group.members));
+        const freshIds = newlyLitPlaceIds(previousLit, passport);
+        previousLit = litPlaceIds(passport);
+        setState({ kind: "ready", group: payload.group, freshIds });
       } catch {
         if (alive && firstRun) setState({ kind: "network-error" });
       }
@@ -140,13 +152,29 @@ export function VisitorGroupLeaderExperience({ groupCode }: { groupCode: string 
           </div>
         ) : null}
 
-        {state.kind === "ready" ? <LeaderGroupView group={state.group} now={now} /> : null}
+        {state.kind === "ready" ? (
+          <LeaderGroupView group={state.group} now={now} freshIds={state.freshIds} />
+        ) : null}
       </div>
     </main>
   );
 }
 
-function LeaderGroupView({ group, now }: { group: VisitorGroupStatus; now: Date }) {
+function LeaderGroupView({
+  group,
+  now,
+  freshIds,
+}: {
+  group: VisitorGroupStatus;
+  now: Date;
+  freshIds: string[];
+}) {
+  // TC-10: gộp lượt vào của cả đoàn từ chính dữ liệu trang đã có — không gọi
+  // thêm lượt nào.
+  const passport = useMemo(
+    () => buildTripPassport(groupTripPassportEntries(group.members)),
+    [group.members],
+  );
   const siteId = pickCurrentAttendanceSiteId({ members: group.members, now });
   const attendance: GroupAttendanceResult | null = siteId
     ? deriveGroupAttendance({ members: group.members, siteId, now })
@@ -219,7 +247,20 @@ function LeaderGroupView({ group, now }: { group: VisitorGroupStatus; now: Date 
         </div>
       ) : null}
 
-      <div className="mt-7 rounded-2xl border border-[#bcd6c8] bg-[#f0f7f2] p-5">
+      <div className="mt-12 border-t border-[#183f34]/15 pt-10">
+        <TripPassport
+          passport={passport}
+          freshIds={freshIds}
+          lang="vi"
+          audience="group"
+          headingLevel={2}
+          layout="stacked"
+          visitDate={group.visitDate}
+          memberCount={group.memberCount}
+        />
+      </div>
+
+      <div className="mt-10 rounded-2xl border border-[#bcd6c8] bg-[#f0f7f2] p-5">
         <p className="font-bold text-[#183f34]">Mã đoàn dùng chung được, không phải lỗ hổng</p>
         <p className="mt-2 text-sm leading-6 text-[#27362f]">
           Ai bận không đi được thì cứ đưa mã của mình cho người đi thay — người cầm mã được đối xử đúng như người đó,

@@ -3,6 +3,8 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type {
   VisitorGroupMember,
+  VisitorGroupMemberEntry,
+  VisitorGroupMemberJourney,
   VisitorGroupStatus,
 } from "@/domain/visitor-group";
 
@@ -19,6 +21,7 @@ export class VisitorGroupRepositoryError extends Error {
       | "OWNERSHIP_REQUIRED"
       | "MEMBER_NOT_FOUND"
       | "GROUP_NOT_FOUND"
+      | "JOURNEY_NOT_READY"
       | "PERSISTENCE_FAILED",
     options?: ErrorOptions,
   ) {
@@ -67,6 +70,15 @@ function careNeedFrom(value: unknown): VisitorGroupMember["careNeed"] {
   return raw === "young-child" || raw === "elderly" || raw === "mobility" ? raw : "none";
 }
 
+function entriesFrom(value: unknown): VisitorGroupMemberEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+    const e = entry as Record<string, unknown>;
+    return [{ siteId: String(e.site_id ?? ""), scannedAt: String(e.scanned_at ?? "") }];
+  });
+}
+
 function membersFrom(value: unknown): VisitorGroupMember[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
@@ -74,7 +86,6 @@ function membersFrom(value: unknown): VisitorGroupMember[] {
     const row = item as Record<string, unknown>;
     const nhom = String(row.guest_group);
     if (nhom !== "adult" && nhom !== "child") return [];
-    const entries = Array.isArray(row.entries) ? row.entries : [];
     return [{
       memberIndex: Number(row.member_index ?? 0),
       memberCode: String(row.member_code ?? ""),
@@ -82,13 +93,40 @@ function membersFrom(value: unknown): VisitorGroupMember[] {
       displayName: String(row.display_name ?? ""),
       careNeed: careNeedFrom(row.care_need),
       activated: row.activated === true,
-      entries: entries.flatMap((entry) => {
-        if (!entry || typeof entry !== "object") return [];
-        const e = entry as Record<string, unknown>;
-        return [{ siteId: String(e.site_id ?? ""), scannedAt: String(e.scanned_at ?? "") }];
-      }),
+      entries: entriesFrom(row.entries),
     }];
   });
+}
+
+/**
+ * Hàm đọc chưa có trên cơ sở dữ liệu: PostgREST báo `PGRST202` (không thấy hàm
+ * trong bộ nhớ lược đồ), PostgreSQL báo `42883` (không có hàm mang chữ ký ấy).
+ *
+ * Mã ứng dụng lên production trước khi migration `202609180077` được áp, nên
+ * đây là một trạng thái có thật, không phải lỗi hiếm.
+ */
+export function isMissingDatabaseFunction(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const code = "code" in error ? String(error.code) : "";
+  return code === "PGRST202" || code === "42883";
+}
+
+/**
+ * Chỉ nhận đúng năm trường hàm đã hứa. Trường lạ nào có lọt vào dữ liệu trả
+ * về cũng không đi tiếp ra trình duyệt.
+ */
+export function memberJourneyFrom(value: unknown): VisitorGroupMemberJourney | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const nhom = String(row.guest_group);
+  if (!row.member_code || (nhom !== "adult" && nhom !== "child")) return null;
+  return {
+    memberCode: String(row.member_code),
+    guestGroup: nhom,
+    displayName: String(row.display_name ?? ""),
+    visitDate: row.visit_date == null ? "" : String(row.visit_date),
+    entries: entriesFrom(row.entries),
+  };
 }
 
 /**
@@ -186,6 +224,38 @@ export async function setVisitorGroupMemberDetails(input: {
     throw new VisitorGroupRepositoryError("Không tìm thấy đoàn nào mang mã này.", "GROUP_NOT_FOUND");
   }
   return status;
+}
+
+/**
+ * TC-10 — những nơi một người đã đi qua, đọc bằng mã của chính họ.
+ *
+ * Hàm cơ sở dữ liệu chưa được áp thì báo `JOURNEY_NOT_READY` để trang nói
+ * thẳng "phần này sắp có", thay vì một câu "kết nối trục trặc" sai sự thật.
+ */
+export async function getVisitorGroupMemberJourney(
+  memberCode: string,
+): Promise<VisitorGroupMemberJourney> {
+  const { data, error } = await createAdminClient().rpc("erp_visitor_group_member_journey", {
+    p_tenant_id: TENANT_ID,
+    p_member_code: memberCode.trim().toUpperCase(),
+  });
+  if (error) {
+    if (isMissingDatabaseFunction(error)) {
+      throw new VisitorGroupRepositoryError(
+        "Bản đồ những nơi đã đi qua chưa mở ở bản đang chạy.",
+        "JOURNEY_NOT_READY",
+      );
+    }
+    throw mapRepositoryError(error);
+  }
+  const journey = memberJourneyFrom(data);
+  if (!journey) {
+    throw new VisitorGroupRepositoryError(
+      "Không tìm thấy mã khách này trong đoàn nào.",
+      "MEMBER_NOT_FOUND",
+    );
+  }
+  return journey;
 }
 
 export async function getVisitorGroupStatus(groupCode: string): Promise<VisitorGroupStatus> {

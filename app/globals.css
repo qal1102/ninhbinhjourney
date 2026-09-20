@@ -698,6 +698,114 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   white-space: nowrap;
 }
 
+/*
+ * TC-10 — tấm bản đồ "Những nơi bạn đã đi qua".
+ *
+ * Nền bản đồ nhạt màu như giấy cũ để các điểm đã sáng nổi lên; điểm chưa ghé
+ * là một vòng rỗng. Không nhấp nháy thường trực: chỉ nơi VỪA sáng mới có một
+ * nhịp chuyển nhẹ, và nhịp ấy tắt hẳn khi khách chọn giảm chuyển động.
+ */
+.nb-passport-map .leaflet-tile-pane {
+  filter: grayscale(1) sepia(0.22) brightness(1.06) contrast(0.86);
+  opacity: 0.72;
+}
+
+.nb-passport-pin {
+  background: rgba(251, 250, 246, 0.92);
+  border: 1.5px dashed rgba(24, 63, 52, 0.55);
+  border-radius: 999px;
+  height: 16px;
+  position: relative;
+  width: 16px;
+}
+
+.nb-passport-pin.is-lit {
+  align-items: center;
+  background: #183f34;
+  border: 2px solid #fbfaf6;
+  box-shadow:
+    0 0 0 5px rgba(231, 185, 106, 0.34),
+    0 10px 22px rgba(24, 63, 52, 0.32);
+  color: #fbfaf6;
+  display: flex;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.nb-passport-pin.is-fresh {
+  animation: nb-passport-light 1400ms var(--motion-editorial-ease) both;
+}
+
+.nb-passport-label {
+  color: rgba(29, 41, 37, 0.62);
+  font-size: 12px;
+  font-weight: 700;
+  left: calc(100% + 8px);
+  line-height: 1;
+  pointer-events: none;
+  position: absolute;
+  text-shadow:
+    0 0 3px #fbfaf6,
+    0 0 6px #fbfaf6,
+    0 0 10px rgba(251, 250, 246, 0.9);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.nb-passport-label.is-left {
+  left: auto;
+  right: calc(100% + 8px);
+}
+
+.nb-passport-pin.is-lit .nb-passport-label {
+  color: #183f34;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.nb-passport-row.is-fresh {
+  animation: nb-passport-row-light 1800ms var(--motion-editorial-ease) both;
+}
+
+@keyframes nb-passport-light {
+  0% {
+    background: rgba(251, 250, 246, 0.92);
+    box-shadow: 0 0 0 0 rgba(231, 185, 106, 0.6);
+    color: transparent;
+    transform: scale(0.6);
+  }
+  55% {
+    box-shadow:
+      0 0 0 14px rgba(231, 185, 106, 0),
+      0 10px 22px rgba(24, 63, 52, 0.32);
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes nb-passport-row-light {
+  0% {
+    background-color: rgba(231, 185, 106, 0.28);
+  }
+  100% {
+    background-color: rgba(231, 185, 106, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-passport-pin.is-fresh,
+  .nb-passport-row.is-fresh {
+    animation: none;
+  }
+}
+
 .nb-location-control {
   background: rgba(251, 250, 246, 0.94);
   border: 1px solid rgba(168, 206, 193, 0.8);

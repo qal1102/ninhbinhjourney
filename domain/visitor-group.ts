@@ -62,13 +62,27 @@ export const VisitorGroupMemberDetailsRequestSchema = z
   .strict();
 
 /**
+ * Hình dạng mã thành viên, khai đúng một lần — cùng khuôn với ràng buộc cột
+ * `member_code` ở migration `202608300054` và phép kiểm khuôn trong
+ * `erp_visitor_group_member_journey` (migration `202609180077`).
+ */
+export const VISITOR_GROUP_MEMBER_CODE_PATTERN = /^TV-[A-Z0-9]{10}$/i;
+
+/**
  * Khách tự khai tên mình. Tự nguyện: bỏ trống là rút lại, và không ảnh hưởng
  * gì tới việc vào cổng.
  */
 export const VisitorGroupMemberActivateRequestSchema = z
   .object({
-    member_code: z.string().trim().regex(/^TV-[A-Z0-9]{10}$/i),
+    member_code: z.string().trim().regex(VISITOR_GROUP_MEMBER_CODE_PATTERN),
     display_name: z.string().trim().max(200),
+  })
+  .strict();
+
+/** TC-10 — khách mở lại hành trình của chính mình bằng mã thành viên. */
+export const VisitorGroupMemberJourneyQuerySchema = z
+  .object({
+    member_code: z.string().trim().regex(VISITOR_GROUP_MEMBER_CODE_PATTERN),
   })
   .strict();
 
@@ -96,6 +110,22 @@ export type VisitorGroupMember = {
   careNeed: "none" | "young-child" | "elderly" | "mobility";
   activated: boolean;
   /** Những nơi người này đã đi qua trong chuyến, theo thứ tự thời gian. */
+  entries: VisitorGroupMemberEntry[];
+};
+
+/**
+ * TC-10 — hành trình của đúng một người, đọc bằng mã của chính họ.
+ *
+ * Cố ý không có tên người khác, không gì của trưởng đoàn, không nhu cầu chăm
+ * sóc: ai cầm mã là mở được trang này, nên trang chỉ được biết về người cầm mã.
+ */
+export type VisitorGroupMemberJourney = {
+  memberCode: string;
+  guestGroup: "adult" | "child";
+  /** Tên chính người này tự khai. Rỗng là bình thường. */
+  displayName: string;
+  visitDate: string;
+  /** Những lượt vào thành công bằng mã này, theo thứ tự thời gian. */
   entries: VisitorGroupMemberEntry[];
 };
 

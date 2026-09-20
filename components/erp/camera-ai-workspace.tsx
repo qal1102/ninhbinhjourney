@@ -369,7 +369,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                     </div>
                     {selected.status !== "offline" ? (
                       <div className="absolute bottom-[18%] left-[23%] h-20 w-16 rounded border-2 border-[#83e7b5]">
-                        <span className="absolute -top-6 left-0 bg-[#83e7b5] px-1.5 py-0.5 text-[9px] font-black text-[#11362a]">
+                        <span className="absolute -top-6 left-0 bg-[#83e7b5] px-1.5 py-0.5 text-xs font-black text-[#11362a]">
                           KHUNG DỰNG SẴN
                         </span>
                       </div>

@@ -152,7 +152,7 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
             <path d="M10 21h4" />
           </svg>
           {inbox && inbox.count > 0 ? (
-            <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full border-2 border-white bg-[#c8523c] px-0.5 text-[9px] font-black leading-none text-white">
+            <span className="absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-[#c8523c] px-1 text-xs font-black leading-none text-white">
               {inbox.count > 9 ? "9+" : inbox.count}
             </span>
           ) : null}

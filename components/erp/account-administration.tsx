@@ -440,7 +440,7 @@ export function AccountAdministration({ accounts, audit }: Props) {
                 </span>
                 <Link
                   href={`/erp/ho-so/${account.accountId}`}
-                  className="rounded-full border border-[#ced8d1] bg-white px-3 py-1 text-xs font-black text-[#385047] hover:border-[#8fa99f]"
+                  className="inline-flex min-h-11 items-center rounded-full border border-[#ced8d1] bg-white px-4 text-xs font-black text-[#385047] hover:border-[#8fa99f]"
                 >
                   Xem hồ sơ
                 </Link>

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TripPassport } from "@/components/commerce/trip-passport";
+import { VisitReviewRow } from "@/components/commerce/visit-review-row";
+import type { VisitReview } from "@/domain/visit-review";
 import {
   buildTripPassport,
   litPlaceIds,
@@ -128,6 +130,34 @@ export function VisitorGroupMemberExperience({
   const [status, setStatus] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   // Khách đã gõ vào ô tên thì lượt làm mới bản đồ không được ghi đè lên.
   const nameTouched = useRef(false);
+  /**
+   * TC-12 — lời khách đã kể trước đó, để mở lại trang thì sao cũ vẫn còn sáng.
+   * Hỏng đường này thì ô chấm sao vẫn dùng được, chỉ là bắt đầu từ trống.
+   */
+  const [reviews, setReviews] = useState<VisitReview[]>([]);
+
+  useEffect(() => {
+    if (!validFormat) return;
+    let alive = true;
+    void (async () => {
+      try {
+        const response = await fetch(
+          `/api/customer-visit-reviews?member_code=${encodeURIComponent(code)}`,
+          { credentials: "same-origin", cache: "no-store" },
+        );
+        const payload = (await response.json().catch(() => null)) as
+          | { accepted: true; reviews: VisitReview[] }
+          | { accepted: false }
+          | null;
+        if (alive && response.ok && payload?.accepted) setReviews(payload.reviews);
+      } catch {
+        // Im lặng: chưa đọc được lời cũ thì khách vẫn chấm sao được như thường.
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [code, validFormat]);
 
   useEffect(() => {
     if (!validFormat) return;
@@ -338,6 +368,15 @@ export function VisitorGroupMemberExperience({
             headingLevel={1}
             layout="wide"
             visitDate={journey.journey.visitDate}
+            renderStopExtra={(stopId, stopName) => (
+              <VisitReviewRow
+                memberCode={code}
+                siteId={stopId}
+                siteName={stopName}
+                lang={lang}
+                initial={reviews.find((review) => review.siteId === stopId)}
+              />
+            )}
           >
             {/* Trên màn rộng, chỗ ghi tên nằm cùng cột với danh sách, cạnh bản
                 đồ; trên điện thoại nó đi tiếp ngay bên dưới. */}

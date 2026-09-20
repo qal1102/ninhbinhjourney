@@ -89,6 +89,7 @@ export function TripPassport({
   layout,
   visitDate = "",
   memberCount,
+  renderStopExtra,
   children,
 }: {
   passport: TripPassportData;
@@ -99,6 +100,11 @@ export function TripPassport({
   layout: "wide" | "stacked";
   visitDate?: string;
   memberCount?: number;
+  /**
+   * TC-12 — chỗ gắn thêm cho từng nơi đã tới, ví dụ ô chấm sao. Tấm hộ chiếu
+   * không biết gì về đánh giá; nó chỉ chừa chỗ.
+   */
+  renderStopExtra?: (stopId: string, stopName: string) => ReactNode;
   /** Nội dung đi tiếp ngay dưới danh sách, cùng cột với nó trên màn rộng. */
   children?: ReactNode;
 }) {
@@ -154,10 +160,11 @@ export function TripPassport({
                 <li
                   key={stop.id}
                   data-place-id={stop.id}
-                  className={`nb-passport-row flex items-center gap-4 border-b border-[#183f34]/15 py-4 ${
+                  className={`nb-passport-row border-b border-[#183f34]/15 py-4 ${
                     fresh.has(stop.id) ? "is-fresh" : ""
                   }`}
                 >
+                  <div className="flex items-center gap-4">
                   <span className="relative size-14 shrink-0">
                     <Image
                       src={stop.image}
@@ -181,6 +188,8 @@ export function TripPassport({
                         : ""}
                     </span>
                   </span>
+                  </div>
+                  {renderStopExtra ? renderStopExtra(stop.id, stop.name[lang]) : null}
                 </li>
               ))}
             </ol>

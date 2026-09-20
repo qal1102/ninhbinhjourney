@@ -443,6 +443,20 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   GROUP_MEMBER_NOT_FOUND:
     "Không tìm thấy mã khách này trong đoàn nào.",
 
+  // TC-12 — danh gia co dau chan.
+  REVIEW_INPUT_INVALID:
+    "Yêu cầu gửi lên chưa hợp lệ.",
+  REVIEW_RATING_INVALID:
+    "Số sao phải từ 1 tới 5.",
+  REVIEW_COMMENT_TOO_LONG:
+    "Lời kể dài quá mức cho phép, xin rút ngắn lại giúp em.",
+  REVIEW_MEMBER_NOT_FOUND:
+    "Không tìm thấy mã khách này trong đoàn nào.",
+  REVIEW_KHONG_CO_DAU_CHAN:
+    "Nơi này chưa ghi nhận lượt vào bằng mã của khách, nên chưa gửi lời được.",
+  REVIEW_TOO_MANY_SITES:
+    "Hỏi quá nhiều nơi trong một lượt.",
+
   // TC-18 — doan mua tai quay.
   GROUP_COUNTER_INPUT_INVALID:
     "Số người hoặc nhãn đoàn chưa hợp lệ.",

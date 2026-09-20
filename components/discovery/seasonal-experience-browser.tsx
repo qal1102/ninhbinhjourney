@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SeasonalEditorialGroup } from "@/components/discovery/seasonal-editorial-group";
 import { CONTACT as contact, contactMailto } from "@/content/contact";
+import { useMidAutumnSeasonOpen } from "@/lib/seasonal/use-mid-autumn-season";
 
 export type SeasonalAction = "booking" | "contact" | "gift" | "planning";
 
@@ -49,6 +50,13 @@ export type BrowserCopy = {
   previousStory: string;
   nextStory: string;
   galleryLabel: string;
+  // A15-TRUNG-THU-01: Bàn Trăng (action "booking") chỉ giữ chỗ được
+  // 18–27/09/2026; sau mốc này nút giữ chỗ đổi hẳn sang khối bốn chữ dưới
+  // đây thay vì dẫn tới một lượt giữ chỗ chắc chắn hỏng ở tầng CSDL.
+  bookingClosedBadge: string;
+  bookingClosedTitle: string;
+  bookingClosedReason: string;
+  bookingClosedCta: string;
 };
 
 export function SeasonalExperienceBrowser({
@@ -66,6 +74,7 @@ export function SeasonalExperienceBrowser({
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const seasonOpen = useMidAutumnSeasonOpen();
 
   function openExperience(item: SeasonalExperience) {
     triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -118,6 +127,7 @@ export function SeasonalExperienceBrowser({
   }, [active, closeExperience]);
 
   const planHref = `/plan?lang=${lang}&source=${encodeURIComponent(source)}`;
+  const packagesHref = `/packages?lang=${lang}&source=${encodeURIComponent(source)}`;
 
   function primaryHref(item: SeasonalExperience) {
     if (item.href) return item.href;
@@ -130,6 +140,13 @@ export function SeasonalExperienceBrowser({
         : `Enquiry about ${item.title} — Ninh Binh Journey`,
     );
   }
+
+  // A15-TRUNG-THU-01: chỉ mục "booking" (Bàn Trăng) đi vào một lượt giữ chỗ
+  // thật, ép cứng bởi `bookingEndDate` 27/09/2026 ở cả `content/packages.ts`
+  // lẫn CSDL. Các action khác (contact/gift/planning) chỉ mở email hoặc
+  // trang lập hành trình -- không giữ chỗ, không thể "hỏng", nên giữ nguyên.
+  const isBookingClosed = (item: SeasonalExperience) =>
+    item.action === "booking" && !seasonOpen;
 
   return (
     <>
@@ -154,7 +171,16 @@ export function SeasonalExperienceBrowser({
 
       <div className="mt-20 space-y-24 sm:mt-24 sm:space-y-32 lg:space-y-40">
         {groups.map((group, groupIndex) => {
-          return <SeasonalEditorialGroup key={group.id} group={group} groupIndex={groupIndex} copy={copy} onOpen={openExperience} />;
+          return (
+            <SeasonalEditorialGroup
+              key={group.id}
+              group={group}
+              groupIndex={groupIndex}
+              copy={copy}
+              onOpen={openExperience}
+              seasonOpen={seasonOpen}
+            />
+          );
         })}
       </div>
 
@@ -212,14 +238,29 @@ export function SeasonalExperienceBrowser({
                 {active.editorial ? <p className="mt-6 border-l border-[#A66B3D] pl-4 text-xs uppercase leading-6 tracking-[0.12em] text-[#796B58]">{copy.editorialNotice}</p> : active.concept ? <p className="mt-5 rounded-2xl bg-[#EEE7D8] p-4 text-xs leading-6 text-[#6a604c]">{copy.conceptNotice}</p> : null}
 
                 <div className="mt-8 space-y-3 lg:mt-auto lg:pt-10">
+                  {isBookingClosed(active) ? (
+                    // A15-TRUNG-THU-01: mùa đã khép (27/09/2026) -- không còn
+                    // dẫn tới một lượt giữ chỗ chắc chắn bị CSDL từ chối. Nói
+                    // thẳng lý do, rồi mở lối thật tới các gói đang bán.
+                    <div
+                      data-seasonal-booking-closed={active.id}
+                      className="rounded-2xl border border-[#B5863E]/35 bg-[#F3EEDF] px-5 py-3.5"
+                    >
+                      <p className="text-sm font-extrabold text-[#183F34]">{copy.bookingClosedTitle}</p>
+                      <p className="mt-1 text-xs leading-5 text-[#6a604c]">{copy.bookingClosedReason}</p>
+                    </div>
+                  ) : null}
                   <a
-                    data-customer-track="seasonal-experience-primary"
+                    data-customer-track={
+                      isBookingClosed(active) ? "seasonal-experience-booking-closed" : "seasonal-experience-primary"
+                    }
                     data-customer-content-id={active.id}
-                    data-customer-content-type={active.action}
-                    href={primaryHref(active)}
+                    data-customer-content-type={isBookingClosed(active) ? "booking-closed" : active.action}
+                    href={isBookingClosed(active) ? packagesHref : primaryHref(active)}
                     className="flex min-h-12 items-center justify-between rounded-full bg-[#183F34] px-6 font-extrabold text-white transition hover:bg-[#245544]"
                   >
-                    {copy.actions[active.action]} <span aria-hidden="true">→</span>
+                    {isBookingClosed(active) ? copy.bookingClosedCta : copy.actions[active.action]}{" "}
+                    <span aria-hidden="true">→</span>
                   </a>
                   <div className="grid grid-cols-2 gap-3">
                     <a href={contact.phoneHref} className="flex min-h-11 items-center justify-center rounded-full border border-[#bec9c3] px-4 text-sm font-bold">{copy.call}</a>

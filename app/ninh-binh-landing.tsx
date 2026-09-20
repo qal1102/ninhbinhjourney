@@ -16,6 +16,7 @@ import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
 import { JOURNEY_CONCIERGE_OPEN_EVENT, JourneyConcierge } from "@/components/discovery/journey-concierge";
+import { useMidAutumnSeasonOpen } from "@/lib/seasonal/use-mid-autumn-season";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
@@ -82,6 +83,11 @@ const copy = {
     portalTravel: "Ninh Binh travel",
     portalCollaboration: "Brand collaborations",
     portalSeasonal: "Seasonal occasions · Mid-Autumn",
+    // A15-TRUNG-THU-01: shown instead of `portalSeasonal` once the Moon
+    // Table booking window closes (27/09/2026), see
+    // lib/seasonal/mid-autumn-season.ts. Same "Seasonal occasions ·" prefix
+    // so the portal keeps reading as one family of four doors.
+    portalSeasonalClosed: "Seasonal occasions · Season closed",
     portalBooking: "Reserve",
     portalEyebrow: "Choose a way into Ninh Binh",
     introTop: "Ninh Binh",
@@ -261,6 +267,10 @@ const copy = {
     portalTravel: "Du lịch Ninh Bình",
     portalCollaboration: "Hợp tác thương hiệu",
     portalSeasonal: "Sự kiện theo mùa · Trung thu",
+    // A15-TRUNG-THU-01: thay cho `portalSeasonal` từ khi Bàn Trăng hết bán
+    // (27/09/2026), xem lib/seasonal/mid-autumn-season.ts. Giữ nguyên tiền
+    // tố "Sự kiện theo mùa ·" để cổng vẫn đọc như một trong bốn lối cũ.
+    portalSeasonalClosed: "Sự kiện theo mùa · Mùa đã khép",
     portalBooking: "Đặt chỗ",
     portalEyebrow: "Bốn lối vào, cùng một vùng đất",
     introTop: "Ninh Bình",
@@ -878,6 +888,12 @@ export default function NinhBinhLanding({
   const showIntro = introVisible && !introAlreadyPlayed;
   const modalOpen = Boolean(detailId || checkoutOpen);
   const ninhBinhHour = useNinhBinhHour();
+  // A15-TRUNG-THU-01: một cờ duy nhất, tính theo đồng hồ thật của khách,
+  // chi phối nhãn cổng, hộp trợ lý hành trình và trang mùa riêng.
+  const midAutumnSeasonOpen = useMidAutumnSeasonOpen();
+  const portalSeasonalLabel = midAutumnSeasonOpen
+    ? (t.portalSeasonal as string)
+    : (t.portalSeasonalClosed as string);
 
   /* HERO-CONTINUITY-11: local transform/opacity-only scroll state. */
   useEffect(() => {
@@ -1332,7 +1348,7 @@ export default function NinhBinhLanding({
               [
                 ["travel", t.portalTravel],
                 ["collaboration", t.portalCollaboration],
-                ["seasonal", t.portalSeasonal],
+                ["seasonal", portalSeasonalLabel],
                 ["booking", t.portalBooking],
               ] as const
             ).map(([destination, label]) => (
@@ -1380,7 +1396,7 @@ export default function NinhBinhLanding({
             [
               ["travel", t.portalTravel],
               ["collaboration", t.portalCollaboration],
-              ["seasonal", t.portalSeasonal],
+              ["seasonal", portalSeasonalLabel],
               ["booking", t.portalBooking],
             ] as const
           ).map(([destination, label], index) => (
@@ -1459,7 +1475,7 @@ export default function NinhBinhLanding({
 
       <TrangAnScrollStory {...trangAnStory[lang]} />
 
-      <JourneyConcierge lang={lang} source={source} />
+      <JourneyConcierge lang={lang} source={source} midAutumnSeasonOpen={midAutumnSeasonOpen} />
 
       <section id="map" data-customer-section="home-map" className="scroll-mt-20 px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">

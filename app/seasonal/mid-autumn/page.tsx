@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
+import { MidAutumnSeasonBanner } from "@/components/discovery/mid-autumn-season-banner";
 
 export const metadata = {
   title: "Trung thu | Ninh Bình Journey",
@@ -36,6 +37,7 @@ export default async function MidAutumnPage({
           </nav>
         </div>
       </header>
+      <MidAutumnSeasonBanner lang={lang} source={source} />
       <section className="overflow-hidden border-b border-white/12 bg-[#0d1915] px-5 py-14 text-[#fbf7ee] sm:px-8 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
           <div>

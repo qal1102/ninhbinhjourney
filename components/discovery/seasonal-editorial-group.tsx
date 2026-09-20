@@ -13,6 +13,8 @@ type GroupProps = {
   groupIndex: number;
   copy: BrowserCopy;
   onOpen: (item: SeasonalExperience) => void;
+  /** A15-TRUNG-THU-01: false từ 28/09/2026 giờ VN, xem lib/seasonal/mid-autumn-season.ts. */
+  seasonOpen: boolean;
 };
 
 function SectionHeading({ group, groupIndex }: Pick<GroupProps, "group" | "groupIndex">) {
@@ -41,6 +43,20 @@ function ConceptMark({ item, copy }: { item: SeasonalExperience; copy: BrowserCo
   return (
     <span className="absolute left-4 top-4 border border-white/35 bg-[#14251f]/76 px-3 py-1.5 text-[0.56rem] font-extrabold uppercase tracking-[0.18em] text-white backdrop-blur-md sm:left-5 sm:top-5">
       {copy.conceptLabel}
+    </span>
+  );
+}
+
+/**
+ * A15-TRUNG-THU-01. Đúng một mục dùng action "booking" (Bàn Trăng bên Ngô
+ * Đồng) -- sau 27/09/2026 giờ VN, đánh dấu ngay trên thẻ trước khi khách kịp
+ * bấm mở chi tiết, thay vì để họ tự khám phá ra ở bước sau.
+ */
+function SeasonClosedMark({ item, seasonOpen, copy }: { item: SeasonalExperience; seasonOpen: boolean; copy: BrowserCopy }) {
+  if (seasonOpen || item.action !== "booking") return null;
+  return (
+    <span className="absolute left-4 top-4 border border-white/35 bg-[#14251f]/76 px-3 py-1.5 text-[0.56rem] font-extrabold uppercase tracking-[0.18em] text-white backdrop-blur-md sm:left-5 sm:top-5">
+      {copy.bookingClosedBadge}
     </span>
   );
 }
@@ -110,7 +126,7 @@ function CatalogLayout({ group, copy, onOpen }: Omit<GroupProps, "groupIndex">) 
   );
 }
 
-function FeatureLayout({ group, copy, onOpen }: Omit<GroupProps, "groupIndex">) {
+function FeatureLayout({ group, copy, onOpen, seasonOpen }: Omit<GroupProps, "groupIndex">) {
   const [featured, ...supporting] = group.items;
   if (!featured) return null;
 
@@ -125,6 +141,7 @@ function FeatureLayout({ group, copy, onOpen }: Omit<GroupProps, "groupIndex">) 
         >
           <div data-seasonal-card-media className="relative aspect-[16/10] overflow-hidden bg-[#263b33] lg:col-span-8">
             <Image src={featured.image} alt={featured.title} fill sizes="(min-width: 1024px) 68vw, 100vw" className="object-cover transition duration-[1200ms] group-hover:scale-[1.018]" />
+            <SeasonClosedMark item={featured} seasonOpen={seasonOpen} copy={copy} />
             <span className="absolute bottom-5 left-5 border-l border-white/60 pl-3 text-[0.58rem] font-extrabold uppercase tracking-[0.2em] text-white sm:bottom-7 sm:left-7">{featured.kicker}</span>
           </div>
           <div data-seasonal-card-copy className="flex min-h-[280px] flex-col lg:col-span-4 lg:py-4">

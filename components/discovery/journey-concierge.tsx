@@ -50,6 +50,11 @@ type ConciergeCopy = {
   chapters: Chapter[];
   worldsLabel: string;
   worlds: WorldLink[];
+  // A15-TRUNG-THU-01: thay nhãn/mô tả của world "seasonal" khi
+  // `midAutumnSeasonOpen` là false, để trợ lý không mời khách tới một mùa
+  // đã khép như thể còn đang mở.
+  seasonalWorldClosedLabel: string;
+  seasonalWorldClosedDescription: string;
 };
 
 const COPY: Record<Language, ConciergeCopy> = {
@@ -111,6 +116,9 @@ const COPY: Record<Language, ConciergeCopy> = {
         pathname: "/packages",
       },
     ],
+    seasonalWorldClosedLabel: "Mùa Trăng 2026 · đã khép",
+    seasonalWorldClosedDescription:
+      "Trăng rằm 25/09 đã qua, Bàn Trăng cũng khép ngày 27/09 — xem lại mùa này, hẹn mùa trăng 2027.",
   },
   en: {
     inlineLabel: "Journey index",
@@ -170,6 +178,9 @@ const COPY: Record<Language, ConciergeCopy> = {
         pathname: "/packages",
       },
     ],
+    seasonalWorldClosedLabel: "Moon Season 2026 · closed",
+    seasonalWorldClosedDescription:
+      "The 25 Sep full moon has passed and the Moon Table closed on 27 Sep — browse this season's archive, see you in 2027.",
   },
 };
 
@@ -216,7 +227,16 @@ function ChapterArrow() {
  * while the client layer only adds current-section context and an accessible
  * sheet for small screens or long pages.
  */
-export function JourneyConcierge({ lang, source = "" }: { lang: Language; source?: string }) {
+export function JourneyConcierge({
+  lang,
+  source = "",
+  midAutumnSeasonOpen = true,
+}: {
+  lang: Language;
+  source?: string;
+  /** A15-TRUNG-THU-01: mặc định `true` (còn mùa) cho bất kỳ chỗ gọi nào lỡ quên truyền. */
+  midAutumnSeasonOpen?: boolean;
+}) {
   const copy = COPY[lang];
   const [activeId, setActiveId] = useState<ChapterId>(copy.chapters[0].id);
   const [open, setOpen] = useState(false);
@@ -494,28 +514,39 @@ export function JourneyConcierge({ lang, source = "" }: { lang: Language; source
                     {copy.worldsLabel}
                   </p>
                   <div className="mt-3 grid gap-2">
-                    {copy.worlds.map((world, index) => (
-                      <Link
-                        key={world.id}
-                        href={worldHref(world.pathname, lang, source)}
-                        transitionTypes={["portal-enter"]}
-                        onClick={() => {
-                          if (open) closeDialog();
-                        }}
-                        data-concierge-world={world.id}
-                        data-customer-track={`journey-concierge-world-${world.id}`}
-                        data-customer-content-id={world.id}
-                        data-customer-content-type="world-navigation"
-                        className="group grid min-h-16 grid-cols-[2rem_1fr_auto] items-center gap-3 rounded-[14px] border border-[#183F34]/12 bg-white/55 px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-[#B5863E]/55 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3F7568] motion-reduce:transform-none motion-reduce:transition-none"
-                      >
-                        <span className="font-display text-xl text-[#B5863E]">{String(index + 1).padStart(2, "0")}</span>
-                        <span className="min-w-0">
-                          <span className="block text-sm font-extrabold text-[#183F34]">{world.label}</span>
-                          <span className="mt-0.5 block text-xs leading-5 text-[#6D756F]">{world.description}</span>
-                        </span>
-                        <ChapterArrow />
-                      </Link>
-                    ))}
+                    {copy.worlds.map((world, index) => {
+                      // A15-TRUNG-THU-01: world "seasonal" sau khi Bàn Trăng
+                      // hết bán (27/09/2026) đổi sang nhãn/mô tả đã khép,
+                      // không còn mời như một dịp sắp tới. Đường dẫn giữ
+                      // nguyên -- trang mùa vẫn mở được, chỉ đổi lời mời.
+                      const seasonalClosed = world.id === "seasonal" && !midAutumnSeasonOpen;
+                      const label = seasonalClosed ? copy.seasonalWorldClosedLabel : world.label;
+                      const description = seasonalClosed
+                        ? copy.seasonalWorldClosedDescription
+                        : world.description;
+                      return (
+                        <Link
+                          key={world.id}
+                          href={worldHref(world.pathname, lang, source)}
+                          transitionTypes={["portal-enter"]}
+                          onClick={() => {
+                            if (open) closeDialog();
+                          }}
+                          data-concierge-world={world.id}
+                          data-customer-track={`journey-concierge-world-${world.id}`}
+                          data-customer-content-id={world.id}
+                          data-customer-content-type="world-navigation"
+                          className="group grid min-h-16 grid-cols-[2rem_1fr_auto] items-center gap-3 rounded-[14px] border border-[#183F34]/12 bg-white/55 px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-[#B5863E]/55 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3F7568] motion-reduce:transform-none motion-reduce:transition-none"
+                        >
+                          <span className="font-display text-xl text-[#B5863E]">{String(index + 1).padStart(2, "0")}</span>
+                          <span className="min-w-0">
+                            <span className="block text-sm font-extrabold text-[#183F34]">{label}</span>
+                            <span className="mt-0.5 block text-xs leading-5 text-[#6D756F]">{description}</span>
+                          </span>
+                          <ChapterArrow />
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               </section>

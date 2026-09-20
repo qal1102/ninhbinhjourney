@@ -40,6 +40,11 @@ const campaign = {
       previousStory: "Câu chuyện trước",
       nextStory: "Câu chuyện tiếp theo",
       galleryLabel: "Các khung hình",
+      bookingClosedBadge: "Đã khép mùa 2026",
+      bookingClosedTitle: "Bàn Trăng đã khép — hẹn mùa trăng 2027",
+      bookingClosedReason:
+        "Bàn Trăng chỉ giữ chỗ 18–27/09/2026; mốc này đã qua nên không giữ bàn được nữa.",
+      bookingClosedCta: "Xem các gói đang mở",
     },
     groups: [
       {
@@ -286,6 +291,11 @@ const campaign = {
       previousStory: "Previous story",
       nextStory: "Next story",
       galleryLabel: "Campaign frames",
+      bookingClosedBadge: "2026 season closed",
+      bookingClosedTitle: "Moon Table closed — see you in 2027",
+      bookingClosedReason:
+        "The Moon Table only held bookings 18–27 Sep 2026; that window has now passed.",
+      bookingClosedCta: "Browse open packages",
     },
     groups: [
       {

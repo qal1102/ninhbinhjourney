@@ -39,6 +39,8 @@ type Props = {
   gateScans: readonly GateScanEvent[];
   ticketSales: TicketSalesSummary | null;
   offlineGateEnabled?: boolean;
+  /** A15-ERP-07 — tắt thì cả màn check-in không còn dấu vết vé mẫu nào. */
+  demoTicketsEnabled?: boolean;
   counterSale?: CounterSaleWorkspace | null;
 };
 type Period = "day" | "week" | "month" | "year";
@@ -75,7 +77,7 @@ function formatChange(percent: number | null) {
   return `${sign}${percent.toLocaleString("vi-VN")}% so với kỳ liền trước`;
 }
 
-export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScans, ticketSales, offlineGateEnabled = false, counterSale = null }: Props) {
+export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScans, ticketSales, offlineGateEnabled = false, counterSale = null, demoTicketsEnabled = true }: Props) {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("day");
   const [scanCode, setScanCode] = useState("");
@@ -374,7 +376,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           <div className="mt-6 border-t border-white/15 pt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Vé còn hiệu lực hôm nay</p>
-              {isDirector ? (
+              {isDirector && demoTicketsEnabled ? (
                 <button
                   type="button"
                   onClick={handleRefreshDemoTickets}
@@ -398,7 +400,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                 <p className="text-sm font-bold text-white/90">
                   {todayTicketsMessage || "Hôm nay chưa có vé nào còn hiệu lực tại cơ sở này."}
                 </p>
-                {isDirector ? (
+                {isDirector && demoTicketsEnabled ? (
                   <>
                     <p className="mt-2 text-xs leading-5 text-white/70">
                       Muốn thử quét thì bấm nút dưới đây: hệ thống kéo bộ vé mẫu về đúng ngày hôm nay và hiện mã QR ngay tại đây. Bạn mở màn hình này trên máy tính rồi dùng điện thoại quét chính mã ấy là chạy trọn vòng.
@@ -414,7 +416,8 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                   </>
                 ) : (
                   <p className="mt-2 text-xs leading-5 text-white/70">
-                    Bạn vẫn quét được vé khách đưa: nhập mã vào ô phía trên, hoặc tra theo tên và số điện thoại ở mục bên dưới. Riêng vé mẫu để tập quét thì chỉ giám đốc kéo về được.
+                    Bạn vẫn quét được vé khách đưa: nhập mã vào ô phía trên, hoặc tra theo tên và số điện thoại ở mục bên dưới.
+                    {demoTicketsEnabled ? " Riêng vé mẫu để tập quét thì chỉ giám đốc kéo về được." : ""}
                   </p>
                 )}
               </div>
@@ -424,7 +427,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                  vé khách đưa. Nay vé khách thật hiện thẳng; vé mẫu gập vào một mục
                  riêng, phải chủ ý mở mới thấy. */
               (() => {
-                const veMau = todayTickets.filter((ticket) => isDemoTicketCode(ticket.ticketCode));
+                const veMau = demoTicketsEnabled ? todayTickets.filter((ticket) => isDemoTicketCode(ticket.ticketCode)) : [];
                 const veThat = todayTickets.filter((ticket) => !isDemoTicketCode(ticket.ticketCode));
                 const renderVe = (ticket: (typeof todayTickets)[number]) => (
                   <div

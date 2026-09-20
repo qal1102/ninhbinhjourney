@@ -1,6 +1,7 @@
 "use server";
 
 import { createHash, timingSafeEqual } from "node:crypto";
+import { DEMO_TICKETS_DISABLED_MESSAGE, resolveDemoTicketsEnabled } from "@/domain/erp-demo-tickets";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -853,6 +854,11 @@ export async function refreshDemoTicketsAction(): Promise<{
   const user = await getCurrentErpUser();
   if (!user) {
     return { ok: false, message: "Phiên đăng nhập đã hết hạn.", ticketCodes: [] };
+  }
+  // Ẩn nút trên màn hình là chưa đủ: lệnh này gọi thẳng được. Cờ phải chặn ở
+  // đây thì mới thật sự tắt (A15-ERP-07).
+  if (!resolveDemoTicketsEnabled(process.env.ERP_DEMO_TICKETS_ENABLED)) {
+    return { ok: false, message: DEMO_TICKETS_DISABLED_MESSAGE, ticketCodes: [] };
   }
   try {
     const result = await refreshDemoTickets(user.id);

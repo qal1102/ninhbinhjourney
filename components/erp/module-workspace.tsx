@@ -42,6 +42,7 @@ import { SopWorkspace } from "./sop-workspace";
 import { ProjectEventWorkspace } from "./project-event-workspace";
 import { FieldReportWorkspace } from "./field-report-workspace";
 import { TicketGuestWorkspace } from "./ticket-guest-workspace";
+import { resolveDemoTicketsEnabled } from "@/domain/erp-demo-tickets";
 import { SupplierApControlCenter } from "./supplier-ap-control-center";
 import { StaffPerformanceWorkspace } from "./staff-performance-workspace";
 import { IncidentWorkflowWorkspace } from "./incident-workflow-workspace";
@@ -478,7 +479,7 @@ export function ModuleWorkspace({
     return <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} counterSale={counterSale} />;
   }
   if (module.id === "check-in-khach") {
-    return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} offlineGateEnabled={process.env.ERP_OFFLINE_GATE_ENABLED === "true"} />;
+    return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} offlineGateEnabled={process.env.ERP_OFFLINE_GATE_ENABLED === "true"} demoTicketsEnabled={resolveDemoTicketsEnabled(process.env.ERP_DEMO_TICKETS_ENABLED)} />;
   }
   if (module.id === "doi-tac-nha-cung-ung") {
     return (

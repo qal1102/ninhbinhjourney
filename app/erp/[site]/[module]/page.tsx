@@ -27,6 +27,7 @@ import {
   listWorkdaysForUser,
 } from "@/lib/erp/workday-view";
 import { listOnSiteDueOrders } from "@/lib/erp/on-site-due-repository";
+import { readShiftCareBrief } from "@/lib/erp/shift-care-repository";
 
 type Props = {
   params: Promise<{ site: string; module: string }>;
@@ -38,12 +39,23 @@ type Props = {
  * thì trả rỗng ở trong kho, nên màn hình vẫn sống như cũ.
  */
 async function docDuBao(siteId: string, siteName: string) {
-  const homNay = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
   return forecastSiteCapacity({
     siteIds: [siteId],
-    visitDate: homNay.toISOString().slice(0, 10),
+    visitDate: ngayVanHanh(),
     siteNames: { [siteId]: siteName },
   });
+}
+
+/**
+ * Ngày vận hành theo giờ Ninh Bình, không theo giờ máy chủ.
+ *
+ * Cộng thẳng bảy giờ rồi cắt chuỗi ISO, giống `vietnamBusinessDate` bên
+ * `module-workspace`. Lối `toLocaleString` rồi `new Date(...)` chỉ ra đúng khi
+ * máy chủ chạy giờ UTC — đúng trên production hôm nay, nhưng sai ngay ở máy
+ * người làm, và sai lặng lẽ: bảng trống trong khi đoàn thì có thật.
+ */
+function ngayVanHanh(): string {
+  return new Date(Date.now() + 7 * 60 * 60 * 1_000).toISOString().slice(0, 10);
 }
 
 export default async function ErpModulePage({ params, searchParams }: Props) {
@@ -151,6 +163,14 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         })
       : null;
 
+  // TC-13 — bản giao ca "hôm nay ai cần để ý", chỉ đọc khi thật sự mở màn
+  // check-in. Kho tự nuốt lỗi và trả rỗng, nên máy quét ở cổng không thể chết
+  // vì một khối thông tin phụ trợ.
+  const shiftCare =
+    moduleDefinition.id === "check-in-khach"
+      ? await readShiftCareBrief({ siteId: site.id, visitDate: ngayVanHanh() })
+      : [];
+
   // TC-21 — đối soát cuối ca. Đọc sau `Promise.all` vì nó cần chính danh sách
   // ca vừa đọc về, và cần biết người dùng đang chọn ca nào. Bảng này chỉ đọc,
   // nên hỏng cũng không được kéo cả module tài chính xuống theo.
@@ -209,6 +229,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         staffDirectory={staffDirectory}
         capacityWorkspace={capacityWorkspace}
         capacityForecast={capacityForecast[0] ?? null}
+        shiftCare={shiftCare}
         sopWorkspace={sopWorkspace}
         shiftReconciliation={shiftReconciliation}
         counterSale={counterSale}

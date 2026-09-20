@@ -483,6 +483,10 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   REVIEW_MODERATION_NOT_FOUND:
     "Không tìm thấy đánh giá này.",
 
+  // TC-13 — ban giao ca "hom nay ai can de y".
+  CA_TRUC_INPUT_INVALID:
+    "Chưa rõ cơ sở hoặc ngày cần xem bản giao ca.",
+
   // TC-18 — doan mua tai quay.
   GROUP_COUNTER_INPUT_INVALID:
     "Số người hoặc nhãn đoàn chưa hợp lệ.",

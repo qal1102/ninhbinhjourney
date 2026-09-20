@@ -14,6 +14,7 @@ import type {
   CurrentErpUser,
   ErpAccessState,
 } from "@/lib/erp/demo-session";
+import type { ShiftCareGroup } from "@/domain/shift-care-brief";
 import type { IncidentCase } from "@/lib/erp/incident-repository";
 import type { FieldReport } from "@/lib/erp/field-report-repository";
 import type {
@@ -47,6 +48,7 @@ import type { SiteCapacityForecast } from "@/lib/erp/capacity-forecast-repositor
 import { SupplierApControlCenter } from "./supplier-ap-control-center";
 import { StaffPerformanceWorkspace } from "./staff-performance-workspace";
 import { IncidentWorkflowWorkspace } from "./incident-workflow-workspace";
+import { ShiftCareBriefPanel } from "./shift-care-brief-panel";
 import {
   WorkdayLifecycle,
   type WorkdayEmployeeOption,
@@ -80,6 +82,8 @@ type Props = {
   initialCameraId?: string;
   /** TC-11 — dự báo giờ chạm trần của chính cơ sở này, null khi chưa đọc được. */
   capacityForecast?: SiteCapacityForecast | null;
+  /** TC-13 — đoàn hôm nay có người tự khai cần hỗ trợ; rỗng ở mọi module khác. */
+  shiftCare?: readonly ShiftCareGroup[];
 };
 
 function formatVnd(value: number) {
@@ -360,6 +364,7 @@ export function ModuleWorkspace({
   onSiteDue = null,
   initialCameraId,
   capacityForecast = null,
+  shiftCare = [],
 }: Props) {
   if (module.id === "suc-chua") {
     return (
@@ -483,7 +488,16 @@ export function ModuleWorkspace({
     return <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} counterSale={counterSale} />;
   }
   if (module.id === "check-in-khach") {
-    return <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} offlineGateEnabled={process.env.ERP_OFFLINE_GATE_ENABLED === "true"} demoTicketsEnabled={resolveDemoTicketsEnabled(process.env.ERP_DEMO_TICKETS_ENABLED)} />;
+    // TC-13: bản giao ca đứng trước máy quét. Đặt nó xuống cuối thì ở khổ
+    // 390px nó rơi tới mốc 1838px — phải cuộn gần hai màn hình mới thấy, và
+    // một bản giao ca không ai nhìn thấy thì bằng không. Ngày thường khối này
+    // chỉ là một dòng chữ, nên máy ở cổng gần như không bị đẩy xuống.
+    return (
+      <>
+        <ShiftCareBriefPanel groups={shiftCare} />
+        <TicketGuestWorkspace site={site} user={user} mode="checkin" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} offlineGateEnabled={process.env.ERP_OFFLINE_GATE_ENABLED === "true"} demoTicketsEnabled={resolveDemoTicketsEnabled(process.env.ERP_DEMO_TICKETS_ENABLED)} />
+      </>
+    );
   }
   if (module.id === "doi-tac-nha-cung-ung") {
     return (

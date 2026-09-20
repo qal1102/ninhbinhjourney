@@ -2050,3 +2050,29 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     font-weight: 800;
   }
 }
+
+/*
+ * A15-LOI-03 — sàn chữ 14px cho màn vận hành.
+ *
+ * Bốn màn ở cổng và ngoài hiện trường (`ERP_OPERATIONAL_MODULE_IDS` trong
+ * `domain/erp.ts`) được nâng sàn: nhãn nhỏ nhất trên đó là 14px chứ không phải
+ * 12px. Người dùng chúng đang **đứng**, ngoài nắng, tay bận, và sai một nhịp
+ * là khách đứng chờ.
+ *
+ * Vì sao là một luật CSS có phạm vi chứ không phải sửa 668 chỗ `text-xs`:
+ *
+ *   1. Sàn này là thuộc tính của **màn hình**, không phải của từng nhãn. Sửa
+ *      tay từng chỗ thì lần thêm khối mới ai đó lại gõ `text-xs`, và sàn thủng
+ *      mà không ai thấy.
+ *   2. Cùng một component (bảng vé, nút đóng ca) dùng lại ở cả màn vận hành
+ *      lẫn màn ngồi bàn. Sửa trong component là kéo luôn màn kế toán to lên
+ *      theo, làm vỡ các bảng nhiều cột vốn cần thấy nhiều dòng một lúc.
+ *   3. Gỡ lại chỉ cần bỏ một khối, không cần lần lại 668 lượt sửa.
+ *
+ * Chỉ nâng `text-xs`. `text-[10px]`/`text-[11px]` đã bị dọn hết khỏi
+ * `components/erp/` từ `82ce4f9`, và bài kiểm canh giữ điều đó.
+ */
+[data-thang-chu="van-hanh"] .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}

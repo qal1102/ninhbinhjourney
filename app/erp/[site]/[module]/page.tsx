@@ -4,7 +4,7 @@ import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { ModuleContextHelp } from "@/components/erp/module-context-help";
 import { ModuleWorkspace } from "@/components/erp/module-workspace";
-import { getErpModule, getErpSite } from "@/domain/erp";
+import { getErpModule, getErpSite, isOperationalModule } from "@/domain/erp";
 import { accountCanAccessModule, getCurrentErpUser } from "@/lib/erp/demo-session";
 import { forecastSiteCapacity } from "@/lib/erp/capacity-forecast-repository";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
@@ -188,6 +188,11 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
 
   return (
     <ErpShell user={user} site={site} activeModuleId={moduleDefinition.id}>
+      {/*
+        A15-LOI-03 — sàn chữ 14px, chỉ ở màn vận hành. Luật nằm trong
+        `app/globals.css`; danh sách màn nằm trong `domain/erp.ts`.
+      */}
+      <div data-thang-chu={isOperationalModule(moduleDefinition.id) ? "van-hanh" : undefined}>
       <ErpBackLink href={backTarget.href} label={backTarget.label} />
       <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
@@ -236,6 +241,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         onSiteDue={onSiteDue}
         initialCameraId={requestedCamera}
       />
+      </div>
     </ErpShell>
   );
 }

@@ -278,6 +278,29 @@ export function getErpModule(moduleId: string) {
   return ERP_MODULES.find((module) => module.id === moduleId);
 }
 
+/**
+ * A15-LOI-03 — những màn hình người ta dùng khi **đang đứng**, ngoài trời,
+ * tay bận, nắng chiếu vào màn hình.
+ *
+ * Danh sách này quyết định sàn chữ 14px. Nó cố ý ngắn: sàn 14px không phải là
+ * "chữ to thì tốt hơn" áp cho cả hệ thống — nới cả ERP lên 14px sẽ đẩy vỡ các
+ * bảng nhiều cột của kế toán và điều hành, nơi người ta ngồi trước màn hình
+ * lớn và cần thấy nhiều dòng một lúc. Chỗ 12px đau thật là ở cổng.
+ *
+ * Năm màn dưới đây đều có một đặc điểm chung: người dùng chúng không ngồi.
+ */
+export const ERP_OPERATIONAL_MODULE_IDS = [
+  "check-in-khach",
+  "ve-dat-cho",
+  "suc-chua",
+  "su-co",
+  "bao-cao-hien-truong",
+] as const;
+
+export function isOperationalModule(moduleId: string): boolean {
+  return (ERP_OPERATIONAL_MODULE_IDS as readonly string[]).includes(moduleId);
+}
+
 export function isErpSiteId(value: string): value is ErpSiteId {
   return ERP_SITES.some((site) => site.id === value);
 }

@@ -100,7 +100,7 @@ export function StaffAccessManager({
                       <legend className="text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Nghiệp vụ được giao</legend>
                       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {ERP_MODULES.map((module) => (
-                          <label key={module.id} className="flex items-center gap-3 rounded-lg border border-[#e0e6e2] px-3 py-2.5 text-sm font-bold text-[#52635b]">
+                          <label key={module.id} className="flex min-h-11 items-center gap-3 rounded-lg border border-[#e0e6e2] px-3 py-2 text-sm font-bold text-[#52635b]">
                             <input type="checkbox" name="moduleIds" value={module.id} defaultChecked={selectedModules.includes(module.id)} className="h-4 w-4 accent-[#286655]" />
                             {module.shortName}
                           </label>
@@ -173,7 +173,7 @@ export function StaffAccessManager({
                 <form action={updateEmployeeAccessAction} className="border-t border-[#e5eae7] p-4 sm:p-5">
                   <input type="hidden" name="siteId" value={site.id} />
                   <input type="hidden" name="employeeId" value={employee.accountId} />
-                  <label className="flex items-center gap-3 rounded-xl bg-[#f2f6f3] p-3 text-sm font-black text-[#34473f]">
+                  <label className="flex min-h-11 items-center gap-3 rounded-xl bg-[#f2f6f3] p-3 text-sm font-black text-[#34473f]">
                     <input type="checkbox" name="siteActive" defaultChecked={assignedHere} disabled={locked} className="h-4 w-4 accent-[#286655]" />
                     Cho phép nhân viên làm việc và xem {site.shortName}
                   </label>
@@ -181,7 +181,7 @@ export function StaffAccessManager({
                     <legend className="text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Nghiệp vụ được giao</legend>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {assignableModules.map((module) => (
-                        <label key={module.id} className="flex items-center gap-3 rounded-lg border border-[#e0e6e2] px-3 py-2.5 text-sm font-bold text-[#52635b]">
+                        <label key={module.id} className="flex min-h-11 items-center gap-3 rounded-lg border border-[#e0e6e2] px-3 py-2 text-sm font-bold text-[#52635b]">
                           <input type="checkbox" name="moduleIds" value={module.id} defaultChecked={selectedModules.includes(module.id)} disabled={locked} className="h-4 w-4 accent-[#286655]" />
                           {module.shortName}
                         </label>

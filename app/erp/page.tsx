@@ -102,6 +102,9 @@ export default async function ErpHomePage({ searchParams }: Props) {
   // vừa đọc, không mở thêm lượt đọc nào; luật xếp hạng nằm trong domain.
   const demViecChoGiamDoc: DemViecChoGiamDoc = {
     suCoLeoThang: escalatedIncidents.length,
+    suCoQuaHan: escalatedIncidents.filter(
+      (incident) => incident.elapsedMinutes >= incident.slaMinutes,
+    ).length,
     caLechChoQuyet: shiftClosures.filter(
       (record) => record.status === "exception-pending-director",
     ).length,

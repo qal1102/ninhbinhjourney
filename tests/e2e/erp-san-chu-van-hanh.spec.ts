@@ -54,6 +54,12 @@ for (const moduleId of ERP_OPERATIONAL_MODULE_IDS) {
       const catChu = la
         .filter((el) => {
           const s = getComputedStyle(el);
+          // Chữ chỉ dành cho trình đọc màn hình (`sr-only`) cố ý bị kẹp về
+          // một ô 1×1px, nên `scrollWidth > clientWidth` luôn đúng với nó.
+          // Đó không phải chữ bị cắt — không ai nhìn thấy nó cả. Bỏ qua mọi
+          // phần tử nhỏ hơn 4px, và mọi phần tử đang bị kẹp.
+          if (el.clientWidth < 4 || el.clientHeight < 4) return false;
+          if (s.clipPath !== "none" || s.position === "absolute") return false;
           return (
             el.scrollWidth > el.clientWidth + 1 &&
             s.overflowX !== "auto" &&

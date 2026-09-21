@@ -132,22 +132,40 @@ export function MachViecPanel({
         gon ? "mb-3 p-3 sm:p-4" : "mb-6 p-4 sm:p-5",
       ].join(" ")}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className="text-sm font-black text-[#1f2f2a]">
+      {/* Cả hàng tiêu đề là nút mở, không phải một nút riêng bên cạnh.
+          Đo thật ở khổ 390px trước khi đổi: nút viền "Xem cả mạch" không đủ
+          chỗ nằm cùng hàng nên rơi xuống dòng riêng, thành một khung rỗng to
+          nằm giữa thẻ — trông như lỗi dựng trang. Nay hàng tiêu đề trải hết
+          bề ngang, mũi chỉ nằm sát mép phải, và chạm đâu cũng mở được. */}
+      <button
+        type="button"
+        onClick={() => setMoRong((truoc) => !truoc)}
+        data-testid="mach-viec-toggle"
+        aria-expanded={moRong}
+        className="flex w-full min-h-11 items-center gap-3 text-left"
+      >
+        <span className="min-w-0 flex-1 text-sm font-black text-[#1f2f2a]">
           <span className="text-[#2f6f8f]">Mạch việc · </span>
           {mach.ten}
           <span className="font-bold text-[#5f7068]"> · {chinh.length} bước</span>
-        </p>
-        <button
-          type="button"
-          onClick={() => setMoRong((truoc) => !truoc)}
-          data-testid="mach-viec-toggle"
-          aria-expanded={moRong}
-          className="inline-flex min-h-11 items-center rounded-lg border border-[#c9dceb] bg-[#f4f9fc] px-4 text-sm font-black text-[#2f6f8f]"
+        </span>
+        {/* Mũi chỉ vẽ bằng SVG, không phải ký tự "▼". Bản đầu dùng ký tự với
+            `text-[11px]` và thế là màn hình có chữ 11px — dưới cả sàn 12px mà
+            lượt soát 20/09 đã dọn sạch. Hình vẽ thì cỡ do khung quyết định,
+            không ăn theo cỡ chữ, nên không bao giờ kéo sàn xuống. */}
+        <span
+          aria-hidden
+          className={[
+            "grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[#c9dceb] bg-[#f4f9fc] text-[#2f6f8f] transition-transform",
+            moRong ? "rotate-180" : "",
+          ].join(" ")}
         >
-          {moRong ? "Thu lại" : "Xem cả mạch"}
-        </button>
-      </div>
+          <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6l5 5 5-5" />
+          </svg>
+        </span>
+        <span className="sr-only">{moRong ? "Thu mạch lại" : "Xem cả mạch"}</span>
+      </button>
 
       <p
         data-testid="mach-viec-cho-minh"
@@ -176,10 +194,22 @@ export function MachViecPanel({
           nên khổ hẹp không bao giờ tràn ngang. Bản gọn giấu hàng này khi chưa
           mở, vì ba hàng số xếp chồng đẩy phần làm việc đi quá xa. */}
       {gon && !moRong ? null : (
-        <>
-          <p className="mt-2 text-sm text-[#78857f]">Hồ sơ đang nằm ở đâu:</p>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {chinh.map((buoc) => (
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+          <span className="text-sm text-[#78857f]">Hồ sơ đang ở bước:</span>
+          {chinh.map((buoc) => (
+            <ChipBuoc
+              key={buoc.id}
+              buoc={buoc}
+              so={dem.get(buoc.id) ?? 0}
+              denLuot={denLuotVai(buoc, viewerRole)}
+            />
+          ))}
+          {/* Nhánh rẽ chỉ hiện khi đang giữ hồ sơ. Luồng đề nghị có hai
+              nhánh, nên trước đây hàng số kết thúc bằng "Rẽ Rẽ" — hai viên
+              giống hệt nhau, rỗng, không nói gì. */}
+          {nhanh
+            .filter((buoc) => (dem.get(buoc.id) ?? 0) > 0)
+            .map((buoc) => (
               <ChipBuoc
                 key={buoc.id}
                 buoc={buoc}
@@ -187,16 +217,7 @@ export function MachViecPanel({
                 denLuot={denLuotVai(buoc, viewerRole)}
               />
             ))}
-            {nhanh.map((buoc) => (
-              <ChipBuoc
-                key={buoc.id}
-                buoc={buoc}
-                so={dem.get(buoc.id) ?? 0}
-                denLuot={denLuotVai(buoc, viewerRole)}
-              />
-            ))}
-          </div>
-        </>
+        </div>
       )}
 
       {moRong ? (

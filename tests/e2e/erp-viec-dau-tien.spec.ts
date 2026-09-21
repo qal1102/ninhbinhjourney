@@ -65,7 +65,15 @@ test("có việc thì có nút mở thẳng tới nơi làm; hết việc thì k
 
   await expect(nut).toBeVisible();
   const duong = await nut.getAttribute("href");
-  expect(duong).toMatch(/^\/erp\//);
+  // Hai dạng đích hợp lệ, và **chỉ** hai: một màn ERP khác, hoặc một neo
+  // xuống khối quyết định nằm ngay trong trang này. Việc nào mà nơi quyết
+  // định lại nằm trên chính trang chủ thì phải dùng neo — đưa giám đốc sang
+  // một màn chỉ đọc được là đúng cái bẫy `erp-access.spec.ts` canh giữ.
+  expect(duong).toMatch(/^(\/erp\/|#)/);
   await nut.click();
+  if (duong!.startsWith("#")) {
+    await expect(page.locator(duong!)).toBeVisible();
+    return;
+  }
   await expect(page).toHaveURL(new RegExp(duong!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 });

@@ -227,95 +227,17 @@ export function ExecutiveDashboard({
     pendingSopDecisions,
   );
 
-  // ERP-UX-01. Chủ dự án dùng thử và nói "không hiểu gì hết, mọi thứ lung
-  // tung". Một nguyên nhân đo được: giám đốc đăng nhập xong chỉ thấy bảng số,
-  // không có câu trả lời cho "giờ tôi làm gì trước".
+  // ERP-UX-01 — lịch sử của khối này, giữ lại vì nó giải thích một quyết định
+  // dễ bị lật lại. Chỗ này từng tính `nextAction`: đúng MỘT việc nên làm
+  // trước, xếp theo mức chặn nghiệp vụ. Ngày 21/09/2026 phép xếp hạng ấy
+  // chuyển hẳn vào `domain/viec-dau-tien.ts` và hiện ở khối `ViecDauTienPanel`
+  // trên cùng trang chủ — giữ cả hai thì trang nói ba lần cùng một câu.
   //
-  // Trang nhân viên đã giải đúng bài này từ lâu: danh tính + ca → **đúng một**
-  // việc → một nút chính. Khối dưới đây mang khuôn đó sang vai giám đốc.
-  //
-  // Thứ tự ưu tiên bên dưới là theo mức chặn nghiệp vụ, không phải theo thời
-  // gian tạo: cổng Go/No-Go chặn việc mở cửa cả cơ sở trong ngày nên đứng
-  // trước; kế đến là sự cố đã quá SLA. Không có gì chờ thì nói thẳng là không
-  // có, tuyệt đối không dựng một việc giả cho màn hình đỡ trống.
-  const overdueIncident = escalatedIncidents.find(
-    (incident) => incident.elapsedMinutes >= incident.slaMinutes,
-  );
-  const nextAction: {
-    kind: string;
-    title: string;
-    detail: string;
-    href: string;
-    cta: string;
-  } | null = (() => {
-    const sopDecision = pendingSopDecisions[0];
-    if (sopDecision) {
-      return {
-        kind: "Cổng mở cửa Go/No-Go",
-        title: `${siteShortNameById.get(sopDecision.siteId) ?? sopDecision.siteId} đang chờ bạn quyết định mở cửa`,
-        detail: `Hồ sơ ${sopDecision.assessmentCode}. Chưa có quyết định thì cơ sở chưa được mở cửa.`,
-        href: `/erp/${sopDecision.siteId}/sop-dien-tap`,
-        cta: "Xem hồ sơ và quyết định",
-      };
-    }
-    if (overdueIncident) {
-      return {
-        kind: "Sự cố đã quá SLA",
-        title: overdueIncident.title,
-        detail: `${siteShortNameById.get(overdueIncident.siteId) ?? overdueIncident.siteId} · ${overdueIncident.area} · đã quá hạn ${overdueIncident.elapsedMinutes - overdueIncident.slaMinutes} phút.`,
-        href: `/erp/${overdueIncident.siteId}/su-co`,
-        cta: "Mở hồ sơ sự cố",
-      };
-    }
-    const incident = escalatedIncidents[0];
-    if (incident) {
-      return {
-        kind: "Sự cố đã chuyển cấp",
-        title: incident.title,
-        detail: `${siteShortNameById.get(incident.siteId) ?? incident.siteId} · ${incident.area} · còn ${incident.slaMinutes - incident.elapsedMinutes} phút trước hạn.`,
-        href: `/erp/${incident.siteId}/su-co`,
-        cta: "Mở hồ sơ sự cố",
-      };
-    }
-    if (pendingShiftCloseDecisions.length > 0) {
-      return {
-        kind: "Ngoại lệ chốt ca",
-        title: `${pendingShiftCloseDecisions.length} hồ sơ chốt ca chờ bạn duyệt ngoại lệ`,
-        detail:
-          "Ca chưa được duyệt thì tiền mặt chưa khớp sổ. Hồ sơ nằm ngay dưới trang này.",
-        // Trước đây nút này trỏ sang `/erp/finance`. Ở đó hàng chốt ca chỉ
-        // dựng cho vai kế toán (`ShiftCloseAccountingQueue` bọc trong
-        // `user.role === "accountant"`), nên giám đốc bấm xong sang một trang
-        // KHÔNG BAO GIỜ có hồ sơ ấy — việc chính của họ thành ngõ cụt. Nơi
-        // duy nhất giám đốc quyết được là khối "Cần giám đốc quyết định" ngay
-        // bên dưới, nên nút đưa thẳng xuống đó.
-        href: "#quyet-dinh-giam-doc",
-        cta: "Xuống hồ sơ chốt ca",
-      };
-    }
-    const invoice = pendingSupplierDecisions[0];
-    if (invoice) {
-      return {
-        kind: "Hóa đơn nhà cung cấp",
-        title: `${invoice.supplier.name} vượt hồ sơ nguồn`,
-        detail: `HĐ ${invoice.invoiceSeries}/${invoice.invoiceNumber} · ${formatVnd(invoice.totalVnd)}.`,
-        href: `/erp/${invoice.siteId}/doi-tac-nha-cung-ung`,
-        cta: "Xem hóa đơn",
-      };
-    }
-    const request = pendingProjectChangeRequests[0];
-    if (request) {
-      return {
-        kind: changeKindLabels[request.kind],
-        title: request.summary,
-        detail: `${siteShortNameById.get(request.siteId) ?? request.siteId} · chờ bạn duyệt thay đổi.`,
-        href: `/erp/${request.siteId}/du-an-su-kien`,
-        cta: "Xem yêu cầu",
-      };
-    }
-    return null;
-  })();
-
+  // Lúc gộp mới đọc ra rằng bản trong domain xếp SAI: nó để quyết định SOP
+  // xuống chót, trong khi `listPendingSopDecisions` đọc
+  // `erp_sop_opening_assessments` — cổng mở cửa buổi sáng, chưa quyết thì cơ
+  // sở chưa được mở. Thứ tự ở đây đúng và đã được chép sang, kèm cả mức "sự
+  // cố đã quá SLA" đứng trước "sự cố còn trong hạn".
   return (
     <div className="min-w-0 space-y-5">
       <section className="min-w-0 overflow-hidden rounded-3xl bg-[#173f34] p-5 text-white sm:p-8">
@@ -371,7 +293,25 @@ export function ExecutiveDashboard({
               className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4"
             >
               <p className="text-xs leading-4 text-white/50">{label}</p>
-              <p className="mt-2 break-words text-xl font-black tracking-[-0.03em] sm:text-2xl">
+              {/*
+                KHÔNG dùng `break-words` ở con số. Đo thật ở khổ 390px: ô rộng
+                ~138px, còn "266.200.000 đ" cần ~143px, nên `break-words` cắt
+                đôi ngay giữa chữ số thành "266.200.00" / "0 đ" — đọc thoáng
+                qua là một con số khác hẳn. Một con số tiền bị cắt đôi tệ hơn
+                hẳn một con số nhỏ chữ. Nay số dài thì hạ cỡ chữ (vẫn trên sàn
+                14px), và nếu có phải xuống dòng thì chỉ xuống ở khoảng trắng
+                trước chữ "đ".
+              */}
+              <p
+                className={[
+                  "mt-2 font-black tracking-[-0.03em] sm:text-2xl",
+                  String(value).length > 11
+                    ? "text-base"
+                    : String(value).length > 8
+                      ? "text-lg"
+                      : "text-xl",
+                ].join(" ")}
+              >
                 {value}
               </p>
               <p className="mt-2 text-xs leading-4 text-[#b5d6ca]">
@@ -401,47 +341,40 @@ export function ExecutiveDashboard({
 
       {/* Một màn hình, một hành động chính. Nếu không chỉ ra được hành động
           đó là gì thì màn hình chưa xong — luật ERP. */}
+      {/*
+        Khối này TỪNG mở đầu bằng "Việc cần làm trước tiên" kèm tiêu đề lớn và
+        một nút hành động. Từ 21/09 phần ấy đã bị gỡ, cố ý: khối
+        `ViecDauTienPanel` ở đầu trang nói đúng việc ấy, xếp hạng có lý do, và
+        đứng trên cùng. Để cả hai thì trang chủ giám đốc nói **ba lần cùng một
+        câu** — "1 ca lệch chờ anh quyết" hiện ở đầu trang, lại hiện ở đây, rồi
+        lại hiện ở khối "Cần giám đốc quyết định" ngay dưới. Chủ dự án tự mở
+        điện thoại ra và nói ngay là nhiều quá; đếm lại thì đúng là thừa hai
+        lần. Giữ lại đúng phần khối này làm được mà khối kia không làm: đường
+        đi thẳng vào chỗ làm việc.
+      */}
       <section className="rounded-2xl border border-[#cfdcd5] bg-white p-5 shadow-sm sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
-          Việc cần làm trước tiên
+          Vào thẳng chỗ làm việc
         </p>
-        {nextAction ? (
-          <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-[#87642b]">{nextAction.kind}</p>
-              <h2 className="mt-1 break-words text-2xl font-black text-[#20342c]">
-                {nextAction.title}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-[#697770]">
-                {nextAction.detail}
-              </p>
-            </div>
-            <Link
-              href={nextAction.href}
-              className="inline-flex min-h-12 w-fit shrink-0 items-center rounded-xl bg-[#183f34] px-5 text-sm font-black text-white transition hover:bg-[#12332a]"
-            >
-              {nextAction.cta} →
-            </Link>
-          </div>
-        ) : (
-          <p className="mt-3 text-sm leading-6 text-[#697770]">
-            Không có hồ sơ nào chờ bạn quyết định. Chọn một cơ sở bên dưới để
-            xem việc đang chạy tại đó.
-          </p>
-        )}
 
         {/* Luật ERP: "Trang chủ của mọi vai phải có đường vào công việc."
             Trước đây giám đốc đăng nhập xong không có một liên kết nào tới
             module — thanh nghiệp vụ chỉ hiện sau khi đã vào một cơ sở. Đây là
             dải chuyển cơ sở, cố ý **không** phải lưới thẻ đánh số kiểu "chọn
             một lối vào": khuôn đó đã bị chủ dự án loại hai lần. */}
-        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#e7ece9] pt-4">
-          <span className="text-xs font-bold text-[#7a8781]">Vào cơ sở:</span>
+        {/* Nhãn đứng riêng một dòng, nút xếp thành lưới. Trước đây nhãn nằm
+            cùng hàng với nút nên ở khổ điện thoại hàng nút bắt đầu lệch mỗi
+            nhóm một kiểu — nhóm này thụt vào sau chữ "Vào cơ sở:", nhóm kia
+            thụt sau một nhãn dài hơn hẳn. Đường gạch ngang phía trên cũng bỏ:
+            nó vốn để ngăn với phần tiêu đề đã gỡ, nay nó nằm ngay dưới một
+            tiêu đề, không ngăn cách gì cả. */}
+        <p className="mt-4 text-xs font-bold text-[#7a8781]">Vào cơ sở</p>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {sites.map((site) => (
             <Link
               key={site.id}
               href={`/erp/${site.id}`}
-              className="inline-flex min-h-11 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6] sm:justify-start"
             >
               {site.shortName}
             </Link>
@@ -455,25 +388,27 @@ export function ExecutiveDashboard({
             không biết là có. Hai đường dưới đây đi thẳng tới hai màn hình
             có thể cầm điện thoại lên thử được ngay. */}
         {sites[0] ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-[#7a8781]">
-              Thử tận tay tại {sites[0].shortName}:
-            </span>
+          <div className="mt-4">
+            <p className="text-xs font-bold text-[#7a8781]">
+              Thử tận tay tại {sites[0].shortName}
+            </p>
+            <div className="mt-2 grid gap-2 sm:flex sm:flex-wrap">
             <Link
               href={`/erp/${sites[0].id}/check-in-khach`}
-              className="inline-flex min-h-11 items-center rounded-lg bg-[#183f34] px-3 text-sm font-bold text-white transition hover:bg-[#12332a]"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#183f34] px-3 text-sm font-bold text-white transition hover:bg-[#12332a] sm:justify-start"
             >
               Quét mã ở cổng →
             </Link>
             <Link
               href={`/erp/${sites[0].id}/ve-dat-cho`}
-              className="inline-flex min-h-11 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6] sm:justify-start"
             >
               Bán vé, lập phiếu đoàn →
             </Link>
-            <span className="text-xs text-[#8b968f]">
+            </div>
+            <p className="mt-2 text-xs text-[#8b968f]">
               Cơ sở nào cũng có hai màn hình này.
-            </span>
+            </p>
           </div>
         ) : null}
       </section>
@@ -490,7 +425,10 @@ export function ExecutiveDashboard({
             <h2 className="mt-2 text-2xl font-black text-[#3f3524]">
               {directorDecisionCount} hồ sơ đang chờ
             </h2>
-            <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-bold text-[#7a6c50]">
+            {/* Trước đây là `flex-wrap`: năm mục tự xuống dòng theo bề rộng
+                nên ở khổ điện thoại cột thứ hai bắt đầu ở một chỗ khác mỗi
+                hàng, trông như bị xô lệch. Lưới hai cột thì mọi hàng thẳng. */}
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-bold text-[#7a6c50]">
               <div>
                 <dt className="inline text-[#3f3524]">
                   {pendingShiftCloseDecisions.length}
@@ -513,7 +451,7 @@ export function ExecutiveDashboard({
                 <dt className="inline text-[#3f3524]">
                   {pendingProjectChangeRequests.length}
                 </dt>{" "}
-                <dd className="inline">yêu cầu đổi phạm vi dự án</dd>
+                <dd className="inline">yêu cầu đổi dự án</dd>
               </div>
               <div>
                 <dt className="inline text-[#3f3524]">

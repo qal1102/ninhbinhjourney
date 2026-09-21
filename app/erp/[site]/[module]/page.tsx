@@ -194,21 +194,28 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
       */}
       <div data-thang-chu={isOperationalModule(moduleDefinition.id) ? "van-hanh" : undefined}>
       <ErpBackLink href={backTarget.href} label={backTarget.label} />
-      <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#668078]">
+      {/*
+        Nút `?` đứng cùng hàng với đường dẫn, không đứng riêng một dòng.
+        Đo thật ở khổ 390px trước khi đổi: khối tiêu đề chiếm 650px — ba phần
+        tư màn hình điện thoại — mà 72px trong đó là một nút tròn nằm một mình
+        giữa khoảng trắng. Trên máy tính bố cục cũ vẫn giữ nguyên tinh thần:
+        nút nằm bên phải, chỉ khác là nó lên cùng hàng đường dẫn.
+      */}
+      <div className="mb-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#668078]">
             <Link href={`/erp/${site.id}`} className="inline-flex min-h-11 items-center hover:text-[#183f34]">{site.shortName}</Link>
             <span>/</span>
             <span>{moduleDefinition.shortName}</span>
           </div>
-          <h1 className="font-display mt-3 text-4xl leading-tight text-[#183f34] sm:text-6xl">{moduleDefinition.name}</h1>
-          <p className="mt-3 max-w-3xl text-base leading-7 text-[#68776f]">{moduleDefinition.description}</p>
+          <ModuleContextHelp
+            module={moduleDefinition}
+            role={user.role}
+            site={site}
+          />
         </div>
-        <ModuleContextHelp
-          module={moduleDefinition}
-          role={user.role}
-          site={site}
-        />
+        <h1 className="font-display mt-1 text-4xl leading-tight text-[#183f34] sm:text-6xl">{moduleDefinition.name}</h1>
+        <p className="mt-3 max-w-3xl text-base leading-7 text-[#68776f]">{moduleDefinition.description}</p>
       </div>
       <ModuleWorkspace
         site={site}

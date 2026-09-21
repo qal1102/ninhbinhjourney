@@ -9,14 +9,22 @@
  *
  * ## Luật xếp hạng, và vì sao theo thứ tự này
  *
- * 1. **Sự cố đã leo thang** — có thể đang có người gặp chuyện ở hiện trường.
- *    Tiền chờ được, người thì không.
- * 2. **Ca lệch quá ngưỡng** — tiền mặt đã rời két và chưa ai giải thích xong.
+ * 1. **Cổng mở cửa Go/No-Go** — chưa có quyết định thì **cơ sở chưa được mở
+ *    cửa**. Mọi việc khác đều giả định cửa đã mở, nên nó phải đứng trước.
+ * 2. **Sự cố đã quá hạn SLA** — đang có chuyện ở hiện trường và đã trễ.
+ * 3. **Sự cố đã leo thang, còn trong hạn** — vẫn là người, vẫn trước tiền.
+ * 4. **Ca lệch quá ngưỡng** — tiền mặt đã rời két và chưa ai giải thích xong.
  *    Càng để lâu càng khó lần lại vì người trực đã về.
- * 3. **Hoá đơn đối tác chờ quyết** — cũng là tiền, nhưng là tiền chưa ra khỏi
+ * 5. **Hoá đơn đối tác chờ quyết** — cũng là tiền, nhưng là tiền chưa ra khỏi
  *    tài khoản, nên hoãn một ngày không mất gì.
- * 4. **Đề nghị đổi dự án** — ảnh hưởng ngân sách, nhưng có đường lùi.
- * 5. **Quyết định SOP** — quan trọng về dài hạn, không gấp trong ngày.
+ * 6. **Đề nghị đổi dự án** — ảnh hưởng ngân sách, nhưng có đường lùi.
+ *
+ * **Sửa thứ tự ngày 21/09/2026.** Bản đầu xếp quyết định SOP xuống chót với lý
+ * do "quan trọng về dài hạn, không gấp trong ngày". Sai. Khối cũ trong
+ * `executive-dashboard-live.tsx` — thứ bị khối này thay — đã ghi sẵn lý lẽ
+ * đúng: `listPendingSopDecisions` đọc `erp_sop_opening_assessments`, tức là
+ * **cổng mở cửa buổi sáng**, không phải quy trình bàn giấy. Lúc gộp hai khối
+ * làm một mới đọc ra. Hai mức của sự cố cũng lấy từ đó.
  *
  * Cố ý **chỉ trả về một việc**. Trả về một danh sách năm việc là quay lại đúng
  * cái bệnh đang chữa: người đọc lại phải tự xếp hạng.
@@ -43,7 +51,10 @@ export type ViecDauTien = {
 };
 
 export type DemViecChoGiamDoc = {
+  /** Tổng sự cố đã leo thang, **đã gồm** cả phần quá hạn. */
   suCoLeoThang: number;
+  /** Phần đã quá hạn SLA trong số trên. Không cộng thêm vào tổng. */
+  suCoQuaHan: number;
   caLechChoQuyet: number;
   hoaDonChoQuyet: number;
   deNghiDoiDuAn: number;
@@ -68,6 +79,30 @@ export function viecDauTien(
   /** Cơ sở dùng để dựng đường dẫn cho những việc nằm trong một cơ sở. */
   siteId: string,
 ): ViecDauTien {
+  if (dem.quyetDinhSop > 0) {
+    return {
+      id: "sop",
+      cauNoi: `${dem.quyetDinhSop} cơ sở đang chờ anh quyết định cho mở cửa.`,
+      viSao: "Chưa có quyết định thì cơ sở chưa được mở cửa — mọi việc khác hôm nay đều đứng sau chuyện này.",
+      href: `/erp/${siteId}/sop-dien-tap`,
+      nhanNut: "Xem hồ sơ mở cửa",
+      so: dem.quyetDinhSop,
+      mucDo: "gap",
+    };
+  }
+
+  if (dem.suCoQuaHan > 0) {
+    return {
+      id: "su-co-qua-han",
+      cauNoi: `${dem.suCoQuaHan} sự cố đã quá hạn xử lý.`,
+      viSao: "Đã trễ mốc cam kết, và ngoài hiện trường có thể đang có người chờ. Không có việc nào hôm nay gấp hơn.",
+      href: `/erp/${siteId}/su-co`,
+      nhanNut: "Mở hàng sự cố",
+      so: dem.suCoQuaHan,
+      mucDo: "gap",
+    };
+  }
+
   if (dem.suCoLeoThang > 0) {
     return {
       id: "su-co",
@@ -85,8 +120,18 @@ export function viecDauTien(
       id: "ca-lech",
       cauNoi: `${dem.caLechChoQuyet} ca bán vé lệch quá ngưỡng, đang chờ anh quyết.`,
       viSao: "Tiền mặt đã rời két và chưa ai khép lại được. Để qua ngày thì người trực ca hôm ấy đã về, rất khó lần lại.",
-      href: `/erp/${siteId}/ve-dat-cho`,
-      nhanNut: "Xem các ca lệch",
+      // Neo trong chính trang chủ, KHÔNG phải màn Vé của cơ sở.
+      //
+      // Bản đầu trỏ sang `/erp/{cơ sở}/ve-dat-cho`. Ở đó
+      // `ShiftCloseSiteWorkflow` chỉ dựng nút cho vai nhân viên và quản lý —
+      // giám đốc mở ra **đọc được mà không quyết được gì**. Đúng cái bẫy mà
+      // bài `erp-access.spec.ts` ("việc chính của giám đốc dẫn tới đúng chỗ
+      // quyết định được") đã dựng lên từ 09/09/2026 để chặn, và đúng cái bẫy
+      // mà khối cũ trong `executive-dashboard-live.tsx` đã tránh được bằng
+      // chính cái neo này. Nơi duy nhất giám đốc duyệt được ngoại lệ chốt ca
+      // là khối `#quyet-dinh-giam-doc`, nằm ngay dưới trên cùng trang.
+      href: "#quyet-dinh-giam-doc",
+      nhanNut: "Xuống hồ sơ chốt ca",
       so: dem.caLechChoQuyet,
       mucDo: "gap",
     };
@@ -116,18 +161,6 @@ export function viecDauTien(
     };
   }
 
-  if (dem.quyetDinhSop > 0) {
-    return {
-      id: "sop",
-      cauNoi: `${dem.quyetDinhSop} quyết định quy trình đang chờ anh.`,
-      viSao: "Quan trọng về dài hạn, không gấp trong ngày — làm khi anh có một lúc yên tĩnh.",
-      href: `/erp/${siteId}/sop-dien-tap`,
-      nhanNut: "Mở quy trình",
-      so: dem.quyetDinhSop,
-      mucDo: "ranh",
-    };
-  }
-
   return {
     id: "khong-co",
     cauNoi: VIEC_DAU_TIEN_COPY.ranh,
@@ -139,7 +172,12 @@ export function viecDauTien(
   };
 }
 
-/** Tổng số việc đang chờ, để nói "còn N việc khác sau việc này". */
+/**
+ * Tổng số việc đang chờ, để nói "còn N việc khác sau việc này".
+ *
+ * `suCoQuaHan` **không** cộng vào đây: nó là một lát cắt của `suCoLeoThang`,
+ * không phải một loại việc riêng. Cộng cả hai là đếm đôi cùng một hồ sơ.
+ */
 export function tongViecCho(dem: DemViecChoGiamDoc): number {
   return (
     dem.suCoLeoThang +

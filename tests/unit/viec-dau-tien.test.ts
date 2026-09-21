@@ -9,6 +9,7 @@ import {
 
 const RONG: DemViecChoGiamDoc = {
   suCoLeoThang: 0,
+  suCoQuaHan: 0,
   caLechChoQuyet: 0,
   hoaDonChoQuyet: 0,
   deNghiDoiDuAn: 0,
@@ -20,13 +21,35 @@ function chon(phan: Partial<DemViecChoGiamDoc>) {
 }
 
 describe("Việc nên làm trước: thứ tự ưu tiên", () => {
-  it("người đứng trước tiền — sự cố leo thang thắng mọi thứ khác", () => {
+  it("cổng mở cửa đứng trước tất cả — chưa quyết thì cơ sở chưa mở được", () => {
+    const ra = chon({
+      quyetDinhSop: 1,
+      suCoLeoThang: 9,
+      suCoQuaHan: 9,
+      caLechChoQuyet: 9,
+      hoaDonChoQuyet: 9,
+      deNghiDoiDuAn: 9,
+    });
+    expect(ra.id).toBe("sop");
+    expect(ra.mucDo).toBe("gap");
+    // Bản đầu xếp việc này xuống chót và gọi nó là "không gấp trong ngày".
+    // Bài này khoá lại lời sửa: nó là cổng mở cửa buổi sáng, không phải quy
+    // trình bàn giấy — xem chú thích đầu `domain/viec-dau-tien.ts`.
+    expect(ra.cauNoi).toContain("mở cửa");
+  });
+
+  it("sự cố đã quá hạn đứng trước sự cố còn trong hạn", () => {
+    const ra = chon({ suCoLeoThang: 3, suCoQuaHan: 1 });
+    expect(ra.id).toBe("su-co-qua-han");
+    expect(ra.so).toBe(1);
+  });
+
+  it("người đứng trước tiền — sự cố leo thang thắng mọi việc tiền bạc", () => {
     const ra = chon({
       suCoLeoThang: 1,
       caLechChoQuyet: 9,
       hoaDonChoQuyet: 9,
       deNghiDoiDuAn: 9,
-      quyetDinhSop: 9,
     });
     expect(ra.id).toBe("su-co");
     expect(ra.mucDo).toBe("gap");
@@ -40,12 +63,6 @@ describe("Việc nên làm trước: thứ tự ưu tiên", () => {
   it("hoá đơn đứng trước đề nghị đổi dự án", () => {
     expect(chon({ hoaDonChoQuyet: 1, deNghiDoiDuAn: 30 }).id).toBe("hoa-don");
   });
-
-  it("quy trình xếp cuối, và được nói thẳng là không gấp", () => {
-    const ra = chon({ quyetDinhSop: 4 });
-    expect(ra.id).toBe("sop");
-    expect(ra.mucDo).toBe("ranh");
-  });
 });
 
 describe("Việc nên làm trước: câu chữ và đường đi", () => {
@@ -56,19 +73,28 @@ describe("Việc nên làm trước: câu chữ và đường đi", () => {
 
   it("mỗi việc đều nói được VÌ SAO nó đứng trước", () => {
     for (const phan of [
+      { quyetDinhSop: 1 },
+      { suCoLeoThang: 1, suCoQuaHan: 1 },
       { suCoLeoThang: 1 },
       { caLechChoQuyet: 1 },
       { hoaDonChoQuyet: 1 },
       { deNghiDoiDuAn: 1 },
-      { quyetDinhSop: 1 },
     ]) {
       expect(chon(phan).viSao.trim().length).toBeGreaterThan(40);
     }
   });
 
   it("đường dẫn bám theo cơ sở được truyền vào", () => {
+    expect(viecDauTien({ ...RONG, hoaDonChoQuyet: 1 }, "tam-coc").href).toBe(
+      "/erp/tam-coc/doi-tac-nha-cung-ung",
+    );
+  });
+
+  it("ca lệch trỏ vào khối quyết định trên trang chủ, không trỏ vào màn Vé", () => {
+    // Màn Vé của cơ sở chỉ dựng nút cho nhân viên và quản lý; giám đốc mở ra
+    // đọc được mà không quyết được. Bài này khoá lại đúng chỗ đã từng sai.
     expect(viecDauTien({ ...RONG, caLechChoQuyet: 1 }, "tam-coc").href).toBe(
-      "/erp/tam-coc/ve-dat-cho",
+      "#quyet-dinh-giam-doc",
     );
   });
 });
@@ -87,11 +113,17 @@ describe("Việc nên làm trước: ngày rảnh", () => {
     expect(
       tongViecCho({
         suCoLeoThang: 1,
+        suCoQuaHan: 0,
         caLechChoQuyet: 2,
         hoaDonChoQuyet: 3,
         deNghiDoiDuAn: 4,
         quyetDinhSop: 5,
       }),
     ).toBe(15);
+  });
+
+  it("sự cố quá hạn KHÔNG cộng thêm vào tổng — nó là một lát cắt của sự cố", () => {
+    // Đếm đôi ở đây sẽ làm câu "còn N việc khác" nói quá số thật.
+    expect(tongViecCho({ ...RONG, suCoLeoThang: 2, suCoQuaHan: 2 })).toBe(2);
   });
 });

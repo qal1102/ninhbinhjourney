@@ -1092,11 +1092,18 @@ test("ERP login has no serious accessibility violation or horizontal overflow", 
 test("việc chính của giám đốc dẫn tới đúng chỗ quyết định được", async ({ page }) => {
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
 
-  // Nút "việc cần làm trước tiên" từng trỏ sang `/erp/finance`. Hàng chốt ca
-  // ở trang ấy bọc trong `user.role === "accountant"`, nên giám đốc bấm xong
-  // sang một trang KHÔNG BAO GIỜ chứa hồ sơ mình phải duyệt. Nay nút đưa
-  // thẳng xuống khối quyết định nằm cùng trang.
-  const nextAction = page.getByRole("link", { name: /Xuống hồ sơ chốt ca/ });
+  // Nút việc chính từng trỏ sang `/erp/finance`. Hàng chốt ca ở trang ấy bọc
+  // trong `user.role === "accountant"`, nên giám đốc bấm xong sang một trang
+  // KHÔNG BAO GIỜ chứa hồ sơ mình phải duyệt. Nay nút đưa thẳng xuống khối
+  // quyết định nằm cùng trang.
+  //
+  // 21/09/2026: nút chuyển từ khối "Việc cần làm trước tiên" (đã gỡ vì nói
+  // lặp) sang khối `viec-dau-tien` ở đầu trang. Bài này **đã bắt đỏ đúng lúc
+  // chuyển**: bản đầu của khối mới trỏ về `/erp/{cơ sở}/ve-dat-cho` và giẫm
+  // lại y nguyên cái bẫy trên. Giữ bài, chỉ đổi chỗ tìm nút.
+  const nextAction = page
+    .getByTestId("viec-dau-tien")
+    .getByRole("link", { name: /Xuống hồ sơ chốt ca/ });
   await expect(nextAction).toBeVisible();
   await expect(nextAction).toHaveAttribute("href", "#quyet-dinh-giam-doc");
   await nextAction.click();

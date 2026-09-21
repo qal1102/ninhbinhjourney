@@ -87,6 +87,7 @@ export function MachViecPanel({
   trangThai,
   viewerRole,
   dangODay,
+  gon = false,
 }: {
   mach: MachViec;
   /** Cơ sở đang mở — dùng để dựng đường dẫn tới màn của từng bước. */
@@ -100,6 +101,16 @@ export function MachViecPanel({
    * không đi đâu cả làm người đọc tưởng mình bấm hỏng.
    */
   dangODay?: string;
+  /**
+   * Bản gọn, cho trang có nhiều mạch xếp chồng.
+   *
+   * Đo thật ở khổ 390px: ba dải đầy đủ trên trang Tài chính đẩy phần kế toán
+   * xuống mốc 889px — gần một màn hình rưỡi cuộn trước khi chạm việc. Bản gọn
+   * giữ đúng thứ đáng giá nhất khi liếc qua, là dòng "đang chờ bạn", còn hàng
+   * số đếm từng bước thì để dành lúc mở ra. Trang một mạch **không** dùng bản
+   * này: ở đó hàng số không đẩy gì xuống cả.
+   */
+  gon?: boolean;
 }) {
   const [moRong, setMoRong] = useState(false);
   const dem = demTheoBuoc(mach, trangThai);
@@ -115,7 +126,11 @@ export function MachViecPanel({
     <section
       data-testid="mach-viec"
       data-mach={mach.id}
-      className="mb-6 rounded-2xl border border-[#c9dceb] bg-white p-4 shadow-sm sm:p-5"
+      data-gon={gon ? "1" : undefined}
+      className={[
+        "rounded-2xl border border-[#c9dceb] bg-white shadow-sm",
+        gon ? "mb-3 p-3 sm:p-4" : "mb-6 p-4 sm:p-5",
+      ].join(" ")}
     >
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <p className="text-sm font-black text-[#1f2f2a]">
@@ -158,26 +173,31 @@ export function MachViecPanel({
       </p>
 
       {/* Hàng số đếm: bước nào đang giữ bao nhiêu hồ sơ. Cho xuống dòng được
-          nên khổ hẹp không bao giờ tràn ngang. */}
-      <p className="mt-2 text-sm text-[#78857f]">Hồ sơ đang nằm ở đâu:</p>
-      <div className="mt-1 flex flex-wrap items-center gap-1.5">
-        {chinh.map((buoc) => (
-          <ChipBuoc
-            key={buoc.id}
-            buoc={buoc}
-            so={dem.get(buoc.id) ?? 0}
-            denLuot={denLuotVai(buoc, viewerRole)}
-          />
-        ))}
-        {nhanh.map((buoc) => (
-          <ChipBuoc
-            key={buoc.id}
-            buoc={buoc}
-            so={dem.get(buoc.id) ?? 0}
-            denLuot={denLuotVai(buoc, viewerRole)}
-          />
-        ))}
-      </div>
+          nên khổ hẹp không bao giờ tràn ngang. Bản gọn giấu hàng này khi chưa
+          mở, vì ba hàng số xếp chồng đẩy phần làm việc đi quá xa. */}
+      {gon && !moRong ? null : (
+        <>
+          <p className="mt-2 text-sm text-[#78857f]">Hồ sơ đang nằm ở đâu:</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {chinh.map((buoc) => (
+              <ChipBuoc
+                key={buoc.id}
+                buoc={buoc}
+                so={dem.get(buoc.id) ?? 0}
+                denLuot={denLuotVai(buoc, viewerRole)}
+              />
+            ))}
+            {nhanh.map((buoc) => (
+              <ChipBuoc
+                key={buoc.id}
+                buoc={buoc}
+                so={dem.get(buoc.id) ?? 0}
+                denLuot={denLuotVai(buoc, viewerRole)}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {moRong ? (
         <div data-testid="mach-viec-chi-tiet" className="mt-4">

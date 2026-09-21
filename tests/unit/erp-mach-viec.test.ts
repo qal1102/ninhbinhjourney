@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { ERP_MODULES, ERP_ROLE_LABELS, type ErpRole } from "@/domain/erp";
+import { CASH_DEPOSIT_STATUS_LABELS } from "@/domain/erp-cash-deposit";
 import { SHIFT_CLOSE_STATUSES } from "@/domain/erp-shift-close";
+import { STAFF_REQUEST_STATUS_LABELS } from "@/domain/erp-staff-requests";
 import { SUPPLIER_AP_STATUS_LABELS } from "@/domain/erp-supplier-ap";
+import { WORKDAY_STATUSES } from "@/domain/erp-workday";
+import { INCIDENT_STATUSES } from "@/domain/incident";
 import {
   buocChinh,
   buocDangCho,
@@ -52,10 +56,46 @@ describe("Mạch việc: xương sống phải khớp máy trạng thái thật"
     }
   });
 
+  it("mọi trạng thái của phiếu chấm công đều được vẽ vào đúng một bước", () => {
+    const mach = machViecTheoId("cham-cong")!;
+    for (const tt of WORKDAY_STATUSES) {
+      const hop = mach.buoc.filter((b) => b.dangCho.includes(tt));
+      expect(hop.length, `trạng thái "${tt}" phải thuộc đúng một bước`).toBe(1);
+    }
+  });
+
+  it("mọi trạng thái của đề nghị nhân sự đều được vẽ vào đúng một bước", () => {
+    const mach = machViecTheoId("de-nghi-nhan-su")!;
+    for (const tt of Object.keys(STAFF_REQUEST_STATUS_LABELS)) {
+      const hop = mach.buoc.filter((b) => b.dangCho.includes(tt));
+      expect(hop.length, `trạng thái "${tt}" phải thuộc đúng một bước`).toBe(1);
+    }
+  });
+
+  it("mọi trạng thái của phiếu nộp quỹ đều được vẽ vào đúng một bước", () => {
+    const mach = machViecTheoId("nop-quy")!;
+    for (const tt of Object.keys(CASH_DEPOSIT_STATUS_LABELS)) {
+      const hop = mach.buoc.filter((b) => b.dangCho.includes(tt));
+      expect(hop.length, `trạng thái "${tt}" phải thuộc đúng một bước`).toBe(1);
+    }
+  });
+
+  it("mọi trạng thái của hồ sơ sự cố đều được vẽ vào đúng một bước", () => {
+    const mach = machViecTheoId("su-co")!;
+    for (const tt of INCIDENT_STATUSES) {
+      const hop = mach.buoc.filter((b) => b.dangCho.includes(tt));
+      expect(hop.length, `trạng thái "${tt}" phải thuộc đúng một bước`).toBe(1);
+    }
+  });
+
   it("không bước nào nhận vơ một trạng thái không có thật", () => {
     const coThat = new Set<string>([
       ...SHIFT_CLOSE_STATUSES,
       ...Object.keys(SUPPLIER_AP_STATUS_LABELS),
+      ...WORKDAY_STATUSES,
+      ...Object.keys(STAFF_REQUEST_STATUS_LABELS),
+      ...Object.keys(CASH_DEPOSIT_STATUS_LABELS),
+      ...INCIDENT_STATUSES,
     ]);
     for (const mach of MACH_VIEC) {
       for (const buoc of mach.buoc) {
@@ -201,11 +241,32 @@ describe("Mạch việc: tìm luồng theo nơi đang đứng", () => {
     ]);
   });
 
-  it("trang Tài chính là nơi hai luồng gặp nhau", () => {
+  it("trang Tài chính là nơi ba luồng tiền gặp nhau", () => {
     expect(machViecCuaTrang("/erp/finance").map((m) => m.id)).toEqual([
       "dong-ca",
       "cong-no-doi-tac",
+      "nop-quy",
     ]);
+  });
+
+  it("bốn luồng thêm sau đứng đúng chỗ làm việc của chúng", () => {
+    expect(machViecCuaModule("cham-cong").map((m) => m.id)).toEqual(["cham-cong"]);
+    expect(machViecCuaModule("su-co").map((m) => m.id)).toEqual(["su-co"]);
+    expect(machViecCuaTrang("/erp/de-xuat").map((m) => m.id)).toEqual(["de-nghi-nhan-su"]);
+  });
+
+  it("mỗi màn có máy trạng thái đều đã có mạch, không màn nào bị bỏ quên", () => {
+    // Danh sách này là lời hứa: thêm một màn có máy trạng thái mà quên vẽ mạch
+    // thì sửa danh sách ở đây sẽ thấy ngay mình đang hứa hão.
+    const phaiCoMach = [
+      "ve-dat-cho",
+      "doi-tac-nha-cung-ung",
+      "cham-cong",
+      "su-co",
+    ];
+    for (const moduleId of phaiCoMach) {
+      expect(machViecCuaModule(moduleId).length, moduleId).toBeGreaterThan(0);
+    }
   });
 
   it("màn không thuộc luồng nào thì trả rỗng, không trả bừa luồng đầu tiên", () => {

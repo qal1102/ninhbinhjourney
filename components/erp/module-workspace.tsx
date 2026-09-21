@@ -412,7 +412,16 @@ export function ModuleWorkspace({
   }
   if (module.id === "su-co") {
     return (
-      <IncidentWorkflowWorkspace site={site} user={user} cases={[...incidents]} />
+      <>
+        <MachViecTaiDay
+          machId="su-co"
+          siteId={site.id}
+          moduleId={module.id}
+          viewerRole={user.role}
+          trangThai={incidents.map((item) => item.status)}
+        />
+        <IncidentWorkflowWorkspace site={site} user={user} cases={[...incidents]} />
+      </>
     );
   }
   if (module.id === "nhan-su") {
@@ -455,6 +464,13 @@ export function ModuleWorkspace({
   if (module.id === "cham-cong") {
     return (
       <div className="space-y-5">
+        <MachViecTaiDay
+          machId="cham-cong"
+          siteId={site.id}
+          moduleId={module.id}
+          viewerRole={user.role}
+          trangThai={workdays.map((record) => record.status)}
+        />
         <WorkdayLifecycle
           user={user}
           sites={[site]}

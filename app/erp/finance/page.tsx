@@ -72,6 +72,10 @@ export default async function ErpFinancePage({ searchParams }: Props) {
       mach: machViecTheoId("cong-no-doi-tac"),
       trangThai: supplierAp.invoices.map((invoice) => invoice.status),
     },
+    {
+      mach: machViecTheoId("nop-quy"),
+      trangThai: cashDeposits.map((deposit) => deposit.status),
+    },
   ].flatMap(({ mach, trangThai }) => (mach ? [{ mach, trangThai }] : []));
 
   const sourceValue = params.source;
@@ -83,9 +87,10 @@ export default async function ErpFinancePage({ searchParams }: Props) {
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       {/*
-        Trang này là nơi hai luồng tiền gặp nhau: bước 3–4 của đóng ca và bước
-        3, 5 của công nợ đều làm ở đây. Vì thế dựng cả hai dải, mỗi dải đếm
-        đúng những hồ sơ mà chính trang này đang cầm.
+        Trang này là nơi ba luồng tiền gặp nhau: bước 3–4 của đóng ca, bước 3
+        và 5 của công nợ, và cả ba bước của nộp quỹ đều làm ở đây. Vì thế dựng
+        cả ba dải, mỗi dải đếm đúng những hồ sơ mà chính trang này đang cầm.
+        Ba dải đều gập sẵn nên phần làm việc bên dưới không bị đẩy xa.
       */}
       {machViecCuaTrangNay.map(({ mach, trangThai }) => (
         <MachViecPanel
@@ -95,6 +100,7 @@ export default async function ErpFinancePage({ searchParams }: Props) {
           viewerRole={user.role}
           trangThai={trangThai}
           dangODay="/erp/finance"
+          gon
         />
       ))}
       <AccountingControlCenter

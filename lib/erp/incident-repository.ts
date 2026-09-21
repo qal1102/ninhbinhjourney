@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
+import type { IncidentStatus } from "@/domain/incident";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
 const INCIDENT_COOKIE = "nbj-erp-demo-incidents";
@@ -22,12 +23,10 @@ const signingSecret =
   "destinationos-ninh-binh-demo-session-v1-change-before-live-data";
 
 export type IncidentSeverity = "P1" | "P2" | "P3" | "P4";
-export type IncidentStatus =
-  | "reported"
-  | "acknowledged"
-  | "in-progress"
-  | "verification"
-  | "closed";
+// Danh sách thật nằm ở `domain/incident.ts` để tầng thuần và bài kiểm đọc
+// được lúc chạy; ở đây chỉ mượn lại tên kiểu và phát tiếp cho những nơi vốn
+// đã nhập từ tệp này.
+export type { IncidentStatus };
 
 export type IncidentEvidence = {
   id: string;

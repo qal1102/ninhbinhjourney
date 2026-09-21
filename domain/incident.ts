@@ -90,3 +90,22 @@ export function parseIncidentDraft(input: {
 
   return draft;
 }
+
+/**
+ * Máy trạng thái của một hồ sơ sự cố.
+ *
+ * Trước đây danh sách này nằm trong `lib/erp/incident-repository.ts`, mà tệp
+ * ấy mở đầu bằng `import "server-only"` — nghĩa là tầng thuần và bài kiểm
+ * không đọc được nó lúc chạy, chỉ mượn được cái kiểu. Mạch việc cần đếm hồ sơ
+ * theo trạng thái nên phải có danh sách thật; đưa về đây để cả hai bên dùng
+ * chung đúng một nguồn, thay vì chép ra hai chỗ rồi lệch nhau.
+ */
+export const INCIDENT_STATUSES = [
+  "reported",
+  "acknowledged",
+  "in-progress",
+  "verification",
+  "closed",
+] as const;
+
+export type IncidentStatus = (typeof INCIDENT_STATUSES)[number];

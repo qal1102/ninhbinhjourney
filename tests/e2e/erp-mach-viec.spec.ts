@@ -114,3 +114,99 @@ test("màn ngoài luồng tiền thì nút ? không bịa ra một quy trình", 
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByTestId("context-help-mach")).toHaveCount(0);
 });
+
+/**
+ * Bốn luồng thêm sau — chấm công, đề nghị nhân sự, nộp quỹ, sự cố.
+ *
+ * Cùng một hợp đồng với hai luồng tiền: dải đứng trước phần làm việc, gập
+ * sẵn, và bước làm ngay tại màn đang mở thì nói "bạn đang đứng ở đây". Vẫn
+ * chỉ đọc, không ghi hàng nào.
+ */
+
+const BON_LUONG = [
+  { duong: "/erp/trang-an/cham-cong", mach: "cham-cong", soBuoc: 4, ten: "Chấm công theo phiếu việc" },
+  { duong: "/erp/trang-an/su-co", mach: "su-co", soBuoc: 6, ten: "Sự cố hiện trường" },
+  { duong: "/erp/de-xuat", mach: "de-nghi-nhan-su", soBuoc: 5, ten: "Đề nghị nhân sự" },
+] as const;
+
+for (const luong of BON_LUONG) {
+  test(`mạch ${luong.mach} đứng đúng chỗ, gập sẵn, mở ra đủ ${luong.soBuoc} bước`, async ({
+    page,
+  }) => {
+    await loginAsDirector(page);
+    await page.goto(luong.duong);
+
+    const dai = page.getByTestId("mach-viec");
+    await expect(dai).toHaveCount(1);
+    await expect(dai).toHaveAttribute("data-mach", luong.mach);
+    await expect(dai).toContainText(luong.ten);
+    await expect(page.getByTestId("mach-viec-buoc")).toHaveCount(0);
+
+    const do_ = await page.evaluate(() => {
+      const d = document.querySelector('[data-testid="mach-viec"]')!;
+      return {
+        cao: d.getBoundingClientRect().height,
+        tranNgang: document.documentElement.scrollWidth > window.innerWidth + 1,
+      };
+    });
+    expect(do_.tranNgang).toBe(false);
+    expect(do_.cao).toBeLessThan(280);
+
+    await page.getByTestId("mach-viec-toggle").click();
+    await expect(page.getByTestId("mach-viec-buoc")).toHaveCount(luong.soBuoc);
+    await expect(page.getByTestId("mach-viec-buoc").first()).toContainText("Dữ liệu từ đâu");
+    await expect(page.getByTestId("mach-viec-nhanh").first()).toBeVisible();
+    // Mọi bước của ba mạch này đều làm ngay tại màn đang mở.
+    await expect(page.getByTestId("mach-viec-dang-o-day").first()).toBeVisible();
+  });
+}
+
+test("trang Tài chính mang đủ ba mạch tiền, ở bản gọn, không đẩy việc đi quá xa", async ({
+  page,
+}) => {
+  await loginAsDirector(page);
+  await page.goto("/erp/finance");
+
+  const dai = page.getByTestId("mach-viec");
+  await expect(dai).toHaveCount(3);
+  await expect(dai.nth(0)).toHaveAttribute("data-mach", "dong-ca");
+  await expect(dai.nth(1)).toHaveAttribute("data-mach", "cong-no-doi-tac");
+  await expect(dai.nth(2)).toHaveAttribute("data-mach", "nop-quy");
+  for (let i = 0; i < 3; i += 1) {
+    await expect(dai.nth(i)).toHaveAttribute("data-gon", "1");
+  }
+
+  // Bản gọn giấu hàng số đếm khi chưa mở — đó chính là chỗ tiết kiệm được.
+  await expect(page.getByTestId("mach-viec-chip")).toHaveCount(0);
+  // Dòng "đang chờ bạn" thì KHÔNG được giấu: nó là lý do dải có mặt ở đây.
+  await expect(page.getByTestId("mach-viec-cho-minh")).toHaveCount(3);
+
+  const do_ = await page.evaluate(() => {
+    const ds = Array.from(document.querySelectorAll('[data-testid="mach-viec"]'));
+    return {
+      duoiCung: Math.max(...ds.map((d) => d.getBoundingClientRect().bottom + window.scrollY)),
+      tranNgang: document.documentElement.scrollWidth > window.innerWidth + 1,
+    };
+  });
+  expect(do_.tranNgang).toBe(false);
+  // Đo thật ở khổ 390px sau khi chuyển sang bản gọn: 611px. Bản đầy đủ là
+  // 889px — gần một màn hình rưỡi cuộn trước khi chạm phần kế toán.
+  expect(do_.duoiCung).toBeLessThan(700);
+
+  // Mở một dải ra thì hàng số đếm quay lại đầy đủ.
+  await dai.nth(2).getByTestId("mach-viec-toggle").click();
+  await expect(page.getByTestId("mach-viec-buoc")).toHaveCount(3);
+  await expect(page.getByTestId("mach-viec-chip").first()).toBeVisible();
+});
+
+test("nút ? ở màn Chấm công và màn Sự cố cũng nói được khúc quy trình", async ({ page }) => {
+  await loginAsDirector(page);
+  for (const duong of ["/erp/trang-an/cham-cong", "/erp/trang-an/su-co"]) {
+    await page.goto(duong);
+    await page.getByRole("button", { name: /Trợ giúp về/ }).click();
+    const mach = page.getByTestId("context-help-mach");
+    await expect(mach).toHaveCount(1);
+    await expect(mach).toContainText("ngay tại màn này");
+    await page.getByRole("button", { name: "Đã hiểu" }).click();
+  }
+});

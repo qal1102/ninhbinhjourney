@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { WorldSwitcher } from "@/components/discovery/world-switcher";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -173,15 +174,7 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
 
   return (
     <main ref={rootRef} data-collaboration-dossier data-dossier-active={activeId} className="min-h-screen bg-[#e9e4d9] text-[#1a2922]">
-      <header className="sticky top-0 z-50 border-b border-[#1a2922]/15 bg-[#e9e4d9]/92 backdrop-blur">
-        <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <Link href={href("/", lang, source)} transitionTypes={["nav-back"]} className="font-display text-lg tracking-[0.1em] text-[#183f34]">NINH BÌNH</Link>
-          <nav aria-label={lang === "vi" ? "Điều hướng dossier" : "Dossier navigation"} className="flex items-center gap-4 text-xs font-bold sm:gap-6 sm:text-sm">
-            <Link href={href("/", lang, source)} transitionTypes={["nav-back"]} className="underline underline-offset-4">{t.back}</Link>
-            <Link href={href("/packages", lang, source)} transitionTypes={["portal-enter"]} className="hidden underline underline-offset-4 sm:inline">{t.booking}</Link>
-          </nav>
-        </div>
-      </header>
+      <WorldSwitcher hienTai="collaboration" lang={lang} source={source} tone="sang" />
 
       <section className="border-b border-[#1a2922]/15 px-5 pb-16 pt-16 sm:px-8 sm:pb-24 sm:pt-28">
         <div className="mx-auto grid max-w-[90rem] gap-10 lg:grid-cols-[1.18fr_.82fr] lg:items-end">
@@ -200,12 +193,20 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
         </aside>
 
         <section aria-label={t.index} className="overflow-hidden">
+          {/*
+            Khung ảnh giữ khổ DỌC 4:5 ở mọi bề rộng. Bản cũ đổi sang 16:10 từ
+            `sm` trở lên, mà ảnh nguồn đều là ảnh người đứng — `object-cover`
+            trong một khung ngang thì cắt mất đầu và chân, đúng chỗ chủ dự án
+            nói "mấy cái hình ở hợp tác thương hiệu lệch rồi". Chỉ đạo sáng tạo
+            cũng đã ghi rõ: "Ảnh dọc lớn… khổ dọc là bắt buộc — bố cục tạp chí
+            dựa vào nó".
+          */}
           {chapters.map((chapter, index) => {
             const finale = chapter.id === "hermes";
             return <article key={chapter.id} id={`dossier-${chapter.id}`} data-dossier-chapter={chapter.id} data-dossier-final={finale || undefined} className={`relative grid min-h-[88svh] scroll-mt-24 overflow-hidden px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-12 lg:items-center lg:px-12 xl:px-16 ${finale ? "bg-[#a64c27] text-[#fff4e9]" : "text-[#1a2922]"}`} style={finale ? undefined : { backgroundColor: chapter.tone }}>
               <span aria-hidden="true" className={`pointer-events-none absolute right-[-.08em] top-[-.22em] font-display text-[42vw] leading-none ${finale ? "text-[#f9d4a6]/15" : "text-[#1a2922]/[0.045]"}`}>{String(index + 1).padStart(2, "0")}</span>
               <div data-dossier-copy className={`relative z-10 lg:col-span-4 ${index % 2 ? "lg:order-2 lg:col-start-9" : ""}`}><p className={`text-[0.62rem] font-extrabold uppercase tracking-[0.24em] ${finale ? "text-[#ffe0ba]" : "text-[#765536]"}`}>{chapter.kicker[lang]}</p><p className="font-display mt-5 text-5xl leading-[0.86] sm:text-7xl">{chapter.brand}</p><h2 className="font-display mt-5 max-w-md text-3xl leading-[0.96] sm:text-5xl">{chapter.title[lang]}</h2><p className={`mt-6 max-w-md text-base leading-8 ${finale ? "text-white/80" : "text-[#526057]"}`}>{chapter.body[lang]}</p><p className={`mt-8 border-t pt-4 text-[0.59rem] font-bold uppercase leading-5 tracking-[0.15em] ${finale ? "border-white/35 text-[#ffe0ba]" : "border-[#1a2922]/20 text-[#765536]"}`}>Independent creative study · Uncommissioned concept · No affiliation or endorsement</p></div>
-              <div className={`relative z-10 mt-10 aspect-[4/5] overflow-hidden bg-black/10 shadow-[0_32px_110px_rgba(28,33,27,.25)] sm:aspect-[16/10] lg:col-span-7 lg:mt-0 ${index % 2 ? "lg:order-1 lg:col-start-1" : "lg:col-start-6"}`}><Image data-dossier-image src={chapter.image} alt={`${chapter.brand} — ${chapter.title[lang]}`} fill loading="lazy" sizes="(min-width: 1024px) 57vw, 100vw" className="object-cover" /><span aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-black/10" /></div>
+              <div className={`relative z-10 mt-10 aspect-[4/5] overflow-hidden bg-black/10 shadow-[0_32px_110px_rgba(28,33,27,.25)] lg:col-span-7 lg:mt-0 ${index % 2 ? "lg:order-1 lg:col-start-1" : "lg:col-start-6"}`}><Image data-dossier-image src={chapter.image} alt={`${chapter.brand} — ${chapter.title[lang]}`} fill loading="lazy" sizes="(min-width: 1024px) 57vw, 100vw" className="object-cover" /><span aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-black/10" /></div>
             </article>;
           })}
         </section>

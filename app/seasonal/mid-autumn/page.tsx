@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { MidAutumnSeasonBanner } from "@/components/discovery/mid-autumn-season-banner";
+import { MoonDial } from "@/components/discovery/moon-dial";
+import { WorldSwitcher } from "@/components/discovery/world-switcher";
 
 export const metadata = {
   title: "Trung thu | Ninh Bình Journey",
@@ -28,15 +29,7 @@ export default async function MidAutumnPage({
 
   return (
     <main className="min-h-screen bg-[#17231f]">
-      <header className="border-b border-white/15 bg-[#13251f] text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-4 sm:px-8">
-          <Link href={`/?${homeParams.toString()}`} transitionTypes={["nav-back"]} className="font-display text-lg tracking-[0.1em]">NINH BÌNH</Link>
-          <nav aria-label={lang === "vi" ? "Điều hướng mùa" : "Season navigation"} className="flex gap-5 text-sm font-bold text-white/82">
-            <Link href={`/collaborations?${homeParams.toString()}`} transitionTypes={["portal-enter"]} className="hidden underline underline-offset-4 sm:inline">{lang === "vi" ? "Hợp tác thương hiệu" : "Brand collaborations"}</Link>
-            <Link href={`/packages?${homeParams.toString()}`} transitionTypes={["portal-enter"]} className="underline underline-offset-4">{lang === "vi" ? "Đặt chỗ" : "Reserve"}</Link>
-          </nav>
-        </div>
-      </header>
+      <WorldSwitcher hienTai="seasonal" lang={lang} source={source} tone="toi" />
       <MidAutumnSeasonBanner lang={lang} source={source} />
       <section className="overflow-hidden border-b border-white/12 bg-[#0d1915] px-5 py-14 text-[#fbf7ee] sm:px-8 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
@@ -48,17 +41,14 @@ export default async function MidAutumnPage({
               {[lang === "vi" ? "18.09 · mở mùa" : "18 Sep · opens", lang === "vi" ? "25.09 · rằm" : "25 Sep · full moon", lang === "vi" ? "27.09 · khép mùa" : "27 Sep · closes"].map((date) => <li key={date} className="border-r border-white/18 px-3 py-4 last:border-r-0 first:pl-0">{date}</li>)}
             </ol>
           </div>
-          <div aria-hidden="true" className="relative mx-auto aspect-square w-full max-w-[34rem]">
-            <svg viewBox="0 0 520 520" className="h-full w-full overflow-visible" fill="none">
-              <circle cx="260" cy="260" r="202" stroke="rgba(231,185,106,.42)" strokeWidth="1" strokeDasharray="3 10" />
-              <circle cx="260" cy="260" r="128" stroke="rgba(255,255,255,.14)" strokeWidth="1" />
-              <path d="M50 315C132 214 213 178 318 201C388 216 438 264 486 332" stroke="rgba(231,185,106,.75)" strokeWidth="1.5" />
-              <circle cx="260" cy="260" r="72" fill="#ead49b" />
-              <circle cx="260" cy="260" r="61" fill="#f8eecf" />
-              <g className="origin-center animate-[spin_18s_linear_infinite] motion-reduce:animate-none"><circle cx="260" cy="58" r="9" fill="#e7b96a" /><circle cx="438" cy="356" r="6" fill="#fff7e6" /></g>
-            </svg>
-            <span className="absolute inset-0 grid place-items-center pt-[12.5rem] text-center text-[0.58rem] font-extrabold uppercase tracking-[.3em] text-[#315447]">Ngo Dong<br />Moon orbit</span>
-          </div>
+          <MoonDial
+            lang={lang}
+            dem={[
+              { ngay: "2026-09-18", nhan: { vi: "18.09 · mở mùa", en: "18 Sep · opens" }, loi: { vi: "Đêm mở mùa, vừa tới thượng huyền — sáng chưa trọn nửa, đủ soi lối xuống bến.", en: "Opening night: just past first quarter — not yet full, enough to light the path to the pier." } },
+              { ngay: "2026-09-25", nhan: { vi: "25.09 · rằm", en: "25 Sep · full moon" }, loi: { vi: "Rằm tháng tám. Trăng đầy nhất của mùa thật ra rơi vào đêm sau, 26.09 — lịch và bầu trời lệch nhau một ngày.", en: "The fifteenth of the eighth lunar month. The brightest moon actually falls the next night, 26 Sep — calendar and sky differ by a day." } },
+              { ngay: "2026-09-27", nhan: { vi: "27.09 · khép mùa", en: "27 Sep · closes" }, loi: { vi: "Trăng đã qua đỉnh và bắt đầu xuống, khuyết dần về bên kia.", en: "Past the peak and waning now, thinning from the other side." } },
+            ]}
+          />
         </div>
       </section>
       <MidAutumnCampaign lang={lang} source={source} />

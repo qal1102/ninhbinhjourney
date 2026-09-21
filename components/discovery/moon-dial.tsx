@@ -1,0 +1,191 @@
+"use client";
+
+import { useId, useState } from "react";
+
+import {
+  heSoBongTrang,
+  phaTrang,
+  TEN_PHA_EN,
+  TEN_PHA_VI,
+} from "@/domain/lunar-phase";
+
+/**
+ * Vòng trăng của mùa — ba đêm, ba mặt trăng khác nhau, bấm được.
+ *
+ * ## Thứ này thay cái gì
+ *
+ * Chỗ này từng là hai hình tròn tô đặc màu be, hai chấm quay quanh tâm ở hai
+ * bán kính khác nhau, và một dòng chữ `Ngo Dong / Moon orbit` — in hoa, không
+ * dấu, tiếng Anh lẫn tiếng Việt — đặt đè lên để **giải thích** rằng đó là mặt
+ * trăng. Một hình cần chú thích mới hiểu là một hình đã hỏng. Nó cũng không
+ * mang thông tin nào: cả ba đêm của mùa đều tròn y hệt nhau.
+ *
+ * ## Thứ nó làm được
+ *
+ * Mỗi đêm trong mùa có một pha trăng **tính thật** (`domain/lunar-phase.ts`),
+ * và hình vẽ đổi theo: độ đầy, chiều khuyết, tên gọi. Đêm mở mùa là trăng
+ * khuyết đầu tháng, đêm rằm gần trọn đĩa, đêm khép mùa đã bắt đầu xuống. Bấm
+ * hoặc dùng phím mũi tên để đi giữa ba đêm.
+ *
+ * Đây là **kỹ năng riêng của thế giới Trung thu**, đúng như ma trận chỉ đạo
+ * sáng tạo yêu cầu: lịch–quỹ đạo–vật liệu, không mượn bộ hiệu ứng của trang
+ * du lịch hay trang thương hiệu.
+ *
+ * ## Vẽ đúng chiều khuyết
+ *
+ * Phần sáng được dựng bằng **nửa đường tròn + một cung elip**. Bề rộng cung
+ * elip là `|cos(2πp)|`; dấu của nó quyết định cung phình ra hay lõm vào — đó
+ * chính là chỗ phân biệt một lưỡi liềm với một vầng trăng gần đầy, và cũng là
+ * chỗ hầu hết mặt trăng vẽ tay bị sai. Nửa sau tuần trăng chỉ việc **lật
+ * gương** hình của nửa đầu, nên không có cơ hội sai dấu hai lần.
+ */
+
+export type DemTrang = {
+  /** Ngày dương, dạng `YYYY-MM-DD`. */
+  ngay: string;
+  nhan: { vi: string; en: string };
+  loi: { vi: string; en: string };
+};
+
+const R = 150;
+const TAM = 200;
+
+function duongSang(pha: number) {
+  const k = heSoBongTrang(pha);
+  const rx = Math.abs(k) * R;
+  // Đi từ đỉnh xuống đáy theo nửa đường tròn bên phải, rồi vòng lại bằng cung
+  // elip. `sweep = 0` cho cung phình sang phải (lưỡi liềm), `1` cho cung lõm
+  // sang trái (gần đầy).
+  const sweep = k > 0 ? 0 : 1;
+  return [
+    `M ${TAM} ${TAM - R}`,
+    `A ${R} ${R} 0 0 1 ${TAM} ${TAM + R}`,
+    `A ${rx} ${R} 0 0 ${sweep} ${TAM} ${TAM - R}`,
+    "Z",
+  ].join(" ");
+}
+
+export function MoonDial({
+  dem,
+  lang,
+}: {
+  dem: readonly DemTrang[];
+  lang: "vi" | "en";
+}) {
+  const [chon, setChon] = useState(() =>
+    Math.max(0, dem.findIndex((d) => d.nhan.vi.includes("rằm"))),
+  );
+  const id = useId();
+  const demNay = dem[chon] ?? dem[0];
+  // 21 giờ Việt Nam — giờ người ta thật sự ngẩng lên nhìn, không phải 0 giờ.
+  const pha = phaTrang(new Date(`${demNay.ngay}T21:00:00+07:00`));
+  const tenPha = lang === "vi" ? TEN_PHA_VI[pha.ten] : TEN_PHA_EN[pha.ten];
+  const phanTram = Math.round(pha.doSang * 100);
+
+  return (
+    <div className="relative mx-auto w-full max-w-[34rem]">
+      <div className="relative aspect-square w-full">
+        <svg
+          viewBox="0 0 400 400"
+          className="h-full w-full overflow-visible"
+          role="img"
+          aria-label={
+            lang === "vi"
+              ? `Trăng đêm ${demNay.nhan.vi}: ${tenPha}, sáng ${phanTram}%`
+              : `Moon on ${demNay.nhan.en}: ${tenPha}, ${phanTram}% lit`
+          }
+        >
+          <defs>
+            {/* Quầng sáng quanh trăng — thứ làm một hình tròn thành mặt trăng. */}
+            <radialGradient id={`${id}-quang`}>
+              <stop offset="55%" stopColor="#f6e6bd" stopOpacity="0.34" />
+              <stop offset="78%" stopColor="#e7b96a" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#e7b96a" stopOpacity="0" />
+            </radialGradient>
+            {/* Đĩa trăng tối dần về rìa, như một quả cầu nhận nắng xiên. */}
+            <radialGradient id={`${id}-dia`} cx="38%" cy="33%" r="78%">
+              <stop offset="0%" stopColor="#fffaf0" />
+              <stop offset="58%" stopColor="#f3e4c2" />
+              <stop offset="100%" stopColor="#cbb894" />
+            </radialGradient>
+            <clipPath id={`${id}-trong-dia`}>
+              <circle cx={TAM} cy={TAM} r={R} />
+            </clipPath>
+            <path id={`${id}-sang`} d={duongSang(pha.pha)} />
+            <clipPath id={`${id}-cat-sang`}>
+              <use href={`#${id}-sang`} />
+            </clipPath>
+          </defs>
+
+          <circle cx={TAM} cy={TAM} r={R * 1.9} fill={`url(#${id}-quang)`} />
+          {/* Phần tối của đĩa vẫn hiện rất mờ — đêm rằm thì không thấy, đêm
+              khuyết thì thấy được viền tròn, đúng như mắt thường nhìn. */}
+          <circle cx={TAM} cy={TAM} r={R} fill="#1b2a25" opacity="0.55" />
+
+          <g
+            transform={pha.dangLen ? undefined : `translate(${TAM * 2} 0) scale(-1 1)`}
+            className="transition-[transform] duration-700 motion-reduce:transition-none"
+          >
+            <use href={`#${id}-sang`} fill={`url(#${id}-dia)`} />
+            {/* Biển trăng. Cắt theo phần sáng nên chúng khuất dần cùng bóng,
+                thay vì trôi lơ lửng trên nền tối. */}
+            <g clipPath={`url(#${id}-cat-sang)`} fill="#b9a37f" opacity="0.4">
+              <ellipse cx="168" cy="160" rx="42" ry="33" />
+              <ellipse cx="232" cy="139" rx="26" ry="21" />
+              <ellipse cx="205" cy="241" rx="34" ry="24" />
+              <ellipse cx="146" cy="243" rx="17" ry="15" />
+              <ellipse cx="253" cy="216" rx="14" ry="12" />
+            </g>
+          </g>
+          <circle
+            cx={TAM}
+            cy={TAM}
+            r={R}
+            fill="none"
+            stroke="rgba(231,185,106,.3)"
+            strokeWidth="1"
+          />
+        </svg>
+      </div>
+
+      <p className="mt-2 text-center text-sm text-white/72">
+        <span className="font-semibold text-[#e7b96a]">{tenPha}</span>
+        {lang === "vi" ? ` · sáng ${phanTram}%` : ` · ${phanTram}% lit`}
+      </p>
+      <p className="mx-auto mt-1 max-w-sm text-center text-sm leading-6 text-white/58">
+        {lang === "vi" ? demNay.loi.vi : demNay.loi.en}
+      </p>
+
+      <div
+        role="radiogroup"
+        aria-label={lang === "vi" ? "Ba đêm của mùa" : "Three nights of the season"}
+        className="mt-5 flex flex-wrap justify-center gap-2"
+        onKeyDown={(su) => {
+          if (su.key !== "ArrowRight" && su.key !== "ArrowLeft") return;
+          su.preventDefault();
+          const buoc = su.key === "ArrowRight" ? 1 : -1;
+          setChon((truoc) => (truoc + buoc + dem.length) % dem.length);
+        }}
+      >
+        {dem.map((d, i) => (
+          <button
+            key={d.ngay}
+            type="button"
+            role="radio"
+            aria-checked={i === chon}
+            tabIndex={i === chon ? 0 : -1}
+            onClick={() => setChon(i)}
+            className={[
+              "inline-flex min-h-11 items-center rounded-full border px-4 text-sm transition motion-reduce:transition-none",
+              i === chon
+                ? "border-[#e7b96a] bg-[#e7b96a]/14 font-bold text-[#f3d9a6]"
+                : "border-white/22 text-white/70 hover:border-white/45 hover:text-white",
+            ].join(" ")}
+          >
+            {lang === "vi" ? d.nhan.vi : d.nhan.en}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

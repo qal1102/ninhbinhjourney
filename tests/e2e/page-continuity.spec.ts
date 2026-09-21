@@ -166,7 +166,12 @@ test("experience portals preserve language and source, then offer a stable retur
     .toBe(0);
 
   const beforeReturn = await transitionCount(page);
-  await page.getByRole("link", { name: "Return to Ninh Binh travel" }).click();
+  // Bám THUỘC TÍNH, không bám câu chữ. Ngày 22/09 đường về của mọi chương
+  // chuyển sang thanh chuyển thế giới dùng chung và nhãn đổi thành "Back to
+  // Ninh Binh" — bài này đỏ ngay, đúng việc của nó. Nhưng thứ đáng canh là
+  // "luôn có một đường về giữ nguyên ngôn ngữ và nguồn", không phải bảy chữ
+  // cụ thể; nhãn còn đổi nữa, hợp đồng thì không.
+  await page.locator("[data-world-back]").first().click();
   await expect(page).toHaveURL(/\/?\?lang=en&source=page-continuity-e2e$/);
   await expect.poll(() => transitionCount(page)).toBeGreaterThan(beforeReturn);
   await expect

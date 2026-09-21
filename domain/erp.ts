@@ -287,7 +287,9 @@ export function getErpModule(moduleId: string) {
  * bảng nhiều cột của kế toán và điều hành, nơi người ta ngồi trước màn hình
  * lớn và cần thấy nhiều dòng một lúc. Chỗ 12px đau thật là ở cổng.
  *
- * Năm màn dưới đây đều có một đặc điểm chung: người dùng chúng không ngồi.
+ * Bảy màn dưới đây đều có một đặc điểm chung: người dùng chúng không ngồi.
+ * Chấm công và Nhân sự vào danh sách ngày 21/09: nhân viên chấm vào ca và
+ * bàn giao ca đều làm khi đang đứng ngoài hiện trường, cầm điện thoại.
  */
 export const ERP_OPERATIONAL_MODULE_IDS = [
   "check-in-khach",
@@ -295,6 +297,8 @@ export const ERP_OPERATIONAL_MODULE_IDS = [
   "suc-chua",
   "su-co",
   "bao-cao-hien-truong",
+  "cham-cong",
+  "nhan-su",
 ] as const;
 
 export function isOperationalModule(moduleId: string): boolean {

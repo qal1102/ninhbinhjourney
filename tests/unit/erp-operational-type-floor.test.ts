@@ -25,6 +25,11 @@ describe("A15-LOI-03: sàn chữ 14px ở màn vận hành", () => {
   it("nhận đúng màn vận hành, và không nhận nhầm màn ngồi bàn", () => {
     expect(isOperationalModule("check-in-khach")).toBe(true);
     expect(isOperationalModule("bao-cao-hien-truong")).toBe(true);
+    // Thêm 21/09: chấm vào ca và bàn giao ca cũng làm khi đang đứng.
+    // Đo trước/sau ở khổ 390px: 9 + 82 chỗ chữ dưới 14px về 0, số chỗ chữ bị
+    // cắt giữ nguyên 7 (đã có từ trước), không màn nào tràn ngang.
+    expect(isOperationalModule("cham-cong")).toBe(true);
+    expect(isOperationalModule("nhan-su")).toBe(true);
     // Kế toán và báo cáo ngồi trước màn hình lớn, cần thấy nhiều dòng một lúc.
     // Nới chữ ở đó là làm vỡ bảng nhiều cột, không phải giúp ai.
     expect(isOperationalModule("tai-chinh-doi-soat")).toBe(false);

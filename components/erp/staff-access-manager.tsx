@@ -85,7 +85,7 @@ export function StaffAccessManager({
                         <p className="font-black text-[#293a33]">{manager.displayName}</p>
                         <span className="rounded-full bg-[#e8edf5] px-2 py-0.5 text-xs font-black text-[#49617d]">Quản lý cơ sở</span>
                       </div>
-                      <p className="mt-1 truncate text-sm text-[#75817b]">{manager.jobTitle} · {manager.email ?? manager.username ?? manager.accountId}</p>
+                      <p className="mt-1 break-words text-sm text-[#75817b] sm:truncate">{manager.jobTitle} · {manager.email ?? manager.username ?? manager.accountId}</p>
                     </div>
                     <p className="shrink-0 text-xs font-bold text-[#586961]">{selectedModules.length}/{ERP_MODULES.length} nghiệp vụ</p>
                   </summary>
@@ -162,7 +162,7 @@ export function StaffAccessManager({
                       </span>
                       {profile ? <span className={`rounded-full px-2 py-0.5 text-xs font-black ${profile.employmentType === "seasonal" ? "bg-[#fff0ce] text-[#77531c]" : "bg-[#e8edf5] text-[#49617d]"}`}>{profile.employmentType === "seasonal" ? "Thời vụ" : "Chính thức"}</span> : null}
                     </div>
-                    <p className="mt-1 truncate text-sm text-[#75817b]">{employee.jobTitle} · {employee.email ?? employee.username ?? employee.accountId}</p>
+                    <p className="mt-1 break-words text-sm text-[#75817b] sm:truncate">{employee.jobTitle} · {employee.email ?? employee.username ?? employee.accountId}</p>
                     {profile ? <p className="mt-1 text-xs text-[#8a958f]">{profile.primaryStation} · Ca {profile.shiftLabel}{profile.accessEndsAt ? ` · Quyền đến ${formatDate(profile.accessEndsAt)}` : ""}</p> : null}
                   </div>
                   <div className="shrink-0 text-right">

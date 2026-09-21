@@ -142,7 +142,11 @@ export type ShiftCloseJournalLine = {
   creditVnd: number;
 };
 
-const SHIFT_CLOSE_STATUSES: readonly ShiftCloseStatus[] = [
+/**
+ * Xuất ra ngoài để `domain/erp-mach-viec.ts` có một nguồn thật mà đối chiếu:
+ * thêm một trạng thái ở đây mà quên vẽ nó vào mạch việc thì bài kiểm đỏ ngay.
+ */
+export const SHIFT_CLOSE_STATUSES: readonly ShiftCloseStatus[] = [
   "submitted",
   "manager-returned",
   "manager-approved",

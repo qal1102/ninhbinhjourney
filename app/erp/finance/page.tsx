@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { AccountingControlCenter } from "@/components/erp/accounting-control-center";
+import { MachViecPanel } from "@/components/erp/mach-viec-panel";
+import { machViecTheoId } from "@/domain/erp-mach-viec";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
 import { canViewRegionalFinance } from "@/domain/erp-role-policy";
 import type { CashDepositEligibleShift } from "@/domain/erp-cash-deposit";
@@ -60,6 +62,18 @@ export default async function ErpFinancePage({ searchParams }: Props) {
     acc[siteId as ErpSiteId] = shifts;
     return acc;
   }, {});
+  // Trang Tài chính không thuộc một cơ sở nào, nhưng vài bước của mạch lại
+  // nằm trong cơ sở. Lấy cơ sở đầu tiên người này được vào để dựng đường dẫn;
+  // giám đốc vào được cả bốn nên lấy cái nào cũng mở ra đúng màn.
+  const coSoChoDuongDan = cashSites[0]?.id ?? ERP_SITES[0].id;
+  const machViecCuaTrangNay = [
+    { mach: machViecTheoId("dong-ca"), trangThai: shiftClosures.map((r) => r.status) },
+    {
+      mach: machViecTheoId("cong-no-doi-tac"),
+      trangThai: supplierAp.invoices.map((invoice) => invoice.status),
+    },
+  ].flatMap(({ mach, trangThai }) => (mach ? [{ mach, trangThai }] : []));
+
   const sourceValue = params.source;
   const initialSourceId = Array.isArray(sourceValue)
     ? sourceValue[0]
@@ -68,6 +82,21 @@ export default async function ErpFinancePage({ searchParams }: Props) {
   return (
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
+      {/*
+        Trang này là nơi hai luồng tiền gặp nhau: bước 3–4 của đóng ca và bước
+        3, 5 của công nợ đều làm ở đây. Vì thế dựng cả hai dải, mỗi dải đếm
+        đúng những hồ sơ mà chính trang này đang cầm.
+      */}
+      {machViecCuaTrangNay.map(({ mach, trangThai }) => (
+        <MachViecPanel
+          key={mach.id}
+          mach={mach}
+          siteId={coSoChoDuongDan}
+          viewerRole={user.role}
+          trangThai={trangThai}
+          dangODay="/erp/finance"
+        />
+      ))}
       <AccountingControlCenter
         user={user}
         shiftClosures={shiftClosures}

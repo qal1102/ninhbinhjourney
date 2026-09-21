@@ -49,6 +49,8 @@ import { SupplierApControlCenter } from "./supplier-ap-control-center";
 import { StaffPerformanceWorkspace } from "./staff-performance-workspace";
 import { IncidentWorkflowWorkspace } from "./incident-workflow-workspace";
 import { ShiftCareBriefPanel } from "./shift-care-brief-panel";
+import { MachViecPanel } from "./mach-viec-panel";
+import { machViecTheoId } from "@/domain/erp-mach-viec";
 import {
   WorkdayLifecycle,
   type WorkdayEmployeeOption,
@@ -92,6 +94,40 @@ function formatVnd(value: number) {
     currency: "VND",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+/**
+ * Dải mạch việc cho đúng màn đang mở.
+ *
+ * Luồng không tồn tại thì không vẽ gì cả — thà không có mạch còn hơn có một
+ * mạch bịa. Trạng thái nhận vào là trạng thái của chính những hồ sơ màn hình
+ * này đang cầm, nên con số đếm không bao giờ lệch với cái người ta nhìn thấy
+ * bên dưới.
+ */
+function MachViecTaiDay({
+  machId,
+  siteId,
+  moduleId,
+  viewerRole,
+  trangThai,
+}: {
+  machId: string;
+  siteId: ErpSite["id"];
+  moduleId: string;
+  viewerRole: CurrentErpUser["role"];
+  trangThai: readonly string[];
+}) {
+  const mach = machViecTheoId(machId);
+  if (!mach) return null;
+  return (
+    <MachViecPanel
+      mach={mach}
+      siteId={siteId}
+      viewerRole={viewerRole}
+      trangThai={trangThai}
+      dangODay={`/erp/${siteId}/${moduleId}`}
+    />
+  );
 }
 
 /** Today in Asia/Ho_Chi_Minh — the operating day, not the server's. */
@@ -485,7 +521,20 @@ export function ModuleWorkspace({
     );
   }
   if (module.id === "ve-dat-cho") {
-    return <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} counterSale={counterSale} />;
+    // Mạch việc "đóng ca" bắt đầu và được duyệt ngay tại màn này (bước 1–2),
+    // nên dải đứng trước phần bán vé. Nó gập sẵn, chỉ cao một khối ngắn.
+    return (
+      <>
+        <MachViecTaiDay
+          machId="dong-ca"
+          siteId={site.id}
+          moduleId={module.id}
+          viewerRole={user.role}
+          trangThai={shiftClosures.map((record) => record.status)}
+        />
+        <TicketGuestWorkspace site={site} user={user} mode="sales" shiftClosures={shiftClosures} gateScans={gateScans} ticketSales={ticketSales} counterSale={counterSale} />
+      </>
+    );
   }
   if (module.id === "check-in-khach") {
     // TC-13: bản giao ca đứng trước máy quét. Đặt nó xuống cuối thì ở khổ
@@ -501,12 +550,21 @@ export function ModuleWorkspace({
   }
   if (module.id === "doi-tac-nha-cung-ung") {
     return (
-      <SupplierApControlCenter
-        site={site}
-        user={user}
-        invoices={supplierApInvoices}
-        suppliers={supplierApSuppliers}
-      />
+      <>
+        <MachViecTaiDay
+          machId="cong-no-doi-tac"
+          siteId={site.id}
+          moduleId={module.id}
+          viewerRole={user.role}
+          trangThai={supplierApInvoices.map((invoice) => invoice.status)}
+        />
+        <SupplierApControlCenter
+          site={site}
+          user={user}
+          invoices={supplierApInvoices}
+          suppliers={supplierApSuppliers}
+        />
+      </>
     );
   }
 

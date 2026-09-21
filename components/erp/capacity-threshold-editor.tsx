@@ -96,9 +96,16 @@ export function CapacityThresholdEditor({
               }
               className="min-h-11 min-w-0 rounded-lg border border-[#cbd7d1] bg-white px-3 text-sm"
             >
-              <option value="round-trip">Quay vòng (thuyền, xe điện, bến)</option>
-              <option value="static">Sức chứa tĩnh (bãi đỗ, khu chờ, cứu hộ)</option>
+              <option value="round-trip">Quay vòng</option>
+              <option value="static">Sức chứa tĩnh</option>
             </select>
+            {/* Ví dụ để ngoài ô chọn, không nhét vào nhãn lựa chọn. Đo trên
+                production 21/09: nhãn "Quay vòng (thuyền, xe điện, bến)" rộng
+                223px trong một ô 259px, tức bị cắt mất đúng phần đang giải
+                thích. Ô chọn không phải chỗ viết chú thích. */}
+            <span className="mt-1 block text-xs font-normal text-[#7c8882]">
+              Quay vòng: thuyền, xe điện, bến. Tĩnh: bãi đỗ, khu chờ, cứu hộ.
+            </span>
           </label>
           <label className="grid gap-1 text-xs font-bold text-[#5d6f66]">
             Hệ số an toàn (0–1)

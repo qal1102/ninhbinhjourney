@@ -7,6 +7,7 @@ import {
   type ErpRole,
   type ErpSite,
 } from "@/domain/erp";
+import { buocChinh, dangChoAi, machViecCuaModule } from "@/domain/erp-mach-viec";
 
 const roleGuidance: Record<
   ErpRole,
@@ -99,6 +100,10 @@ type Props = {
 export function ModuleContextHelp({ module, role, site }: Props) {
   const [open, setOpen] = useState(false);
   const titleId = useId();
+  // Mạch dẫn (giai đoạn 4) — màn này nằm ở khúc nào của quy trình. Lấy từ
+  // xương sống chung nên không phải viết tay cho từng màn, và không thể lệch
+  // với dải mạch việc hiện ngay trên trang.
+  const machCuaMan = machViecCuaModule(module.id);
   const defaultGuidance = roleGuidance[role];
   const supplierGuidance =
     module.id === "doi-tac-nha-cung-ung"
@@ -187,6 +192,48 @@ export function ModuleContextHelp({ module, role, site }: Props) {
                 </h3>
                 <p className="mt-1">{guidance.nextStep}</p>
               </article>
+
+              {machCuaMan.map((mach) => (
+                <article
+                  key={mach.id}
+                  data-testid="context-help-mach"
+                  className="rounded-2xl border border-[#c9dceb] bg-[#f7fbfd] p-4"
+                >
+                  <h3 className="font-black text-[#29483b]">
+                    Màn này nằm ở đâu trong quy trình
+                  </h3>
+                  <p className="mt-1">{mach.motCau}</p>
+                  <ol className="mt-3 space-y-2">
+                    {buocChinh(mach).map((buoc) => {
+                      const oDay =
+                        buoc.noiLam.kieu === "module" && buoc.noiLam.moduleId === module.id;
+                      return (
+                        <li
+                          key={buoc.id}
+                          className={[
+                            "rounded-xl border p-3",
+                            oDay
+                              ? "border-[#b2cfe2] bg-white"
+                              : "border-transparent bg-white/60",
+                          ].join(" ")}
+                        >
+                          <p className="font-black text-[#1f2f2a]">
+                            {buoc.thuTu}. {buoc.ten}
+                            {oDay ? " — ngay tại màn này" : ""}
+                          </p>
+                          <p className="mt-0.5 text-[#5f7068]">
+                            Ai làm: {dangChoAi(buoc, (r) => ERP_ROLE_LABELS[r])}
+                          </p>
+                          <p className="mt-1">
+                            <span className="font-black">Dữ liệu từ đâu: </span>
+                            {buoc.nguonVao}
+                          </p>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </article>
+              ))}
             </div>
 
             <button

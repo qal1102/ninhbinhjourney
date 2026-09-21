@@ -90,3 +90,27 @@ test("màn không thuộc luồng tiền nào thì không dựng dải", async (
   await page.goto("/erp/trang-an/camera-ai");
   await expect(page.getByTestId("mach-viec")).toHaveCount(0);
 });
+
+test("nút ? nói được màn này nằm ở khúc nào của quy trình", async ({ page }) => {
+  await loginAsDirector(page);
+  await page.goto("/erp/trang-an/ve-dat-cho");
+
+  await page.getByRole("button", { name: /Trợ giúp về/ }).click();
+  const hop = page.getByRole("dialog");
+  await expect(hop).toBeVisible();
+
+  const machTrongHop = page.getByTestId("context-help-mach");
+  await expect(machTrongHop).toHaveCount(1);
+  await expect(machTrongHop).toContainText("Màn này nằm ở đâu trong quy trình");
+  // Bước làm ngay tại màn đang mở phải được gọi tên, không bắt người đọc tự dò.
+  await expect(machTrongHop).toContainText("ngay tại màn này");
+  await expect(machTrongHop).toContainText("Dữ liệu từ đâu");
+});
+
+test("màn ngoài luồng tiền thì nút ? không bịa ra một quy trình", async ({ page }) => {
+  await loginAsDirector(page);
+  await page.goto("/erp/trang-an/camera-ai");
+  await page.getByRole("button", { name: /Trợ giúp về/ }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByTestId("context-help-mach")).toHaveCount(0);
+});

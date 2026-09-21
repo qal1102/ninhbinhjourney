@@ -81,6 +81,12 @@ const copy = {
     // Nhan thu hai tung la "Stories", tro toi khoi `#stories` da xoa.
     // Gio no tro toi danh muc diem den, nen phai goi dung ten.
     portalTravel: "Ninh Binh travel",
+    // Nhãn ngắn cho dải mục lục ở khổ điện thoại; tên đầy đủ vẫn đọc được
+    // bằng trình đọc màn hình qua `sr-only`.
+    portalTravelShort: "Travel",
+    portalCollaborationShort: "Brands",
+    portalSeasonalShort: "Mid-Autumn",
+    portalBookingShort: "Book",
     portalCollaboration: "Brand collaborations",
     portalSeasonal: "Seasonal occasions · Mid-Autumn",
     // A15-TRUNG-THU-01: shown instead of `portalSeasonal` once the Moon
@@ -127,7 +133,7 @@ const copy = {
       midday: "and the sun stands straight above the limestone",
       afternoon: "and late light runs gold across the Tam Cốc fields",
       dusk: "and the birds are coming back to Thung Nham",
-      night: "and there is only an oar, somewhere under the caves",
+      night: "and the Tràng An pier has closed, the nine caves on Route 1 waiting for morning",
     },
     journeysLabel: "Curated Ninh Binh",
     journeysTitle: "Stories, not stops",
@@ -265,6 +271,10 @@ const copy = {
   },
   vi: {
     portalTravel: "Du lịch Ninh Bình",
+    portalTravelShort: "Du lịch",
+    portalCollaborationShort: "Thương hiệu",
+    portalSeasonalShort: "Trung thu",
+    portalBookingShort: "Đặt chỗ",
     portalCollaboration: "Hợp tác thương hiệu",
     portalSeasonal: "Sự kiện theo mùa · Trung thu",
     // A15-TRUNG-THU-01: thay cho `portalSeasonal` từ khi Bàn Trăng hết bán
@@ -290,7 +300,7 @@ const copy = {
       midday: "nắng đứng bóng trên vách đá vôi",
       afternoon: "nắng xiên vàng dọc triền lúa Tam Cốc",
       dusk: "đàn chim đang về Thung Nham",
-      night: "chỉ còn tiếng mái chèo khua dưới vòm hang",
+      night: "bến thuyền Tràng An đã nghỉ, chín hang trên tuyến 1 khép lại tới sáng",
     },
     journeysLabel: "Ninh Bình tuyển chọn",
     journeysTitle: "Câu chuyện, không chỉ điểm dừng",
@@ -1317,7 +1327,16 @@ export default function NinhBinhLanding({
           <span className="hero-depth-grade" />
         </div>
         <svg className="hero-depth-lines pointer-events-none absolute" aria-hidden="true" viewBox="0 0 720 900" preserveAspectRatio="xMidYMid slice">
-          <path className="hero-depth-contour" d="M71 900V386c0-84 29-148 86-192 49-38 98-40 146-8 28-91 92-146 191-166 85-17 150 13 195 90" fill="none" />
+          {/*
+            Đoạn đầu của đường nét này TỪNG là `M71 900V386` — một nét thẳng
+            đứng dài 514 đơn vị. Đo pixel trên ảnh dựng thật ở 1440px ngày
+            21/09: nó hiện thành một vạch sáng 1px tại x≈798 chạy gần hết
+            chiều cao màn hình, nhảy màu 188/255 so với hai bên. Trên ảnh núi
+            đá vôi, một vạch thẳng tắp như vậy đọc ra là đường viền giao diện
+            bị lỗi, không phải nếp núi. Nay đoạn ấy uốn nhẹ theo sườn, và
+            `hero-depth-lines` có mặt nạ cho nó tan dần ở chân.
+          */}
+          <path className="hero-depth-contour" d="M63 900c10-132 3-244 22-330 14-64 36-114 72-156 49-38 98-40 146-8 28-91 92-146 191-166 85-17 150 13 195 90" fill="none" />
           <path className="hero-depth-river" d="M134 716c126-82 212-27 289-75 78-49 127-164 243-168" fill="none" />
         </svg>
         {/*
@@ -1388,29 +1407,54 @@ export default function NinhBinhLanding({
           </div>
           </div>
         </div>
+        {/*
+          Cổng bốn thế giới ở khổ điện thoại — dải chữ, KHÔNG phải lưới thẻ.
+
+          Bản cũ là một lưới 2×2 thẻ có viền, chữ in hoa đậm, mỗi thẻ một mũi
+          tên ↗, nằm chắn ngay dưới đầu trang. Soi ảnh chụp thật ở 390px ngày
+          21/09: nó đẩy chữ "Ninh Bình" xuống mốc 740px, che gần hết ảnh, và
+          đọc như menu một cổng thông tin hành chính — đúng hai thứ mà chính
+          tài liệu của dự án đã cấm:
+
+          - `UI_UX_RULES.md#voice-rules`: "Cấm lưới thẻ điều hướng đánh số kiểu
+            'chọn một lối vào'. Đã bị chủ dự án loại hai lần trên web."
+          - `REFERENCE_SITE_ANALYSIS.md` (rà 15/09): "cổng bốn thế giới phải là
+            một tương tác editorial thật, không phải bốn pill kiểu dashboard."
+
+          Vẫn giữ đủ bốn lối theo chỉ đạo sáng tạo, nhưng dưới dạng một hàng
+          mục lục tạp chí: chữ serif, không viền, gạch chân mảnh, thế giới
+          đang đứng được đánh dấu bằng vàng. Nhãn rút ngắn cho vừa một hàng;
+          tên đầy đủ vẫn đọc được bằng trình đọc màn hình.
+        */}
         <nav
           aria-label={t.portalEyebrow as string}
-          className="absolute inset-x-5 top-[4.8rem] z-20 grid grid-cols-2 overflow-hidden rounded-[1.1rem] border border-white/20 bg-[#0b211b]/58 text-[#FBFAF6] shadow-[0_18px_52px_rgba(3,16,12,.24)] backdrop-blur-md lg:hidden"
+          className="absolute inset-x-0 top-[4.4rem] z-20 overflow-x-auto px-5 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
         >
-          {(
-            [
-              ["travel", t.portalTravel],
-              ["collaboration", t.portalCollaboration],
-              ["seasonal", portalSeasonalLabel],
-              ["booking", t.portalBooking],
-            ] as const
-          ).map(([destination, label], index) => (
-            <Link
-              key={destination}
-              data-experience-portal={destination}
-              href={experiencePortalHref(destination, lang, source)}
-              transitionTypes={destination === "travel" ? undefined : ["portal-enter"]}
-              className={`group flex min-h-11 items-center justify-between gap-2 px-3 py-2 text-[0.66rem] font-extrabold uppercase leading-4 tracking-[0.08em] transition hover:bg-white/10 hover:text-[#E7B96A] motion-reduce:transition-none ${index % 2 === 0 ? "border-r border-white/15" : ""} ${index < 2 ? "border-b border-white/15" : ""}`}
-            >
-              <span>{label}</span>
-              <span aria-hidden="true" className="text-sm transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none">↗</span>
-            </Link>
-          ))}
+          <span className="flex w-max items-baseline gap-5 border-b border-white/15 pb-2 font-display text-[0.95rem] text-[#FBFAF6]/78">
+            {(
+              [
+                ["travel", t.portalTravel, t.portalTravelShort],
+                ["collaboration", t.portalCollaboration, t.portalCollaborationShort],
+                ["seasonal", portalSeasonalLabel, t.portalSeasonalShort],
+                ["booking", t.portalBooking, t.portalBookingShort],
+              ] as const
+            ).map(([destination, label, short]) => (
+              <Link
+                key={destination}
+                data-experience-portal={destination}
+                href={experiencePortalHref(destination, lang, source)}
+                transitionTypes={destination === "travel" ? undefined : ["portal-enter"]}
+                className={`inline-flex min-h-11 items-center whitespace-nowrap border-b-2 transition motion-reduce:transition-none ${
+                  destination === "travel"
+                    ? "border-[#E7B96A] text-[#E7B96A]"
+                    : "border-transparent hover:border-[#E7B96A]/60 hover:text-[#FBFAF6]"
+                }`}
+              >
+                <span aria-hidden="true">{short as string}</span>
+                <span className="sr-only">{label}</span>
+              </Link>
+            ))}
+          </span>
         </nav>
         <div id="top" className="hero-scene-content relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-offset,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-offset,0px))]">
           {/*

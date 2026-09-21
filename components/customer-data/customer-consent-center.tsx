@@ -169,35 +169,48 @@ export function CustomerConsentCenter() {
   if (!ready || !isCustomerConsentSurface(pathname)) return null;
 
   if (!hasDecision) {
+    /*
+      Dải mỏng, không phải tấm thẻ.
+      Bản cũ là một thẻ ba tầng — nhãn in hoa, tiêu đề serif cỡ lớn, rồi một
+      đoạn văn — cao gần 150px, nằm đè lên ảnh đầu trang ở cả desktop lẫn
+      điện thoại, và theo suốt lúc cuộn. Soi ảnh chụp thật 21/09: thứ đầu
+      tiên khách nhìn thấy khi mở web là một hộp xin phép, không phải Ninh
+      Bình. Nội dung pháp lý giữ nguyên ý — vẫn nói rõ chỉ ghi nhận khi được
+      đồng ý và đổi được bất cứ lúc nào — nhưng gói trong một dòng.
+    */
     return (
-      <aside ref={bannerRef} className="fixed inset-x-2 bottom-2 z-[1300] mx-auto max-w-4xl rounded-[18px] border border-white/18 bg-[#183f34]/96 p-3 text-white shadow-2xl backdrop-blur sm:inset-x-4 sm:bottom-4 sm:p-4" aria-label={language === "en" ? "Privacy choice" : "Lựa chọn quyền riêng tư"}>
-        <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6">
-          <div className="min-w-0">
-            <p className="text-[0.58rem] font-extrabold uppercase tracking-[0.18em] text-[#e7c78d]">
-              {language === "en" ? "Your privacy" : "Quyền riêng tư"}
-            </p>
-            <h2 className="font-display mt-1 text-base leading-tight min-[280px]:text-lg">
-              {language === "en" ? "May we learn what is useful?" : "Cho phép ghi nhận nội dung hữu ích?"}
-            </h2>
-            <p className="mt-1 text-[0.7rem] leading-4 text-white/72 min-[280px]:text-xs min-[280px]:leading-5">
-              {language === "en"
-                ? "Only with your consent, we record how this website is used. You can change this at any time."
-                : "Chỉ khi bạn đồng ý, website mới ghi nhận cách nội dung được sử dụng. Có thể đổi lựa chọn bất cứ lúc nào."}
-            </p>
-          </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2 md:flex-nowrap">
-            <Link href="/quyen-rieng-tu" className="mr-auto min-h-9 px-1 py-2 text-[0.68rem] font-bold text-white/72 underline underline-offset-2 md:mr-1">
+      <aside ref={bannerRef} className="fixed inset-x-2 bottom-2 z-[1300] mx-auto max-w-3xl rounded-[22px] border border-white/16 bg-[#0f2a22]/92 px-4 py-3 text-white shadow-[0_18px_44px_rgba(3,16,12,.34)] backdrop-blur-md sm:inset-x-4 sm:bottom-4 sm:rounded-full sm:px-5 sm:py-2.5" aria-label={language === "en" ? "Privacy choice" : "Lựa chọn quyền riêng tư"}>
+        {/*
+          Tiêu đề giữ lại cho trình đọc màn hình. Bản rút gọn đầu tiên gỡ hẳn
+          thẻ `h2` và thế là dải mất tên gọi trong cây trợ năng — bài
+          `customer-progressive-identity.spec.ts` bắt đỏ ngay. Thu gọn phần
+          NHÌN THẤY là một chuyện; bỏ luôn cái tên của một vùng giao diện lại
+          là chuyện khác.
+        */}
+        <h2 className="sr-only">
+          {language === "en" ? "May we learn what is useful?" : "Cho phép ghi nhận nội dung hữu ích?"}
+        </h2>
+        {/* Ở 390px, để chữ và nút cùng một hàng thì chữ chỉ còn ~90px và vỡ
+            thành bốn dòng chen giữa hai nút. Xếp dọc ở khổ hẹp, ngang từ `sm`. */}
+        <div className="flex min-w-0 flex-col items-stretch gap-2.5 sm:flex-row sm:items-center sm:gap-x-3">
+          <p className="min-w-0 flex-1 text-center text-[0.78rem] leading-5 text-white/80 sm:text-left sm:text-sm">
+            {language === "en"
+              ? "We only record how this site is used if you allow it."
+              : "Chỉ khi bạn đồng ý, website mới ghi nhận cách nội dung được dùng."}{" "}
+            <Link href="/quyen-rieng-tu" className="font-semibold text-white/92 underline underline-offset-2">
               {language === "en" ? "Details" : "Chi tiết"}
             </Link>
-            <button type="button" disabled={pending} onClick={() => void save(false, false)} className="min-h-10 min-w-0 rounded-full border border-white/35 px-3 text-xs font-bold disabled:opacity-50 min-[280px]:px-4 min-[280px]:text-sm">
+          </p>
+          <span className="flex shrink-0 items-center justify-end gap-2">
+            <button type="button" disabled={pending} onClick={() => void save(false, false)} className="min-h-10 rounded-full border border-white/30 px-3.5 text-xs font-bold disabled:opacity-50 sm:text-sm">
               {language === "en" ? "Essential only" : "Chỉ cần thiết"}
             </button>
-            <button type="button" disabled={pending} onClick={() => void save(true, false)} className="min-h-10 min-w-0 rounded-full bg-[#e7c78d] px-3 text-xs font-extrabold text-[#183f34] disabled:opacity-50 min-[280px]:px-4 min-[280px]:text-sm">
+            <button type="button" disabled={pending} onClick={() => void save(true, false)} className="min-h-10 rounded-full bg-[#e7c78d] px-4 text-xs font-extrabold text-[#183f34] disabled:opacity-50 sm:text-sm">
               {pending ? (language === "en" ? "Saving…" : "Đang lưu…") : language === "en" ? "Allow" : "Đồng ý"}
             </button>
-          </div>
+          </span>
         </div>
-        {message ? <p className="mt-3 text-sm text-[#ffd9d1]" role="alert">{message}</p> : null}
+        {message ? <p className="mt-2 text-center text-sm text-[#ffd9d1]" role="alert">{message}</p> : null}
       </aside>
     );
   }

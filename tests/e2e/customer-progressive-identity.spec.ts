@@ -87,7 +87,16 @@ test.describe("CUS-05 progressive identity and consent", () => {
     });
 
     await page.goto("/plan", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Cho phép ghi nhận nội dung hữu ích?" })).toBeVisible();
+    // Bám VÙNG hỏi quyền, không bám riêng dòng tiêu đề. Ngày 21/09 dải này
+    // rút từ một thẻ ba tầng xuống một dòng, và tiêu đề chuyển thành chữ chỉ
+    // dành cho trình đọc màn hình — `toBeVisible()` trên một phần tử bị kẹp
+    // 1×1px luôn sai, dù cây trợ năng vẫn có đủ tên. Điều bài này thật sự
+    // cần canh là: hỏi quyền PHẢI hiện ra trước khi ghi nhận bất cứ gì.
+    const daiQuyen = page.getByRole("complementary", { name: "Lựa chọn quyền riêng tư" });
+    await expect(daiQuyen).toBeVisible();
+    await expect(
+      daiQuyen.getByRole("heading", { name: "Cho phép ghi nhận nội dung hữu ích?" }),
+    ).toBeAttached();
     await page.waitForTimeout(1200);
     expect(analyticsEvents).toHaveLength(0);
     await page.getByRole("button", { name: "Đồng ý" }).click();

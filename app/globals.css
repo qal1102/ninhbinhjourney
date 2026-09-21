@@ -1235,12 +1235,18 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   );
 }
 
+/*
+ * Tông đêm nhẹ lại. Lớp này chồng LÊN TRÊN lớp phủ của cảnh, nên buổi tối ảnh
+ * Tràng An nhận tổng cộng ba lớp tối và gần như đen đặc — khách mở web lúc 11
+ * giờ đêm không thấy mình đang nhìn nơi nào. Giữ đúng ý "trời đã tối", nhưng
+ * để cảnh còn đọc được: màu xanh đêm vẫn đó, độ đậm hạ khoảng một nửa.
+ */
 .hero-tod-night {
   background: linear-gradient(
     170deg,
-    rgba(28, 46, 74, 0.5),
-    rgba(20, 34, 46, 0.36) 44%,
-    rgba(10, 18, 26, 0.62)
+    rgba(28, 46, 74, 0.28),
+    rgba(20, 34, 46, 0.18) 44%,
+    rgba(10, 18, 26, 0.34)
   );
 }
 
@@ -1270,10 +1276,17 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   will-change: transform, opacity;
 }
 
+/*
+ * Nửa trái từng là một mảng xanh đặc gần như phẳng (0.79 chồng lên ảnh),
+ * nên ở khổ 1440 khách thấy một hình chữ nhật tối rộng ~770px với chữ nổi
+ * giữa, còn ảnh chỉ sống ở nửa phải trong khung cửa đá. Hạ độ phủ để ảnh đi
+ * hết bề ngang và khung cửa đá thành điểm nhấn, chứ không còn là chỗ duy
+ * nhất nhìn thấy cảnh. Phần đậm giữ ở đáy, nơi thật sự có chữ.
+ */
 .hero-scene-scrim {
   background:
-    linear-gradient(90deg, rgba(8, 24, 20, 0.79) 0%, rgba(8, 24, 20, 0.52) 47%, rgba(8, 24, 20, 0.1) 76%),
-    linear-gradient(180deg, rgba(24, 63, 52, 0.12), rgba(24, 63, 52, 0.45) 48%, rgba(16, 34, 29, 0.94));
+    linear-gradient(90deg, rgba(8, 24, 20, 0.6) 0%, rgba(8, 24, 20, 0.34) 47%, rgba(8, 24, 20, 0.06) 76%),
+    linear-gradient(180deg, rgba(24, 63, 52, 0.08), rgba(24, 63, 52, 0.3) 48%, rgba(16, 34, 29, 0.9));
 }
 
 .hero-depth-window,
@@ -1290,8 +1303,25 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   will-change: transform, opacity;
 }
 
+/*
+ * Khung cửa đá vôi. Hai cạnh dọc của đa giác (`10% …` và `91% …`) cắt thẳng
+ * đứng, nên trên ảnh thật chúng hiện thành **một đường kẻ dọc cứng** chạy gần
+ * hết chiều cao màn hình — soi ở 1440px ngày 21/09 thấy rõ ở mốc x≈770. Một
+ * vết cắt thẳng như thế đọc ra là lỗi dựng trang, không phải một khung cửa.
+ * Lớp mặt nạ dưới đây làm tan hai mép dọc ấy, giữ nguyên phần đỉnh vòm — chỗ
+ * đường cắt là có chủ đích và cần sắc.
+ */
 .hero-depth-window {
   clip-path: polygon(10% 100%, 10% 43%, 14% 31%, 22% 22%, 30% 21%, 38% 30%, 43% 16%, 55% 5%, 68% 2%, 75% 8%, 82% 20%, 88% 37%, 91% 52%, 91% 100%);
+  mask-image: linear-gradient(
+    90deg,
+    transparent 8%,
+    rgba(0, 0, 0, 0.55) 17%,
+    #000 30%,
+    #000 78%,
+    rgba(0, 0, 0, 0.6) 89%,
+    transparent 95%
+  );
   overflow: hidden;
   position: absolute;
 }
@@ -1308,10 +1338,18 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
 }
 
 .hero-depth-contour {
-  opacity: 0.82;
-  stroke: rgba(251, 250, 246, 0.68);
-  stroke-width: 1.2;
+  opacity: 0.55;
+  stroke: rgba(251, 250, 246, 0.5);
+  stroke-width: 1;
   vector-effect: non-scaling-stroke;
+}
+
+/*
+ * Cả hai nét đều tan dần ở chân khung, để không có nét nào chạm mép màn hình
+ * bằng một đầu cụt — thứ làm người xem đọc ra "đường kẻ" thay vì "nếp núi".
+ */
+.hero-depth-lines {
+  mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 96%);
 }
 
 .hero-depth-river {
@@ -1450,16 +1488,41 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     height: max(43rem, 100svh);
   }
 
+  /*
+   * Lớp phủ nhẹ đi để CẢNH còn nhìn thấy được.
+   *
+   * Bản cũ chồng 0.7 ngang + 0.93 dọc, cộng thêm lớp tô theo giờ (ban đêm
+   * còn thêm 0.62 nữa). Soi ảnh chụp thật ở 390px lúc 23 giờ ngày 21/09:
+   * ảnh Tràng An phía sau gần như đen đặc — khách mở trang ra không thấy
+   * mình đang ở đâu. Một trang du lịch cao cấp bán bằng cảnh, không bán
+   * bằng nền tối.
+   *
+   * Vẫn giữ đủ tương phản cho chữ trắng: phần đậm dồn xuống đáy, nơi có
+   * chữ; hai phần ba trên để cảnh thở. Đo lại sau khi đổi: chữ tiêu đề và
+   * phụ đề vẫn đạt tương phản AA trên nền sáng nhất của ảnh.
+   */
   .hero-scene-scrim {
     background:
-      linear-gradient(90deg, rgba(8, 24, 20, 0.7), rgba(8, 24, 20, 0.24)),
-      linear-gradient(180deg, rgba(24, 63, 52, 0.16), rgba(16, 34, 29, 0.93) 66%);
+      linear-gradient(90deg, rgba(8, 24, 20, 0.52), rgba(8, 24, 20, 0.12)),
+      linear-gradient(
+        180deg,
+        rgba(16, 34, 29, 0.34) 0%,
+        rgba(16, 34, 29, 0.12) 26%,
+        rgba(16, 34, 29, 0.62) 62%,
+        rgba(16, 34, 29, 0.93) 100%
+      );
   }
 
+  /*
+   * Ở 390px khung cửa rộng 118vw và lệch ra ngoài màn hình, nên thứ khách
+   * thật sự nhìn thấy chỉ còn **một đường chéo cứng vắt qua nền trời** —
+   * không đọc ra khung cửa đá nữa. Hạ hẳn độ rõ để nó chỉ còn là một lớp
+   * chất liệu mờ, và mặt nạ ở bản gốc lo phần tan mép.
+   */
   .hero-depth-window,
   .hero-depth-lines {
     height: 72%;
-    opacity: calc(0.4 - var(--hero-progress) * 0.08);
+    opacity: calc(0.16 - var(--hero-progress) * 0.04);
     right: -42vw;
     top: 8%;
     width: 118vw;
@@ -1471,13 +1534,21 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     display: none;
   }
 
+  /*
+   * Hai lớp mặt chữ mảnh lại. Ở khổ điện thoại cỡ chữ là 14vw, nên một
+   * viền 1px kèm lệch 0,08rem không còn đọc ra "khắc đá" mà thành một
+   * đường viền trắng bao quanh — nhìn như chữ bị in lệch. Giữ ý đồ, hạ độ
+   * rõ xuống để nó là chiều sâu chứ không phải đường viền.
+   */
   .hero-signature-title::before {
-    opacity: 0.48;
+    opacity: 0.26;
+    transform: translate3d(-0.04rem, -0.04rem, 0);
+    -webkit-text-stroke-width: 0.6px;
   }
 
   .hero-signature-title::after {
-    opacity: 0.62;
-    transform: translate3d(0.08rem, 0.08rem, 0);
+    opacity: 0.4;
+    transform: translate3d(0.05rem, 0.05rem, 0);
   }
 
   .hero-copy-safe {
@@ -1487,8 +1558,15 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   /* Reserve the lower-right fixed concierge footprint at both sides of the
      handoff so neither the tertiary hero cue nor the cinematic title sits
      underneath it on a 390px viewport. */
+  /*
+   * Phải CỘNG chiều cao dải quyền riêng tư vào đây, không được viết một con
+   * số chết. Luật này nằm sau lớp tiện ích `pb-[calc(4rem + …)]` trong cùng
+   * mức đặc hiệu, nên nó ghi đè và phần chừa chỗ cho dải bị mất — đo ở 390px
+   * ngày 21/09: dòng "Xem năm hành trình đã chuẩn bị sẵn" nằm đúng dưới mép
+   * trên của dải và bị che một nửa.
+   */
   .hero-scene-content {
-    padding-bottom: 6.75rem;
+    padding-bottom: calc(6.75rem + var(--nbj-consent-offset, 0px));
   }
 
   .hero-cinematic-handoff .cinematic-copy {

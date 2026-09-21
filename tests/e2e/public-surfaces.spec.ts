@@ -723,8 +723,11 @@ test("discovery map mode renders a real interactive map, not a static canvas", a
 }) => {
   await page.goto("/explore");
   await page.getByRole("button", { name: "Bản đồ", exact: true }).click();
-  await expect(page.locator(".leaflet-container")).toBeVisible();
-  await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible();
+  await expect(page.locator("[data-brand-map]")).toBeVisible();
+  await expect(page.locator(".nb-marker").first()).toBeVisible();
+  // Bản đồ vector vẽ lên canvas. Không có canvas nghĩa là chỉ còn cái khung
+  // rỗng — đúng cái trạng thái "bản đồ hỏng" mà khách nhìn thấy.
+  await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible();
 });
 
 test("captures local responsive evidence", async ({ page }, testInfo) => {

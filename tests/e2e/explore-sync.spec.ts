@@ -223,9 +223,9 @@ test("mobile can hide and reveal Leaflet repeatedly without crashing the route",
     await expect(page.locator('[data-explore-view-panel="map"]')).toBeVisible();
     await expect
       .poll(() =>
-        page.locator(".leaflet-container").evaluate((map) => {
+        page.locator("[data-brand-map]").evaluate((map) => {
           const mapRect = map.getBoundingClientRect();
-          const marker = map.querySelector<HTMLElement>(".leaflet-marker-icon");
+          const marker = map.querySelector<HTMLElement>(".nb-marker");
           const markerRect = marker?.getBoundingClientRect();
           return {
             hasUsableSize: mapRect.width > 300 && mapRect.height > 400,
@@ -237,8 +237,11 @@ test("mobile can hide and reveal Leaflet repeatedly without crashing the route",
               markerRect!.left < mapRect.right &&
               markerRect!.bottom > mapRect.top &&
               markerRect!.top < mapRect.bottom,
+            // Ghim của MapLibre được đặt bằng `transform: translate(...)`.
+            // Khung 0×0 từng làm phép chiếu ra NaN và ghim bay đi mất — đó là
+            // lý do phép đo này tồn tại, giữ nguyên ý sau khi đổi thư viện.
             hasInvalidTransform: Array.from(
-              map.querySelectorAll<HTMLElement>(".leaflet-map-pane, .leaflet-marker-pane"),
+              map.querySelectorAll<HTMLElement>(".maplibregl-marker, .maplibregl-canvas"),
             ).some((element) => element.style.transform.includes("NaN")),
           };
         }),
@@ -251,7 +254,7 @@ test("mobile can hide and reveal Leaflet repeatedly without crashing the route",
   }
 
   await expect(page.getByRole("button", { name: /Thử lại/ })).toHaveCount(0);
-  await expect(page.locator(".leaflet-container")).toBeVisible();
+  await expect(page.locator("[data-brand-map]")).toBeVisible();
 });
 
 test("destination detail traps focus, locks the page and restores its trigger", async ({

@@ -4,7 +4,9 @@ import { ErpShell } from "@/components/erp/erp-shell";
 import { ExecutiveDashboard } from "@/components/erp/executive-dashboard";
 import { RoleHomeDashboard } from "@/components/erp/role-home-dashboard";
 import { VongDanPanel } from "@/components/erp/vong-dan-panel";
+import { ViecDauTienPanel } from "@/components/erp/viec-dau-tien-panel";
 import { VONG_TIEN_ID, type KhoaSo } from "@/domain/huong-dan-vong-dau";
+import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
 import { readTienDoVongDan } from "@/lib/erp/huong-dan-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
@@ -96,6 +98,20 @@ export default async function ErpHomePage({ searchParams }: Props) {
     ? await readTienDoVongDan({ accountId: user.id, vongId: VONG_TIEN_ID })
     : null;
 
+  // Giai đoạn 5 — "hôm nay nên làm gì trước". Đếm từ chính dữ liệu trang này
+  // vừa đọc, không mở thêm lượt đọc nào; luật xếp hạng nằm trong domain.
+  const demViecChoGiamDoc: DemViecChoGiamDoc = {
+    suCoLeoThang: escalatedIncidents.length,
+    caLechChoQuyet: shiftClosures.filter(
+      (record) => record.status === "exception-pending-director",
+    ).length,
+    hoaDonChoQuyet: supplierAp.invoices.filter(
+      (invoice) => invoice.status === "director-exception",
+    ).length,
+    deNghiDoiDuAn: pendingProjectChangeRequests.length,
+    quyetDinhSop: pendingSopDecisions.length,
+  };
+
   // Con số thật cho từng chặng, lấy từ chính dữ liệu trang này vừa đọc —
   // không mở thêm một lượt đọc nào. Chặng nào chưa có số thì để trống, và
   // vòng dẫn sẽ nói thẳng là "chưa có số hôm nay" thay vì bịa một số mẫu.
@@ -114,17 +130,10 @@ export default async function ErpHomePage({ searchParams }: Props) {
         ? `${caChuaKhep.toLocaleString("vi-VN")} hồ sơ ca chưa ghi sổ xong — mỗi hồ sơ đang nằm trên bàn một người cụ thể.`
         : "Mọi hồ sơ ca trong kỳ đã ghi sổ xong.";
 
-    const caChoGiamDoc = shiftClosures.filter(
-      (record) => record.status === "exception-pending-director",
-    ).length;
-    const apChoGiamDoc = supplierAp.invoices.filter(
-      (invoice) => invoice.status === "director-exception",
-    ).length;
-    const tongChoAnh =
-      caChoGiamDoc + apChoGiamDoc + escalatedIncidents.length + pendingProjectChangeRequests.length;
+    const tongChoAnh = tongViecCho(demViecChoGiamDoc);
     soThatVongDan["viec-cho-giam-doc"] =
       tongChoAnh > 0
-        ? `Đang chờ anh quyết: ${caChoGiamDoc} ca lệch, ${apChoGiamDoc} hoá đơn, ${escalatedIncidents.length} sự cố, ${pendingProjectChangeRequests.length} đề nghị đổi dự án.`
+        ? `Đang chờ anh quyết: ${demViecChoGiamDoc.caLechChoQuyet} ca lệch, ${demViecChoGiamDoc.hoaDonChoQuyet} hoá đơn, ${demViecChoGiamDoc.suCoLeoThang} sự cố, ${demViecChoGiamDoc.deNghiDoiDuAn} đề nghị đổi dự án.`
         : "Hôm nay không có việc nào chờ anh quyết.";
 
     const apChuaTra = supplierAp.invoices.filter(
@@ -145,6 +154,13 @@ export default async function ErpHomePage({ searchParams }: Props) {
         >
           Bạn chưa được phân công vào cơ sở hoặc nghiệp vụ này.
         </p>
+      ) : null}
+
+      {isDirector ? (
+        <ViecDauTienPanel
+          dem={demViecChoGiamDoc}
+          siteId={visibleSites[0]?.id ?? ERP_SITES[0].id}
+        />
       ) : null}
 
       {tienDoVongDan ? (

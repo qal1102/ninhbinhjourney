@@ -108,3 +108,85 @@ test.describe("A15-TRUNG-THU-01: cờ mùa Trung thu tính theo đồng hồ th�
     await page.keyboard.press("Escape");
   });
 });
+
+/**
+ * Vòng trăng (`components/discovery/moon-dial.tsx`).
+ *
+ * Bài đầu tiên ở đây là một bài **hồi quy**, không phải bài trang trí: chủ dự
+ * án bấm đêm "khép mùa" rồi không bấm được hai đêm kia nữa. Nguyên nhân là
+ * quầng sáng của mặt trăng vẽ tràn ra ngoài khung vuông (`overflow-visible`)
+ * và vẫn nhận con trỏ; lời của đêm khép mùa ngắn hơn nên hàng nút trồi lên
+ * đúng vào vùng quầng ấy. Đo bằng `elementFromPoint` ngay giữa từng nút, sau
+ * mỗi lượt chọn — `click()` thường không bắt được lỗi này vì Playwright tự
+ * cuộn và tự né.
+ */
+test.describe("Vòng trăng Trung thu", () => {
+  test("chọn bất kỳ đêm nào thì mọi đêm còn lại vẫn bấm được", async ({ page }) => {
+    await prepareReadOnly(page);
+    await page.goto("/seasonal/mid-autumn?lang=vi");
+    const nut = page.getByRole("radio");
+    // `count()` không tự chờ. Thiếu câu này thì bài đỏ với "0 nút" ngay cả khi
+    // trang dựng đủ — đã dính đúng một lần ở khổ mobile.
+    await expect(nut.first()).toBeVisible();
+    const soDem = await nut.count();
+    expect(soDem).toBeGreaterThanOrEqual(3);
+
+    for (let chon = 0; chon < soDem; chon += 1) {
+      await nut.nth(chon).click();
+      await expect(nut.nth(chon)).toHaveAttribute("aria-checked", "true");
+
+      for (let i = 0; i < soDem; i += 1) {
+        await nut.nth(i).scrollIntoViewIfNeeded();
+        const o = await nut.nth(i).boundingBox();
+        expect(o).not.toBeNull();
+        const chuThoat = await page.evaluate(
+          ({ x, y }) => {
+            const tren = document.elementFromPoint(x, y);
+            return tren?.closest('[role="radio"]') ? "nút" : (tren?.tagName ?? "trống");
+          },
+          { x: o!.x + o!.width / 2, y: o!.y + o!.height / 2 },
+        );
+        expect(
+          chuThoat,
+          `đang chọn đêm ${chon}, điểm giữa nút ${i} bị thứ khác che`,
+        ).toBe("nút");
+      }
+    }
+  });
+
+  test("mỗi đêm một mặt trăng khác nhau, không phải ba hình giống hệt", async ({ page }) => {
+    await prepareReadOnly(page);
+    await page.goto("/seasonal/mid-autumn?lang=vi");
+    const nut = page.getByRole("radio");
+    // `count()` không tự chờ. Thiếu câu này thì bài đỏ với "0 nút" ngay cả khi
+    // trang dựng đủ — đã dính đúng một lần ở khổ mobile.
+    await expect(nut.first()).toBeVisible();
+    const soDem = await nut.count();
+    const nhan = new Set<string>();
+    for (let i = 0; i < soDem; i += 1) {
+      await nut.nth(i).click();
+      nhan.add(((await page.locator("[data-moon-phase]").textContent()) ?? "").trim());
+    }
+    // Ba đêm của mùa nằm ở ba pha khác nhau; nếu nhãn trùng nhau thì hoặc phép
+    // tính hỏng, hoặc hình đã quay về kiểu "hai vòng tròn giống hệt" ngày xưa.
+    expect(nhan.size).toBe(soDem);
+  });
+
+  test("vòng trăng tự biết mùa đang ở giai đoạn nào", async ({ page }) => {
+    await prepareReadOnly(page);
+    await page.goto("/seasonal/mid-autumn?lang=vi");
+    const cau = page.locator("[data-moon-season]");
+    await expect(cau).toBeVisible();
+    await expect(cau).toHaveAttribute(
+      "data-moon-season",
+      /^(truoc-mua|trong-mua|dung-ram|qua-ram|het-mua)$/,
+    );
+
+    // Quanh mùa thì có thêm đêm "tối nay", và nó phải là đêm mở sẵn — đứng
+    // trước rằm ba hôm mà vòng trăng vẫn mở ở đêm rằm là đúng cái lỗi đang sửa.
+    const toiNay = page.getByRole("radio", { name: /Tối nay/ });
+    if (await toiNay.count()) {
+      await expect(toiNay).toHaveAttribute("aria-checked", "true");
+    }
+  });
+});

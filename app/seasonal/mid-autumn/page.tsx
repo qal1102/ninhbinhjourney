@@ -41,8 +41,11 @@ export default async function MidAutumnPage({
               {[lang === "vi" ? "18.09 · mở mùa" : "18 Sep · opens", lang === "vi" ? "25.09 · rằm" : "25 Sep · full moon", lang === "vi" ? "27.09 · khép mùa" : "27 Sep · closes"].map((date) => <li key={date} className="border-r border-white/18 px-3 py-4 last:border-r-0 first:pl-0">{date}</li>)}
             </ol>
           </div>
+          {/* Giờ lấy ở máy chủ rồi truyền xuống: vòng trăng phải nói mùa trăng
+              của Ninh Bình, không phải mùa trăng theo đồng hồ máy khách. */}
           <MoonDial
             lang={lang}
+            bayGio={new Date().toISOString()}
             dem={[
               { ngay: "2026-09-18", nhan: { vi: "18.09 · mở mùa", en: "18 Sep · opens" }, loi: { vi: "Đêm mở mùa, vừa tới thượng huyền — sáng chưa trọn nửa, đủ soi lối xuống bến.", en: "Opening night: just past first quarter — not yet full, enough to light the path to the pier." } },
               { ngay: "2026-09-25", nhan: { vi: "25.09 · rằm", en: "25 Sep · full moon" }, loi: { vi: "Rằm tháng tám. Trăng đầy nhất của mùa thật ra rơi vào đêm sau, 26.09 — lịch và bầu trời lệch nhau một ngày.", en: "The fifteenth of the eighth lunar month. The brightest moon actually falls the next night, 26 Sep — calendar and sky differ by a day." } },

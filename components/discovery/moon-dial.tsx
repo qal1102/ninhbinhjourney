@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 import {
   heSoBongTrang,
@@ -8,6 +8,7 @@ import {
   TEN_PHA_EN,
   TEN_PHA_VI,
 } from "@/domain/lunar-phase";
+import { loiTinhTrang, tinhTrangMua } from "@/domain/mua-trang";
 
 /**
  * Vòng trăng của mùa — ba đêm, ba mặt trăng khác nhau, bấm được.
@@ -26,6 +27,11 @@ import {
  * và hình vẽ đổi theo: độ đầy, chiều khuyết, tên gọi. Đêm mở mùa là trăng
  * khuyết đầu tháng, đêm rằm gần trọn đĩa, đêm khép mùa đã bắt đầu xuống. Bấm
  * hoặc dùng phím mũi tên để đi giữa ba đêm.
+ *
+ * Vòng trăng **tự biết hôm nay là ngày nào trong mùa**: quanh mùa thì nó mở
+ * sẵn ở đêm "tối nay" và tính trăng thật của đêm ấy, kèm một dòng đếm ngược
+ * tới mốc kế tiếp; ngoài mùa thì lùi về đêm rằm. Bản đầu luôn mở ở đêm rằm bất
+ * kể hôm nay là ngày nào — chủ dự án mở web trước rằm ba đêm và bắt ngay.
  *
  * Đây là **kỹ năng riêng của thế giới Trung thu**, đúng như ma trận chỉ đạo
  * sáng tạo yêu cầu: lịch–quỹ đạo–vật liệu, không mượn bộ hiệu ứng của trang
@@ -68,15 +74,42 @@ function duongSang(pha: number) {
 export function MoonDial({
   dem,
   lang,
+  bayGio,
 }: {
   dem: readonly DemTrang[];
   lang: "vi" | "en";
+  /**
+   * Thời điểm hiện tại, dạng ISO, **do máy chủ truyền xuống**. Không gọi
+   * `new Date()` ngay trong lúc dựng: máy chủ và máy khách sẽ ra hai kết quả
+   * khác nhau nên React kêu lệch hydrate, và tệ hơn, khách ở múi giờ khác sẽ
+   * thấy một mùa trăng không phải của Ninh Bình.
+   */
+  bayGio: string;
 }) {
-  const [chon, setChon] = useState(() =>
-    Math.max(0, dem.findIndex((d) => d.nhan.vi.includes("rằm"))),
-  );
   const id = useId();
-  const demNay = dem[chon] ?? dem[0];
+
+  const { danhSach, macDinh, tinhTrang } = useMemo(() => {
+    const iRam = Math.max(0, dem.findIndex((d) => d.nhan.vi.includes("rằm")));
+    const tt = tinhTrangMua(new Date(bayGio), dem.map((d) => d.ngay), dem[iRam].ngay);
+    if (!tt.hienToiNay) return { danhSach: dem, macDinh: iRam, tinhTrang: tt };
+    // Hôm nay trùng đúng một đêm của mùa thì không thêm chip thứ tư — hai chip
+    // cùng trỏ vào một đêm chỉ làm khách phân vân.
+    const trungDem = dem.findIndex((d) => d.ngay === tt.homNay);
+    if (trungDem >= 0) return { danhSach: dem, macDinh: trungDem, tinhTrang: tt };
+    const [, thang, ngay] = tt.homNay.split("-");
+    const toiNay: DemTrang = {
+      ngay: tt.homNay,
+      nhan: { vi: `Tối nay · ${ngay}.${thang}`, en: `Tonight · ${ngay}.${thang}` },
+      loi: {
+        vi: "Trăng đúng đêm nay trên sông Ngô Đồng — tính theo lịch trời, không phải một tấm ảnh chụp sẵn.",
+        en: "The moon over the Ngo Dong tonight — computed from the sky, not a stock photo.",
+      },
+    };
+    return { danhSach: [toiNay, ...dem], macDinh: 0, tinhTrang: tt };
+  }, [dem, bayGio]);
+
+  const [chon, setChon] = useState(macDinh);
+  const demNay = danhSach[chon] ?? danhSach[macDinh];
   // 21 giờ Việt Nam — giờ người ta thật sự ngẩng lên nhìn, không phải 0 giờ.
   const pha = phaTrang(new Date(`${demNay.ngay}T21:00:00+07:00`));
   const tenPha = lang === "vi" ? TEN_PHA_VI[pha.ten] : TEN_PHA_EN[pha.ten];
@@ -87,7 +120,11 @@ export function MoonDial({
       <div className="relative aspect-square w-full">
         <svg
           viewBox="0 0 400 400"
-          className="h-full w-full overflow-visible"
+          // Quầng sáng vẽ tràn ra ngoài khung vuông. Không khoá con trỏ thì
+          // chính vòng tròn trong suốt ấy **nuốt cú bấm** của hàng nút ngay
+          // bên dưới: chọn đêm khép mùa làm dòng chữ ngắn lại, hàng nút trồi
+          // lên nằm dưới quầng, và hai đêm kia hết bấm được.
+          className="pointer-events-none h-full w-full overflow-visible"
           role="img"
           aria-label={
             lang === "vi"
@@ -148,26 +185,28 @@ export function MoonDial({
         </svg>
       </div>
 
-      <p className="mt-2 text-center text-sm text-white/72">
+      <p className="mt-2 text-center text-sm text-white/72" data-moon-phase>
         <span className="font-semibold text-[#e7b96a]">{tenPha}</span>
         {lang === "vi" ? ` · sáng ${phanTram}%` : ` · ${phanTram}% lit`}
       </p>
-      <p className="mx-auto mt-1 max-w-sm text-center text-sm leading-6 text-white/58">
+      {/* Chiều cao giữ cố định: lời của mỗi đêm dài ngắn khác nhau, để trôi thì
+          hàng nút nhảy lên nhảy xuống ngay dưới ngón tay đang bấm. */}
+      <p className="mx-auto mt-1 flex min-h-[5.25rem] max-w-sm items-start justify-center text-center text-sm leading-6 text-white/58 sm:min-h-[3.75rem]">
         {lang === "vi" ? demNay.loi.vi : demNay.loi.en}
       </p>
 
       <div
         role="radiogroup"
-        aria-label={lang === "vi" ? "Ba đêm của mùa" : "Three nights of the season"}
+        aria-label={lang === "vi" ? "Các đêm của mùa trăng" : "Nights of the moon season"}
         className="mt-5 flex flex-wrap justify-center gap-2"
         onKeyDown={(su) => {
           if (su.key !== "ArrowRight" && su.key !== "ArrowLeft") return;
           su.preventDefault();
           const buoc = su.key === "ArrowRight" ? 1 : -1;
-          setChon((truoc) => (truoc + buoc + dem.length) % dem.length);
+          setChon((truoc) => (truoc + buoc + danhSach.length) % danhSach.length);
         }}
       >
-        {dem.map((d, i) => (
+        {danhSach.map((d, i) => (
           <button
             key={d.ngay}
             type="button"
@@ -186,6 +225,14 @@ export function MoonDial({
           </button>
         ))}
       </div>
+
+      {/* Mùa đang ở đâu, tính từ hôm nay. */}
+      <p
+        data-moon-season={tinhTrang.giaiDoan}
+        className="mt-3 text-center text-[0.68rem] font-extrabold uppercase tracking-[0.22em] text-[#e7b96a]/78"
+      >
+        {loiTinhTrang(tinhTrang, lang)}
+      </p>
     </div>
   );
 }

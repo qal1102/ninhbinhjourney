@@ -5,30 +5,41 @@
 > Anh đánh dấu món nào muốn, tôi làm món đó. Không đánh dấu thì tôi không làm —
 > làm hết một lượt là cách chắc chắn nhất để trang thành nặng và rối.
 
-Soạn 22/09/2026, sau khi đọc cách chấm của Awwwards và mấy trang đoạt giải 2026.
+Soạn 22/09/2026, sửa lại cùng ngày sau khi chủ dự án nói rõ mục đích.
+
+> **Mục đích, nói thẳng từ chủ dự án:** *"ý tao là nhồi hết các loại skills đỉnh
+> cao của Awwwards mà mày có thể làm được, chứ không phải mục đích làm sao để
+> đoạt giải. Mục đích chính là lên đó copy kỹ năng, sao chép các thứ hay ho mà
+> mình có thể làm được xong bỏ vào — những cái fancy đẳng cấp nhất."*
+>
+> Và: *"design ở đây là kiểu Designer kết hợp của frontend — nhìn vào phải wow,
+> chứ cái bấm bấm hoạt động đương nhiên phải được rồi."*
+>
+> Nên bảng dưới đây **không xếp theo thang điểm của ban giám khảo**. Nó xếp theo
+> *nhìn vào có sững lại một nhịp không*. Chuyện bấm được, không vỡ, không giật
+> là mức sàn — không tính là thành tích.
 
 ---
 
-## 0. Luật chơi, trước khi chọn
+## 0. Hai điều rút ra từ mấy trang đỉnh nhất 2026
 
-Awwwards chấm theo bốn cột, **trọng số công bố**: Design 40% · Usability 30% ·
-Creativity 20% · Content 10%. Mốc Honorable Mention từ 6,5; Site of the Day
-thường phải 8 phẩy mấy. Có ít nhất 18 giám khảo chấm, ba điểm lệch nhất bị loại.
+Không phải luật thi. Là hai điều quan sát được từ chính những trang nhìn đã
+nhất năm nay, và cả hai đều đáng chép:
 
-Ba hệ quả, và cả ba đều đi ngược trực giác "thêm hiệu ứng cho ngầu":
+1. **Nghề nằm ở nhịp, không nằm ở số lượng hiệu ứng.** Mấy trang đẹp nhất 2026
+   đều chỉ có **một** ý tưởng lớn chạy suốt trang, rồi diễn nó thật kỹ: một
+   cảnh 3D được chiếu đèn như tác phẩm trưng bày, một bộ chữ co giãn theo cuộn,
+   một cú chuyển khối giữa các phần giống máy quay lia. Nhồi mười hiệu ứng rời
+   rạc lên một trang thì ra hội chợ, không ra đẳng cấp.
+2. **Hiệu ứng chở được dữ kiện thật thì sang gấp đôi.** Đa số trang đẹp đều
+   rỗng. Trang này có thứ hiếm: pha trăng tính được, lịch mùa thật, toạ độ
+   thật, hồ sơ hợp tác tra được nguồn. Một vòng trăng **đúng với bầu trời đêm
+   nay** gây ấn tượng hơn hẳn một vòng trăng vẽ cho đẹp — vì khách nhận ra nó
+   thật.
 
-1. **Design + Usability = 70%.** Hiệu ứng nằm ở cột Creativity, chỉ 20%. Một
-   trang mượt và dễ dùng luôn thắng một trang lắm trò mà khó bấm. Đúng cái lỗi
-   vòng trăng vừa dính: quầng sáng đẹp, nhưng nó nuốt mất nút bấm.
-2. **Mobile bị chấm bằng đúng bộ tiêu chí ấy**, và riêng nhánh Mobile Excellence
-   đòi qua 70/100 tiêu chí Google trước khi giám khảo mở ra nhìn. Hiệu ứng nào
-   làm điện thoại giật là trừ thẳng vào 30% Usability.
-3. **Content 10% nhưng là chỗ ta hơn người.** Đa số trang đoạt giải đẹp mà rỗng.
-   Trang này có dữ liệu thật: pha trăng, lịch mùa, sức chứa bến thuyền, hồ sơ
-   hợp tác có nguồn. Hiệu ứng nào **chở được một dữ kiện thật** thì đáng làm gấp
-   đôi hiệu ứng chỉ để đẹp.
-
-Vì vậy mọi món dưới đây đều ghi thêm một dòng: **nó nói được điều gì thật?**
+Nên mỗi món dưới đây đều ghi thêm một dòng: **nó nói được điều gì thật?** Món
+không nói được gì vẫn làm, nếu nhìn đủ đã; nhưng khi phải chọn, món nói được
+điều thật đi trước.
 
 ---
 
@@ -130,8 +141,8 @@ Ghi ra để khỏi phải cãi lại sau:
 
 ## 8. Nếu anh chỉ chọn sáu món
 
-Đây là sáu món tôi chọn nếu phải chọn thay anh — ăn điểm nhiều nhất trên mỗi
-giờ bỏ ra, và **năm trong sáu món chở được một dữ kiện thật**:
+Chủ dự án đã bảo tự chọn. Sáu món này gây ấn tượng nhiều nhất trên mỗi giờ bỏ
+ra, và **năm trong sáu món chở được một dữ kiện thật**:
 
 1. **A1 — bản đồ sống** (sửa hẳn lỗi đang có, đồng thời là món gây ấn tượng nhất)
 2. **C3 — trang Trung thu đổi mặt theo giai đoạn mùa**
@@ -144,7 +155,70 @@ Mỗi món xong sẽ có ảnh chụp trước/sau, đo trên cả điện tho�
 
 ---
 
-## 9. Nguồn
+## 9. ⚠️ Ghi chú 22/09: ba nét vẽ và cái vòm ở đầu trang
+
+**Chủ dự án hỏi:** *"cái ý tưởng về 3 cái sông uốn lượn ở đầu trang hình ngọn
+núi đưa nào làm vậy? Nhìn nó cứ ngáo ngáo... như kiểu thằng nào vẽ vạch lên."*
+
+**Đã chụp ảnh production và tô đỏ đúng hai nét ấy để xem chúng nằm đâu. Nhận
+xét ấy đúng.** Ghi lại đây để phiên sau không cãi nhau bằng trí nhớ.
+
+### Thật ra đang có BA thứ chồng lên nhau ở góc phải đầu trang
+
+| Thứ | Là gì | Vấn đề |
+|---|---|---|
+| Cái vòm nhạt hình quả trứng | `.hero-depth-window` — một **tấm ảnh thứ hai** (cảnh mưa Tràng An) bị cắt theo hình vòm, dán đè lên ảnh nền | Hai tấm ảnh khác nhau chồng nhau trong cùng một khung. Mắt không đọc ra "chiều sâu", chỉ đọc ra "ảnh bị lỗi" |
+| Nét cong dài | `.hero-depth-contour` — định làm "nếp núi" | **Không trùng với nếp núi nào trong ảnh.** Nó cắt ngang mặt vách đá rồi chạy xuống mặt nước |
+| Nét cong ngắn | `.hero-depth-river` — định làm "dòng sông" | Chạy vắt qua cả vách đá lẫn con thuyền, tức qua chỗ không thể có sông |
+
+### Vì sao nó thành "vẽ vạch lên"
+
+Một nét trang trí đặt lên **ảnh chụp thật** chỉ có hai đường sống được:
+
+1. **Bám đúng một vật có thật trong ảnh** (đúng nếp núi ấy, đúng mép nước ấy), hoặc
+2. **Nằm ở chỗ không có gì để mâu thuẫn** (trên nền trơn, ngoài lề ảnh).
+
+Hai nét hiện tại không đi đường nào cả: chúng được vẽ tay theo cảm giác, rồi
+đặt lên một tấm ảnh có địa hình rõ ràng. Mắt người so sánh trong nửa giây và
+kết luận "cái này không thuộc về đây". Không cứu được bằng cách chỉnh màu hay
+giảm độ mờ — sai ở chỗ **nó không nói gì thật**.
+
+### Một lỗi nữa bắt được trong cùng lượt chụp
+
+Ảnh chụp lúc ở Ninh Bình **02:00**, tức lớp phủ "ban đêm" đang bật. Ở khổ điện
+thoại, lớp ấy dìm tấm ảnh xuống gần như **một mảng xanh đậm trơn** — không còn
+nhìn ra núi, nước hay con thuyền. Ý tưởng "trang đổi màu theo giờ thật" là hay,
+nhưng bản đêm hiện tại đang giết mất tấm ảnh trên điện thoại.
+
+### Bốn hướng thay, xếp theo mức độ tôi tin tưởng
+
+**H1 — Bỏ hẳn hai nét và cái vòm.** Tấm ảnh đủ mạnh để đứng một mình. Mất 15
+phút, không rủi ro, và ngay lập tức hết cái cảm giác "ai đó vẽ bậy lên ảnh".
+Đây là việc nên làm trước, bất kể sau đó chọn hướng nào.
+
+**H2 — Thay bằng một tấm biển ấn phẩm.** Góc dưới ảnh có một dòng nhỏ kiểu
+chú thích của tạp chí: *Tràng An · 20°15′N 105°54′E · 06:12*. Một đường kẻ
+mảnh, một dòng chữ. Nó **nói một điều thật** (đúng nơi, đúng toạ độ, đúng giờ
+chụp), và chính cái sự tiết chế ấy là thứ làm một trang trông "bài bản từ A tới
+Z". Rẻ, và hợp với chỗ này nhất.
+
+**H3 — Đường đi thật của con thuyền, chỉ vẽ trên mặt nước.** Nếu vẫn muốn có
+nét, thì nét ấy phải là **tuyến chèo thật của Tràng An**, che mặt nạ để chỉ
+hiện ở vùng nước, và một chấm nhỏ trôi dọc tuyến khi khách cuộn. Lúc đó nét
+không còn là trang trí: nó là một tuyến đường, nằm đúng chỗ tuyến đường được
+phép nằm. Tốn công vừa, nhưng đây là hướng duy nhất giữ được ý "có nét vẽ".
+
+**H4 — Lấy chiều sâu bằng lớp, không bằng nét.** Tách ảnh thành hai–ba lớp
+(núi xa, núi gần, mặt nước) rồi cho chúng trôi lệch tốc độ khi cuộn. Chiều sâu
+đến từ chuyển động thật chứ không từ một đường kẻ giả. Cần người tách ảnh —
+đã ghi vào `YEU_CAU_HINH_ANH.md`.
+
+**Đề nghị:** làm **H1 + H2** ngay (bỏ nét, thêm biển chú thích), rồi tính H3
+hoặc H4 sau khi có ảnh tách lớp. Và sửa riêng lớp phủ ban đêm ở khổ điện thoại.
+
+---
+
+## 10. Nguồn
 
 - Cách chấm của Awwwards (trọng số, ngưỡng điểm, nhánh Mobile Excellence):
   <https://www.hontran.dev/blog/awwwards-judging-criteria>

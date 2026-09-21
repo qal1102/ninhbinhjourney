@@ -81,6 +81,8 @@ import {
 } from "@/lib/erp/counter-sale-repository";
 import type { CounterSaleReceipt } from "@/domain/erp-counter-sale";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
+import { changMoLai, VONG_TIEN_ID, type TienDoVongDan } from "@/domain/huong-dan-vong-dau";
+import { writeTienDoVongDan } from "@/lib/erp/huong-dan-repository";
 
 function safePasswordEqual(actual: string, expected: string) {
   const left = createHash("sha256").update(actual).digest();
@@ -1176,4 +1178,35 @@ export async function moderateVisitReviewAction(
             ket_qua.quotaLimit === null ? null : Math.max(0, ket_qua.quotaLimit - (ket_qua.quotaUsed ?? 0)),
           )}`,
   };
+}
+
+/**
+ * Mạch dẫn — ghi lại người này đang đi tới chặng nào của vòng dẫn.
+ *
+ * Không có nhánh phân quyền nào ở đây, cố ý: vòng dẫn chỉ ghi vào hàng của
+ * chính tài khoản đang đăng nhập, và nó không mang một mẩu dữ liệu nghiệp vụ
+ * nào. Thứ tệ nhất một lượt gọi sai có thể làm là khiến chính người gọi phải
+ * xem lại vòng dẫn từ đầu.
+ */
+export async function ghiTienDoVongDanAction(
+  formData: FormData,
+): Promise<{ ok: boolean; tienDo: TienDoVongDan }> {
+  const actor = await getCurrentErpUser();
+  if (!actor) {
+    return {
+      ok: false,
+      tienDo: { changHienTai: 1, daXong: false, boQua: false, tungDi: false },
+    };
+  }
+
+  const chang = Number(formData.get("chang"));
+  const tienDo = await writeTienDoVongDan({
+    accountId: actor.id,
+    vongId: VONG_TIEN_ID,
+    chang: Number.isFinite(chang) ? changMoLai(chang) : 1,
+    xong: formData.get("xong") === "1",
+    boQua: formData.get("boQua") === "1",
+    diLai: formData.get("diLai") === "1",
+  });
+  return { ok: true, tienDo };
 }

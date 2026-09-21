@@ -67,6 +67,11 @@ vi.mock("@/lib/erp/visit-review-moderation-repository", () => ({
   hideQuotaUsed: vi.fn(),
 }));
 
+vi.mock("@/lib/erp/huong-dan-repository", () => ({
+  readTienDoVongDan: vi.fn(),
+  writeTienDoVongDan: vi.fn(),
+}));
+
 // QA-P2-09: bộ đếm đăng nhập sai đọc `next/headers` và mở đầu bằng
 // `import "server-only"`, nên cũng phải giả lập như các kho khác.
 vi.mock("@/lib/erp/login-throttle", () => ({

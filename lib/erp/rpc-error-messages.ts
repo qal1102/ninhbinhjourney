@@ -487,6 +487,12 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CA_TRUC_INPUT_INVALID:
     "Chưa rõ cơ sở hoặc ngày cần xem bản giao ca.",
 
+  // Mach dan — tien do vong dan.
+  HUONG_DAN_INPUT_INVALID:
+    "Chưa rõ tài khoản hoặc vòng hướng dẫn cần ghi nhớ.",
+  HUONG_DAN_CHANG_INVALID:
+    "Số chặng của vòng hướng dẫn không hợp lệ.",
+
   // TC-18 — doan mua tai quay.
   GROUP_COUNTER_INPUT_INVALID:
     "Số người hoặc nhãn đoàn chưa hợp lệ.",

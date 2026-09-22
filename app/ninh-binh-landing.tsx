@@ -275,8 +275,8 @@ const copy = {
     selected: "Selected",
     welcome: "Welcome location",
     welcomeDescription:
-      "No QR source was supplied, so the map starts from a neutral Ninh Binh welcome point.",
-    mapHint: "Tap any marker for story, timing and route actions.",
+      "Touch a pin and the place tells its own story. Some can only be reached by boat, others are best early in the day.",
+    mapHint: "Touch a pin for its story, the hour to go, then add it to your day.",
     nearMe: "Near me",
     locating: "Finding your position...",
     locationFound: "Map centered near you.",
@@ -420,8 +420,8 @@ const copy = {
     selected: "Đã chọn",
     welcome: "Điểm chào đón",
     welcomeDescription:
-      "URL chưa có nguồn QR, vì vậy bản đồ bắt đầu tại một điểm chào đón trung tính của Ninh Bình.",
-    mapHint: "Chạm vào marker để xem câu chuyện, thời điểm và thao tác thêm vào lịch trình.",
+      "Chạm một ghim để nơi ấy tự kể chuyện của mình. Có nơi chỉ đến được bằng thuyền, có nơi nên đi từ sớm.",
+    mapHint: "Chạm một ghim để nghe chuyện, biết giờ nên đi, rồi thêm vào lịch trình.",
     nearMe: "Gần tôi",
     locating: "Đang tìm vị trí của bạn...",
     locationFound: "Bản đồ đã đưa về gần vị trí của bạn.",

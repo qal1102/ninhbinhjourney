@@ -487,6 +487,16 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CA_TRUC_INPUT_INVALID:
     "Chưa rõ cơ sở hoặc ngày cần xem bản giao ca.",
 
+  // So lien he nhan hang doi tac.
+  DOI_TAC_INPUT_INVALID:
+    "Xin điền tên nhãn hàng trước đã.",
+  DOI_TAC_TEN_QUA_DAI:
+    "Tên nhãn hàng dài quá, xin rút gọn lại.",
+  DOI_TAC_GIAI_DOAN_INVALID:
+    "Giai đoạn trao đổi không hợp lệ.",
+  DOI_TAC_NOT_FOUND:
+    "Dòng này không còn trong sổ nữa.",
+
   // Mach dan — tien do vong dan.
   HUONG_DAN_INPUT_INVALID:
     "Chưa rõ tài khoản hoặc vòng hướng dẫn cần ghi nhớ.",

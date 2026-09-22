@@ -10,7 +10,9 @@ import { CustomerFunnelDashboard } from "@/components/customer-data/customer-fun
 import { getCustomerFunnelReport, isCustomerFunnelDashboardEnabled } from "@/lib/customer-data/funnel-repository";
 import type { CustomerFunnelReport } from "@/domain/customer-funnel";
 import { goiYTen, LichMuaVuPanel } from "@/components/erp/lich-mua-vu-panel";
+import { SoDoiTacPanel } from "@/components/erp/so-doi-tac-panel";
 import { CAC_DIP, lichMuaVu } from "@/domain/lich-mua-vu";
+import { docSoDoiTac, soDoiTacSanSang } from "@/lib/erp/doi-tac-repository";
 
 export default async function ErpMarketingPage({
   searchParams,
@@ -23,8 +25,10 @@ export default async function ErpMarketingPage({
   if (user.role !== "director") redirect("/erp?denied=marketing");
 
   // Lịch mùa vụ tính ở máy chủ: ngày âm lịch phải theo đồng hồ của hệ thống,
-  // không theo đồng hồ máy người đang mở màn hình.
-  const lich = lichMuaVu(new Date());
+  // không theo đồng hồ máy người đang mở màn hình. Sổ đối tác đếm ngày im
+  // lặng theo đúng cái đồng hồ ấy, nên cả hai cùng lấy một mốc thời gian.
+  const bayGio = new Date();
+  const lich = lichMuaVu(bayGio);
   // Bấm một dịp thì quay lại chính trang này kèm mã dịp, và ô tạo chiến dịch
   // mở ra với tên đã điền sẵn. Không cần trạng thái phía máy khách, cũng
   // không cần thêm bảng nào.
@@ -33,6 +37,10 @@ export default async function ErpMarketingPage({
   const dipChon = maDip ? CAC_DIP.find((d) => d.id === maDip) : undefined;
   const dipTrongLich = dipChon ? lich.find((d) => d.dip.id === dipChon.id) : undefined;
   const goiYTenChienDich = dipTrongLich ? goiYTen(dipTrongLich) : "";
+
+  // Sổ đối tác đọc hỏng thì mất đúng khối ấy, không kéo sập cả màn hình.
+  const soDoiTac = await docSoDoiTac();
+  const soSanSang = soDoiTacSanSang();
 
   let config = null;
   let funnel: CustomerFunnelReport | null = null;
@@ -54,6 +62,12 @@ export default async function ErpMarketingPage({
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <div className="space-y-6">
         <LichMuaVuPanel lich={lich} />
+        <SoDoiTacPanel
+          so={soDoiTac ?? []}
+          dip={lich}
+          bayGio={bayGio.toISOString()}
+          sanSang={soSanSang && soDoiTac !== null}
+        />
         {config ? (
           <MarketingQrControlCenter config={config} goiYTenChienDich={goiYTenChienDich} />
         ) : (

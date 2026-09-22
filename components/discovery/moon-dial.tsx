@@ -9,6 +9,7 @@ import {
   TEN_PHA_VI,
 } from "@/domain/lunar-phase";
 import { loiTinhTrang, tinhTrangMua } from "@/domain/mua-trang";
+import { MoonWater } from "@/components/discovery/moon-water";
 
 /**
  * Vòng trăng của mùa — ba đêm, ba mặt trăng khác nhau, bấm được.
@@ -184,6 +185,13 @@ export function MoonDial({
           />
         </svg>
       </div>
+
+      {/*
+        Mặt nước ngay dưới trăng. Vệt sáng rộng hẹp theo đúng pha của đêm đang
+        chọn — đêm khuyết vệt hẹp, đêm rằm vệt rộng — nên đổi đêm là đổi cả
+        mặt sông, không chỉ đổi cái đĩa tròn phía trên.
+      */}
+      <MoonWater doSang={pha.doSang} className="-mt-3 h-28 sm:h-32" />
 
       <p className="mt-2 text-center text-sm text-white/72" data-moon-phase>
         <span className="font-semibold text-[#e7b96a]">{tenPha}</span>

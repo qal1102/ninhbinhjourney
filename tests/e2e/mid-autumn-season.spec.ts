@@ -190,3 +190,83 @@ test.describe("Vòng trăng Trung thu", () => {
     }
   });
 });
+
+/**
+ * Mặt nước dưới vòng trăng.
+ *
+ * Bài đáng giá ở đây không phải "có canvas không" mà là **vệt nước có đi theo
+ * trăng không**. Đếm thẳng số điểm ảnh sáng trên canvas ở hai đêm khác nhau:
+ * đêm rằm phải sáng hơn hẳn đêm thượng huyền. Nếu ai đó sau này vẽ một vệt
+ * cố định cho "đẹp và rẻ", bài này đỏ.
+ */
+test.describe("Mặt nước dưới trăng", () => {
+  async function doDoSang(page: import("@playwright/test").Page) {
+    // Phải kéo mặt nước vào khung nhìn trước khi đo. Nó **cố ý ngừng vẽ khi
+    // trôi ra ngoài** để không đốt pin của khách; ở ngoài khung thì canvas
+    // giữ nguyên khung hình cũ, và đo lúc ấy là đo một tấm ảnh cũ.
+    await page.locator("[data-moon-water]").scrollIntoViewIfNeeded();
+    // Gợn nhấp nháy theo thời gian, nên lấy lượt sáng nhất trong vài khung
+    // hình thay vì tin một khung duy nhất.
+    let caoNhat = 0;
+    for (let lan = 0; lan < 6; lan += 1) {
+      const diem = await page.locator("[data-moon-water]").evaluate((el) => {
+        const canvas = el as HTMLCanvasElement;
+        const ctx = canvas.getContext("2d");
+        if (!ctx || canvas.width === 0) return 0;
+        const anh = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let dem = 0;
+        for (let i = 3; i < anh.length; i += 4) {
+          if (anh[i] > 24) dem += 1;
+        }
+        return dem;
+      });
+      caoNhat = Math.max(caoNhat, diem);
+      await page.waitForTimeout(160);
+    }
+    return caoNhat;
+  }
+
+  test("vệt trăng trên nước rộng và sáng lên đúng vào đêm rằm", async ({ page }) => {
+    test.slow();
+    await prepareReadOnly(page);
+    await page.goto("/seasonal/mid-autumn?lang=vi");
+    await expect(page.locator("[data-moon-water]")).toBeAttached();
+
+    await page.getByRole("radio", { name: /18\.09/ }).click();
+    await expect(page.locator("[data-moon-phase]")).toContainText("thượng huyền");
+    const khuyet = await doDoSang(page);
+
+    await page.getByRole("radio", { name: /25\.09/ }).click();
+    await expect(page.locator("[data-moon-phase]")).toContainText("trăng tròn");
+    const ram = await doDoSang(page);
+
+    expect(khuyet).toBeGreaterThan(0);
+    expect(ram, `đêm rằm ${ram} điểm sáng, đêm khuyết ${khuyet}`).toBeGreaterThan(khuyet * 1.3);
+  });
+
+  test("chọn giảm chuyển động thì mặt nước vẫn có, chỉ là không gợn", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await prepareReadOnly(page);
+    await page.goto("/seasonal/mid-autumn?lang=vi");
+    const nuoc = page.locator("[data-moon-water]");
+    await expect(nuoc).toBeAttached();
+    await nuoc.scrollIntoViewIfNeeded();
+    // Vẽ đúng một khung rồi đứng yên: hai lượt đo cách nhau nửa giây phải ra
+    // cùng một con số.
+    const dem = async () =>
+      nuoc.evaluate((el) => {
+        const c = el as HTMLCanvasElement;
+        const ctx = c.getContext("2d");
+        if (!ctx || c.width === 0) return -1;
+        const d = ctx.getImageData(0, 0, c.width, c.height).data;
+        let n = 0;
+        for (let i = 3; i < d.length; i += 4) if (d[i] > 24) n += 1;
+        return n;
+      });
+    // Chờ khung hình tĩnh đầu tiên vẽ xong rồi mới so hai lượt đo.
+    await expect.poll(dem, { timeout: 10_000 }).toBeGreaterThan(0);
+    const lan1 = await dem();
+    await page.waitForTimeout(600);
+    expect(await dem()).toBe(lan1);
+  });
+});

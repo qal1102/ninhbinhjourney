@@ -123,30 +123,38 @@ export function LichMuaVuPanel({ lich }: { lich: readonly DipSapToi[] }) {
           </p>
           <ol className="mt-3 divide-y divide-[#ece3d4] border-y border-[#ece3d4]">
             {conXa.map((d) => (
-              <li
-                key={d.dip.id}
-                data-dip={d.dip.id}
-                data-trang-thai={d.trangThai}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3"
-              >
-                <span className="w-[10.5rem] shrink-0 text-sm font-black text-[#3d3325]">
-                  {ngayDoc(d.ngayBatDau)}
-                </span>
-                <span className="min-w-0 flex-1 text-sm font-bold text-[#4a4133]">
-                  {d.dip.ten}
-                  {d.dip.lich === "am" ? (
-                    <span className="ml-2 text-xs font-medium text-[#8a8171]">
-                      {d.dip.ngay}/{d.dip.thang} âm lịch
-                    </span>
-                  ) : null}
-                </span>
-                <span className="text-xs text-[#8a8171]">còn {d.conBaoNhieuNgay} ngày</span>
+              // CẢ HÀNG là một liên kết, không phải mỗi chữ "Mở chiến dịch" ở
+              // mép phải. Lý do đo được trên production: nút trợ lý nổi cố
+              // định ở góc dưới bên phải **đè đúng lên liên kết ấy** ở hàng
+              // đang nằm ngang tầm nó — bấm không trúng. Vùng chạm trải hết
+              // hàng thì nút nổi chỉ che một góc nhỏ, phần còn lại vẫn bấm
+              // được; và nó cũng là vùng chạm lớn hơn cho người dùng điện
+              // thoại.
+              <li key={d.dip.id} data-dip={d.dip.id} data-trang-thai={d.trangThai}>
                 <Link
                   href={`/erp/marketing?dip=${encodeURIComponent(d.dip.id)}#tao-chien-dich`}
                   prefetch={false}
-                  className="inline-flex min-h-11 items-center px-2 text-sm font-black text-[#6b5520] underline underline-offset-4 hover:text-[#8a6b27]"
+                  className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 py-3 transition hover:bg-[#f6efe2]"
                 >
-                  Mở chiến dịch
+                  <span className="w-[10.5rem] shrink-0 text-sm font-black text-[#3d3325]">
+                    {ngayDoc(d.ngayBatDau)}
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm font-bold text-[#4a4133]">
+                    {d.dip.ten}
+                    {d.dip.lich === "am" ? (
+                      <span className="ml-2 text-xs font-medium text-[#8a8171]">
+                        {d.dip.ngay}/{d.dip.thang} âm lịch
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-xs text-[#8a8171]">còn {d.conBaoNhieuNgay} ngày</span>
+                  <span
+                    aria-hidden="true"
+                    className="text-sm font-black text-[#6b5520] underline underline-offset-4"
+                  >
+                    Mở chiến dịch
+                  </span>
+                  <span className="sr-only">Mở chiến dịch cho {d.dip.ten}</span>
                 </Link>
               </li>
             ))}

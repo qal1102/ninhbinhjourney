@@ -1326,19 +1326,34 @@ export default function NinhBinhLanding({
           <Image src="/images/destinations/intro-trang-an-rain.png" alt="" fill sizes="(max-width: 767px) 118vw, 54vw" className="hero-depth-image object-cover" />
           <span className="hero-depth-grade" />
         </div>
-        <svg className="hero-depth-lines pointer-events-none absolute" aria-hidden="true" viewBox="0 0 720 900" preserveAspectRatio="xMidYMid slice">
-          {/*
-            Đoạn đầu của đường nét này TỪNG là `M71 900V386` — một nét thẳng
-            đứng dài 514 đơn vị. Đo pixel trên ảnh dựng thật ở 1440px ngày
-            21/09: nó hiện thành một vạch sáng 1px tại x≈798 chạy gần hết
-            chiều cao màn hình, nhảy màu 188/255 so với hai bên. Trên ảnh núi
-            đá vôi, một vạch thẳng tắp như vậy đọc ra là đường viền giao diện
-            bị lỗi, không phải nếp núi. Nay đoạn ấy uốn nhẹ theo sườn, và
-            `hero-depth-lines` có mặt nạ cho nó tan dần ở chân.
-          */}
-          <path className="hero-depth-contour" d="M63 900c10-132 3-244 22-330 14-64 36-114 72-156 49-38 98-40 146-8 28-91 92-146 191-166 85-17 150 13 195 90" fill="none" />
-          <path className="hero-depth-river" d="M134 716c126-82 212-27 289-75 78-49 127-164 243-168" fill="none" />
-        </svg>
+        {/*
+          ĐÃ GỠ hai nét "nếp núi" và "dòng sông" vẽ tay ở đây (22/09/2026).
+          Chủ dự án nhìn production rồi nói: *"nhìn nó cứ ngáo ngáo, như kiểu
+          thằng nào vẽ vạch lên"*. Chụp ảnh tô đỏ hai nét ấy lên thì thấy đúng:
+          chúng không bám nếp núi nào trong ảnh, cắt ngang mặt vách đá rồi
+          chạy vắt qua con thuyền.
+
+          Luật rút ra, ghi lại để đừng vẽ thêm lần nữa: một nét trang trí đặt
+          lên ẢNH CHỤP THẬT chỉ sống được nếu nó **bám đúng một vật có thật
+          trong ảnh**, hoặc **nằm ở chỗ không có gì để mâu thuẫn**. Vẽ theo
+          cảm giác rồi dán lên một tấm ảnh có địa hình rõ ràng thì mắt người
+          so sánh trong nửa giây và kết luận "cái này không thuộc về đây".
+
+          Bốn hướng thay nằm ở docs/reference/KY_NANG_GIAO_DIEN.md mục 9.
+        */}
+        {/*
+          Bảng chú thích ảnh, dựng đứng sát mép phải như dòng ghi công trong
+          ấn phẩm. Nó thay chỗ hai nét vẽ cũ bằng một thứ **nói điều thật**:
+          đúng nơi chụp (ảnh nền là trang-an.jpg), đúng toạ độ lấy từ chính
+          kho dữ liệu điểm đến. Ẩn ở khổ hẹp — chỗ ấy đã chật.
+        */}
+        <p
+          data-hero-plate
+          aria-hidden="true"
+          className="pointer-events-none absolute right-4 top-1/2 z-10 hidden -translate-y-1/2 select-none text-[0.68rem] font-semibold uppercase tracking-[0.42em] text-white/38 [writing-mode:vertical-rl] lg:block"
+        >
+          {lang === "en" ? "Trang An · 20°15′N 105°54′E" : "Tràng An · 20°15′B 105°54′Đ"}
+        </p>
         {/*
           Tong mau anh mo dau doi theo GIO THAT o Ninh Binh: hung vang luc
           rang, trong luc trua, ho phach luc chieu, cham luc dem. Khong bia
@@ -1498,11 +1513,12 @@ export default function NinhBinhLanding({
           </a>
           </div>
         </div>
-        <div className="hero-handoff" data-hero-handoff aria-hidden="true">
-          <span />
-          <svg viewBox="0 0 520 50" preserveAspectRatio="none"><path d="M0 31C77 31 93 9 151 9c62 0 68 31 132 31 69 0 87-29 155-29 34 0 58 7 82 18" /></svg>
-          <i />
-        </div>
+        {/*
+          ĐÃ GỠ nốt nét thứ ba (22/09/2026): một chấm vàng — đường lượn —
+          chấm xanh nằm vắt ngang góc dưới phải. Cùng một bệnh với hai nét
+          kia, và nó còn chạy thẳng vào chỗ nút trợ lý hành trình đang đứng.
+          Ba nét ấy là ba thứ chủ dự án gọi chung là "3 cái sông uốn lượn".
+        */}
       </section>
 
       {/*

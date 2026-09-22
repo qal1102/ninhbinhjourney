@@ -84,8 +84,14 @@ test.describe("Bản đồ thương hiệu", () => {
   }) => {
     await chuanBi(page);
     await page.goto("/?lang=vi");
-    await page.locator("#map").scrollIntoViewIfNeeded();
-    await expect(page.locator("[data-brand-map]")).toBeVisible({ timeout: 20_000 });
+    // Bản đồ trang chủ chỉ được gắn khi khối `#map` sắp vào khung nhìn
+    // (IntersectionObserver, để không kéo gói bản đồ ngay lúc mở trang). Một
+    // lần cuộn không phải lúc nào cũng đủ: trang dài, ảnh về dần và mốc cuộn
+    // trôi theo. Cuộn lại cho tới khi bản đồ có mặt.
+    await expect(async () => {
+      await page.locator("#map").scrollIntoViewIfNeeded();
+      await expect(page.locator("[data-brand-map]")).toBeVisible({ timeout: 4_000 });
+    }).toPass({ timeout: 40_000 });
     await expect(page.locator(".nb-marker").first()).toBeVisible();
 
     // Trước khi bấm, bản đồ đang tự giới thiệu.

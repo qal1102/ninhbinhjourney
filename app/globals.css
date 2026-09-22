@@ -1,4 +1,3 @@
-@import "leaflet/dist/leaflet.css";
 @import "tailwindcss";
 
 :root {
@@ -613,29 +612,6 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
 
 .route-progress-track span {
   will-change: transform;
-}
-
-.leaflet-container {
-  background: #d7e6dd;
-  font-family: var(--font-body);
-  isolation: isolate;
-}
-
-.leaflet-control-attribution {
-  border-radius: 6px 0 0 0;
-  color: #6d756f;
-  font-size: 10px;
-}
-
-.leaflet-popup-content-wrapper {
-  border-radius: 8px;
-  box-shadow: 0 22px 60px rgba(24, 63, 52, 0.24);
-  overflow: hidden;
-}
-
-.leaflet-popup-content {
-  margin: 0;
-  width: 280px !important;
 }
 
 .nb-marker {

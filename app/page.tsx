@@ -5,6 +5,8 @@ import {
   readPublicEnvironment,
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
+import { DESTINATIONS } from "@/content/destinations";
+import { PACKAGES } from "@/content/packages";
 
 export const metadata = {
   // Trang chủ đổi ngôn ngữ bằng `?lang=`; các biến thể ấy cùng một nội dung.
@@ -54,6 +56,15 @@ export default async function Home({ searchParams }: PageProps) {
       bookingEnabled={bookingEnabled}
       presentationMode={presentationMode}
       surfaceAttributes={surfaceAttributes}
+      bayGio={new Date().toISOString()}
+      soLieuCong={{
+        soDiemDen: DESTINATIONS.length,
+        // Năm chương hồ sơ trong `collaboration-editorial.tsx`. Đếm tay vì
+        // dữ liệu ấy nằm ngay trong component chứ chưa tách ra kho riêng;
+        // tách được thì thay bằng `.length`.
+        soHoSo: 5,
+        soGoi: PACKAGES.length,
+      }}
     />
   );
 }

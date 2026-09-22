@@ -13,6 +13,12 @@ import {
   type TrangAnStoryBeat,
 } from "@/components/discovery/trang-an-scroll-story";
 import { DestinationZigzag } from "@/components/discovery/destination-zigzag";
+import {
+  PortalRailDesktop,
+  PortalRailMobile,
+  type Cong,
+  type SoLieuCong,
+} from "@/components/discovery/portal-rail";
 import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
 import { JOURNEY_CONCIERGE_OPEN_EVENT, JourneyConcierge } from "@/components/discovery/journey-concierge";
@@ -65,6 +71,14 @@ type Props = {
   presentationMode: boolean;
   bookingEnabled: boolean;
   surfaceAttributes: ExperienceSurfaceAttributes;
+  /**
+   * Giờ máy chủ, dạng ISO. Bốn cổng in ra số đêm còn lại tới rằm, mà
+   * `new Date()` gọi trong lúc dựng ở máy khách thì lệch hydrate — và khách ở
+   * múi giờ khác sẽ thấy một mùa trăng không phải của Ninh Bình.
+   */
+  bayGio: string;
+  /** Số điểm đến, số hồ sơ thương hiệu, số gói — đếm từ chính kho dữ liệu. */
+  soLieuCong: SoLieuCong;
 };
 
 const TourismMap = dynamic(() => import("./tourism-map"), {
@@ -877,6 +891,8 @@ export default function NinhBinhLanding({
   presentationMode,
   bookingEnabled,
   surfaceAttributes,
+  bayGio,
+  soLieuCong,
 }: Props) {
   const [lang, setLang] = useState<Language>(initialLang);
   const t = copy[lang];
@@ -904,6 +920,18 @@ export default function NinhBinhLanding({
   const portalSeasonalLabel = midAutumnSeasonOpen
     ? (t.portalSeasonal as string)
     : (t.portalSeasonalClosed as string);
+
+  // Bốn cổng, dựng sau khi đã biết nhãn của cổng Trung thu (nhãn ấy đổi theo
+  // mùa còn mở hay đã khép).
+  const cacCong = useMemo<readonly Cong[]>(
+    () => [
+      { id: "travel", nhan: t.portalTravel as string, nhanNgan: t.portalTravelShort as string, duongDan: experiencePortalHref("travel", lang, source) },
+      { id: "collaboration", nhan: t.portalCollaboration as string, nhanNgan: t.portalCollaborationShort as string, duongDan: experiencePortalHref("collaboration", lang, source) },
+      { id: "seasonal", nhan: portalSeasonalLabel, nhanNgan: t.portalSeasonalShort as string, duongDan: experiencePortalHref("seasonal", lang, source) },
+      { id: "booking", nhan: t.portalBooking as string, nhanNgan: t.portalBookingShort as string, duongDan: experiencePortalHref("booking", lang, source) },
+    ],
+    [lang, portalSeasonalLabel, source, t],
+  );
 
   /* HERO-CONTINUITY-11: local transform/opacity-only scroll state. */
   useEffect(() => {
@@ -1377,26 +1405,13 @@ export default function NinhBinhLanding({
               Ninh Bình
             </span>
           </a>
-          <nav aria-label={t.portalEyebrow as string} className="hidden items-center gap-5 text-sm text-[#FBFAF6]/82 lg:flex">
-            {(
-              [
-                ["travel", t.portalTravel],
-                ["collaboration", t.portalCollaboration],
-                ["seasonal", portalSeasonalLabel],
-                ["booking", t.portalBooking],
-              ] as const
-            ).map(([destination, label]) => (
-              <Link
-                key={destination}
-                data-experience-portal={destination}
-                href={experiencePortalHref(destination, lang, source)}
-                transitionTypes={destination === "travel" ? undefined : ["portal-enter"]}
-                className="border-b border-transparent pb-1 transition hover:border-[#E7B96A] hover:text-[#E7B96A]"
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
+          <PortalRailDesktop
+            cong={cacCong}
+            nhanVung={t.portalEyebrow as string}
+            lang={lang}
+            soLieu={soLieuCong}
+            bayGio={bayGio}
+          />
           <div className="flex items-center gap-2">
           {/*
             QA-P2-09: tren dien thoai, thanh dieu huong `md:flex` an di va menu
@@ -1441,36 +1456,14 @@ export default function NinhBinhLanding({
           đang đứng được đánh dấu bằng vàng. Nhãn rút ngắn cho vừa một hàng;
           tên đầy đủ vẫn đọc được bằng trình đọc màn hình.
         */}
-        <nav
-          aria-label={t.portalEyebrow as string}
+        <PortalRailMobile
+          cong={cacCong}
+          nhanVung={t.portalEyebrow as string}
+          lang={lang}
+          soLieu={soLieuCong}
+          bayGio={bayGio}
           className="absolute inset-x-0 top-[4.4rem] z-20 overflow-x-auto px-5 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
-        >
-          <span className="flex w-max items-baseline gap-5 border-b border-white/15 pb-2 font-display text-[0.95rem] text-[#FBFAF6]/78">
-            {(
-              [
-                ["travel", t.portalTravel, t.portalTravelShort],
-                ["collaboration", t.portalCollaboration, t.portalCollaborationShort],
-                ["seasonal", portalSeasonalLabel, t.portalSeasonalShort],
-                ["booking", t.portalBooking, t.portalBookingShort],
-              ] as const
-            ).map(([destination, label, short]) => (
-              <Link
-                key={destination}
-                data-experience-portal={destination}
-                href={experiencePortalHref(destination, lang, source)}
-                transitionTypes={destination === "travel" ? undefined : ["portal-enter"]}
-                className={`inline-flex min-h-11 items-center whitespace-nowrap border-b-2 transition motion-reduce:transition-none ${
-                  destination === "travel"
-                    ? "border-[#E7B96A] text-[#E7B96A]"
-                    : "border-transparent hover:border-[#E7B96A]/60 hover:text-[#FBFAF6]"
-                }`}
-              >
-                <span aria-hidden="true">{short as string}</span>
-                <span className="sr-only">{label}</span>
-              </Link>
-            ))}
-          </span>
-        </nav>
+        />
         <div id="top" className="hero-scene-content relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-offset,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-offset,0px))]">
           {/*
             Nhan "Client demonstration · Supabase shared core" da GO HAN

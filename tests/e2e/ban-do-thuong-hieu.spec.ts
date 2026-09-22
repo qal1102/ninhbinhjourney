@@ -82,6 +82,10 @@ test.describe("Bản đồ thương hiệu", () => {
   test("bấm một ghim ở trang chủ thì mở tấm thiệp của trang, không phải bong bóng mặc định", async ({
     page,
   }) => {
+    // Trang chủ nặng: ảnh đầu trang, video mở đầu, rồi mới tới bản đồ — mà
+    // bản đồ lại chỉ gắn khi sắp vào khung nhìn. Chạy một mình thì kịp, chạy
+    // cùng cả bộ ở khổ điện thoại thì chạm trần 30 giây.
+    test.slow();
     await chuanBi(page);
     await page.goto("/?lang=vi");
     // Bản đồ trang chủ chỉ được gắn khi khối `#map` sắp vào khung nhìn

@@ -53,7 +53,12 @@ describe("opt-in luxury collaboration dossier contract", () => {
     const homepage = readFileSync(path.join(REPO_ROOT, "app", "ninh-binh-landing.tsx"), "utf8");
     expect(homepage).not.toMatch(THIRD_PARTY_BRAND);
     expect(homepage).not.toContain('from "@/components/discovery/mid-autumn-campaign"');
-    expect(homepage).toContain('href={experiencePortalHref(destination, lang, source)}');
+    // Cổng vào trang Hợp tác PHẢI đi qua `experiencePortalHref`. Ý của câu
+    // kiểm này không đổi từ ngày viết: trang chủ không được chép cứng đường
+    // dẫn hay tên nhãn hàng nào. Chỉ đổi hình dạng lời gọi — 22/09/2026 bốn
+    // cổng chuyển sang `components/discovery/portal-rail.tsx` nên tham số
+    // không còn là biến `destination` chạy vòng nữa mà là id viết thẳng.
+    expect(homepage).toContain('experiencePortalHref("collaboration", lang, source)');
   });
 
   it("allows brand wording in the dossier source only", () => {

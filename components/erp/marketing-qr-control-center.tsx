@@ -59,7 +59,17 @@ function DestinationEditor({ source }: { source: MarketingQrSourceRecord }) {
   );
 }
 
-export function MarketingQrControlCenter({ config }: { config: MarketingQrConfig }) {
+export function MarketingQrControlCenter({
+  config,
+  goiYTenChienDich = "",
+}: {
+  config: MarketingQrConfig;
+  /**
+   * Tên điền sẵn khi người dùng bấm một dịp trong lịch mùa vụ. Rỗng thì ô
+   * tên để trống như cũ.
+   */
+  goiYTenChienDich?: string;
+}) {
   const [campaignState, campaignAction] = useActionState(createMarketingCampaignAction, INITIAL_STATE);
   const [sourceState, sourceAction] = useActionState(createMarketingQrSourceAction, INITIAL_STATE);
 
@@ -77,9 +87,16 @@ export function MarketingQrControlCenter({ config }: { config: MarketingQrConfig
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <form action={campaignAction} className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm">
+        <form id="tao-chien-dich" action={campaignAction} className="scroll-mt-24 rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm">
           <h2 className="text-lg font-black text-[#203a30]">Tạo chiến dịch</h2>
-          <label className="mt-4 grid gap-1 text-xs font-bold text-[#5d6f66]">Tên chiến dịch<input name="name" required minLength={2} maxLength={160} placeholder="QR bến Tam Cốc tháng 8" className="min-h-11 rounded-lg border border-[#cbd7d1] px-3 text-sm" /></label>
+          {goiYTenChienDich ? (
+            <p className="mt-2 rounded-xl bg-[#eef5ef] px-3 py-2 text-xs font-bold text-[#356957]">
+              Đã điền sẵn tên theo dịp bạn vừa chọn trong lịch mùa vụ. Sửa lại được.
+            </p>
+          ) : null}
+          {/* `key` đổi theo gợi ý: không có nó thì React giữ nguyên ô cũ và
+              tên điền sẵn không vào được. */}
+          <label className="mt-4 grid gap-1 text-xs font-bold text-[#5d6f66]">Tên chiến dịch<input key={goiYTenChienDich} name="name" required minLength={2} maxLength={160} defaultValue={goiYTenChienDich} placeholder="QR bến Tam Cốc tháng 8" className="min-h-11 rounded-lg border border-[#cbd7d1] px-3 text-sm" /></label>
           <label className="mt-3 grid gap-1 text-xs font-bold text-[#5d6f66]">Trạng thái<select name="status" defaultValue="draft" className="min-h-11 rounded-lg border border-[#cbd7d1] bg-white px-3 text-sm"><option value="draft">Nháp</option><option value="active">Đang chạy</option><option value="paused">Tạm dừng</option></select></label>
           <p className="mt-2 text-xs text-[#7c8b83]">Mã chiến dịch do máy đặt theo tên bạn vừa nhập. Tạo xong là có mã ngay, khỏi nghĩ.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3"><SubmitButton>Tạo chiến dịch</SubmitButton><ActionMessage state={campaignState} /></div>

@@ -57,7 +57,7 @@ test.describe("A5 production funnel dashboard smoke", () => {
     // có. Không chấp nhận một bảng rỗng im lặng.
     const sourceRows = dashboard.locator("tbody tr");
     const emptySources = dashboard.getByText(
-      "Chưa có sự kiện thật trong cửa sổ 7 ngày.",
+      "Bảy ngày qua chưa có lượt nào.",
     );
     const hasSourceRows = (await sourceRows.count()) > 0;
     expect(
@@ -65,8 +65,8 @@ test.describe("A5 production funnel dashboard smoke", () => {
       "Bảng nguồn vừa không có dòng nào vừa không nói là chưa có dữ liệu",
     ).toBe(true);
 
-    // Slot CUS-06 theo cùng luật.
-    const emptySlots = dashboard.getByText("Chưa có slot CUS-06 trong cửa sổ này.");
+    // Khung giờ mở bán theo cùng luật.
+    const emptySlots = dashboard.getByText("Bảy ngày qua chưa có khung giờ nào mở bán.");
     const slotCards = dashboard.locator('article:has-text("Công suất")');
     expect(
       (await slotCards.count()) > 0 || (await emptySlots.count()) > 0,
@@ -74,11 +74,11 @@ test.describe("A5 production funnel dashboard smoke", () => {
     ).toBe(true);
 
     // Phần không gắn được nguồn phải nằm riêng, không bị phân bổ đoán.
-    // `exact: true` là bắt buộc: đoạn dẫn của bảng cũng chứa nguyên cụm này
-    // ("...profile chưa gắn nguồn được để riêng thay vì phân bổ đoán"), nên
-    // khớp lỏng sẽ trúng hai phần tử và Playwright từ chối ở strict mode.
+    // `exact: true` là bắt buộc: đoạn dẫn của bảng cũng nhắc tới khách chưa
+    // rõ nguồn, nên khớp lỏng sẽ trúng hai phần tử và Playwright từ chối ở
+    // strict mode.
     await expect(
-      dashboard.getByText("Profile chưa gắn nguồn", { exact: true }),
+      dashboard.getByText("Khách chưa rõ đến từ đâu", { exact: true }),
     ).toBeVisible();
 
     expect(

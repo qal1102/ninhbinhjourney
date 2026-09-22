@@ -705,9 +705,17 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
  * là một vòng rỗng. Không nhấp nháy thường trực: chỉ nơi VỪA sáng mới có một
  * nhịp chuyển nhẹ, và nhịp ấy tắt hẳn khi khách chọn giảm chuyển động.
  */
-.nb-passport-map .leaflet-tile-pane {
-  filter: grayscale(1) sepia(0.22) brightness(1.06) contrast(0.86);
-  opacity: 0.72;
+/*
+ * Mặt bản đồ lùi lại để các điểm nổi lên.
+ *
+ * Bản Leaflet cũ phải rút hết màu (`grayscale(1)`) vì ảnh nền OpenStreetMap
+ * vốn xanh đỏ đủ cả. Bản đồ bây giờ đã tự tô bằng bảng màu thương hiệu, nên
+ * rút hết màu là ném đi đúng cái vừa dựng — chỉ cần hạ độ bão hoà và làm nhạt
+ * đi là đủ, nước vẫn còn một chút ngọc bích cho ra đất Ninh Bình.
+ */
+.nb-passport-map .maplibregl-canvas {
+  filter: saturate(0.52) brightness(1.05);
+  opacity: 0.76;
 }
 
 .nb-passport-pin {
@@ -2090,10 +2098,16 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
  * mắt bắt được nó giữa mười mấy ghim khác — và nhịp thở ấy tắt hẳn khi máy
  * khách xin giảm chuyển động.
  */
-.nb-marker {
+.nb-marker,
+.nb-route-pin {
   appearance: none;
   cursor: pointer;
   padding: 0;
+}
+
+/* Ghim đang mở thẻ: viền vàng đồng cho mắt bắt được giữa các chặng khác. */
+.nb-route-pin.is-open {
+  box-shadow: 0 0 0 5px rgba(231, 199, 141, 0.45), 0 10px 28px rgba(24, 63, 52, 0.32);
 }
 
 .nb-marker-toi {

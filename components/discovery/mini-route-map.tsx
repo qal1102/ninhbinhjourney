@@ -25,9 +25,13 @@ const MiniRouteMapCanvas = dynamic(() => import("@/components/discovery/mini-rou
  * gói (nhiều ghim theo từng chặng trong `schedule`).
  *
  * Lười tải giống cách trang chủ đã làm cho `TourismMap`
- * (`app/ninh-binh-landing.tsx`, kỹ thuật `IntersectionObserver`): chunk
- * Leaflet (~152 KB) chỉ tải khi khối này sắp vào khung nhìn, không tải
- * ngay lúc trang chi tiết dựng xong.
+ * (`app/ninh-binh-landing.tsx`, kỹ thuật `IntersectionObserver`): phần bản đồ
+ * chỉ tải khi khối này sắp vào khung nhìn, không tải ngay lúc trang chi tiết
+ * dựng xong.
+ *
+ * `tone="dark"` không chỉ đổi màu khung viền: nó đổi luôn bảng màu của chính
+ * mặt bản đồ sang chương tối. Trang gói nằm trên nền xanh đậm, một tấm bản đồ
+ * trắng trợn giữa đó là một lỗ thủng sáng trên trang.
  */
 export function MiniRouteMap({
   points,
@@ -72,7 +76,9 @@ export function MiniRouteMap({
           tone === "dark" ? "border-white/15" : "border-[#A8CEC1]/60"
         } ${mapClassName}`}
       >
-        {nearViewport ? <MiniRouteMapCanvas points={points} /> : (
+        {nearViewport ? (
+          <MiniRouteMapCanvas points={points} tone={tone === "dark" ? "dem" : "giay"} />
+        ) : (
           <div className="grid h-full w-full place-items-center bg-[#D7E6DD]">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#A8CEC1] border-t-[#183F34]" />
           </div>

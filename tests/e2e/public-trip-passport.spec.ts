@@ -100,9 +100,9 @@ test("hai trong bốn nơi đã sáng, giờ ghi theo giờ Việt Nam", async (
   await expect(page.getByText("Ai cầm mã này cũng mở được trang này")).toBeVisible();
   await khongChuCam(page);
 
-  // Bản đồ nằm trong một ngữ cảnh xếp lớp riêng: không lớp nào của Leaflet
-  // vượt được ra ngoài để đè lên hộp thoại.
-  await expect(page.locator(".leaflet-container")).toHaveCSS("isolation", "isolate");
+  // Bản đồ nằm trong một ngữ cảnh xếp lớp riêng: không lớp nào của nó vượt
+  // được ra ngoài để đè lên hộp thoại.
+  await expect(page.locator(".nb-passport-map")).toHaveCSS("isolation", "isolate");
 });
 
 test("chưa vào nơi nào: bản đồ còn mờ, không đếm ngược", async ({ page }) => {
@@ -132,7 +132,7 @@ test("migration chưa áp: trang nói phần này sắp có, chỗ ghi tên vẫ
   await expect(trangThai).toHaveAttribute("data-state", "not-ready");
   await expect(page.getByText("Tấm bản đồ này sắp có")).toBeVisible();
   await expect(page.getByText(/kết nối|trục trặc|lỗi/i)).toHaveCount(0);
-  await expect(page.locator(".leaflet-container")).toHaveCount(0);
+  await expect(page.locator(".nb-passport-map")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Lưu tên" })).toBeEnabled();
   await khongChuCam(page);
 });
@@ -229,7 +229,7 @@ for (const khung of [
     await page.goto(`/doan/${MA}`);
     await expect(page.locator(".nb-passport-pin.is-lit")).toHaveCount(2);
     await khongTranNgang(page);
-    const map = await page.locator(".leaflet-container").boundingBox();
+    const map = await page.locator(".nb-passport-map").boundingBox();
     expect(map?.width ?? 0).toBeGreaterThan(300);
     expect((map?.x ?? 0) + (map?.width ?? 0)).toBeLessThanOrEqual(khung.width);
   });

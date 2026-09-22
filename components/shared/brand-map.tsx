@@ -1,6 +1,10 @@
 "use client";
 
-import maplibregl, { type Map as MapLibreMap, type Marker } from "maplibre-gl";
+import maplibregl, {
+  type GeoJSONSource,
+  type Map as MapLibreMap,
+  type Marker,
+} from "maplibre-gl";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { useReducedMotion } from "@/components/shared/use-reduced-motion";
@@ -50,6 +54,33 @@ export type GhimBanDo = {
   khoa?: string;
   /** Lớp CSS thêm cho ghim, ví dụ `nb-marker-neutral` hay `nb-marker-toi`. */
   lop?: string;
+  /**
+   * Lớp gốc thay cho `nb-marker` — dùng khi ghim có hình dáng riêng đã tả sẵn
+   * trong `globals.css`: `nb-route-pin` của hành trình, `nb-passport-pin` của
+   * tấm hộ chiếu.
+   */
+  goc?: string;
+  /** Tên in cạnh ghim, ví dụ "Tràng An" trên tấm hộ chiếu. */
+  nhanPhu?: string;
+  /** Lớp cho `nhanPhu`, ví dụ `nb-passport-label is-left`. */
+  lopNhanPhu?: string;
+  /** Thuộc tính `data-*` gắn thêm — kiểu dáng và bài kiểm đang bám vào. */
+  thuocTinh?: Readonly<Record<string, string>>;
+  /** Ghim chỉ để nhìn, không bấm được. */
+  khongBam?: boolean;
+  /** Nổi lên trên khi hai ghim sát nhau. */
+  noiBat?: boolean;
+};
+
+/** Đường nối các ghim — vẽ trên mặt bản đồ, dưới ghim. */
+export type DuongNoi = {
+  /** Dãy `[vĩ độ, kinh độ]` theo đúng thứ tự đi. */
+  diem: readonly (readonly [number, number])[];
+  mau: string;
+  beRong?: number;
+  /** Nét đứt, tính theo bội số bề rộng đường. */
+  netDut?: readonly [number, number];
+  doMo?: number;
 };
 
 export type BrandMapProps = {
@@ -62,6 +93,18 @@ export type BrandMapProps = {
   tone?: ToneBanDo;
   /** Khoá mọi thao tác — dùng cho bản đồ nhỏ chỉ để ghim vị trí. */
   tinh?: boolean;
+  /** Đường nối các ghim, nếu có. */
+  duongNoi?: DuongNoi | null;
+  /**
+   * Lề khi ôm trọn bộ ghim vào khung, tính bằng pixel.
+   *
+   * Nhận cả bốn phía riêng vì có bản đồ phải chừa mép dưới rộng hơn: đó là chỗ
+   * dòng ghi nguồn, và là chỗ dải nhắn "bản đồ chưa về kịp" hiện lên — dải ấy
+   * không được đè lên ghim nào ở phía nam.
+   */
+  le?: number | { top: number; bottom: number; left: number; right: number };
+  /** Mức phóng lớn nhất khi ôm trọn bộ ghim. */
+  zoomToiDa?: number;
   tamMacDinh?: readonly [number, number];
   zoomMacDinh?: number;
   /** Lời nhắn khi bản đồ không tải được. `null` thì không hiện chữ nào. */
@@ -108,20 +151,67 @@ const NGHIENG_KHI_CHON = 48;
 const ZOOM_KHI_CHON = 14.2;
 
 function lopGhim(ghim: GhimBanDo, dangChon: boolean) {
-  return ["nb-marker", dangChon ? "nb-marker-active" : "", ghim.lop ?? ""]
-    .filter(Boolean)
-    .join(" ");
+  const goc = ghim.goc ?? "nb-marker";
+  // Chỉ ghim mặc định mới có lớp "đang chọn" dựng sẵn. Ghim hình dáng riêng
+  // tự nói trạng thái của nó qua `lop` (`is-lit`, `is-fresh`…), đặt thêm một
+  // lớp `nb-route-pin-active` không ai tả trong CSS chỉ là rác.
+  const chon = dangChon && !ghim.goc ? "nb-marker-active" : "";
+  return [goc, chon, ghim.lop ?? ""].filter(Boolean).join(" ");
+}
+
+/** Đổ lại phần ruột của ghim: số thứ tự, rồi tên đặt cạnh nếu có. */
+function doRuotGhim(el: HTMLElement, ghim: GhimBanDo) {
+  el.textContent = ghim.thuTu ? String(ghim.thuTu) : "";
+  if (!ghim.nhanPhu) return;
+  const ten = document.createElement("span");
+  if (ghim.lopNhanPhu) ten.className = ghim.lopNhanPhu;
+  ten.textContent = ghim.nhanPhu;
+  el.appendChild(ten);
 }
 
 function dungPhanTuGhim(ghim: GhimBanDo, dangChon: boolean) {
-  const el = document.createElement("button");
-  el.type = "button";
+  // Ghim bấm được là một cái nút thật, để bàn phím tới được. Ghim chỉ để nhìn
+  // thì là một cái `div` và **ẩn khỏi trình đọc màn hình**: những trang dùng
+  // loại ghim này đều in sẵn danh sách các điểm ngay bên dưới bản đồ, nên đọc
+  // lên lần nữa chỉ làm người dùng nghe hai lần cùng một danh sách.
+  const bamDuoc = !ghim.khongBam;
+  const el = document.createElement(bamDuoc ? "button" : "div");
+  if (bamDuoc) {
+    (el as HTMLButtonElement).type = "button";
+    el.setAttribute("aria-label", ghim.nhan);
+  } else {
+    el.setAttribute("aria-hidden", "true");
+  }
   el.className = lopGhim(ghim, dangChon);
-  el.textContent = ghim.thuTu ? String(ghim.thuTu) : "";
-  el.setAttribute("aria-label", ghim.nhan);
+  doRuotGhim(el, ghim);
   if (ghim.khoa) el.setAttribute("data-map-destination", ghim.khoa);
   el.setAttribute("data-map-pin", ghim.id);
+  for (const [ten, gia] of Object.entries(ghim.thuocTinh ?? {})) {
+    el.setAttribute(ten, gia);
+  }
+  if (ghim.noiBat) el.style.zIndex = "2";
   return el;
+}
+
+const ID_DUONG_NOI = "nb-duong-noi";
+
+/** GeoJSON của đường nối, hoặc một bộ rỗng khi chưa đủ hai điểm. */
+function hinhDuong(duong: DuongNoi | null): GeoJSON.FeatureCollection {
+  const diem = duong?.diem ?? [];
+  if (diem.length < 2) return { type: "FeatureCollection", features: [] };
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: diem.map((d) => [d[1], d[0]]),
+        },
+      },
+    ],
+  };
 }
 
 export function BrandMap({
@@ -132,6 +222,9 @@ export function BrandMap({
   className = "",
   tone = "giay",
   tinh = false,
+  duongNoi = null,
+  le = 56,
+  zoomToiDa = 13,
   tamMacDinh,
   zoomMacDinh = 10,
   loiNhanHong = LOI_NHAN_HONG_TUONG_TAC,
@@ -141,6 +234,12 @@ export function BrandMap({
   const banDo = useRef<MapLibreMap | null>(null);
   const cacGhim = useRef(new Map<string, Marker>());
   const daBay = useRef(false);
+  // Khung ôm trọn bộ ghim của lần dựng gần nhất, để đo lại được khi khung đổi cỡ.
+  const khungCuoi = useRef<{
+    bien: maplibregl.LngLatBounds;
+    padding: BrandMapProps["le"];
+    maxZoom: number;
+  } | null>(null);
   const itChuyenDong = useReducedMotion();
   const [hong, setHong] = useState(false);
   const idVung = useId();
@@ -183,6 +282,19 @@ export function BrandMap({
       new maplibregl.AttributionControl({ compact: true, customAttribution: GHI_CONG_BAN_DO }),
       "bottom-right",
     );
+    // MapLibre bày sẵn cả dòng ghi nguồn ra, mở toang. Trên bản đồ nhỏ, dòng
+    // ấy là một thanh trắng dài chiếm trọn mép dưới và **đè lên chính cái ghim
+    // ở phía nam** — đo được ở bản đồ cao 254px của trang gói. Thu lại thành
+    // một chữ "i"; ghi nguồn vẫn còn nguyên, bấm vào là đọc được, đúng điều
+    // kiện bắt buộc của cả ba bên cung cấp dữ liệu.
+    const thuGhiCong = () => {
+      const o = map
+        .getContainer()
+        .querySelector<HTMLDetailsElement>("details.maplibregl-ctrl-attrib");
+      if (o) o.open = false;
+    };
+    thuGhiCong();
+    map.on("load", thuGhiCong);
     if (!tinh) {
       map.addControl(
         new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }),
@@ -222,7 +334,10 @@ export function BrandMap({
         // bấm sẽ làm cả bộ ghim nháy một cái — thấy rõ trên điện thoại.
         const el = cu.getElement();
         el.className = lopGhim(g, g.id === dangChon);
-        el.textContent = g.thuTu ? String(g.thuTu) : "";
+        doRuotGhim(el, g);
+        for (const [ten, gia] of Object.entries(g.thuocTinh ?? {})) {
+          el.setAttribute(ten, gia);
+        }
         cu.setLngLat([g.toaDo[1], g.toaDo[0]]);
         continue;
       }
@@ -241,6 +356,44 @@ export function BrandMap({
       cacGhim.current.delete(id);
     }
   }, [ghim, dangChon]);
+
+  // Đường nối các điểm. Vẽ bằng một lớp của chính bản đồ chứ không phải một
+  // hình SVG chồng lên trên: có thế nó mới nghiêng, xoay và co giãn cùng mặt
+  // đất khi khách lái bản đồ.
+  useEffect(() => {
+    const map = banDo.current;
+    if (!map) return;
+
+    const ve = () => {
+      if (!banDo.current) return;
+      const nguon = map.getSource(ID_DUONG_NOI) as GeoJSONSource | undefined;
+      if (nguon) {
+        nguon.setData(hinhDuong(duongNoi));
+        return;
+      }
+      if (!duongNoi) return;
+      map.addSource(ID_DUONG_NOI, { type: "geojson", data: hinhDuong(duongNoi) });
+      map.addLayer({
+        id: ID_DUONG_NOI,
+        type: "line",
+        source: ID_DUONG_NOI,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": duongNoi.mau,
+          "line-width": duongNoi.beRong ?? 3,
+          "line-opacity": duongNoi.doMo ?? 0.75,
+          ...(duongNoi.netDut
+            ? { "line-dasharray": [duongNoi.netDut[0], duongNoi.netDut[1]] }
+            : {}),
+        },
+      });
+    };
+
+    // Thêm lớp trước khi kiểu vẽ xong là MapLibre ném lỗi "Style is not done
+    // loading". Bản đồ nhỏ dựng rất nhanh nên lần nào cũng rơi vào đúng đó.
+    if (map.isStyleLoaded()) ve();
+    else map.once("load", ve);
+  }, [duongNoi]);
 
   // Khung nhìn: lần đầu ôm trọn bộ ghim, sau đó bay tới ghim được chọn.
   useEffect(() => {
@@ -274,16 +427,18 @@ export function BrandMap({
         [ghim[0].toaDo[1], ghim[0].toaDo[0]],
       ),
     );
+    const omTron = { bien, padding: le, maxZoom: zoomToiDa };
+    khungCuoi.current = omTron;
     map.fitBounds(bien, {
-      padding: 56,
-      maxZoom: 13,
+      padding: le,
+      maxZoom: zoomToiDa,
       pitch: 0,
       bearing: 0,
       animate: !itChuyenDong && daBay.current,
       duration: 700,
     });
     daBay.current = true;
-  }, [ghim, dangChon, itChuyenDong, doiTamKhiChon]);
+  }, [ghim, dangChon, itChuyenDong, doiTamKhiChon, le, zoomToiDa]);
 
   // MapLibre đo khung một lần lúc dựng. Trang `/explore` giữ bản đồ luôn nằm
   // trong cây nhưng ẩn đi khi khách chuyển sang "Danh sách", nên phải tự đo
@@ -294,10 +449,21 @@ export function BrandMap({
     const theoDoi = new ResizeObserver(() => {
       if (o.clientWidth === 0 || o.clientHeight === 0) return;
       banDo.current?.resize();
+      // Bản đồ tĩnh là một tấm hình: khách xoay máy hay kéo cửa sổ thì nó phải
+      // ôm lại đủ các điểm, chứ không được để một điểm trôi ra ngoài mép — ở
+      // bản đồ lái được thì khách tự kéo lại, ở đây thì không.
+      const om = khungCuoi.current;
+      if (tinh && om) {
+        banDo.current?.fitBounds(om.bien, {
+          padding: om.padding,
+          maxZoom: om.maxZoom,
+          animate: false,
+        });
+      }
     });
     theoDoi.observe(o);
     return () => theoDoi.disconnect();
-  }, []);
+  }, [tinh]);
 
   return (
     <div className={`relative isolate overflow-hidden ${className}`}>

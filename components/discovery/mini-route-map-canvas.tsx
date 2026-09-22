@@ -1,91 +1,86 @@
 "use client";
 
-import L from "leaflet";
-import { useEffect, useMemo } from "react";
-import { MapContainer, Marker, Polyline, useMap } from "react-leaflet";
-import { MapTiles, TILE_FALLBACK_NOTE_STATIC } from "@/components/shared/map-tiles";
+import { useMemo } from "react";
+
 import type { MiniRouteMapPoint } from "@/components/discovery/mini-route-map";
-
-const fallbackCenter: [number, number] = [20.2503, 105.897];
-
-function markerIcon(order: number) {
-  return L.divIcon({
-    className: "",
-    html: `<div class="nb-marker nb-marker-active">${order}</div>`,
-    iconAnchor: [14, 14],
-    iconSize: [28, 28],
-    popupAnchor: [0, -16],
-  });
-}
+import {
+  BrandMap,
+  LOI_NHAN_HONG_TINH,
+  type DuongNoi,
+  type GhimBanDo,
+} from "@/components/shared/brand-map";
+import type { ToneBanDo } from "@/lib/map/brand-style";
 
 /**
- * Đưa khung nhìn về đúng các điểm được truyền vào -- một điểm thì phóng
- * gần, nhiều điểm thì `fitBounds` sao cho tất cả cùng vào khung. Tách
- * thành component riêng như `explore-map.tsx`/`tourism-map.tsx` đã làm,
- * vì Leaflet chỉ đọc được view mới bên trong `useMap()`.
+ * Bản đồ nhỏ ghim vị trí — ở trang chi tiết điểm đến (một ghim) và trang chi
+ * tiết gói (các chặng nối thành một đường).
+ *
+ * Luôn được nạp qua `next/dynamic` từ `mini-route-map.tsx`, không import thẳng
+ * ở đâu khác, để phần bản đồ chỉ tải khi khối này sắp vào khung nhìn.
+ *
+ * ## Đây là một tấm hình, không phải bản đồ để lái
+ *
+ * Khung này chỉ cao chừng 160px. Kéo và phóng trong một ô bé như thế chẳng ai
+ * dùng, mà lại nuốt mất cú vuốt của khách đang cuộn trang trên điện thoại.
+ * Nên nó khoá hẳn thao tác; muốn lái thì đã có bản đồ lớn ở trang khám phá.
  */
-function FitToPoints({ points }: { points: readonly MiniRouteMapPoint[] }) {
-  const map = useMap();
 
-  useEffect(() => {
-    if (points.length === 0) return;
-    if (points.length === 1) {
-      map.setView(points[0].coordinates as [number, number], 13, { animate: false });
-      return;
-    }
-    map.fitBounds(
-      L.latLngBounds(points.map((point) => point.coordinates as [number, number])),
-      { padding: [28, 28], animate: false },
-    );
-  }, [points, map]);
+const LE_OM_GHIM = { top: 24, bottom: 34, left: 24, right: 24 };
 
-  return null;
-}
-
-/**
- * Phần vẽ bản đồ thật (nặng vì kéo theo Leaflet) -- luôn được tải qua
- * `next/dynamic` từ `mini-route-map.tsx`, không import thẳng ở đâu khác,
- * để chunk Leaflet chỉ tải khi khối bản đồ nhỏ này thật sự được gắn vào
- * trang (xem `IntersectionObserver` ở component bọc ngoài).
- */
 export default function MiniRouteMapCanvas({
   points,
+  tone = "giay",
 }: {
   points: readonly MiniRouteMapPoint[];
+  tone?: ToneBanDo;
 }) {
-  const center = (points[0]?.coordinates as [number, number]) ?? fallbackCenter;
-  const path = useMemo(
-    () => points.map((point) => point.coordinates as [number, number]),
+  const ghim = useMemo<GhimBanDo[]>(
+    () =>
+      points.map((point, index) => ({
+        id: point.id,
+        toaDo: point.coordinates,
+        nhan: point.label,
+        // Một điểm thì đánh số là thừa; nhiều điểm thì số chính là thứ tự đi.
+        thuTu: points.length > 1 ? index + 1 : undefined,
+        khongBam: true,
+      })),
     [points],
   );
 
+  const duongNoi = useMemo<DuongNoi | null>(() => {
+    if (points.length < 2) return null;
+    return {
+      diem: points.map((point) => point.coordinates),
+      mau: tone === "dem" ? "#E7C78D" : "#183F34",
+      beRong: 2.4,
+      // Nét chấm chứ không phải gạch dài: đây là lối đi giữa các chặng, không
+      // phải một con đường có thật trên mặt đất.
+      netDut: [0.35, 2.4],
+      doMo: 0.7,
+    };
+  }, [points, tone]);
+
+  const nhanVung =
+    points.length > 1
+      ? `Bản đồ các chặng: ${points.map((p) => p.label).join(", ")}`
+      : `Bản đồ vị trí ${points[0]?.label ?? "điểm đến"}`;
+
   return (
-    <MapContainer
-      center={center}
-      zoom={12}
-      scrollWheelZoom={false}
-      dragging={points.length > 1}
-      zoomControl={points.length > 1}
+    <BrandMap
+      ghim={ghim}
+      duongNoi={duongNoi}
+      nhanVung={nhanVung}
+      tone={tone}
+      tinh
+      le={LE_OM_GHIM}
+      // Một ghim thì KÉO RA chứ không vào gần. Đo trên trang điểm đến: khung
+      // chỉ cao 158px, nên ở khổ 14 cả tấm bản đồ chỉ còn 1,5km bề dọc — vừa
+      // đúng một mảng xanh phẳng, trong khi mặt nước Tràng An nằm ngay phía
+      // trên mép. Lùi về 12.6 thì khung ôm khoảng 4km và khách thấy được điều
+      // đáng thấy: nơi này nằm ở đâu giữa vùng núi và sông.
+      zoomToiDa={points.length > 1 ? 13 : 12.6}
       className="h-full w-full"
-    >
-      <FitToPoints points={points} />
-      {/* Bản đồ nhỏ chỉ ghim vị trí, không bấm vào từng điểm, nên lời nhắn
-          khi thiếu ảnh nền cũng nói đúng chừng đó. */}
-      <MapTiles fallbackNote={TILE_FALLBACK_NOTE_STATIC} />
-      {points.length > 1 ? (
-        <Polyline
-          positions={path}
-          pathOptions={{ color: "#183F34", weight: 3, opacity: 0.6, dashArray: "1 8" }}
-        />
-      ) : null}
-      {points.map((point, index) => (
-        <Marker
-          key={point.id}
-          position={point.coordinates as [number, number]}
-          icon={markerIcon(index + 1)}
-          alt={point.label}
-        />
-      ))}
-    </MapContainer>
+      loiNhanHong={LOI_NHAN_HONG_TINH}
+    />
   );
 }

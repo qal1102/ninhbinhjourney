@@ -1,16 +1,22 @@
 "use client";
 
-import L from "leaflet";
-import { useEffect, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
+
 import {
-  MapContainer,
-  Marker,
-  Polyline,
-  Popup,
-  useMap,
-} from "react-leaflet";
-import { MapTiles } from "@/components/shared/map-tiles";
+  BrandMap,
+  type DuongNoi,
+  type GhimBanDo,
+} from "@/components/shared/brand-map";
 import { DESTINATIONS } from "@/content/destinations";
+
+/**
+ * Bản đồ hành trình trong màn dựng lịch trình.
+ *
+ * Các chặng nối thành một đường nét đứt theo đúng thứ tự khách xếp, mỗi chặng
+ * một ghim đánh số. Bấm vào ghim thì mở một tấm thiệp nhỏ ở góc — thay cho
+ * popup dựng sẵn của thư viện bản đồ, vốn mang phông chữ và bóng đổ của riêng
+ * nó và không bao giờ trông giống phần còn lại của trang.
+ */
 
 export type RouteStop = {
   id: string;
@@ -20,39 +26,13 @@ export type RouteStop = {
 
 type ResolvedStop = RouteStop & {
   order: number;
-  position: [number, number];
+  position: readonly [number, number];
   name: string;
 };
 
-function stopIcon(order: number) {
-  return L.divIcon({
-    className: "",
-    html: `<div class="nb-route-pin">${order}</div>`,
-    iconAnchor: [16, 16],
-    iconSize: [32, 32],
-    popupAnchor: [0, -18],
-  });
-}
-
-function FitToRoute({ stops }: { stops: ResolvedStop[] }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (stops.length === 0) return;
-    if (stops.length === 1) {
-      map.setView(stops[0].position, 13, { animate: true });
-      return;
-    }
-    map.fitBounds(L.latLngBounds(stops.map((stop) => stop.position)), {
-      padding: [48, 48],
-      animate: true,
-    });
-  }, [map, stops]);
-
-  return null;
-}
-
 export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
+  const [dangChon, setDangChon] = useState<string | null>(null);
+
   const resolved = useMemo<ResolvedStop[]>(
     () =>
       stops.flatMap((stop, index) => {
@@ -60,12 +40,11 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
           (candidate) => candidate.id === stop.siteId,
         );
         if (!destination) return [];
-        const [latitude, longitude] = destination.coordinates;
         return [
           {
             ...stop,
             order: index + 1,
-            position: [latitude, longitude] as [number, number],
+            position: destination.coordinates,
             name: destination.name.vi,
           },
         ];
@@ -73,10 +52,35 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
     [stops],
   );
 
-  const icons = useMemo(
-    () => resolved.map((stop) => stopIcon(stop.order)),
-    [resolved],
+  const ghim = useMemo<GhimBanDo[]>(
+    () =>
+      resolved.map((stop) => ({
+        id: stop.id,
+        toaDo: stop.position,
+        nhan: `Điểm ${stop.order}: ${stop.name}`,
+        thuTu: stop.order,
+        goc: "nb-route-pin",
+        lop: stop.id === dangChon ? "is-open" : undefined,
+      })),
+    [resolved, dangChon],
   );
+
+  const duongNoi = useMemo<DuongNoi | null>(() => {
+    if (resolved.length < 2) return null;
+    return {
+      diem: resolved.map((stop) => stop.position),
+      mau: "#E7C78D",
+      beRong: 3,
+      netDut: [2, 1.6],
+      doMo: 0.85,
+    };
+  }, [resolved]);
+
+  const chon = useCallback((id: string) => {
+    setDangChon((truoc) => (truoc === id ? null : id));
+  }, []);
+
+  const dangXem = resolved.find((stop) => stop.id === dangChon) ?? null;
 
   if (resolved.length === 0) {
     return (
@@ -87,33 +91,38 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
   }
 
   return (
-    <MapContainer
-      center={resolved[0].position}
-      className="min-h-[24rem] w-full overflow-hidden rounded-2xl"
-      scrollWheelZoom={false}
-      zoom={11}
-    >
-      <FitToRoute stops={resolved} />
-      <MapTiles />
-      <Polyline
-        positions={resolved.map((stop) => stop.position)}
-        pathOptions={{ color: "#e7c78d", weight: 3, dashArray: "6 5" }}
+    <div className="relative w-full">
+      <BrandMap
+        ghim={ghim}
+        duongNoi={duongNoi}
+        dangChon={dangChon}
+        onChonGhim={chon}
+        nhanVung={`Bản đồ hành trình, ${resolved.length} điểm`}
+        className="min-h-[24rem] w-full rounded-2xl"
+        le={{ top: 48, bottom: 96, left: 48, right: 48 }}
+        zoomToiDa={12.5}
+        // Tấm thiệp nằm ở mép dưới bên trái, nên đẩy điểm vừa chọn lên trên:
+        // bấm một ghim rồi không còn thấy chính cái ghim ấy là lỗi khó chịu.
+        doiTamKhiChon={[0, -70]}
       />
-      {resolved.map((stop, index) => (
-        <Marker key={stop.id} icon={icons[index]} position={stop.position}>
-          <Popup>
-            <div className="bg-[#fbfaf6] p-3 text-[#1d2925]">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3f7568]">
-                Điểm {stop.order}
-              </p>
-              <h3 className="font-display mt-1 text-xl text-[#183f34]">
-                {stop.name}
-              </h3>
-              <p className="mt-1 text-sm text-[#6d756f]">{stop.label}</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+      {dangXem ? (
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[3] sm:inset-x-auto sm:left-4 sm:max-w-xs">
+          <div className="pointer-events-auto rounded-2xl border border-[#d9e4de] bg-[#fbfaf6] p-4 shadow-[0_18px_40px_rgba(24,63,52,0.24)]">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3f7568]">
+              Điểm {dangXem.order}
+            </p>
+            <h3 className="font-display mt-1 text-xl text-[#183f34]">{dangXem.name}</h3>
+            <p className="mt-1 text-sm leading-6 text-[#6d756f]">{dangXem.label}</p>
+            <button
+              type="button"
+              onClick={() => setDangChon(null)}
+              className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-[#3f7568] underline underline-offset-4"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }

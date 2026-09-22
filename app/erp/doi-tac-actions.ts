@@ -14,12 +14,23 @@ import { getCurrentErpUser } from "@/lib/erp/demo-session";
  * mắt của mọi tài khoản.
  */
 
+/*
+ * CHỈ ĐƯỢC XUẤT RA HÀM BẤT ĐỒNG BỘ TỪ TỆP NÀY.
+ *
+ * Một tệp `"use server"` mà xuất ra thêm một hằng số thì Next.js ném
+ * `A "use server" file can only export async functions` — nhưng **chỉ ném lúc
+ * chạy, đúng lượt bấm nút**, không ném lúc dựng. Đã trả giá đúng một lần:
+ * build sạch, bài kiểm cục bộ xanh, lên production bấm lưu là màn hình đổ
+ * vào trang "dữ liệu chưa thể đồng bộ". Kiểu chữ (`type`) thì không sao, vì
+ * nó bị xoá hẳn khi biên dịch.
+ *
+ * Nay có `tests/unit/use-server-chi-xuat-ham.test.ts` canh chỗ này.
+ */
+
 export type DoiTacActionState = {
   status: "idle" | "success" | "error";
   message: string;
 };
-
-export const TRANG_THAI_DAU: DoiTacActionState = { status: "idle", message: "" };
 
 function loiRa(error: unknown): DoiTacActionState {
   if (error instanceof SoDoiTacError) return { status: "error", message: error.message };

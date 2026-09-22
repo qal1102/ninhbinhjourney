@@ -6,7 +6,6 @@ import { useFormStatus } from "react-dom";
 import {
   ghiDoiTacAction,
   goDoiTacAction,
-  TRANG_THAI_DAU,
   type DoiTacActionState,
 } from "@/app/erp/doi-tac-actions";
 import {
@@ -40,6 +39,11 @@ import type { DipSapToi } from "@/domain/lich-mua-vu";
  * Mọi tên đối tác đều do người dùng nhập. Đây là ranh giới sẵn có của dự án
  * (`tests/security/no-third-party-brands.test.ts`) và tệp này không phá nó.
  */
+
+// Hằng số nằm ở đây chứ không nằm cạnh lệnh máy chủ: tệp `"use server"` chỉ
+// được phép xuất ra hàm bất đồng bộ, xuất thêm một đối tượng là Next.js ném
+// lỗi ngay lượt bấm nút đầu tiên trên production.
+const TRANG_THAI_DAU: DoiTacActionState = { status: "idle", message: "" };
 
 function NutLuu({ children }: { children: string }) {
   const { pending } = useFormStatus();

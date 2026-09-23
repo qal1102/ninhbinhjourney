@@ -29,7 +29,7 @@ async function expectCapacityWorkspace(page: Page, formula: string) {
   // nào, `T8` là số hiệu một phiếu việc. Đã bóc đi — xem hàng JARGON-UX-01
   // trong docs/HANDOFF.md.
   await expect(page.getByText("mới là số thay thế")).toBeVisible();
-  await expect(page.getByText("không phải số người đang có mặt")).toBeVisible();
+  await expect(page.getByText("chưa phải số người đang có mặt")).toBeVisible();
   // Và không được để chữ nội bộ mọc lại ở đúng chỗ này.
   await expect(page.getByText(/\bproxy\b|\bT8\b/)).toHaveCount(0);
   await expect(page.getByText("Phản ứng theo bốn mức")).toBeVisible();

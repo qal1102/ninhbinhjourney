@@ -69,19 +69,19 @@ const COPY: Record<Language, ConciergeCopy> = {
       "Đi thẳng tới điểm đến, tuyến đi, gói có sẵn hoặc tự lập hành trình.",
     current: "Đang xem",
     navigationAria: "Các phần được gợi ý",
-    worldsLabel: "Mở một thế giới khác",
+    worldsLabel: "Trang khác",
     chapters: [
       {
         id: "destinations-highlights",
         label: "Lần đầu đến Ninh Bình",
         shortLabel: "Điểm đến",
-        description: "Bắt đầu với những nơi làm nên một chuyến đi Ninh Bình.",
+        description: "Những nơi nên đi trong chuyến đầu tiên.",
       },
       {
         id: "curated-routes",
         label: "Xem các tuyến gợi ý",
         shortLabel: "Tuyến đi",
-        description: "Ghép các điểm dừng thành một ngày có nhịp đi rõ ràng.",
+        description: "Các điểm đã xếp sẵn thành một ngày.",
       },
       {
         id: "packages",
@@ -93,14 +93,14 @@ const COPY: Record<Language, ConciergeCopy> = {
         id: "ai",
         label: "Tự lập hành trình",
         shortLabel: "Lập hành trình",
-        description: "Chọn thời lượng, nhịp đi và điều bạn muốn ưu tiên.",
+        description: "Chọn thời gian, kiểu đi và điều bạn thích.",
       },
     ],
     worlds: [
       {
         id: "collaboration",
         label: "Hồ sơ thương hiệu",
-        description: "Mở dossier biên tập và đề xuất kết nối độc lập.",
+        description: "Xem hồ sơ ý tưởng mời hợp tác.",
         pathname: "/collaborations",
       },
       {
@@ -118,7 +118,7 @@ const COPY: Record<Language, ConciergeCopy> = {
     ],
     seasonalWorldClosedLabel: "Mùa Trăng 2026 · đã khép",
     seasonalWorldClosedDescription:
-      "Trăng rằm 25/09 đã qua, Bàn Trăng cũng khép ngày 27/09 — xem lại mùa này, hẹn mùa trăng 2027.",
+      "Rằm 25/09 đã qua, Bàn Trăng đóng ngày 27/09. Bạn vẫn xem lại được, hẹn Trung thu 2027.",
   },
   en: {
     inlineLabel: "Journey index",

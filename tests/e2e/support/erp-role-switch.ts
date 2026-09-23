@@ -99,7 +99,7 @@ export async function switchToAccount(
     async () => {
       // Đã sang tới nơi thì TUYỆT ĐỐI không bấm lại. Bấm lần hai lúc phiên đã
       // là tài khoản đích khiến `startRoleSwitch` ném "Đang xem đúng tài khoản
-      // này rồi", và trang production đổ về màn "Dữ liệu chưa thể đồng bộ."
+      // này rồi", và trang production đổ về màn "Trang này chưa tải xong."
       // Đúng lỗi đã làm bài quản lý đỏ trên production 29/08 — do chính vòng
       // thử lại này gây ra, không phải do sản phẩm.
       if ((await arrived.count()) > 0) return;
@@ -132,7 +132,7 @@ export async function endRoleSwitch(page: Page) {
       attempt += 1;
       // Đây là nút DUY NHẤT không bấm lại được: phiên đã về giám đốc rồi mà
       // bấm nữa thì `endRoleSwitch` ném "Không đang xem theo vai trò khác" và
-      // trang đổ về màn "Dữ liệu chưa thể đồng bộ.". Nên trước mỗi lần bấm
+      // trang đổ về màn "Trang này chưa tải xong.". Nên trước mỗi lần bấm
       // lại, tải lại trang đã — nó cho biết trạng thái THẬT trên máy chủ mà
       // không gửi thêm gì. Băng thông báo còn sau khi tải lại thì mới là cú
       // bấm bị mất thật.

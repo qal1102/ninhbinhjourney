@@ -604,7 +604,7 @@ async function transitionInSupabase(
       /version|conflict|stale/i.test(result.error.message)
     ) {
       throw new WorkdayRepositoryConflictError(
-        "Phiếu đã được cập nhật ở phiên khác. Hãy tải lại trước khi thao tác.",
+        "Phiếu đã được cập nhật ở phiên khác. Xin tải lại trước khi thao tác.",
       );
     }
     throw repositoryError("cập nhật phiếu", result.error);
@@ -853,7 +853,7 @@ async function transitionInDemo(
   }
   if (state.records[index].version !== current.version) {
     throw new WorkdayRepositoryConflictError(
-      "Phiếu đã được cập nhật ở phiên khác. Hãy tải lại trước khi thao tác.",
+      "Phiếu đã được cập nhật ở phiên khác. Xin tải lại trước khi thao tác.",
     );
   }
   state.records[index] = next;

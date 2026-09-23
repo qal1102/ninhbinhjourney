@@ -142,7 +142,7 @@ export const CAC_DIP: readonly DipMuaVu[] = Object.freeze([
     thang: 8,
     chuanBiTruoc: 60,
     yNghia:
-      "Đã có chương riêng trên web. Mùa trăng là dịp duy nhất trong năm bán được trải nghiệm ban đêm.",
+      "Trên web đã có trang Trung thu riêng. Đây là dịp duy nhất trong năm bán được các hoạt động buổi tối.",
   },
   {
     id: "tet-duong-lich",

@@ -5,17 +5,17 @@ import { notFound } from "next/navigation";
 const sources = {
   "TRANGAN-WHARF-DEMO": {
     place: "Bến thuyền Tràng An",
-    lead: "Mặt nước mở ra một hành trình chậm giữa núi đá vôi, hang xuyên thủy và những lớp di sản.",
+    lead: "Ngồi thuyền luồn hang giữa núi đá vôi ở Tràng An.",
     source: "trang_an",
   },
   "BAIDINH-GATE-DEMO": {
     place: "Điểm đón Bái Đính",
-    lead: "Bắt đầu từ nhịp chuông, hành lang đá và một ngày kết nối di sản Ninh Bình.",
+    lead: "Chùa Bái Đính và một ngày đi thăm di sản Ninh Bình.",
     source: "bai_dinh",
   },
   "HOTEL-LOBBY-DEMO": {
     place: "Điểm chào đón lưu trú",
-    lead: "Một lời mời riêng để khám phá Ninh Bình theo thời gian, nhịp đi và sở thích của bạn.",
+    lead: "Lập lịch đi Ninh Bình theo thời gian và sở thích của bạn.",
     source: "hotel_lobby",
   },
   "AIRPORT-CONCEPT-DEMO": {

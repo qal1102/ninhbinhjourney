@@ -130,7 +130,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
     const caChuaKhep = shiftClosures.filter((record) => record.status !== "posted").length;
     soThatVongDan["ca-dang-cho-nguoi-khac"] =
       caChuaKhep > 0
-        ? `${caChuaKhep.toLocaleString("vi-VN")} hồ sơ ca chưa ghi sổ xong — mỗi hồ sơ đang nằm trên bàn một người cụ thể.`
+        ? `${caChuaKhep.toLocaleString("vi-VN")} hồ sơ ca chưa ghi sổ xong, hồ sơ nào cũng đang chờ một người cụ thể.`
         : "Mọi hồ sơ ca trong kỳ đã ghi sổ xong.";
 
     const tongChoAnh = tongViecCho(demViecChoGiamDoc);
@@ -145,7 +145,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
     soThatVongDan["hoa-don-doi-tac"] = `${apChuaTra.toLocaleString("vi-VN")} hoá đơn đối tác chưa thanh toán xong, trên tổng ${supplierAp.invoices.length.toLocaleString("vi-VN")} hoá đơn.`;
 
     soThatVongDan["diem-khach-cham"] =
-      "Bảng điểm nằm ở màn Khách hàng — mỗi lời gắn với một lượt qua cổng có thật.";
+      "Xem điểm khách chấm ở màn Khách hàng.";
   }
 
   return (

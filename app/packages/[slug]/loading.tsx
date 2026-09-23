@@ -69,7 +69,7 @@ export default function PackageDetailLoading() {
               Ninh Bình Journey
             </p>
             <p className="font-display mt-5 text-2xl text-white/78">
-              Lịch trình đang được đặt vào đúng nhịp của chuyến đi.
+              Đang tải lịch trình…
             </p>
           </aside>
         </div>

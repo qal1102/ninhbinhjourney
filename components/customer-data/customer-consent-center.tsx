@@ -234,7 +234,7 @@ export function CustomerConsentCenter() {
             <div className="mt-6 space-y-3">
               <label className="flex gap-4 rounded-2xl border border-[#d8ded9] bg-white p-4">
                 <input type="checkbox" checked={analytics} onChange={(event) => setAnalytics(event.target.checked)} className="mt-1 h-5 w-5 accent-[#27634f]" />
-                <span><strong className="block">{language === "en" ? "Improve the experience" : "Giúp cải thiện trải nghiệm"}</strong><span className="mt-1 block text-sm leading-6 text-[#637068]">{language === "en" ? "Shows us which content is useful so we can organise the website and suggestions better." : "Cho biết nội dung nào hữu ích để chúng tôi sắp xếp website và gợi ý tốt hơn."}</span></span>
+                <span><strong className="block">{language === "en" ? "Improve the experience" : "Giúp chúng tôi làm trang tốt hơn"}</strong><span className="mt-1 block text-sm leading-6 text-[#637068]">{language === "en" ? "Shows us which content is useful so we can organise the website and suggestions better." : "Cho biết nội dung nào hữu ích để chúng tôi sắp xếp website và gợi ý tốt hơn."}</span></span>
               </label>
               <label className="flex gap-4 rounded-2xl border border-[#d8ded9] bg-white p-4">
                 <input type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} className="mt-1 h-5 w-5 accent-[#27634f]" />

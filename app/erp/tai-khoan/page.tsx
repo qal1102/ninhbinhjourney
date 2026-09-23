@@ -39,7 +39,7 @@ export default async function ErpAccountAdministrationPage() {
       {hiddenTestAccounts.length > 0 ? (
         <details className="mt-6 rounded-2xl border border-[#d8e0db] bg-[#f7f9f7] p-4 text-sm text-[#5d6c65] sm:p-5">
           <summary className="cursor-pointer font-bold text-[#42574e]">
-            Đang ẩn {hiddenTestAccounts.length.toLocaleString("vi-VN")} tài khoản do bài kiểm tự động tạo, đều đã khoá
+            Đang ẩn {hiddenTestAccounts.length.toLocaleString("vi-VN")} tài khoản tạo ra khi chạy thử tự động, đều đã khoá
           </summary>
           <p className="mt-3 leading-6">
             Đây không phải nhân viên thật. Hệ thống không xoá tài khoản để giữ vết

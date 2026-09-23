@@ -499,7 +499,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
     pushReply({
       answer: "Chưa tìm thấy màn hình phù hợp",
-      detail: "Hãy nói “Mở” kèm nghiệp vụ và cơ sở, ví dụ: “Mở camera Tam Chúc” hoặc “Mở nhân sự Tràng An”.",
+      detail: "Xin nói “Mở” kèm nghiệp vụ và cơ sở, ví dụ: “Mở camera Tam Chúc” hoặc “Mở nhân sự Tràng An”.",
     });
   }
 
@@ -539,7 +539,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
       durationTimerRef.current = window.setInterval(() => {
         setRecordingMs(Date.now() - startedAtRef.current);
       }, 100);
-      setVoiceMessage("Đang nghe. Hãy nói tên màn hình và cơ sở.");
+      setVoiceMessage("Đang nghe. Xin nói tên màn hình và cơ sở.");
     };
     recognition.onresult = (event) => {
       let finalText = "";
@@ -570,12 +570,12 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
       stopDurationTimer();
       setInterim("");
       const messages: Record<string, string> = {
-        "not-allowed": "Micro đang bị chặn. Hãy cho phép quyền micro trong cài đặt trình duyệt.",
+        "not-allowed": "Micro đang bị chặn. Xin cho phép quyền micro trong cài đặt trình duyệt.",
         "audio-capture": "Không tìm thấy micro trên thiết bị.",
-        network: "Kết nối nhận giọng nói bị gián đoạn. Hãy thử lại hoặc nhập lệnh.",
-        "no-speech": "Chưa nghe thấy giọng nói. Hãy đưa điện thoại gần hơn và thử lại.",
+        network: "Kết nối nhận giọng nói bị gián đoạn. Xin thử lại hoặc nhập lệnh.",
+        "no-speech": "Chưa nghe thấy giọng nói. Xin đưa điện thoại gần hơn và thử lại.",
       };
-      setVoiceMessage(messages[event.error] ?? "Không thể nhận giọng nói. Hãy thử lại hoặc nhập lệnh.");
+      setVoiceMessage(messages[event.error] ?? "Không thể nhận giọng nói. Xin thử lại hoặc nhập lệnh.");
       window.setTimeout(() => commandInputRef.current?.focus(), 0);
     };
     recognitionRef.current = recognition;
@@ -583,7 +583,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
       recognition.start();
     } catch {
       setListening(false);
-      setVoiceMessage("Micro chưa sẵn sàng. Hãy thử lại hoặc nhập lệnh.");
+      setVoiceMessage("Micro chưa sẵn sàng. Xin thử lại hoặc nhập lệnh.");
       window.setTimeout(() => commandInputRef.current?.focus(), 0);
     }
   }

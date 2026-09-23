@@ -160,7 +160,7 @@ async function readCounterCash(
       return {
         counterCash: null,
         reason:
-          "Phần tiền bán tại quầy chưa đối soát được vì migration 202609130069 chưa" +
+          "Phần tiền bán tại quầy chưa đối soát được vì kho dữ liệu chưa được cập nhật phần này, chưa" +
           " áp lên máy chủ. Hệ thống xin phép để trống thay vì hiện 0 đồng.",
       };
     }
@@ -222,7 +222,7 @@ async function readOnSiteCash(
       return {
         cash: null,
         reason:
-          "Phần tiền thu tại cổng chưa đối soát được vì migration 202609060062 chưa" +
+          "Phần tiền thu tại cổng chưa đối soát được vì kho dữ liệu chưa được cập nhật phần này, chưa" +
           " áp lên máy chủ. Hệ thống xin phép để trống thay vì hiện 0 đồng.",
       };
     }

@@ -129,13 +129,13 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
     // Chuỗi này từng là "Ước tính vận hành T11a" — số hiệu phiếu việc nội
     // bộ đứng ngay trước mắt khách. Xem bài chống lọt chữ nội bộ ở cuối tệp.
-    await expect(page.getByText("Ước tính từ vận hành")).toBeVisible();
+    await expect(page.getByText("Số chỗ ước tính")).toBeVisible();
     // Máy chủ phải nhận đủ ba con số, và tổng phải khớp — thiếu một cái là vé
     // phát ra sai loại mà không có gì báo.
     expect(holdRequestBody.party_size).toBe(3);
     expect(holdRequestBody.adults).toBe(2);
     expect(holdRequestBody.children).toBe(1);
-    await expect(page.getByText(/Đã giữ chỗ thật trong kho công suất/i)).toBeVisible();
+    await expect(page.getByText(/Chỗ của bạn đã được giữ/i)).toBeVisible();
 
     // TC-25: mặc định nay là trả tại điểm — lối duy nhất chạy trọn vẹn. Bài
     // này đo lối trả trước, nên phải chọn nó ra một cách tường minh.
@@ -258,9 +258,9 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     }
 
     // Và cả sau khi đã giữ chỗ — khối "các điểm đã khoá" chỉ hiện ở bước đó,
-    // và nó chính là chỗ "T11a" từng đứng — nay phải đọc là "Ước tính từ vận hành".
+    // và nó chính là chỗ "T11a" từng đứng — nay phải đọc là "Số chỗ ước tính".
     await page.getByRole("button", { name: /Khung .*còn (khoảng )?12 chỗ/i }).click();
     await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
-    await expect(page.getByText("Ước tính từ vận hành")).toBeVisible();
+    await expect(page.getByText("Số chỗ ước tính")).toBeVisible();
   });
 });

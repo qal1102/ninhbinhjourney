@@ -70,7 +70,7 @@ export default async function PackageDetailPage({
           <section>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
               {customerBookingEnabled
-                ? `Giữ chỗ theo sức chứa thật · ${item.durationLabel}`
+                ? `Giữ chỗ theo số chỗ còn trống · ${item.durationLabel}`
                 : flags.sandboxCheckout
                   ? `Dữ liệu minh họa · ${item.durationLabel}`
                 : `Bảng giá tham khảo · ${item.durationLabel}`}
@@ -79,7 +79,7 @@ export default async function PackageDetailPage({
               {item.name}
             </h1>
             <p className="mt-6 max-w-xl text-xl leading-8 text-white/68">
-              {item.editorialDescription ?? `Dành cho ${item.audience.toLocaleLowerCase("vi-VN")}. Giá và lịch là dữ liệu minh họa, được server tính lại trước khi xác nhận.`}
+              {item.editorialDescription ?? `Dành cho ${item.audience.toLocaleLowerCase("vi-VN")}. Giá và lịch là minh hoạ, và được tính lại một lần nữa trước khi bạn xác nhận.`}
             </p>
             <div className="mt-9 grid gap-4 sm:grid-cols-2">
               {sites.map((site) => (

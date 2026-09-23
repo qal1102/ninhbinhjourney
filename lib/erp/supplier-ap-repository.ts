@@ -443,7 +443,7 @@ function repositoryError(operation: string, error: unknown) {
   const message = source.message ?? "";
   if (source.code === "40001" || message.includes("VERSION_CONFLICT")) {
     return new SupplierApRepositoryConflictError(
-      "Hồ sơ vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+      "Hồ sơ vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
     );
   }
   if (
@@ -989,7 +989,7 @@ async function writeDemoState(state: DemoState) {
   const value = encodeState(state);
   if (Buffer.byteLength(value, "utf8") > COOKIE_MAX_BYTES) {
     throw new SupplierApRepositoryError(
-      "Phiên demo công nợ đã vượt dung lượng lưu trữ. Hãy đăng xuất để đặt lại dữ liệu demo.",
+      "Phiên demo công nợ đã vượt dung lượng lưu trữ. Xin đăng xuất để đặt lại dữ liệu demo.",
     );
   }
   const store = await cookies();
@@ -1056,7 +1056,7 @@ function replaceRecord(state: DemoState, record: SupplierApInvoice) {
 function requireVersion(record: SupplierApInvoice, expectedVersion: number) {
   if (record.version !== expectedVersion) {
     throw new SupplierApRepositoryConflictError(
-      "Hồ sơ đã thay đổi. Hãy tải lại trước khi tiếp tục.",
+      "Hồ sơ đã thay đổi. Xin tải lại trước khi tiếp tục.",
     );
   }
 }

@@ -114,7 +114,7 @@ function requireFreshCapture(capturedAt: string) {
     time > now + 2 * 60 * 1_000
   ) {
     throw new Error(
-      "Vị trí của ảnh đã cũ. Hãy chụp lại tại hiện trường rồi gửi ngay.",
+      "Vị trí của ảnh đã cũ. Xin chụp lại tại hiện trường rồi gửi ngay.",
     );
   }
 }
@@ -177,7 +177,7 @@ async function employeeRecord(workdayId: string) {
   }
   if (record.businessDate !== vietnamDateKey()) {
     throw new Error(
-      "Phiếu này không thuộc ngày làm việc hiện tại. Hãy liên hệ quản lý để xử lý ngoại lệ.",
+      "Phiếu này không thuộc ngày làm việc hiện tại. Xin liên hệ quản lý để xử lý ngoại lệ.",
     );
   }
   return { user, record };
@@ -402,7 +402,7 @@ export async function updateWorkdayProgressAction(
     const expectedVersion = Number(formData.get("expectedVersion"));
     const { user, record } = await employeeRecord(workdayId);
     if (record.version !== expectedVersion) {
-      return fail("Phiếu đã thay đổi. Hãy tải lại trước khi cập nhật.");
+      return fail("Phiếu đã thay đổi. Xin tải lại trước khi cập nhật.");
     }
     const actionKey =
       asText(formData.get("idempotencyKey")) || crypto.randomUUID();
@@ -457,7 +457,7 @@ export async function submitWorkdayAction(
     const expectedVersion = Number(formData.get("expectedVersion"));
     const { user, record } = await employeeRecord(workdayId);
     if (record.version !== expectedVersion) {
-      return fail("Phiếu đã thay đổi. Hãy tải lại trước khi bàn giao.");
+      return fail("Phiếu đã thay đổi. Xin tải lại trước khi bàn giao.");
     }
     const actionKey =
       asText(formData.get("idempotencyKey")) || crypto.randomUUID();
@@ -517,11 +517,11 @@ export async function reviewWorkdayAction(
       return fail("Phiếu không thuộc phạm vi quản lý.");
     }
     if (record.version !== Number(formData.get("expectedVersion"))) {
-      return fail("Phiếu đã thay đổi. Hãy tải lại trước khi duyệt.");
+      return fail("Phiếu đã thay đổi. Xin tải lại trước khi duyệt.");
     }
     const decisionValue = asText(formData.get("decision"));
     if (decisionValue !== "approve" && decisionValue !== "return") {
-      return fail("Hãy chọn xác nhận hoàn thành hoặc yêu cầu bổ sung.");
+      return fail("Xin chọn xác nhận hoàn thành hoặc yêu cầu bổ sung.");
     }
     const decision = decisionValue;
     const actionKey =

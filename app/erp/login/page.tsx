@@ -60,7 +60,7 @@ export default async function ErpLoginPage({ searchParams }: Props) {
               Trung tâm điều hành
             </p>
             <h1 className="font-display mt-5 text-6xl leading-[0.98] xl:text-7xl">
-              Một nhịp vận hành,<br />toàn bộ cơ sở.
+              Mọi cơ sở,<br />trên một màn hình.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-white/72">
               Theo dõi tài chính, dòng khách, nhân sự, phương tiện và sự cố trong cùng một hệ thống.

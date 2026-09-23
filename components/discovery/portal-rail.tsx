@@ -67,10 +67,10 @@ const ANH: Record<CongId, string> = {
 
 function moTa(id: CongId, lang: "vi" | "en"): string {
   const vi: Record<CongId, string> = {
-    travel: "Chín nơi đáng đi, mỗi nơi một nhịp riêng. Xem trên bản đồ rồi chọn.",
-    collaboration: "Hồ sơ dạng tạp chí về khả năng sáng tạo ở Ninh Bình.",
-    seasonal: "Một chương riêng cho mùa trăng: ba đêm, một dòng Ngô Đồng.",
-    booking: "Hành trình đã có tuyến đi, khung giờ và mức giá rõ ràng.",
+    travel: "Chín nơi đáng đi. Xem trên bản đồ rồi chọn.",
+    collaboration: "Hồ sơ ý tưởng mời thương hiệu hợp tác.",
+    seasonal: "Trung thu bên sông Ngô Đồng: bàn tối, quà, lịch trăng.",
+    booking: "Các gói đi sẵn, có giờ và giá rõ ràng.",
   };
   const en: Record<CongId, string> = {
     travel: "Nine places worth the trip, each with its own rhythm. See them on the map.",

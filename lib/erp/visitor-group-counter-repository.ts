@@ -69,7 +69,7 @@ function mapRepositoryError(error: unknown): CounterVisitorGroupRepositoryError 
     if (message.includes(needle)) return new CounterVisitorGroupRepositoryError(safeMessage, code);
   }
   return new CounterVisitorGroupRepositoryError(
-    "Chưa lập được phiếu đoàn tại quầy. Hãy thử lại.",
+    "Chưa lập được phiếu đoàn tại quầy. Xin thử lại.",
     "PERSISTENCE_FAILED",
     { cause: error instanceof Error ? error : undefined },
   );
@@ -158,7 +158,7 @@ export async function createCounterVisitorGroup(input: {
   const status = statusFrom(data);
   if (!status) {
     throw new CounterVisitorGroupRepositoryError(
-      "Chưa lập được phiếu đoàn tại quầy. Hãy thử lại.",
+      "Chưa lập được phiếu đoàn tại quầy. Xin thử lại.",
       "PERSISTENCE_FAILED",
     );
   }

@@ -13,11 +13,11 @@ export default function GlobalError({
           Unable to load this view
         </p>
         <h1 className="font-display mt-3 text-4xl text-[#183f34]">
-          Dữ liệu chưa thể đồng bộ.
+          Trang này chưa tải xong.
         </h1>
         <p className="mt-4 leading-7 text-[#59654b]">
-          Kiểm tra kết nối rồi thử lại. Không có thay đổi nào được xác nhận chỉ
-          vì màn hình này báo lỗi.
+          Bạn kiểm tra mạng rồi thử lại giúp nhé. Việc vừa làm dở chưa được
+          ghi nhận, thử lại là được.
         </p>
         <button
           type="button"

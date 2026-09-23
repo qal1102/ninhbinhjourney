@@ -17,12 +17,12 @@ const purposes = [
   {
     title: "Phân tích trải nghiệm",
     status: "Tự chọn",
-    body: "Đo trang, phần nội dung, thời gian xem chủ động, độ sâu cuộn và nút đã chọn. Không thu nội dung bạn gõ, âm thanh, email hay số điện thoại trong event hành vi.",
+    body: "Ghi lại bạn xem trang nào, xem bao lâu, cuộn tới đâu, bấm nút nào. Chúng tôi không ghi chữ bạn gõ, giọng nói, email hay số điện thoại vào phần này.",
   },
   {
     title: "Thông tin giới thiệu",
     status: "Mặc định tắt",
-    body: "Chỉ được dùng khi bạn tự bật. Rút lại quyền sẽ làm phân khúc marketing mất hiệu lực ngay; quyền phục vụ hành trình vẫn độc lập.",
+    body: "Chỉ dùng khi bạn tự bật. Bạn tắt đi là chúng tôi thôi gửi tin quảng cáo ngay; phần phục vụ chuyến đi của bạn không bị ảnh hưởng.",
   },
 ] as const;
 
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
 
       <article className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#56766a]">Thông báo xử lý dữ liệu · phiên bản 17.09.2026</p>
-        <h1 className="font-display mt-4 max-w-4xl text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">Dữ liệu của bạn vẫn là lựa chọn của bạn.</h1>
+        <h1 className="font-display mt-4 max-w-4xl text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">Bạn quyết định dữ liệu của mình được dùng thế nào.</h1>
         <p className="mt-6 max-w-3xl text-lg leading-8 text-[#596b63]">
           Xuân Trường vận hành Ninh Bình Journey và chịu trách nhiệm với dữ liệu được gửi qua website. Chúng tôi chỉ ghi nhận cách website được sử dụng sau khi bạn đồng ý; việc phục vụ hành trình và việc gửi thông tin giới thiệu luôn là hai lựa chọn riêng.
         </p>
@@ -123,9 +123,9 @@ export default function PrivacyPage() {
           <div>
             <h2 className="font-display text-3xl">Thời hạn lưu giữ</h2>
             <ul className="mt-5 space-y-3 text-sm leading-7 text-white/78">
-              <li>Event hành vi ẩn danh: tối đa 13 tháng.</li>
+              <li>Dữ liệu thao tác trên trang (không gắn tên): tối đa 13 tháng.</li>
               <li>Yêu cầu nhận lại hành trình và liên hệ phục vụ: 90 ngày sau ngày đi dự kiến, trừ khi phát sinh giao dịch cần thời hạn khác.</li>
-              <li>Quyền marketing: tới khi rút lại hoặc 24 tháng không có tương tác, tùy thời điểm nào đến trước.</li>
+              <li>Đồng ý nhận tin quảng cáo: tới khi bạn tắt, hoặc sau 24 tháng không tương tác, tuỳ điều nào tới trước.</li>
               <li>Dữ liệu giao dịch, vé và kế toán sẽ có thời hạn riêng theo nghĩa vụ vận hành khi luồng bán thật được phê duyệt.</li>
             </ul>
           </div>

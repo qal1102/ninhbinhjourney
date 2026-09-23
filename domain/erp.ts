@@ -164,7 +164,7 @@ export const ERP_MODULES: readonly ErpModule[] = [
     id: "du-an-su-kien",
     name: "Dự án & sự kiện",
     shortName: "Dự án",
-    description: "Theo dõi festival, chương trình lớn, tiến độ, ngân sách, nhà thầu, deadline và rủi ro cần xử lý.",
+    description: "Theo dõi lễ hội và sự kiện lớn: tiến độ, ngân sách, nhà thầu, hạn chót và rủi ro cần xử lý.",
     accent: "#9a5f32",
     employeeAssignable: true,
     status: "live",

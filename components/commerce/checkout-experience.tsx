@@ -175,8 +175,7 @@ export function CheckoutExperience({
             <span>
               <strong className="block">Cổng thanh toán mô phỏng</strong>
               <span className="mt-1 block text-sm leading-6 text-[#59654b]">
-                Toàn bộ quy trình được mô phỏng và có ghi lại để kiểm chứng.
-                Không kết nối tới mạng lưới thanh toán thật.
+                Đây là thanh toán thử, không nối với ngân hàng nào.
               </span>
             </span>
           </label>

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   const anonymousId = (await cookies()).get(CUSTOMER_ANONYMOUS_COOKIE)?.value;
   if (!anonymousId || !UUID_PATTERN.test(anonymousId)) {
     return Response.json(
-      { accepted: false, error: { code: "CUSTOMER_PROFILE_NOT_FOUND", message: "Hãy tạo và lưu hành trình trước khi để lại liên hệ." } },
+      { accepted: false, error: { code: "CUSTOMER_PROFILE_NOT_FOUND", message: "Xin tạo và lưu hành trình trước khi để lại liên hệ." } },
       { status: 409, headers: { "Cache-Control": "no-store" } },
     );
   }

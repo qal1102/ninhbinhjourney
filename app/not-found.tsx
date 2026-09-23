@@ -8,10 +8,10 @@ export default function NotFound() {
           404 · Not found
         </p>
         <h1 className="font-display mt-4 text-5xl text-[#183f34]">
-          Không tìm thấy điểm dừng này.
+          Không tìm thấy trang này.
         </h1>
         <p className="mt-4 leading-7 text-[#59654b]">
-          Liên kết có thể đã hết hạn hoặc không thuộc phòng dữ liệu hiện tại.
+          Có thể đường dẫn đã cũ, hoặc bị gõ nhầm.
         </p>
         <Link
           href="/explore"

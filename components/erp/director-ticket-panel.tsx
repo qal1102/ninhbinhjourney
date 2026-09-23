@@ -50,8 +50,8 @@ export function DirectorTicketPanel({
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-[#75574a]">
           Phần còn lại của trang vẫn dùng bình thường. Bạn tải lại trang giúp
-          em; nếu vẫn vậy thì kho vé đang trục trặc chứ không phải hôm nay
-          không bán được vé nào.
+          em; nếu vẫn vậy thì kho vé đang trục trặc, không có nghĩa là hôm nay
+          không bán được vé.
         </p>
       </section>
     );
@@ -248,8 +248,8 @@ export function DirectorTicketPanel({
             </p>
             <p className="mt-2 text-xs leading-5 text-[#7c8882]">
               {overview.webOrders30d.toLocaleString("vi-VN")} đơn đã xác nhận.
-              Chỉ tính đơn đặt qua web, vì vé bán tại quầy chưa lưu giá ở đâu
-              cả — gộp chung vào là ra một con số không có thật.
+              Chỉ tính đơn đặt qua web, vì vé bán tại quầy chưa lưu giá, nên
+              chưa cộng chung vào đây được.
             </p>
           </div>
 

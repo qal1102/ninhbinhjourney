@@ -133,7 +133,7 @@ export function protectCustomerContact(raw: string): {
     parsed = normalizeCustomerContact(raw);
   } catch {
     throw new CustomerIdentityRepositoryError(
-      "Hãy nhập một email hoặc số điện thoại Việt Nam hợp lệ.",
+      "Mời bạn nhập email hoặc số điện thoại Việt Nam.",
       "INPUT_INVALID",
     );
   }

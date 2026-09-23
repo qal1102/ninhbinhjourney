@@ -29,7 +29,7 @@ const NOT_FOUND_MESSAGE =
 const INVALID_INPUT_PAGE_MESSAGE =
   "Em chưa đọc được mã đặt chỗ hoặc liên hệ bạn vừa nhập ạ. Mời bạn nhập lại mã bắt đầu bằng NBJ, cùng số điện thoại hoặc email đã dùng lúc đặt.";
 const SERVER_INVALID_INPUT_MESSAGE =
-  "Hãy nhập một email hoặc số điện thoại Việt Nam hợp lệ.";
+  "Mời bạn nhập email hoặc số điện thoại Việt Nam.";
 
 // Lỗi kỹ thuật lọt ra mắt khách đọc như một vết stack trace hay một từ khoá
 // HTTP/JavaScript trần, chứ không phải thứ tiếng Việt lễ tân mà cả sản phẩm

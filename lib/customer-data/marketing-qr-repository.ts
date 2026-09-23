@@ -64,7 +64,7 @@ function mapRepositoryError(error: unknown): MarketingQrRepositoryError {
     return new MarketingQrRepositoryError("Mã QR này đang tạm dừng hoặc chiến dịch chưa hoạt động.", "NOT_ACTIVE");
   }
   if (message.includes("MARKETING_QR_VERSION_CONFLICT")) {
-    return new MarketingQrRepositoryError("Mã QR vừa được người khác cập nhật. Hãy tải lại trước khi đổi đích.", "VERSION_CONFLICT");
+    return new MarketingQrRepositoryError("Mã QR vừa được người khác cập nhật. Xin tải lại trước khi đổi đích.", "VERSION_CONFLICT");
   }
   if (message.includes("MARKETING_QR_") || message.includes("MARKETING_CAMPAIGN_")) {
     return new MarketingQrRepositoryError("Dữ liệu campaign hoặc QR chưa hợp lệ.", "INPUT_INVALID");

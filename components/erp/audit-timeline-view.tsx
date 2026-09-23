@@ -239,7 +239,7 @@ export function AuditTimelineView({
         {rowsKiemThu.length > 0 ? (
           <details className="mt-4 rounded-xl border border-[#d8e0db] bg-[#f7f9f7] p-4 text-sm">
             <summary className="cursor-pointer font-bold text-[#42574e]">
-              Đang ẩn {rowsKiemThu.length.toLocaleString("vi-VN")} dòng do bài kiểm tự động tạo
+              Đang ẩn {rowsKiemThu.length.toLocaleString("vi-VN")} dòng tạo ra khi chạy thử tự động
             </summary>
             <ol className="mt-3 divide-y divide-[#e6ebe8]">{rowsKiemThu.map(renderRow)}</ol>
           </details>

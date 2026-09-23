@@ -77,19 +77,19 @@ export const destinations: Destination[] = [
     duration: { en: "3-4 hours", vi: "3-4 giờ" },
     tagline: {
       en: "Where limestone mountains meet quiet water",
-      vi: "Nơi núi đá vôi gặp mặt nước tĩnh lặng",
+      vi: "Đi thuyền giữa núi đá vôi và hang nước",
     },
     shortDescription: {
       en: "A slow boat journey through caves, valleys and temple silhouettes.",
-      vi: "Chuyến thuyền chậm qua hang nước, thung lũng và bóng đền cổ.",
+      vi: "Ngồi thuyền chèo qua hang, qua thung, ghé các đền ven nước.",
     },
     description: {
       en: "Trang An is the emotional opening of Ninh Binh: water, limestone, rowing boats and a sense that the landscape is unfolding one bend at a time.",
-      vi: "Tràng An là phần mở đầu giàu cảm xúc của Ninh Bình: nước, núi đá vôi, thuyền chèo và cảm giác cảnh quan mở ra qua từng khúc quanh.",
+      vi: "Phần lớn khách bắt đầu Ninh Bình từ Tràng An. Thuyền do người địa phương chèo, luồn qua những hang thấp tới mức phải cúi đầu; ra khỏi hang là một thung nước có núi bao quanh.",
     },
     history: {
       en: "Trang An is part of the UNESCO-recognized landscape complex, where traces of settlement, temples and limestone caves sit inside a rare water-and-karst setting.",
-      vi: "Tràng An thuộc quần thể danh thắng được UNESCO ghi danh, nơi dấu tích cư trú, đền cổ và hang động đá vôi nằm trong một cảnh quan nước - núi hiếm có.",
+      vi: "Quần thể danh thắng Tràng An được UNESCO ghi danh là di sản thế giới hỗn hợp, vừa vì cảnh quan, vừa vì dấu tích người xưa cư trú trong các hang đá vôi.",
     },
     highlights: {
       en: ["Boat routes through caves", "Limestone valleys", "Water temples", "Quiet morning reflections"],
@@ -110,19 +110,19 @@ export const destinations: Destination[] = [
     duration: { en: "2-3 hours", vi: "2-3 giờ" },
     tagline: {
       en: "Bells, stone corridors and hillside air",
-      vi: "Chuông, hành lang đá và gió núi",
+      vi: "Chùa trên sườn núi, hành lang La Hán dài",
     },
     shortDescription: {
       en: "Grand courtyards and temple corridors with a quiet sense of scale.",
-      vi: "Sân rộng và hành lang chùa với cảm giác không gian khoáng đạt.",
+      vi: "Sân chùa rộng, hành lang dài, nhiều bậc lên cao.",
     },
     description: {
       en: "Bai Dinh gives the day a spacious spiritual rhythm, balancing grand architecture with slow movement and open views.",
-      vi: "Bái Đính đem lại nhịp tâm linh rộng mở, cân bằng giữa kiến trúc quy mô, bước đi chậm và các tầm nhìn thoáng.",
+      vi: "Bái Đính rộng tới mức đi hết mất cả buổi. Nên đi xe điện tới cổng, rồi đi bộ dọc hành lang La Hán lên dần các điện trên sườn núi.",
     },
     history: {
       en: "The area combines older sacred sites with a large contemporary pagoda complex, making it one of the most recognizable spiritual landmarks in northern Vietnam.",
-      vi: "Khu vực này kết hợp các dấu tích tâm linh cổ với quần thể chùa quy mô lớn hiện nay, trở thành một điểm nhận diện nổi bật của du lịch tâm linh miền Bắc.",
+      vi: "Trên núi có chùa Bái Đính cổ, dưới chân núi là quần thể chùa mới xây từ năm 2003. Hai phần cách nhau một quãng đi bộ.",
     },
     highlights: {
       en: ["Bell tower", "Long arhat corridors", "Temple courtyards", "Hillside viewpoints"],
@@ -143,19 +143,19 @@ export const destinations: Destination[] = [
     duration: { en: "Half day", vi: "Nửa ngày" },
     tagline: {
       en: "Lake light and temple roofs in a softer northern breeze",
-      vi: "Ánh hồ và mái chùa trong làn gió bắc dịu nhẹ",
+      vi: "Chùa lớn bên một lòng hồ rộng",
     },
     shortDescription: {
       en: "A contemplative lake-and-temple stop for a slower journey.",
-      vi: "Điểm dừng hồ và chùa cho một hành trình chậm hơn.",
+      vi: "Hồ rộng, chùa lớn, hơi xa trung tâm nên dành nửa ngày.",
     },
     description: {
       en: "Tam Chuc stretches the route north with water, scale and a calm pace for visitors who enjoy contemplative landscapes.",
-      vi: "Tam Chúc mở rộng hành trình về phía bắc bằng mặt nước, quy mô và nhịp tĩnh dành cho du khách thích cảnh quan trầm lắng.",
+      vi: "Tam Chúc hợp với người thích cảnh rộng và yên. Từ bờ nhìn ra là cả dãy núi soi bóng xuống hồ, và ngồi thuyền qua hồ là cách ngắm đẹp nhất.",
     },
     history: {
       en: "Tam Chuc sits in a broad lake basin connected to a revived Buddhist landscape, now an important spiritual and scenic stop in the expanded regional route.",
-      vi: "Tam Chúc nằm trong lòng hồ rộng gắn với không gian Phật giáo được phục dựng, hiện là điểm dừng tâm linh và cảnh quan quan trọng trong tuyến vùng mở rộng.",
+      vi: "Quần thể chùa Tam Chúc dựng trên nền một ngôi chùa cổ bên hồ. Năm 2019, Điện Tam Thế ở đây là nơi tổ chức Đại lễ Vesak.",
     },
     highlights: {
       en: ["Lake approach", "Temple roofs", "Mountain backdrop", "Wide ceremonial spaces"],
@@ -176,19 +176,19 @@ export const destinations: Destination[] = [
     duration: { en: "1-2 hours", vi: "1-2 giờ" },
     tagline: {
       en: "Lantern reflections after a day on the water",
-      vi: "Ánh đèn lồng sau một ngày theo dòng nước",
+      vi: "Phố đèn lồng để dạo buổi tối",
     },
     shortDescription: {
       en: "A warm evening chapter with lanterns, food and gentle walking.",
-      vi: "Một chương buổi tối ấm áp với đèn lồng, ẩm thực và dạo bộ.",
+      vi: "Đi dạo, ăn tối, ngồi thuyền nhỏ dưới đèn lồng.",
     },
     description: {
       en: "Hoa Lu Old Town closes the day softly: lanterns, small boats, food and reflections that make the route feel complete.",
-      vi: "Phố cổ Hoa Lư khép lại ngày thật nhẹ: đèn lồng, thuyền nhỏ, ẩm thực và những phản chiếu làm hành trình trọn vẹn hơn.",
+      vi: "Ban ngày đi thuyền, leo núi đã mỏi chân thì tối về Phố cổ Hoa Lư. Đường phẳng, đi bộ nhẹ nhàng, có chỗ ăn tối, có thuyền nhỏ chở khách dạo quanh mặt nước lúc lên đèn.",
     },
     history: {
       en: "The old-town experience is a contemporary cultural evening space inspired by regional architecture, lantern streets and waterside life.",
-      vi: "Không gian phố cổ là điểm trải nghiệm văn hóa buổi tối hiện đại, lấy cảm hứng từ kiến trúc vùng, phố đèn lồng và đời sống ven nước.",
+      vi: "Phố cổ Hoa Lư là khu phố mới dựng theo dáng nhà xưa, đông vui nhất về tối. Bạn đừng nhầm với Cố đô Hoa Lư, nơi có đền thờ vua Đinh và vua Lê.",
     },
     highlights: {
       en: ["Lantern boats", "Evening food stops", "Walking streets", "Water reflections"],
@@ -209,19 +209,19 @@ export const destinations: Destination[] = [
     duration: { en: "2-3 hours", vi: "2-3 giờ" },
     tagline: {
       en: "Rice fields, river bends and rural limestone views",
-      vi: "Đồng lúa, khúc sông và núi đá vôi làng quê",
+      vi: "Sông Ngô Đồng chảy giữa ruộng lúa và núi",
     },
     shortDescription: {
       en: "A countryside river route close to daily life.",
-      vi: "Tuyến sông làng quê gần nhịp sống thường ngày.",
+      vi: "Ngồi thuyền qua ba hang, hai bên là ruộng lúa.",
     },
     description: {
       en: "Tam Coc is softer and more rural, pairing water routes with rice fields and the everyday texture of Ninh Binh.",
-      vi: "Tam Cốc dịu và thôn quê hơn, kết hợp tuyến nước với đồng lúa và chất đời thường của Ninh Bình.",
+      vi: "So với Tràng An, Tam Cốc gần làng hơn: thuyền đi giữa ruộng lúa, có lúc gặp người dân đang cấy, đang gặt ngay sát bờ.",
     },
     history: {
       en: "Tam Coc has long been known for boat routes through three caves and seasonal rice-field views framed by limestone mountains.",
-      vi: "Tam Cốc được biết đến lâu đời với tuyến thuyền qua ba hang và cảnh đồng lúa theo mùa nằm giữa khung núi đá vôi.",
+      vi: "Tam Cốc nghĩa là ba hang: sông Ngô Đồng chảy xuyên núi thành hang Cả, hang Hai, hang Ba. Thuyền đi qua đủ cả ba rồi quay về bến.",
     },
     highlights: {
       en: ["Three cave route", "Rice-field views", "Village edges", "Boat photography"],
@@ -242,19 +242,19 @@ export const destinations: Destination[] = [
     duration: { en: "2 hours", vi: "2 giờ" },
     tagline: {
       en: "A climb toward the wide green geometry of Ninh Binh",
-      vi: "Một cung leo lên hình khối xanh rộng mở của Ninh Bình",
+      vi: "486 bậc đá lên đỉnh Ngọa Long",
     },
     shortDescription: {
       en: "A dramatic viewpoint for active travelers.",
-      vi: "Điểm ngắm cảnh ấn tượng cho du khách thích vận động.",
+      vi: "Leo mỏi chân, bù lại trên đỉnh thấy cả Tam Cốc.",
     },
     description: {
       en: "Hang Mua gives the journey altitude, with limestone ridges, river lines and a view that makes the region legible at once.",
-      vi: "Hang Múa đem lại độ cao cho hành trình, với sống núi đá vôi, đường sông và góc nhìn giúp đọc được toàn vùng trong một khoảnh khắc.",
+      vi: "Đứng trên đỉnh Hang Múa, bạn thấy sông Ngô Đồng uốn qua ruộng lúa Tam Cốc, xa hơn là những dãy núi đá vôi nối nhau. Muốn nhìn Ninh Bình từ trên cao thì đây là chỗ dễ lên nhất.",
     },
     history: {
       en: "The viewpoint is known for its stone stair climb and dragon ridge, offering one of the clearest panoramas over Tam Coc and nearby limestone valleys.",
-      vi: "Điểm ngắm cảnh nổi tiếng với lối bậc đá và sống núi rồng, mở ra một trong những góc nhìn rõ nhất xuống Tam Cốc và các thung lũng đá vôi gần kề.",
+      vi: "Lối bậc đá men theo sống núi, có tượng rồng đá chạy dọc, dẫn lên ngôi đình nhỏ trên đỉnh Ngọa Long.",
     },
     highlights: {
       en: ["Dragon stair ridge", "River panorama", "Sunset viewpoint", "Active climb"],
@@ -275,19 +275,19 @@ export const destinations: Destination[] = [
     duration: { en: "1-2 hours", vi: "1-2 giờ" },
     tagline: {
       en: "A historic pause between mountains and dynasties",
-      vi: "Một khoảng dừng lịch sử giữa núi và các triều đại",
+      vi: "Kinh đô của nhà Đinh và nhà Tiền Lê",
     },
     shortDescription: {
       en: "Temples and heritage traces from Vietnam's early capital.",
-      vi: "Đền thờ và dấu tích di sản của kinh đô xưa.",
+      vi: "Đền vua Đinh, đền vua Lê giữa vòng núi.",
     },
     description: {
       en: "Hoa Lu Ancient Capital adds historical depth, grounding the natural drama of Ninh Binh in stories of kings, gates and stone.",
-      vi: "Cố đô Hoa Lư thêm chiều sâu lịch sử, đặt vẻ hùng vĩ của Ninh Bình vào câu chuyện vua chúa, cổng thành và đá núi.",
+      vi: "Ở Cố đô Hoa Lư, núi đá chính là tường thành: vua Đinh chọn đất này vì bốn bề là núi, giặc khó đánh vào. Nay còn đền thờ vua Đinh Tiên Hoàng và vua Lê Đại Hành.",
     },
     history: {
       en: "Hoa Lu was Vietnam's capital in the 10th and 11th centuries under the Dinh and early Le dynasties, protected by limestone terrain and river routes.",
-      vi: "Hoa Lư từng là kinh đô của Việt Nam vào thế kỷ X-XI dưới thời Đinh và Tiền Lê, được bảo vệ bởi địa thế núi đá vôi và các tuyến sông.",
+      vi: "Hoa Lư là kinh đô nước Đại Cồ Việt từ năm 968 tới năm 1010, qua hai triều Đinh và Tiền Lê, trước khi Lý Công Uẩn dời đô ra Thăng Long.",
     },
     highlights: {
       en: ["Dinh King Temple", "Le King Temple", "Ancient gates", "Limestone defensive landscape"],
@@ -308,19 +308,19 @@ export const destinations: Destination[] = [
     duration: { en: "Half day", vi: "Nửa ngày" },
     tagline: {
       en: "Forest shade at the western edge of the journey",
-      vi: "Bóng rừng ở rìa tây của hành trình",
+      vi: "Rừng già ở phía tây Ninh Bình",
     },
     shortDescription: {
       en: "A forest escape for nature-focused visitors.",
-      vi: "Một khoảng rừng dành cho du khách yêu thiên nhiên.",
+      vi: "Đi bộ trong rừng, ghé trung tâm cứu hộ linh trưởng.",
     },
     description: {
       en: "Cuc Phuong brings forest, biodiversity and a cooler rhythm into the Ninh Binh journey.",
-      vi: "Cúc Phương đưa rừng, đa dạng sinh học và một nhịp mát lành hơn vào hành trình Ninh Bình.",
+      vi: "Sau mấy ngày toàn sông nước và núi đá, Cúc Phương là chỗ đổi gió: rừng rậm, đường mòn dưới tán cây cổ thụ, trời mát hơn hẳn.",
     },
     history: {
       en: "Cuc Phuong is Vietnam's first national park, valued for ancient forest, conservation work and a very different ecological layer of the region.",
-      vi: "Cúc Phương là vườn quốc gia đầu tiên của Việt Nam, nổi bật bởi rừng già, công tác bảo tồn và một lớp sinh thái rất khác của vùng.",
+      vi: "Cúc Phương là vườn quốc gia đầu tiên của Việt Nam, lập năm 1962. Trong vườn có trung tâm cứu hộ thú linh trưởng và nhiều cây cổ thụ hàng trăm năm tuổi.",
     },
     highlights: {
       en: ["Ancient trees", "Forest trails", "Primate conservation", "Seasonal butterflies"],
@@ -341,19 +341,19 @@ export const destinations: Destination[] = [
     duration: { en: "1-2 hours", vi: "1-2 giờ" },
     tagline: {
       en: "Stone, timber and a rare meeting of architectural traditions",
-      vi: "Đá, gỗ và cuộc gặp hiếm giữa các truyền thống kiến trúc",
+      vi: "Nhà thờ đá mà mái cong như đình làng",
     },
     shortDescription: {
       en: "A distinctive cathedral complex in the expanded region.",
-      vi: "Quần thể nhà thờ đặc sắc trong vùng Ninh Bình mở rộng.",
+      vi: "Nhà thờ Công giáo xây bằng đá và gỗ lim, dáng như đình chùa Việt.",
     },
     description: {
       en: "Phat Diem expands the story beyond karsts, adding coastal-delta craft and a memorable architectural voice.",
-      vi: "Phát Diệm mở rộng câu chuyện vượt khỏi núi đá, thêm dấu ấn thủ công vùng đồng bằng ven biển và một giọng kiến trúc khó quên.",
+      vi: "Phát Diệm nằm ở Kim Sơn, gần biển, xa hẳn vùng núi. Đi xa thế là để xem một nhà thờ Công giáo mà thoạt nhìn cứ ngỡ đình làng: mái cong, cột gỗ lim, tường đá chạm trổ.",
     },
     history: {
       en: "Phat Diem Cathedral complex was built with a distinctive blend of Vietnamese timber-roof forms and Catholic stone architecture, creating a rare regional landmark.",
-      vi: "Quần thể Nhà thờ Phát Diệm được xây dựng với sự hòa trộn đặc sắc giữa mái gỗ Việt Nam và kiến trúc đá Công giáo, tạo nên một dấu mốc hiếm có của vùng.",
+      vi: "Quần thể nhà thờ do linh mục Trần Lục cho xây vào cuối thế kỷ XIX, thợ là người trong vùng, đá và gỗ lim chở về từ nhiều nơi.",
     },
     highlights: {
       en: ["Stone cathedral", "Timber roof forms", "Pond courtyard", "Bell house"],
@@ -374,19 +374,19 @@ export const destinations: Destination[] = [
     duration: { en: "2-3 hours", vi: "2-3 giờ" },
     tagline: {
       en: "The quiet hour when birds return to limestone valleys",
-      vi: "Khoảnh khắc đàn chim bay về giữa thung lũng đá vôi",
+      vi: "Chiều nào chim cũng bay về thung này",
     },
     shortDescription: {
       en: "A quieter nature stop best timed for late afternoon.",
-      vi: "Một điểm thiên nhiên yên hơn, đẹp nhất vào cuối chiều.",
+      vi: "Nên tới cuối chiều, lúc chim về tổ.",
     },
     description: {
       en: "Thung Nham is the softer western branch of the route: water, reeds, karsts and the evening movement of birds returning home.",
-      vi: "Thung Nham là nhánh phía tây dịu hơn của hành trình: nước, lau sậy, núi đá và chuyển động buổi chiều của đàn chim bay về tổ.",
+      vi: "Chiều muộn ở Thung Nham, cò và vạc bay về đậu kín những lùm cây ven nước. Ngồi thuyền nhỏ ra giữa đầm là thấy rõ nhất.",
     },
     history: {
       en: "The valley is known for wetlands and bird habitat inside the Tam Coc-Bich Dong landscape, giving visitors a slower ecological layer after the busy boat routes.",
-      vi: "Thung lũng nổi bật bởi vùng nước và nơi cư trú của chim trong cảnh quan Tam Cốc - Bích Động, tạo thêm một lớp sinh thái chậm rãi sau các tuyến thuyền đông khách.",
+      vi: "Vườn chim nằm trong khu Tam Cốc – Bích Động, là chỗ trú của nhiều loài chim nước. Khách ít hơn hẳn các bến thuyền chính.",
     },
     highlights: {
       en: ["Bird garden at dusk", "Wetland boat views", "Limestone valley", "Quiet photography"],
@@ -407,19 +407,19 @@ export const destinations: Destination[] = [
     duration: { en: "2 hours", vi: "2 giờ" },
     tagline: {
       en: "Still water, limestone reflections and fewer voices",
-      vi: "Mặt nước tĩnh, bóng núi đá và ít tiếng ồn hơn",
+      vi: "Đầm nông, núi soi bóng, rất vắng",
     },
     shortDescription: {
       en: "A calm wetland route for travelers avoiding the busiest loops.",
-      vi: "Tuyến đầm tĩnh dành cho người muốn tránh các vòng đông nhất.",
+      vi: "Ngồi thuyền trên đầm, tránh được chỗ đông.",
     },
     description: {
       en: "Van Long feels almost horizontal compared with Trang An: shallow wetlands, mirrored limestone and a gentler rhythm for people who like silence.",
-      vi: "Vân Long có cảm giác phẳng và lặng hơn Tràng An: đầm nước nông, bóng núi soi xuống mặt nước và nhịp đi êm cho người thích sự yên tĩnh.",
+      vi: "Ở Vân Long không có hang để luồn. Thuyền nan đi chậm trên mặt đầm phẳng, bóng núi in xuống nước. Nếu chịu khó nhìn lên vách đá, bạn có thể thấy voọc mông trắng.",
     },
     history: {
       en: "The reserve protects an important wetland and limestone ecosystem north of the central tourism cluster, often appreciated for its understated scenery.",
-      vi: "Khu bảo tồn gìn giữ hệ sinh thái đất ngập nước và núi đá phía bắc cụm du lịch trung tâm, được yêu thích bởi vẻ đẹp ít phô trương.",
+      vi: "Vân Long là khu bảo tồn đất ngập nước ở phía bắc Tràng An, có tên trong Danh sách Xanh của IUCN. Phần lớn số voọc mông trắng còn lại trên thế giới sống trên những vách núi quanh đầm.",
     },
     highlights: {
       en: ["Mirror-like water", "Quiet sampan route", "Karst reflections", "Wildlife habitat"],
@@ -440,19 +440,19 @@ export const destinations: Destination[] = [
     duration: { en: "1-2 hours", vi: "1-2 giờ" },
     tagline: {
       en: "A walled mountain lake with a darker royal past",
-      vi: "Một hồ núi khép kín với lớp lịch sử trầm hơn",
+      vi: "Thung kín, hồ nhỏ, chuyện xưa thời Đinh",
     },
     shortDescription: {
       en: "A secluded stop near Hoa Lu for history and atmosphere.",
-      vi: "Một điểm khép kín gần Hoa Lư, hợp với lịch sử và không khí tĩnh.",
+      vi: "Ngay cạnh Cố đô Hoa Lư mà ít người biết.",
     },
     description: {
       en: "Am Tien adds a slightly mysterious pause: stone paths, enclosed water and a place that feels separate from the busier heritage route.",
-      vi: "Am Tiên thêm một khoảng dừng hơi bí ẩn: lối đá, mặt nước khép kín và cảm giác tách khỏi tuyến di sản đông hơn.",
+      vi: "Qua lối đá xuống Am Tiên là lọt vào một thung núi kín bốn bề, giữa có hồ nước. Tiếng xe cộ bên ngoài không vọng vào tới.",
     },
     history: {
       en: "The site is tied to stories from the Dinh dynasty period and later became known for its enclosed mountain-lake setting close to Hoa Lu.",
-      vi: "Điểm này gắn với các câu chuyện thời Đinh và về sau được biết đến bởi không gian hồ núi khép kín gần Cố đô Hoa Lư.",
+      vi: "Tương truyền đây là nơi vua Đinh nuôi hổ báo để trị tội, về sau Thái hậu Dương Vân Nga về đây tu những năm cuối đời.",
     },
     highlights: {
       en: ["Enclosed lake", "Stone gate", "Cave approach", "Hoa Lu side trip"],
@@ -473,19 +473,19 @@ export const destinations: Destination[] = [
     duration: { en: "1 hour", vi: "1 giờ" },
     tagline: {
       en: "Small gates, cave altars and limestone shade",
-      vi: "Cổng nhỏ, điện trong hang và bóng núi đá",
+      vi: "Ba ngôi chùa dựa vào vách núi",
     },
     shortDescription: {
       en: "A compact pagoda stop that pairs naturally with Tam Coc.",
-      vi: "Một điểm chùa nhỏ gọn, ghép rất tự nhiên với Tam Cốc.",
+      vi: "Chùa nhỏ, cách bến Tam Cốc vài phút.",
     },
     description: {
       en: "Bich Dong is not about scale. Its beauty is in the bridge, the old gate, the cave levels and the way the pagoda disappears into stone.",
-      vi: "Bích Động không hấp dẫn bằng quy mô. Vẻ đẹp nằm ở cây cầu, cổng cổ, các tầng hang và cách ngôi chùa lẩn vào vách đá.",
+      vi: "Bích Động nhỏ, không đồ sộ như Bái Đính. Qua cây cầu đá và cổng tam quan cổ, bạn leo bậc lên chùa Hạ, vào chùa Trung nằm trong hang, rồi lên chùa Thượng gần đỉnh núi.",
     },
     history: {
       en: "The pagoda is an old spiritual site built into limestone terrain near Tam Coc, with upper, middle and lower worship spaces connected by stone steps.",
-      vi: "Chùa là điểm tâm linh cổ nằm trong địa hình núi đá gần Tam Cốc, có các không gian thờ hạ, trung và thượng nối với nhau bằng bậc đá.",
+      vi: "Chùa có từ thời Hậu Lê, gồm ba ngôi Hạ, Trung, Thượng nối nhau bằng bậc đá leo dần lên núi.",
     },
     highlights: {
       en: ["Stone bridge", "Cave pagoda levels", "Old gate", "Tam Coc pairing"],
@@ -506,19 +506,19 @@ export const destinations: Destination[] = [
     duration: { en: "45-60 min", vi: "45-60 phút" },
     tagline: {
       en: "A quiet temple reached through rice-field paths",
-      vi: "Một ngôi đền yên qua lối ruộng lúa",
+      vi: "Đền nhỏ ở cuối đường ruộng",
     },
     shortDescription: {
       en: "A small heritage pause behind the Tam Coc bustle.",
-      vi: "Một khoảng dừng di sản nhỏ sau nhịp đông của Tam Cốc.",
+      vi: "Đạp xe từ Tam Cốc sang, tránh được đám đông.",
     },
     description: {
       en: "Thai Vi Temple works best as a breather: a short walk or bike ride through rice fields to a stone temple with very little performance.",
-      vi: "Đền Thái Vi hợp nhất như một nhịp nghỉ: đi bộ hoặc đạp xe ngắn qua ruộng lúa tới một ngôi đền đá không phô trương.",
+      vi: "Đền Thái Vi hợp để ghé sau bến thuyền Tam Cốc: đạp xe một quãng ngắn qua ruộng lúa là tới. Đền nhỏ, xây bằng đá, thường vắng.",
     },
     history: {
       en: "The temple is associated with the Tran dynasty and sits inside a rural landscape that makes the approach as memorable as the shrine itself.",
-      vi: "Ngôi đền gắn với triều Trần và nằm trong cảnh quan làng quê, khiến lối đi tới đền cũng đáng nhớ như chính di tích.",
+      vi: "Đền thờ các vua nhà Trần, nằm lọt giữa làng và ruộng lúa.",
     },
     highlights: {
       en: ["Rice-field approach", "Stone temple", "Cycling stop", "Quiet courtyards"],
@@ -539,23 +539,23 @@ export const destinations: Destination[] = [
     duration: { en: "1-2 hours", vi: "1-2 giờ" },
     tagline: {
       en: "A thoughtful stop for conservation-minded travelers",
-      vi: "Một điểm dừng tử tế cho du khách quan tâm bảo tồn",
+      vi: "Nơi chăm gấu được cứu khỏi trại nuôi lấy mật",
     },
     shortDescription: {
       en: "A responsible side trip focused on animal welfare.",
-      vi: "Một nhánh đi có trách nhiệm, tập trung vào phúc lợi động vật.",
+      vi: "Xem gấu được chăm sóc, nghe kể chuyện cứu hộ.",
     },
     description: {
       en: "Bear Sanctuary Ninh Binh is different from the landscape icons: it gives the journey a humane conservation layer that many international visitors actively look for.",
-      vi: "Cơ sở bảo tồn gấu Ninh Bình khác với các biểu tượng cảnh quan: điểm này thêm một lớp bảo tồn nhân văn mà nhiều du khách quốc tế chủ động tìm kiếm.",
+      vi: "Ở đây không có cảnh để chụp. Bù lại, bạn được thấy những con gấu từng bị nhốt lấy mật nay sống trong khu bán hoang dã, và nghe người chăm kể chúng đã trải qua những gì.",
     },
     history: {
       en: "The sanctuary is part of a modern animal-welfare effort, designed around rescued bears, visitor education and more responsible tourism choices.",
-      vi: "Cơ sở là một phần của nỗ lực phúc lợi động vật hiện đại, xoay quanh gấu được cứu hộ, giáo dục du khách và lựa chọn du lịch có trách nhiệm hơn.",
+      vi: "Cơ sở chăm sóc gấu được cứu khỏi các trại nuôi lấy mật. Khách đi theo lối riêng, giữ khoảng cách với khu gấu sống.",
     },
     highlights: {
       en: ["Ethical visit", "Forest enclosures", "Visitor education", "Good for families"],
-      vi: ["Tham quan có đạo đức", "Khu bán hoang dã", "Giáo dục du khách", "Hợp với gia đình"],
+      vi: ["Có người hướng dẫn", "Khu bán hoang dã", "Nghe kể chuyện cứu hộ", "Hợp với gia đình"],
     },
     tags: { en: ["Family", "Conservation", "Responsible"], vi: ["Gia đình", "Bảo tồn", "Có trách nhiệm"] },
     imagePosition: "50% 50%",
@@ -566,7 +566,7 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
   trang_an: {
     significance: {
       en: "Trang An is the anchor of the region: a UNESCO mixed heritage landscape where caves, rivers and temples make the karst scenery feel lived-in rather than only scenic.",
-      vi: "Tràng An là điểm neo của vùng: một di sản hỗn hợp UNESCO, nơi hang động, sông nước và đền phủ khiến cảnh núi đá có chiều sâu văn hóa chứ không chỉ đẹp để ngắm.",
+      vi: "Có một ngày ở Ninh Bình thì nhiều người chọn Tràng An. Đây là di sản thế giới hỗn hợp duy nhất ở Việt Nam, được ghi danh vì cả cảnh đẹp lẫn dấu tích người xưa.",
     },
     bestTime: { en: "Early morning or late afternoon; weekdays are much easier than weekends.", vi: "Sáng sớm hoặc cuối chiều; ngày thường dễ chịu hơn cuối tuần rất nhiều." },
     crowdTip: { en: "Weekend boat queues can build quickly, so arrive before the main Hanoi day-trip rush.", vi: "Cuối tuần thuyền dễ xếp hàng lâu, nên tới trước đợt khách đi trong ngày từ Hà Nội." },
@@ -579,15 +579,15 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
     pairWith: ["bai_dinh", "hoa_lu_old_town"],
     operatorNote: {
       en: "Editor's pick for first-time international visitors.",
-      vi: "Gợi ý nổi bật cho du khách quốc tế lần đầu tới Ninh Bình.",
+      vi: "Hợp nhất cho người tới Ninh Bình lần đầu.",
     },
   },
   bai_dinh: {
     significance: {
       en: "Bai Dinh gives Ninh Binh its grand spiritual scale, connecting older sacred ground with one of the largest pagoda complexes in Southeast Asia.",
-      vi: "Bái Đính tạo nên quy mô tâm linh lớn của Ninh Bình, nối lớp chùa cổ với một trong những quần thể chùa lớn nhất Đông Nam Á.",
+      vi: "Bái Đính có cả chùa cổ trên núi lẫn quần thể chùa mới, thuộc hàng lớn nhất Đông Nam Á, dưới chân núi.",
     },
-    bestTime: { en: "Early afternoon on weekdays is often calmer than expected.", vi: "Đầu giờ chiều ngày thường thường vắng và dễ đi hơn tưởng tượng." },
+    bestTime: { en: "Early afternoon on weekdays is often calmer than expected.", vi: "Đầu giờ chiều ngày thường khá vắng, đi thong thả được." },
     crowdTip: { en: "Festival season and major lunar dates can be very crowded.", vi: "Mùa lễ hội và các ngày âm lịch lớn có thể rất đông." },
     gettingThere: { en: "About 25-35 minutes from Trang An by car; use the electric cart inside the complex.", vi: "Khoảng 25-35 phút từ Tràng An bằng ô tô; nên dùng xe điện trong khuôn viên." },
     entranceFee: { en: "Entry/cart/tower fees may be separate; confirm at the ticket counter.", vi: "Vé vào, xe điện và tháp có thể tính riêng; xác nhận tại quầy vé." },
@@ -598,13 +598,13 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
     pairWith: ["trang_an", "tam_chuc"],
     operatorNote: {
       en: "Most loved by many first-time visitors for scale and views.",
-      vi: "Được nhiều du khách lần đầu yêu thích nhờ quy mô và tầm nhìn.",
+      vi: "Khách lần đầu thường thích vì chùa rộng, đứng trên cao nhìn được xa.",
     },
   },
   tam_chuc: {
     significance: {
       en: "Tam Chuc extends the map into the approved expanded Ninh Binh region, adding a broad lake-temple landscape to the heritage circuit.",
-      vi: "Tam Chúc mở bản đồ sang vùng Ninh Bình mở rộng, bổ sung cảnh quan hồ và chùa quy mô lớn cho tuyến di sản.",
+      vi: "Tam Chúc nằm tít phía bắc, đáng đi nếu bạn thích chùa lớn bên hồ và còn dư nửa ngày.",
     },
     bestTime: { en: "Late afternoon for lake light, or early morning if combining with spiritual stops.", vi: "Cuối chiều để có ánh hồ đẹp, hoặc sáng sớm nếu ghép với tuyến tâm linh." },
     crowdTip: { en: "Large ceremonies and holidays can change traffic and boat flow.", vi: "Dịp lễ lớn có thể làm thay đổi luồng xe và thuyền." },
@@ -612,14 +612,14 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
     entranceFee: { en: "Boat/electric vehicle pricing can vary; check the gate before planning exact costs.", vi: "Giá thuyền/xe điện có thể thay đổi; kiểm tra tại cổng trước khi chốt chi phí." },
     practical: {
       en: ["Plan it as a half-day if transferring from the Trang An cluster.", "The lake approach is part of the experience.", "Carry water in warm months."],
-      vi: ["Nếu đi từ cụm Tràng An nên tính nửa ngày.", "Tuyến qua hồ là một phần quan trọng của trải nghiệm.", "Mang nước vào mùa nóng."],
+      vi: ["Nếu đi từ cụm Tràng An nên tính nửa ngày.", "Nên ngồi thuyền qua hồ, cảnh đẹp nhất là nhìn từ dưới nước.", "Mang nước vào mùa nóng."],
     },
     pairWith: ["bai_dinh", "van_long"],
   },
   hoa_lu_old_town: {
     significance: {
       en: "Hoa Lu Old Town is a modern evening layer, useful for ending the day with lanterns, food and easy walking rather than another transfer-heavy stop.",
-      vi: "Phố cổ Hoa Lư là lớp trải nghiệm buổi tối hiện đại, hợp để kết ngày bằng đèn lồng, đồ ăn và đi bộ nhẹ thay vì thêm một điểm phải di chuyển xa.",
+      vi: "Phố cổ Hoa Lư hợp để kết thúc một ngày: đi bộ nhẹ, ăn tối, ngắm đèn lồng, khỏi phải chạy xe thêm chỗ nào xa.",
     },
     bestTime: { en: "After sunset, when lantern reflections and food stalls feel alive.", vi: "Sau hoàng hôn, khi đèn lồng và các điểm ăn tối bắt đầu có không khí." },
     crowdTip: { en: "Arrive a little before peak dinner time if traveling with children or elders.", vi: "Nên tới trước giờ ăn tối cao điểm nếu đi cùng trẻ nhỏ hoặc người lớn tuổi." },
@@ -627,18 +627,18 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
     entranceFee: { en: "Public areas and individual activities may differ; check each activity on site.", vi: "Khu công cộng và từng hoạt động có thể khác nhau; kiểm tra trực tiếp tại điểm." },
     practical: {
       en: ["Good dinner stop.", "Keep valuables close in busy walking areas.", "Works well as a soft finish to a family route."],
-      vi: ["Hợp để ăn tối.", "Giữ đồ cá nhân khi khu đi bộ đông.", "Rất hợp làm điểm kết nhẹ cho gia đình."],
+      vi: ["Hợp để ăn tối.", "Giữ đồ cá nhân khi khu đi bộ đông.", "Gia đình có trẻ nhỏ đi rất hợp."],
     },
     pairWith: ["trang_an", "bai_dinh"],
   },
   tam_coc: {
     significance: {
       en: "Tam Coc gives the journey its rural texture: rice fields, low boats and limestone forms closer to village life.",
-      vi: "Tam Cốc đem lại chất làng quê cho hành trình: ruộng lúa, thuyền thấp và núi đá gần với nhịp sống địa phương.",
+      vi: "Tam Cốc là chỗ thấy rõ nhất đời sống quê Ninh Bình: ruộng lúa sát mép sông, người chèo thuyền là dân các làng quanh đó.",
     },
     bestTime: { en: "Green or golden rice season is strongest; morning light is easier for photos.", vi: "Mùa lúa xanh hoặc lúa vàng đẹp nhất; ánh sáng buổi sáng dễ chụp hơn." },
-    crowdTip: { en: "The boat pier can be busy, but nearby temples and cycling lanes spread visitors out.", vi: "Bến thuyền có thể đông, nhưng các đền gần đó và đường đạp xe giúp giãn khách." },
-    gettingThere: { en: "A natural base area with hotels, cafes and cycling routes.", vi: "Là khu lưu trú tự nhiên với khách sạn, quán cà phê và tuyến đạp xe." },
+    crowdTip: { en: "The boat pier can be busy, but nearby temples and cycling lanes spread visitors out.", vi: "Bến thuyền hay đông; lúc ấy đạp xe sang Bích Động hay Thái Vi sẽ vắng hơn." },
+    gettingThere: { en: "A natural base area with hotels, cafes and cycling routes.", vi: "Quanh bến có nhiều khách sạn, quán cà phê, chỗ thuê xe đạp; nhiều người chọn ngủ lại đây." },
     entranceFee: { en: "Boat ticket rules can change; confirm at the pier.", vi: "Quy định vé thuyền có thể đổi; xác nhận tại bến." },
     practical: {
       en: ["Pair with Bich Dong or Thai Vi by bicycle.", "Carry cash for small stops.", "Avoid the harsh midday climb if adding Hang Mua."],
@@ -649,7 +649,7 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
   hang_mua: {
     significance: {
       en: "Hang Mua explains the whole landscape from above, turning the river-and-karst geography into one readable view.",
-      vi: "Hang Múa giúp đọc toàn bộ cảnh quan từ trên cao, biến địa hình sông nước và núi đá thành một góc nhìn rõ ràng.",
+      vi: "Từ đỉnh Hang Múa thấy được cả vùng Tam Cốc: sông, ruộng, núi và cả đường tới các điểm khác.",
     },
     bestTime: { en: "Sunrise or late afternoon; avoid midday heat.", vi: "Bình minh hoặc cuối chiều; tránh nắng gắt giữa ngày." },
     crowdTip: { en: "Sunset is beautiful but crowded; arrive earlier if you want space on the stairs.", vi: "Hoàng hôn đẹp nhưng đông; tới sớm hơn nếu muốn thoáng trên bậc thang." },
@@ -664,7 +664,7 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
   hoa_lu_ancient_capital: {
     significance: {
       en: "The ancient capital gives the landscape political memory, connecting the karst defenses with early Vietnamese dynasties.",
-      vi: "Cố đô đem lại ký ức chính trị cho cảnh quan, nối địa thế phòng thủ núi đá với các triều đại đầu của Việt Nam.",
+      vi: "Tới Cố đô Hoa Lư mới hiểu vì sao người xưa đóng đô giữa núi: núi đá bao quanh chính là tường thành.",
     },
     bestTime: { en: "Morning or late afternoon, especially when pairing with Am Tien.", vi: "Buổi sáng hoặc cuối chiều, nhất là khi ghép cùng Am Tiên." },
     crowdTip: { en: "Go early on weekends to avoid coach arrivals.", vi: "Cuối tuần nên đi sớm để tránh các đoàn xe lớn." },
@@ -672,16 +672,16 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
     entranceFee: { en: "Check current gate fee on arrival.", vi: "Kiểm tra giá vé hiện tại tại cổng." },
     practical: {
       en: ["Read the temple names before entering to avoid mixing Old Town and Ancient Capital.", "Dress modestly.", "Best with a guide if you want historical context."],
-      vi: ["Nên đọc tên đền trước khi vào để không nhầm Phố cổ và Cố đô.", "Mặc lịch sự.", "Có hướng dẫn viên sẽ hiểu lịch sử sâu hơn."],
+      vi: ["Nên đọc tên đền trước khi vào để không nhầm Phố cổ và Cố đô.", "Mặc lịch sự.", "Nên thuê hướng dẫn viên, có người kể mới thấy hết chuyện."],
     },
     pairWith: ["am_tien", "trang_an"],
   },
   cuc_phuong: {
     significance: {
       en: "Cuc Phuong changes the rhythm from karst water to old forest, adding biodiversity and conservation to the route.",
-      vi: "Cúc Phương đổi nhịp từ sông núi sang rừng già, thêm lớp đa dạng sinh học và bảo tồn cho hành trình.",
+      vi: "Cúc Phương là nơi duy nhất trong tuyến có rừng già để đi bộ.",
     },
-    bestTime: { en: "Dry-season mornings; butterfly season can be especially memorable.", vi: "Buổi sáng mùa khô; mùa bướm thường rất đáng nhớ." },
+    bestTime: { en: "Dry-season mornings; butterfly season can be especially memorable.", vi: "Buổi sáng mùa khô. Khoảng tháng Tư, tháng Năm là mùa bướm." },
     crowdTip: { en: "Allow travel time because the forest sits away from the central cluster.", vi: "Cần tính thời gian di chuyển vì rừng nằm xa cụm trung tâm." },
     gettingThere: { en: "Best as a half-day or full-day western branch by private transfer.", vi: "Hợp làm nhánh phía tây nửa ngày hoặc một ngày bằng xe riêng." },
     entranceFee: { en: "Park and conservation-center fees can vary; check the park gate.", vi: "Vé vườn và các trung tâm bảo tồn có thể khác nhau; kiểm tra tại cổng." },
@@ -694,7 +694,7 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
   phat_diem: {
     significance: {
       en: "Phat Diem adds a coastal-delta architectural voice, showing that expanded Ninh Binh is not only limestone and boats.",
-      vi: "Phát Diệm thêm giọng kiến trúc vùng đồng bằng ven biển, cho thấy Ninh Bình mở rộng không chỉ có núi đá và thuyền.",
+      vi: "Phát Diệm cho thấy một Ninh Bình khác hẳn: đồng bằng ven biển, làng Công giáo, nhà thờ đá.",
     },
     bestTime: { en: "Morning or soft late afternoon light for stone and timber details.", vi: "Buổi sáng hoặc cuối chiều để thấy rõ chi tiết đá và gỗ." },
     crowdTip: { en: "Respect service times and quiet zones around the cathedral complex.", vi: "Tôn trọng giờ lễ và các khu vực cần yên tĩnh trong quần thể." },
@@ -709,7 +709,7 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
   thung_nham: {
     significance: {
       en: "Thung Nham is valuable because it gives nature-focused travelers a quieter dusk alternative to the main boat circuits.",
-      vi: "Thung Nham đáng giá vì cho du khách yêu thiên nhiên một lựa chọn hoàng hôn yên hơn các tuyến thuyền chính.",
+      vi: "Muốn ngắm hoàng hôn mà tránh chỗ đông thì chọn Thung Nham.",
     },
     bestTime: { en: "Late afternoon, roughly 16:30-18:00, when birds return.", vi: "Cuối chiều, khoảng 16:30-18:00, lúc chim bay về tổ." },
     crowdTip: { en: "Do not arrive too late; the best movement is before full darkness.", vi: "Đừng tới quá muộn; thời điểm đẹp nhất là trước khi trời tối hẳn." },
@@ -724,22 +724,22 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
   van_long: {
     significance: {
       en: "Van Long is a strong hidden-gem choice because the scenery is quiet, reflective and less staged than the major icons.",
-      vi: "Vân Long là lựa chọn hidden gem tốt vì cảnh tĩnh, nhiều phản chiếu và ít cảm giác dàn dựng hơn các biểu tượng lớn.",
+      vi: "Vân Long hợp với người ngại đông: đầm rộng, ít khách, cảnh còn mộc.",
     },
     bestTime: { en: "Morning mist or late afternoon light.", vi: "Sương sáng hoặc ánh cuối chiều." },
-    crowdTip: { en: "Weekdays can feel almost private compared with central piers.", vi: "Ngày thường có thể rất riêng tư so với các bến trung tâm." },
+    crowdTip: { en: "Weekdays can feel almost private compared with central piers.", vi: "Ngày thường có khi cả đầm chỉ có thuyền của bạn." },
     gettingThere: { en: "Good northern stop between central Ninh Binh and Tam Chuc/Bai Dinh routes.", vi: "Hợp làm điểm phía bắc giữa trung tâm Ninh Bình và tuyến Tam Chúc/Bái Đính." },
     entranceFee: { en: "Boat and entry fees may change; confirm at the local pier.", vi: "Vé thuyền và vé vào có thể thay đổi; xác nhận tại bến địa phương." },
     practical: {
       en: ["Bring cash.", "Best for quiet travelers, not people seeking nightlife.", "Respect the wetland habitat."],
-      vi: ["Mang tiền mặt.", "Hợp người thích yên tĩnh, không hợp tìm hoạt động đêm.", "Tôn trọng sinh cảnh đầm nước."],
+      vi: ["Mang tiền mặt.", "Buổi tối ở đây không có gì để chơi, hợp người thích yên.", "Tôn trọng sinh cảnh đầm nước."],
     },
     pairWith: ["bai_dinh", "tam_chuc"],
   },
   am_tien: {
     significance: {
       en: "Am Tien works because it separates Hoa Lu history from the crowded postcard route, adding atmosphere and a darker legend layer.",
-      vi: "Am Tiên hiệu quả vì tách lớp lịch sử Hoa Lư khỏi tuyến check-in đông, thêm không khí và lớp truyền thuyết trầm hơn.",
+      vi: "Am Tiên chỉ cách Cố đô Hoa Lư một quãng ngắn mà vắng hơn nhiều, lại có lắm chuyện xưa để nghe.",
     },
     bestTime: { en: "Late afternoon, when the lake and cliffs soften.", vi: "Cuối chiều, khi mặt hồ và vách đá dịu lại." },
     crowdTip: { en: "Pair it before or after Hoa Lu Ancient Capital, not as a rushed detour.", vi: "Nên ghép trước hoặc sau Cố đô Hoa Lư, không nên đi vội như điểm tạt ngang." },
@@ -747,17 +747,17 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
     entranceFee: { en: "Check current local ticket information at the gate.", vi: "Kiểm tra thông tin vé hiện tại tại cổng." },
     practical: {
       en: ["Wear comfortable shoes for steps.", "Good for photography in softer light.", "Bring water if visiting in summer."],
-      vi: ["Mang giày thoải mái vì có bậc.", "Hợp chụp ảnh lúc ánh sáng mềm.", "Mang nước nếu đi mùa hè."],
+      vi: ["Mang giày thoải mái vì có bậc.", "Chụp ảnh đẹp nhất lúc chiều muộn.", "Mang nước nếu đi mùa hè."],
     },
     pairWith: ["hoa_lu_ancient_capital", "trang_an"],
   },
   bich_dong: {
     significance: {
       en: "Bich Dong is the small-scale counterpoint to Bai Dinh: less grand, more intimate, and tightly tied to limestone caves.",
-      vi: "Bích Động là đối trọng quy mô nhỏ của Bái Đính: không hoành tráng, nhưng thân mật hơn và gắn chặt với hang núi đá.",
+      vi: "Nếu thấy Bái Đính rộng quá, Bích Động là ngôi chùa nhỏ nằm gọn trong núi, đi một vòng chưa tới một giờ.",
     },
     bestTime: { en: "Morning for the bridge and entrance; avoid harsh noon light.", vi: "Buổi sáng đẹp ở khu cầu và cổng; tránh nắng gắt giữa trưa." },
-    crowdTip: { en: "Most people pass quickly, so lingering quietly changes the experience.", vi: "Nhiều người chỉ ghé nhanh, nên ở lại chậm một chút sẽ thấy khác hẳn." },
+    crowdTip: { en: "Most people pass quickly, so lingering quietly changes the experience.", vi: "Nhiều người ghé mười phút rồi đi. Ngồi lại lâu hơn ở chùa Trung sẽ thấy yên hơn nhiều." },
     gettingThere: { en: "Short bicycle or car ride from Tam Coc.", vi: "Đi xe đạp hoặc ô tô rất ngắn từ Tam Cốc." },
     entranceFee: { en: "Check on-site guidance for current access rules.", vi: "Kiểm tra hướng dẫn tại điểm về quy định hiện tại." },
     practical: {
@@ -769,7 +769,7 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
   thai_vi: {
     significance: {
       en: "Thai Vi matters because the route to it is part of the experience: fields, village edges and a modest temple rather than a staged attraction.",
-      vi: "Thái Vi đáng đi vì chính lối tới cũng là trải nghiệm: ruộng, rìa làng và một ngôi đền vừa phải thay vì điểm diễn quá mạnh.",
+      vi: "Đường tới Thái Vi đi qua ruộng lúa và làng, yên hơn hẳn bến thuyền. Riêng quãng đường ấy đã đáng đi.",
     },
     bestTime: { en: "Late afternoon by bicycle or on foot.", vi: "Cuối chiều, đi xe đạp hoặc đi bộ." },
     crowdTip: { en: "It stays calmer than the main boat pier even on many busy days.", vi: "Thường vẫn yên hơn bến thuyền chính ngay cả nhiều ngày đông." },
@@ -784,7 +784,7 @@ export const destinationFacts: Record<DestinationId, DestinationFacts> = {
   bear_sanctuary: {
     significance: {
       en: "The sanctuary broadens the itinerary beyond scenery, adding responsible tourism and animal-welfare context that many international travelers value.",
-      vi: "Cơ sở bảo tồn mở rộng lịch trình vượt khỏi cảnh đẹp, thêm lớp du lịch có trách nhiệm và phúc lợi động vật mà nhiều khách quốc tế coi trọng.",
+      vi: "Hợp với gia đình muốn con hiểu thêm về chuyện bảo vệ động vật hoang dã.",
     },
     bestTime: { en: "Morning or early afternoon, depending on visitor hours.", vi: "Buổi sáng hoặc đầu chiều, tùy giờ mở cửa tham quan." },
     crowdTip: { en: "Check opening days before transferring west.", vi: "Kiểm tra ngày mở cửa trước khi đi về phía tây." },

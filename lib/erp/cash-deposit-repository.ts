@@ -68,7 +68,7 @@ function repositoryError(operation: string, error: unknown) {
   const message = source.message ?? "";
   if (source.code === "40001" || message.includes("VERSION_CONFLICT")) {
     return new CashDepositRepositoryConflictError(
-      "Hồ sơ vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+      "Hồ sơ vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
     );
   }
   const businessMessage = findRpcBusinessMessage(error);

@@ -46,7 +46,7 @@ test.describe("CUS-05 progressive identity and consent", () => {
   test("keeps the public privacy notice readable and explicit", async ({ page }, testInfo) => {
     await page.goto("/quyen-rieng-tu", { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByRole("heading", { name: "Dữ liệu của bạn vẫn là lựa chọn của bạn." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Bạn quyết định dữ liệu của mình được dùng thế nào." })).toBeVisible();
     await expect(page.getByText("Xuân Trường vận hành Ninh Bình Journey và chịu trách nhiệm", { exact: false })).toBeVisible();
     await expect(page.getByText("Dữ liệu được bảo vệ thế nào", { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

@@ -167,7 +167,7 @@ function DestinationSheet({
               transitionTypes={["nav-forward"]}
               className="inline-flex min-h-12 items-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
-              Xem câu chuyện
+              Đọc thêm
             </Link>
             <Link
               href={planDestinationHref(

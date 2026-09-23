@@ -52,9 +52,9 @@ export function LichMuaVuPanel({ lich }: { lich: readonly DipSapToi[] }) {
           : "Chưa dịp nào tới hạn chuẩn bị"}
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-[#6b6250]">
-        Ngày của các dịp âm lịch được tính cho đúng năm, không chép tay. Mỗi dịp
-        ghi luôn mốc phải bắt đầu chuẩn bị — biết ngày khai hội mà biết muộn thì
-        cũng bằng không. Bấm vào một dịp để mở sẵn chiến dịch nháp cho nó.
+        Ngày các lễ âm lịch được tính tự động theo từng năm. Dịp nào cũng ghi luôn
+        ngày nên bắt đầu chuẩn bị. Bấm vào một dịp để tạo sẵn chiến dịch nháp
+        cho dịp đó.
       </p>
 
       {/*

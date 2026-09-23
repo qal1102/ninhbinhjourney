@@ -193,9 +193,8 @@ export function CapacityWorkspace({
 
       <aside className="rounded-2xl border border-[#d9c98f] bg-[#fff9df] p-4 text-sm leading-6 text-[#66551d] sm:px-5">
         <strong>Con số dưới đây mới là số thay thế:</strong> lượt khách được cổng
-        cho vào trong giờ. Đây không phải số người đang có mặt, cũng không phải số
-        đo từ cảm biến tại điểm nghẽn; khi bến và cổng có thiết bị đếm thì thay
-        bằng số đo thật.
+        cho vào trong giờ. Đây chưa phải số người đang có mặt. Khi bến và cổng lắp
+        máy đếm người thì số này sẽ thay bằng số đếm thật.
       </aside>
 
       {user.role === "director" ? (

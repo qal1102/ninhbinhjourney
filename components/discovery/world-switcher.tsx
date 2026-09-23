@@ -138,7 +138,7 @@ export function WorldSwitcher({
 
         {/* Ba chương còn lại, cuộn ngang được ở khổ hẹp. */}
         <nav
-          aria-label={lang === "vi" ? "Chuyển chương" : "Switch chapter"}
+          aria-label={lang === "vi" ? "Chuyển trang" : "Switch chapter"}
           className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <span className="flex w-max items-center gap-4 font-display text-sm">

@@ -5,7 +5,7 @@ import { simulatedOutboundAdapter } from "@/services/adapters/outbound/simulated
 describe("CUS-07 recommendation presentation and outbound adapter contract", () => {
   it("maps each supported explainable reason to visitor-safe Vietnamese copy", () => {
     expect(RECOMMENDATION_REASON_LABELS.explicit_party_children).toContain("chủ động");
-    expect(RECOMMENDATION_REASON_LABELS.explicit_relaxed_or_low_walking).toContain("nhịp thư thả");
+    expect(RECOMMENDATION_REASON_LABELS.explicit_relaxed_or_low_walking).toContain("đi thong thả");
     expect(RECOMMENDATION_REASON_LABELS.explicit_active_photography).toContain("nhiếp ảnh");
   });
 

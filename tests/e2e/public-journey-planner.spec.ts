@@ -57,7 +57,7 @@ test("một thẻ gợi ý, bấm một cái là ra kết quả, không phải �
     page.getByRole("heading", { name: "Chúng tôi hiểu thế này" }),
   ).toBeVisible();
   const summary = page.locator("[data-plan-summary]");
-  await expect(summary).toContainText("Nhịp thư thả");
+  await expect(summary).toContainText("Đi thong thả");
   await expect(summary).toContainText("ít đi bộ");
 
   // Và phải gợi ý được gói, chứ không dừng ở chỗ hiểu xong rồi thôi.
@@ -227,7 +227,7 @@ test("lý do từng chặng viết bằng tiếng Việt, không lộ tên hằn
 
   const firstStop = page.locator("ol > li").first();
   await expect(firstStop).toBeVisible();
-  await expect(firstStop).toContainText("nhịp cân bằng");
+  await expect(firstStop).toContainText("kiểu đi vừa phải");
 
   const itineraryText = await page.locator("main").innerText();
   expect(itineraryText).not.toMatch(/\b(balanced|relaxed|active|moderate)\b/);

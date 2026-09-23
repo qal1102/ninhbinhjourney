@@ -42,9 +42,9 @@ export type PackageCatalogItem = {
 };
 
 export const PACE_LABEL: Record<PackageCatalogItem["pace"], string> = {
-  relaxed: "nhịp thư thả",
-  balanced: "nhịp cân bằng",
-  active: "nhịp năng động",
+  relaxed: "đi thong thả",
+  balanced: "đi vừa phải",
+  active: "đi được nhiều",
 };
 
 export const PACKAGES: readonly PackageCatalogItem[] = [
@@ -66,10 +66,10 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     ],
     inclusions: [
       "Quyền vào hai điểm trong lịch trình",
-      "Điều phối khung giờ minh họa",
-      "QR Pass dùng tại điểm",
+      "Khung giờ đi gợi ý",
+      "Vé QR dùng ở cổng",
     ],
-    exclusions: ["Lưu trú", "Chi tiêu cá nhân", "Dịch vụ ngoài catalog demo"],
+    exclusions: ["Lưu trú", "Chi tiêu cá nhân", "Dịch vụ ngoài gói"],
     schedule: [
       "08:00 · Tràng An",
       "12:00 · Khoảng nghỉ tự túc",
@@ -94,10 +94,10 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     ],
     inclusions: [
       "Tuyến thuyền Tràng An minh họa",
-      "Chương buổi tối Phố cổ Hoa Lư",
-      "QR Pass và trạng thái realtime",
+      "Buổi tối ở Phố cổ Hoa Lư",
+      "Vé QR, xem được đã vào cổng hay chưa",
     ],
-    exclusions: ["Lưu trú", "Bữa ăn", "Xe điện/dịch vụ ngoài catalog demo"],
+    exclusions: ["Lưu trú", "Bữa ăn", "Xe điện và dịch vụ ngoài gói"],
     schedule: ["08:00 · Tràng An", "Nghỉ dài buổi chiều", "18:00 · Phố cổ Hoa Lư"],
   },
   {
@@ -118,7 +118,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     ],
     inclusions: [
       "Hai quyền vào điểm",
-      "Khung giờ gia đình minh họa",
+      "Khung giờ hợp với trẻ nhỏ",
       "QR Pass chung cho booking",
     ],
     exclusions: ["Lưu trú", "Bữa ăn", "Dịch vụ trông trẻ"],
@@ -142,7 +142,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     ],
     inclusions: [
       "Hai quyền vào điểm",
-      "Khung giờ ánh sáng minh họa",
+      "Khung giờ có nắng đẹp",
       "QR Pass chung cho booking",
     ],
     exclusions: ["Thiết bị nhiếp ảnh", "Người chụp ảnh", "Lưu trú"],
@@ -153,7 +153,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     regionId: CORE_IDS.regionId,
     slug: "ban-trang-tam-coc-2026",
     name: "Bàn Trăng bên Ngô Đồng",
-    audience: "Hai người muốn khép ngày Tam Cốc bằng một bàn tối riêng",
+    audience: "Hai người muốn ăn tối riêng sau chuyến Tam Cốc",
     companionFit: ["couple"],
     durationLabel: "19:00–21:30 · mùa trăng 2026",
     durationMinutes: 150,
@@ -165,21 +165,21 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
       "Thực đơn thử nghiệm theo mùa cho hai khách",
       "Trà và một phần bánh Trung thu dùng tại bàn",
       "Một hộp Trăng Non hai bánh mang về",
-      "Giữ chỗ 15 phút trên sức chứa thật trong ngày",
+      "Giữ chỗ 15 phút theo số chỗ còn trống",
     ],
     exclusions: [
       "Đồ uống gọi thêm",
       "Di chuyển và lưu trú",
-      "Thanh toán thật trong bản trình diễn",
+      "Thanh toán thật (bản thử chưa thu tiền)",
     ],
     schedule: [
-      "19:00 · đón khách tại không gian trải nghiệm Tam Cốc",
+      "19:00 · đón khách ở Tam Cốc",
       "19:15 · thực đơn theo mùa",
       "20:45 · trà, bánh và hộp quà mang về",
     ],
     campaign: "mid-autumn-2026",
     editorialDescription:
-      "Ba hang Cả, Hai, Ba nằm lại sau lưng khi thuyền rời sông Ngô Đồng. Buổi tối bắt đầu bằng một bàn ăn cho hai người, khép lại bằng trà và hộp bánh mang về.",
+      "Đi thuyền Tam Cốc xong, buổi tối hai người ngồi bàn ăn riêng, cuối bữa có trà và hộp bánh mang về.",
     priceLabel: "2.480.000 VND · bàn hai khách",
     bookingStartDate: "2026-09-18",
     bookingEndDate: "2026-09-27",

@@ -99,7 +99,7 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
   async function queueScan(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!state?.manifest || !manifestActive) {
-      setMessage("Chưa có bộ vé còn hiệu lực. Hãy nạp vé khi đang có mạng trước ca.");
+      setMessage("Chưa có bộ vé còn hiệu lực. Xin nạp vé khi đang có mạng trước ca.");
       setRefused(true);
       return;
     }

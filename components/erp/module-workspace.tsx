@@ -595,7 +595,7 @@ export function ModuleWorkspace({
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[#7a5750]">
           Nghiệp vụ này có chạy thật, nhưng kho dữ liệu chưa phản hồi cho cơ sở{" "}
-          {site.shortName}. Hãy tải lại trang; nếu vẫn vậy, báo bộ phận hệ thống.
+          {site.shortName}. Xin tải lại trang; nếu vẫn vậy, báo bộ phận hệ thống.
         </p>
       </section>
     );

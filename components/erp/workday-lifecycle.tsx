@@ -88,7 +88,7 @@ function positionError(error: unknown) {
       return "Bạn cần cho phép vị trí để vào ca và xác thực ảnh hiện trường.";
     }
     if (code === 3) {
-      return "Chưa lấy được GPS. Hãy ra nơi thoáng và thử lại.";
+      return "Chưa lấy được GPS. Xin ra nơi thoáng và thử lại.";
     }
   }
   return error instanceof Error ? error.message : "Không đọc được vị trí.";

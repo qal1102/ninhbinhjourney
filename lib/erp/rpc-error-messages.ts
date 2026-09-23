@@ -31,7 +31,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   ACCOUNTING_CHECKER_ROLE_REQUIRED:
     "Bước duyệt bút toán thuộc về kế toán trưởng. Tài khoản của bạn chưa giữ vai trò đó.",
   ACCOUNTING_MAKER_CHECKER_SEPARATION_REQUIRED:
-    "Người lập và người duyệt phải là hai người khác nhau. Hãy chuyển hồ sơ cho người có quyền duyệt.",
+    "Người lập và người duyệt phải là hai người khác nhau. Xin chuyển hồ sơ cho người có quyền duyệt.",
   ACCOUNTING_RETURNED_JOURNAL_WRONG_MAKER:
     "Bút toán bị trả về phải do chính người lập ban đầu chỉnh sửa lại.",
 
@@ -40,13 +40,13 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   AP_INVOICE_ALREADY_POSTED:
     "Hóa đơn đã ghi sổ nên không sửa được nữa. Muốn điều chỉnh phải lập bút toán đảo.",
   AP_INVOICE_NOT_READY_FOR_ACCOUNTING:
-    "Hóa đơn chưa ở trạng thái sẵn sàng cho kế toán. Hãy tải lại danh sách.",
+    "Hóa đơn chưa ở trạng thái sẵn sàng cho kế toán. Xin tải lại danh sách.",
   AP_INVOICE_NOT_MATCH_EXCEPTION:
-    "Hóa đơn không còn ở trạng thái lệch ba chiều. Hãy tải lại danh sách.",
+    "Hóa đơn không còn ở trạng thái lệch ba chiều. Xin tải lại danh sách.",
   AP_INVOICE_NOT_RETURNED_TO_MANAGER:
-    "Hóa đơn không ở trạng thái bị trả về cho quản lý. Hãy tải lại danh sách.",
+    "Hóa đơn không ở trạng thái bị trả về cho quản lý. Xin tải lại danh sách.",
   AP_INVOICE_NOT_PENDING_CHECKER:
-    "Hóa đơn chưa chờ kế toán trưởng duyệt. Hãy tải lại danh sách.",
+    "Hóa đơn chưa chờ kế toán trưởng duyệt. Xin tải lại danh sách.",
   AP_INVOICE_NOT_DIRECTOR_EXCEPTION:
     "Hồ sơ không ở trạng thái chờ giám đốc quyết định.",
   AP_INVOICE_TRANSITION_NOT_ALLOWED:
@@ -106,9 +106,9 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CAPACITY_INPUT_INVALID:
     "Thông tin phương tiện, số chỗ, thời gian vòng hoặc nguồn chưa hợp lệ.",
   CAPACITY_VERSION_CONFLICT:
-    "Ngưỡng sức chứa vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Ngưỡng sức chứa vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   CAPACITY_THRESHOLD_CODE_TAKEN:
-    "Mã điểm nghẽn này đã có tại cơ sở. Hãy chọn một mã khác.",
+    "Mã điểm nghẽn này đã có tại cơ sở. Xin chọn một mã khác.",
   SOP_ASSESSMENT_INPUT_INVALID:
     "Thông tin đánh giá mở cửa chưa hợp lệ hoặc không thuộc ngày vận hành hiện tại.",
   SOP_MANAGER_ROLE_REQUIRED:
@@ -213,10 +213,10 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   SHIFT_CLOSE_CREATE_ROLE_OR_STATUS_IS_INVALID:
     "Vai trò hoặc trạng thái khởi tạo phiếu chốt ca không hợp lệ.",
   SHIFT_CLOSE_VERSION_CONFLICT:
-    "Phiếu chốt ca vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Phiếu chốt ca vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   SHIFT_CLOSE_VERSION_MUST_INCREMENT: "Phiên bản phiếu chốt ca phải tăng.",
   SHIFT_CLOSE_IDEMPOTENCY_CONFLICT:
-    "Thao tác này đã được gửi với nội dung khác. Hãy tải lại và thử lại.",
+    "Thao tác này đã được gửi với nội dung khác. Xin tải lại và thử lại.",
   SHIFT_CLOSE_IDENTITY_IS_IMMUTABLE:
     "Không được đổi định danh của phiếu chốt ca.",
   SHIFT_CLOSE_ID_AND_VERSION_ARE_REQUIRED:
@@ -265,15 +265,15 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   WORKDAY_CHECK_IN_OUTSIDE_GEOFENCE:
     "Bạn đang ở ngoài phạm vi cho phép của cơ sở nên chưa nhận việc được.",
   WORKDAY_CHECK_IN_ACCURACY_INVALID:
-    "Định vị chưa đủ chính xác. Hãy ra chỗ thoáng và thử lại.",
+    "Định vị chưa đủ chính xác. Xin ra chỗ thoáng và thử lại.",
   WORKDAY_GEOFENCE_NOT_FOUND: "Cơ sở này chưa khai báo phạm vi định vị.",
   WORKDAY_LOCATION_INPUT_INVALID: "Dữ liệu định vị không hợp lệ.",
   WORKDAY_LOCATION_NOT_ALLOWED: "Vị trí này không được phép cho bước đang làm.",
   WORKDAY_VERSION_CONFLICT:
-    "Phiếu công việc vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Phiếu công việc vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   WORKDAY_VERSION_MUST_INCREMENT: "Phiên bản phiếu công việc phải tăng.",
   WORKDAY_IDEMPOTENCY_CONFLICT:
-    "Thao tác này đã được gửi với nội dung khác. Hãy tải lại và thử lại.",
+    "Thao tác này đã được gửi với nội dung khác. Xin tải lại và thử lại.",
   WORKDAY_IDENTITY_IS_IMMUTABLE: "Không được đổi định danh của phiếu công việc.",
   WORKDAY_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
 
@@ -330,28 +330,28 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
 
   // --- Khóa phiên bản và chống trùng ---
   AP_INVOICE_VERSION_CONFLICT:
-    "Hồ sơ vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Hồ sơ vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   AP_INVOICE_VERSION_MUST_INCREMENT: "Phiên bản hóa đơn phải tăng.",
   AP_IDEMPOTENCY_CONFLICT:
-    "Thao tác này đã được gửi với nội dung khác. Hãy tải lại và thử lại.",
+    "Thao tác này đã được gửi với nội dung khác. Xin tải lại và thử lại.",
   ACCOUNTING_IDEMPOTENCY_CONFLICT:
-    "Thao tác này đã được gửi với nội dung khác. Hãy tải lại và thử lại.",
+    "Thao tác này đã được gửi với nội dung khác. Xin tải lại và thử lại.",
   SOP_IDEMPOTENCY_CONFLICT:
-    "Thao tác Go/No-Go này đã được gửi với nội dung khác. Hãy tải lại trước khi thử lại.",
+    "Thao tác Go/No-Go này đã được gửi với nội dung khác. Xin tải lại trước khi thử lại.",
   SOP_ASSESSMENT_VERSION_CONFLICT:
-    "Hồ sơ Go/No-Go vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Hồ sơ Go/No-Go vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   ACCOUNTING_JOURNAL_VERSION_CONFLICT:
-    "Bút toán vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Bút toán vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   ACCOUNTING_JOURNAL_VERSION_MUST_INCREMENT: "Phiên bản bút toán phải tăng.",
   ACCOUNTING_JOURNAL_TRANSITION_NOT_ALLOWED:
     "Bước chuyển trạng thái này không hợp lệ với bút toán.",
   ACCOUNTING_PERIOD_VERSION_CONFLICT:
-    "Kỳ kế toán vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Kỳ kế toán vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   ACCOUNTING_PERIOD_VERSION_MUST_INCREMENT: "Phiên bản kỳ kế toán phải tăng.",
   ACCOUNTING_PERIOD_TRANSITION_NOT_ALLOWED:
     "Bước chuyển trạng thái này không hợp lệ với kỳ kế toán.",
   ACCOUNTING_SOURCE_VERSION_CONFLICT:
-    "Chứng từ gốc vừa được người khác cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Chứng từ gốc vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   AP_EXCEPTION_REQUIRES_ACCOUNTANT_VERIFICATION:
     "Ngoại lệ phải được kế toán kiểm tra trước khi trình giám đốc.",
 
@@ -373,7 +373,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   SHIFT_HANDOVER_ALREADY_DECIDED: "Phiếu bàn giao này đã được xử lý.",
   SHIFT_HANDOVER_DISPUTE_NEEDS_REASON: "Từ chối nhận ca phải nêu lý do.",
   SHIFT_HANDOVER_VERSION_CONFLICT:
-    "Phiếu bàn giao vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Phiếu bàn giao vừa được cập nhật. Xin tải lại trước khi tiếp tục.",
   SHIFT_HANDOVER_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
 
   // --- Quản trị tài khoản ---
@@ -397,7 +397,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
 
   // --- Thương mại (stack /ops) ---
   CAPACITY_UNAVAILABLE: "Khung giờ này đã hết chỗ.",
-  QUOTE_EXPIRED: "Báo giá đã hết hiệu lực. Hãy tạo lại báo giá mới.",
+  QUOTE_EXPIRED: "Báo giá đã hết hiệu lực. Xin tạo lại báo giá mới.",
 
   // --- Dữ liệu khách hàng (CUS-01) ---
   CUSTOMER_EVENT_ID_REQUIRED:
@@ -601,7 +601,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   MARKETING_QR_NOT_FOUND:
     "Không tìm thấy mã QR marketing này.",
   MARKETING_QR_VERSION_CONFLICT:
-    "Mã QR vừa được cập nhật. Hãy tải lại trước khi đổi đích.",
+    "Mã QR vừa được cập nhật. Xin tải lại trước khi đổi đích.",
   MARKETING_QR_NOT_ACTIVE:
     "Mã QR hoặc campaign đang tạm dừng nên chưa thể chuyển hướng.",
 
@@ -617,7 +617,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Có ca đã được gộp vào một lượt nộp khác rồi — mỗi ca chỉ nộp một lần.",
   CASH_DEPOSIT_NOT_FOUND: "Không tìm thấy lượt nộp quỹ này.",
   CASH_DEPOSIT_VERSION_CONFLICT:
-    "Lượt nộp quỹ vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Lượt nộp quỹ vừa được cập nhật. Xin tải lại trước khi tiếp tục.",
   CASH_DEPOSIT_NOT_MATCHABLE:
     "Lượt nộp quỹ không còn ở trạng thái chờ đối khớp.",
   CASH_STATEMENT_LINE_INPUT_INVALID: "Thông tin dòng sao kê chưa hợp lệ.",
@@ -625,7 +625,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CASH_STATEMENT_LINE_ACCOUNT_MISMATCH:
     "Dòng sao kê không cùng tài khoản ngân hàng hoặc cơ sở với lượt nộp.",
   CASH_STATEMENT_LINE_VERSION_CONFLICT:
-    "Dòng sao kê vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Dòng sao kê vừa được cập nhật. Xin tải lại trước khi tiếp tục.",
   CASH_STATEMENT_LINE_NOT_AVAILABLE:
     "Dòng sao kê này đã được khớp với một lượt nộp khác.",
   CASH_MATCH_INPUT_INVALID: "Thông tin đối khớp chưa hợp lệ.",
@@ -643,7 +643,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Lượt nộp quỹ không còn chờ kế toán trưởng ghi sổ.",
   CASH_JOURNAL_NOT_PENDING_CHECKER: "Bút toán không còn chờ duyệt.",
   CASH_JOURNAL_VERSION_CONFLICT:
-    "Bút toán vừa được cập nhật. Hãy tải lại trước khi tiếp tục.",
+    "Bút toán vừa được cập nhật. Xin tải lại trước khi tiếp tục.",
   CASH_JOURNAL_NOT_BALANCED: "Bút toán chưa cân đối Nợ và Có.",
   // --- Bán vé tại quầy (QA-ERP-POS-04) ---
   COUNTER_SALE_INPUT_INVALID: "Số vé hoặc số tiền chưa hợp lệ. Xin kiểm tra lại rồi bấm lần nữa.",

@@ -105,7 +105,7 @@ const DONG_CA: MachViec = {
       vai: ["employee"],
       noiLam: { kieu: "module", moduleId: "ve-dat-cho" },
       nguonVao:
-        "Vé đã bán trong ca — cả máy quét ở cổng lẫn quầy — cộng số tiền mặt đếm thật lúc giao ca.",
+        "Vé bán trong ca, cả ở cổng lẫn ở quầy, cùng số tiền mặt đếm được lúc giao ca.",
       ketQua:
         "Một hồ sơ ca mang bốn con số: tổng thu, hoàn, tiền mặt, thẻ. Chênh lệch do hệ thống tự tính, không ai gõ tay.",
       dangCho: ["manager-returned"],
@@ -188,9 +188,9 @@ const CONG_NO_DOI_TAC: MachViec = {
       vai: ["manager", "accountant"],
       noiLam: { kieu: "module", moduleId: "doi-tac-nha-cung-ung" },
       nguonVao:
-        "Đơn đặt hàng, biên bản nghiệm thu và hoá đơn nhà cung cấp — ba thứ do ba lúc khác nhau sinh ra.",
+        "Đơn đặt hàng, biên bản nghiệm thu và hoá đơn nhà cung cấp, mỗi thứ có vào một lúc khác nhau.",
       ketQua:
-        "Hệ thống tự đối ba chiều. Còn lệch thì nêu đích danh lệch chỗ nào, không nói chung chung là 'sai'.",
+        "Hệ thống tự đối chiếu ba thứ. Lệch ở đâu thì chỉ đúng chỗ đó.",
       dangCho: ["match-exception", "accounting-returned"],
     },
     {
@@ -280,7 +280,7 @@ const CHAM_CONG: MachViec = {
       nguonVao:
         "Phiếu việc quản lý đã giao cho ca hôm nay, kèm điểm làm việc và mốc giờ phải có mặt.",
       ketQua:
-        "Giờ vào ca được ghi kèm toạ độ và khoảng cách tới điểm làm việc — không gõ tay được, nên không chấm hộ được.",
+        "Giờ vào ca ghi kèm toạ độ và khoảng cách tới điểm làm việc, nên không ai chấm công hộ được.",
       dangCho: ["assigned"],
     },
     {
@@ -346,7 +346,7 @@ const DE_NGHI_NHAN_SU: MachViec = {
   id: "de-nghi-nhan-su",
   ten: "Đề nghị nhân sự",
   motCau:
-    "Mọi lời xin — nghỉ, đổi ca, ứng tiền, mua đồ, sửa chữa — đi chung một đường, nên không còn lời xin nào nằm trong tin nhắn riêng của ai.",
+    "Xin nghỉ, đổi ca, ứng tiền, mua đồ hay sửa chữa đều gửi chung một chỗ, không còn lời xin nào lọt thỏm trong tin nhắn riêng.",
   buoc: [
     {
       id: "de-nghi-1-gui",
@@ -414,7 +414,7 @@ const DE_NGHI_NHAN_SU: MachViec = {
       nguonVao:
         "Quản lý hoặc giám đốc bác, và người bác buộc phải viết lý do dài hơn năm ký tự.",
       ketQua:
-        "Hồ sơ dừng hẳn. Muốn xin lại thì gửi một đề nghị mới — không hồi sinh hồ sơ cũ, để lý do bác không bị xoá dấu.",
+        "Hồ sơ dừng hẳn. Muốn xin lại thì gửi đề nghị mới; hồ sơ cũ giữ nguyên để còn lưu lý do bị bác.",
       dangCho: ["rejected"],
       nhanh: true,
     },
@@ -425,7 +425,7 @@ const DE_NGHI_NHAN_SU: MachViec = {
       vai: [],
       noiLam: { kieu: "trang", href: "/erp/de-xuat" },
       nguonVao:
-        "Chính người gửi rút, và chỉ rút được khi chưa ai duyệt — duyệt rồi thì phải đi đường bác bỏ.",
+        "Người gửi tự rút, và chỉ rút được khi chưa ai duyệt. Đã duyệt rồi thì phải nhờ người duyệt bác.",
       ketQua: "Hồ sơ dừng, vẫn nằm trong nhật ký để về sau đếm được.",
       dangCho: ["cancelled"],
       nhanh: true,
@@ -482,7 +482,7 @@ const NOP_QUY: MachViec = {
     {
       id: "nop-quy-nhanh-lech",
       thuTu: null,
-      ten: "Lệch số — chờ giải trình rồi quyết",
+      ten: "Lệch số, chờ giải trình rồi quyết",
       vai: ["chief-accountant", "director"],
       noiLam: { kieu: "trang", href: "/erp/finance" },
       nguonVao:
@@ -507,7 +507,7 @@ const SU_CO: MachViec = {
   id: "su-co",
   ten: "Sự cố hiện trường",
   motCau:
-    "Từ lúc ai đó thấy chuyện bất thường tới lúc hồ sơ đóng, mỗi mốc đều có người đứng tên và có đồng hồ SLA chạy.",
+    "Từ lúc có người thấy chuyện bất thường tới lúc đóng hồ sơ, mốc nào cũng có người đứng tên và có hạn xử lý đếm ngược.",
   buoc: [
     {
       id: "su-co-1-bao",
@@ -518,7 +518,7 @@ const SU_CO: MachViec = {
       nguonVao:
         "Người trực thấy tận mắt, hoặc camera AI tự bắt được rồi mở hồ sơ thay người.",
       ketQua:
-        "Một hồ sơ có mức độ P1–P4, có mốc SLA, và đồng hồ bắt đầu chạy từ giây ấy.",
+        "Một hồ sơ có mức độ P1–P4 và hạn xử lý, bắt đầu đếm ngay từ lúc mở.",
       dangCho: [],
     },
     {
@@ -571,7 +571,7 @@ const SU_CO: MachViec = {
       noiLam: { kieu: "module", moduleId: "su-co" },
       nguonVao: "Lượt xác minh của quản lý cơ sở.",
       ketQua:
-        "Hồ sơ khép kèm số phút đã dùng — chính con số ấy về sau nói được SOP nào chậm.",
+        "Hồ sơ đóng kèm số phút đã mất. Về sau nhìn con số này là biết quy trình nào xử lý chậm.",
       dangCho: ["closed"],
     },
     {
@@ -581,9 +581,9 @@ const SU_CO: MachViec = {
       vai: ["director"],
       noiLam: { kieu: "trang", href: "/erp" },
       nguonVao:
-        "Cờ leo thang gắn thêm vào hồ sơ đang mở — không phải một trạng thái riêng, nên hồ sơ vẫn đứng ở bước nó đang đứng.",
+        "Hồ sơ được gắn thêm dấu leo thang, nhưng vẫn ở nguyên bước đang xử lý.",
       ketQua:
-        "Giám đốc thấy ngay ở trang chủ. Hồ sơ vẫn đi tiếp trên đường chính; leo thang chỉ thêm một cặp mắt, không thay ai làm.",
+        "Giám đốc thấy ngay ở trang chủ. Hồ sơ vẫn đi tiếp như thường; leo thang để giám đốc cùng theo dõi, không làm thay ai.",
       dangCho: [],
       nhanh: true,
     },
@@ -675,7 +675,7 @@ export function dangChoAi(
   buoc: MachViecBuoc,
   nhanVai: (role: ErpRole) => string,
 ): string {
-  if (buoc.vai.length === 0) return "Không ai — bước này đã khép";
+  if (buoc.vai.length === 0) return "Không ai, bước này đã xong";
   return buoc.vai.map(nhanVai).join(" hoặc ");
 }
 

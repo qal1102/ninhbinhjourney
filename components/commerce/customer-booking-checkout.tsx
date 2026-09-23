@@ -149,9 +149,9 @@ function formatGuestGroupSummary(tickets: ConfirmationResult["tickets"]) {
 // "T11a" là số hiệu một phiếu việc trong hàng đợi nội bộ, không phải chữ khách
 // hiểu được. Khách chỉ cần biết con số sức chứa này lấy từ đâu ra.
 const SOURCE_LABEL = {
-  estimate: "Ước tính từ vận hành",
-  customer: "Số liệu doanh nghiệp cung cấp",
-  measured: "Số liệu đã đo",
+  estimate: "Số chỗ ước tính",
+  customer: "Số chỗ do điểm tham quan báo",
+  measured: "Số chỗ đã đếm thực tế",
 } as const;
 
 // TC-15 — nhu cầu chăm sóc thay cho tuổi, đúng chủ đích của domain/visitor-group.ts.
@@ -196,7 +196,7 @@ async function responsePayload(response: Response) {
     | { error?: { message?: string } }
     | null;
   if (!response.ok) {
-    throw new Error(payload?.error?.message ?? "Kho đặt chỗ chưa phản hồi. Hãy thử lại.");
+    throw new Error(payload?.error?.message ?? "Hệ thống đặt chỗ chưa trả lời, mời bạn thử lại.");
   }
   return payload;
 }
@@ -395,9 +395,9 @@ export function CustomerBookingCheckout({
       setHold(payload);
       setConfirmation(null);
       paymentRequestId.current = crypto.randomUUID();
-      setMessage("Đã giữ chỗ thật trong kho công suất. Thời hạn 15 phút bắt đầu từ lúc này.");
+      setMessage("Chỗ của bạn đã được giữ. Bạn có 15 phút để hoàn tất ạ.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không thể giữ chỗ lúc này.");
+      setMessage(error instanceof Error ? error.message : "Lúc này chưa giữ chỗ được, mời bạn thử lại.");
     } finally {
       setPending(null);
     }
@@ -433,10 +433,10 @@ export function CustomerBookingCheckout({
       setMessage(
         payAtSite
           ? "Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào ạ."
-          : "Đặt chỗ đã xác nhận. Vé bên dưới là vé thật mà cổng vận hành đọc trực tiếp.",
+          : "Đặt chỗ xong rồi ạ. Vé bên dưới quét được ngay ở cổng.",
       );
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không thể xác nhận đặt chỗ lúc này.");
+      setMessage(error instanceof Error ? error.message : "Lúc này chưa xác nhận được, mời bạn thử lại.");
     } finally {
       setPending(null);
     }
@@ -545,21 +545,21 @@ export function CustomerBookingCheckout({
       <section className="overflow-hidden rounded-[2rem] border border-[#d4d1c7] bg-white shadow-[0_24px_70px_rgba(24,63,52,0.08)]">
         <div className="border-b border-[#e5e1d8] bg-[#fbfaf6] p-6 sm:p-8">
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#9a6328]">
-            Giữ chỗ theo sức chứa thật trong ngày
+            Giữ chỗ theo số chỗ còn trống trong ngày
           </p>
           <h2 className="font-display mt-3 text-4xl leading-tight text-[#183f34] sm:text-5xl">
             Chọn ngày. Chúng tôi giữ chỗ trong 15 phút.
           </h2>
           <p className="mt-4 max-w-2xl leading-7 text-[#59654b]">
-            Không cần tài khoản, tên, email hay số điện thoại. Phiên ẩn danh chỉ nối đơn với hành trình của bạn; không tự đăng ký nhận marketing.
+            Bạn không cần tạo tài khoản hay để lại tên, số điện thoại. Chúng tôi cũng không tự đăng ký cho bạn nhận tin quảng cáo.
           </p>
         </div>
 
         <div className="p-6 sm:p-8">
           <label className="block max-w-xs text-sm font-bold text-[#27362f]">
-            Ngày trải nghiệm
+            Ngày đi
             <input
-              aria-label="Ngày trải nghiệm"
+              aria-label="Ngày đi"
               type="date"
               value={visitDate}
               min={packageItem.bookingStartDate ?? localIsoDate(1)}
@@ -624,7 +624,7 @@ export function CustomerBookingCheckout({
               </div>
             )}
             {slots?.some((slot) => slot.capacitySourceKind === "estimate") ? (
-              <p className="mt-2 text-xs text-[#6b786f]">Số chỗ tính theo sức chứa ước tính của điểm, chưa đếm bằng lượt khách thật.</p>
+              <p className="mt-2 text-xs text-[#6b786f]">Số chỗ còn lại là ước tính theo sức chứa của điểm tham quan.</p>
             ) : null}
           </div>
 
@@ -684,7 +684,7 @@ export function CustomerBookingCheckout({
           <div className="mt-7 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
             <p className="font-extrabold">Vé phát ra ở đây là vé thật</p>
             <p className="mt-2 text-sm leading-6">
-              Chỗ được giữ thật trong kho công suất, vé có mã QR mà máy quét ở cổng đọc được. Riêng đường chuyển tiền từ ngân hàng thì bên em chưa đấu nối, nên trang này <strong className="font-bold">không hỏi số thẻ hay tài khoản</strong> của bạn — và cũng sẽ không bao giờ hỏi trên một trang chưa đấu nối.
+              Chỗ được giữ thật, vé có mã QR mà máy ở cổng quét được. Riêng đường chuyển tiền từ ngân hàng thì bên em chưa đấu nối, nên trang này <strong className="font-bold">không hỏi số thẻ hay tài khoản</strong> của bạn — và cũng sẽ không bao giờ hỏi trên một trang chưa đấu nối.
             </p>
           </div>
 
@@ -692,8 +692,8 @@ export function CustomerBookingCheckout({
             <div className="mt-7">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">Các điểm đã khóa công suất</p>
-                  <p className="mt-2 text-sm text-[#59654b]">Điểm nào chưa có ngưỡng sức chứa thì vẫn nằm trong lịch trình, nhưng bên em không ghi nhận là đã giữ chỗ ở đó.</p>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">Các điểm đã giữ chỗ</p>
+                  <p className="mt-2 text-sm text-[#59654b]">Điểm nào chưa nhận giữ chỗ trước thì vẫn nằm trong lịch trình, nhưng bạn vào theo lượt bình thường ở cổng.</p>
                 </div>
                 <div className="rounded-2xl bg-[#183f34] px-5 py-3 text-right text-white">
                   <p className="text-xs uppercase tracking-[0.16em] text-white/60">Còn lại</p>
@@ -705,7 +705,7 @@ export function CustomerBookingCheckout({
                   <li key={slot.slotId} className="rounded-2xl border border-[#dde1db] p-4">
                     <div className="flex flex-wrap justify-between gap-2">
                       <strong>{new Date(slot.startsAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })}</strong>
-                      <span className="text-xs font-bold text-[#557568]">Ngưỡng sức chứa v{slot.thresholdVersion}</span>
+                      <span className="text-xs font-bold text-[#557568]">Đã giữ chỗ</span>
                     </div>
                     <p className="mt-2 text-sm text-[#59654b]">{SOURCE_LABEL[slot.capacitySource]}</p>
                   </li>
@@ -1040,7 +1040,7 @@ export function CustomerBookingCheckout({
               />
               <span className="mt-1 font-normal leading-5 text-[#59654b]">
                 {payAtSite
-                  ? "Để đội ngũ liên lạc được khi có việc, và để một chỗ giữ mà không tới còn truy được về ai."
+                  ? "Để bên em gọi được cho bạn khi có việc cần báo."
                   : "Để lỡ mất trang, bạn còn mở lại được vé ở mục tra cứu vé. Không để lại cũng được, nhưng khi ấy tấm ảnh chụp màn hình là bản lưu duy nhất của bạn."}
                 {" "}Số của bạn được mã hoá trước khi lưu.
               </span>
@@ -1061,7 +1061,7 @@ export function CustomerBookingCheckout({
         )}
         {/* `text-white/45` trên nền #183F34 chỉ đạt 3,67:1. Nâng lên /60 là
             5,3:1 mà vẫn giữ đúng vai trò dòng chú thích mờ. */}
-        <p className="mt-5 text-xs leading-5 text-white/60">Gửi lại cùng một yêu cầu không tạo thêm đơn, khoản thanh toán hay vé thứ hai.</p>
+        <p className="mt-5 text-xs leading-5 text-white/60">Lỡ bấm hai lần cũng không sao, bạn vẫn chỉ có một đơn và một bộ vé.</p>
       </aside>
     </div>
   );

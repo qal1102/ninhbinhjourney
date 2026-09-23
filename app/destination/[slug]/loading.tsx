@@ -59,7 +59,7 @@ export default function DestinationLoading() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,28,23,.16),rgba(12,28,23,.86))]" />
         <div className="relative z-10 mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-end px-5 pb-12 text-white sm:px-8 sm:pb-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#e7c78d]">
-            Đang mở câu chuyện điểm đến
+            Đang mở trang điểm đến
           </p>
           <h1 className="font-display mt-4 max-w-5xl text-6xl leading-[0.9] text-balance sm:text-8xl">
             {name}

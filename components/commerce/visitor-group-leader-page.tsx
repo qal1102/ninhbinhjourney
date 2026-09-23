@@ -261,17 +261,17 @@ function LeaderGroupView({
       </div>
 
       <div className="mt-10 rounded-2xl border border-[#bcd6c8] bg-[#f0f7f2] p-5">
-        <p className="font-bold text-[#183f34]">Mã đoàn dùng chung được, không phải lỗ hổng</p>
+        <p className="font-bold text-[#183f34]">Ai bận thì đưa mã cho người khác đi thay</p>
         <p className="mt-2 text-sm leading-6 text-[#27362f]">
-          Ai bận không đi được thì cứ đưa mã của mình cho người đi thay — người cầm mã được đối xử đúng như người đó,
-          cổng vẫn cho vào bình thường. Cả đoàn dùng chung một hạn mức chỗ nên không ai chiếm thêm được suất nào cả,
-          bạn không cần lo bị gian lận số chỗ đâu ạ.
+          Ai bận không đi được thì cứ đưa mã của mình cho người đi thay, cổng vẫn cho vào bình thường.
+          Cả đoàn dùng chung số chỗ đã đặt, nên có đổi người thì tổng số người vào cũng không vượt quá
+          số đã giữ ạ.
         </p>
       </div>
 
       <p className="mt-8 text-xs leading-5 text-[#6b786f]">
         Ngưỡng nhắc ở trên là {GROUP_ATTENDANCE_ALERT_THRESHOLD_MINUTES} phút kể từ người đầu tiên qua cổng, tính
-        trên đúng nhật ký quét của đoàn — trang này không ghi thêm dữ liệu nào cả.
+        theo lượt quét mã ở cổng.
       </p>
     </div>
   );

@@ -8,7 +8,7 @@ type Language = "en" | "vi";
 const COPY: Record<Language, { eyebrow: string; body: string; cta: string }> = {
   vi: {
     eyebrow: "Mùa trăng 2026 đã khép",
-    body: "Rằm tháng Tám qua ngày 25/09, Bàn Trăng khép ngày 27/09 — trang này giờ là nơi xem lại mùa, hẹn bạn mùa trăng 2027.",
+    body: "Rằm tháng Tám đã qua (25/09), Bàn Trăng đóng ngày 27/09. Bạn vẫn xem lại được trang này, hẹn Trung thu 2027.",
     cta: "Xem các gói đang mở",
   },
   en: {

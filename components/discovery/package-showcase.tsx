@@ -135,7 +135,7 @@ export function PackageShowcase({
   const viewAllHref = packageCatalogHref(navigationContext, "home");
   const contactSubject =
     lang === "vi"
-      ? "Hỏi về gói trải nghiệm — Ninh Bình Journey"
+      ? "Hỏi về gói tham quan — Ninh Bình Journey"
       : "Enquiry about experience packages — Ninh Binh Journey";
 
   return (

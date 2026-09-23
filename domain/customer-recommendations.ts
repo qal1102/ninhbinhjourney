@@ -16,6 +16,6 @@ export type CustomerRecommendation = z.infer<typeof CustomerRecommendationSchema
 
 export const RECOMMENDATION_REASON_LABELS: Record<string, string> = {
   explicit_party_children: "Khách đã chủ động chọn nhóm có trẻ em.",
-  explicit_relaxed_or_low_walking: "Khách đã chủ động chọn nhịp thư thả hoặc khả năng đi bộ thấp.",
-  explicit_active_photography: "Khách đã chủ động chọn nhịp năng động và quan tâm nhiếp ảnh.",
+  explicit_relaxed_or_low_walking: "Khách đã tự chọn đi thong thả hoặc đi bộ ít.",
+  explicit_active_photography: "Khách đã tự chọn đi được nhiều và thích nhiếp ảnh.",
 };

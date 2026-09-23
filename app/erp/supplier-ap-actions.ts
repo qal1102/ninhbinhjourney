@@ -329,7 +329,7 @@ export async function resubmitSupplierInvoiceAction(
     const current = await loadInvoiceForUser(user, input.invoiceId);
     if (current.version !== input.expectedVersion) {
       throw new SupplierApRepositoryConflictError(
-        "Hồ sơ vừa được cập nhật. Hãy tải lại trước khi gửi lại.",
+        "Hồ sơ vừa được cập nhật. Xin tải lại trước khi gửi lại.",
       );
     }
     const envelope = requestEnvelope("resubmit-supplier-invoice", user.id, input);
@@ -373,7 +373,7 @@ export async function escalateSupplierInvoiceAction(
     const current = await loadInvoiceForUser(user, input.invoiceId);
     if (current.version !== input.expectedVersion) {
       throw new SupplierApRepositoryConflictError(
-        "Hồ sơ vừa được cập nhật. Hãy tải lại trước khi chuyển cấp.",
+        "Hồ sơ vừa được cập nhật. Xin tải lại trước khi chuyển cấp.",
       );
     }
     if (
@@ -428,7 +428,7 @@ export async function decideSupplierExceptionAction(
     const current = await loadInvoiceForUser(user, input.invoiceId);
     if (current.version !== input.expectedVersion) {
       throw new SupplierApRepositoryConflictError(
-        "Hồ sơ vừa được cập nhật. Hãy tải lại trước khi quyết định.",
+        "Hồ sơ vừa được cập nhật. Xin tải lại trước khi quyết định.",
       );
     }
     const envelope = requestEnvelope("decide-supplier-exception", user.id, input);
@@ -477,7 +477,7 @@ export async function prepareSupplierInvoiceJournalAction(
     const current = await loadInvoiceForUser(user, input.invoiceId);
     if (current.version !== input.expectedVersion) {
       throw new SupplierApRepositoryConflictError(
-        "Hồ sơ vừa được cập nhật. Hãy tải lại trước khi lập công nợ.",
+        "Hồ sơ vừa được cập nhật. Xin tải lại trước khi lập công nợ.",
       );
     }
     const envelope = requestEnvelope("prepare-supplier-invoice", user.id, input);
@@ -532,7 +532,7 @@ export async function reviewSupplierInvoiceJournalAction(
       current.journalVersion !== input.expectedJournalVersion
     ) {
       throw new SupplierApRepositoryConflictError(
-        "Hồ sơ hoặc bút toán vừa được cập nhật. Hãy tải lại trước khi kiểm tra.",
+        "Hồ sơ hoặc bút toán vừa được cập nhật. Xin tải lại trước khi kiểm tra.",
       );
     }
     if (current.accountantAccountId === user.id) {

@@ -409,9 +409,9 @@ export function SoDoiTacPanel({
             : "Không mối nào đang bị bỏ quên"}
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-[#6b6250]">
-        Hợp tác nhãn hàng ít khi chết vì bị từ chối — nó chết vì im lặng. Sổ này
-        đếm số ngày kể từ lần trao đổi gần nhất và tự đẩy mối đã nguội lên đầu.
-        Mỗi dòng gắn được vào một dịp trong lịch mùa vụ ở trên.
+        Sổ đếm số ngày kể từ lần gần nhất anh trao đổi với từng nhãn hàng. Mối nào
+        lâu không liên lạc thì tự lên đầu để anh gọi lại. Mỗi dòng gắn được vào
+        một dịp trong lịch mùa vụ ở trên.
       </p>
 
       {!sanSang ? (

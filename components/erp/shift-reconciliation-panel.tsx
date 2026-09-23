@@ -275,8 +275,8 @@ export function ShiftReconciliationPanel({
             </p>
           ) : scans.total === 0 ? (
             <p className="mt-2 text-sm font-medium text-[#5f7068]">
-              Suốt khung giờ này chưa có lượt quét nào ở cổng. Chưa có gì để đối soát,
-              chứ không phải hệ thống đếm ra số không.
+              Suốt khung giờ này chưa có lượt quét nào ở cổng. Vì vậy chưa có gì
+              để đối soát.
             </p>
           ) : (
             <>

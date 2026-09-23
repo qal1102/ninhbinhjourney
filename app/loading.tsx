@@ -8,7 +8,7 @@ export default function GlobalLoading() {
       <div className="text-center">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#a8cec1] border-t-[#183f34]" />
         <p className="mt-4 text-sm font-bold">
-          Đang chuẩn bị trải nghiệm / Loading…
+          Đang tải trang / Loading…
         </p>
       </div>
     </main>

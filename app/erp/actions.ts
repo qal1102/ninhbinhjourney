@@ -181,7 +181,7 @@ export async function changePasswordErpAction(
   if (!user || !user.authUserId) {
     return {
       status: "error",
-      message: "Phiên đăng nhập không hợp lệ. Hãy đăng nhập lại.",
+      message: "Phiên đăng nhập không hợp lệ. Xin đăng nhập lại.",
     };
   }
   const supabase = await createSupabaseServerClient();
@@ -423,7 +423,7 @@ export async function recordAttendanceAction(
     }
     return {
       success: false,
-      message: "Chưa thể ghi nhận chấm công. Hãy kiểm tra kết nối rồi thử lại.",
+      message: "Chưa thể ghi nhận chấm công. Xin kiểm tra kết nối rồi thử lại.",
     };
   }
   revalidatePath(`/erp/${siteId}/cham-cong`);
@@ -481,7 +481,7 @@ export async function transitionIncidentAction(
     if (error instanceof IncidentRepositoryConflictError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể cập nhật sự cố. Hãy thử lại." };
+    return { success: false, message: "Chưa thể cập nhật sự cố. Xin thử lại." };
   }
 }
 
@@ -519,7 +519,7 @@ export async function progressIncidentAction(
     if (error instanceof IncidentRepositoryConflictError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể cập nhật sự cố. Hãy thử lại." };
+    return { success: false, message: "Chưa thể cập nhật sự cố. Xin thử lại." };
   }
 }
 
@@ -577,7 +577,7 @@ export async function reportIncidentFromCameraAction(
     if (error instanceof IncidentRepositoryError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể tạo hồ sơ sự cố. Hãy thử lại." };
+    return { success: false, message: "Chưa thể tạo hồ sơ sự cố. Xin thử lại." };
   }
 }
 
@@ -645,7 +645,7 @@ export async function submitFieldReportAction(
     if (error instanceof FieldReportRepositoryError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể lưu báo cáo. Hãy thử lại." };
+    return { success: false, message: "Chưa thể lưu báo cáo. Xin thử lại." };
   }
 }
 
@@ -743,7 +743,7 @@ export async function recordGateScanAction(input: {
     if (error instanceof GateScanRepositoryError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể ghi nhận lượt quét. Hãy thử lại." };
+    return { success: false, message: "Chưa thể ghi nhận lượt quét. Xin thử lại." };
   }
 }
 
@@ -796,7 +796,7 @@ export async function lookupTicketsAction(input: {
     if (error instanceof GateScanRepositoryError) {
       return { tickets: [], message: error.message };
     }
-    return { tickets: [], message: "Chưa tra cứu được vé. Hãy thử lại." };
+    return { tickets: [], message: "Chưa tra cứu được vé. Xin thử lại." };
   }
 }
 
@@ -836,7 +836,7 @@ export async function listTodayTicketsAction(input: {
     if (error instanceof GateScanRepositoryError) {
       return { tickets: [], message: error.message };
     }
-    return { tickets: [], message: "Chưa đọc được danh sách vé. Hãy thử lại." };
+    return { tickets: [], message: "Chưa đọc được danh sách vé. Xin thử lại." };
   }
 }
 
@@ -1006,7 +1006,7 @@ export async function createCounterVisitorGroupAction(input: {
     if (error instanceof CounterVisitorGroupRepositoryError) {
       return { ok: false, message: error.message };
     }
-    return { ok: false, message: "Chưa lập được phiếu đoàn tại quầy. Hãy thử lại." };
+    return { ok: false, message: "Chưa lập được phiếu đoàn tại quầy. Xin thử lại." };
   }
 }
 

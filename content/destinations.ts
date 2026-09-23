@@ -116,15 +116,15 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     slug: "trang-an",
     name: { vi: "Tràng An", en: "Trang An" },
     editorialLine: {
-      vi: "Mặt nước mở từng lớp di sản giữa núi đá vôi.",
+      vi: "Ngồi thuyền luồn hang giữa núi đá vôi.",
       en: "Water reveals layer after layer of heritage among the karsts.",
     },
     description: {
-      vi: "Một hành trình thuyền chậm qua thung nước, hang xuyên thủy và các điểm đền phủ trong Quần thể danh thắng Tràng An.",
+      vi: "Thuyền chèo tay đi qua các thung nước, hang xuyên núi và ghé những đền phủ trong Quần thể danh thắng Tràng An.",
       en: "A slow boat journey through flooded valleys, water caves and sacred sites within the Trang An Landscape Complex.",
     },
     story: {
-      vi: "Tràng An là chương mở đầu của Ninh Bình — nơi đá vôi hàng triệu năm tuổi, dấu chân người ở từ thời tiền sử và mái đền cổ cùng nằm trong một khung cảnh sông núi. Không phải ngẫu nhiên UNESCO gọi đây là di sản kép: vừa của tự nhiên, vừa của con người.",
+      vi: "Tràng An là nơi hầu hết khách bắt đầu chuyến Ninh Bình. Núi đá vôi ở đây đã hàng triệu năm tuổi, trong hang còn dấu vết người thời tiền sử, ven sông có đền cổ. Vì thế UNESCO công nhận Tràng An là di sản kép, cả về thiên nhiên lẫn văn hoá.",
       en: "Trang An is Ninh Binh's opening chapter — where limestone millions of years old, traces of prehistoric settlement and old temple roofs all sit inside one river-and-mountain scene. UNESCO did not call this a dual heritage site by accident: both natural and human-made.",
     },
     coordinates: [20.2503, 105.897],
@@ -154,7 +154,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         // chưa lấy được nguyên văn phần Outstanding Universal Value. Các dữ
         // kiện dưới đây đối chiếu khớp qua nhiều nguồn thứ cấp.
         text: {
-          vi: "Được ghi danh năm 2014 là Di sản Thế giới hỗn hợp — vừa văn hóa vừa thiên nhiên — theo ba tiêu chí (v), (vii) và (viii). Vùng lõi rộng 6.172 ha, và các hang động ở đây lưu dấu người ở liên tục suốt hơn 30.000 năm.",
+          vi: "Được ghi danh năm 2014 là Di sản Thế giới hỗn hợp, cả văn hoá lẫn thiên nhiên, theo ba tiêu chí (v), (vii) và (viii). Vùng lõi rộng 6.172 ha, và các hang động ở đây lưu dấu người ở liên tục suốt hơn 30.000 năm.",
           en: "Inscribed in 2014 as a mixed World Heritage property — both cultural and natural — under criteria (v), (vii) and (viii). The core zone covers 6,172 ha, and its caves hold traces of continuous human occupation spanning more than 30,000 years.",
         },
         verbatim: false,
@@ -164,7 +164,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       },
       {
         text: {
-          vi: "Nơi này đang nổi lên trên mạng xã hội, nên sẽ không còn là viên ngọc giấu kín được lâu nữa. Hãy đi khi nó vẫn còn cho ta một trải nghiệm miền Bắc Việt Nam rất thật.",
+          vi: "Nơi này đang nổi trên mạng xã hội, chẳng bao lâu nữa sẽ hết vắng. Nên đi sớm, khi còn thấy được một miền Bắc Việt Nam rất thật.",
           en: "It's rising in popularity on social media, so it won't stay a hidden gem for too long. Go while it still offers a very authentic northern Vietnam experience.",
         },
         verbatim: true,
@@ -182,7 +182,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "Hơn 30.000 năm trước", en: "More than 30,000 years ago" },
         label: { vi: "Người ở trong hang đá", en: "People sheltering in the caves" },
         detail: {
-          vi: "Các hang động trong lòng Tràng An giữ dấu tích người ở liên tục — không phải một lần dừng chân, mà nhiều thế hệ nối nhau sống giữa núi đá này.",
+          vi: "Các hang trong lòng Tràng An còn dấu tích người ở liên tục, nhiều thế hệ nối nhau sống giữa vùng núi đá này.",
           en: "The caves inside Trang An hold traces of continuous human presence — not a single stopover, but generations living among these limestone mountains one after another.",
         },
       },
@@ -190,7 +190,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "Thế kỷ X", en: "10th century" },
         label: { vi: "Kinh đô nằm trong lòng núi", en: "A capital held inside the mountains" },
         detail: {
-          vi: "Vùng lõi Cố đô Hoa Lư — kinh đô đầu tiên của nhà nước phong kiến tập quyền Đại Cồ Việt — nằm ngay trong ranh giới Tràng An, là một trong ba khu được bảo vệ của quần thể.",
+          vi: "Cố đô Hoa Lư, kinh đô đầu tiên của nhà nước phong kiến tập quyền Đại Cồ Việt, nằm ngay trong ranh giới Tràng An và là một trong ba khu được bảo vệ của quần thể.",
           en: "The core zone of Hoa Lu Ancient Capital — the first capital of the centralized feudal state of Dai Co Viet — sits inside Trang An's boundary, one of the complex's three protected areas.",
         },
       },
@@ -198,13 +198,13 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "2014", en: "2014" },
         label: { vi: "UNESCO ghi danh di sản kép", en: "UNESCO inscribes a dual heritage" },
         detail: {
-          vi: "Tràng An trở thành Di sản Thế giới hỗn hợp — vừa văn hóa vừa thiên nhiên — một trong số ít nơi trên thế giới được công nhận cả hai vế cùng lúc.",
+          vi: "Tràng An trở thành Di sản Thế giới hỗn hợp, thuộc số ít nơi trên thế giới được công nhận cả về văn hoá lẫn thiên nhiên.",
           en: "Trang An becomes a mixed World Heritage property — both cultural and natural — one of the few places worldwide recognised under both categories at once.",
         },
       },
     ],
     realLimit: {
-      vi: "Mỗi thuyền chở tối đa 4 khách, chèo tay dọc một tuyến sông cố định — không có làn ưu tiên. Giờ cao điểm buổi sáng thường phải xếp hàng thật ở bến, không phải cảm giác dàn dựng.",
+      vi: "Mỗi thuyền chở tối đa 4 khách, chèo tay theo một tuyến cố định, ai tới trước đi trước. Sáng cao điểm thường phải xếp hàng ở bến khá lâu.",
       en: "Each boat carries up to 4 passengers, hand-rowed along a single fixed river route — there is no fast lane. Morning peak hours mean a real queue at the dock, not a staged one.",
     },
   },
@@ -219,11 +219,11 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "A tenth-century capital held within a ring of limestone cliffs.",
     },
     description: {
-      vi: "Đền vua Đinh và đền vua Lê đứng lặng giữa vòng núi đá, giữ nguyên trục thần đạo từ hơn nghìn năm trước.",
+      vi: "Đền vua Đinh và đền vua Lê nằm giữa vòng núi đá, vẫn giữ trục thần đạo từ hơn nghìn năm trước.",
       en: "The temples of King Dinh and King Le stand quietly inside a ring of limestone, keeping the same sacred axis laid out more than a thousand years ago.",
     },
     story: {
-      vi: "Hoa Lư từng là kinh đô của nhà nước Đại Cồ Việt — triều đại độc lập đầu tiên sau nghìn năm Bắc thuộc. Đi cùng người hiểu chuyện sẽ dễ tách bạch: đâu là cố đô nghìn năm, đâu là phố cổ mới dựng gần đây.",
+      vi: "Hoa Lư từng là kinh đô nước Đại Cồ Việt, triều đại độc lập đầu tiên sau nghìn năm Bắc thuộc. Nên đi cùng người rành chuyện, để khỏi lẫn cố đô nghìn năm với phố cổ mới dựng gần đây.",
       en: "Hoa Lu was once the capital of Dai Co Viet — the first independent state after a thousand years under Chinese rule. Going with someone who knows the story makes it easy to tell apart: which parts are the thousand-year-old citadel, and which are the old town built more recently.",
     },
     coordinates: [20.2845, 105.9082],
@@ -253,7 +253,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         // trả 403). Dữ kiện "Cố đô Hoa Lư là một trong ba khu bảo vệ nằm
         // trong vùng di sản Tràng An" đối chiếu khớp qua nhiều nguồn.
         text: {
-          vi: "Cố đô Hoa Lư là một trong ba khu bảo vệ nằm trong Quần thể danh thắng Tràng An — di sản được UNESCO ghi danh năm 2014. Nói cách khác, kinh thành cũ và vùng núi đá quanh nó được thế giới công nhận như một chỉnh thể, không tách rời.",
+          vi: "Cố đô Hoa Lư là một trong ba khu bảo vệ của Quần thể danh thắng Tràng An, được UNESCO ghi danh năm 2014. Kinh thành cũ và vùng núi đá quanh nó được công nhận chung làm một.",
           en: "The Hoa Lu Ancient Capital is one of three protected areas inside the Trang An Landscape Complex, inscribed by UNESCO in 2014. The old citadel and the limestone country around it are recognised as one whole, not as separate things.",
         },
         verbatim: false,
@@ -267,7 +267,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "968", en: "968" },
         label: { vi: "Đinh Bộ Lĩnh lập kinh đô", en: "Dinh Bo Linh founds the capital" },
         detail: {
-          vi: "Sau khi dẹp loạn 12 sứ quân, Đinh Bộ Lĩnh lên ngôi hoàng đế, đặt tên nước Đại Cồ Việt và chọn Hoa Lư — nơi núi non bao bọc như một tòa thành tự nhiên — làm kinh đô.",
+          vi: "Dẹp xong loạn 12 sứ quân, Đinh Bộ Lĩnh lên ngôi hoàng đế, đặt tên nước là Đại Cồ Việt và chọn Hoa Lư làm kinh đô, vì núi non quanh đây bọc kín như một toà thành.",
           en: "After putting down the rebellion of the 12 warlords, Dinh Bo Linh crowned himself emperor, named the country Dai Co Viet, and chose Hoa Lu — ringed by mountains like a natural citadel — as the capital.",
         },
       },
@@ -275,7 +275,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "968–1010", en: "968–1010" },
         label: { vi: "42 năm, ba triều đại", en: "42 years, three dynasties" },
         detail: {
-          vi: "Hoa Lư giữ vai trò trung tâm quyền lực qua nhà Đinh, Tiền Lê và những năm đầu nhà Lý — chứng kiến việc thống nhất đất nước, chống quân Tống và dẹp Chiêm Thành.",
+          vi: "Hoa Lư là trung tâm quyền lực qua nhà Đinh, nhà Tiền Lê và những năm đầu nhà Lý. Từ đây, các vua thống nhất đất nước, đánh quân Tống, dẹp Chiêm Thành.",
           en: "Hoa Lu remained the seat of power through the Dinh, Earlier Le and early Ly dynasties — witnessing national unification, resistance against the Song and campaigns against Champa.",
         },
       },
@@ -283,7 +283,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "1010", en: "1010" },
         label: { vi: "Lý Thái Tổ dời đô", en: "Ly Thai To moves the capital" },
         detail: {
-          vi: "Nhận thấy Hoa Lư quá chật hẹp để trở thành một đô thị lớn, Lý Thái Tổ dời đô về Thăng Long. Hoa Lư từ đây trở thành cố đô — kinh đô cũ, không còn là trung tâm nhưng vẫn giữ nguyên trục thần đạo.",
+          vi: "Thấy Hoa Lư quá chật để thành một đô thị lớn, Lý Thái Tổ dời đô ra Thăng Long. Từ đó Hoa Lư thành cố đô, thôi là trung tâm nhưng vẫn giữ trục thần đạo.",
           en: "Recognising that Hoa Lu was too cramped to grow into a proper capital city, Ly Thai To moved the seat of power to Thang Long. Hoa Lu became the former capital from then on — no longer the center, but keeping the same sacred axis.",
         },
       },
@@ -291,7 +291,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "2014", en: "2014" },
         label: { vi: "UNESCO ghi danh cùng Tràng An", en: "UNESCO inscription, alongside Trang An" },
         detail: {
-          vi: "Cố đô Hoa Lư trở thành một trong ba khu bảo vệ của Quần thể danh thắng Tràng An — Di sản Thế giới hỗn hợp, vừa văn hóa vừa thiên nhiên.",
+          vi: "Cố đô Hoa Lư trở thành một trong ba khu bảo vệ của Quần thể danh thắng Tràng An, Di sản Thế giới hỗn hợp cả văn hoá lẫn thiên nhiên.",
           en: "Hoa Lu Ancient Capital becomes one of three protected areas within the Trang An Landscape Complex — a mixed World Heritage property, both cultural and natural.",
         },
       },
@@ -304,15 +304,15 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     slug: "bai-dinh",
     name: { vi: "Chùa Bái Đính", en: "Bai Dinh Pagoda" },
     editorialLine: {
-      vi: "Chuông, hành lang đá và nhịp đi chậm trên sườn núi.",
+      vi: "Chùa cổ trên núi, chùa mới dưới chân núi.",
       en: "Bells, stone corridors and a measured hillside rhythm.",
     },
     description: {
-      vi: "Chuông chùa cổ vọng cạnh những mái ngói mới dựng, và nhìn xuống từ hành lang cao là cả một vùng núi mở ra trước mắt.",
+      vi: "Chùa cổ nằm trên núi, chùa mới dựng dưới chân. Đứng trên hành lang cao nhìn xuống là thấy cả một vùng núi.",
       en: "An old temple bell echoes beside newly built roofs, and from the high corridor the whole mountain range opens out below.",
     },
     story: {
-      vi: "Bái Đính là khoảng lặng giữa hành trình di sản — chỗ để chậm lại, thắp một nén nhang, rồi đi tiếp. Khuôn viên trải rất rộng, nên với gia đình có ông bà đi cùng, xe điện là lựa chọn nên tính trước.",
+      vi: "Nhiều người ghé Bái Đính để thắp nén nhang giữa chuyến đi. Khuôn viên rất rộng, nếu đi cùng ông bà thì nên tính trước chuyện đi xe điện.",
       en: "Bai Dinh is a pause inside the heritage route — a place to slow down, light incense, then move on. The grounds stretch wide, so for families travelling with grandparents, the electric cart is worth planning ahead for.",
     },
     coordinates: [20.2768, 105.8656],
@@ -339,7 +339,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     press: [
       {
         text: {
-          vi: "Hành lang La Hán trải dài gần 3 km, được công nhận là hành lang La Hán dài nhất châu Á, với 500 pho tượng La Hán bằng đá nguyên khối cao từ 1,5 đến 2 mét.",
+          vi: "Hành lang La Hán dài gần 3 km, được công nhận dài nhất châu Á, có 500 pho tượng La Hán tạc bằng đá nguyên khối, cao từ 1,5 đến 2 mét.",
           en: "The Arhat corridor stretches nearly 3 kilometers, making it the longest Arhat corridor in Asia, holding 500 monolithic Arhat statues ranging from 1.5 to 2 meters in height.",
         },
         verbatim: false,
@@ -353,7 +353,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "1136", en: "1136" },
         label: { vi: "Quốc sư lập chùa trong hang núi", en: "A royal monk founds a cave temple" },
         detail: {
-          vi: "Thiền sư Nguyễn Minh Không — quốc sư nhà Lý — tìm được một hang động trên núi Đính trong lúc đi tìm thuốc chữa bệnh cho vua, và chọn nơi này lập chùa, tạc tượng thờ Phật.",
+          vi: "Thiền sư Nguyễn Minh Không, quốc sư nhà Lý, trong lúc đi tìm thuốc chữa bệnh cho vua đã gặp một hang động trên núi Đính, rồi lập chùa, tạc tượng thờ Phật ở đó.",
           en: "Zen master Nguyen Minh Khong — a royal preceptor of the Ly dynasty — found a cave on Mount Dinh while searching for medicine to treat the king, and chose the spot to found a temple and carve Buddha statues.",
         },
       },
@@ -361,7 +361,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "2003", en: "2003" },
         label: { vi: "Khởi công quần thể mới", en: "Construction of the new complex begins" },
         detail: {
-          vi: "Bên cạnh chùa cổ trong hang, một quần thể chùa mới được khởi công — quy mô lớn hơn nhiều lần, nhưng vẫn giữ chùa cổ nguyên vẹn như điểm khởi đầu của cả câu chuyện.",
+          vi: "Cạnh chùa cổ trong hang, người ta khởi công một quần thể chùa mới lớn hơn nhiều lần. Chùa cổ vẫn được giữ nguyên.",
           en: "Beside the old cave temple, a much larger new complex broke ground — while the ancient temple was kept intact as the starting point of the whole story.",
         },
       },
@@ -369,7 +369,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
         year: { vi: "2012", en: "2012" },
         label: { vi: "Chín kỷ lục được xác lập", en: "Nine records set" },
         detail: {
-          vi: "Hành lang La Hán dài gần 3 km với 500 pho tượng đá nguyên khối trở thành hành lang La Hán dài nhất châu Á — một trong chín kỷ lục Bái Đính nắm giữ tính đến năm này.",
+          vi: "Hành lang La Hán dài gần 3 km với 500 pho tượng đá nguyên khối được công nhận dài nhất châu Á, một trong chín kỷ lục Bái Đính có được tính tới năm này.",
           en: "The nearly 3-kilometer Arhat corridor, holding 500 monolithic stone statues, became the longest Arhat corridor in Asia — one of nine records Bai Dinh held by this year.",
         },
       },
@@ -382,7 +382,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     slug: "hoa-lu-old-town",
     name: { vi: "Phố cổ Hoa Lư", en: "Hoa Lu Old Town" },
     editorialLine: {
-      vi: "Đèn lồng và mặt nước cho một chương buổi tối nhẹ.",
+      vi: "Dạo phố đèn lồng ven hồ buổi tối.",
       en: "Lantern light and reflections for an easy evening chapter.",
     },
     // Không phải press: mượn dữ kiện (dựng theo dáng kinh đô Đại Cồ Việt thế
@@ -394,7 +394,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "Built to echo the shape of the tenth-century Dai Co Viet capital, this is now a lakeside walking street lined with handicraft stalls from villages across the province, lantern-lit food stalls, and boats drifting slowly as the sun goes down.",
     },
     story: {
-      vi: "Đây là điểm khép một ngày nhẹ nhàng, không cần thêm một chặng xe nào nữa — ánh đèn lồng thay cho ánh nắng, và nhịp phố thay cho nhịp núi. Xin nói rõ: đây là khu văn hóa mới dựng, khác với Cố đô Hoa Lư nghìn năm tuổi ở gần đó — tên gọi giống nhau, nhưng là hai câu chuyện khác nhau.",
+      vi: "Đây là chỗ hợp để kết thúc một ngày, khỏi phải đi xe thêm chặng nào. Xin lưu ý: đây là khu văn hoá mới dựng, khác với Cố đô Hoa Lư nghìn năm tuổi ở gần đó. Tên gần giống nhau nhưng là hai nơi khác hẳn.",
       en: "This is a gentle way to close the day, no further transfer needed — lantern light replaces sunlight, and the street's rhythm replaces the mountain's. To be clear: this is a newly built cultural quarter, not the thousand-year-old Hoa Lu Ancient Capital nearby — the names sound alike, but they are two different stories.",
     },
     coordinates: [20.2579, 105.9741],
@@ -430,11 +430,11 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "The Ngo Dong River slips through rice fields and three caves.",
     },
     description: {
-      vi: "Thuyền len qua đồng lúa và ba hang núi, rồi ghé chùa Bích Động trên sườn đá — cả tuyến đi vừa một buổi, thêm dăm vòng xe đạp quanh làng.",
+      vi: "Thuyền len qua đồng lúa và ba hang núi, xong thì ghé chùa Bích Động trên sườn đá. Cả tuyến đi vừa một buổi, còn thời gian thì đạp xe một vòng quanh làng.",
       en: "The boat winds through rice fields and three caves, then stops at Bich Dong Pagoda on the hillside — the whole route fits a morning, with a few laps by bicycle around the village.",
     },
     story: {
-      vi: "So với Tràng An, Tam Cốc mang hơi thở làng quê rõ hơn: thuyền be bé, đồng lúa đổi màu theo mùa, và người dân vẫn sống ngay bên bờ sông. Bích Động góp thêm một khoảng tĩnh tâm linh, nép mình trên sườn núi đá.",
+      vi: "So với Tràng An, Tam Cốc quê hơn: thuyền nhỏ, ruộng lúa đổi màu theo mùa, người dân sống ngay bên bờ sông. Gần đó có chùa Bích Động nép trên sườn núi, vắng và yên.",
       en: "Compared with Trang An, Tam Coc feels more like the countryside: small boats, rice fields that change colour with the season, and people still living right along the riverbank. Bich Dong adds a quiet spiritual pause, tucked into the hillside.",
     },
     coordinates: [20.2169, 105.9368],
@@ -479,7 +479,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     slug: "hang-mua",
     name: { vi: "Hang Múa", en: "Hang Mua" },
     editorialLine: {
-      vi: "Độ cao làm lộ rõ đường sông và sống núi.",
+      vi: "Lên cao mới thấy rõ sông uốn và núi nối nhau.",
       en: "Height reveals the river bends and limestone ridges.",
     },
     // Không phải press: mượn tích vua Trần Thái Tông xem múa hát (giải thích
@@ -487,11 +487,11 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     // trích dẫn nguyên văn, không ghi nguồn, vì không bài nào đủ tin cậy để
     // đứng tên trong `press`.
     description: {
-      vi: "Bậc đá dốc leo dần lên đỉnh, và đến nơi là cả Tam Cốc cùng những thung lũng lân cận trải ra dưới chân.",
+      vi: "Bậc đá dốc dần lên đỉnh. Tới nơi, cả Tam Cốc và những thung lũng quanh đó nằm dưới chân.",
       en: "Steep stone steps climb toward the summit, and at the top, Tam Coc and the surrounding valleys spread out below.",
     },
     story: {
-      vi: "Người ta hay gọi đây là \"vịnh Hạ Long trên cạn\", nhưng tên thật của ngọn núi lại kể một câu chuyện khác: tương truyền vua Trần Thái Tông từng dừng chân xem múa hát nơi này, nên núi mang tên Hang Múa — múa, chứ không phải vịnh. Vài trăm bậc đá dưới nắng đổi lấy một tầm nhìn hiếm có, xứng đáng nhưng cần sức và cần trời quang. Với người muốn đi ít, đây không phải điểm nên chọn trước.",
+      vi: "Người ta hay gọi vùng này là \"vịnh Hạ Long trên cạn\". Còn cái tên Hang Múa thì có tích riêng: tương truyền vua Trần Thái Tông từng dừng chân xem múa hát ở đây. Leo vài trăm bậc đá dưới nắng khá mệt, bù lại cảnh trên đỉnh rất đẹp nếu trời quang. Ai ngại đi bộ thì nên để nơi này lại sau.",
       en: "People often call it \"Ha Long Bay on land\", but the mountain's real name tells a different story: legend says Emperor Tran Thai Tong once stopped here to watch a dance performance, and so the peak became Hang Mua — the dancing cave, not a bay. A few hundred stone steps under the sun trade for a rare view, worth it but demanding stamina and clear skies. For those who prefer to walk less, this is not the place to start with.",
     },
     coordinates: [20.229, 105.9361],
@@ -523,15 +523,15 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     slug: "thung-nham",
     name: { vi: "Thung Nham", en: "Thung Nham" },
     editorialLine: {
-      vi: "Mặt nước, lau sậy và nhịp chim về tổ cuối ngày.",
+      vi: "Chiều muộn ngồi thuyền xem chim về tổ.",
       en: "Water, reeds and the evening rhythm of returning birds.",
     },
     description: {
-      vi: "Lau sậy và mặt nước yên tĩnh phía tây Tam Cốc — một buổi chiều chậm rãi, dành cho ai muốn ngồi lặng ngắm chim về tổ.",
+      vi: "Đầm nước và lau sậy phía tây Tam Cốc, hợp với ai muốn ngồi yên cả buổi chiều xem chim về tổ.",
       en: "Reeds and quiet water west of Tam Coc — a slow afternoon, for anyone who wants to sit still and watch the birds come home.",
     },
     story: {
-      vi: "Sau những điểm di sản đông người, Thung Nham là chỗ để hạ nhịp thở. Đến đúng lúc chim về mới trọn vẹn, và gần khu sinh cảnh thì nên đi khẽ, nói khẽ.",
+      vi: "Đi mấy điểm đông người rồi thì Thung Nham là chỗ nghỉ ngơi. Nên tới đúng lúc chim về, và khi tới gần chỗ chim ở thì đi khẽ, nói nhỏ.",
       en: "After the busier heritage sites, Thung Nham is where the pace drops. It is best timed to when the birds return, and near the habitat, footsteps and voices should stay soft.",
     },
     coordinates: [20.2136, 105.9027],
@@ -558,7 +558,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     press: [
       {
         text: {
-          vi: "Vườn chim Thung Nham rộng 18 héc-ta bên mặt nước xanh ngọc của hồ Tiên, là nơi trú ngụ của khoảng 5.000 tổ chim thuộc hơn 40 loài — trong đó có hai loài nằm trong Sách Đỏ Việt Nam.",
+          vi: "Vườn chim Thung Nham rộng 18 héc-ta bên hồ Tiên, có khoảng 5.000 tổ chim thuộc hơn 40 loài, trong đó hai loài nằm trong Sách Đỏ Việt Nam.",
           en: "Thung Nham Bird Garden covers 18 hectares set amid the cool, emerald waters of Tien Lake, home to around 5,000 nests of various kinds belonging to more than 40 species — two of which are listed in the Vietnam Red Book.",
         },
         verbatim: false,
@@ -575,15 +575,15 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     slug: "van-long",
     name: { vi: "Đầm Vân Long", en: "Van Long Wetland" },
     editorialLine: {
-      vi: "Một mặt gương phẳng, chậm và ít phô diễn.",
+      vi: "Đầm phẳng lặng, thuyền nan đi chậm.",
       en: "A quiet mirror of water with an unhurried sense of place.",
     },
     description: {
-      vi: "Thuyền nan lướt nhẹ qua mặt nước phẳng như gương, vách núi soi bóng ngược, và cả vùng đầm này là đất bảo tồn.",
+      vi: "Thuyền nan đi trên mặt đầm phẳng lặng, vách núi soi bóng xuống nước. Cả vùng đầm là khu bảo tồn.",
       en: "A bamboo boat glides over water flat as a mirror, the cliffs reflected upside down, and the whole wetland is protected land.",
     },
     story: {
-      vi: "Vân Long dành cho người muốn một buổi sáng thật tĩnh, chỉ có tiếng mái chèo khua nước. Đây là đất của voọc mông trắng và nhiều loài chim quý, nhưng gặp được hay không còn tùy duyên — không ai hứa trước điều đó.",
+      vi: "Vân Long hợp với ai muốn một buổi sáng thật yên, chỉ nghe tiếng mái chèo. Đây là nơi sống của voọc mông trắng và nhiều loài chim quý, nhưng có gặp được hay không thì còn tuỳ may.",
       en: "Van Long is for those who want a truly still morning, with only the sound of the paddle in the water. This is home to the white-rumped langur and many rare birds, but seeing them is a matter of chance — nobody can promise that in advance.",
     },
     coordinates: [20.3636, 105.8773],
@@ -621,7 +621,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       {
         // Không ngoặc kép: đây là dữ kiện tổng hợp từ nhiều đoạn trong cùng bài, không phải một câu nguyên văn.
         text: {
-          vi: "Vân Long là khu bảo tồn đất ngập nước duy nhất của Việt Nam lọt vào Danh sách Xanh của IUCN, và được Công ước Ramsar công nhận là vùng đất ngập nước có tầm quan trọng quốc tế. Đây cũng là nơi sinh sống của phần lớn quần thể voọc mông trắng còn lại trên thế giới — loài chỉ còn khoảng 234 đến 275 cá thể trong tự nhiên.",
+          vi: "Vân Long là khu bảo tồn đất ngập nước duy nhất của Việt Nam có tên trong Danh sách Xanh của IUCN, và được Công ước Ramsar công nhận là vùng đất ngập nước có tầm quan trọng quốc tế. Phần lớn số voọc mông trắng còn lại trên thế giới sống ở đây; cả loài chỉ còn khoảng 234 đến 275 con ngoài tự nhiên.",
           en: "Van Long is the only Vietnamese protected area on the IUCN Green List, and is recognised by the Ramsar Convention as a wetland of international importance. It is also home to most of the world's remaining Delacour's langurs — a species with only between 234 and 275 individuals left in the wild.",
         },
         verbatim: false,
@@ -631,7 +631,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       },
     ],
     realLimit: {
-      vi: "Voọc mông trắng dễ gặp nhất vào mùa khô, từ tháng 11 đến tháng 4, rõ nhất lúc sáng sớm và chiều muộn. Ngoài khung này, khả năng gặp thấp hơn hẳn — không ai hứa trước được điều gì.",
+      vi: "Voọc mông trắng dễ gặp nhất vào mùa khô, từ tháng 11 đến tháng 4, lúc sáng sớm hoặc chiều muộn. Ngoài khoảng ấy thì khó gặp hơn nhiều.",
       en: "Delacour's langurs are easiest to spot in the dry season, November through April, clearest at early morning and late afternoon. Outside that window, sightings are far less likely — nobody can promise anything in advance.",
     },
   },
@@ -648,7 +648,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
     slug: "tam-chuc",
     name: { vi: "Khu du lịch Tam Chúc", en: "Tam Chuc Complex" },
     editorialLine: {
-      vi: "Quy mô rất lớn, mặt hồ rộng và nhịp đi bộ dài.",
+      vi: "Chùa rất lớn, hồ rộng, phải đi bộ nhiều.",
       en: "Vast scale, an open lake and a long walking rhythm.",
     },
     description: {
@@ -656,7 +656,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "A large lakeside spiritual complex in Ha Nam province, about an hour by road from central Ninh Binh.",
     },
     story: {
-      vi: "Tam Chúc thường được ghép cùng Bái Đính thành một ngày trọn vẹn. Khoảng cách giữa các điện lớn nên hãy tính trước thời gian đi bộ và xe điện, nhất là vào mùa lễ hội.",
+      vi: "Nhiều người ghép Tam Chúc với Bái Đính trong cùng một ngày. Các điện cách nhau xa, nên tính trước thời gian đi bộ và đi xe điện, nhất là mùa lễ hội.",
       en: "Tam Chuc is usually paired with Bai Dinh to fill a full day. The halls stand far apart, so plan for walking time and the shuttle, especially in festival season.",
     },
     coordinates: [20.5579, 105.7817],
@@ -685,7 +685,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       {
         // Không ngoặc kép: tổng hợp từ nhiều câu trong bài, không phải một câu nguyên văn.
         text: {
-          vi: "Quần thể Tam Chúc rộng khoảng 5.100 héc-ta, gồm 1.000 héc-ta mặt hồ, 3.000 héc-ta núi đá tự nhiên và 1.000 héc-ta thung lũng. Điện Tam Thế cao 39 mét, diện tích 5.400 m², đủ chỗ cho 5.000 phật tử hành lễ cùng lúc. Chùa còn lưu giữ một cây Bồ Đề được Chủ tịch Quốc hội Sri Lanka trao tặng — Việt Nam là quốc gia thứ hai sau Nepal nhận được giống cây quý này.",
+          vi: "Quần thể Tam Chúc rộng khoảng 5.100 héc-ta, gồm 1.000 héc-ta mặt hồ, 3.000 héc-ta núi đá tự nhiên và 1.000 héc-ta thung lũng. Điện Tam Thế cao 39 mét, diện tích 5.400 m², đủ chỗ cho 5.000 phật tử hành lễ cùng lúc. Chùa còn giữ một cây Bồ Đề do Chủ tịch Quốc hội Sri Lanka tặng; Việt Nam là nước thứ hai, sau Nepal, được nhận giống cây này.",
           en: "The Tam Chuc complex covers roughly 5,100 hectares, including 1,000 hectares of lake, 3,000 hectares of natural rocky mountain and 1,000 hectares of valley. Tam The Palace stands 39 meters tall across 5,400 square meters, enough for 5,000 Buddhists to perform ceremonies at once. The pagoda also holds a Bodhi tree gifted by Sri Lanka's Parliament Speaker — Vietnam is the second country after Nepal to receive this tree.",
         },
         verbatim: false,

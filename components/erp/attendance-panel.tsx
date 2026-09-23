@@ -57,7 +57,7 @@ export function AttendancePanel({ site, user, events }: Props) {
     } catch {
       setResult({
         success: false,
-        message: "Chưa thể ghi nhận chấm công. Hãy kiểm tra kết nối rồi thử lại.",
+        message: "Chưa thể ghi nhận chấm công. Xin kiểm tra kết nối rồi thử lại.",
       });
     } finally {
       setPending(false);
@@ -80,7 +80,7 @@ export function AttendancePanel({ site, user, events }: Props) {
       () => {
         setResult({
           success: false,
-          message: "Chưa lấy được vị trí. Hãy cấp quyền định vị rồi thử lại.",
+          message: "Chưa lấy được vị trí. Xin cấp quyền định vị rồi thử lại.",
         });
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 },

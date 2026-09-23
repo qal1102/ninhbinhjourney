@@ -59,7 +59,7 @@ export const VONG_TIEN: readonly Chang[] = [
     ten: "Khách trả tiền ở cổng",
     laGi: "Mỗi tấm vé bán ra hoặc quét vào đều rơi thẳng vào một con số duy nhất, tính theo ngày vận hành giờ Ninh Bình.",
     soODau:
-      "Không ai gõ tay con số này. Nó cộng từ lượt quét ở cổng và vé bán tại quầy — nên muốn nó sai thì phải có người quét sai, chứ không phải gõ sai.",
+      "Con số này không ai gõ tay. Máy cộng từ lượt quét ở cổng và vé bán tại quầy, nên chỉ sai khi có người quét sai.",
     khoaSo: "ve-hom-nay",
     moMan: { nhan: "Mở màn Vé & đặt chỗ", duong: (site) => `/erp/${site}/ve-dat-cho` },
   },
@@ -77,13 +77,13 @@ export const VONG_TIEN: readonly Chang[] = [
     ten: "Hồ sơ đang nằm trên bàn ai",
     laGi: "Mỗi hồ sơ ca đi qua đúng bốn người: nhân viên nộp, quản lý duyệt, kế toán đối soát, kế toán trưởng ghi sổ.",
     soODau:
-      "Dải mạch việc trên mỗi màn đọc thẳng trạng thái hồ sơ, nên nó không thể nói khác sự thật. Bước nào đang giữ bao nhiêu hồ sơ thì hiện đúng bấy nhiêu.",
+      "Dải mạch việc trên mỗi màn lấy thẳng từ trạng thái hồ sơ. Bước nào đang giữ bao nhiêu hồ sơ thì hiện đúng bấy nhiêu.",
     khoaSo: "ca-dang-cho-nguoi-khac",
     moMan: { nhan: "Xem mạch việc đóng ca", duong: (site) => `/erp/${site}/ve-dat-cho` },
   },
   {
     thuTu: 4,
-    ten: "Chỗ anh phải ra tay",
+    ten: "Việc tới tay anh",
     laGi: "Giám đốc không duyệt từng ca. Chỉ những ca lệch quá ngưỡng, kèm giải trình của kế toán, mới lên tới bàn anh.",
     soODau:
       "Hệ thống tự lọc: lệch dưới 1.000 đồng thì kế toán tự khép. Vì thế hàng việc của anh ngắn, và mỗi việc trong đó đều đã có người xác minh trước.",
@@ -93,9 +93,9 @@ export const VONG_TIEN: readonly Chang[] = [
   {
     thuTu: 5,
     ten: "Tiền đi ra",
-    laGi: "Chiều ngược lại: hoá đơn nhà cung cấp chỉ được trả sau khi khớp đủ ba chiều — đặt hàng, nghiệm thu, hoá đơn.",
+    laGi: "Tiền chi ra cũng vậy: hoá đơn nhà cung cấp chỉ được trả khi khớp đủ ba thứ là đơn đặt hàng, biên bản nghiệm thu và hoá đơn.",
     soODau:
-      "Còn lệch một chiều thì hệ thống nêu đích danh lệch chỗ nào, không báo chung chung là 'sai'. Chưa khớp thì không có đường nào chi tiền.",
+      "Lệch ở đâu, hệ thống chỉ đúng chỗ đó. Chưa khớp thì chưa chi được tiền.",
     khoaSo: "hoa-don-doi-tac",
     moMan: {
       nhan: "Mở màn Đối tác & nhà cung ứng",
@@ -105,7 +105,7 @@ export const VONG_TIEN: readonly Chang[] = [
   {
     thuTu: 6,
     ten: "Khách nghĩ gì về nơi mình",
-    laGi: "Khách chấm sao sau khi đã qua cổng, nên mỗi lời đều gắn với một lượt vào có thật — không ai chấm hộ được.",
+    laGi: "Khách chỉ chấm sao được sau khi đã qua cổng, nên lời nhận xét nào cũng gắn với một lượt vào có thật.",
     soODau:
       "Bảng điểm chỉ kết luận khi một cơ sở đủ năm lời trở lên. Ẩn một lời phải ghi lý do, và không ai xoá hẳn được lời của khách.",
     khoaSo: "diem-khach-cham",
@@ -114,9 +114,9 @@ export const VONG_TIEN: readonly Chang[] = [
   {
     thuTu: 7,
     ten: "Từ mai, mỗi sáng anh xem ba ô này",
-    laGi: "Một: hàng việc chờ anh quyết. Hai: vé và doanh thu hôm qua. Ba: nơi nào đang tụt điểm.",
+    laGi: "Việc đang chờ anh quyết, vé và doanh thu hôm qua, và nơi nào đang bị khách chấm điểm thấp.",
     soODau:
-      "Ba ô đó đều nằm ngay trang chủ này. Phần còn lại của hệ thống là chỗ người khác làm việc — anh chỉ mở khi cần soi lại một hồ sơ cụ thể.",
+      "Cả ba đều nằm ngay trang chủ này. Các màn khác là chỗ nhân viên làm việc, anh chỉ cần mở khi muốn xem lại một hồ sơ nào đó.",
     khoaSo: "khong-can",
     moMan: null,
   },
@@ -125,7 +125,7 @@ export const VONG_TIEN: readonly Chang[] = [
 export const VONG_TIEN_COPY = {
   ten: "Đi theo một đồng tiền",
   moiChao:
-    "Lần đầu mở hệ thống, anh chưa cần biết hết mười lăm màn hình. Đi một vòng sáu phút theo đúng đường mà một đồng tiền của khách đi qua, là hiểu cả bộ máy.",
+    "Lần đầu mở hệ thống, anh chưa cần biết hết mười lăm màn hình. Anh chỉ cần đi một vòng sáu phút, theo đường tiền của khách đi từ cổng vào tới sổ sách, là nắm được cả hệ thống.",
   moiChaoLai: "Xem lại vòng dẫn sáu phút: một đồng tiền của khách đi qua những đâu.",
   batDau: "Bắt đầu đi vòng",
   diLai: "Đi lại một vòng",

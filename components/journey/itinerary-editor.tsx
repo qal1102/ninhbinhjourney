@@ -177,7 +177,7 @@ export function ItineraryEditor({
                   : "Lịch trình đã xác nhận · lưu trên máy bạn"}
             </p>
             <h2 className="font-display mt-3 text-4xl text-[#183f34] sm:text-5xl">
-              Một ngày theo nhịp nhẹ
+              Một ngày đi nhẹ nhàng
             </h2>
           </div>
           <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">

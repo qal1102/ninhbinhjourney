@@ -62,13 +62,13 @@ export default async function ExplorePage({
         </p>
         <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_0.7fr] lg:items-end">
           <h1 className="font-display text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">
-            Chọn nhịp đi,
+            Chọn cách đi trước,
             <br />
-            không chỉ chọn điểm.
+            rồi mới chọn điểm.
           </h1>
           <p className="max-w-xl text-lg leading-8 text-[#59654b]">
             Có người muốn đi thật chậm, có người muốn thấy thật nhiều. Lọc theo
-            thời gian bạn có, mức đi bộ chịu được và nhóm đi cùng — bản đồ sẽ
+            thời gian bạn có, mức đi bộ chịu được và người đi cùng, bản đồ
             chỉ giữ lại những nơi hợp với bạn.
           </p>
         </div>

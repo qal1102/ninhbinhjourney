@@ -14,13 +14,13 @@ import { SITE_URL } from "@/lib/site-url";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Ninh Bình Journey",
-  description: "Hành trình giữa núi, nước và di sản vượt thời gian.",
+  description: "Núi đá vôi, sông nước và cố đô Hoa Lư.",
   openGraph: {
     siteName: "Ninh Bình Journey",
     locale: "vi_VN",
     type: "website",
     title: "Ninh Bình Journey",
-    description: "Hành trình giữa núi, nước và di sản vượt thời gian.",
+    description: "Núi đá vôi, sông nước và cố đô Hoa Lư.",
     images: [{ url: "/images/og/ninh-binh-journey.jpg", width: 1200, height: 630 }],
   },
 };

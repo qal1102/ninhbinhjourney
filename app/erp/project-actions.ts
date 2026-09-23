@@ -104,7 +104,7 @@ export async function updateProjectWorkItemAction(input: {
     if (error instanceof ProjectRepositoryConflictError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể cập nhật gói việc. Hãy thử lại." };
+    return { success: false, message: "Chưa thể cập nhật gói việc. Xin thử lại." };
   }
 }
 
@@ -138,7 +138,7 @@ export async function reportProjectBlockerAction(input: {
     if (error instanceof ProjectRepositoryConflictError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể cập nhật gói việc. Hãy thử lại." };
+    return { success: false, message: "Chưa thể cập nhật gói việc. Xin thử lại." };
   }
 }
 
@@ -183,7 +183,7 @@ export async function submitProjectChangeRequestAction(input: {
     if (error instanceof ProjectRepositoryConflictError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể gửi yêu cầu. Hãy thử lại." };
+    return { success: false, message: "Chưa thể gửi yêu cầu. Xin thử lại." };
   }
 }
 
@@ -221,7 +221,7 @@ export async function decideProjectChangeRequestAction(input: {
     if (error instanceof ProjectRepositoryConflictError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể xử lý yêu cầu. Hãy thử lại." };
+    return { success: false, message: "Chưa thể xử lý yêu cầu. Xin thử lại." };
   }
 }
 
@@ -265,6 +265,6 @@ export async function recordProjectSettlementAction(input: {
     if (error instanceof ProjectRepositoryConflictError) {
       return { success: false, message: error.message };
     }
-    return { success: false, message: "Chưa thể ghi nhận quyết toán. Hãy thử lại." };
+    return { success: false, message: "Chưa thể ghi nhận quyết toán. Xin thử lại." };
   }
 }

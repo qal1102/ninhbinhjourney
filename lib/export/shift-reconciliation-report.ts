@@ -117,7 +117,7 @@ export function buildShiftReconciliationReport(input: {
       columns: scanColumns,
       rows: [],
       emptyText:
-        "Suốt khung giờ này chưa có lượt quét nào ở cổng. Chưa có gì để đối soát, chứ không phải hệ thống đếm ra số không.",
+        "Suốt khung giờ này chưa có lượt quét nào ở cổng. Vì vậy chưa có gì để đối soát.",
     });
   } else {
     tables.push({

@@ -135,7 +135,7 @@ export function Customer360Dashboard({
           Hành trình khách đã chủ động tạo
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-6 text-[#d4e4de]">
-          Khách đến từ đâu, thích gì, lên lịch ra sao, cho phép dùng dữ liệu tới đâu — tất cả xếp trên cùng một dòng thời gian. Gợi ý chỉ dựa vào điều khách đã tự chọn, và luôn ghi rõ vì sao. Màn hình này không mở được email hay số điện thoại của khách, và mỗi lần mở đều được ghi vào nhật ký.
+          Khách đến từ đâu, thích gì, lên lịch ra sao, đồng ý cho dùng dữ liệu tới đâu, tất cả xếp trên một dòng thời gian. Gợi ý chỉ dựa vào điều khách đã tự chọn, và luôn ghi rõ vì sao. Màn hình này không mở được email hay số điện thoại của khách, và mỗi lần mở đều được ghi vào nhật ký.
         </p>
       </section>
 
@@ -257,7 +257,7 @@ export function Customer360Dashboard({
                       : "Chưa chọn sở thích"}
                   </h2>
                   <p className="mt-1 text-sm text-[#66756e]">
-                    {journey.intent.pace === "relaxed" ? "Nhịp thư thả" : journey.intent.pace === "active" ? "Nhịp năng động" : "Nhịp cân bằng"}
+                    {journey.intent.pace === "relaxed" ? "Đi thong thả" : journey.intent.pace === "active" ? "Đi được nhiều" : "Đi vừa phải"}
                     {" · "}{journey.intent.duration_minutes} phút
                     {" · "}{journey.intent.visit_date}
                   </p>

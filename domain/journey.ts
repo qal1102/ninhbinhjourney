@@ -74,9 +74,9 @@ const travelMinutes: Record<string, Record<string, number>> = {
 // giải thích hiện trên từng chặng, nên phải đọc lọt tai trong một câu tiếng
 // Việt, không phải tên biến.
 const PACE_REASON_LABEL: Record<JourneyIntent["pace"], string> = {
-  relaxed: "nhịp thư thả bạn muốn",
-  balanced: "nhịp cân bằng bạn muốn",
-  active: "nhịp năng động bạn muốn",
+  relaxed: "kiểu đi thong thả bạn muốn",
+  balanced: "kiểu đi vừa phải bạn muốn",
+  active: "kiểu đi nhiều bạn muốn",
 };
 
 const MOBILITY_REASON_LABEL: Record<MobilityLevel, string> = {
@@ -524,7 +524,7 @@ export function generateItinerary(
     estimatedPriceVnd,
     validation: { valid: true, issues: [] },
     explanation:
-      "Lịch trình ưu tiên giờ mở cửa minh họa, tổng thời gian, mức đi bộ, quãng di chuyển rồi mới cân nhắc ngân sách và sở thích.",
+      "Lịch trình xếp theo giờ mở cửa, tổng thời gian, mức đi bộ và quãng đường trước, rồi mới tới ngân sách và sở thích.",
   };
   itinerary.validation = validateItinerary({ itinerary, intent, unavailable });
   return itinerary;
@@ -549,7 +549,7 @@ export function validateItinerary(input: {
     if (!configuredIds.has(item.siteId) || !destination) {
       issues.push({
         code: "UNKNOWN_SITE",
-        message: "Lịch trình chứa một điểm ngoài catalog Ninh Bình đã cấu hình.",
+        message: "Lịch trình có một điểm chưa có trong danh sách của chúng tôi.",
         itemId: item.id,
       });
       continue;
@@ -557,7 +557,7 @@ export function validateItinerary(input: {
     if (unavailable.has(item.siteId)) {
       issues.push({
         code: "SITE_UNAVAILABLE",
-        message: `${destination.name.vi} đang đóng hoặc hết khả dụng trong khung demo đã chọn.`,
+        message: `${destination.name.vi} đang đóng cửa vào giờ đã chọn.`,
         itemId: item.id,
       });
     }
@@ -567,7 +567,7 @@ export function validateItinerary(input: {
     ) {
       issues.push({
         code: "MOBILITY_CONFLICT",
-        message: `${destination.name.vi} cần mức đi bộ cao hơn lựa chọn đã xác nhận.`,
+        message: `${destination.name.vi} phải đi bộ nhiều hơn mức bạn chọn.`,
         itemId: item.id,
       });
     }
@@ -576,14 +576,14 @@ export function validateItinerary(input: {
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       issues.push({
         code: "INVALID_TIME",
-        message: `${destination.name.vi} có thời gian bắt đầu/kết thúc không hợp lệ.`,
+        message: `${destination.name.vi} có giờ bắt đầu hoặc kết thúc bị sai.`,
         itemId: item.id,
       });
     }
     if (previousEnd > 0 && start < previousEnd) {
       issues.push({
         code: "OVERLAP",
-        message: `${destination.name.vi} bị chồng thời gian với điểm trước.`,
+        message: `${destination.name.vi} trùng giờ với điểm trước.`,
         itemId: item.id,
       });
     }
@@ -593,7 +593,7 @@ export function validateItinerary(input: {
     if (startMinute < window.start || endMinute > window.end) {
       issues.push({
         code: "OUTSIDE_DEMO_WINDOW",
-        message: `${destination.name.vi} nằm ngoài khung giờ demo ${destination.demoOpeningWindow}.`,
+        message: `${destination.name.vi} nằm ngoài giờ mở cửa ${destination.demoOpeningWindow}.`,
         itemId: item.id,
       });
     }
@@ -613,7 +613,7 @@ export function validateItinerary(input: {
     if (elapsedMinutes > input.intent.durationMinutes) {
       issues.push({
         code: "DURATION_EXCEEDED",
-        message: `Lịch trình vượt quá ${input.intent.durationMinutes} phút đã xác nhận.`,
+        message: `Lịch trình dài hơn ${input.intent.durationMinutes} phút bạn có.`,
       });
     }
   }
@@ -656,7 +656,7 @@ export function rebuildItineraryWithSites(input: {
         startAt: isoAt(visitDate, cursor),
         endAt: isoAt(visitDate, cursor + 1),
         travelMinutesFromPrevious: 0,
-        reason: "Điểm chưa được cấu hình.",
+        reason: "Điểm này chưa có trong danh sách.",
       });
       cursor += 1;
       continue;
@@ -671,7 +671,7 @@ export function rebuildItineraryWithSites(input: {
       startAt: isoAt(visitDate, startMinute),
       endAt: isoAt(visitDate, endMinute),
       travelMinutesFromPrevious: travel,
-      reason: `${destination.name.vi} được giữ trong thứ tự đã chỉnh; hệ thống đã chạy lại giờ mở cửa, di chuyển và mức đi bộ.`,
+      reason: `${destination.name.vi} giữ đúng thứ tự bạn xếp; giờ mở cửa, đường đi và mức đi bộ đã được tính lại.`,
     });
     cursor = endMinute;
     previousSlug = destination.slug;
@@ -682,7 +682,7 @@ export function rebuildItineraryWithSites(input: {
     items,
     totalMinutes: items.length > 0 ? cursor - 8 * 60 : 0,
     explanation:
-      "Lịch trình đã được tính lại sau chỉnh sửa. Mọi xung đột còn lại được hiển thị trước khi có thể dùng hành trình.",
+      "Lịch trình đã tính lại theo chỗ bạn sửa. Còn chỗ nào vướng, chúng tôi báo ngay bên dưới.",
   };
   return revalidateEditedItinerary({
     itinerary: rebuilt,

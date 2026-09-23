@@ -239,7 +239,7 @@ test("explore sheet hands its destination image to the route without duplicate n
   const beforeForward = await transitionCount(page);
   await page
     .getByTestId("explore-detail-sheet")
-    .getByRole("link", { name: "Xem câu chuyện" })
+    .getByRole("link", { name: "Đọc thêm" })
     .click();
   await expect(page).toHaveURL(
     /\/destination\/trang-an\?lang=en&source=page-continuity-e2e&journey=continuity-journey&from=explore$/,

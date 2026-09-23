@@ -69,7 +69,7 @@ function actionError(error: unknown): AccountingActionState {
     return {
       status: "error",
       message:
-        "Hồ sơ vừa được người khác cập nhật. Hãy tải lại màn hình trước khi tiếp tục.",
+        "Hồ sơ vừa được người khác cập nhật. Xin tải lại màn hình trước khi tiếp tục.",
     };
   }
   if (

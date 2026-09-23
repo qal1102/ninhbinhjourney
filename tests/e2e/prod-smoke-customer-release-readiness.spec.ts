@@ -23,10 +23,10 @@ test.describe("A6 production readiness smoke", () => {
     await expect(page.getByRole("heading", { name: "Sẵn sàng phát hành dữ liệu khách hàng" })).toBeVisible({ timeout: 20_000 });
 
     if (expectation === "canary-ready") {
-      await expect(page.getByTestId("release-verdict")).toHaveText("ĐỦ ĐIỀU KIỆN KỸ THUẬT ĐỂ LẬP CANARY");
-      await expect(page.getByText("Schema sẵn sàng", { exact: true })).toHaveCount(7);
+      await expect(page.getByTestId("release-verdict")).toHaveText("ĐỦ ĐIỀU KIỆN ĐỂ MỞ THỬ");
+      await expect(page.getByText("Kho dữ liệu sẵn sàng", { exact: true })).toHaveCount(7);
     } else {
-      await expect(page.getByTestId("release-verdict")).toHaveText("CHƯA ĐƯỢC BẬT PRODUCTION");
+      await expect(page.getByTestId("release-verdict")).toHaveText("CHƯA BẬT CHO KHÁCH THẬT");
     }
   });
 });

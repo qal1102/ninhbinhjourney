@@ -74,9 +74,9 @@ type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
  */
 /** Chữ cho dòng tóm tắt — nói bằng lời người, không phải bằng khoá dữ liệu. */
 const PACE_SUMMARY: Record<NonNullable<JourneyIntent["pace"]>, string> = {
-  relaxed: "Nhịp thư thả",
-  balanced: "Nhịp cân bằng",
-  active: "Nhịp năng động",
+  relaxed: "Đi thong thả",
+  balanced: "Đi vừa phải",
+  active: "Đi được nhiều",
 };
 
 const WALKING_SUMMARY: Record<
@@ -171,7 +171,7 @@ const MATCH_COPY: Record<
     title: "Gói hợp với bạn",
     emptyTitle: "Lần này chưa có gói nào hợp",
     method:
-      "Chúng tôi dò từ khoá trong câu bạn viết, rồi đối chiếu nhịp đi, thời lượng, người đi cùng với năm gói có sẵn. Giá đứng ngoài phép so này, vì giá trên trang gói mới chỉ là dữ liệu minh hoạ.",
+      "Chúng tôi đọc câu bạn viết rồi so với năm gói có sẵn: đi chậm hay đi nhiều, mấy tiếng, đi với ai. Chưa tính tới giá, vì giá trên trang gói mới là giá minh hoạ.",
     strong: "Hợp rõ",
     partial: "Hợp một phần",
     detail: "Xem gói này",
@@ -449,7 +449,7 @@ export function PlanExperience({
     if (!Recognition) {
       setVoiceState("unsupported");
       setMessage(
-        "Trình duyệt không hỗ trợ nhận dạng giọng nói. Toàn bộ luồng vẫn dùng được bằng văn bản.",
+        "Trình duyệt này chưa nghe được giọng nói. Bạn gõ vào ô bên dưới là được.",
       );
       return;
     }
@@ -479,8 +479,8 @@ export function PlanExperience({
       setVoiceState(event.error === "not-allowed" ? "denied" : "error");
       setMessage(
         event.error === "not-allowed"
-          ? "Quyền microphone bị từ chối. Hãy tiếp tục bằng ô văn bản."
-          : "Không thể nhận dạng giọng nói. Hãy tiếp tục bằng ô văn bản.",
+          ? "Micro chưa được cho phép. Bạn gõ vào ô bên dưới là được."
+          : "Chưa nghe rõ. Bạn gõ vào ô bên dưới giúp nhé.",
       );
     };
     recognition.onend = () => {
@@ -533,7 +533,7 @@ export function PlanExperience({
       };
       if (!response.ok || !payload.intent || !payload.itinerary) {
         throw new Error(
-          payload.error?.message ?? "Chưa thể tạo hành trình. Hãy thử lại.",
+          payload.error?.message ?? "Chưa lập được lịch trình, mời bạn thử lại.",
         );
       }
       setResult({
@@ -551,7 +551,7 @@ export function PlanExperience({
       setMessage(
         error instanceof Error
           ? error.message
-          : "Chưa thể tạo hành trình. Hãy thử lại.",
+          : "Chưa lập được lịch trình, mời bạn thử lại.",
       );
     } finally {
       setPending(false);
@@ -589,7 +589,7 @@ export function PlanExperience({
           Nói hoặc gõ · đều dùng được
         </p>
         <h2 className="font-display mt-4 text-4xl leading-tight sm:text-5xl">
-          Kể về ngày bạn muốn có.
+          Bạn muốn đi một ngày thế nào?
         </h2>
         <button
           type="button"
@@ -625,7 +625,7 @@ export function PlanExperience({
             setText(REQUIRED_VIETNAMESE_SAMPLE);
             setVoiceState("demo");
             setMessage(
-              "Đã nạp transcript mẫu xác định; không có âm thanh nào đang được xử lý.",
+              "Đây là câu nói mẫu, micro không bật.",
             );
           }}
           className="mt-5 min-h-11 w-full rounded-full border border-white/25 px-4 text-sm font-bold"
@@ -834,8 +834,8 @@ export function PlanExperience({
             </div>
             {draft.partyContext?.includes("travelling-with-parents") ? (
               <p className="mt-4 rounded-xl bg-[#edf3f0] p-3 text-sm">
-                Ngữ cảnh: đi cùng bố mẹ. Hệ thống không tự suy đoán khuyết tật
-                hay nhu cầu y tế từ thông tin này.
+                Đi cùng bố mẹ. Chúng tôi không tự đoán sức khoẻ của ai từ
+                thông tin này.
               </p>
             ) : null}
             <button

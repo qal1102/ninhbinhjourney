@@ -129,11 +129,11 @@ export const PACKAGE_MATCH_REASON_LABEL: Record<
   PackageMatchText
 > = {
   "pace-exact": {
-    vi: "Đúng nhịp bạn muốn đi.",
+    vi: "Đúng kiểu đi bạn muốn.",
     en: "It keeps the pace you asked for.",
   },
   "pace-near": {
-    vi: "Nhịp lệch nhẹ so với điều bạn kể, nhưng vẫn gần.",
+    vi: "Hơi khác kiểu đi bạn kể, nhưng vẫn gần.",
     en: "The pace sits a step away from what you described, but close.",
   },
   "duration-fits": {
@@ -145,7 +145,7 @@ export const PACKAGE_MATCH_REASON_LABEL: Record<
     en: "Shorter than your day, leaving room to linger.",
   },
   "companions-children": {
-    vi: "Xếp riêng cho nhà có trẻ nhỏ, khung giờ cũng theo nhịp gia đình.",
+    vi: "Xếp riêng cho nhà có trẻ nhỏ, giờ giấc hợp với trẻ.",
     en: "Laid out for families with young children, right down to the hours it keeps.",
   },
   "companions-seniors": {
@@ -173,7 +173,7 @@ export const PACKAGE_NO_MATCH_LABEL: Record<PackageSkipCode, PackageMatchText> =
       en: "The remaining packages all run longer than the time you set aside.",
     },
     "pace-opposite": {
-      vi: "Nhịp bạn muốn đi ngược hẳn nhịp những gói còn lại.",
+      vi: "Kiểu đi bạn muốn khác hẳn các gói còn lại.",
       en: "The pace you want runs opposite to the packages left on the shelf.",
     },
     "party-size-fixed": {
@@ -181,7 +181,7 @@ export const PACKAGE_NO_MATCH_LABEL: Record<PackageSkipCode, PackageMatchText> =
       en: "The package that is left seats a fixed number of guests, which does not match your party.",
     },
     "outside-booking-window": {
-      vi: "Gói hợp nhịp lại nằm ngoài mùa đang mở đặt chỗ.",
+      vi: "Gói hợp với bạn lại đang ngoài mùa đặt chỗ.",
       en: "The package that fits your rhythm sits outside its booking season.",
     },
     "below-threshold": {

@@ -6,7 +6,7 @@ import { WorldSwitcher } from "@/components/discovery/world-switcher";
 
 export const metadata = {
   title: "Trung thu | Ninh Bình Journey",
-  description: "Một chương riêng cho mùa trăng ở Ninh Bình.",
+  description: "Trung thu ở Ninh Bình: bàn tối bên sông, quà mang về, lịch trăng từng đêm.",
   alternates: { canonical: "/seasonal/mid-autumn" },
 };
 
@@ -35,8 +35,8 @@ export default async function MidAutumnPage({
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-[#e7b96a]">{lang === "vi" ? "Lịch trăng · 2026" : "Moon calendar · 2026"}</p>
-            <h1 className="font-display mt-5 max-w-3xl text-5xl leading-[.9] sm:text-7xl">{lang === "vi" ? "Ba đêm, một dòng Ngô Đồng." : "Three nights, one Ngo Dong River."}</h1>
-            <p className="mt-6 max-w-xl text-base leading-8 text-white/68 sm:text-lg">{lang === "vi" ? "Một chương theo mùa có nhịp riêng: chọn ngày, chọn số người, rồi để bàn tối, quà và đường đi gặp nhau dưới trăng." : "A seasonal chapter with its own rhythm: choose the date and party, then let the table, gifts and journey meet beneath the moon."}</p>
+            <h1 className="font-display mt-5 max-w-3xl text-5xl leading-[.9] sm:text-7xl">{lang === "vi" ? "Ba đêm trăng trên sông Ngô Đồng" : "Three nights, one Ngo Dong River."}</h1>
+            <p className="mt-6 max-w-xl text-base leading-8 text-white/68 sm:text-lg">{lang === "vi" ? "Chọn đêm, chọn số người, rồi đặt bàn tối, quà và chuyến đi cho đêm ấy." : "A seasonal chapter with its own rhythm: choose the date and party, then let the table, gifts and journey meet beneath the moon."}</p>
             <ol className="mt-9 grid max-w-xl grid-cols-3 border-y border-white/18 text-sm">
               {[lang === "vi" ? "18.09 · mở mùa" : "18 Sep · opens", lang === "vi" ? "25.09 · rằm" : "25 Sep · full moon", lang === "vi" ? "27.09 · khép mùa" : "27 Sep · closes"].map((date) => <li key={date} className="border-r border-white/18 px-3 py-4 last:border-r-0 first:pl-0">{date}</li>)}
             </ol>

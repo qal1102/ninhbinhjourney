@@ -13,7 +13,7 @@ test("A6 fails closed and exposes no secret values when release inputs are absen
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/release");
   await expect(page.getByRole("heading", { name: "Sẵn sàng phát hành dữ liệu khách hàng" })).toBeVisible();
-  await expect(page.getByTestId("release-verdict")).toHaveText("CHƯA ĐƯỢC BẬT PRODUCTION");
+  await expect(page.getByTestId("release-verdict")).toHaveText("CHƯA BẬT CHO KHÁCH THẬT");
   await expect(page.getByTestId("release-phase-CUS-08")).toContainText("Chưa probe");
   await expect(page.getByTestId("release-flag-ERP_OFFLINE_GATE_ENABLED")).toContainText("OFF");
   await expect(page.locator("body")).not.toContainText("playwright-customer-identity-hash-key-at-least-32-chars");

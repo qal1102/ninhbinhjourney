@@ -163,7 +163,11 @@ test.describe("Marketing: sổ liên hệ nhãn hàng đối tác", () => {
       await khoi.getByRole("button", { name: "Gỡ", exact: true }).click();
 
       await expect(so.locator("li", { hasText: ten })).toHaveCount(0);
-      await expect(so.getByRole("status")).toContainText(`Đã gỡ “${ten}” khỏi sổ`);
+      // Khớp đúng câu báo gỡ: ô thêm dòng vẫn giữ câu "Đã ghi…" của lượt thêm
+      // ngay trước, nên khớp theo vai trò `status` sẽ trúng cả hai.
+      await expect(
+        so.getByRole("status").filter({ hasText: `Đã gỡ “${ten}” khỏi sổ` }),
+      ).toBeVisible();
     } finally {
       await go(page, ten);
     }

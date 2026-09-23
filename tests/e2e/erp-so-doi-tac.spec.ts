@@ -48,15 +48,24 @@ async function them(page: Page, ten: string, giaiDoan: string, coTraoDoi: boolea
   await expect(page.getByText(`Đã ghi “${ten}” vào sổ`)).toBeVisible();
 }
 
-/** Gỡ hẳn dòng. Gọi trong `finally`, nên không được ném lỗi ra ngoài. */
+/**
+ * Gỡ hẳn dòng. Gọi trong `finally`.
+ *
+ * **Không dùng `expect` ở đây.** Playwright ghi nhận một `expect` hỏng vào kết
+ * quả bài kể cả khi mình đã `catch` nó — bài đã từng đỏ chỉ vì phần dọn chờ
+ * một câu báo, trong khi dòng thật ra đã được gỡ sạch. Phần dọn chỉ cần một
+ * điều: sau khi xong, dòng ấy không còn trong sổ.
+ */
 async function go(page: Page, ten: string) {
   try {
     await page.goto("/erp/marketing");
-    const dong = page.getByTestId("so-doi-tac").locator("li", { hasText: ten }).first();
+    const so = page.getByTestId("so-doi-tac");
+    const dong = so.locator("li", { hasText: ten }).first();
     if ((await dong.count()) === 0) return;
     await dong.getByRole("button", { name: "Gỡ khỏi sổ" }).click();
-    await dong.getByRole("button", { name: "Gỡ", exact: true }).click();
-    await expect(page.getByText(`Đã gỡ “${ten}” khỏi sổ`)).toBeVisible();
+    // Lời hỏi gỡ nằm ngoài danh sách, không nằm trong dòng sắp bị gỡ.
+    await so.locator("[data-khoi-go]").getByRole("button", { name: "Gỡ", exact: true }).click();
+    await so.locator("li", { hasText: ten }).waitFor({ state: "detached", timeout: 15_000 });
   } catch (loi) {
     console.error("Dọn dòng kiểm thử không thành", ten, loi);
   }
@@ -130,6 +139,31 @@ test.describe("Marketing: sổ liên hệ nhãn hàng đối tác", () => {
       await them(page, ten, "da-chot", false);
       await expect(so.locator("li", { hasText: ten })).toHaveCount(1);
       await expect(so.locator("li", { hasText: ten }).getByText("Đã chốt")).toBeVisible();
+    } finally {
+      await go(page, ten);
+    }
+  });
+
+  test("gỡ một dòng thì dòng biến mất mà lời báo vẫn còn ở lại", async ({ page }) => {
+    // Lỗi đo được trên production ở khổ điện thoại: lời báo "đã gỡ" từng nằm
+    // ngay trong dòng bị gỡ, nên người dùng bấm xong chỉ thấy hàng biến mất
+    // và không có gì nói cho họ biết là đã xong.
+    test.slow();
+    await dangNhapGiamDoc(page);
+    const { so, ghiDuoc } = await moSo(page);
+    if (!ghiDuoc) return;
+
+    const ten = tenThu("gỡ");
+    try {
+      await them(page, ten, "nham-truoc", false);
+      const dong = so.locator("li", { hasText: ten }).first();
+      await dong.getByRole("button", { name: "Gỡ khỏi sổ" }).click();
+      const khoi = so.locator("[data-khoi-go]");
+      await expect(khoi).toContainText(ten);
+      await khoi.getByRole("button", { name: "Gỡ", exact: true }).click();
+
+      await expect(so.locator("li", { hasText: ten })).toHaveCount(0);
+      await expect(so.getByRole("status")).toContainText(`Đã gỡ “${ten}” khỏi sổ`);
     } finally {
       await go(page, ten);
     }

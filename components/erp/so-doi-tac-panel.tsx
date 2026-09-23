@@ -225,41 +225,55 @@ function OForm({
   );
 }
 
-function NutGo({ doiTac }: { doiTac: DoiTacNhanHang }) {
+/**
+ * Khối gỡ — nằm NGOÀI danh sách, không nằm trong dòng sắp bị gỡ.
+ *
+ * Lý do đo được trên production ở khổ điện thoại: lúc đầu lời báo "đã gỡ"
+ * nằm ngay trong cái `<li>` vừa bị gỡ, nên dòng biến mất là lời báo biến mất
+ * theo — người dùng bấm xong, hàng biến mất, và **không có gì nói cho họ biết
+ * là đã xong**. Lời xác nhận một việc không bao giờ được sống bên trong chính
+ * thứ mà việc ấy xoá đi.
+ */
+function KhoiGo({
+  dangGo,
+  onThoi,
+}: {
+  dangGo: DoiTacNhanHang | null;
+  onThoi: () => void;
+}) {
   const [trangThai, action] = useActionState(goDoiTacAction, TRANG_THAI_DAU);
-  const [hoi, setHoi] = useState(false);
 
-  if (!hoi) {
-    return (
-      <button
-        type="button"
-        onClick={() => setHoi(true)}
-        className="min-h-11 text-xs font-bold text-[#8a8171] underline underline-offset-4"
-      >
-        Gỡ khỏi sổ
-      </button>
-    );
-  }
+  if (!dangGo) return <LoiNhan trangThai={trangThai} />;
 
   return (
-    <form action={action} className="flex flex-wrap items-center gap-2">
-      <input type="hidden" name="id" value={doiTac.id} />
-      <input type="hidden" name="ten" value={doiTac.ten} />
-      <span className="text-xs font-bold text-[#994737]">Gỡ hẳn {doiTac.ten}?</span>
+    <form
+      action={action}
+      data-khoi-go
+      className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#d8b3a8] bg-[#fff8f3] p-4"
+    >
+      <input type="hidden" name="id" value={dangGo.id} />
+      <input type="hidden" name="ten" value={dangGo.ten} />
+      <span className="text-sm font-bold text-[#994737]">
+        Gỡ hẳn “{dangGo.ten}” khỏi sổ?
+      </span>
+      {/*
+        KHÔNG gọi `onThoi` ở đây. Đặt lại trạng thái ngay trong lượt bấm sẽ
+        tháo chính cái form đang gửi đi, và lệnh máy chủ không bao giờ chạy.
+        Lời hỏi tự đóng khi dòng ấy biến khỏi sổ — xem hiệu ứng ở panel.
+      */}
       <button
         type="submit"
-        className="min-h-11 rounded-lg border border-[#d8b3a8] px-3 text-xs font-black text-[#994737]"
+        className="min-h-11 rounded-lg border border-[#d8b3a8] bg-white px-4 text-sm font-black text-[#994737]"
       >
         Gỡ
       </button>
       <button
         type="button"
-        onClick={() => setHoi(false)}
-        className="min-h-11 text-xs font-bold text-[#5d6f66] underline underline-offset-4"
+        onClick={onThoi}
+        className="min-h-11 text-sm font-bold text-[#5d6f66] underline underline-offset-4"
       >
         Thôi
       </button>
-      <LoiNhan trangThai={trangThai} />
     </form>
   );
 }
@@ -269,11 +283,13 @@ function DongDoiTac({
   bayGio,
   tenDip,
   onSua,
+  onGo,
 }: {
   doiTac: DoiTacNhanHang;
   bayGio: Date;
   tenDip: string;
   onSua: () => void;
+  onGo: () => void;
 }) {
   const nguoi = daNguoi(bayGio, doiTac);
   const mo = MO_TA_GIAI_DOAN[doiTac.giaiDoan];
@@ -344,7 +360,13 @@ function DongDoiTac({
         >
           Sửa dòng này
         </a>
-        <NutGo doiTac={doiTac} />
+        <button
+          type="button"
+          onClick={onGo}
+          className="min-h-11 text-xs font-bold text-[#8a8171] underline underline-offset-4"
+        >
+          Gỡ khỏi sổ
+        </button>
       </div>
     </li>
   );
@@ -363,6 +385,7 @@ export function SoDoiTacPanel({
   sanSang: boolean;
 }) {
   const [dangSua, setDangSua] = useState<DoiTacNhanHang | null>(null);
+  const [dangGo, setDangGo] = useState<DoiTacNhanHang | null>(null);
   const luc = new Date(bayGio);
   const xep = xepSoDoiTac(luc, so);
   const phaiLam = demViecPhaiLam(luc, so);
@@ -398,6 +421,13 @@ export function SoDoiTacPanel({
         </p>
       ) : null}
 
+      {/* Lời hỏi gỡ tự đóng khi dòng ấy không còn trong sổ — suy ra ngay lúc
+          dựng, không cần một hiệu ứng đặt lại trạng thái. */}
+      <KhoiGo
+        dangGo={dangGo && so.some((d) => d.id === dangGo.id) ? dangGo : null}
+        onThoi={() => setDangGo(null)}
+      />
+
       {xep.length > 0 ? (
         <ol className="mt-6 space-y-3">
           {xep.map((d) => (
@@ -407,6 +437,7 @@ export function SoDoiTacPanel({
               bayGio={luc}
               tenDip={tenDip.get(d.dipNhamToi) ?? ""}
               onSua={() => setDangSua(d)}
+              onGo={() => setDangGo(d)}
             />
           ))}
         </ol>

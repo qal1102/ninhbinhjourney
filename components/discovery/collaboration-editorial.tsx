@@ -133,17 +133,34 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
     const media = gsap.matchMedia();
     media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
       root.querySelectorAll<HTMLElement>("[data-dossier-chapter]").forEach((chapter, index) => {
-        const image = chapter.querySelector<HTMLElement>("[data-dossier-image]");
+        const page = chapter.querySelector<HTMLElement>("[data-dossier-page]");
+        const spine = chapter.querySelector<HTMLElement>("[data-dossier-spine]");
         const copyBlock = chapter.querySelector<HTMLElement>("[data-dossier-copy]");
-        if (image) {
+        // Lật trang: tấm ảnh là một trang giấy gắn vào gáy (mép giáp phần
+        // chữ). Chương chẵn ảnh nằm bên phải nên gáy ở mép trái, chương lẻ
+        // ngược lại. Cuộn tới đâu trang mở tới đó, và bóng gáy nhạt dần như
+        // tờ giấy vừa được vuốt phẳng. Chữ không bao giờ xoay: đọc được là
+        // trên hết, hiệu ứng chỉ ở phần ảnh.
+        if (page) {
+          const gayTrai = index % 2 === 0;
           gsap.fromTo(
-            image,
-            { clipPath: "inset(11% 9% 11% 9%)", scale: 1.08 },
+            page,
+            { rotateY: gayTrai ? -58 : 58, transformOrigin: gayTrai ? "left center" : "right center" },
             {
-              clipPath: "inset(0% 0% 0% 0%)",
-              scale: 1,
+              rotateY: 0,
+              ease: "power1.out",
+              scrollTrigger: { trigger: chapter, start: "top 88%", end: "center 52%", scrub: 0.7 },
+            },
+          );
+        }
+        if (spine) {
+          gsap.fromTo(
+            spine,
+            { opacity: 0.85 },
+            {
+              opacity: 0.22,
               ease: "none",
-              scrollTrigger: { trigger: chapter, start: "top 82%", end: "center 44%", scrub: 0.65 },
+              scrollTrigger: { trigger: chapter, start: "top 88%", end: "center 52%", scrub: 0.7 },
             },
           );
         }
@@ -161,13 +178,6 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
               scrollTrigger: { trigger: chapter, start: "top 84%", end: "top 42%", scrub: 0.45 },
             },
           );
-        }
-        if (index % 2 && image) {
-          gsap.to(image, {
-            yPercent: 5,
-            ease: "none",
-            scrollTrigger: { trigger: chapter, start: "top bottom", end: "bottom top", scrub: 0.65 },
-          });
         }
       });
     });
@@ -191,6 +201,7 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
             <p className="mr-7 shrink-0 text-[0.58rem] font-extrabold uppercase tracking-[0.24em] text-[#6d5034] lg:mb-5">{t.index}</p>
             {chapters.map((chapter, index) => <a key={chapter.id} href={`#dossier-${chapter.id}`} aria-current={activeId === chapter.id ? "step" : undefined} className={`group shrink-0 border-l-2 px-3 py-2 text-left transition motion-reduce:transition-none lg:w-full ${activeId === chapter.id ? "border-[#a65b32] text-[#183f34]" : "border-transparent text-[#68736b] hover:border-[#a65b32]/45 hover:text-[#183f34]"}`}><span className="mr-2 text-[0.58rem] font-bold tracking-[0.18em]">{String(index + 1).padStart(2, "0")}</span><span className="font-display text-lg">{chapter.brand}</span></a>)}
           </nav>
+          <LatTrang activeId={activeId} lang={lang} />
           <div aria-hidden="true" className="hidden h-px bg-[#1a2922]/15 lg:block"><span className="block h-px bg-[#a65b32] transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${((chapters.findIndex((chapter) => chapter.id === activeId) + 1) / chapters.length) * 100}%` }} /></div>
         </aside>
 
@@ -205,10 +216,10 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
           */}
           {chapters.map((chapter, index) => {
             const finale = chapter.id === "hermes";
-            return <article key={chapter.id} id={`dossier-${chapter.id}`} data-dossier-chapter={chapter.id} data-dossier-final={finale || undefined} className={`relative grid min-h-[88svh] scroll-mt-24 overflow-hidden px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-12 lg:items-center lg:px-12 xl:px-16 ${finale ? "bg-[#a64c27] text-[#fff4e9]" : "text-[#1a2922]"}`} style={finale ? undefined : { backgroundColor: chapter.tone }}>
+            return <article key={chapter.id} id={`dossier-${chapter.id}`} data-dossier-chapter={chapter.id} data-dossier-final={finale || undefined} className={`relative grid min-h-[88svh] scroll-mt-24 overflow-hidden [perspective:2200px] px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-12 lg:items-center lg:px-12 xl:px-16 ${finale ? "bg-[#a64c27] text-[#fff4e9]" : "text-[#1a2922]"}`} style={finale ? undefined : { backgroundColor: chapter.tone }}>
               <span aria-hidden="true" className={`pointer-events-none absolute right-[-.08em] top-[-.22em] font-display text-[42vw] leading-none ${finale ? "text-[#f9d4a6]/15" : "text-[#1a2922]/[0.045]"}`}>{String(index + 1).padStart(2, "0")}</span>
               <div data-dossier-copy className={`relative z-10 lg:col-span-4 ${index % 2 ? "lg:order-2 lg:col-start-9" : ""}`}><p className={`text-[0.62rem] font-extrabold uppercase tracking-[0.24em] ${finale ? "text-[#ffe0ba]" : "text-[#765536]"}`}>{chapter.kicker[lang]}</p><p className="font-display mt-5 text-5xl leading-[0.86] sm:text-7xl">{chapter.brand}</p><h2 className="font-display mt-5 max-w-md text-3xl leading-[0.96] sm:text-5xl">{chapter.title[lang]}</h2><p className={`mt-6 max-w-md text-base leading-8 ${finale ? "text-white/80" : "text-[#526057]"}`}>{chapter.body[lang]}</p><p className={`mt-8 border-t pt-4 text-[0.59rem] font-bold uppercase leading-5 tracking-[0.15em] ${finale ? "border-white/35 text-[#ffe0ba]" : "border-[#1a2922]/20 text-[#765536]"}`}>Independent creative study · Uncommissioned concept · No affiliation or endorsement</p></div>
-              <div className={`relative z-10 mt-10 aspect-[4/5] overflow-hidden bg-black/10 shadow-[0_32px_110px_rgba(28,33,27,.25)] lg:col-span-7 lg:mt-0 ${index % 2 ? "lg:order-1 lg:col-start-1" : "lg:col-start-6"}`}><Image data-dossier-image src={chapter.image} alt={`${chapter.brand} — ${chapter.title[lang]}`} fill loading="lazy" sizes="(min-width: 1024px) 57vw, 100vw" className="object-cover" /><span aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-black/10" /></div>
+              <div data-dossier-page className={`relative z-10 mt-10 aspect-[4/5] overflow-hidden bg-black/10 shadow-[0_32px_110px_rgba(28,33,27,.25),6px_6px_0_-1px_#f4efe4,12px_12px_0_-2px_#e2dccf] [backface-visibility:hidden] lg:col-span-7 lg:mt-0 ${index % 2 ? "lg:order-1 lg:col-start-1" : "lg:col-start-6"}`}><Image data-dossier-image src={chapter.image} alt={`${chapter.brand} — ${chapter.title[lang]}`} fill loading="lazy" sizes="(min-width: 1024px) 57vw, 100vw" className="object-cover" /><span aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-black/10" />{/* Bóng gáy: dải tối ở mép giáp phần chữ, như nếp gấp giữa hai trang. */}<span data-dossier-spine aria-hidden="true" className={`pointer-events-none absolute inset-y-0 w-1/4 opacity-25 ${index % 2 ? "right-0 bg-gradient-to-l" : "left-0 bg-gradient-to-r"} from-black/45 via-black/10 to-transparent`} /></div>
             </article>;
           })}
         </section>
@@ -223,5 +234,50 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
 
       <section className="bg-[#183f34] px-5 py-16 text-white sm:px-8 sm:py-24"><div className="mx-auto grid max-w-[90rem] gap-8 lg:grid-cols-[1fr_auto] lg:items-end"><div className="max-w-3xl"><p className="text-[0.62rem] font-extrabold uppercase tracking-[0.28em] text-[#e7c78d]">Ninh Binh Journey</p><h2 className="font-display mt-5 text-4xl leading-[0.95] sm:text-6xl">{t.closing}</h2></div><div className="flex flex-col gap-3 sm:flex-row lg:flex-col"><ProtectedMailLink subject={lang === "vi" ? "Trao đổi về hồ sơ ý tưởng Ninh Bình" : "Ninh Binh creative dossier"} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#e7c78d] px-6 text-sm font-bold text-[#183f34] transition hover:bg-[#f0d39c]">{t.contact}</ProtectedMailLink><a href={contact.phoneHref} className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/35 px-6 text-sm font-bold transition hover:bg-white/10">{t.call} · {contact.phoneLabel}</a></div></div><div className="mx-auto mt-10 max-w-[90rem] border-t border-white/15 pt-5 text-sm text-white/70"><Link href={href("/seasonal/mid-autumn", lang, source)} transitionTypes={["portal-enter"]} className="underline underline-offset-4">{t.seasonal}</Link></div></section>
     </main>
+  );
+}
+
+/**
+ * Lật trang bằng nút và bàn phím.
+ *
+ * Hồ sơ vẫn đọc theo cuộn dọc như một tạp chí; hai nút này cho người thích
+ * "lật" từng trang một, và phím ← → làm đúng việc ấy khi con trỏ đang ở trong
+ * hồ sơ. Không nghe phím ở cả trang: mũi tên là phím cuộn của người dùng bàn
+ * phím, cướp nó ở mọi nơi là phá khả năng dùng trang.
+ */
+function LatTrang({ activeId, lang }: { activeId: DossierChapter["id"]; lang: Language }) {
+  const viTri = chapters.findIndex((chapter) => chapter.id === activeId);
+
+  function toi(buoc: number) {
+    const dich = chapters[Math.min(chapters.length - 1, Math.max(0, viTri + buoc))];
+    const el = document.getElementById(`dossier-${dich.id}`);
+    if (!el) return;
+    const giamChuyenDong = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: giamChuyenDong ? "auto" : "smooth", block: "start" });
+  }
+
+  useEffect(() => {
+    function phim(su: KeyboardEvent) {
+      const trong = (su.target as HTMLElement | null)?.closest?.("[data-collaboration-dossier]");
+      if (!trong) return;
+      const dangGo = (su.target as HTMLElement).closest("input, textarea, select, [contenteditable]");
+      if (dangGo) return;
+      if (su.key === "ArrowRight") { su.preventDefault(); toi(1); }
+      if (su.key === "ArrowLeft") { su.preventDefault(); toi(-1); }
+    }
+    document.addEventListener("keydown", phim);
+    return () => document.removeEventListener("keydown", phim);
+  });
+
+  const chu = lang === "vi"
+    ? { truoc: "Trang trước", sau: "Trang sau", trang: `Trang ${viTri + 1}/${chapters.length}` }
+    : { truoc: "Previous page", sau: "Next page", trang: `Page ${viTri + 1}/${chapters.length}` };
+
+  return (
+    <div data-lat-trang className="flex items-center gap-2 px-5 pb-4 lg:px-7 lg:pb-8">
+      <button type="button" onClick={() => toi(-1)} disabled={viTri <= 0} aria-label={chu.truoc} className="grid h-11 w-11 place-items-center rounded-full border border-[#1a2922]/25 text-lg text-[#183f34] transition hover:bg-[#1a2922]/5 disabled:opacity-35 motion-reduce:transition-none">←</button>
+      <p aria-live="polite" className="min-w-[4.5rem] text-center text-xs font-bold tracking-[0.12em] text-[#6d5034]">{chu.trang}</p>
+      <button type="button" onClick={() => toi(1)} disabled={viTri >= chapters.length - 1} aria-label={chu.sau} className="grid h-11 w-11 place-items-center rounded-full border border-[#1a2922]/25 text-lg text-[#183f34] transition hover:bg-[#1a2922]/5 disabled:opacity-35 motion-reduce:transition-none">→</button>
+    </div>
   );
 }

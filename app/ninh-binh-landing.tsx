@@ -178,8 +178,8 @@ const copy = {
     routeStopLabel: "Stop",
     addRoute: "Add route",
     youAreHere: "You are here",
-    qrSource: "QR source",
-    welcomePoint: "Ninh Binh welcome point",
+    qrSource: "You are viewing",
+    welcomePoint: "All of Ninh Binh",
     mapTitle: "Interactive tourism map",
     mapBody:
       "All four core zones of the Tràng An heritage site fit inside this frame, along with the old capital at Hoa Lư and the stone cathedral at Phát Diệm out toward the coast. Touch a point and let that place tell its own story.",
@@ -337,8 +337,8 @@ const copy = {
     routeStopLabel: "Chặng",
     addRoute: "Thêm tuyến",
     youAreHere: "Bạn đang ở đây",
-    qrSource: "Nguồn QR",
-    welcomePoint: "Điểm chào đón Ninh Bình",
+    qrSource: "Bạn đang xem",
+    welcomePoint: "Toàn cảnh Ninh Bình",
     mapTitle: "Bản đồ du lịch tương tác",
     mapBody:
       "Bốn vùng lõi của di sản Tràng An nằm gọn trong khung hình này, cùng cố đô Hoa Lư và nhà thờ đá Phát Diệm ngoài phía biển. Chạm vào một điểm để xem nơi đó có gì.",

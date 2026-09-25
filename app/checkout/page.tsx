@@ -21,20 +21,20 @@ export default async function CheckoutPage({
       <main className="grid min-h-screen place-items-center bg-[#f4f0e7] p-5 text-[#151a17]">
         <section className="max-w-xl rounded-3xl border border-[#d7d5cd] bg-white p-8 text-center">
           <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#356957]">
-            Production mode
+            Đặt chỗ trực tuyến
           </p>
           <h1 className="font-display mt-3 text-4xl text-[#183f34]">
-            Online checkout is not configured.
+            Đặt chỗ trên web đang tạm đóng.
           </h1>
           <p className="mt-4 leading-7 text-[#59654b]">
-            Sandbox payment controls are intentionally hidden outside the
-            client-demonstration mode. No live payment adapter is claimed.
+            Hiện chưa giữ chỗ và thanh toán trên web được. Bạn vẫn xem được
+            các gói, và gọi cho chúng tôi để đặt trực tiếp.
           </p>
           <Link
             href="/packages"
             className="mt-6 inline-flex min-h-11 items-center rounded-full border border-[#183f34] px-5 font-bold"
           >
-            Back to catalog
+            Xem các gói
           </Link>
         </section>
       </main>

@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import { CONTACT } from "@/content/contact";
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGES } from "@/content/packages";
+import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 import type { CustomerTicketLookupTicket } from "@/domain/customer-booking";
 
 type LookupResponse =
@@ -331,8 +332,14 @@ export function TicketLookup() {
             ))}
           </ul>
 
-          <p className="mt-6 text-sm leading-6 text-[#6b786f]">
-            Mời bạn chụp lại màn hình này giúp em, để lúc ở cổng sóng yếu vẫn có mã trong máy ạ.
+          <LuuAnhVe
+            orderCode={result.order.code}
+            productName={productName(result.order.product_id)}
+            tickets={result.tickets}
+            tone="light"
+          />
+          <p className="mt-4 text-sm leading-6 text-[#6b786f]">
+            Lưu ảnh vé về máy giúp em, để lúc ở cổng sóng yếu vẫn mở được mã ạ.
           </p>
         </section>
       ) : null}

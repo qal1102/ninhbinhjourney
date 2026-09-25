@@ -731,11 +731,23 @@ export async function recordGateScanAction(input: {
     const remaining = decision.ticket
       ? ` (${decision.ticket.entriesUsed}/${decision.ticket.entriesAllowed} lượt)`
       : "";
+    // Vé khách đặt trên web: nói luôn khách đã trả bằng cách nào, để nhân
+    // viên khỏi hỏi lại. Đọc không được thì thôi, cổng vẫn chạy như cũ.
+    let cachTra: string | null = null;
+    if (!decision.replayed) {
+      try {
+        const { cachTraCuaVe } = await import("@/lib/customer-data/booking-repository");
+        cachTra = await cachTraCuaVe(decision.code);
+      } catch {
+        cachTra = null;
+      }
+    }
+    const daTra = cachTra === "qr-transfer" ? " · Đã thanh toán bằng QR" : "";
     return {
       success: true,
       message: decision.replayed
         ? `${decision.code} đã được ghi nhận trước đó lúc ${clock}, không tính thêm lượt.`
-        : `Vé hợp lệ${guest}${remaining} — vào cổng lúc ${clock}.`,
+        : `Vé hợp lệ${guest}${remaining}${daTra} — vào cổng lúc ${clock}.`,
       event,
       decision,
     };

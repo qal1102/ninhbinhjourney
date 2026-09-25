@@ -1,6 +1,7 @@
 import type { Customer360Journey } from "@/lib/customer-data/journey-repository";
 import type { Customer360BookingOrder } from "@/lib/customer-data/booking-repository";
 import type { Customer360OutboundAction } from "@/lib/customer-data/recommendation-repository";
+import { nhanCachTra } from "@/domain/customer-booking";
 import { RECOMMENDATION_REASON_LABELS, type CustomerRecommendation } from "@/domain/customer-recommendations";
 
 const EVENT_LABELS: Record<string, string> = {
@@ -220,7 +221,7 @@ export function Customer360Dashboard({
                   </div>
                   <span className="rounded-full bg-[#e7efe9] px-2.5 py-1 text-xs font-bold text-[#35594b]">{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>
                 </div>
-                <p className="mt-3 font-bold">{order.totalVnd.toLocaleString("vi-VN")} VND · {order.paymentStatus === "succeeded" ? "đã ghi nhận thanh toán thử" : "chưa thanh toán"}</p>
+                <p className="mt-3 font-bold">{order.totalVnd.toLocaleString("vi-VN")} VND · <span data-cach-tra={order.paymentMode ?? ""}>{nhanCachTra(order.paymentMode, order.paymentStatus)}</span></p>
                 {order.tickets.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {order.tickets.map((ticket) => <code key={ticket.ticketCode} className="rounded-lg bg-[#173f34] px-2.5 py-1.5 text-xs font-bold text-[#e7c78d]">{ticket.ticketCode} · {ticket.entriesAllowed} lượt</code>)}

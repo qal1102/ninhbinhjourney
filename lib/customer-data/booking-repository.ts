@@ -16,6 +16,8 @@ import {
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 
+export type CachTraTien = "simulation" | "pay-on-site" | "qr-transfer";
+
 export class CustomerBookingRepositoryError extends Error {
   constructor(
     message: string,
@@ -32,6 +34,7 @@ export class CustomerBookingRepositoryError extends Error {
       | "PARTY_MIX_INVALID"
       | "HOLD_NOT_FOUND"
       | "HOLD_EXPIRED"
+      | "QR_LAPSE_LIMIT"
       | "OWNERSHIP_REQUIRED"
       | "ID_COLLISION"
       | "CONTACT_REQUIRED"
@@ -89,7 +92,8 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_BOOKING_SLOT_NOT_OFFERED", "SLOT_NOT_OFFERED", "Khung giờ này không nằm trong lịch bán của gói."],
     ["CUSTOMER_BOOKING_PARTY_MIX_INVALID", "PARTY_MIX_INVALID", "Số người lớn cộng số trẻ em phải đúng bằng tổng số khách, và phải có ít nhất một người lớn."],
     ["CUSTOMER_BOOKING_HOLD_NOT_FOUND", "HOLD_NOT_FOUND", "Không tìm thấy lượt giữ chỗ này."],
-    ["CUSTOMER_BOOKING_HOLD_EXPIRED", "HOLD_EXPIRED", "Lượt giữ chỗ đã hết hạn; hãy giữ lại khung giờ mới."],
+    ["CUSTOMER_BOOKING_HOLD_EXPIRED", "HOLD_EXPIRED", "Lượt giữ chỗ đã quá 15 phút nên chỗ đã được nhả ra. Mời bạn giữ lại một khung giờ ạ."],
+    ["CUSTOMER_QR_LAPSE_LIMIT", "QR_LAPSE_LIMIT", "Số này đã giữ chỗ ba lần trong tuần mà chưa thanh toán. Để công bằng với khách khác, mời bạn tới quầy vé tại điểm để đặt trực tiếp ạ."],
     ["CUSTOMER_BOOKING_OWNERSHIP_REQUIRED", "OWNERSHIP_REQUIRED", "Lượt giữ chỗ không thuộc phiên khách hiện tại."],
     ["CUSTOMER_BOOKING_ID_COLLISION", "ID_COLLISION", "Mã giữ chỗ đã được dùng cho một yêu cầu khác."],
     ["CUSTOMER_PAYMENT_ID_COLLISION", "ID_COLLISION", "Mã xác nhận đã được dùng cho một thanh toán mô phỏng khác."],
@@ -254,7 +258,8 @@ export async function confirmCustomerBooking(input: {
   paymentRequestId: string;
   holdId: string;
   anonymousId: string;
-  paymentMode: "simulation" | "pay-on-site";
+  /** `qr-transfer` chỉ đi qua trang quét mã, không đi qua API xác nhận thường. */
+  paymentMode: CachTraTien;
   /** Bắt buộc khi `paymentMode` là `pay-on-site`; tuỳ khách ở lối trả ngay. */
   contact?: string;
 }) {
@@ -287,7 +292,7 @@ export async function confirmCustomerBooking(input: {
     orderStatus: String(row.order_status) as "confirmed",
     paymentAttemptId: String(row.payment_attempt_id),
     paymentStatus: String(row.payment_status) as "succeeded" | "pending",
-    paymentMode: String(row.payment_mode) as "simulation" | "pay-on-site",
+    paymentMode: String(row.payment_mode) as CachTraTien,
     amountDueVnd: Number(row.amount_due_vnd ?? 0),
     tickets: ticketsFromRow(row.tickets),
     duplicate: row.inserted !== true,
@@ -304,6 +309,7 @@ export type Customer360BookingOrder = {
   totalVnd: number;
   status: string;
   paymentStatus: string | null;
+  paymentMode: CachTraTien | null;
   createdAt: string;
   tickets: Array<{ ticketCode: string; siteId: string; entriesAllowed: number; status: string }>;
 };
@@ -323,15 +329,17 @@ export async function listCustomer360BookingOrders(limit = 100): Promise<Custome
   if (orderIds.length === 0) return [];
 
   const [paymentResult, bridgeResult] = await Promise.all([
-    client.from("customer_payment_attempts").select("order_id, status").eq("tenant_id", TENANT_ID).in("order_id", orderIds),
+    client.from("customer_payment_attempts").select("order_id, status, mode").eq("tenant_id", TENANT_ID).in("order_id", orderIds),
     client.from("customer_order_tickets").select("order_id, ticket_id, entries_allowed").eq("tenant_id", TENANT_ID).in("order_id", orderIds),
   ]);
   if (paymentResult.error) throw mapRepositoryError(paymentResult.error);
   if (bridgeResult.error) throw mapRepositoryError(bridgeResult.error);
 
   const paymentByOrder = new Map<string, string>();
+  const modeByOrder = new Map<string, CachTraTien>();
   for (const row of (paymentResult.data ?? []) as Array<Record<string, unknown>>) {
     paymentByOrder.set(String(row.order_id), String(row.status));
+    modeByOrder.set(String(row.order_id), String(row.mode) as CachTraTien);
   }
   const bridgesByOrder = new Map<string, Array<{ ticketId: string; entriesAllowed: number }>>();
   const ticketIds: string[] = [];
@@ -370,6 +378,7 @@ export async function listCustomer360BookingOrders(limit = 100): Promise<Custome
       totalVnd: Number(row.total_vnd),
       status: String(row.status),
       paymentStatus: paymentByOrder.get(orderId) ?? null,
+      paymentMode: modeByOrder.get(orderId) ?? null,
       createdAt: String(row.created_at),
       tickets: (bridgesByOrder.get(orderId) ?? []).flatMap((bridge) => {
         const ticket = ticketsById.get(bridge.ticketId);
@@ -477,9 +486,100 @@ export async function lookupCustomerOrderTickets(input: {
     children: row.children === null || row.children === undefined ? null : Number(row.children),
     totalVnd: Number(row.total_vnd),
     currency: "VND",
-    paymentMode: (row.payment_mode ?? null) as "simulation" | "pay-on-site" | null,
+    paymentMode: (row.payment_mode ?? null) as CachTraTien | null,
     paymentStatus: (row.payment_status ?? null) as "succeeded" | "pending" | null,
     amountDueVnd: Number(row.amount_due_vnd ?? 0),
     tickets: lookupTicketsFromRow(row.tickets),
   });
+}
+
+/**
+ * Mở mã QR thanh toán cho một lượt giữ chỗ.
+ *
+ * Ghi lại "đã hẹn trả" theo bản băm liên hệ, để một số điện thoại giữ rồi bỏ
+ * ba lần trong bảy ngày bị mời tới quầy (xem migration 089). Liên hệ là bắt
+ * buộc ở lối này: không có nó thì không đếm được ai đang giữ chỗ bừa.
+ */
+export async function moHenTraQr(input: {
+  holdId: string;
+  anonymousId: string;
+  contact: string;
+}): Promise<{ expiresAt: string }> {
+  const lienHe = protectCustomerContact(input.contact);
+  const { data, error } = await createAdminClient().rpc("customer_qr_open_payment_intent", {
+    p_tenant_id: TENANT_ID,
+    p_hold_id: input.holdId,
+    p_anonymous_id: input.anonymousId,
+    p_identity_digest: lienHe.digest,
+  });
+  if (error || !data) throw mapRepositoryError(error);
+  return { expiresAt: String((data as Record<string, unknown>).expires_at) };
+}
+
+/**
+ * Máy đặt chỗ hỏi "khách đã quét mã và trả chưa?".
+ *
+ * Chỉ ĐỌC: có khoản trả nào mang đúng mã yêu cầu và đúng lượt giữ hay chưa.
+ * Có rồi thì gọi lại hàm xác nhận với cùng mã — hàm ấy chống trùng, nên nó
+ * trả nguyên đơn và vé đã phát chứ không phát thêm. Chưa có thì thôi: máy đặt
+ * chỗ tuyệt đối không được tự xác nhận thay cho lượt quét.
+ */
+export async function docKetQuaQr(input: {
+  holdId: string;
+  paymentRequestId: string;
+  anonymousId: string;
+}) {
+  const { data, error } = await createAdminClient()
+    .from("customer_payment_attempts")
+    .select("id")
+    .eq("tenant_id", TENANT_ID)
+    .eq("idempotency_key", input.paymentRequestId)
+    .eq("hold_id", input.holdId)
+    .eq("mode", "qr-transfer")
+    .maybeSingle();
+  if (error) throw mapRepositoryError(error);
+  if (!data) return null;
+  return confirmCustomerBooking({
+    paymentRequestId: input.paymentRequestId,
+    holdId: input.holdId,
+    anonymousId: input.anonymousId,
+    paymentMode: "qr-transfer",
+  });
+}
+
+/**
+ * Nhân viên quét vé ở cổng: vé web này đã được trả bằng cách nào.
+ *
+ * Trả `null` khi không phải vé web hoặc chưa đọc được — cổng vẫn chạy như
+ * cũ, chỉ thiếu một dòng chú thích.
+ */
+export async function cachTraCuaVe(ticketCode: string): Promise<CachTraTien | null> {
+  try {
+    const client = createAdminClient();
+    const { data: ve } = await client
+      .from("erp_tickets")
+      .select("id")
+      .eq("tenant_id", TENANT_ID)
+      .eq("ticket_code", ticketCode)
+      .maybeSingle();
+    if (!ve) return null;
+    const { data: cau } = await client
+      .from("customer_order_tickets")
+      .select("order_id")
+      .eq("tenant_id", TENANT_ID)
+      .eq("ticket_id", String((ve as Record<string, unknown>).id))
+      .maybeSingle();
+    if (!cau) return null;
+    const { data: tra } = await client
+      .from("customer_payment_attempts")
+      .select("mode, status")
+      .eq("tenant_id", TENANT_ID)
+      .eq("order_id", String((cau as Record<string, unknown>).order_id))
+      .eq("status", "succeeded")
+      .limit(1)
+      .maybeSingle();
+    return tra ? (String((tra as Record<string, unknown>).mode) as CachTraTien) : null;
+  } catch {
+    return null;
+  }
 }

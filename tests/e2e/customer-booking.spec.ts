@@ -63,14 +63,13 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     });
     await page.route("**/api/customer-booking-confirmations", async (route) => {
       const body = route.request().postDataJSON() as Record<string, unknown>;
-      // TC-22: mac dinh van la loi tra tien mo phong, va man hinh KHONG
-      // duoc gui kem lien he o loi nay — thu mot du lieu ca nhan khong dung
-      // toi la mot khoan no. Khoa chat bang toEqual de mot truong lo ra la
-      // bai kiem do ngay.
+      // Lối này nay chỉ còn trả tại điểm, và luôn kèm liên hệ. Khoá chặt
+      // bằng toEqual để một trường lọt ra là bài kiểm đỏ ngay.
       expect(body).toEqual({
         payment_request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
         hold_id: "60000000-0000-4000-8000-000000000001",
-        payment_mode: "simulation",
+        payment_mode: "pay-on-site",
+        contact: "0912345678",
       });
       await route.fulfill({
         status: 201,
@@ -105,12 +104,59 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     });
   });
 
-  test("holds shared capacity then confirms a simulated payment into a T8 ticket", async ({ page }) => {
+  test("giữ chỗ 15 phút, quét mã QR thanh toán, vé hiện ra kèm nút lưu ảnh", async ({ page }) => {
+    // Máy chủ mở mã QR cho lượt giữ, rồi trả lời "chưa trả" một lần trước
+    // khi báo "đã trả" — giống khách đang cầm điện thoại quét.
+    let qrBody: Record<string, unknown> = {};
+    let lanHoi = 0;
+    await page.route("**/api/customer-booking-qr-payments**", async (route) => {
+      const request = route.request();
+      if (request.method() === "POST") {
+        qrBody = request.postDataJSON() as Record<string, unknown>;
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify({
+            accepted: true,
+            pay_url: "http://localhost/thanh-toan/phieu-thu",
+            expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
+          }),
+        });
+        return;
+      }
+      lanHoi += 1;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(lanHoi < 2 ? { accepted: true, paid: false } : {
+          accepted: true,
+          paid: true,
+          order: { id: "50000000-0000-4000-8000-000000000001", code: "NBJ-ABCDEF123456", status: "confirmed" },
+          payment: { id: "80000000-0000-4000-8000-000000000001", status: "succeeded", mode: "qr-transfer", amount_due_vnd: 0 },
+          tickets: [{
+            ticketId: "90000000-0000-4000-8000-000000000001",
+            ticketCode: "WEB-ABCDEF123456",
+            siteId: "10000000-0000-4000-8000-000000000001",
+            validOn: "2026-08-21",
+            entriesAllowed: 2,
+            guestGroup: "adult",
+            status: "issued",
+          }, {
+            ticketId: "90000000-0000-4000-8000-000000000002",
+            ticketCode: "WEB-ABCDEF654321",
+            siteId: "10000000-0000-4000-8000-000000000001",
+            validOn: "2026-08-21",
+            entriesAllowed: 1,
+            guestGroup: "child",
+            status: "issued",
+          }],
+        }),
+      });
+    });
+
     await page.goto("/checkout?package=heritage-day");
     await expect(page.getByRole("heading", { name: /Một chỗ đã giữ/i })).toBeVisible();
-    // TC-25: khối này từng mở đầu bằng "Thanh toán mô phỏng — không thu tiền",
-    // và người đọc dừng ngay ở chữ "mô phỏng". Nay nói cái CÓ trước.
-    await expect(page.getByText(/Vé phát ra ở đây là vé thật/i)).toBeVisible();
+    await expect(page.getByText(/Giữ chỗ 15 phút, quét mã QR là xong/i)).toBeVisible();
     // Lời hứa không đổi và là lời hứa quan trọng nhất trên trang này: không
     // bao giờ hỏi số thẻ hay tài khoản ngân hàng. Ô liên hệ thì có, và cố ý
     // có — nó là đường lấy lại vé duy nhất khi hệ thống chưa gửi được tin.
@@ -137,16 +183,56 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     expect(holdRequestBody.children).toBe(1);
     await expect(page.getByText(/Chỗ của bạn đã được giữ/i)).toBeVisible();
 
-    // TC-25: mặc định nay là trả tại điểm — lối duy nhất chạy trọn vẹn. Bài
-    // này đo lối trả trước, nên phải chọn nó ra một cách tường minh.
-    await page.getByRole("radio", { name: /Nhận vé ngay, chưa trừ tiền/ }).check();
-    await page.getByRole("button", { name: "Nhận vé ngay" }).click();
+    // QR là lối mặc định. Chưa để lại số thì chưa có mã: luật "giữ rồi bỏ
+    // ba lần thì đặt tại quầy" đếm theo số điện thoại.
+    await expect(page.getByRole("radio", { name: /Quét mã QR/ })).toBeChecked();
+    await page.getByRole("button", { name: "Lấy mã QR thanh toán" }).click();
+    await expect(page.getByText(/số điện thoại hoặc email trước đã/i)).toBeVisible();
+    await page.getByLabel("Số điện thoại hoặc email").fill("0912345678");
+    await page.getByRole("button", { name: "Lấy mã QR thanh toán" }).click();
+
+    const khungQr = page.getByTestId("qr-thanh-toan");
+    await expect(khungQr.getByRole("img", { name: /Mã QR thanh toán/ })).toBeVisible();
+    await expect(khungQr).toContainText("1.780.000 đ");
+    expect(qrBody).toEqual({
+      hold_id: "60000000-0000-4000-8000-000000000001",
+      payment_request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+      contact: "0912345678",
+      amount_vnd: 1_780_000,
+      product_id: expect.any(String),
+    });
+
+    // Khách quét xong: màn hình tự chuyển sang vé, không phải bấm gì.
+    await expect(page.getByTestId("customer-booking-confirmed")).toContainText("Đã thanh toán bằng QR");
     await expect(page.getByTestId("customer-booking-confirmed")).toContainText("NBJ-ABCDEF123456");
+    await expect(page.getByRole("button", { name: "Lưu ảnh vé về máy" })).toBeVisible();
     await expect(page.getByTestId("customer-booking-confirmed")).toContainText("WEB-ABCDEF123456");
     await expect(page.getByTestId("customer-booking-confirmed")).toContainText("2 lượt vào");
     // TC-03: khách phải đọc được mình cầm vé của những ai.
     await expect(page.getByTestId("customer-booking-confirmed"))
       .toContainText("2 vé · 1 trẻ dưới 1m3 (không mất vé)");
+  });
+
+  test("trả tại điểm vẫn là lối phụ chạy được, và ảnh vé tải về đúng tên", async ({ page }) => {
+    await page.goto("/checkout?package=heritage-day");
+    await page.getByRole("button", { name: /Khung .*còn (khoảng )?12 chỗ/i }).click();
+    await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
+    await page.getByRole("radio", { name: /Trả tại điểm/ }).check();
+    await page.getByLabel("Số điện thoại hoặc email").fill("0912345678");
+    await page.getByRole("button", { name: "Giữ chỗ, trả tiền tại điểm" }).click();
+    await expect(page.getByTestId("customer-booking-confirmed")).toContainText("NBJ-ABCDEF123456");
+
+    const [taiVe] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "Lưu ảnh vé về máy" }).click(),
+    ]);
+    expect(taiVe.suggestedFilename()).toBe("ve-NBJ-ABCDEF123456.png");
+  });
+
+  test("mã QR hỏng mở ra một câu dễ hiểu, không phải trang lỗi", async ({ page }) => {
+    await page.goto("/thanh-toan/khong-phai-phieu-that");
+    await expect(page.getByRole("heading", { name: "Mã QR chưa dùng được" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Xem các gói tham quan" })).toBeVisible();
   });
 
   test("TC-02: a full or paused slot cannot be picked, and says why", async ({ page }) => {
@@ -211,7 +297,7 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     await page.goto("/checkout?package=heritage-day");
     await page.getByRole("button", { name: /Khung .*còn (khoảng )?12 chỗ/i }).click();
     await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
-    await expect(page.getByRole("radio", { name: /Nhận vé ngay, chưa trừ tiền/ })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /Quét mã QR/ })).toBeVisible();
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa"])

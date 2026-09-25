@@ -9,6 +9,7 @@ import { WEB_BOOKING_MAX_PARTY_SIZE } from "@/domain/customer-booking";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import { getOrCreateCustomerAnonymousId } from "@/lib/customer-data/browser-tracking";
 import { formatVietnameseDate } from "@/lib/vietnamese-date";
+import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 
 type VisitorGroupApiResponse =
   | { accepted: true; group: VisitorGroupStatus }
@@ -114,7 +115,7 @@ type ConfirmationResult = {
   payment: {
     id: string;
     status: "succeeded" | "pending";
-    mode: "simulation" | "pay-on-site";
+    mode: "simulation" | "pay-on-site" | "qr-transfer";
     amount_due_vnd: number;
   };
   tickets: Array<{
@@ -231,7 +232,13 @@ export function CustomerBookingCheckout({
   // TC-22: khách chọn trả tiền tại điểm thay vì trả ngay trên trang.
   // TC-25: mặc định là trả tại điểm — lối duy nhất chạy trọn vẹn, có người
   // thu tiền thật và có bảng đối soát cuối ca nhận khoản ấy.
-  const [payAtSite, setPayAtSite] = useState(true);
+  //
+  // 26/09/2026: chủ dự án chốt QR là lối chính — giữ chỗ 15 phút, quét mã
+  // trong 15 phút là xong, quá hạn thì chỗ tự nhả. Trả tại điểm lùi xuống
+  // làm lối phụ.
+  const [payAtSite, setPayAtSite] = useState(false);
+  // Mã QR thanh toán đang hiện: đường dẫn nó trỏ tới và ảnh của nó.
+  const [qr, setQr] = useState<{ payUrl: string; dataUrl: string } | null>(null);
   // Có liên hệ nào thật sự được gửi lên cùng đơn này không. Đọc lại ô nhập lúc
   // dựng màn hình xác nhận thì sai: khách có thể gõ thêm vào ô sau khi đã đặt
   // xong, và màn hình sẽ hứa một đường tra cứu không tồn tại.
@@ -356,6 +363,7 @@ export function CustomerBookingCheckout({
 
   function invalidateHold() {
     setHold(null);
+    setQr(null);
     setConfirmation(null);
     setMessage("");
     holdRequestId.current = crypto.randomUUID();
@@ -393,6 +401,7 @@ export function CustomerBookingCheckout({
       });
       const payload = await responsePayload(response) as HoldResult;
       setHold(payload);
+      setQr(null);
       setConfirmation(null);
       paymentRequestId.current = crypto.randomUUID();
       setMessage("Chỗ của bạn đã được giữ. Bạn có 15 phút để hoàn tất ạ.");
@@ -407,8 +416,12 @@ export function CustomerBookingCheckout({
     if (!hold || remainingSeconds <= 0) return;
     // TC-22: chọn trả tiền tại điểm thì phải có liên hệ. Chặn ngay ở đây để
     // khách thấy lý do tại chỗ, thay vì bấm xong mới nhận một câu từ chối.
-    if (payAtSite && contact.trim().length < 6) {
-      setMessage("Bạn để lại giúp em số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc ạ.");
+    if (contact.trim().length < 6) {
+      setMessage("Bạn để lại giúp em số điện thoại hoặc email trước đã ạ. Lỡ mất trang, bạn dùng chính số này để mở lại vé.");
+      return;
+    }
+    if (!payAtSite) {
+      await layMaQr();
       return;
     }
     setPending("confirm");
@@ -421,26 +434,86 @@ export function CustomerBookingCheckout({
         body: JSON.stringify({
           payment_request_id: paymentRequestId.current,
           hold_id: hold.hold.id,
-          payment_mode: payAtSite ? "pay-on-site" : "simulation",
-          // TC-25: lối trả trước cũng gửi liên hệ, nhưng chỉ khi khách có gõ
-          // vào. Gửi một chuỗi rỗng lên là máy chủ từ chối cả đơn.
-          ...(contact.trim().length >= 6 ? { contact: contact.trim() } : {}),
+          payment_mode: "pay-on-site",
+          contact: contact.trim(),
         }),
       });
       const payload = await responsePayload(response) as ConfirmationResult;
       setConfirmation(payload);
       setContactSaved(contact.trim().length >= 6);
-      setMessage(
-        payAtSite
-          ? "Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào ạ."
-          : "Đặt chỗ xong rồi ạ. Vé bên dưới quét được ngay ở cổng.",
-      );
+      setMessage("Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào ạ.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Lúc này chưa xác nhận được, mời bạn thử lại.");
     } finally {
       setPending(null);
     }
   }
+
+  // Xin mã QR thanh toán cho lượt giữ đang có. Mã trỏ tới trang
+  // /thanh-toan/[phiếu]; điện thoại quét mã, bấm xác nhận là xong.
+  async function layMaQr() {
+    if (!hold) return;
+    setPending("confirm");
+    setMessage("");
+    try {
+      const response = await fetch("/api/customer-booking-qr-payments", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hold_id: hold.hold.id,
+          payment_request_id: paymentRequestId.current,
+          contact: contact.trim(),
+          amount_vnd: hold.amount.total_vnd,
+          product_id: packageItem.id,
+        }),
+      });
+      const payload = await responsePayload(response) as { pay_url: string };
+      const dataUrl = await QRCode.toDataURL(payload.pay_url, {
+        margin: 1,
+        width: 440,
+        errorCorrectionLevel: "L",
+        color: { dark: "#10231d", light: "#ffffff" },
+      });
+      setQr({ payUrl: payload.pay_url, dataUrl });
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Lúc này chưa lấy được mã QR, mời bạn thử lại.");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  // Đang hiện mã QR thì cứ vài giây hỏi máy chủ "khách trả chưa?". Chỉ đọc:
+  // máy này không bao giờ tự xác nhận thay cho lượt quét.
+  useEffect(() => {
+    if (!qr || !hold || confirmation) return;
+    let dung = false;
+    const hoi = async () => {
+      try {
+        const response = await fetch(
+          `/api/customer-booking-qr-payments?hold_id=${encodeURIComponent(hold.hold.id)}&payment_request_id=${encodeURIComponent(paymentRequestId.current)}`,
+          { credentials: "same-origin", cache: "no-store" },
+        );
+        const payload = (await response.json().catch(() => null)) as
+          | ({ accepted: true; paid: true } & ConfirmationResult)
+          | { accepted: true; paid: false }
+          | null;
+        if (dung || !payload || !("paid" in payload) || !payload.paid) return;
+        setConfirmation(payload);
+        setContactSaved(true);
+        setQr(null);
+        setMessage("Đã nhận thanh toán qua mã QR. Vé của bạn ở ngay bên dưới ạ.");
+      } catch {
+        // Mạng chập chờn thì lần sau hỏi lại, không làm phiền khách.
+      }
+    };
+    const timer = window.setInterval(() => void hoi(), 2500);
+    void hoi();
+    return () => {
+      dung = true;
+      window.clearInterval(timer);
+    };
+  }, [qr, hold, confirmation]);
 
   async function createVisitorGroup(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -682,9 +755,9 @@ export function CustomerBookingCheckout({
               Nên nói cái CÓ trước, rồi mới nói cái chưa có — vẫn đủ thật,
               nhưng không mời người ta bỏ đi ngay từ dòng đầu. */}
           <div className="mt-7 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
-            <p className="font-extrabold">Vé phát ra ở đây là vé thật</p>
+            <p className="font-extrabold">Giữ chỗ 15 phút, quét mã QR là xong</p>
             <p className="mt-2 text-sm leading-6">
-              Chỗ được giữ thật, vé có mã QR mà máy ở cổng quét được. Riêng đường chuyển tiền từ ngân hàng thì bên em chưa đấu nối, nên trang này <strong className="font-bold">không hỏi số thẻ hay tài khoản</strong> của bạn — và cũng sẽ không bao giờ hỏi trên một trang chưa đấu nối.
+              Chỗ giữ là thật, vé có mã QR mà máy ở cổng quét được. Quá 15 phút chưa thanh toán thì chỗ tự nhả cho khách khác. Ở bản trình diễn này, bước chuyển khoản là giả lập: quét mã, bấm xác nhận là xong, <strong className="font-bold">không có tiền thật nào bị trừ</strong>.
             </p>
           </div>
 
@@ -733,11 +806,13 @@ export function CustomerBookingCheckout({
 
         {confirmation ? (
           <div className="mt-6" data-testid="customer-booking-confirmed">
-            <p className="rounded-2xl bg-[#dceadd] p-4 font-bold text-[#183f34]">Đã xác nhận · {confirmation.order.code}</p>
+            <p className="rounded-2xl bg-[#dceadd] p-4 font-bold text-[#183f34]">
+              {confirmation.payment.mode === "qr-transfer" ? "Đã thanh toán bằng QR" : "Đã xác nhận"} · {confirmation.order.code}
+            </p>
 
-            {/* TC-23: nói thẳng hệ thống chưa gửi được tin nhắn, và chỉ cho
-                khách đúng một đường lấy lại vé. Tuyệt đối không viết chữ nào
-                ngụ ý "chúng tôi đã gửi tin cho bạn" — điều đó chưa làm được. */}
+            {/* Hệ thống chưa gửi tin nhắn hay email nào, nên không viết chữ
+                nào ngụ ý "đã gửi cho bạn". Đường giữ vé là ảnh vé lưu về máy
+                (nút bên dưới), cộng trang tra cứu vé bằng liên hệ. */}
             <div className="mt-5 rounded-2xl border border-[#e7c78d]/45 bg-[#e7c78d]/12 p-4">
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#e7c78d]">
                 Xin bạn giữ lấy mã này
@@ -746,9 +821,8 @@ export function CustomerBookingCheckout({
                 {confirmation.order.code}
               </p>
               <p className="mt-3 text-sm leading-6 text-white/75">
-                Bên em đang đấu nối Zalo; xong việc đó thì mã đặt chỗ tự về máy bạn. Còn bây
-                giờ hệ thống chưa gửi được tin nhắn hay email nào, nên bạn chụp lại màn hình
-                này giúp em ạ.
+                Bạn bấm <strong className="font-bold text-white">Lưu ảnh vé về máy</strong> ở dưới:
+                ảnh vé nằm trong thư viện ảnh, tới cổng mở ra cho nhân viên quét là vào.
                 {/* TC-25: câu này nay tuỳ vào việc khách CÓ để lại liên hệ hay
                     không, chứ không tuỳ vào cách trả tiền. Trước đây lối trả
                     ngay luôn nhận câu "trang tra cứu chưa có gì để đối chiếu",
@@ -804,6 +878,11 @@ export function CustomerBookingCheckout({
                 </li>
               ))}
             </ul>
+            <LuuAnhVe
+              orderCode={confirmation.order.code}
+              productName={packageItem.name}
+              tickets={confirmation.tickets}
+            />
 
             <div className="mt-8 border-t border-white/15 pt-6">
               {!group ? (
@@ -993,56 +1072,76 @@ export function CustomerBookingCheckout({
           </>
         ) : (
           <>
-          {/* TC-25 đổi thứ tự hai lối, và đây là lý do.
-              Trả tại điểm là lối DUY NHẤT chạy trọn vẹn từ đầu tới cuối: giữ
-              chỗ, phát vé, nhân viên thu tiền mặt ở cổng, và khoản ấy nay về
-              đúng bảng đối soát cuối ca. Không có một mắt xích nào phải giả
-              vờ. Nên nó đứng trước và là lựa chọn mặc định.
-              Lối trả trước đứng sau, nói thẳng là chưa trừ tiền. */}
-          {/* Khối này nằm trên tấm thẻ xanh đậm, nên nền `bg-white/60` trước
-              đây trong suốt một nửa và ra màu #a3b2ae. Chữ trong khối lại
-              trộn hai bảng màu: mấy dòng chọn lối trả tiền thừa hưởng chữ
-              trắng của thẻ, còn nhãn và câu chú thích dùng màu chữ của nền
-              sáng. Kết quả đo bằng axe: 2,2:1 cho chữ trắng và 2,0–2,4:1 cho
-              chữ xám, trên chính màn hình khách quyết định trả tiền thế nào.
-              Nay nền đục hẳn bằng màu kem của trang, và mọi dòng chữ trong
-              khối lấy màu của nền sáng. */}
+          {qr ? (
+            // Mã QR thanh toán. Máy tính: khách giơ điện thoại quét. Điện
+            // thoại: không tự quét được màn hình của chính mình, nên có nút mở
+            // thẳng trang thanh toán ở thẻ mới — thẻ này vẫn tự chuyển sang vé.
+            <div data-testid="qr-thanh-toan" className="mt-7 rounded-2xl bg-[#f4f0e7] p-5 text-center text-[#27362f]">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Quét mã để thanh toán</p>
+              <p className="font-display mt-2 text-3xl text-[#183f34]">{(hold.amount.total_vnd).toLocaleString("vi-VN")} đ</p>
+              {/* Điện thoại không tự quét được màn hình của chính nó, nên trên
+                  màn hẹp nút mở trang thanh toán đứng TRƯỚC mã QR. */}
+              <a
+                href={qr.payUrl}
+                target="_blank"
+                rel="noopener"
+                className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-[#183f34] px-5 text-sm font-extrabold text-white lg:hidden"
+              >
+                Thanh toán ngay
+              </a>
+              <p className="mt-4 text-xs font-bold text-[#59654b] lg:hidden">Hoặc đưa mã này cho người đi cùng quét</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={qr.dataUrl}
+                alt="Mã QR thanh toán, quét bằng camera điện thoại hoặc Zalo"
+                className="mx-auto mt-4 aspect-square w-full max-w-[15rem] rounded-2xl border border-[#d7d5cd] bg-white p-3"
+              />
+              <p className="mt-4 hidden text-sm leading-6 lg:block">
+                Mở camera điện thoại hoặc Zalo, quét mã rồi bấm <strong className="font-bold">Xác nhận chuyển khoản</strong>. Vé hiện ra ngay trên màn hình này.
+              </p>
+              <p role="status" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#356957]">
+                <span aria-hidden="true" className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#d58c35] motion-reduce:animate-none" />
+                Đang chờ bạn quét mã · còn {formatCountdown(remainingSeconds)}
+              </p>
+              <button
+                type="button"
+                onClick={() => setQr(null)}
+                className="mx-auto mt-3 block min-h-11 text-sm font-bold text-[#59654b] underline underline-offset-4"
+              >
+                Đổi cách trả tiền
+              </button>
+            </div>
+          ) : (
+          <>
+          {/* Nền kem đục trên thẻ xanh đậm: chữ trong khối lấy màu nền sáng.
+              Trước đây nền trong suốt một nửa, axe đo chữ chỉ đạt 2:1. */}
           <fieldset className="mt-7 rounded-2xl border border-[#d7d5cd] bg-[#f4f0e7] p-4 text-[#27362f]">
-            {/* `legend` nằm vắt lên đường viền trên và KHÔNG được nền của
-                `fieldset` sơn phía sau, nên chữ xanh đậm này rơi thẳng xuống
-                nền xanh đậm của tấm thẻ — 1,8:1, đọc gần như không ra. Tự sơn
-                nền kem cho chính nó là xong; axe không bắt được chỗ này vì nó
-                quy nền của legend về nền fieldset. */}
+            {/* `legend` vắt lên viền trên và KHÔNG được nền fieldset sơn phía
+                sau, nên phải tự sơn nền kem cho nó, không thì chữ xanh rơi
+                thẳng xuống nền xanh đậm (1,8:1). */}
             <legend className="rounded bg-[#f4f0e7] px-2 text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Trả tiền thế nào</legend>
             <label className="flex min-h-11 items-start gap-3 text-sm text-[#27362f]">
+              <input type="radio" name="cach-tra-tien" checked={!payAtSite} onChange={() => setPayAtSite(false)} className="mt-1" />
+              <span><strong className="font-bold">Quét mã QR (nên chọn)</strong> — quét bằng camera hoặc Zalo trong 15 phút giữ chỗ, vé có ngay.</span>
+            </label>
+            <label className="mt-3 flex min-h-11 items-start gap-3 text-sm text-[#27362f]">
               <input type="radio" name="cach-tra-tien" checked={payAtSite} onChange={() => setPayAtSite(true)} className="mt-1" />
               <span><strong className="font-bold">Trả tại điểm</strong> — giữ chỗ ngay, tới nơi đưa mã cho nhân viên rồi trả tiền mặt.</span>
             </label>
-            <label className="mt-3 flex min-h-11 items-start gap-3 text-sm text-[#27362f]">
-              <input type="radio" name="cach-tra-tien" checked={!payAtSite} onChange={() => setPayAtSite(false)} className="mt-1" />
-              <span><strong className="font-bold">Nhận vé ngay, chưa trừ tiền</strong> — vé và mã QR có liền; bên em chưa đấu nối ngân hàng nên trang không thu đồng nào.</span>
-            </label>
-            {/* TC-25: ô liên hệ nay hiện ở CẢ HAI lối.
-                Trước đây nó chỉ hiện khi trả tại điểm, nên khách trả trước
-                không có gì được lưu — đóng tab là mất vé, vì trang tra cứu
-                đối chiếu bằng mã đặt chỗ CỘNG liên hệ. Hệ thống lại chưa gửi
-                được tin nhắn nào, nên đó là đường lấy lại duy nhất. */}
+            {/* Liên hệ bắt buộc ở cả hai lối: nó là đường mở lại vé ở trang
+                tra cứu, và là thứ để đếm ai giữ chỗ rồi bỏ nhiều lần. */}
             <label className="mt-4 grid gap-1 text-xs font-bold text-[#5f6f66]">
-              {payAtSite ? "Số điện thoại hoặc email" : "Số điện thoại hoặc email (không bắt buộc)"}
+              Số điện thoại hoặc email
               <input
                 value={contact}
                 onChange={(event) => setContact(event.target.value)}
-                // Ô này nhận CẢ số điện thoại lẫn email, nên không được ghim
-                // `inputMode="tel"`: bàn phím số trên điện thoại không gõ nổi
-                // dấu @. Đúng lỗi đã sửa ở trang tra cứu vé.
+                // Ô nhận CẢ số điện thoại lẫn email, nên không ghim
+                // `inputMode="tel"`: bàn phím số không gõ nổi dấu @.
                 placeholder="0912 345 678 hoặc ban@email.com"
                 className="min-h-11 rounded-xl border border-[#cbd7d1] bg-white px-3 text-sm font-medium"
               />
               <span className="mt-1 font-normal leading-5 text-[#59654b]">
-                {payAtSite
-                  ? "Để bên em gọi được cho bạn khi có việc cần báo."
-                  : "Để lỡ mất trang, bạn còn mở lại được vé ở mục tra cứu vé. Không để lại cũng được, nhưng khi ấy tấm ảnh chụp màn hình là bản lưu duy nhất của bạn."}
-                {" "}Số của bạn được mã hoá trước khi lưu.
+                Lỡ mất trang, bạn dùng số này để mở lại vé ở mục tra cứu vé. Giữ chỗ rồi bỏ ba lần trong tuần thì số này phải đặt tại quầy. Số của bạn được mã hoá trước khi lưu.
               </span>
             </label>
           </fieldset>
@@ -1052,11 +1151,14 @@ export function CustomerBookingCheckout({
             disabled={pending !== null || remainingSeconds <= 0}
             className="mt-4 min-h-12 w-full rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17] disabled:opacity-50"
           >
-            {/* TC-25: nút cũ ghi "Xác nhận thanh toán mô phỏng" — đọc lên là
-                thấy một cái nút giả, chẳng ai buồn bấm. Nay nút nói đúng thứ
-                sắp xảy ra: bấm xong là có vé. */}
-            {pending === "confirm" ? "Đang phát hành vé…" : remainingSeconds <= 0 ? "Giữ chỗ đã hết hạn" : payAtSite ? "Giữ chỗ, trả tiền tại điểm" : "Nhận vé ngay"}
+            {pending === "confirm"
+              ? payAtSite ? "Đang phát hành vé…" : "Đang tạo mã QR…"
+              : remainingSeconds <= 0
+                ? "Giữ chỗ đã hết hạn"
+                : payAtSite ? "Giữ chỗ, trả tiền tại điểm" : "Lấy mã QR thanh toán"}
           </button>
+          </>
+          )}
           </>
         )}
         {/* `text-white/45` trên nền #183F34 chỉ đạt 3,67:1. Nâng lên /60 là

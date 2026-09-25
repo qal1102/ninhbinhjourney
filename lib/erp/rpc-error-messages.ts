@@ -518,6 +518,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Số điện thoại hoặc email bạn để lại chưa đúng dạng. Bạn xem lại giúp em ạ.",
   CUSTOMER_PAYMENT_UNPAID_LIMIT:
     "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp giúp em ạ.",
+  CUSTOMER_QR_LAPSE_LIMIT:
+    "Số này đã giữ chỗ ba lần trong tuần mà chưa thanh toán. Để công bằng với khách khác, mời bạn tới quầy vé tại điểm để đặt trực tiếp ạ.",
   PAYMENT_COLLECT_INPUT_INVALID:
     "Thời điểm thu tiền gửi lên chưa hợp lệ.",
   PAYMENT_COLLECT_ACTOR_REQUIRED:

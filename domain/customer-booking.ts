@@ -264,8 +264,40 @@ export type CustomerTicketLookupResult =
       children: number | null;
       totalVnd: number;
       currency: "VND";
-      paymentMode: "simulation" | "pay-on-site" | null;
+      paymentMode: "simulation" | "pay-on-site" | "qr-transfer" | null;
       paymentStatus: "succeeded" | "pending" | null;
       amountDueVnd: number;
       tickets: CustomerTicketLookupTicket[];
     };
+
+/**
+ * Máy đặt chỗ xin mở mã QR thanh toán cho lượt giữ đang có.
+ *
+ * Liên hệ BẮT BUỘC ở lối này: luật "ba lần giữ rồi bỏ trong bảy ngày thì mời
+ * tới quầy" đếm theo số điện thoại, không có số thì không đếm được. Số tiền
+ * chỉ để trang quét hiện cho khách xem; tiền thật do cơ sở dữ liệu tính.
+ */
+export const CustomerQrPaymentRequestSchema = z
+  .object({
+    hold_id: z.string().uuid(),
+    payment_request_id: z.string().uuid(),
+    contact: z.string().trim().min(6).max(160),
+    amount_vnd: z.number().int().min(0).max(1_000_000_000),
+    product_id: z.string().min(1).max(80),
+  })
+  .strict();
+
+/** Cách trả nói bằng lời người vận hành hiểu, dùng chung cho mọi màn hình ERP. */
+export function nhanCachTra(
+  mode: "simulation" | "pay-on-site" | "qr-transfer" | null,
+  status: string | null,
+): string {
+  if (mode === "qr-transfer" && status === "succeeded") return "Đã thanh toán bằng QR";
+  if (mode === "pay-on-site") {
+    if (status === "succeeded") return "Đã thu tiền mặt tại điểm";
+    if (status === "cancelled") return "Đã huỷ vì khách không đến";
+    return "Chờ thu tại điểm";
+  }
+  if (mode === "simulation" && status === "succeeded") return "Nhận vé trước, chưa thu tiền (bản thử cũ)";
+  return "Chưa thanh toán";
+}

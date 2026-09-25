@@ -8,7 +8,9 @@ import { ViecDauTienPanel } from "@/components/erp/viec-dau-tien-panel";
 import { VONG_TIEN_ID, type KhoaSo } from "@/domain/huong-dan-vong-dau";
 import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
 import { readTienDoVongDan } from "@/lib/erp/huong-dan-repository";
-import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { getCurrentErpUser, isRoleSwitchEnabled } from "@/lib/erp/demo-session";
+import { listRoleSwitchTargets } from "@/lib/erp/staff-directory";
+import { BanDoChucNangPanel } from "@/components/erp/ban-do-chuc-nang-panel";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { listAccountingJournals } from "@/lib/erp/accounting-repository";
 import { listEscalatedIncidents } from "@/lib/erp/incident-repository";
@@ -163,6 +165,14 @@ export default async function ErpHomePage({ searchParams }: Props) {
         <ViecDauTienPanel
           dem={demViecChoGiamDoc}
           siteId={visibleSites[0]?.id ?? ERP_SITES[0].id}
+        />
+      ) : null}
+
+      {isDirector && !user.actingAs ? (
+        <BanDoChucNangPanel
+          targets={isRoleSwitchEnabled() ? await listRoleSwitchTargets() : []}
+          quyen={access.employees}
+          chuyenVaiDuoc={isRoleSwitchEnabled()}
         />
       ) : null}
 

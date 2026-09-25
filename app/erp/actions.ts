@@ -83,6 +83,7 @@ import type { CounterSaleReceipt } from "@/domain/erp-counter-sale";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import { changMoLai, VONG_TIEN_ID, type TienDoVongDan } from "@/domain/huong-dan-vong-dau";
 import { writeTienDoVongDan } from "@/lib/erp/huong-dan-repository";
+import { laDuongDanErpAnToan } from "@/domain/ban-do-chuc-nang";
 
 function safePasswordEqual(actual: string, expected: string) {
   const left = createHash("sha256").update(actual).digest();
@@ -220,7 +221,10 @@ export async function switchDemoRoleAction(formData: FormData) {
     targetRole: target.role,
     action: "started",
   });
-  redirect("/erp");
+  // Bản đồ chức năng gửi kèm màn hình cần tới, để giám đốc chuyển vai xong
+  // là đứng ngay đúng chỗ. Chỉ nhận đường dẫn nội bộ ERP.
+  const tiepTheo = String(formData.get("next") ?? "");
+  redirect(laDuongDanErpAnToan(tiepTheo) ? tiepTheo : "/erp");
 }
 
 export async function endRoleSwitchAction() {

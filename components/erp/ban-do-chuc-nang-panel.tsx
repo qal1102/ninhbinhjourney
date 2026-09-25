@@ -2,11 +2,10 @@ import Link from "next/link";
 import { switchDemoRoleAction } from "@/app/erp/actions";
 import {
   BAN_DO_CHUC_NANG,
-  CO_SO_MAU,
+  chonTaiKhoanMau,
   duongDanChucNang,
-  type ChucNang,
 } from "@/domain/ban-do-chuc-nang";
-import { ERP_ROLE_LABELS, type ErpModuleId } from "@/domain/erp";
+import { ERP_ROLE_LABELS } from "@/domain/erp";
 import type { EmployeeAccess } from "@/lib/erp/staff-access-repository";
 import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 
@@ -17,24 +16,6 @@ import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
  * Nhân viên" chuyển sang một tài khoản đúng vai ở Tràng An và đưa tới đúng
  * màn hình ấy; thanh trên cùng luôn có nút quay về giám đốc.
  */
-
-// Nhân viên chỉ vào được nghiệp vụ giám đốc đã tích cho họ, nên phải chọn
-// đúng người đã được giao việc ấy ở cơ sở mẫu; chọn bừa là bị trả về
-// "Nghiệp vụ này chưa được mở cho tài khoản của bạn".
-function taiKhoanMau(
-  targets: readonly ErpStaffDirectoryEntry[],
-  quyen: Record<string, EmployeeAccess>,
-  chucNang: ChucNang,
-) {
-  const phan = duongDanChucNang(chucNang).split("/").filter(Boolean);
-  const moduleId = phan.length === 3 ? (phan[2] as ErpModuleId) : null;
-  const hop = (t: ErpStaffDirectoryEntry) => {
-    if (!t.active || t.role !== chucNang.vai) return false;
-    if (chucNang.vai !== "employee" || !moduleId) return true;
-    return Boolean(quyen[t.accountId]?.moduleIdsBySite[CO_SO_MAU]?.includes(moduleId));
-  };
-  return targets.find((t) => hop(t) && t.siteIds.includes(CO_SO_MAU)) ?? targets.find(hop) ?? null;
-}
 
 export function BanDoChucNangPanel({
   targets,
@@ -64,7 +45,7 @@ export function BanDoChucNangPanel({
             <ul className="mt-2 divide-y divide-[#eef1ed]">
               {nhom.chucNang.map((cn) => {
                 const duongDan = duongDanChucNang(cn);
-                const mau = cn.vai === "director" ? null : taiKhoanMau(targets, quyen, cn);
+                const mau = cn.vai === "director" ? null : chonTaiKhoanMau(targets, quyen, cn.vai, duongDan);
                 return (
                   <li key={cn.id} data-chuc-nang={cn.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">

@@ -1,4 +1,4 @@
-import type { ErpRole } from "@/domain/erp";
+import type { ErpModuleId, ErpRole } from "@/domain/erp";
 
 /**
  * Bản đồ mọi chức năng, cho giám đốc trình diễn trên MỘT tài khoản.
@@ -85,4 +85,28 @@ export function duongDanChucNang(chucNang: ChucNang, site: string = CO_SO_MAU) {
 /** Chỉ nhận đường dẫn nội bộ ERP gọn gàng, để lệnh chuyển vai không bị lợi dụng chuyển hướng ra ngoài. */
 export function laDuongDanErpAnToan(value: string): boolean {
   return /^\/erp(\/[a-z0-9-]{1,40}){0,3}$/.test(value);
+}
+
+type TaiKhoanChon = { accountId: string; role: ErpRole; active: boolean; siteIds: readonly string[] };
+type QuyenNhanVien = Record<string, { moduleIdsBySite: Partial<Record<string, readonly string[]>> }>;
+
+/**
+ * Chọn tài khoản để "làm thử" một việc. Nhân viên chỉ vào được nghiệp vụ giám
+ * đốc đã tích cho họ, nên với vai nhân viên phải chọn đúng người đã được giao
+ * màn hình ấy ở cơ sở mẫu; chọn bừa là bị trả về "Nghiệp vụ này chưa được mở".
+ */
+export function chonTaiKhoanMau<T extends TaiKhoanChon>(
+  targets: readonly T[],
+  quyen: QuyenNhanVien,
+  vai: ErpRole,
+  duongDan: string,
+): T | null {
+  const phan = duongDan.split(/[/#]/).filter(Boolean);
+  const moduleId = phan.length >= 3 ? (phan[2] as ErpModuleId) : null;
+  const hop = (t: T) => {
+    if (!t.active || t.role !== vai) return false;
+    if (vai !== "employee" || !moduleId) return true;
+    return Boolean(quyen[t.accountId]?.moduleIdsBySite[CO_SO_MAU]?.includes(moduleId));
+  };
+  return targets.find((t) => hop(t) && t.siteIds.includes(CO_SO_MAU)) ?? targets.find(hop) ?? null;
 }

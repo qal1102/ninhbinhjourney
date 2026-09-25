@@ -65,10 +65,10 @@ test("trang chủ giám đốc có vòng dẫn, và nó không tràn hay chữ b
   expect(do_!.tranNgang).toBe(false);
 
   // Dù đang mở hay đã thu, vòng dẫn luôn phải gọi được tên của chính nó.
-  await expect(vong).toContainText("Đi theo một đồng tiền");
+  await expect(vong).toContainText("Trình diễn một vòng khách");
 });
 
-test("mở ra thì đi được hết bảy chặng, mỗi chặng nói số ở đâu ra", async ({ page }) => {
+test("mở ra thì đi được hết bảy bước, mỗi bước nói bấm vào đâu và để ý gì", async ({ page }) => {
   test.skip(
     !chayCucBo,
     "Phần bấm nút ghi thật vào kho tiến độ — không chạy trên production.",
@@ -88,7 +88,8 @@ test("mở ra thì đi được hết bảy chặng, mỗi chặng nói số ở
 
   for (let thuTu = 1; thuTu <= 7; thuTu += 1) {
     await expect(vong).toHaveAttribute("data-chang", String(thuTu));
-    await expect(vong).toContainText("Số này ở đâu ra");
+    await expect(vong).toContainText("Bấm vào đâu");
+    await expect(vong).toContainText("Để ý thấy gì");
     if (thuTu < 7) {
       await page.getByTestId("vong-dan-tiep").click();
       await expect(vong).toHaveAttribute("data-chang", String(thuTu + 1));

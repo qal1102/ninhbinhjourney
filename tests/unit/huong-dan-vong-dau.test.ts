@@ -15,11 +15,25 @@ describe("Vòng dẫn: hình dạng bảy chặng", () => {
     expect(VONG_TIEN.map((c) => c.thuTu)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
-  it("chặng nào cũng nói được 'là gì' và 'số ở đâu ra'", () => {
+  it("chặng nào cũng nói được 'bấm vào đâu' và 'để ý thấy gì'", () => {
     for (const chang of VONG_TIEN) {
-      expect(chang.laGi.trim().length, `chặng ${chang.thuTu}`).toBeGreaterThan(40);
-      expect(chang.soODau.trim().length, `chặng ${chang.thuTu}`).toBeGreaterThan(40);
+      expect(chang.lamGi.trim().length, `chặng ${chang.thuTu}`).toBeGreaterThan(40);
+      expect(chang.deY.trim().length, `chặng ${chang.thuTu}`).toBeGreaterThan(40);
     }
+  });
+
+  it("chủ dự án chê vì ba chặng liền mở cùng một màn: không để lặp lại", () => {
+    const duong = VONG_TIEN.map((c) => c.moMan?.duong("trang-an") ?? null);
+    for (let i = 1; i < duong.length; i += 1) {
+      if (duong[i] && duong[i - 1]) {
+        expect(duong[i], `chặng ${i + 1}`).not.toBe(duong[i - 1]);
+      }
+    }
+  });
+
+  it("trang của khách mở ở thẻ mới, việc của nhân viên có nút chuyển vai", () => {
+    expect(changTheoThuTu(1)?.moMan).toMatchObject({ theMoi: true });
+    expect(changTheoThuTu(4)?.moMan).toMatchObject({ vai: "employee" });
   });
 
   it("chặng kết không dẫn đi đâu nữa", () => {
@@ -27,8 +41,7 @@ describe("Vòng dẫn: hình dạng bảy chặng", () => {
   });
 
   it("đường dẫn bám theo cơ sở đang xem", () => {
-    const chang1 = changTheoThuTu(1);
-    expect(chang1?.moMan?.duong("tam-coc")).toBe("/erp/tam-coc/ve-dat-cho");
+    expect(changTheoThuTu(4)?.moMan?.duong("tam-coc")).toBe("/erp/tam-coc/check-in-khach");
   });
 
   it("chặng không có thật thì trả null", () => {
@@ -94,8 +107,11 @@ describe("Vòng dẫn: chỉ tự bung ra đúng một lần", () => {
     expect(nen({})).toBe(true);
   });
 
-  it("đã từng mở, đã đi hết, hay đã bấm để sau thì không tự bung nữa", () => {
-    expect(nen({ tungDi: true })).toBe(false);
+  it("đang đi dở thì mở lại đúng bước, vì kịch bản bắt người dùng rời trang", () => {
+    expect(nen({ tungDi: true, changHienTai: 4 })).toBe(true);
+  });
+
+  it("đã đi hết, hay đã bấm để sau thì không tự bung nữa", () => {
     expect(nen({ daXong: true })).toBe(false);
     expect(nen({ boQua: true })).toBe(false);
   });

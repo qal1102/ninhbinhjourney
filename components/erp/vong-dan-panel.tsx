@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
-import { ghiTienDoVongDanAction } from "@/app/erp/actions";
-import type { ErpSiteId } from "@/domain/erp";
+import { ghiTienDoVongDanAction, switchDemoRoleAction } from "@/app/erp/actions";
+import { ERP_ROLE_LABELS, type ErpSiteId } from "@/domain/erp";
 import {
   changMoLai,
   changTheoThuTu,
@@ -39,7 +39,10 @@ export function VongDanPanel({
   tienDoBanDau,
   soThat,
   siteId,
+  taiKhoanTheoChang = {},
 }: {
+  /** Tài khoản mẫu cho những bước phải chuyển vai, theo số bước. */
+  taiKhoanTheoChang?: Partial<Record<number, string>>;
   tienDoBanDau: TienDoVongDan;
   /** Con số thật cho từng chặng, do trang chủ điền từ dữ liệu đang có. */
   soThat: Partial<Record<KhoaSo, string>>;
@@ -85,7 +88,11 @@ export function VongDanPanel({
             }}
             className="inline-flex min-h-11 items-center rounded-lg border border-[#b6cca7] bg-white px-4 text-sm font-black text-[#3d6b50]"
           >
-            {tienDo.daXong || tienDo.tungDi ? VONG_TIEN_COPY.diLai : VONG_TIEN_COPY.batDau}
+            {tienDo.daXong
+              ? VONG_TIEN_COPY.diLai
+              : tienDo.tungDi
+                ? `Đi tiếp từ bước ${changMoLai(tienDo.changHienTai)}`
+                : VONG_TIEN_COPY.batDau}
           </button>
         </div>
       </section>
@@ -108,7 +115,7 @@ export function VongDanPanel({
           {VONG_TIEN_COPY.ten}
         </p>
         <p className="text-sm font-black tabular-nums text-[#5f7068]">
-          Chặng {hienTai.thuTu}/{VONG_TIEN.length}
+          Bước {hienTai.thuTu}/{VONG_TIEN.length}
         </p>
       </div>
 
@@ -119,7 +126,7 @@ export function VongDanPanel({
         aria-valuenow={phanTramDaDi(hienTai.thuTu)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`Đã đi ${hienTai.thuTu} trên ${VONG_TIEN.length} chặng`}
+        aria-label={`Đã đi ${hienTai.thuTu} trên ${VONG_TIEN.length} bước`}
       >
         <div
           className="h-full rounded-full bg-[#3d6b50] transition-[width]"
@@ -130,7 +137,10 @@ export function VongDanPanel({
       <h2 className="mt-3 text-xl font-black text-[#1f2f2a]">
         {hienTai.thuTu}. {hienTai.ten}
       </h2>
-      <p className="mt-2 text-sm leading-6 text-[#42554c]">{hienTai.laGi}</p>
+      <div className="mt-3 rounded-xl bg-[#f3f8ef] px-4 py-3">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-[#3d6b50]">Bấm vào đâu</p>
+        <p className="mt-1 text-sm leading-6 text-[#26402f]">{hienTai.lamGi}</p>
+      </div>
 
       {hienTai.khoaSo !== "khong-can" ? (
         <p
@@ -142,18 +152,46 @@ export function VongDanPanel({
       ) : null}
 
       <p className="mt-3 text-sm leading-6 text-[#42554c]">
-        <span className="font-black">Số này ở đâu ra: </span>
-        {hienTai.soODau}
+        <span className="font-black">Để ý thấy gì: </span>
+        {hienTai.deY}
       </p>
 
       {hienTai.moMan ? (
-        <Link
-          href={hienTai.moMan.duong(siteId)}
-          data-testid="vong-dan-mo-man"
-          className="mt-3 inline-flex min-h-11 items-center text-sm font-black text-[#2f6f8f] underline"
-        >
-          {hienTai.moMan.nhan}
-        </Link>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {hienTai.moMan.vai && taiKhoanTheoChang[hienTai.thuTu] ? (
+            // Việc của nhân viên: chuyển vai rồi đứng ngay đúng màn hình.
+            <form action={switchDemoRoleAction}>
+              <input type="hidden" name="targetUserId" value={taiKhoanTheoChang[hienTai.thuTu]} />
+              <input type="hidden" name="next" value={hienTai.moMan.duong(siteId)} />
+              <button
+                type="submit"
+                data-testid="vong-dan-lam-thu"
+                className="inline-flex min-h-11 items-center rounded-lg bg-[#183f34] px-4 text-sm font-black text-white"
+              >
+                Làm thử như {ERP_ROLE_LABELS[hienTai.moMan.vai]}
+              </button>
+            </form>
+          ) : null}
+          {hienTai.moMan.vai && taiKhoanTheoChang[hienTai.thuTu] ? null : hienTai.moMan.theMoi ? (
+            <a
+              href={hienTai.moMan.duong(siteId)}
+              target="_blank"
+              rel="noopener"
+              data-testid="vong-dan-mo-man"
+              className="inline-flex min-h-11 items-center rounded-lg border border-[#2f6f8f] px-4 text-sm font-black text-[#2f6f8f]"
+            >
+              {hienTai.moMan.nhan} ↗
+            </a>
+          ) : (
+            <Link
+              href={hienTai.moMan.duong(siteId)}
+              data-testid="vong-dan-mo-man"
+              className="inline-flex min-h-11 items-center rounded-lg border border-[#2f6f8f] px-4 text-sm font-black text-[#2f6f8f]"
+            >
+              {hienTai.moMan.nhan}
+            </Link>
+          )}
+        </div>
       ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">

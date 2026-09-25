@@ -5,7 +5,8 @@ import { ExecutiveDashboard } from "@/components/erp/executive-dashboard";
 import { RoleHomeDashboard } from "@/components/erp/role-home-dashboard";
 import { VongDanPanel } from "@/components/erp/vong-dan-panel";
 import { ViecDauTienPanel } from "@/components/erp/viec-dau-tien-panel";
-import { VONG_TIEN_ID, type KhoaSo } from "@/domain/huong-dan-vong-dau";
+import { VONG_TIEN, VONG_TIEN_ID, type KhoaSo } from "@/domain/huong-dan-vong-dau";
+import { chonTaiKhoanMau, CO_SO_MAU } from "@/domain/ban-do-chuc-nang";
 import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
 import { readTienDoVongDan } from "@/lib/erp/huong-dan-repository";
 import { getCurrentErpUser, isRoleSwitchEnabled } from "@/lib/erp/demo-session";
@@ -150,6 +151,23 @@ export default async function ErpHomePage({ searchParams }: Props) {
       "Xem điểm khách chấm ở màn Khách hàng.";
   }
 
+  // Bước trình diễn nào là việc của nhân viên thì chuẩn bị sẵn tài khoản
+  // đúng người, để nút "Làm thử" chuyển vai và vào thẳng màn hình ấy.
+  const mucTieuChuyenVai = isDirector && !user.actingAs && isRoleSwitchEnabled()
+    ? await listRoleSwitchTargets()
+    : [];
+  const taiKhoanTheoChang: Partial<Record<number, string>> = {};
+  for (const chang of VONG_TIEN) {
+    if (!chang.moMan?.vai) continue;
+    const mau = chonTaiKhoanMau(
+      mucTieuChuyenVai,
+      access.employees,
+      chang.moMan.vai,
+      chang.moMan.duong(CO_SO_MAU),
+    );
+    if (mau) taiKhoanTheoChang[chang.thuTu] = mau.accountId;
+  }
+
   return (
     <ErpShell user={user}>
       {denied ? (
@@ -170,7 +188,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
 
       {isDirector && !user.actingAs ? (
         <BanDoChucNangPanel
-          targets={isRoleSwitchEnabled() ? await listRoleSwitchTargets() : []}
+          targets={mucTieuChuyenVai}
           quyen={access.employees}
           chuyenVaiDuoc={isRoleSwitchEnabled()}
         />
@@ -178,6 +196,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
 
       {tienDoVongDan ? (
         <VongDanPanel
+          taiKhoanTheoChang={taiKhoanTheoChang}
           tienDoBanDau={tienDoVongDan}
           soThat={soThatVongDan}
           siteId={visibleSites[0]?.id ?? ERP_SITES[0].id}

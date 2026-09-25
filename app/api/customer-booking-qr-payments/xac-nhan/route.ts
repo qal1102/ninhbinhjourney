@@ -1,4 +1,9 @@
-import { isSameOriginCustomerRequest } from "@/domain/customer-identity";
+import { cookies } from "next/headers";
+import {
+  CUSTOMER_ANONYMOUS_COOKIE,
+  customerCookieHeader,
+  isSameOriginCustomerRequest,
+} from "@/domain/customer-identity";
 import {
   confirmCustomerBooking,
   CustomerBookingRepositoryError,
@@ -42,6 +47,10 @@ export async function POST(request: Request) {
       paymentMode: "qr-transfer",
       contact: phieu.contact,
     });
+    // Điện thoại vừa trả tiền thường là chiếc khách mang tới cổng. Máy chưa
+    // có phiên khách nào thì nhận luôn phiên của người đặt, để /ho-so mở
+    // thẳng hộ chiếu. Máy đã có phiên riêng thì để nguyên, không ghi đè.
+    const daCoPhien = Boolean((await cookies()).get(CUSTOMER_ANONYMOUS_COOKIE)?.value);
     return Response.json(
       {
         accepted: true,
@@ -50,7 +59,10 @@ export async function POST(request: Request) {
         payment: { status: result.paymentStatus, mode: result.paymentMode },
         tickets: result.tickets,
       },
-      { status: result.duplicate ? 200 : 201, headers: NO_STORE },
+      {
+        status: result.duplicate ? 200 : 201,
+        headers: daCoPhien ? NO_STORE : { ...NO_STORE, "Set-Cookie": customerCookieHeader(phieu.anonymousId) },
+      },
     );
   } catch (error) {
     if (error instanceof PhieuQrError) {

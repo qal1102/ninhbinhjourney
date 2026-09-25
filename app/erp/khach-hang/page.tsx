@@ -8,6 +8,9 @@ import { hideQuotaUsed } from "@/lib/erp/visit-review-moderation-repository";
 import { canModerateReviews } from "@/domain/visit-review-moderation";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
+import { KhachThayGi } from "@/components/customer-data/khach-thay-gi";
+import type { HoSoKhach } from "@/domain/ho-so-khach";
+import { hoSoTheoMaHoSo } from "@/lib/customer-data/ho-so-khach-repository";
 import { canViewCustomer360 } from "@/domain/customer-journey";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
@@ -29,7 +32,13 @@ import {
 import type { CustomerRecommendation } from "@/domain/customer-recommendations";
 import { auditCustomer360Access } from "@/lib/customer-data/identity-repository";
 
-export default async function Customer360Page() {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function Customer360Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ xem?: string }>;
+}) {
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
   if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
@@ -96,10 +105,27 @@ export default async function Customer360Page() {
     if (canModerateReviews(user.role)) hidesUsed = await hideQuotaUsed(user.id);
   }
 
+  /*
+   * "Khách thấy gì" — giám đốc đứng ở vị trí khách để trình diễn: hộ chiếu
+   * của một khách thật, dựng bằng đúng thành phần trang /ho-so đang dùng.
+   * Chưa chọn ai thì lấy khách của đơn mới nhất, để màn hình không trống.
+   */
+  const { xem } = await searchParams;
+  const maXem = xem && UUID.test(xem) ? xem : orders[0]?.profileId ?? null;
+  let hoSoXem: HoSoKhach | null = null;
+  if (bookingEnabled && maXem) {
+    try {
+      hoSoXem = await hoSoTheoMaHoSo(maXem);
+    } catch {
+      hoSoXem = null;
+    }
+  }
+
   return (
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
       <Customer360Dashboard status={status} journeys={journeys} orders={orders} recommendations={recommendations} outboundActions={outboundActions} />
+      <KhachThayGi hoSo={hoSoXem} maKhach={maXem} />
       {reviewRows.length > 0 ? (
         <div className="mt-6">
           <VisitReviewOverviewPanel rows={reviewRows} fromLabel={doc(batDau)} toLabel={doc(homNay)} viewerRole={user.role} hidesUsedIn30Days={hidesUsed} />

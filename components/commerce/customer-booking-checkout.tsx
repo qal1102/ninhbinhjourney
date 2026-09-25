@@ -883,6 +883,12 @@ export function CustomerBookingCheckout({
               productName={packageItem.name}
               tickets={confirmation.tickets}
             />
+            <Link
+              href="/ho-so"
+              className="mt-3 block text-center text-sm font-bold text-[#e7c78d] underline decoration-[#e7c78d]/50 underline-offset-4"
+            >
+              Xem hộ chiếu Ninh Bình: đi đủ các vùng để mở quà
+            </Link>
 
             <div className="mt-8 border-t border-white/15 pt-6">
               {!group ? (

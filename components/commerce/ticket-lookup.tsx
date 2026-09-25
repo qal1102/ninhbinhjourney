@@ -341,6 +341,9 @@ export function TicketLookup() {
           <p className="mt-4 text-sm leading-6 text-[#6b786f]">
             Lưu ảnh vé về máy giúp em, để lúc ở cổng sóng yếu vẫn mở được mã ạ.
           </p>
+          <Link href="/ho-so" className="mt-3 inline-block text-sm font-bold text-[#356957] underline underline-offset-4">
+            Xem hộ chiếu Ninh Bình: đi đủ các vùng để mở quà
+          </Link>
         </section>
       ) : null}
     </div>

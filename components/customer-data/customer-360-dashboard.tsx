@@ -216,7 +216,10 @@ export function Customer360Dashboard({
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <strong>{order.productName}</strong>
-                    <p className="mt-1 text-xs">{order.orderCode} · khách {shortCustomerId(order.profileId)}</p>
+                    <p className="mt-1 text-xs">
+                      {order.orderCode} · khách {shortCustomerId(order.profileId)} ·{" "}
+                      <a href={`?xem=${order.profileId}#khach-thay-gi`} className="font-bold text-[#35594b] underline underline-offset-2">Xem như khách</a>
+                    </p>
                     <p className="mt-1 text-xs">{order.visitDate} · {order.partySize} khách · {formatDate(order.createdAt)}</p>
                   </div>
                   <span className="rounded-full bg-[#e7efe9] px-2.5 py-1 text-xs font-bold text-[#35594b]">{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>

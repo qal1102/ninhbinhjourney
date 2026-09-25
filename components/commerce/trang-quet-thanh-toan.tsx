@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { LuuAnhVe, type VeDeLuu } from "@/components/commerce/luu-anh-ve";
@@ -117,6 +118,9 @@ export function TrangQuetThanhToan({
             ))}
           </ul>
           <LuuAnhVe orderCode={ketQua.orderCode} productName={productName} tickets={ketQua.tickets} tone="light" />
+          <Link href="/ho-so" className="mt-4 block text-center text-sm font-bold text-[#356957] underline underline-offset-4">
+            Xem hộ chiếu Ninh Bình: đi đủ các vùng để mở quà
+          </Link>
         </div>
       </section>
     );

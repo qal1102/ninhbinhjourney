@@ -594,6 +594,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Campaign marketing thiếu mã campaign hoặc người thực hiện hợp lệ.",
   MARKETING_CAMPAIGN_INPUT_INVALID:
     "Thông tin campaign marketing chưa đúng định dạng hoặc chứa dữ liệu không được phép.",
+  MARKETING_CAMPAIGN_OCCASION_INVALID:
+    "Dịp đã chọn không hợp lệ, xin chọn lại trong danh sách.",
   MARKETING_CAMPAIGN_NOT_FOUND:
     "Không tìm thấy campaign marketing trong đơn vị hiện tại.",
   MARKETING_QR_INPUT_INVALID:

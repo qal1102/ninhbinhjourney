@@ -11,11 +11,13 @@ import {
 import {
   createMarketingCampaign,
   createMarketingQrSource,
+  ganDipChienDich,
   listMarketingQrConfig,
   MarketingQrRepositoryError,
   updateMarketingQrDestination,
 } from "@/lib/customer-data/marketing-qr-repository";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { CAC_DIP } from "@/domain/lich-mua-vu";
 
 export type MarketingQrActionState = {
   status: "idle" | "success" | "error";
@@ -54,9 +56,60 @@ export async function createMarketingCampaignAction(
     const code = MarketingCodeSchema.parse(
       generateCode(name, config.campaigns.map((campaign) => campaign.code), MARKETING_CODE_SHAPE),
     );
-    await createMarketingCampaign({ code, name, status, actorAccountId: user.id });
+    const dipId = docDip(formData);
+    const campaignId = await createMarketingCampaign({ code, name, status, actorAccountId: user.id });
+    // Gắn dịp là bước thứ hai, cố ý tách khỏi lúc tạo: hàm tạo chiến dịch đã
+    // chạy trên production từ tháng Tám, đổi chữ ký của nó là đụng vào đường
+    // đang dùng. Gắn hỏng thì chiến dịch vẫn còn, và câu báo nói đúng như vậy.
+    if (dipId) {
+      try {
+        await ganDipChienDich({ campaignId, dipId, actorAccountId: user.id });
+      } catch {
+        revalidatePath("/erp/marketing");
+        return {
+          status: "error",
+          message: `Đã tạo chiến dịch “${name}” (mã ${code}), nhưng chưa gắn được vào dịp. Xin chọn lại dịp ở danh sách chiến dịch bên dưới.`,
+        };
+      }
+    }
     revalidatePath("/erp/marketing");
-    return { status: "success", message: `Đã tạo chiến dịch “${name}”, mã ${code}.` };
+    const tenDip = dipId ? CAC_DIP.find((d) => d.id === dipId)?.ten : undefined;
+    return {
+      status: "success",
+      message: tenDip
+        ? `Đã tạo chiến dịch “${name}”, mã ${code}, gắn vào dịp ${tenDip}.`
+        : `Đã tạo chiến dịch “${name}”, mã ${code}.`,
+    };
+  } catch (error) {
+    return errorState(error);
+  }
+}
+
+/** Mã dịp từ ô chọn, chỉ nhận đúng các dịp có trong lịch mùa vụ. */
+function docDip(formData: FormData) {
+  const gia = formData.get("dip");
+  const dip = typeof gia === "string" ? gia.trim() : "";
+  if (!dip) return "";
+  if (!CAC_DIP.some((d) => d.id === dip)) throw new Error("Dịp đã chọn không có trong lịch mùa vụ.");
+  return dip;
+}
+
+export async function ganDipChienDichAction(
+  _previous: MarketingQrActionState,
+  formData: FormData,
+): Promise<MarketingQrActionState> {
+  try {
+    const user = await requireMarketingDirector();
+    const campaignId = String(formData.get("campaignId") ?? "").trim();
+    if (!campaignId) return { status: "error", message: "Không rõ chiến dịch nào." };
+    const dipId = docDip(formData);
+    await ganDipChienDich({ campaignId, dipId, actorAccountId: user.id });
+    revalidatePath("/erp/marketing");
+    const tenDip = dipId ? CAC_DIP.find((d) => d.id === dipId)?.ten : undefined;
+    return {
+      status: "success",
+      message: tenDip ? `Đã gắn vào dịp ${tenDip}.` : "Đã gỡ khỏi dịp.",
+    };
   } catch (error) {
     return errorState(error);
   }

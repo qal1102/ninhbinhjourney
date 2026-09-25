@@ -98,6 +98,27 @@ test.describe("Marketing: lịch mùa vụ", () => {
       return;
     }
     await expect(o).toHaveValue(/Đại lễ Phật đản \d{4}/);
+    // Ô "Thuộc dịp" chọn sẵn đúng dịp vừa bấm: tạo xong là chiến dịch được
+    // gắn vào dịp, và phễu khách cộng được lượt quét, doanh thu theo dịp.
+    await expect(page.locator('#tao-chien-dich select[name="dip"]')).toHaveValue("phat-dan");
+  });
+
+  test("phễu khách có bảng theo dịp, và mỗi chiến dịch có chỗ gắn dịp", async ({ page }) => {
+    // Chỉ đọc: bài này không tạo chiến dịch nào, vì chiến dịch không gỡ được
+    // và nhật ký chiến dịch chỉ ghi thêm, không xoá.
+    test.slow();
+    await dangNhapGiamDoc(page);
+    await page.goto("/erp/marketing");
+    await expect(page.getByTestId("lich-mua-vu")).toBeVisible();
+    if ((await page.locator("#tao-chien-dich").count()) === 0) return;
+    const bang = page.getByTestId("phieu-theo-dip");
+    if ((await bang.count()) > 0) {
+      await expect(bang.getByRole("heading", { name: /dịp nào ra tiền/ })).toBeVisible();
+    }
+    const danhSach = page.getByTestId("danh-sach-chien-dich");
+    if ((await danhSach.count()) > 0) {
+      await expect(danhSach.locator('select[name="dip"]').first()).toBeVisible();
+    }
   });
 
   test("màn hình marketing không in tên bảng dữ liệu ra cho người dùng đọc", async ({

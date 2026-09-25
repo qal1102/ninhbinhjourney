@@ -69,7 +69,12 @@ export default async function ErpMarketingPage({
           sanSang={soSanSang && soDoiTac !== null}
         />
         {config ? (
-          <MarketingQrControlCenter config={config} goiYTenChienDich={goiYTenChienDich} />
+          <MarketingQrControlCenter
+            config={config}
+            goiYTenChienDich={goiYTenChienDich}
+            dip={lich.map((d) => ({ id: d.dip.id, ten: d.dip.ten }))}
+            dipChon={dipChon?.id ?? ""}
+          />
         ) : (
         <section className="rounded-3xl border border-[#e0d6c4] bg-[#fdf8ef] p-6 sm:p-8">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8a6b27]">Kênh khách · mã QR đổi được đích</p>

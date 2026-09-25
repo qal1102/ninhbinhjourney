@@ -37,7 +37,8 @@ function increment(rows: Map<string, CustomerFunnelSourceRow>, id: string, field
   const row = rows.get(id) ?? {
     sourceId: id,
     sourceLabel: id === "unattributed" ? "Chưa gắn QR nguồn" : id,
-    campaignLabel: id === "unattributed" ? "Trực tiếp / nguồn chưa khớp" : "Campaign chưa khớp",
+    campaignLabel: id === "unattributed" ? "Trực tiếp / nguồn chưa khớp" : "Chiến dịch chưa khớp",
+    dipId: "",
     qrScans: 0, pageViews: 0, holds: 0, payments: 0, acceptedGateScans: 0,
   };
   row[field] += 1;
@@ -53,7 +54,7 @@ export async function getCustomerFunnelReport(days = 7): Promise<CustomerFunnelR
   const journeySince = new Date(windowStart.getTime() - 90 * 86_400_000).toISOString();
 
   const [campaigns, sources, qrScans, pageViews, journeys, holds, payments, orders, bridges, gateScans, slots, holdSlots, offlineItems] = await Promise.all([
-    db.from("marketing_campaigns").select("id, name").eq("tenant_id", TENANT_ID).limit(MAX_ROWS),
+    db.from("marketing_campaigns").select("id, name, dip_id").eq("tenant_id", TENANT_ID).limit(MAX_ROWS),
     db.from("marketing_qr_sources").select("id, code, placement_label, campaign_id").eq("tenant_id", TENANT_ID).limit(MAX_ROWS),
     db.from("marketing_qr_scans").select("qr_source_id, occurred_at").eq("tenant_id", TENANT_ID).gte("occurred_at", start).lt("occurred_at", end).limit(MAX_ROWS),
     db.from("customer_events").select("profile_id, source_context, occurred_at").eq("tenant_id", TENANT_ID).eq("event_name", "page_viewed").gte("occurred_at", start).lt("occurred_at", end).limit(MAX_ROWS),
@@ -71,12 +72,14 @@ export async function getCustomerFunnelReport(days = 7): Promise<CustomerFunnelR
   if (failed?.error) throw new CustomerFunnelRepositoryError("Kho phễu chưa đọc đủ các nguồn để đối soát.", { cause: new Error(failed.error.message) });
 
   const campaignById = new Map((campaigns.data ?? []).map((row) => [String(row.id), String(row.name)]));
+  const dipByCampaign = new Map((campaigns.data ?? []).map((row) => [String(row.id), typeof row.dip_id === "string" ? row.dip_id : ""]));
   const rows = new Map<string, CustomerFunnelSourceRow>();
   for (const source of sources.data ?? []) {
     rows.set(String(source.id), {
       sourceId: String(source.id),
       sourceLabel: `${String(source.code)} · ${String(source.placement_label)}`,
-      campaignLabel: campaignById.get(String(source.campaign_id)) ?? "Campaign chưa khớp",
+      campaignLabel: campaignById.get(String(source.campaign_id)) ?? "Chiến dịch chưa khớp",
+      dipId: dipByCampaign.get(String(source.campaign_id)) ?? "",
       qrScans: 0, pageViews: 0, holds: 0, payments: 0, acceptedGateScans: 0,
     });
   }

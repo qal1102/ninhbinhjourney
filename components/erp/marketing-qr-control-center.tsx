@@ -5,10 +5,79 @@ import { useFormStatus } from "react-dom";
 import {
   createMarketingCampaignAction,
   createMarketingQrSourceAction,
+  ganDipChienDichAction,
   updateMarketingQrDestinationAction,
   type MarketingQrActionState,
 } from "@/app/erp/marketing-actions";
-import type { MarketingQrConfig, MarketingQrSourceRecord } from "@/domain/marketing-qr";
+import type {
+  MarketingCampaignRecord,
+  MarketingQrConfig,
+  MarketingQrSourceRecord,
+} from "@/domain/marketing-qr";
+
+/** Một dịp trong lịch mùa vụ, đủ để dựng ô chọn. */
+export type LuaChonDip = { id: string; ten: string };
+
+function ODip({ dip, macDinh, ten = "dip" }: { dip: readonly LuaChonDip[]; macDinh: string; ten?: string }) {
+  return (
+    <select
+      name={ten}
+      defaultValue={macDinh}
+      className="min-h-11 rounded-lg border border-[#cbd7d1] bg-white px-3 text-sm"
+    >
+      <option value="">Chưa gắn dịp nào</option>
+      {dip.map((d) => (
+        <option key={d.id} value={d.id}>
+          {d.ten}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/**
+ * Một dòng chiến dịch, kèm ô đổi dịp.
+ *
+ * Gắn dịp là để phễu khách cộng được lượt quét, giữ chỗ, thanh toán và lượt
+ * vào cổng theo từng dịp — tức là trả lời được "dịp nào ra tiền". Mỗi lần đổi
+ * kho ghi lại cũ và mới, vì đổi dịp là đổi luôn con số của hai dịp.
+ */
+function DongChienDich({
+  campaign,
+  dip,
+}: {
+  campaign: MarketingCampaignRecord;
+  dip: readonly LuaChonDip[];
+}) {
+  const [state, action] = useActionState(ganDipChienDichAction, INITIAL_STATE);
+  const tenDip = dip.find((d) => d.id === campaign.dipId)?.ten;
+  return (
+    <li
+      data-chien-dich={campaign.code}
+      data-dip={campaign.dipId}
+      className="rounded-2xl border border-[#d8e0db] bg-white p-4"
+    >
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="text-xs font-black uppercase tracking-[0.12em] text-[#607b70]">{campaign.code}</span>
+        <h3 className="text-base font-black text-[#203a30]">{campaign.name}</h3>
+        <span className="text-xs font-bold text-[#66756e]">
+          {campaign.status === "active" ? "Đang chạy" : campaign.status === "paused" ? "Tạm dừng" : "Nháp"}
+          {" · "}
+          {tenDip ? `dịp ${tenDip}` : "chưa gắn dịp"}
+        </span>
+      </div>
+      <form action={action} className="mt-3 flex flex-wrap items-end gap-3">
+        <input type="hidden" name="campaignId" value={campaign.id} />
+        <label className="grid gap-1 text-xs font-bold text-[#5d6f66]">
+          Thuộc dịp
+          <ODip dip={dip} macDinh={campaign.dipId} />
+        </label>
+        <SubmitButton>Lưu dịp</SubmitButton>
+        <ActionMessage state={state} />
+      </form>
+    </li>
+  );
+}
 
 const INITIAL_STATE: MarketingQrActionState = { status: "idle", message: "" };
 
@@ -62,8 +131,14 @@ function DestinationEditor({ source }: { source: MarketingQrSourceRecord }) {
 export function MarketingQrControlCenter({
   config,
   goiYTenChienDich = "",
+  dip = [],
+  dipChon = "",
 }: {
   config: MarketingQrConfig;
+  /** Các dịp trong lịch mùa vụ, để gắn chiến dịch vào. */
+  dip?: readonly LuaChonDip[];
+  /** Dịp người dùng vừa bấm trong lịch mùa vụ, chọn sẵn trong ô dịp. */
+  dipChon?: string;
   /**
    * Tên điền sẵn khi người dùng bấm một dịp trong lịch mùa vụ. Rỗng thì ô
    * tên để trống như cũ.
@@ -97,6 +172,7 @@ export function MarketingQrControlCenter({
           {/* `key` đổi theo gợi ý: không có nó thì React giữ nguyên ô cũ và
               tên điền sẵn không vào được. */}
           <label className="mt-4 grid gap-1 text-xs font-bold text-[#5d6f66]">Tên chiến dịch<input key={goiYTenChienDich} name="name" required minLength={2} maxLength={160} defaultValue={goiYTenChienDich} placeholder="QR bến Tam Cốc tháng 8" className="min-h-11 rounded-lg border border-[#cbd7d1] px-3 text-sm" /></label>
+          <label className="mt-3 grid gap-1 text-xs font-bold text-[#5d6f66]">Thuộc dịp<ODip key={dipChon} dip={dip} macDinh={dipChon} /></label>
           <label className="mt-3 grid gap-1 text-xs font-bold text-[#5d6f66]">Trạng thái<select name="status" defaultValue="draft" className="min-h-11 rounded-lg border border-[#cbd7d1] bg-white px-3 text-sm"><option value="draft">Nháp</option><option value="active">Đang chạy</option><option value="paused">Tạm dừng</option></select></label>
           <p className="mt-2 text-xs text-[#7c8b83]">Mã chiến dịch do máy đặt theo tên bạn vừa nhập. Tạo xong là có mã ngay, khỏi nghĩ.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3"><SubmitButton>Tạo chiến dịch</SubmitButton><ActionMessage state={campaignState} /></div>
@@ -116,6 +192,23 @@ export function MarketingQrControlCenter({
           </>}
         </form>
       </section>
+
+      {config.campaigns.length > 0 ? (
+        <section data-testid="danh-sach-chien-dich" className="space-y-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.15em] text-[#607b70]">Chiến dịch</p>
+            <h2 className="mt-1 text-2xl font-black text-[#203a30]">{config.campaigns.length} chiến dịch</h2>
+            <p className="mt-1 max-w-3xl text-sm text-[#66756e]">
+              Gắn mỗi chiến dịch vào một dịp để bảng phễu bên dưới cộng được khách theo dịp: dịp nào nhiều người quét mã, dịp nào ra tiền.
+            </p>
+          </div>
+          <ol className="grid gap-3 lg:grid-cols-2">
+            {config.campaigns.map((campaign) => (
+              <DongChienDich key={campaign.id} campaign={campaign} dip={dip} />
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.15em] text-[#607b70]">Mã QR đang dùng</p><h2 className="mt-1 text-2xl font-black text-[#203a30]">{config.sources.length} mã QR</h2></div><p className="text-sm text-[#66756e]">Số lượt quét đếm thẳng từ nhật ký quét, không phải số ước tính.</p></div>

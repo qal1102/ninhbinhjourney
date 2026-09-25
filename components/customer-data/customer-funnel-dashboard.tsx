@@ -1,4 +1,5 @@
-import type { CustomerFunnelReport } from "@/domain/customer-funnel";
+import { gomTheoDip, type CustomerFunnelReport } from "@/domain/customer-funnel";
+import { CAC_DIP } from "@/domain/lich-mua-vu";
 
 /**
  * Bảng này nói với GIÁM ĐỐC, không nói với người viết mã.
@@ -60,6 +61,8 @@ export function CustomerFunnelDashboard({ report }: { report: CustomerFunnelRepo
         </table>
       </div>
 
+      <TheoDip report={report} />
+
       <div className="mt-7">
         <h3 className="text-xl font-black text-[#203a30]">Từng khung giờ: bán được bao nhiêu, ai đã tới</h3>
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
@@ -67,5 +70,38 @@ export function CustomerFunnelDashboard({ report }: { report: CustomerFunnelRepo
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * Dịp nào ra tiền: cộng các dòng nguồn khách theo dịp của chiến dịch.
+ *
+ * Chỉ tính khách đã quy được về một mã QR. Khách không rõ nguồn không bị chia
+ * đều hay đoán hộ vào dịp nào, nên tổng ở đây có thể nhỏ hơn tổng toàn trang;
+ * câu dưới bảng nói thẳng điều ấy.
+ */
+function TheoDip({ report }: { report: CustomerFunnelReport }) {
+  const dong = gomTheoDip(report.sources);
+  const tenDip = new Map(CAC_DIP.map((d) => [d.id, d.ten]));
+  return (
+    <div className="mt-7" data-testid="phieu-theo-dip">
+      <h3 className="text-xl font-black text-[#203a30]">Theo dịp: dịp nào ra tiền</h3>
+      <p className="mt-1 max-w-3xl text-sm text-[#66756e]">
+        Cộng theo dịp mà chiến dịch được gắn vào, trong bảy ngày gần nhất. Chỉ tính khách đến từ mã QR; khách chưa rõ đến từ đâu không bị đoán vào dịp nào.
+      </p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="min-w-[640px] w-full text-left text-sm">
+          <thead><tr className="border-b border-[#dfe6e2] text-xs uppercase tracking-[0.1em] text-[#6a7b73]"><th className="py-3 pr-4">Dịp</th><th>Quét mã</th><th>Mở trang</th><th>Giữ chỗ</th><th>Thanh toán</th><th>Qua cổng</th></tr></thead>
+          <tbody>
+            {dong.length ? dong.map((row) => (
+              <tr key={row.dipId || "chua-gan"} data-dip={row.dipId} className="border-b border-[#edf1ef]">
+                <td className="py-3 pr-4"><strong>{row.dipId ? tenDip.get(row.dipId) ?? row.dipId : "Chưa gắn dịp"}</strong></td>
+                <td>{row.qrScans}</td><td>{row.pageViews}</td><td>{row.holds}</td><td>{row.payments}</td><td>{row.acceptedGateScans}</td>
+              </tr>
+            )) : <tr><td colSpan={6} className="py-8 text-center text-[#7a8881]">Bảy ngày qua chưa có khách nào đến từ mã QR.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

@@ -67,7 +67,7 @@ function mapRepositoryError(error: unknown): MarketingQrRepositoryError {
     return new MarketingQrRepositoryError("Mã QR vừa được người khác cập nhật. Xin tải lại trước khi đổi đích.", "VERSION_CONFLICT");
   }
   if (message.includes("MARKETING_QR_") || message.includes("MARKETING_CAMPAIGN_")) {
-    return new MarketingQrRepositoryError("Dữ liệu campaign hoặc QR chưa hợp lệ.", "INPUT_INVALID");
+    return new MarketingQrRepositoryError("Thông tin chiến dịch hoặc mã QR chưa hợp lệ.", "INPUT_INVALID");
   }
   return new MarketingQrRepositoryError(
     "Kho QR marketing chưa thể hoàn tất thao tác này.",
@@ -85,7 +85,7 @@ export async function listMarketingQrConfig(): Promise<MarketingQrConfig> {
   const [campaignResult, sourceResult] = await Promise.all([
     client
       .from("marketing_campaigns")
-      .select("id, code, name, status")
+      .select("id, code, name, status, dip_id")
       .eq("tenant_id", TENANT_ID)
       .order("created_at", { ascending: false }),
     client
@@ -102,6 +102,7 @@ export async function listMarketingQrConfig(): Promise<MarketingQrConfig> {
     code: String(row.code),
     name: String(row.name),
     status: row.status as MarketingCampaignRecord["status"],
+    dipId: typeof row.dip_id === "string" ? row.dip_id : "",
   }));
   const campaignById = new Map(campaigns.map((campaign) => [campaign.id, campaign]));
   const sourceRows = (sourceResult.data ?? []) as Array<RpcRow>;
@@ -162,6 +163,25 @@ export async function createMarketingCampaign(input: MarketingCampaignInput & { 
   const row = firstRow(data);
   if (error || !row) throw mapRepositoryError(error);
   return String(row.campaign_id);
+}
+
+/**
+ * Gắn (hoặc gỡ, khi `dipId` rỗng) một chiến dịch vào một dịp trong lịch mùa
+ * vụ. Đây là mắt xích để phễu khách cộng được lượt quét, giữ chỗ, thanh toán
+ * và lượt vào cổng theo từng dịp. Kho tự ghi nhật ký cũ – mới mỗi lần đổi.
+ */
+export async function ganDipChienDich(input: {
+  campaignId: string;
+  dipId: string;
+  actorAccountId: string;
+}) {
+  const { error } = await createAdminClient().rpc("marketing_gan_dip_chien_dich", {
+    p_tenant_id: TENANT_ID,
+    p_campaign_id: input.campaignId,
+    p_actor_account_id: input.actorAccountId,
+    p_dip_id: input.dipId,
+  });
+  if (error) throw mapRepositoryError(error);
 }
 
 export async function createMarketingQrSource(input: MarketingQrSourceInput & { actorAccountId: string }) {

@@ -83,6 +83,8 @@ export type MarketingCampaignRecord = {
   code: string;
   name: string;
   status: "draft" | "active" | "paused";
+  /** Mã dịp trong `domain/lich-mua-vu.ts`; rỗng là chưa gắn dịp nào. */
+  dipId: string;
 };
 
 export type MarketingQrSourceRecord = {

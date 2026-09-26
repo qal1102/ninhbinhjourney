@@ -71,6 +71,17 @@ describe("A15-ERP-04 — đọc kết quả đếm trong kho", () => {
     expect(counts?.channelMonth["doi-tac"]).toEqual({ tickets: 1, entries: 42 });
     expect(counts?.channelMonth.website).toBeUndefined();
     expect(counts?.demoSeedTickets30d).toBe(8);
+    // Kho cũ chưa trả phần lịch sử mẫu thì là 0, không phải lỗi.
+    expect(counts?.demoHistoryEntries30d).toBe(0);
+  });
+
+  it("đọc phần lịch sử mẫu của khung tháng để màn hình ghi 'gồm số liệu mẫu'", () => {
+    const ketQua = ketQuaVeDoan();
+    const thang = (ketQua.windows as Array<Record<string, unknown>>).find((w) => w.key === "month")!;
+    thang.demo_history_entry_count = 1234;
+    expect(parseDirectorTicketOverviewRpc(ketQua)?.demoHistoryEntries30d).toBe(1234);
+    thang.demo_history_entry_count = "hong";
+    expect(parseDirectorTicketOverviewRpc(ketQua)?.demoHistoryEntries30d).toBe(0);
   });
 
   it("kết quả hỏng hoặc sai hình dạng thì trả null để kho lùi về lệnh đếm cũ", () => {
@@ -164,6 +175,7 @@ describe("A15-ERP-04 — dựng bảng cho giám đốc", () => {
       siteMonth: { [TRANG_AN]: tam(3), [TAM_COC]: tam(6) },
       channelMonth: { "quay-ve": tam(9), website: tam(0) },
       demoSeedTickets30d: 0,
+      demoHistoryEntries30d: 0,
     };
     const overview = buildDirectorTicketOverview(counts, CONTEXT);
     expect(overview.measure).toBe("tickets");

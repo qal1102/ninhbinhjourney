@@ -77,6 +77,8 @@ export function DirectorTicketPanel({
   const [today, week, month] = overview.windows;
   const busiest = overview.bySite[0];
   const theoLuot = overview.measure === "entries";
+  // Lịch sử mẫu (migration 092) được cộng vào số, nên phải nói ra ở đầu khối.
+  const coMau = overview.demoHistoryEntries30d > 0;
 
   return (
     <section
@@ -85,8 +87,16 @@ export function DirectorTicketPanel({
     >
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
+          <p className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
             Vé đã bán · cả bốn cơ sở
+            {coMau ? (
+              <span
+                data-testid="nhan-so-lieu-mau"
+                className="rounded-full border border-[#e6d6b4] bg-[#fdf8ec] px-2 py-0.5 text-[11px] normal-case tracking-normal text-[#6c5a34]"
+              >
+                gồm số liệu mẫu
+              </span>
+            ) : null}
           </p>
           <h2 className="mt-2 text-2xl font-black text-[#20342c]">
             Hôm nay {today.current.toLocaleString("vi-VN")}{" "}
@@ -239,19 +249,34 @@ export function DirectorTicketPanel({
             </div>
           )}
 
-          <div className="mt-5 rounded-xl border border-[#e3e9e5] bg-[#f6f9f7] p-4">
-            <p className="text-xs font-bold text-[#6d7c74]">
-              Tiền khách trả qua web · 30 ngày
-            </p>
-            <p className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#1e3229]">
-              {formatVnd(overview.webRevenue30dVnd)}
-            </p>
-            <p className="mt-2 text-xs leading-5 text-[#7c8882]">
-              {overview.webOrders30d.toLocaleString("vi-VN")} đơn đã xác nhận.
-              Chỉ tính đơn đặt qua web, vì vé bán tại quầy chưa lưu giá, nên
-              chưa cộng chung vào đây được.
-            </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2" data-testid="tien-30-ngay">
+            <div className="rounded-xl border border-[#e3e9e5] bg-[#f6f9f7] p-4">
+              <p className="text-xs font-bold text-[#6d7c74]">Tiền bán tại quầy · 30 ngày</p>
+              <p className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#1e3229]">
+                {formatVnd(overview.counterRevenue30dVnd)}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-[#7c8882]">
+                {overview.counterSales30d.toLocaleString("vi-VN")} phiếu thu tiền mặt, không tính phiếu đã huỷ.
+              </p>
+            </div>
+            <div className="rounded-xl border border-[#e3e9e5] bg-[#f6f9f7] p-4">
+              <p className="text-xs font-bold text-[#6d7c74]">Tiền khách trả qua web · 30 ngày</p>
+              <p className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#1e3229]">
+                {formatVnd(overview.webRevenue30dVnd)}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-[#7c8882]">
+                {overview.webOrders30d.toLocaleString("vi-VN")} đơn đã xác nhận.
+              </p>
+            </div>
           </div>
+          {coMau ? (
+            <p className="mt-4 rounded-xl border border-[#e6d6b4] bg-[#fdf8ec] p-4 text-xs leading-5 text-[#6c5a34]">
+              Trong 30 ngày có{" "}
+              <strong>{overview.demoHistoryEntries30d.toLocaleString("vi-VN")} lượt khách thuộc lịch sử mẫu</strong>{" "}
+              nạp để trình diễn: vé quầy, đơn web trả bằng QR và lượt qua cổng ở bốn cơ sở. Chúng được cộng vào
+              các con số trên. Việc làm thật của nhân viên vẫn ghi như thường và cộng chung vào đây.
+            </p>
+          ) : null}
 
           {/* Không giấu phần dữ liệu mẫu đi. Giám đốc thấy 0 vé mà biết kho
               vẫn có mấy tấm thì con số 0 kia mới đọc được; giấu đi thì chính

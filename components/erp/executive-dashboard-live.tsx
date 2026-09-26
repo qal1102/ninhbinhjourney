@@ -79,8 +79,10 @@ function latestUpdatedAt(
   journals: readonly AccountingJournal[],
   supplierApInvoices: readonly SupplierApInvoice[],
   pendingSopDecisions: readonly SopPendingDecision[],
+  khac: readonly string[] = [],
 ) {
   const values = [
+    ...khac,
     ...records.map((record) => record.updatedAt),
     ...workdays.map((record) => record.updatedAt),
     ...journals.map((journal) => journal.updatedAt),
@@ -219,12 +221,15 @@ export function ExecutiveDashboard({
     pendingSopDecisions.length;
   // "Cập nhật gần nhất" cũng là đồng hồ, không phải con số ra quyết định:
   // nó nói lần cuối kho dữ liệu này động đậy là khi nào.
+  // Kho vé là nơi động đậy nhiều nhất trong ngày; mốc đọc của nó cho biết
+  // số trên trang này mới tới đâu.
   const asOf = latestUpdatedAt(
     allRecords,
     workdays,
     allJournals,
     allSupplierApInvoices,
     pendingSopDecisions,
+    ticketOverview?.available ? [ticketOverview.generatedAt] : [],
   );
 
   // ERP-UX-01 — lịch sử của khối này, giữ lại vì nó giải thích một quyết định
@@ -267,16 +272,35 @@ export function ExecutiveDashboard({
 
         <div className="mt-7 grid grid-cols-2 gap-3 xl:grid-cols-4">
           {[
-            [
-              "Vé người trực khai lúc chốt ca",
-              ticketsSold.toLocaleString("vi-VN"),
-              `${currentShiftRecords.length} ca đã gửi`,
-            ],
-            [
-              "Doanh thu ca khai báo",
-              formatVnd(declaredRevenueVnd),
-              `Chênh lệch ${formatVnd(declaredDifferenceVnd)}`,
-            ],
+            // Kho vé đọc được thì hai ô đầu là số hệ thống tự ghi trong ngày.
+            // Số người trực khai lúc chốt ca vẫn nằm ở ma trận bốn cơ sở phía
+            // dưới; để nó đứng đầu trang thì ngày chưa ai chốt ca, cả dải số
+            // lớn nhất đọc 0 dù khách vẫn qua cổng từ sáng (26/09/2026).
+            ...(ticketOverview?.available
+              ? [
+                  [
+                    "Khách hôm nay",
+                    (ticketOverview.windows[0]?.current ?? 0).toLocaleString("vi-VN"),
+                    `${(ticketOverview.windows[0]?.tickets ?? ticketOverview.windows[0]?.current ?? 0).toLocaleString("vi-VN")} tấm vé${ticketOverview.demoHistoryEntries30d > 0 ? " · gồm số liệu mẫu" : ""}`,
+                  ],
+                  [
+                    "Tiền thu hôm nay",
+                    formatVnd(ticketOverview.counterRevenueTodayVnd + ticketOverview.webRevenueTodayVnd),
+                    `Quầy ${formatVnd(ticketOverview.counterRevenueTodayVnd)} · Web ${formatVnd(ticketOverview.webRevenueTodayVnd)}`,
+                  ],
+                ]
+              : [
+                  [
+                    "Vé người trực khai lúc chốt ca",
+                    ticketsSold.toLocaleString("vi-VN"),
+                    `${currentShiftRecords.length} ca đã gửi`,
+                  ],
+                  [
+                    "Doanh thu ca khai báo",
+                    formatVnd(declaredRevenueVnd),
+                    `Chênh lệch ${formatVnd(declaredDifferenceVnd)}`,
+                  ],
+                ]),
             [
               "Công việc hiện trường",
               activeWorkdays.length.toLocaleString("vi-VN"),

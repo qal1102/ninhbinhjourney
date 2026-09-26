@@ -62,7 +62,7 @@ export type DirectorTicketOverview = {
   windows: TicketWindowCount[];
   bySite: SiteTicketCount[];
   byChannel: ChannelTicketCount[];
-  /** Doanh thu thật, chỉ của đơn đặt qua web đã xác nhận. Vé bán tại quầy chưa lưu giá ở đâu cả. */
+  /** Tiền đơn đặt qua web đã xác nhận, 30 ngày. Tiền quầy đọc riêng ở counterRevenue30dVnd. */
   webRevenue30dVnd: number;
   webOrders30d: number;
   /**
@@ -73,6 +73,19 @@ export type DirectorTicketOverview = {
    * tấm mẫu và chúng không được tính, thì con số 0 kia mới đọc được.
    */
   demoSeedTickets30d: number;
+  /**
+   * Lượt khách thuộc **lịch sử mẫu** (`demo-history`, migration 092) trong ba
+   * mươi ngày. Khác vé gieo cũ: phần này ĐƯỢC cộng vào các con số phía trên,
+   * theo lựa chọn của chủ dự án ngày 26/09/2026 — nên màn hình phải ghi rõ
+   * "gồm số liệu mẫu" mỗi khi số này lớn hơn 0.
+   */
+  demoHistoryEntries30d: number;
+  /** Tiền phiếu bán tại quầy chưa huỷ, 30 ngày, cùng các cơ sở đang xem. */
+  counterRevenue30dVnd: number;
+  counterSales30d: number;
+  /** Tiền thu từ đầu ngày hôm nay (giờ Việt Nam): phiếu quầy chưa huỷ và đơn web đã xác nhận. */
+  counterRevenueTodayVnd: number;
+  webRevenueTodayVnd: number;
   generatedAt: string;
 };
 
@@ -137,6 +150,7 @@ export type DirectorTicketCounts = {
   /** Theo kênh bán, khung 30 ngày. */
   channelMonth: Record<string, TicketTally>;
   demoSeedTickets30d: number;
+  demoHistoryEntries30d: number;
 };
 
 /** Số đếm từ kho: hỏng, âm hay không phải số thì là 0. */
@@ -180,11 +194,15 @@ export function parseDirectorTicketOverviewRpc(value: unknown): DirectorTicketCo
 
   const windows = {} as Record<DirectorTicketWindowKey, TicketTally>;
   let demoSeedTickets30d = 0;
+  let demoHistoryEntries30d = 0;
   for (const key of DIRECTOR_TICKET_WINDOW_KEYS) {
     const found = cacKhung.find((item) => item.key === key);
     if (!found) return null;
     windows[key] = dem(found);
-    if (key === "month") demoSeedTickets30d = soDem(found.demo_seed_ticket_count);
+    if (key === "month") {
+      demoSeedTickets30d = soDem(found.demo_seed_ticket_count);
+      demoHistoryEntries30d = soDem(found.demo_history_entry_count);
+    }
   }
 
   const siteToday: Record<string, TicketTally> = {};
@@ -201,7 +219,7 @@ export function parseDirectorTicketOverviewRpc(value: unknown): DirectorTicketCo
     if (item.key === "month") cong(channelMonth, item.channel, dem(item));
   }
 
-  return { measure: "entries", windows, siteToday, siteMonth, channelMonth, demoSeedTickets30d };
+  return { measure: "entries", windows, siteToday, siteMonth, channelMonth, demoSeedTickets30d, demoHistoryEntries30d };
 }
 
 /**
@@ -212,7 +230,7 @@ export function emptyDirectorTicketCounts(): DirectorTicketCounts {
   const windows = Object.fromEntries(
     DIRECTOR_TICKET_WINDOW_KEYS.map((key) => [key, { tickets: 0, entries: null }]),
   ) as Record<DirectorTicketWindowKey, TicketTally>;
-  return { measure: "tickets", windows, siteToday: {}, siteMonth: {}, channelMonth: {}, demoSeedTickets30d: 0 };
+  return { measure: "tickets", windows, siteToday: {}, siteMonth: {}, channelMonth: {}, demoSeedTickets30d: 0, demoHistoryEntries30d: 0 };
 }
 
 export function buildDirectorTicketOverview(
@@ -221,6 +239,10 @@ export function buildDirectorTicketOverview(
     sites: ReadonlyArray<{ siteId: ErpSiteId; shortName: string; uuid: string }>;
     webRevenue30dVnd: number;
     webOrders30d: number;
+    counterRevenue30dVnd?: number;
+    counterSales30d?: number;
+    counterRevenueTodayVnd?: number;
+    webRevenueTodayVnd?: number;
     generatedAt: string;
   },
 ): DirectorTicketOverview {
@@ -281,6 +303,11 @@ export function buildDirectorTicketOverview(
     webRevenue30dVnd: context.webRevenue30dVnd,
     webOrders30d: context.webOrders30d,
     demoSeedTickets30d: counts.demoSeedTickets30d,
+    demoHistoryEntries30d: counts.demoHistoryEntries30d,
+    counterRevenue30dVnd: context.counterRevenue30dVnd ?? 0,
+    counterSales30d: context.counterSales30d ?? 0,
+    counterRevenueTodayVnd: context.counterRevenueTodayVnd ?? 0,
+    webRevenueTodayVnd: context.webRevenueTodayVnd ?? 0,
     generatedAt: context.generatedAt,
   };
 }

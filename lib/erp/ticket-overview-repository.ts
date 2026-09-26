@@ -68,9 +68,8 @@ function createAdminClient(): SupabaseClient {
 
 
 /**
- * Doanh thu ở đây **chỉ** là đơn đặt qua web đã xác nhận, và nhãn trên màn
- * hình phải nói đúng như vậy. `erp_tickets` không có cột giá, nên một con số
- * "doanh thu vé" gộp cả quầy lẫn web sẽ là con số bịa.
+ * Tiền đơn đặt qua web đã xác nhận. `erp_tickets` không có cột giá, nên tiền
+ * đọc từ đơn web và từ phiếu quầy (`readCounterSales`), không suy từ số vé.
  */
 async function readWebOrders(client: SupabaseClient, range: TicketWindow) {
   const { data, error } = await client
@@ -88,6 +87,42 @@ async function readWebOrders(client: SupabaseClient, range: TicketWindow) {
   return {
     orderCount: rows.length,
     revenueVnd: rows.reduce((total, row) => total + Number(row.total_vnd ?? 0), 0),
+  };
+}
+
+type TienTrongKy = { counterSales: number; counterVnd: number; webOrders: number; webVnd: number };
+
+/**
+ * Tiền trong kỳ, cộng ngay trong kho (`erp_doanh_thu_ky`, migration 092).
+ * PostgREST chỉ trả tối đa 1.000 dòng mỗi lượt, mà ba mươi ngày có hàng nghìn
+ * phiếu quầy: cộng ở đây là cộng thiếu mà trông như đúng. Kho chưa có hàm thì
+ * trả `null` để lùi về lệnh đọc đơn web cũ, tiền quầy để 0.
+ */
+async function readRevenue(
+  client: SupabaseClient,
+  siteUuids: readonly string[],
+  range: TicketWindow,
+): Promise<TienTrongKy | null> {
+  const { data, error } = await client.rpc("erp_doanh_thu_ky", {
+    p_tenant_id: TENANT_ID,
+    p_site_ids: [...siteUuids],
+    p_tu: range.from.toISOString(),
+    p_den: range.to.toISOString(),
+  });
+  if (error) {
+    if (error.code === "42883" || error.code === "PGRST202") return null;
+    throw new TicketOverviewError("Không đọc được tiền trong kỳ.", { cause: error });
+  }
+  const row = (data ?? {}) as Record<string, unknown>;
+  const so = (value: unknown) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+  return {
+    counterSales: so(row.counter_sales),
+    counterVnd: so(row.counter_vnd),
+    webOrders: so(row.web_orders),
+    webVnd: so(row.web_vnd),
   };
 }
 
@@ -222,6 +257,8 @@ async function readTicketCountsByHead(
     siteMonth: theoKhoa(siteUuids, siteMonthCounts),
     channelMonth: theoKhoa(DIRECTOR_TICKET_CHANNELS, channelCounts),
     demoSeedTickets30d,
+    // Lệnh đếm cũ chỉ đếm hàng thật; lịch sử mẫu chỉ đi qua hàm trong kho.
+    demoHistoryEntries30d: 0,
   };
 }
 
@@ -239,6 +276,11 @@ export async function getDirectorTicketOverview(
       webRevenue30dVnd: 0,
       webOrders30d: 0,
       demoSeedTickets30d: 0,
+      demoHistoryEntries30d: 0,
+      counterRevenue30dVnd: 0,
+      counterSales30d: 0,
+      counterRevenueTodayVnd: 0,
+      webRevenueTodayVnd: 0,
       generatedAt,
     };
   }
@@ -263,17 +305,28 @@ export async function getDirectorTicketOverview(
   // vé phát hành đúng lúc ấy có thể lọt vào hai cửa sổ hoặc rơi ra ngoài cả hai.
   const windows = directorTicketWindows(new Date());
 
-  const [counts, webOrders] = await Promise.all([
+  const [counts, tien, tienHomNay] = await Promise.all([
     readCountsFromRpc(client, sites, windows).then(
       (fromRpc) => fromRpc ?? readTicketCountsByHead(client, sites, windows),
     ),
-    readWebOrders(client, windows.month),
+    readRevenue(client, sites.map((site) => site.uuid), windows.month).then(
+      async (fromRpc): Promise<TienTrongKy> => {
+        if (fromRpc) return fromRpc;
+        const web = await readWebOrders(client, windows.month);
+        return { counterSales: 0, counterVnd: 0, webOrders: web.orderCount, webVnd: web.revenueVnd };
+      },
+    ),
+    readRevenue(client, sites.map((site) => site.uuid), windows.today),
   ]);
 
   return buildDirectorTicketOverview(counts, {
     sites,
-    webRevenue30dVnd: webOrders.revenueVnd,
-    webOrders30d: webOrders.orderCount,
+    webRevenue30dVnd: tien.webVnd,
+    webOrders30d: tien.webOrders,
+    counterRevenue30dVnd: tien.counterVnd,
+    counterSales30d: tien.counterSales,
+    counterRevenueTodayVnd: tienHomNay?.counterVnd ?? 0,
+    webRevenueTodayVnd: tienHomNay?.webVnd ?? 0,
     generatedAt,
   });
 }

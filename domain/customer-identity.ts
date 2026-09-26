@@ -19,11 +19,6 @@ export const CustomerContactRequestSchema = z
     marketing_communications: z.boolean(),
   })
   .strict();
-
-export type CustomerConsentPreferenceRequest = z.infer<
-  typeof CustomerConsentPreferenceRequestSchema
->;
-export type CustomerContactRequest = z.infer<typeof CustomerContactRequestSchema>;
 export type CustomerIdentityType = "email" | "phone";
 
 const EMAIL_SCHEMA = z.string().email().max(254);

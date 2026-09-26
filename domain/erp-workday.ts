@@ -503,19 +503,6 @@ export function parseWorkdayRecord(value: unknown): WorkdayRecord {
   return record;
 }
 
-export function workdayNeedsEmployee(record: WorkdayRecord) {
-  return [
-    "assigned",
-    "checked-in",
-    "in-progress",
-    "manager-returned",
-  ].includes(record.status);
-}
-
-export function workdayNeedsManager(record: WorkdayRecord) {
-  return record.status === "submitted";
-}
-
 export function workdayLocationFromCheckIn(
   record: WorkdayRecord,
   verification: {

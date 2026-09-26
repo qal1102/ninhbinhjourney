@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { readPublicEnvironment } from "@/config/experience";
 import { getPackageBySlug } from "@/content/packages";
-import { CheckoutExperience } from "@/components/commerce/checkout-experience";
 import { CustomerBookingCheckout } from "@/components/commerce/customer-booking-checkout";
 import { SetupState } from "@/components/shared/setup-state";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
@@ -16,7 +15,7 @@ export default async function CheckoutPage({
   if (environment.status === "missing") {
     return <SetupState environment={environment} surface="Sandbox checkout" />;
   }
-  if (!environment.config.sandboxPaymentEnabled && !customerBookingEnabled) {
+  if (!customerBookingEnabled) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#f4f0e7] p-5 text-[#151a17]">
         <section className="max-w-xl rounded-3xl border border-[#d7d5cd] bg-white p-8 text-center">
@@ -53,6 +52,9 @@ export default async function CheckoutPage({
   }
   const itineraryId =
     typeof params.journey === "string" ? params.journey : undefined;
+  // Lối "thanh toán sandbox" cũ (ghi vào bảng bookings/passes của hệ /ops đã
+  // bỏ) đã gỡ ngày 26/09/2026: nó chỉ hiện khi TẮT đặt chỗ thật, mà production
+  // luôn bật. Tắt đặt chỗ thì trang nói thẳng là tạm đóng, ở khối phía trên.
 
   return (
     <main className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
@@ -69,22 +71,15 @@ export default async function CheckoutPage({
               ERP" là tên một hệ thống nội bộ. Nó lại nằm ở dòng đầu tiên của
               trang thanh toán — chỗ đắt nhất trên cả luồng. Xem luật cấm chữ
               kỹ thuật lọt ra mặt khách ở docs/reference/UI_UX_RULES.md. */}
-          {customerBookingEnabled ? "Đặt vé vào cổng · chỗ giữ 15 phút" : "Production-shaped sandbox lifecycle"}
+          Đặt vé vào cổng · chỗ giữ 15 phút
         </p>
         <h1 className="font-display mt-4 text-5xl leading-[0.96] text-[#183f34] sm:text-7xl">
-          {customerBookingEnabled ? "Một chỗ đã giữ," : "Xác nhận rõ ràng,"}
+          Một chỗ đã giữ,
           <br />
           không có khoản tiền bị thu.
         </h1>
         <div className="mt-10">
-          {customerBookingEnabled ? (
-            <CustomerBookingCheckout packageItem={packageItem} />
-          ) : (
-            <CheckoutExperience
-              packageItem={packageItem}
-              itineraryId={itineraryId}
-            />
-          )}
+          <CustomerBookingCheckout packageItem={packageItem} />
         </div>
       </div>
     </main>

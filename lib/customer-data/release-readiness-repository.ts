@@ -8,8 +8,6 @@ import {
   type CustomerReleasePhaseId,
 } from "@/domain/customer-release-readiness";
 
-export type CustomerReleaseReadinessReport = Awaited<ReturnType<typeof getCustomerReleaseReadiness>>;
-
 export async function getCustomerReleaseReadiness() {
   const environment = inspectCustomerReleaseEnvironment(process.env);
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();

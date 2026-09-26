@@ -661,7 +661,7 @@ async function readSurfaceConfig(page: import("@playwright/test").Page) {
  * `client-demo` mà nút biến mất cũng sai.
  *
  * Hai khẳng định cũ trên `/` đã bỏ vì chúng không bao giờ đỏ được: chữ
- * "Concept Collaborations" nằm trong `components/discovery/home-editorial.tsx`
+ * "Concept Collaborations" nằm trong một tệp trang chủ cũ (nay đã gỡ)
  * mà không file nào import, còn nhãn "Client demonstration" chỉ dựng ở
  * `/explore`. Đếm trên trang chủ thì cả hai luôn bằng 0, bất kể cấu hình nào.
  */

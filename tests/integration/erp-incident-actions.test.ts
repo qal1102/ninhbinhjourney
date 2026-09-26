@@ -128,7 +128,6 @@ const { MockGateScanRepositoryError } = vi.hoisted(() => ({
 
 vi.mock("@/lib/erp/gate-scan-repository", () => ({
   GateScanRepositoryError: MockGateScanRepositoryError,
-  recordGateScan: vi.fn(),
 }));
 
 import {

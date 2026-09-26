@@ -10,11 +10,6 @@ export type CapacitySourceKind = "estimate" | "customer" | "measured";
  */
 export type CapacityModel = "round-trip" | "static";
 
-export const CAPACITY_MODEL_LABELS: Record<CapacityModel, string> = {
-  "round-trip": "Quay vòng",
-  static: "Sức chứa tĩnh",
-};
-
 export type CapacityBottleneckKind =
   | "boat-pier"
   | "ticket-gate"

@@ -263,13 +263,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
   },
 ] as const;
 
-export const EMPLOYEE_DEFAULT_MODULES: readonly ErpModuleId[] = [
-  "check-in-khach",
-  "bao-cao-hien-truong",
-  "su-co",
-  "cham-cong",
-];
-
 export function getErpSite(siteId: string) {
   return ERP_SITES.find((site) => site.id === siteId);
 }

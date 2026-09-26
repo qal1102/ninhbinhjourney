@@ -1,42 +1,5 @@
 import { z } from "zod";
 
-export const DemoRoleSchema = z.enum([
-  "visitor",
-  "check-in-agent",
-  "site-supervisor",
-  "icc-operator",
-  "finance",
-  "content",
-  "admin",
-  "ritual-authority",
-]);
-
-export const DemoRunSchema = z.object({
-  id: z.uuid(),
-  tenantId: z.uuid(),
-  regionId: z.uuid(),
-  operatorId: z.uuid(),
-  ownerUserId: z.uuid(),
-  label: z.string().trim().min(2).max(80),
-  status: z.enum(["active", "read-only", "expired"]),
-  expiresAt: z.iso.datetime(),
-  createdAt: z.iso.datetime(),
-});
-
-export const CreateDemoRunInputSchema = z.object({
-  label: z.string().trim().min(2).max(80),
-  sourceCode: z.string().trim().min(3).max(80).default("TRANGAN-WHARF-DEMO"),
-  expiresInMinutes: z.number().int().min(30).max(240).default(120),
-});
-
-export const JoinDemoRunInputSchema = z.object({
-  token: z.string().min(32).max(512),
-});
-
-export const ResetDemoRunInputSchema = z.object({
-  demoRunId: z.uuid(),
-});
-
 export const JourneyIntentSchema = z.object({
   id: z.string().min(1),
   demoRunId: z.uuid(),
@@ -63,20 +26,6 @@ export const JourneyIntentSchema = z.object({
   visitDate: z.iso.date().optional(),
   fieldConfidence: z.record(z.string(), z.number().min(0).max(1)),
 });
-
-export const ItineraryItemSchema = z
-  .object({
-    id: z.string().min(1),
-    siteId: z.uuid(),
-    startAt: z.iso.datetime(),
-    endAt: z.iso.datetime(),
-    travelMinutesFromPrevious: z.number().int().nonnegative(),
-    reason: z.string().trim().min(2).max(500),
-  })
-  .refine((item) => Date.parse(item.endAt) > Date.parse(item.startAt), {
-    message: "Itinerary item must end after it starts.",
-    path: ["endAt"],
-  });
 
 export const IncidentDraftSchema = z.object({
   id: z.string().min(1),
@@ -136,75 +85,7 @@ export const UpdateJourneyRequestSchema = z.object({
   siteIds: z.array(z.uuid()).min(1).max(8),
 });
 
-export const CreateQuoteRequestSchema = z.object({
-  itineraryId: z.uuid().optional(),
-  productSelections: z
-    .array(
-      z.object({
-        productId: z.uuid(),
-        quantity: z.number().int().min(1).max(20),
-      }),
-    )
-    .min(1)
-    .max(4),
-  visitDate: z.iso.date(),
-  partySize: z.number().int().min(1).max(20),
-});
-
-export const ConfirmBookingRequestSchema = z.object({
-  quoteId: z.uuid(),
-  customerDisplayName: z.string().trim().min(2).max(80),
-  contactKind: z.enum(["email", "phone"]),
-  contactValue: z.string().trim().min(5).max(160),
-  consent: z.literal(true),
-  idempotencyKey: z.string().min(16).max(200),
-});
-
-export const UpdateCapacityRequestSchema = z.object({
-  capacity: z.number().int().min(0).max(10000),
-  status: z.enum(["available", "paused", "closed"]),
-});
-
 export const InspectPassRequestSchema = z.object({
   lookupValue: z.string().trim().min(3).max(512),
   lookupKind: z.enum(["pass-token", "booking-code"]),
-});
-
-export const RedeemPassRequestSchema = InspectPassRequestSchema.extend({
-  siteId: z.uuid().optional(),
-  entitlementId: z.uuid().optional(),
-  quantity: z.number().int().min(1).max(20).default(1),
-  idempotencyKey: z.string().min(16).max(200),
-});
-
-export const ConfirmIncidentRequestSchema = IncidentDraftSchema.extend({
-  siteId: z.uuid(),
-  category: z.enum([
-    "crowd-capacity",
-    "weather",
-    "medical",
-    "transport",
-    "water-safety",
-    "fire-safety",
-    "infrastructure",
-    "security",
-    "lost-person",
-    "other",
-  ]),
-  suggestedSeverity: z.enum(["P1", "P2", "P3", "P4"]),
-});
-
-export const UpdateIncidentRequestSchema = z.object({
-  status: z.enum([
-    "open",
-    "acknowledged",
-    "in-progress",
-    "resolved",
-    "closed",
-  ]),
-  assignedTo: z.uuid().nullable().optional(),
-  resourceStatus: z
-    .enum(["requested", "assigned", "fulfilled", "cancelled"])
-    .nullable()
-    .optional(),
 });

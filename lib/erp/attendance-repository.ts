@@ -360,5 +360,3 @@ export async function recordAttendanceEvent(
   if (readMode() === "supabase") return recordInSupabase(input);
   return recordInCookie(input);
 }
-
-export { vietnamDateKey as attendanceVietnamDateKey };

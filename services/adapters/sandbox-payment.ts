@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { AdapterUnavailableError, DomainError } from "@/domain/errors";
+import { DomainError } from "@/domain/errors";
 import { reduceSandboxPaymentStatus } from "@/domain/commerce";
 
 export type SandboxCallback = {
@@ -39,11 +39,5 @@ export class SandboxPaymentAdapter {
     callback: SandboxCallback,
   ) {
     return reduceSandboxPaymentStatus(current, callback.event);
-  }
-}
-
-export class LivePaymentAdapter {
-  createPayment() {
-    throw new AdapterUnavailableError("Live payment adapter");
   }
 }

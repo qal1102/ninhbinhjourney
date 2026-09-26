@@ -318,29 +318,6 @@ async function readSupabaseScans(siteId: ErpSiteId): Promise<GateScanEvent[]> {
     .filter((event): event is GateScanEvent => event !== null);
 }
 
-async function recordInSupabase(input: RecordGateScanInput): Promise<GateScanEvent> {
-  const client = createAdminClient();
-  const result = await client.rpc("erp_record_gate_scan", {
-    p_tenant_id: TENANT_ID,
-    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
-    p_code: input.code,
-    p_actor_account_id: input.actorId,
-    p_actor_name: input.actorName,
-  });
-  if (result.error) {
-    if (/GATE_SCAN_CODE_INVALID/.test(result.error.message)) {
-      throw new GateScanRepositoryError("Mã QR không hợp lệ.");
-    }
-    throw repositoryError("ghi nhận quét QR", result.error);
-  }
-  const row = (Array.isArray(result.data) ? result.data[0] : result.data) as Record<string, unknown>;
-  const event = eventFromRow(row);
-  if (!event) {
-    throw new GateScanRepositoryError("Cơ sở trong lượt quét QR không hợp lệ.");
-  }
-  return event;
-}
-
 function ticketFromRow(value: unknown): TicketSummary | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
@@ -697,11 +674,6 @@ export async function getRecentGateScans(siteId: ErpSiteId): Promise<GateScanEve
 export async function countGateScansToday(siteId: ErpSiteId): Promise<number> {
   if (readMode() === "supabase") return countGateScansTodayInSupabase(siteId);
   return countGateScansTodayInCookie(siteId);
-}
-
-export async function recordGateScan(input: RecordGateScanInput): Promise<GateScanEvent> {
-  if (readMode() === "supabase") return recordInSupabase(input);
-  return recordInCookie(input);
 }
 
 export type OnSitePaymentCollection = {

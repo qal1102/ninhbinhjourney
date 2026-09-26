@@ -1083,5 +1083,3 @@ export async function removeWorkdayEvidence(storagePath: string) {
   if (readMode() !== "supabase" || storagePath.startsWith("demo://")) return;
   await createAdminClient().storage.from(EVIDENCE_BUCKET).remove([storagePath]);
 }
-
-export const WORKDAY_EVIDENCE_MAX_BYTES = MAX_EVIDENCE_BYTES;

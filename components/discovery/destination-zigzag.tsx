@@ -31,7 +31,7 @@ export type ZigzagCopy = {
  * toi do, ket bang mot khoi moi lap hanh trinh.
  *
  * Chuyen dong bang GSAP ScrollTrigger (khong phai animation-timeline CSS)
- * vi ly do da ghi trong pinned-story.tsx: animation-timeline chi chay
+ * vi animation-timeline chi chay
  * Chrome/Edge, Safari/Firefox se khong thay hieu ung nao.
  *
  * Noi dung lay THANG tu mang `destinations` da bien tap san (tagline,

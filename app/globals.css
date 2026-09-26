@@ -1096,65 +1096,6 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
 }
 
 /*
- * PinnedStory -- chi lo BO CUC va FALLBACK o day. Toan bo chuyen dong
- * (ghim, wipe, hien chu tung dong, parallax) do GSAP ScrollTrigger dieu
- * khien trong components/discovery/pinned-story.tsx.
- *
- * Vi sao khong dung animation-timeline: view() thuan CSS nua: no chi
- * chay tren Chrome/Edge. Safari va Firefox roi thang ve bo cuc tinh --
- * mot phan lon khach (iPhone) se xem ban khong co hieu ung nao.
- *
- * Trang thai mac dinh ben duoi la trang thai KHONG-JS / giam-chuyen-dong:
- * ba nhip xep chong theo chieu doc, doc tuan tu tu tren xuong, du ca noi
- * dung. GSAP se tu chuyen sang absolute + ghim khi no khoi dong.
- */
-.pinned-story {
-  height: 300vh;
-}
-
-.pinned-story-sticky {
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-}
-
-.pinned-story-beat {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.pinned-story-media {
-  position: absolute;
-  inset: 0;
-}
-
-/*
- * Khong co JS (hoac GSAP chua khoi dong) thi khong the ghim -- rot ve
- * danh sach doc binh thuong de khong bao gio co khung trong.
- */
-@media (prefers-reduced-motion: reduce) {
-  .pinned-story {
-    height: auto;
-  }
-
-  .pinned-story-sticky {
-    height: auto;
-    overflow: visible;
-  }
-
-  .pinned-story-beat {
-    position: relative;
-    inset: auto;
-    height: 78vh;
-  }
-
-  .pinned-story-beat + .pinned-story-beat {
-    margin-top: 2px;
-  }
-}
-
-/*
  * Chuyen trang mem (components/shared/page-transition.tsx) + thanh tien
  * do cuon. Ca hai deu la CSS thuan, khong phu thuoc thu vien, va deu tat
  * duoi prefers-reduced-motion.
@@ -1740,7 +1681,7 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
  * containing block cho moi con `position: fixed`.
  *
  * Hau qua that, do duoc tren production 05/08 truoc khi vá:
- *  - GSAP `pin` (pinned-story.tsx) ghim bang position:fixed -> tinh toa do
+ *  - GSAP `pin` (khoi ghim cu, nay da go) ghim bang position:fixed -> tinh toa do
  *    theo hop `.page-enter` cao 21.852px thay vi theo khung nhin, nen
  *    rect.top = -scrollY: khoi ghim nam ngoai man hinh suot ca 1.800px
  *    ghim. Khach cuon qua 2.700px chi thay nen kem trong tron.

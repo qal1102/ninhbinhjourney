@@ -29,7 +29,6 @@ import { z } from "zod";
 export const IDENTITY_DOCUMENT_RETENTION_DAYS = 30;
 
 export const IDENTITY_DOCUMENT_TYPES = ["cccd", "cmnd", "ho_chieu", "khac"] as const;
-export type IdentityDocumentType = (typeof IDENTITY_DOCUMENT_TYPES)[number];
 
 /**
  * Lý do thu — liệt kê có ràng buộc, không phải text tự do. Phải khớp từng
@@ -54,7 +53,6 @@ export const IDENTITY_DOCUMENT_COLLECTION_REASONS = [
   // Trường hợp khác, đã được giám đốc phê duyệt riêng cho từng trường hợp.
   "other_approved_by_director",
 ] as const;
-export type IdentityDocumentCollectionReason = (typeof IDENTITY_DOCUMENT_COLLECTION_REASONS)[number];
 
 /**
  * Tính hạn xoá từ ngày đi. Hàm thuần: `departureDate` do phía gọi truyền

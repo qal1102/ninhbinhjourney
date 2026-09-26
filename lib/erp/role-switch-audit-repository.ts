@@ -141,12 +141,6 @@ async function recordInCookie(input: RecordRoleSwitchInput): Promise<RoleSwitchA
   return event;
 }
 
-async function listInCookie(limit: number): Promise<RoleSwitchAuditEvent[]> {
-  const store = await cookies();
-  const existing = decodeSigned<RoleSwitchAuditEvent[]>(store.get(AUDIT_COOKIE)?.value) ?? [];
-  return [...existing].reverse().slice(0, limit);
-}
-
 // --- supabase mode ------------------------------------------------------
 
 function rowToEvent(row: Record<string, unknown>): RoleSwitchAuditEvent {
@@ -180,20 +174,6 @@ async function recordInSupabase(input: RecordRoleSwitchInput): Promise<RoleSwitc
   return rowToEvent(row);
 }
 
-async function listInSupabase(limit: number): Promise<RoleSwitchAuditEvent[]> {
-  const client = createAdminClient();
-  const result = await client
-    .from("erp_role_switch_audit")
-    .select("*")
-    .eq("tenant_id", TENANT_ID)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (result.error) {
-    throw repositoryError("đọc nhật ký chuyển vai trò", result.error);
-  }
-  return (result.data ?? []).map(rowToEvent);
-}
-
 // --- public API -----------------------------------------------------------
 
 export async function recordRoleSwitch(
@@ -201,11 +181,4 @@ export async function recordRoleSwitch(
 ): Promise<RoleSwitchAuditEvent> {
   if (readMode() === "supabase") return recordInSupabase(input);
   return recordInCookie(input);
-}
-
-export async function listRecentRoleSwitches(
-  limit = 10,
-): Promise<RoleSwitchAuditEvent[]> {
-  if (readMode() === "supabase") return listInSupabase(limit);
-  return listInCookie(limit);
 }

@@ -1,6 +1,5 @@
 export type UUID = string;
 export type ISODateTime = string;
-export type Currency = "VND";
 
 export type DemoRole =
   | "visitor"
@@ -236,16 +235,4 @@ export interface Pass {
   issuedAt: ISODateTime;
   expiresAt: ISODateTime;
   entitlements: PassEntitlement[];
-}
-
-export interface Redemption {
-  id: UUID;
-  demoRunId: UUID;
-  passId: UUID;
-  entitlementId: UUID;
-  siteId: UUID;
-  quantity: number;
-  actorUserId: UUID;
-  idempotencyKey: string;
-  createdAt: ISODateTime;
 }

@@ -1,33 +1,5 @@
 import type { ErpRole, ErpSiteId } from "@/domain/erp";
 
-/**
- * Camera AI — kịch bản mô phỏng có kiểm soát (T17, docs/HANDOFF.md).
- *
- * Không có camera AI thật, không có cảm biến đếm người, không có API để nối.
- * Trước đây màn hình này bịa số ngay trong component rồi để số bịa đó chảy
- * vào nhật ký sự cố thật — đó là lý do nút tạo sự cố đã bị khoá.
- *
- * Module này thay chỗ đó bằng một mô hình mô phỏng **khai báo rõ ràng**:
- *
- * 1. Mỗi khu vực có một sức chứa thiết kế ước lượng (`designCapacity`) — con
- *    số vật lý do người vận hành đặt ra, không phải AI đo được. Số người hiển
- *    thị luôn là `designCapacity × hệ số tải`, nên nó tự giải thích được và
- *    không bao giờ mâu thuẫn với chính nó.
- * 2. Hệ số tải sinh ra từ một bộ số giả ngẫu nhiên **tất định**, gieo hạt bằng
- *    `${siteId}:${bucket}`. Cùng một cơ sở, cùng một khung 5 phút thì mọi
- *    người đang xem đều thấy đúng một cảnh — F5 không nhảy số, và hai máy đặt
- *    cạnh nhau không mâu thuẫn nhau.
- * 3. Kịch bản sự kiện chỉ chạy cho giám đốc và **tối đa 2 sự kiện**
- *    (`CAMERA_SCRIPT_MAX_EVENTS`). Đây là chặn tràn ở tầng dữ liệu, không phải
- *    ở tầng giao diện: hàm không có đường nào trả về quá 2 phần tử.
- *
- * Toàn bộ module này thuần tính toán: không đọc, không ghi, không chạm cơ sở
- * dữ liệu. Không có gì ở đây lọt được vào sự cố, chấm công hay sổ sách thật.
- */
-
-/** Nhãn nguồn số liệu, cùng quy ước với ngưỡng sức chứa (T11). */
-export const CAMERA_SIMULATION_SOURCE = "mô-phỏng" as const;
-
 /** Cảnh giữ nguyên trong 5 phút để số không nhảy mỗi lần tải lại trang. */
 export const CAMERA_SCENE_BUCKET_MS = 5 * 60_000;
 

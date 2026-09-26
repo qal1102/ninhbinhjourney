@@ -823,10 +823,6 @@ export const DESTINATION_PAGE_SLUGS: Readonly<Record<DestinationId, string>> = O
   bear_sanctuary: "bear-sanctuary",
 });
 
-export function destinationPageHref(id: DestinationId) {
-  return `/destination/${DESTINATION_PAGE_SLUGS[id]}`;
-}
-
 export function getLandingDestinationBySlug(slug: string) {
   const entry = Object.entries(DESTINATION_PAGE_SLUGS).find(([, value]) => value === slug);
   if (!entry) return undefined;

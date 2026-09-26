@@ -65,12 +65,6 @@ export type AccountingJournalListOptions = {
   limit?: number;
 };
 
-export type AccountingAuditListOptions = {
-  entityType?: "journal" | "period" | "shift-close";
-  entityId?: string;
-  limit?: number;
-};
-
 export type AccountingCommandContext = {
   actorAccountId: string;
   idempotencyKey: string;
@@ -1428,53 +1422,6 @@ export async function listAccountingPeriods(): Promise<AccountingPeriod[]> {
   return [...state.periods].sort((left, right) =>
     right.periodKey.localeCompare(left.periodKey),
   );
-}
-
-export async function listAccountingAuditEvents(
-  options: AccountingAuditListOptions = {},
-): Promise<AccountingAuditEvent[]> {
-  if (readMode() === "supabase") {
-    const client = createAdminClient();
-    let query = client
-      .from("erp_accounting_audit_events")
-      .select("*")
-      .eq("tenant_id", TENANT_ID);
-    if (options.entityType) {
-      query = query.eq("entity_type", options.entityType);
-    }
-    if (options.entityId) {
-      query = query.eq(
-        "entity_id",
-        validateRecordId(options.entityId, "Mã đối tượng nhật ký"),
-      );
-    }
-    const result = await query
-      .order("occurred_at", { ascending: false })
-      .limit(normalizedLimit(options.limit, MAX_DATABASE_AUDITS));
-    if (result.error) {
-      throw repositoryError("đọc nhật ký kế toán", result.error);
-    }
-    return ((result.data ?? []) as DatabaseRow[]).map(auditFromRow);
-  }
-  const state = await readDemoState();
-  const journalAudits = state.journals.flatMap(
-    (journal) => journal.auditTrail,
-  );
-  return [...journalAudits, ...state.periodAudits]
-    .filter(
-      (audit) =>
-        !options.entityType ||
-        (options.entityType === "journal" && Boolean(audit.journalId)) ||
-        (options.entityType === "period" && Boolean(audit.periodId)),
-    )
-    .filter(
-      (audit) =>
-        !options.entityId ||
-        audit.journalId === options.entityId ||
-        audit.periodId === options.entityId,
-    )
-    .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
-    .slice(0, normalizedLimit(options.limit, MAX_DATABASE_AUDITS));
 }
 
 export async function prepareShiftCloseAccountingJournal(

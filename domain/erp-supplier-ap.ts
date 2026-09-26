@@ -31,14 +31,6 @@ export const SUPPLIER_AP_STATUS_LABELS: Readonly<
 
 export type SupplierApPaymentMethod = "bank-transfer" | "cash" | "offset";
 
-export const SUPPLIER_AP_PAYMENT_METHOD_LABELS: Readonly<
-  Record<SupplierApPaymentMethod, string>
-> = Object.freeze({
-  "bank-transfer": "Chuyển khoản",
-  cash: "Tiền mặt",
-  offset: "Bù trừ công nợ",
-});
-
 export type SupplierApMatchStatus = "matched" | "exception";
 
 export type SupplierApExceptionCode =

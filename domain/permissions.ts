@@ -63,5 +63,3 @@ export function effectiveCapability(input: {
 }) {
   return can(input.authenticatedRole, input.capability);
 }
-
-export const PERMISSION_MATRIX = permissions;

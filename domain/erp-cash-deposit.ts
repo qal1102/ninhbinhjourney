@@ -17,13 +17,6 @@ export const CASH_DEPOSIT_STATUS_LABELS: Readonly<
 
 export type BankStatementLineStatus = "unmatched" | "matched";
 
-export const BANK_STATEMENT_LINE_STATUS_LABELS: Readonly<
-  Record<BankStatementLineStatus, string>
-> = Object.freeze({
-  unmatched: "Chưa khớp",
-  matched: "Đã khớp",
-});
-
 export type CashDepositEligibleShift = {
   id: string;
   shiftCode: string;
@@ -76,15 +69,6 @@ export type BankStatementLine = {
   enteredAt: string;
   version: number;
 };
-
-/**
- * Ngưỡng SLA cho một lượt nộp bị lệch số so với sao kê — phải có người giải
- * trình trong khoảng thời gian này. Hằng số demo, phải cấu hình theo chính
- * sách nội bộ khi triển khai thật (đúng cảnh báo ở
- * docs/reference/ERP_ACCOUNTING_REQUIREMENTS_VI.md §2), không đóng cứng
- * vĩnh viễn.
- */
-export const CASH_EXCEPTION_SLA_HOURS = 24;
 
 export function isCashDepositOverdue(
   deposit: Pick<CashDeposit, "status" | "exceptionDueAt">,

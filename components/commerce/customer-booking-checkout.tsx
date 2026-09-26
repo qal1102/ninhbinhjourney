@@ -624,7 +624,7 @@ export function CustomerBookingCheckout({
             Chọn ngày. Chúng tôi giữ chỗ trong 15 phút.
           </h2>
           <p className="mt-4 max-w-2xl leading-7 text-[#59654b]">
-            Bạn không cần tạo tài khoản hay để lại tên, số điện thoại. Chúng tôi cũng không tự đăng ký cho bạn nhận tin quảng cáo.
+            Bạn không cần tạo tài khoản. Chỉ xin một số điện thoại để gửi lại vé khi cần, và chúng tôi không tự đăng ký cho bạn nhận tin quảng cáo.
           </p>
         </div>
 

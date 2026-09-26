@@ -41,7 +41,7 @@ export function HoSoKhachView({ hoSo, xemThu = false }: { hoSo: HoSoKhach; xemTh
 
       <section className="mt-6">
         <h3 className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">Những nơi đã sáng</h3>
-        <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <ul className={`mt-3 grid grid-cols-2 gap-3 ${xemThu ? "" : "sm:grid-cols-4"}`}>
           {noi.map((diem) => {
             const den = daDen.get(diem.id);
             return (

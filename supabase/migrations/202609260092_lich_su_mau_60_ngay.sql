@@ -15,9 +15,10 @@
 -- `mau-`. Mã sinh từ băm của khoá (cơ sở, giờ, số thứ tự), nên chạy lại cùng
 -- một giờ không nhân đôi gì.
 --
--- Migration này KHÔNG đặt lịch chạy lặp lại: sinh tiếp mỗi ngày là việc chủ dự
--- án phải đồng ý riêng. Công tắc `erp_lich_su_mau_cau_hinh.bat` chặn mọi lần
--- gọi hàm sinh về sau: `update public.erp_lich_su_mau_cau_hinh set bat = false;`
+-- Không sinh liên tục (chủ dự án: sinh liên tục thì toàn rác): mỗi tháng một lần
+-- xoá mẫu cũ hơn 60 ngày và sinh tiếp tới hôm nay, nên kho luôn đúng 60 ngày.
+-- Công tắc `erp_lich_su_mau_cau_hinh.bat = false` thì chỉ còn xoá, không sinh;
+-- gỡ sạch mọi mẫu: `select public.erp_lich_su_mau_xoa();`
 
 begin;
 
@@ -26,6 +27,18 @@ alter table public.erp_tickets drop constraint if exists erp_tickets_data_origin
 alter table public.erp_tickets
   add constraint erp_tickets_data_origin_check
   check (data_origin in ('real', 'demo-seed', 'demo-history'));
+
+-- 1b. Lượt qua cổng tra theo vé: hộ chiếu khách đọc lượt vào theo mã vé, và
+--     xoá một vé phải dò bảng này. Chưa có chỉ mục thì mỗi lần là đọc cả bảng.
+create index if not exists erp_gate_scan_events_ticket_idx
+  on public.erp_gate_scan_events (ticket_id)
+  where ticket_id is not null;
+
+-- 1c. Vé mẫu còn chờ vào cổng, theo ngày: hàm sinh tìm chúng mỗi giờ. Chỉ mục
+--     một phần nên chỉ chứa vé chờ, nhỏ và không đụng vé thật.
+create index if not exists erp_tickets_mau_cho_vao_idx
+  on public.erp_tickets (valid_on)
+  where data_origin = 'demo-history' and entries_used = 0 and status = 'issued';
 
 -- 2. Công tắc.
 create table if not exists public.erp_lich_su_mau_cau_hinh (
@@ -450,23 +463,258 @@ grant execute on function public.erp_lich_su_mau_sinh_gio(timestamptz, timestamp
 revoke all on function public.erp_mau_so(text) from public, anon, authenticated;
 revoke all on function public.erp_mau_id(text) from public, anon, authenticated;
 
--- 5. Nạp 60 ngày, từng giờ một theo thứ tự thời gian (đơn web phải có trước
--- lượt quét của chính nó).
-do $$
+-- 5. Xoá và làm mới.
+--
+-- Chủ dự án hỏi: sinh liên tục thì một lúc là toàn rác? Đúng, nên không sinh
+-- liên tục. Kho luôn giữ ĐÚNG một cửa sổ 60 ngày mẫu: mỗi tháng một lần xoá
+-- phần mẫu cũ hơn 60 ngày và sinh tiếp phần còn thiếu tới hôm nay.
+--
+-- Khoá "chỉ thêm" của các bảng lịch sử nhả đúng khe 'lich-su-mau' cho dòng
+-- mang mã mẫu (bảng khách nhả ở 090; phiếu quầy nhả ở đây). Vé mẫu nào đã bị
+-- phiếu đoàn, lời đánh giá hay lô đồng bộ ngoại tuyến trỏ vào thì giữ lại cùng
+-- phiếu hoặc đơn của nó, không xoá liều.
+create or replace function public.erp_counter_sale_append_only()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $ham$
+begin
+  if tg_op = 'DELETE'
+     and coalesce(current_setting('nbj.cho_phep_xoa', true), '') = 'lich-su-mau'
+     and (
+       coalesce(to_jsonb(old) ->> 'sale_id', '') like 'de000000%'
+       or coalesce(to_jsonb(old) ->> 'id', '') like 'de000000%'
+     ) then
+    return old;
+  end if;
+  raise exception using errcode = '55000', message = 'COUNTER_SALE_APPEND_ONLY';
+end;
+$ham$;
+
+create or replace function public.erp_counter_sale_guard_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $ham$
+begin
+  if tg_op = 'DELETE' then
+    if coalesce(current_setting('nbj.cho_phep_xoa', true), '') = 'lich-su-mau'
+       and old.id::text like 'de000000%' then
+      return old;
+    end if;
+    raise exception using errcode = '55000', message = 'COUNTER_SALE_APPEND_ONLY';
+  end if;
+  if old.status <> 'completed' or new.status <> 'voided'
+     or (
+       new.id, new.tenant_id, new.site_id, new.sale_code, new.sold_by_account_id,
+       new.sold_by_name, new.acting_director_account_id, new.sold_at,
+       new.business_date, new.payment_method, new.payment_reference, new.adults,
+       new.children, new.total_vnd, new.cash_received_vnd,
+       new.cash_counted_confirmed, new.request_key, new.created_at
+     ) is distinct from (
+       old.id, old.tenant_id, old.site_id, old.sale_code, old.sold_by_account_id,
+       old.sold_by_name, old.acting_director_account_id, old.sold_at,
+       old.business_date, old.payment_method, old.payment_reference, old.adults,
+       old.children, old.total_vnd, old.cash_received_vnd,
+       old.cash_counted_confirmed, old.request_key, old.created_at
+     ) then
+    raise exception using errcode = '55000', message = 'COUNTER_SALE_APPEND_ONLY';
+  end if;
+  return new;
+end;
+$ham$;
+
+create or replace function public.erp_lich_su_mau_xoa(p_truoc timestamptz default 'infinity')
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $ham$
+declare
+  v_so integer;
+begin
+  create temporary table if not exists nbj_ve_giu (ticket_id uuid primary key) on commit drop;
+  create temporary table if not exists nbj_ve_xoa (ticket_id uuid primary key) on commit drop;
+  create temporary table if not exists nbj_don_xoa (order_id uuid primary key) on commit drop;
+  delete from pg_temp.nbj_ve_giu;
+  delete from pg_temp.nbj_ve_xoa;
+  delete from pg_temp.nbj_don_xoa;
+
+  -- Vé mẫu đang bị hồ sơ thật trỏ vào: giữ.
+  insert into pg_temp.nbj_ve_giu (ticket_id)
+  select ticket.id from public.erp_tickets ticket
+  where ticket.data_origin = 'demo-history'
+    and (
+      exists (select 1 from public.erp_visitor_groups g where g.ticket_id = ticket.id)
+      or exists (select 1 from public.erp_visit_reviews r where r.ticket_id = ticket.id)
+      or exists (
+        select 1 from public.erp_gate_scan_events scan
+        where scan.ticket_id = ticket.id
+          and (
+            exists (select 1 from public.erp_visit_reviews r where r.scan_event_id = scan.id)
+            or exists (select 1 from public.erp_gate_offline_sync_items i where i.scan_event_id = scan.id)
+          )
+      )
+    )
+  on conflict do nothing;
+  -- Giữ cả những vé cùng phiếu, cùng đơn với vé đang giữ.
+  insert into pg_temp.nbj_ve_giu (ticket_id)
+  select other.ticket_id from public.erp_counter_sale_lines line
+  join public.erp_counter_sale_lines other on other.sale_id = line.sale_id
+  where line.ticket_id in (select ticket_id from pg_temp.nbj_ve_giu)
+  union
+  select other.ticket_id from public.customer_order_tickets bridge
+  join public.customer_order_tickets other on other.order_id = bridge.order_id
+  where bridge.ticket_id in (select ticket_id from pg_temp.nbj_ve_giu)
+  on conflict do nothing;
+
+  -- Vé của phiếu quầy bán trước mốc, hoặc của đơn web đặt trước mốc.
+  insert into pg_temp.nbj_ve_xoa (ticket_id)
+  select line.ticket_id
+  from public.erp_counter_sales sale
+  join public.erp_counter_sale_lines line
+    on line.tenant_id = sale.tenant_id and line.sale_id = sale.id
+  where sale.id::text like 'de000000%' and sale.sold_at < p_truoc
+    and not exists (select 1 from pg_temp.nbj_ve_giu giu where giu.ticket_id = line.ticket_id)
+  union
+  select bridge.ticket_id
+  from public.customer_orders customer_order
+  join public.customer_order_tickets bridge on bridge.order_id = customer_order.id
+  where customer_order.id::text like 'de000000%' and customer_order.created_at < p_truoc
+    and not exists (select 1 from pg_temp.nbj_ve_giu giu where giu.ticket_id = bridge.ticket_id)
+  on conflict do nothing;
+  select count(*) into v_so from pg_temp.nbj_ve_xoa;
+  analyze pg_temp.nbj_ve_xoa;
+  analyze pg_temp.nbj_ve_giu;
+
+  perform set_config('nbj.cho_phep_xoa', 'lich-su-mau', true);
+
+  delete from public.erp_gate_scan_events scan
+  where scan.ticket_id in (select ticket_id from pg_temp.nbj_ve_xoa);
+
+  -- Lọc ngược theo danh sách GIỮ (gần như luôn rỗng) thay vì danh sách xoá:
+  -- cùng kết quả, mà đo trên PGlite nhanh gấp ba mươi lần.
+  delete from public.erp_counter_sale_lines line
+  using public.erp_counter_sales sale
+  where sale.tenant_id = line.tenant_id and sale.id = line.sale_id
+    and sale.id::text like 'de000000%' and sale.sold_at < p_truoc
+    and not exists (select 1 from pg_temp.nbj_ve_giu giu where giu.ticket_id = line.ticket_id);
+  delete from public.erp_counter_sales sale
+  where sale.id::text like 'de000000%' and sale.sold_at < p_truoc
+    and not exists (
+      select 1 from public.erp_counter_sale_lines line
+      where line.tenant_id = sale.tenant_id and line.sale_id = sale.id
+    );
+
+  insert into pg_temp.nbj_don_xoa (order_id)
+  select customer_order.id from public.customer_orders customer_order
+  where customer_order.id::text like 'de000000%' and customer_order.created_at < p_truoc
+    and not exists (
+      select 1 from public.customer_order_tickets bridge
+      where bridge.order_id = customer_order.id
+        and not exists (select 1 from pg_temp.nbj_ve_xoa xoa where xoa.ticket_id = bridge.ticket_id)
+    )
+    and not exists (select 1 from public.erp_visitor_groups g where g.order_id = customer_order.id);
+  analyze pg_temp.nbj_don_xoa;
+
+  delete from public.customer_order_tickets bridge
+  where bridge.order_id in (select order_id from pg_temp.nbj_don_xoa);
+  delete from public.customer_commerce_audit_events event
+  where event.order_id in (select order_id from pg_temp.nbj_don_xoa);
+  delete from public.customer_payment_attempts payment
+  where payment.order_id in (select order_id from pg_temp.nbj_don_xoa);
+  delete from public.customer_booking_hold_slots hold_slot
+  using public.customer_booking_holds hold
+  where hold_slot.hold_id = hold.id
+    and hold.order_id in (select order_id from pg_temp.nbj_don_xoa);
+  delete from public.customer_booking_holds hold
+  where hold.order_id in (select order_id from pg_temp.nbj_don_xoa);
+  delete from public.customer_order_lines line
+  where line.order_id in (select order_id from pg_temp.nbj_don_xoa);
+  delete from public.customer_orders customer_order
+  where customer_order.id in (select order_id from pg_temp.nbj_don_xoa);
+
+  delete from public.erp_tickets ticket
+  where ticket.id in (select ticket_id from pg_temp.nbj_ve_xoa)
+    -- Nêu cả tenant_id: chỉ mục của dòng phiếu bắt đầu bằng tenant_id, thiếu nó
+    -- là mỗi vé đọc lại cả bảng (đo trên PGlite: 150 giây thay vì vài giây).
+    and not exists (
+      select 1 from public.erp_counter_sale_lines line
+      where line.tenant_id = ticket.tenant_id and line.ticket_id = ticket.id
+    )
+    and not exists (select 1 from public.customer_order_tickets bridge where bridge.ticket_id = ticket.id);
+
+  perform set_config('nbj.cho_phep_xoa', '', true);
+  return v_so;
+end;
+$ham$;
+
+-- Làm mới là cửa sổ trượt: xoá phần mẫu cũ hơn p_so_ngay ngày, rồi sinh tiếp từ
+-- giờ mẫu cuối cùng tới bây giờ, từng giờ một theo thứ tự thời gian (đơn web
+-- phải có trước lượt quét của chính nó). Không xoá rồi sinh lại đúng những mã
+-- cũ: đo trên PGlite, làm thế chậm gấp ba vì chỉ mục còn vướng dòng vừa xoá.
+create or replace function public.erp_lich_su_mau_lam_moi(p_so_ngay integer default 60)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $ham$
 declare
   v_gio timestamptz;
+  v_tu timestamptz;
+  v_cuoi timestamptz;
+  v_so integer := 0;
 begin
+  if p_so_ngay is null or p_so_ngay < 1 or p_so_ngay > 90 then
+    raise exception using errcode = '22023', message = 'ERP_DEMO_HISTORY_DAYS_INVALID';
+  end if;
+  -- Hai lượt làm mới chạy chồng nhau thì lượt sau đợi lượt trước xong.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('erp-lich-su-mau', 0));
+  v_tu := date_trunc('hour', now()) - make_interval(days => p_so_ngay);
+  perform public.erp_lich_su_mau_xoa(v_tu);
+  select date_trunc('hour', greatest(
+    (select max(sale.sold_at) from public.erp_counter_sales sale where sale.id::text like 'de000000%'),
+    (select max(customer_order.created_at) from public.customer_orders customer_order
+      where customer_order.id::text like 'de000000%')
+  )) into v_cuoi;
   for v_gio in
     select generate_series(
-      date_trunc('hour', now()) - interval '60 days',
+      greatest(v_tu, coalesce(v_cuoi, v_tu)),
       date_trunc('hour', now()),
       interval '1 hour'
     )
   loop
-    perform public.erp_lich_su_mau_sinh_gio(v_gio, now());
+    v_so := v_so + public.erp_lich_su_mau_sinh_gio(v_gio, now());
+  end loop;
+  return v_so;
+end;
+$ham$;
+
+revoke all on function public.erp_lich_su_mau_xoa(timestamptz) from public, anon, authenticated, service_role;
+grant execute on function public.erp_lich_su_mau_xoa(timestamptz) to service_role;
+revoke all on function public.erp_lich_su_mau_lam_moi(integer) from public, anon, authenticated, service_role;
+grant execute on function public.erp_lich_su_mau_lam_moi(integer) to service_role;
+
+select public.erp_lich_su_mau_lam_moi(60);
+
+-- Mỗi tháng một lần: 03:00 sáng mùng 2 giờ Việt Nam (20:00 UTC mùng 1).
+do $$
+declare
+  v_job record;
+begin
+  for v_job in select jobid from cron.job where jobname = 'erp-lich-su-mau-hang-thang' loop
+    perform cron.unschedule(v_job.jobid);
   end loop;
 end;
 $$;
+
+select cron.schedule(
+  'erp-lich-su-mau-hang-thang',
+  '0 20 1 * *',
+  $cron$select public.erp_lich_su_mau_lam_moi(60);$cron$
+);
 
 -- 6. Trang đầu giám đốc đếm cả lịch sử mẫu, và nói ra phần mẫu là bao nhiêu
 --    (demo_history_entry_count) để màn hình ghi "gồm số liệu mẫu". Vé gieo cũ

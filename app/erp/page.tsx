@@ -30,6 +30,14 @@ type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+/**
+ * Khung "Trình diễn một vòng khách" tạm ẩn từ 26/09/2026. Chủ dự án: "khung
+ * hướng dẫn chỉ nên làm khi xong hết rồi". ERP còn đang đổi (bỏ module vỏ,
+ * thêm báo cáo, số liệu mẫu), nên kịch bản viết bây giờ sẽ sai ngay. Tiến độ
+ * đã lưu trong kho giữ nguyên; bật lại khi viết kịch bản cuối cùng.
+ */
+const HIEN_VONG_DAN = false;
+
 export default async function ErpHomePage({ searchParams }: Props) {
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
@@ -97,7 +105,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
   // Mạch dẫn (giai đoạn 3) — chỉ giám đốc, vì thực tế chỉ tài khoản này được
   // dùng. Kho tự nuốt lỗi và trả "chưa từng đi", nên một lượt đọc hỏng cùng
   // lắm làm vòng dẫn chào lại, không kéo sập trang chủ.
-  const tienDoVongDan = isDirector
+  const tienDoVongDan = isDirector && HIEN_VONG_DAN
     ? await readTienDoVongDan({ accountId: user.id, vongId: VONG_TIEN_ID })
     : null;
 

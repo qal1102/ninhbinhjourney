@@ -9,11 +9,13 @@ const sql = readFileSync(
 const compact = sql.replace(/\s+/g, " ").trim();
 
 describe("migration 092: lịch sử mẫu 60 ngày", () => {
-  it("chạy trọn một giao dịch, không xoá hay bỏ bảng nào", () => {
+  it("chạy trọn một giao dịch, không bỏ bảng nào", () => {
     expect(compact.startsWith("--")).toBe(true);
     expect(compact).toContain("begin;");
     expect(compact.endsWith("commit;")).toBe(true);
-    expect(compact).not.toMatch(/\bdelete from\b|\bdrop table\b|\btruncate\b/i);
+    // Xoá chỉ có trong hàm dọn mẫu (kiểm riêng ở dưới); không bỏ bảng nào.
+    expect(compact).not.toMatch(/\btruncate\b/i);
+    expect(compact).not.toContain("drop " + "table");
   });
 
   it("vé mẫu mang nguồn riêng, vé gieo cũ vẫn giữ nguồn của nó", () => {
@@ -58,7 +60,25 @@ describe("migration 092: lịch sử mẫu 60 ngày", () => {
     expect(compact).not.toContain("ve.data_origin in ('real', 'demo-seed'");
   });
 
-  it("không tự đặt lịch chạy lặp lại: sinh tiếp là quyết định riêng của chủ dự án", () => {
-    expect(compact).not.toContain("cron.schedule");
+  it("không sinh liên tục: chỉ một lịch mỗi tháng, là cửa sổ trượt 60 ngày", () => {
+    expect(compact.split("cron.schedule(").length - 1).toBe(1);
+    expect(compact).toContain("'erp-lich-su-mau-hang-thang', '0 20 1 * *', $cron$select public.erp_lich_su_mau_lam_moi(60);$cron$");
+    expect(compact).toContain("perform public.erp_lich_su_mau_xoa(v_tu);");
+    expect(compact).toContain("greatest(v_tu, coalesce(v_cuoi, v_tu))");
+  });
+
+  it("xoá mẫu chỉ qua khe riêng, chỉ dòng mang mã mẫu, giữ vé hồ sơ thật đang trỏ vào", () => {
+    expect(compact).toContain("perform set_config('nbj.cho_phep_xoa', 'lich-su-mau', true);");
+    expect(compact).toContain("perform set_config('nbj.cho_phep_xoa', '', true);");
+    expect(compact).toContain("and old.id::text like 'de000000%' then return old;");
+    expect(compact).toContain("exists (select 1 from public.erp_visitor_groups g where g.ticket_id = ticket.id)");
+    expect(compact).toContain("exists (select 1 from public.erp_visit_reviews r where r.ticket_id = ticket.id)");
+    expect(compact).toContain("raise exception using errcode = '55000', message = 'COUNTER_SALE_APPEND_ONLY';");
+    expect(compact).toContain(
+      "revoke all on function public.erp_lich_su_mau_xoa(timestamptz) from public, anon, authenticated, service_role;",
+    );
+    expect(compact).toContain(
+      "revoke all on function public.erp_lich_su_mau_lam_moi(integer) from public, anon, authenticated, service_role;",
+    );
   });
 });

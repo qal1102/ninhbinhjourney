@@ -32,7 +32,6 @@ export class CustomerBookingRepositoryError extends Error {
       | "SLOT_PAST"
       | "SLOT_NOT_OFFERED"
       | "PARTY_MIX_INVALID"
-      | "HOLD_NOT_FOUND"
       | "HOLD_EXPIRED"
       | "QR_LAPSE_LIMIT"
       | "OWNERSHIP_REQUIRED"
@@ -91,7 +90,9 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_BOOKING_SLOT_PAST", "SLOT_PAST", "Khung giờ này đã qua hoặc quá gần giờ bắt đầu."],
     ["CUSTOMER_BOOKING_SLOT_NOT_OFFERED", "SLOT_NOT_OFFERED", "Khung giờ này không nằm trong lịch bán của gói."],
     ["CUSTOMER_BOOKING_PARTY_MIX_INVALID", "PARTY_MIX_INVALID", "Số người lớn cộng số trẻ em phải đúng bằng tổng số khách, và phải có ít nhất một người lớn."],
-    ["CUSTOMER_BOOKING_HOLD_NOT_FOUND", "HOLD_NOT_FOUND", "Không tìm thấy lượt giữ chỗ này."],
+    // Lượt giữ quá 15 phút bị xoá hẳn (migration 090), nên với khách "không tìm
+    // thấy lượt giữ" gần như luôn là "đã hết giờ": nói điều khách làm tiếp được.
+    ["CUSTOMER_BOOKING_HOLD_NOT_FOUND", "HOLD_EXPIRED", "Lượt giữ chỗ đã quá 15 phút nên chỗ đã được nhả ra. Mời bạn giữ lại một khung giờ ạ."],
     ["CUSTOMER_BOOKING_HOLD_EXPIRED", "HOLD_EXPIRED", "Lượt giữ chỗ đã quá 15 phút nên chỗ đã được nhả ra. Mời bạn giữ lại một khung giờ ạ."],
     ["CUSTOMER_QR_LAPSE_LIMIT", "QR_LAPSE_LIMIT", "Số này đã giữ chỗ ba lần trong tuần mà chưa thanh toán. Để công bằng với khách khác, mời bạn tới quầy vé tại điểm để đặt trực tiếp ạ."],
     ["CUSTOMER_BOOKING_OWNERSHIP_REQUIRED", "OWNERSHIP_REQUIRED", "Lượt giữ chỗ không thuộc phiên khách hiện tại."],

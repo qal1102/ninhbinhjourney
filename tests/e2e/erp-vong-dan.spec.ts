@@ -22,6 +22,10 @@ import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
 const chayCucBo = baseUrl === "" || /localhost|127\.0\.0\.1/i.test(baseUrl);
 
+// Khung tạm ẩn từ 26/09/2026 (`HIEN_VONG_DAN` trong app/erp/page.tsx): chủ dự án
+// muốn dựng hướng dẫn sau cùng, khi mọi màn đã chốt. Bật lại cùng lúc với khung.
+test.skip(true, "Vòng dẫn tạm ẩn cho tới khi viết kịch bản cuối cùng.");
+
 async function loginAsDirector(page: import("@playwright/test").Page) {
   await page.goto("/erp/login");
   await page.getByLabel("Tên đăng nhập").fill("giamdoc");

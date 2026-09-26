@@ -286,7 +286,9 @@ async function readSupabaseState(): Promise<ErpAccessState> {
     const accountId = row.employee_account_id as string;
     const current = employees[accountId] ?? { siteIds: [], moduleIdsBySite: {} };
     if (!current.siteIds.includes(siteId)) current.siteIds.push(siteId);
-    current.moduleIdsBySite[siteId] = (row.module_ids ?? []) as ErpModuleId[];
+    // Kho có thể còn mã module đã gỡ (xe trung chuyển, tài sản — 26/09/2026);
+    // bỏ qua thay vì để màn phân quyền gặp một mã không có định nghĩa.
+    current.moduleIdsBySite[siteId] = ((row.module_ids ?? []) as string[]).filter(isModuleId);
     employees[accountId] = current;
   }
 

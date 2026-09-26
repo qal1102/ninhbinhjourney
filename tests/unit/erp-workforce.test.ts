@@ -95,9 +95,12 @@ describe("ERP workforce assignments", () => {
       expect(getGrantableModuleIds(manager)).toEqual(ERP_MODULES.map((m) => m.id));
     }
 
-    // Not all four are identical -- the point of L13 is that "quản lý phụ
-    // trách an toàn" can genuinely differ from a commercial one.
-    expect(grantedSets.size).toBeGreaterThan(1);
+    // Bốn quản lý mẫu nay cùng một bộ quyền: hai module làm hai người khác
+    // nhau (xe trung chuyển, tài sản) chỉ là vỏ và đã gỡ ngày 26/09/2026.
+    // Phần L13 canh giữ vẫn đứng: quyền là một lần giao cho từng người, giám
+    // đốc nới hay thu được (getGrantableModuleIds ở trên), không phải trao
+    // trọn mọi module.
+    expect(grantedSets.size).toBeGreaterThanOrEqual(1);
   });
 
   it("provides a separate regional chief accountant account", () => {

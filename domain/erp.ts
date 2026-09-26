@@ -17,8 +17,6 @@ export type ErpModuleId =
   | "su-co"
   | "nhan-su"
   | "cham-cong"
-  | "xe-trung-chuyen"
-  | "tai-san-bao-tri"
   | "doi-tac-nha-cung-ung"
   | "sop-dien-tap"
   | "tai-chinh-doi-soat"
@@ -195,32 +193,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     accent: "#24756a",
     employeeAssignable: true,
     status: "live",
-  },
-  {
-    id: "xe-trung-chuyen",
-    name: "Xe trung chuyển",
-    shortName: "Trung chuyển",
-    description: "Lịch xe, tài xế, điểm đón và trạng thái từng vòng vận hành.",
-    accent: "#3865a3",
-    employeeAssignable: true,
-    status: "planned",
-    plannedNeeds: [
-      "Danh sách xe, tài xế và tuyến chạy",
-      "Vị trí xe theo thời gian thực hoặc mốc điểm đón thủ công",
-    ],
-  },
-  {
-    id: "tai-san-bao-tri",
-    name: "Tài sản & nghiệm thu",
-    shortName: "Tài sản",
-    description: "Theo dõi tài sản, bảo dưỡng, checklist, ảnh hiện trường và biên bản bàn giao.",
-    accent: "#6f6759",
-    employeeAssignable: true,
-    status: "planned",
-    plannedNeeds: [
-      "Danh mục tài sản kèm mã và lịch bảo dưỡng",
-      "Chu kỳ bảo dưỡng và người phụ trách từng nhóm tài sản",
-    ],
   },
   {
     id: "doi-tac-nha-cung-ung",

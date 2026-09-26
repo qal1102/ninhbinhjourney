@@ -23,6 +23,12 @@ const SITE_UUID_BY_SLUG: Record<ErpSiteId, string> = {
   "bai-dinh": "10000000-0000-4000-8000-000000000003",
 };
 
+/** Shell modules removed on 26/09/2026 and what migration 091 turns them into ("" = dropped). */
+const REMOVED_MODULE_REPLACEMENT: Record<string, string> = {
+  "xe-trung-chuyen": "suc-chua",
+  "tai-san-bao-tri": "",
+};
+
 /** The `array[...]` literal that belongs to a given account id in the VALUES list. */
 function seededModulesFor(accountId: string): string[] {
   const block = compact.split(`'${accountId}',`)[1];
@@ -71,7 +77,14 @@ describe("ERP manager module access seed migration 018 contract", () => {
 
   it("pins the historical base before later additive grants", () => {
     for (const manager of listDemoSiteManagers()) {
-      const historical = seededModulesFor(manager.id);
+      // 018 is history and stays as written. The two shell modules it seeded
+      // were removed on 26/09/2026 and migration 091 rewrites them in the store
+      // (shuttle → suc-chua, assets dropped), so compare through that mapping.
+      const historical = [...new Set(
+        seededModulesFor(manager.id)
+          .map((moduleId) => REMOVED_MODULE_REPLACEMENT[moduleId] ?? moduleId)
+          .filter((moduleId) => moduleId !== ""),
+      )];
       const current = [...manager.initialModuleIds];
       const currentSet = new Set<string>(current);
       expect(historical.every((moduleId) => currentSet.has(moduleId))).toBe(true);
@@ -90,10 +103,11 @@ describe("ERP manager module access seed migration 018 contract", () => {
     for (const manager of listDemoSiteManagers()) {
       const modules = seededModulesFor(manager.id);
       for (const moduleId of modules) {
-        expect(known.has(moduleId as never)).toBe(true);
+        expect(known.has(moduleId as never) || moduleId in REMOVED_MODULE_REPLACEMENT).toBe(true);
       }
       // The point of V14: a manager is permissioned, not handed everything.
-      expect(modules.length).toBeLessThan(ERP_MODULES.length);
+      // 15 = the module count when 018 was written (two shells removed since).
+      expect(modules.length).toBeLessThan(15);
       expect(modules).not.toContain("bao-cao");
     }
   });

@@ -33,12 +33,6 @@ export const ERP_MODULE_GROUPS: readonly ErpModuleGroup[] = [
     moduleIds: ["nhan-su", "cham-cong"],
   },
   {
-    id: "vehicles-assets",
-    name: "Phương tiện & tài sản",
-    shortName: "Tài sản",
-    moduleIds: ["xe-trung-chuyen", "tai-san-bao-tri"],
-  },
-  {
     id: "projects-events",
     name: "Dự án & sự kiện",
     shortName: "Dự án",

@@ -96,7 +96,7 @@ export const WORKDAY_TASK_TEMPLATES: readonly WorkdayTaskTemplate[] = [
     siteId: "tam-chuc",
     title: "Điều phối xe điện giữa Vesak và Tam Quan Nội",
     station: "Điểm điều phối xe điện Vesak",
-    moduleId: "xe-trung-chuyen",
+    moduleId: "suc-chua",
     instructions:
       "Kiểm tra xe sẵn sàng, số khách chờ, vòng quay và báo xe chậm hoặc quá tải.",
     evidenceRequired: true,
@@ -136,7 +136,7 @@ export const WORKDAY_TASK_TEMPLATES: readonly WorkdayTaskTemplate[] = [
     siteId: "bai-dinh",
     title: "Điều phối xe điện đưa đón khách",
     station: "Điểm đón xe điện Bái Đính",
-    moduleId: "xe-trung-chuyen",
+    moduleId: "suc-chua",
     instructions:
       "Kiểm tra số xe hoạt động, hàng chờ, ưu tiên khách cần hỗ trợ và báo chuyến trễ.",
     evidenceRequired: true,

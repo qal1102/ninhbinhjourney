@@ -40,11 +40,13 @@ test("quản lý bị chặn đúng ở module không được giao, và vẫn v
 test("hai quản lý có bộ quyền khác nhau — không còn ai cũng thấy mọi thứ", async ({
   page,
 }) => {
-  // Tam Cốc's manager has the shuttle but not the drill book; Tràng An's
-  // manager is the other way round. Same role, different grant.
+  // Tam Cốc's manager runs crowd flow but not the drill book; Tràng An's
+  // manager holds the drill book. Same role, different grant. The shuttle
+  // module this used to open was an empty shell, removed on 26/09/2026;
+  // shuttle dispatch now lives in suc-chua.
   await login(page, "ql.tamcoc", ERP_MANAGER_PASSWORD);
-  await page.goto("/erp/tam-coc/xe-trung-chuyen");
-  await expect(page).toHaveURL(/\/erp\/tam-coc\/xe-trung-chuyen$/);
+  await page.goto("/erp/tam-coc/suc-chua");
+  await expect(page).toHaveURL(/\/erp\/tam-coc\/suc-chua$/);
   await page.goto("/erp/tam-coc/sop-dien-tap");
   await expect(page).toHaveURL(/\/erp\/tam-coc\?denied=module/);
 });

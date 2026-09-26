@@ -37,7 +37,6 @@ const cases: Case[] = [
   ],
   ["Mở hóa đơn điện tử", "accountant", undefined, "/erp/finance"],
   ["Mở đóng kỳ tháng 7", "accountant", undefined, "/erp/finance"],
-  ["Mở tài sản Tam Chúc", "accountant", undefined, "/erp/tam-chuc/tai-san-bao-tri"],
   ["Mở báo cáo hiện trường Tràng An", "accountant", undefined, "/erp/trang-an/bao-cao-hien-truong"],
   ["Mở camera Tam Chúc", "accountant", undefined, null],
   ["Mở nhân sự Tràng An", "accountant", undefined, null],
@@ -57,8 +56,8 @@ const cases: Case[] = [
   ["Mở sức chứa", "manager", "tam-chuc", "/erp/tam-chuc/suc-chua"],
   ["Mở check-in khách", "employee", "trang-an", "/erp/trang-an/check-in-khach"],
   ["Mở chấm công", "employee", "trang-an", "/erp/trang-an/cham-cong"],
-  ["Mở xe trung chuyển Bái Đính", "manager", undefined, "/erp/bai-dinh/xe-trung-chuyen"],
-  ["Mở tài sản bảo trì Tràng An", "manager", undefined, "/erp/trang-an/tai-san-bao-tri"],
+  // Điều phối xe điện là việc điều luồng khách từ 26/09/2026.
+  ["Mở xe điện Bái Đính", "manager", undefined, "/erp/bai-dinh/suc-chua"],
   ["Mở đối tác nhà cung ứng Tam Chúc", "manager", undefined, "/erp/tam-chuc/doi-tac-nha-cung-ung"],
   ["Mở SOP Tam Cốc", "employee", undefined, "/erp/tam-coc/sop-dien-tap"],
   ["Mở bán vé Tràng An", "manager", undefined, "/erp/trang-an/ve-dat-cho"],

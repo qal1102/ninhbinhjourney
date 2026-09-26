@@ -18,7 +18,6 @@ describe("ERP role policy", () => {
       "ve-dat-cho",
       "bao-cao-hien-truong",
       "du-an-su-kien",
-      "tai-san-bao-tri",
       "doi-tac-nha-cung-ung",
       "tai-chinh-doi-soat",
       "bao-cao",
@@ -29,7 +28,6 @@ describe("ERP role policy", () => {
       "su-co",
       "nhan-su",
       "cham-cong",
-      "xe-trung-chuyen",
     ]));
   });
 

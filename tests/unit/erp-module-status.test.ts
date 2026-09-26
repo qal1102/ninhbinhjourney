@@ -45,7 +45,7 @@ describe("ERP module status honesty (T3)", () => {
 
   it("makes every planned module state what data it still needs", () => {
     const planned = ERP_MODULES.filter((module) => module.status === "planned");
-    expect(planned.length).toBe(3);
+    expect(planned.length).toBe(1);
     for (const entry of planned) {
       expect(entry.plannedNeeds?.length, entry.id).toBeGreaterThan(0);
       // No branch may exist for a planned module, or it would render something

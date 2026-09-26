@@ -170,9 +170,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: managerPassword,
     initialSiteIds: ["trang-an"],
     managedSiteIds: ["trang-an"],
-    // Tràng An runs the boat piers and the heaviest fixed infrastructure, so
-    // this manager also holds assets/acceptance and the SOP drill book.
-    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "tai-san-bao-tri"],
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS],
   },
   {
     id: "manager-tam-chuc",
@@ -183,9 +181,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: managerPassword,
     initialSiteIds: ["tam-chuc"],
     managedSiteIds: ["tam-chuc"],
-    // Tam Chúc is the crowd-scale/festival site: SOP drills plus the shuttle
-    // fleet that moves visitors between the gate and the temple complex.
-    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "xe-trung-chuyen"],
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS],
   },
   {
     id: "manager-tam-coc",
@@ -196,8 +192,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: managerPassword,
     initialSiteIds: ["tam-coc"],
     managedSiteIds: ["tam-coc"],
-    // Smallest operation of the four: base modules plus the shuttle only.
-    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "xe-trung-chuyen"],
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS],
   },
   {
     id: "manager-bai-dinh",
@@ -208,9 +203,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: managerPassword,
     initialSiteIds: ["bai-dinh"],
     managedSiteIds: ["bai-dinh"],
-    // Bái Đính runs the largest electric-shuttle fleet and a big maintained
-    // estate, but its drills are led from Tràng An.
-    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS, "xe-trung-chuyen", "tai-san-bao-tri"],
+    initialModuleIds: [...ERP_MANAGER_BASE_MODULE_IDS],
   },
   {
     id: "employee-trang-an-01",
@@ -281,7 +274,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: employeePassword,
     initialSiteIds: ["tam-chuc"],
     managedSiteIds: [],
-    initialModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "su-co", "cham-cong", "du-an-su-kien"],
+    initialModuleIds: ["suc-chua", "bao-cao-hien-truong", "su-co", "cham-cong", "du-an-su-kien"],
     workforceProfile: {
       employmentType: "permanent",
       accessStartsAt: "2024-02-01T00:00:00+07:00",
@@ -289,7 +282,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       supervisorId: "manager-tam-chuc",
       primaryStation: "Bến xe điện",
       shiftLabel: "07:15–12:15",
-      trainedModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "su-co", "cham-cong", "du-an-su-kien"],
+      trainedModuleIds: ["suc-chua", "bao-cao-hien-truong", "su-co", "cham-cong", "du-an-su-kien"],
     },
   },
   {
@@ -321,7 +314,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
     password: employeePassword,
     initialSiteIds: ["bai-dinh"],
     managedSiteIds: [],
-    initialModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "suc-chua", "cham-cong", "du-an-su-kien"],
+    initialModuleIds: ["suc-chua", "bao-cao-hien-truong", "cham-cong", "du-an-su-kien"],
     workforceProfile: {
       employmentType: "permanent",
       accessStartsAt: "2024-03-01T00:00:00+07:00",
@@ -329,7 +322,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
       supervisorId: "manager-bai-dinh",
       primaryStation: "Điểm đón xe điện",
       shiftLabel: "07:00–12:00",
-      trainedModuleIds: ["xe-trung-chuyen", "bao-cao-hien-truong", "suc-chua", "cham-cong", "du-an-su-kien"],
+      trainedModuleIds: ["suc-chua", "bao-cao-hien-truong", "cham-cong", "du-an-su-kien"],
     },
   },
 ] as const;

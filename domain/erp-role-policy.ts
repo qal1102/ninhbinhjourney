@@ -4,7 +4,6 @@ export const ERP_ACCOUNTANT_MODULE_IDS: readonly ErpModuleId[] = [
   "ve-dat-cho",
   "bao-cao-hien-truong",
   "du-an-su-kien",
-  "tai-san-bao-tri",
   "doi-tac-nha-cung-ung",
   "tai-chinh-doi-soat",
   "bao-cao",
@@ -22,9 +21,9 @@ export const ERP_ACCOUNTANT_MODULE_IDS: readonly ErpModuleId[] = [
  * `demo-session.ts` and the grant mechanism only ever applied to employees.
  *
  * Deliberately excluded here: `bao-cao` (regional forecasting belongs to the
- * director and accounting), plus `xe-trung-chuyen` and `tai-san-bao-tri`,
- * which are granted per manager in `demo-data.ts` according to what their
- * site actually operates. Daily Go/No-Go is a base manager duty at every site.
+ * director and accounting). Daily Go/No-Go is a base manager duty at every
+ * site. The shuttle and asset shells were removed on 26/09/2026: electric
+ * shuttle dispatch is crowd-flow work and lives in `suc-chua`.
  */
 export const ERP_MANAGER_BASE_MODULE_IDS: readonly ErpModuleId[] = [
   "ve-dat-cho",

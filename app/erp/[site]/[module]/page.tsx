@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { docBaoCaoCoSo } from "@/lib/erp/bao-cao-repository";
 import { notFound, redirect } from "next/navigation";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
@@ -186,6 +187,8 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         })
       : null;
 
+  const baoCao = moduleDefinition.id === "bao-cao" ? await docBaoCaoCoSo(site.id) : null;
+
   return (
     <ErpShell user={user} site={site} activeModuleId={moduleDefinition.id}>
       {/*
@@ -247,6 +250,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         counterSale={counterSale}
         onSiteDue={onSiteDue}
         initialCameraId={requestedCamera}
+        baoCao={baoCao}
       />
       </div>
     </ErpShell>

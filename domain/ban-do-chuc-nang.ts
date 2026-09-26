@@ -64,6 +64,7 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
       { id: "lap-but-toan", ten: "Kiểm chứng từ, lập bút toán", moTa: "Kế toán nhận chứng từ, lập bút toán, chuẩn bị thanh toán.", vai: "accountant", duongDan: "/erp/finance" },
       { id: "ghi-so", ten: "Ghi sổ và khoá kỳ", moTa: "Kế toán trưởng soát, ghi sổ, khoá hoặc mở lại kỳ.", vai: "chief-accountant", duongDan: "/erp/finance" },
       { id: "duyet-ngoai-le", ten: "Duyệt ngoại lệ tiền", moTa: "Lệch quỹ, công nợ vượt mức: giám đốc quyết.", vai: "director", duongDan: "/erp/finance" },
+      { id: "bao-cao-du-bao", ten: "Báo cáo và dự báo", moTa: "Tám tuần khách qua cổng, ngày đông giờ đông, dự báo bảy ngày tới.", vai: "director", duongDan: "/erp/{site}/bao-cao" },
     ],
   },
   {

@@ -12,7 +12,7 @@ test.describe("ERP: bản đồ mọi chức năng", () => {
     await loginAsDirector(page);
     const banDo = page.getByTestId("ban-do-chuc-nang");
     await banDo.locator("summary").click();
-    await expect(banDo.locator("[data-chuc-nang]")).toHaveCount(18);
+    await expect(banDo.locator("[data-chuc-nang]")).toHaveCount(19);
 
     const dong = banDo.locator('[data-chuc-nang="quet-cong"]');
     await expect(dong.getByRole("link", { name: "Xem" })).toHaveAttribute("href", "/erp/trang-an/check-in-khach");

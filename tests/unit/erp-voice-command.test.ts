@@ -40,7 +40,7 @@ const cases: Case[] = [
   ["Mở báo cáo hiện trường Tràng An", "accountant", undefined, "/erp/trang-an/bao-cao-hien-truong"],
   ["Mở camera Tam Chúc", "accountant", undefined, null],
   ["Mở nhân sự Tràng An", "accountant", undefined, null],
-  ["Mở báo cáo dự báo", "director", undefined, "/erp/finance#forecast"],
+  ["Mở báo cáo dự báo", "director", undefined, "/erp/trang-an/bao-cao"],
   ["Mở báo cáo tài chính Tam Chúc", "director", undefined, "/erp/tam-chuc/tai-chinh-doi-soat"],
   ["Mở camera Tam Chúc", "director", undefined, "/erp/tam-chuc/camera-ai"],
   ["Mở cam 2 Tam Chúc", "director", undefined, "/erp/tam-chuc/camera-ai?camera=02"],

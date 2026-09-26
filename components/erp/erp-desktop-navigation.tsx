@@ -141,11 +141,6 @@ export function ErpDesktopNavigation({ site, modules, activeModuleId }: Props) {
                   >
                     <span className="flex items-center justify-between gap-2">
                       <span>{module.name}</span>
-                      {module.status === "planned" ? (
-                        <span className="shrink-0 rounded-full bg-[#f6ecd8] px-2 py-0.5 text-xs font-black text-[#8a6b27]">
-                          Sau
-                        </span>
-                      ) : null}
                     </span>
                   </Link>
                 ))}

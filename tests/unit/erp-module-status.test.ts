@@ -10,9 +10,10 @@ const workspaceSource = readFileSync(
   "utf8",
 );
 
-// The twelve modules that own a real workflow component. Written out rather than
-// derived, so that flipping a module to `live` without wiring one is a test
-// failure and not a silent claim.
+// Every module owns a real workflow component. Written out rather than
+// derived, so that adding a module without wiring one is a test failure and
+// not a silent claim. There is no "planned" state any more (26/09/2026): the
+// two shells were removed and "bao-cao" was built.
 const MODULES_WITH_A_REAL_WORKFLOW = [
   "ve-dat-cho",
   "check-in-khach",
@@ -26,32 +27,23 @@ const MODULES_WITH_A_REAL_WORKFLOW = [
   "cham-cong",
   "doi-tac-nha-cung-ung",
   "tai-chinh-doi-soat",
+  "bao-cao",
 ] as const;
 
 describe("ERP module status honesty (T3)", () => {
-  it("marks live exactly the modules that dispatch to a workflow", () => {
-    const live = ERP_MODULES.filter((module) => module.status === "live").map(
-      (module) => module.id,
-    );
-    expect([...live].sort()).toEqual([...MODULES_WITH_A_REAL_WORKFLOW].sort());
-
+  it("every module dispatches to a real workflow", () => {
+    expect(ERP_MODULES.map((module) => module.id).sort()).toEqual([...MODULES_WITH_A_REAL_WORKFLOW].sort());
     for (const moduleId of MODULES_WITH_A_REAL_WORKFLOW) {
       expect(
         workspaceSource,
-        `${moduleId} claims to be live but has no branch in ModuleWorkspace`,
+        `${moduleId} has no branch in ModuleWorkspace`,
       ).toContain(`module.id === "${moduleId}"`);
     }
   });
 
-  it("makes every planned module state what data it still needs", () => {
-    const planned = ERP_MODULES.filter((module) => module.status === "planned");
-    expect(planned.length).toBe(1);
-    for (const entry of planned) {
-      expect(entry.plannedNeeds?.length, entry.id).toBeGreaterThan(0);
-      // No branch may exist for a planned module, or it would render something
-      // while claiming to render nothing.
-      expect(workspaceSource).not.toContain(`module.id === "${entry.id}"`);
-    }
+  it("no longer carries the empty-shell screen", () => {
+    expect(workspaceSource).not.toContain("PlannedModuleNotice");
+    expect(workspaceSource).not.toContain("Giai đoạn sau");
   });
 
   it("has no invented operational rows left in the workspace file", () => {

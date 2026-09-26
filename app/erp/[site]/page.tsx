@@ -109,8 +109,8 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
             không ai làm "01 rồi mới tới 02". Màu thì trước đây mỗi module một
             sắc, không mã hoá điều gì cả. Luật ERP: có trình tự thật thì dùng
             stepper có trạng thái; màu phải mã hoá được thứ gì đó, không thì
-            đừng dùng. Thứ duy nhất còn giữ màu là nhãn "Giai đoạn sau", vì nó
-            mã hoá đúng một điều: mở ra chưa có nghiệp vụ. */}
+            đừng dùng. Nhãn "Giai đoạn sau" cũng đã hết chỗ dùng từ 26/09/2026:
+            hai module vỏ đã gỡ, "Báo cáo & dự báo" đã chạy thật. */}
         <div className="mt-6 space-y-7">
           {groups.map((group) => (
             <div key={group.id}>
@@ -124,15 +124,7 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
                   >
                     <div className="flex items-start justify-between gap-4">
                       <h4 className="text-lg font-black text-[#24372f]">{module.name}</h4>
-                      {/* T3: một module chưa có nghiệp vụ phải nói trước khi
-                          người dùng mở ra, không phải sau. */}
-                      {module.status === "planned" ? (
-                        <span className="shrink-0 rounded-full bg-[#f6ecd8] px-3 py-1 text-xs font-black text-[#8a6b27]">
-                          Giai đoạn sau
-                        </span>
-                      ) : (
-                        <span className="shrink-0 text-xl text-[#91a098] transition group-hover:translate-x-1 group-hover:text-[#286655]">→</span>
-                      )}
+                      <span className="shrink-0 text-xl text-[#91a098] transition group-hover:translate-x-1 group-hover:text-[#286655]">→</span>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#697770]">{module.description}</p>
                   </Link>

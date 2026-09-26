@@ -363,13 +363,7 @@ export function ErpMobileMenu({
                             className="flex min-h-11 items-center justify-between rounded-lg px-2 text-sm font-bold text-[#52645c] hover:bg-[#f1f5f2]"
                           >
                             <span>{module.name}</span>
-                            {module.status === "planned" ? (
-                              <span className="rounded-full bg-[#f6ecd8] px-2 py-0.5 text-xs font-black text-[#8a6b27]">
-                                Sau
-                              </span>
-                            ) : (
-                              <span className="text-[#93a199]">›</span>
-                            )}
+                            <span className="text-[#93a199]">›</span>
                           </Link>
                         ))}
                       </section>

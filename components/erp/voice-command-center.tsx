@@ -266,7 +266,8 @@ export function resolveErpNavigationCommand(rawCommand: string, role: ErpRole, s
   if (matchedModule && targetSite && (asksToOpen || isShortModuleCommand)) {
     if ((role === "accountant" || role === "chief-accountant") && !ERP_ACCOUNTANT_MODULE_IDS.includes(matchedModule.id)) return null;
     if ((role === "director" || role === "accountant" || role === "chief-accountant") && !namedSite && !currentSiteId && matchedModule.id === "tai-chinh-doi-soat") return "/erp/finance";
-    if (role === "director" && !namedSite && !currentSiteId && matchedModule.id === "bao-cao") return "/erp/finance#forecast";
+    // Báo cáo & dự báo đi theo từng cơ sở; chưa nói cơ sở nào thì mở Tràng An, cơ sở đông nhất.
+    if (role === "director" && !namedSite && !currentSiteId && matchedModule.id === "bao-cao") return "/erp/trang-an/bao-cao";
     const cameraId = matchedModule.id === "camera-ai" ? findCameraId(command) : undefined;
     return `/erp/${targetSite}/${matchedModule.id}${cameraId ? `?camera=${cameraId}` : ""}`;
   }
@@ -487,9 +488,9 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
     if (/(du bao|30 ngay|thang toi|sap toi)/.test(command)) {
       pushReply({
-        answer: "Chưa đủ chuỗi dữ liệu để dự báo 30 ngày",
-        detail: "Cần dữ liệu đặt chỗ, công suất và lịch sự kiện đã được ghi nhận trước khi đưa ra dự báo.",
-        href: role === "director" ? "/erp/finance#forecast" : undefined,
+        answer: "Dự báo bảy ngày tới nằm ở Báo cáo & dự báo của từng cơ sở",
+        detail: "Tính từ trung bình cùng thứ bốn tuần gần nhất, nhân xu hướng, không thấp hơn số khách đã đặt trước.",
+        href: role === "director" || role === "accountant" || role === "chief-accountant" ? "/erp/trang-an/bao-cao" : undefined,
         hrefLabel: "Mở dự báo",
       });
       return;

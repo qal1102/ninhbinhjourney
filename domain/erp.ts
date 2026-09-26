@@ -41,20 +41,6 @@ export type ErpModule = {
   description: string;
   accent: string;
   employeeAssignable: boolean;
-  /**
-   * `live` — the module runs a real workflow against real persisted data.
-   * `planned` — the screen exists but no workflow is behind it yet.
-   *
-   * T3. Until this field existed the five planned modules rendered invented
-   * tables: named drivers, work orders, "2 tệp đính kèm". A client who asks
-   * "who is Nguyễn Văn Hải?" during a demo gets no honest answer, and every
-   * real module in the product loses credibility with him. `planned` modules
-   * now say what they will do and what data they still need, and say plainly
-   * that nothing is behind them yet.
-   */
-  status: "live" | "planned";
-  /** For `planned` modules only: the data that has to exist first. */
-  plannedNeeds?: readonly string[];
 };
 
 export const ERP_ROLE_LABELS: Record<ErpRole, string> = {
@@ -120,7 +106,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Đơn theo ngày, kênh bán, hoàn đổi và danh sách khách sắp đến.",
     accent: "#286655",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "check-in-khach",
@@ -129,7 +114,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Quét mã, xác thực quyền lợi và xử lý ngoại lệ ngay tại cổng.",
     accent: "#2f6f8f",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "suc-chua",
@@ -138,7 +122,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Theo dõi tải theo ca, tuyến và cảnh báo trước khi quá ngưỡng.",
     accent: "#9a6a20",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "camera-ai",
@@ -147,7 +130,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Xem hiện trường, mật độ ẩn danh và các cảnh báo an toàn theo từng khu vực.",
     accent: "#355f78",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "bao-cao-hien-truong",
@@ -156,7 +138,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Ảnh tại cổng, quầy vé, bến, tuyến và bằng chứng hoàn thành công việc theo ca.",
     accent: "#49735f",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "du-an-su-kien",
@@ -165,7 +146,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Theo dõi lễ hội và sự kiện lớn: tiến độ, ngân sách, nhà thầu, hạn chót và rủi ro cần xử lý.",
     accent: "#9a5f32",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "su-co",
@@ -174,7 +154,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Tiếp nhận, phân mức, giao người xử lý và lưu toàn bộ thời gian phản hồi.",
     accent: "#a34738",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "nhan-su",
@@ -183,7 +162,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Xếp ca, phân công nhân viên và mở đúng module theo trách nhiệm.",
     accent: "#71568f",
     employeeAssignable: false,
-    status: "live",
   },
   {
     id: "cham-cong",
@@ -192,7 +170,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Vào ca/ra ca bằng vị trí cơ sở, tự tạo bảng công và ngoại lệ đi muộn.",
     accent: "#24756a",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "doi-tac-nha-cung-ung",
@@ -201,7 +178,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Tiến độ, cam kết an toàn, hồ sơ nghiệm thu và công nợ của từng đơn vị.",
     accent: "#5d6f8f",
     employeeAssignable: false,
-    status: "live",
   },
   {
     id: "sop-dien-tap",
@@ -210,7 +186,6 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Quy trình theo ngưỡng, phân vai chỉ huy, lịch diễn tập và điều kiện mở cửa.",
     accent: "#8e573f",
     employeeAssignable: true,
-    status: "live",
   },
   {
     id: "tai-chinh-doi-soat",
@@ -219,19 +194,14 @@ export const ERP_MODULES: readonly ErpModule[] = [
     description: "Doanh thu, chi phí, biên lợi nhuận, công nợ và đối soát theo ca, kênh, cơ sở.",
     accent: "#8a6b27",
     employeeAssignable: false,
-    status: "live",
   },
   {
     id: "bao-cao",
     name: "Báo cáo & dự báo",
     shortName: "Phân tích",
-    description: "So sánh tháng, quý, năm; nhận diện xu hướng và các yếu tố cần xử lý sớm.",
+    description: "Tám tuần khách qua cổng, ngày đông giờ đông, tiền quầy và dự báo bảy ngày tới.",
     accent: "#8b5a2b",
     employeeAssignable: false,
-    status: "planned",
-    plannedNeeds: [
-      "Dữ liệu vận hành đủ dài để so sánh kỳ (hiện mới có từ 24/07/2026)",
-    ],
   },
 ] as const;
 

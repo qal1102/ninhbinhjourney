@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { BaoCaoWorkspace } from "./bao-cao-workspace";
+import type { BaoCaoCoSo } from "@/lib/erp/bao-cao-repository";
 import type { ErpModule, ErpSite } from "@/domain/erp";
 import { canViewRegionalFinance } from "@/domain/erp-role-policy";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
@@ -86,6 +88,8 @@ type Props = {
   capacityForecast?: SiteCapacityForecast | null;
   /** TC-13 — đoàn hôm nay có người tự khai cần hỗ trợ; rỗng ở mọi module khác. */
   shiftCare?: readonly ShiftCareGroup[];
+  /** Báo cáo & dự báo; `null` ở mọi module khác. */
+  baoCao?: BaoCaoCoSo | null;
 };
 
 function formatVnd(value: number) {
@@ -310,70 +314,6 @@ function SiteFinanceSource({
   );
 }
 
-/**
- * T3. These five screens used to render invented operational data: named
- * drivers running late, work orders with deadlines, attachment counts. None of
- * it existed. During a demo the first question about any of those rows has no
- * honest answer, and the ten modules that *are* real lose credibility with it.
- *
- * A module with nothing behind it now says so, says what it will do, and says
- * exactly which data has to arrive first. That is a roadmap the client can
- * act on instead of a screen they can be embarrassed by.
- */
-function PlannedModuleNotice({
-  site,
-  module,
-}: {
-  site: ErpSite;
-  module: ErpModule;
-}) {
-  return (
-    <div className="space-y-5">
-      <section className="rounded-3xl border border-[#e0d6c4] bg-[#fdf8ef] p-5 sm:p-8">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8a6b27]">
-          Giai đoạn sau · {site.shortName}
-        </p>
-        <h1 className="mt-2 text-3xl font-black text-[#3d3325] sm:text-4xl">
-          {module.name} chưa có nghiệp vụ chạy thật
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-[#6b6250]">
-          Màn hình này cố tình để trống. Hệ thống không hiển thị số liệu minh
-          hoạ ở đây, vì một con số không có nguồn thật sẽ bị hiểu nhầm là số
-          liệu vận hành.
-        </p>
-      </section>
-
-      <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-lg font-black text-[#20342c]">Khi hoàn thiện sẽ làm gì</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f6d66]">
-          {module.description}
-        </p>
-      </section>
-
-      {module.plannedNeeds && module.plannedNeeds.length > 0 ? (
-        <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-lg font-black text-[#20342c]">
-            Cần có dữ liệu này trước
-          </h2>
-          <ul className="mt-3 space-y-2">
-            {module.plannedNeeds.map((need) => (
-              <li
-                key={need}
-                className="flex gap-3 text-sm leading-6 text-[#5f6d66]"
-              >
-                <span
-                  aria-hidden
-                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#9a6a20]"
-                />
-                <span>{need}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-    </div>
-  );
-}
 
 export function ModuleWorkspace({
   site,
@@ -401,6 +341,7 @@ export function ModuleWorkspace({
   initialCameraId,
   capacityForecast = null,
   shiftCare = [],
+  baoCao = null,
 }: Props) {
   if (module.id === "suc-chua") {
     return (
@@ -564,6 +505,9 @@ export function ModuleWorkspace({
       </>
     );
   }
+  if (module.id === "bao-cao" && baoCao) {
+    return <BaoCaoWorkspace site={site} baoCao={baoCao} />;
+  }
   if (module.id === "doi-tac-nha-cung-ung") {
     return (
       <>
@@ -584,22 +528,18 @@ export function ModuleWorkspace({
     );
   }
 
-  // A `live` module reaching here means its data failed to load (today only
-  // du-an-su-kien can, when projectWorkspace is null). Saying "giai đoạn sau"
-  // would be a lie about a module that works, so say what actually happened.
-  if (module.status === "live") {
-    return (
-      <section className="rounded-2xl border border-[#e6cdc7] bg-[#fff6f3] p-5 sm:p-6">
-        <h1 className="text-xl font-black text-[#8c4436]">
-          Chưa tải được dữ liệu {module.name}
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-[#7a5750]">
-          Nghiệp vụ này có chạy thật, nhưng kho dữ liệu chưa phản hồi cho cơ sở{" "}
-          {site.shortName}. Xin tải lại trang; nếu vẫn vậy, báo bộ phận hệ thống.
-        </p>
-      </section>
-    );
-  }
-
-  return <PlannedModuleNotice site={site} module={module} />;
+  // Mọi module đều có nghiệp vụ thật (26/09/2026). Tới được đây nghĩa là
+  // phần dữ liệu của nó không đọc được — du-an-su-kien khi projectWorkspace
+  // là null, bao-cao khi baoCao là null — nên nói đúng điều đã xảy ra.
+  return (
+    <section className="rounded-2xl border border-[#e6cdc7] bg-[#fff6f3] p-5 sm:p-6">
+      <h1 className="text-xl font-black text-[#8c4436]">
+        Chưa tải được dữ liệu {module.name}
+      </h1>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-[#7a5750]">
+        Nghiệp vụ này có chạy thật, nhưng kho dữ liệu chưa phản hồi cho cơ sở{" "}
+        {site.shortName}. Xin tải lại trang; nếu vẫn vậy, báo bộ phận hệ thống.
+      </p>
+    </section>
+  );
 }

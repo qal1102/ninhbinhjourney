@@ -179,18 +179,13 @@ export default async function ErpHomePage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      {isDirector ? (
+      {/* Không có việc chờ thì khối "Cần giám đốc quyết định" trong bảng số
+          liệu đã nói điều đó; thêm một khung "không có gì" ở đầu trang chỉ
+          đẩy số liệu xuống. */}
+      {isDirector && tongViecCho(demViecChoGiamDoc) > 0 ? (
         <ViecDauTienPanel
           dem={demViecChoGiamDoc}
           siteId={visibleSites[0]?.id ?? ERP_SITES[0].id}
-        />
-      ) : null}
-
-      {isDirector && !user.actingAs ? (
-        <BanDoChucNangPanel
-          targets={mucTieuChuyenVai}
-          quyen={access.employees}
-          chuyenVaiDuoc={isRoleSwitchEnabled()}
         />
       ) : null}
 
@@ -231,6 +226,17 @@ export default async function ErpHomePage({ searchParams }: Props) {
           }
         />
       )}
+
+      {/* Bản đồ là chỗ tra cứu, không phải việc hằng ngày: đứng sau số liệu. */}
+      {isDirector && !user.actingAs ? (
+        <div className="mt-6">
+          <BanDoChucNangPanel
+            targets={mucTieuChuyenVai}
+            quyen={access.employees}
+            chuyenVaiDuoc={isRoleSwitchEnabled()}
+          />
+        </div>
+      ) : null}
     </ErpShell>
   );
 }

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 /**
- * "Việc nên làm trước" — một câu duy nhất ở đầu trang chủ giám đốc.
+ * "Việc nên làm trước" — một câu duy nhất ở đầu trang chủ giám đốc, chỉ khi có việc.
  *
  * Bài này canh thứ dễ mất nhất khi trang chủ được xếp lại: khối phải đứng
  * **trên cùng**, trước cả vòng dẫn và bảng điều hành. Nó là mũi tên chỉ
@@ -22,8 +22,11 @@ async function loginAsDirector(page: import("@playwright/test").Page) {
 test("việc nên làm trước đứng trên cùng và nói rõ vì sao nó đứng trước", async ({ page }) => {
   await loginAsDirector(page);
 
+  // Không có việc chờ thì khung không hiện: khối quyết định trong bảng số
+  // liệu đã nói "0 hồ sơ đang chờ", một khung báo trống nữa chỉ đẩy số xuống.
+  await expect(page.locator("#quyet-dinh-giam-doc")).toBeVisible();
   const viec = page.getByTestId("viec-dau-tien");
-  await expect(viec).toBeVisible();
+  if ((await viec.count()) === 0) return;
   await expect(viec).toContainText("Việc nên làm trước");
 
   const viTri = await page.evaluate(() => {
@@ -54,12 +57,10 @@ test("có việc thì có nút mở thẳng tới nơi làm; hết việc thì k
   await loginAsDirector(page);
 
   const viec = page.getByTestId("viec-dau-tien");
-  const loaiViec = await viec.getAttribute("data-viec");
   const nut = page.getByTestId("viec-dau-tien-mo");
 
-  if (loaiViec === "khong-co") {
+  if ((await viec.count()) === 0) {
     await expect(nut).toHaveCount(0);
-    await expect(viec).toContainText("không có việc nào chờ anh");
     return;
   }
 

@@ -14,8 +14,9 @@ import {
  * bảng điều khiển thứ hai; nó là mũi tên chỉ đường. Dài ra một chút là nó
  * thành thứ phải đọc, và thế thì hỏng mục đích.
  *
- * Ngày rảnh thì nó nói thẳng là rảnh và không có nút nào — không bịa ra một
- * việc gợi ý để màn hình đỡ trống.
+ * Trang chủ chỉ dựng khối này khi có việc chờ (26/09/2026). Ngày rảnh thì
+ * khối quyết định trong bảng số liệu đã nói "0 hồ sơ đang chờ"; không bịa ra
+ * một việc gợi ý để màn hình đỡ trống.
  */
 export function ViecDauTienPanel({
   dem,

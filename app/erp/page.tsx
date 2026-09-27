@@ -58,6 +58,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
     pendingProjectChangeRequests,
     pendingSopDecisions,
     ticketOverview,
+    mucTieuChuyenVai,
   ] = await Promise.all([
     getAccessState(),
     listShiftClosures({ siteIds: user.siteIds }),
@@ -93,6 +94,12 @@ export default async function ErpHomePage({ searchParams }: Props) {
           return null;
         })
       : Promise.resolve(null),
+    // Bước trình diễn nào là việc của nhân viên thì chuẩn bị sẵn tài khoản
+    // đúng người, để nút "Làm thử" chuyển vai và vào thẳng màn hình ấy. Đọc
+    // cùng nhóm với phần trên: trước 27/09 nó chờ riêng một lượt phía sau.
+    isDirector && !user.actingAs && isRoleSwitchEnabled()
+      ? listRoleSwitchTargets()
+      : Promise.resolve([]),
   ]);
   const params = (await searchParams) ?? {};
   const denied = Array.isArray(params.denied)
@@ -159,11 +166,6 @@ export default async function ErpHomePage({ searchParams }: Props) {
       "Xem điểm khách chấm ở màn Khách hàng.";
   }
 
-  // Bước trình diễn nào là việc của nhân viên thì chuẩn bị sẵn tài khoản
-  // đúng người, để nút "Làm thử" chuyển vai và vào thẳng màn hình ấy.
-  const mucTieuChuyenVai = isDirector && !user.actingAs && isRoleSwitchEnabled()
-    ? await listRoleSwitchTargets()
-    : [];
   const taiKhoanTheoChang: Partial<Record<number, string>> = {};
   for (const chang of VONG_TIEN) {
     if (!chang.moMan?.vai) continue;

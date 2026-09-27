@@ -44,6 +44,16 @@ export default async function Customer360Page({
   if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
   if (!canViewCustomer360(user.role)) redirect("/erp?denied=customer-data");
 
+  const homNay = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }),
+  );
+  const batDau = new Date(homNay);
+  batDau.setDate(batDau.getDate() - 29);
+  const ngay = (d: Date) => d.toISOString().slice(0, 10);
+  const doc = (d: Date) => d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+  const { xem } = await searchParams;
+  const xemHopLe = xem && UUID.test(xem) ? xem : null;
+
   let status: "disabled" | "unavailable" | "ready" = "disabled";
   let journeys: Customer360Journey[] = [];
   let orders: Customer360BookingOrder[] = [];
@@ -52,6 +62,31 @@ export default async function Customer360Page({
   const journeyEnabled = isCustomerJourneyPersistenceEnabled();
   const bookingEnabled = isCustomerBookingEnabled();
   const recommendationsEnabled = isCustomerRecommendationsEnabled();
+
+  /*
+   * Bảng điểm 30 ngày (TC-12 mục 2) và hồ sơ khách khi đường dẫn đã chỉ rõ
+   * ai: không phụ thuộc đơn hay gợi ý, nên đọc cùng nhóm song song với chúng.
+   * Trước 27/09 chúng nối đuôi sau mọi lượt đọc khác, màn này mất khoảng 2,7
+   * giây. Cả hai tự trả rỗng khi lỗi, nên không kéo đổ nhóm; và vẫn chỉ đọc
+   * SAU khi đã ghi nhật ký truy cập, như mọi dữ liệu khách.
+   */
+  const docDanhGia = (): Promise<[SiteReviewOverview[], number]> =>
+    bookingEnabled
+      ? Promise.all([
+          listSiteReviewOverview({
+            siteIds: [...TRIP_PASSPORT_PLACE_IDS],
+            from: ngay(batDau),
+            to: ngay(homNay),
+          }),
+          // Hạn mức đã dùng: chỉ hỏi khi vai thật sự ẩn được, đỡ một lượt đọc thừa.
+          canModerateReviews(user.role) ? hideQuotaUsed(user.id) : Promise.resolve(0),
+        ])
+      : Promise.resolve([[], 0]);
+  const docHoSoTheoDuongDan = (): Promise<HoSoKhach | null> =>
+    bookingEnabled && xemHopLe ? hoSoTheoMaHoSo(xemHopLe).catch(() => null) : Promise.resolve(null);
+
+  let danhGia: [SiteReviewOverview[], number] | null = null;
+  let hoSoXem: HoSoKhach | null = null;
   if (journeyEnabled || bookingEnabled || recommendationsEnabled) {
     try {
       // Ghi nhật ký truy cập TRƯỚC khi đọc bất cứ đơn hay gợi ý nào — đọc hành
@@ -61,14 +96,15 @@ export default async function Customer360Page({
       } else {
         await auditCustomer360Access(user.id);
       }
-      // Hai lượt đọc còn lại không phụ thuộc nhau, nên chạy song song thay vì
-      // nối đuôi. Lượt kiểm tay ngày 12/09/2026 thấy màn hình này chậm; đo lại
-      // ra khoảng 3 giây, chậm hơn màn Tài chính chừng một giây — đúng cỡ một
-      // lượt chờ nối đuôi thừa.
-      const [orderResult, queue] = await Promise.all([
+      // Các lượt đọc còn lại không phụ thuộc nhau, nên chạy song song.
+      const [orderResult, queue, danhGiaDoc, hoSoDoc] = await Promise.all([
         bookingEnabled ? listCustomer360BookingOrders() : Promise.resolve(null),
         recommendationsEnabled ? listCustomer360Recommendations() : Promise.resolve(null),
+        docDanhGia(),
+        docHoSoTheoDuongDan(),
       ]);
+      danhGia = danhGiaDoc;
+      hoSoXem = hoSoDoc;
       if (orderResult) orders = orderResult;
       if (queue) {
         recommendations = queue.recommendations;
@@ -80,40 +116,16 @@ export default async function Customer360Page({
       status = "unavailable";
     }
   }
-
-  /*
-   * TC-12 mục 2 — bảng điểm 30 ngày gần nhất, tính theo ngày Việt Nam. Đọc
-   * riêng và nuốt lỗi bên trong kho: khối này hỏng thì ba khối kia của màn
-   * hình Khách hàng vẫn phải sống.
-   */
-  const homNay = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }),
-  );
-  const batDau = new Date(homNay);
-  batDau.setDate(batDau.getDate() - 29);
-  const ngay = (d: Date) => d.toISOString().slice(0, 10);
-  const doc = (d: Date) => d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
-  let reviewRows: SiteReviewOverview[] = [];
-  let hidesUsed = 0;
-  if (bookingEnabled) {
-    reviewRows = await listSiteReviewOverview({
-      siteIds: [...TRIP_PASSPORT_PLACE_IDS],
-      from: ngay(batDau),
-      to: ngay(homNay),
-    });
-    // Hạn mức đã dùng: chỉ hỏi khi vai thật sự ẩn được, đỡ một lượt đọc thừa.
-    if (canModerateReviews(user.role)) hidesUsed = await hideQuotaUsed(user.id);
-  }
+  // Nhóm trên hỏng hoặc không chạy thì hai khối này vẫn phải có.
+  const [reviewRows, hidesUsed] = danhGia ?? (await docDanhGia());
 
   /*
    * "Khách thấy gì" — giám đốc đứng ở vị trí khách để trình diễn: hộ chiếu
    * của một khách thật, dựng bằng đúng thành phần trang /ho-so đang dùng.
    * Chưa chọn ai thì lấy khách của đơn mới nhất, để màn hình không trống.
    */
-  const { xem } = await searchParams;
-  const maXem = xem && UUID.test(xem) ? xem : orders[0]?.profileId ?? null;
-  let hoSoXem: HoSoKhach | null = null;
-  if (bookingEnabled && maXem) {
+  const maXem = xemHopLe ?? orders[0]?.profileId ?? null;
+  if (!hoSoXem && bookingEnabled && maXem) {
     try {
       hoSoXem = await hoSoTheoMaHoSo(maXem);
     } catch {

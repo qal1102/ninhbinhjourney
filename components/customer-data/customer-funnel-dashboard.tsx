@@ -31,6 +31,9 @@ function percent(value: number, total: number) {
  */
 function tyLe(index: number, value: number, truoc: number) {
   if (index === 0) return "mốc đầu";
+  // Có lượt vào thẳng bước này mà không qua bước trước (đặt từ đường dẫn
+  // chia sẻ, lịch sử mẫu chỉ sinh đơn). Phần trăm quá 100% là vô nghĩa.
+  if (index < 4 && value > truoc) return "nhiều hơn bước trước: có lượt vào thẳng";
   if (index === 4) {
     return truoc === 0 ? "—" : `bình quân ${(value / truoc).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} lượt vào mỗi lần trả tiền`;
   }

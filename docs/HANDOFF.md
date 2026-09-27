@@ -60,6 +60,8 @@
     - Chủ dự án cho phép thì mới làm, và phải là lời cho phép riêng cho đúng việc đó.
     - Đặt `pg_cron` sinh dữ liệu lặp lại cũng phải hỏi riêng.
     - Không lách bộ chặn.
+12. **Thanh toán chỉ giả lập, không bao giờ đề xuất cổng thanh toán thật.** Quét QR → báo thành công → vé vào ERP → khách thành hồ sơ là đúng yêu cầu (dự án không kinh doanh thật).
+13. **Ưu tiên thứ người chấm dự án thấy được khi bấm thử.** Đừng tốn công kiểm thử sâu không ai xem. Tạo tài khoản và phân quyền phải làm được ngay trong ERP (`/erp/tai-khoan`).
 
 ## C. Việc tiếp theo
 

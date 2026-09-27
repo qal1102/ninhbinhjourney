@@ -10,7 +10,8 @@
 
 - **Production:** https://ninhbinhjourney.vercel.app, deploy từ `main`. Repo `qal1102/ninhbinhjourney`, Supabase ref `vzewjfcwhovsxslqfpjt` (Tokyo, `ap-northeast-1`).
 - **Vùng chạy hàm máy chủ:** `vercel.json` đặt `"regions": ["hnd1"]` (Tokyo, cùng chỗ với kho). Trước 27/09 hàm chạy ở Washington (`iad1`); đo tiêu đề `X-Vercel-Id` thấy `hkg1::iad1`, trang không gọi kho vẫn mất 0,5 giây byte đầu, mỗi truy vấn kho thêm một vòng Mỹ–Tokyo. Kiểm lại bằng `curl -D -`: phải thấy `::hnd1::`.
-- **Migration:** production có tới `202609260093`. Riêng `061` cố ý bỏ. **`094` (`erp_phieu_khach`) đã viết và chạy thử bằng PGlite, CHƯA ÁP**, chờ chủ dự án cho phép `supabase db push`. Mã dùng nó nằm ở nhánh cục bộ `phieu-khoang-thoi-gian` (xem mục C).
+- **Migration:** local và production khớp tới `202609270094` (áp 27/09 theo lời cho phép của chủ dự án). Riêng `061` cố ý bỏ.
+- **Phễu khách** (`/erp/marketing`): chọn 7/30/90 ngày hoặc một dịp đã qua, so với kỳ liền trước hoặc cùng dịp năm trước. Đếm trong kho bằng `erp_phieu_khach` (094); ô "Qua cổng" chỉ tính vé đơn web, lượt vé quầy ghi riêng.
 - **ERP có 13 module, module nào cũng chạy thật:**
   - Vé & đặt chỗ, Check-in, Sức chứa & luồng khách (gồm điều phối xe điện), Camera AI, Báo cáo hiện trường.
   - Dự án & sự kiện, Sự cố, Nhân sự, Chấm công, Đối tác & NCC, SOP.
@@ -63,9 +64,7 @@
 
 **Tự làm được, theo thứ tự đề xuất:**
 1. **Chốt ca có số:** ma trận bốn cơ sở toàn 0 vì chưa ai chốt ca. Cân nhắc cho lịch sử mẫu sinh cả hồ sơ chốt ca qua đúng quy trình (bảng tài chính bất biến, xem trong lưu trữ `ERP-FAKE-03`), hoặc hỏi chủ dự án có cần không.
-2. **Phễu khách chọn khoảng: làm xong ở nhánh `phieu-khoang-thoi-gian`, chờ áp `094`.** Thứ tự bắt buộc: áp `094` → ghép nhánh vào `main` → push (Vercel tự deploy) → chạy `prod-smoke-a5-funnel` với `NBJ_A5_FUNNEL_SMOKE=1`. Deploy mã trước khi áp thì màn marketing hiện "Phễu khách chưa đọc được".
-   - Sửa kèm một lỗi số thật đang chạy trên production: phễu cũ đọc thô rồi đếm bằng TypeScript, PostgREST cắt ở 1.000 dòng, nên ô "Qua cổng" 7 ngày (thật ra khoảng 7.400) bị cắt ở 1.000.
-   - Ô "Qua cổng" nay chỉ đếm vé của đơn web; lượt vé quầy ghi riêng một dòng.
+2. **Chạy `prod-smoke-a5-funnel` trên production** (`NBJ_A5_FUNNEL_SMOKE=1`, cần mật khẩu giám đốc) để xác nhận phễu mới. Hàm `094` đã áp và mã đã deploy 27/09 nhưng chưa có bài production nào chạy qua.
 3. **Đo lại tốc độ sau khi deploy vùng Tokyo**, cả màn ERP khi đăng nhập giám đốc. Nếu màn nào vẫn chậm thì soát chỗ `await` nối tiếp nhau trong trang đó.
 4. Việc nhỏ còn sót (chi tiết ở hàng `A15-CON-LAI` trong lưu trữ):
    - `ACC-04…07`: nhật ký đăng nhập theo tài khoản, xác thực hai lớp cho vai tài chính, thu hồi phiên từ xa, bàn giao khi nghỉ việc. Giá trị thấp khi chỉ dùng tài khoản giám đốc.
@@ -103,7 +102,7 @@
 | Báo cáo & dự báo | `domain/bao-cao-co-so.ts`, `lib/erp/bao-cao-repository.ts`, `components/erp/bao-cao-workspace.tsx` (RPC `erp_bao_cao_co_so`) |
 | Lịch sử mẫu | migration `202609260092_lich_su_mau_60_ngay.sql` |
 | Xoá lượt giữ quá hạn | migration `202609260090_tu_nha_cho_giu_qua_han.sql` |
-| Phễu khách theo khoảng (nhánh `phieu-khoang-thoi-gian`) | migration `202609270094_phieu_khach_dem_trong_kho.sql`, `domain/customer-funnel.ts` (`chonKhoangPhieu`), `lib/customer-data/funnel-repository.ts`, `components/customer-data/customer-funnel-dashboard.tsx` |
+| Phễu khách theo khoảng | migration `202609270094_phieu_khach_dem_trong_kho.sql`, `domain/customer-funnel.ts` (`chonKhoangPhieu`), `lib/customer-data/funnel-repository.ts`, `components/customer-data/customer-funnel-dashboard.tsx` |
 
 ## E. Cách kiểm và lệnh hay dùng
 

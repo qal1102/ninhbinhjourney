@@ -116,7 +116,7 @@
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
 
-- 27/09 `2ar`: gỡ chuỗi phòng trình diễn chết (`/journey/[id]`, `/demo/qr`, API sửa lịch, tham số `journey`). Sửa nút "Thêm vào hành trình" vốn không làm gì. Chống trễ: hàm máy chủ sang Tokyo, bỏ ảnh gốc 3–4 MB ở hai màn chờ và poster video, middleware bỏ qua tệp tĩnh. Kiểm: Vitest 1.678, lint, build, Playwright 94 bài (lập lịch, giữ ngữ cảnh, danh tính, hero, trang công khai), ảnh 390px và 1440px.
+- 27/09 `2ar`: gỡ chuỗi phòng trình diễn chết (`/journey/[id]`, `/demo/qr`, API sửa lịch, tham số `journey`). Sửa nút "Thêm vào hành trình" vốn không làm gì. Chống trễ: hàm máy chủ sang Tokyo, bỏ ảnh gốc 3–4 MB ở hai màn chờ và poster video, middleware bỏ qua tệp tĩnh. Kiểm: Vitest 1.678, lint, build, Playwright 94 bài (lập lịch, giữ ngữ cảnh, danh tính, hero, trang công khai), ảnh 390px và 1440px. Đo production sau deploy: `hkg1::hnd1`, byte đầu trang công khai khoảng 0,33 giây (trước khoảng 0,5); màn ERP chưa đo vì cần mật khẩu giám đốc.
 - 27/09 `2aq`: rút gọn HANDOFF (bản cũ vào lưu trữ, sửa mục C cho đúng). Phễu khách chọn 7/30/90 ngày hoặc một dịp, so kỳ trước hoặc cùng dịp năm trước; đếm trong kho (`094`, chưa áp). Kiểm: Vitest 1.682 xanh, lint, build, PGlite 94 migration (7 ngày: 468 lượt web + 6.914 lượt quầy = 7.382, khớp đếm thẳng; 90 ngày 102 ms), ảnh 390px và 1440px. **Chưa kiểm trên production.**
 - 26/09 tối `2ap`: áp 090–093; xoá hẳn lượt giữ quá hạn; lịch sử mẫu thành cửa sổ trượt làm mới hàng tháng; ẩn vòng dẫn.
 - 26/09 `2ao`: nghĩ lại ERP; bỏ QR nhân viên; gỡ 2 module vỏ; lịch sử mẫu; báo cáo & dự báo thật; trang đầu có số thật.

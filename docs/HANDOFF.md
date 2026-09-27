@@ -74,7 +74,7 @@
 5. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`.
 
 **Chờ chủ dự án quyết, không tự làm:**
-- `A15-QUYEN-01`: phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) đã có script nhưng **bộ chặn tự động từ chối tạo đăng nhập trên production**; cần chủ dự án tự chạy hoặc thêm quyền.
+- `A15-QUYEN-01`: phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) **bị bộ chặn tự động từ chối** vì tạo đăng nhập trên production; cần chủ dự án quyết cách làm.
 - `A15-DEMO-01`: kho demo tách production (tốn tiền).
 - `QA-ERP-TICKET-05` phần cuối: luật chia tiền vé gói nhiều điểm về từng cơ sở (không suy ra được từ dữ liệu).
 - `ERP-05`: cổng ngoại tuyến cần người cầm máy thật.

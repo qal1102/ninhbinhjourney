@@ -64,8 +64,8 @@
 
 **Tự làm được, theo thứ tự đề xuất:**
 1. **Chốt ca có số:** ma trận bốn cơ sở toàn 0 vì chưa ai chốt ca. Cân nhắc cho lịch sử mẫu sinh cả hồ sơ chốt ca qua đúng quy trình (bảng tài chính bất biến, xem trong lưu trữ `ERP-FAKE-03`), hoặc hỏi chủ dự án có cần không.
-2. **Chạy `prod-smoke-a5-funnel` trên production** (`NBJ_A5_FUNNEL_SMOKE=1`, cần mật khẩu giám đốc) để xác nhận phễu mới. Hàm `094` đã áp và mã đã deploy 27/09 nhưng chưa có bài production nào chạy qua.
-3. **Đo lại tốc độ sau khi deploy vùng Tokyo**, cả màn ERP khi đăng nhập giám đốc. Nếu màn nào vẫn chậm thì soát chỗ `await` nối tiếp nhau trong trang đó.
+2. **Tốc độ còn lại:** trang đầu giám đốc khoảng 1,6 giây, Tài chính khoảng 1,2 giây, Khách hàng khoảng 1,4 giây (đo 28/09, đã đăng nhập). Phần đọc đã song song hết; muốn nhanh hơn phải soi kế hoạch truy vấn của các hàm SQL (`erp_director_ticket_overview`, `erp_doanh_thu_ky`) trên kho production.
+3. **Tài khoản rác "Test · employee-tamchuc-002"** nằm trong Quản trị tài khoản, nhiều khả năng do kiểm thử cũ để lại. Xem nguồn gốc rồi tạm khoá hoặc dọn bằng migration dữ liệu có điều kiện hẹp.
 4. Việc nhỏ còn sót (chi tiết ở hàng `A15-CON-LAI` trong lưu trữ):
    - `ACC-04…07`: nhật ký đăng nhập theo tài khoản, xác thực hai lớp cho vai tài chính, thu hồi phiên từ xa, bàn giao khi nghỉ việc. Giá trị thấp khi chỉ dùng tài khoản giám đốc.
    - `LOI-04`: rà độ sâu nội dung 15 trang điểm đến. `CAN-03`: Lighthouse tại Việt Nam trên 4G.
@@ -74,7 +74,7 @@
 5. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`.
 
 **Chờ chủ dự án quyết, không tự làm:**
-- `A15-QUYEN-01`: phân quyền chưa từng kiểm từ tài khoản cấp thấp; cần ba tài khoản thật. Đây là món nợ lớn nhất.
+- `A15-QUYEN-01`: phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) đã có script nhưng **bộ chặn tự động từ chối tạo đăng nhập trên production**; cần chủ dự án tự chạy hoặc thêm quyền.
 - `A15-DEMO-01`: kho demo tách production (tốn tiền).
 - `QA-ERP-TICKET-05` phần cuối: luật chia tiền vé gói nhiều điểm về từng cơ sở (không suy ra được từ dữ liệu).
 - `ERP-05`: cổng ngoại tuyến cần người cầm máy thật.
@@ -115,6 +115,7 @@
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
 
+- 28/09 `2as`: áp `094`, ghép phễu; bài production phễu 2/2 xanh; phễu bỏ phần trăm quá 100% (nói "có lượt vào thẳng"). Đo ERP đã đăng nhập: đa số màn 0,35–0,65 giây; đọc song song ở trang đầu, Khách hàng (2,7 → 1,4 giây, nhật ký truy cập vẫn đi trước, có bài canh) và màn module (Vé Bái Đính 1,2 → 0,5 giây). Soát tĩnh 79 server action, thêm bài bảo mật canh.
 - 27/09 `2ar`: gỡ chuỗi phòng trình diễn chết (`/journey/[id]`, `/demo/qr`, API sửa lịch, tham số `journey`). Sửa nút "Thêm vào hành trình" vốn không làm gì. Chống trễ: hàm máy chủ sang Tokyo, bỏ ảnh gốc 3–4 MB ở hai màn chờ và poster video, middleware bỏ qua tệp tĩnh. Kiểm: Vitest 1.678, lint, build, Playwright 94 bài (lập lịch, giữ ngữ cảnh, danh tính, hero, trang công khai), ảnh 390px và 1440px. Đo production sau deploy: `hkg1::hnd1`, byte đầu trang công khai khoảng 0,33 giây (trước khoảng 0,5); màn ERP chưa đo vì cần mật khẩu giám đốc.
 - 27/09 `2aq`: rút gọn HANDOFF (bản cũ vào lưu trữ, sửa mục C cho đúng). Phễu khách chọn 7/30/90 ngày hoặc một dịp, so kỳ trước hoặc cùng dịp năm trước; đếm trong kho (`094`, chưa áp). Kiểm: Vitest 1.682 xanh, lint, build, PGlite 94 migration (7 ngày: 468 lượt web + 6.914 lượt quầy = 7.382, khớp đếm thẳng; 90 ngày 102 ms), ảnh 390px và 1440px. **Chưa kiểm trên production.**
 - 26/09 tối `2ap`: áp 090–093; xoá hẳn lượt giữ quá hạn; lịch sử mẫu thành cửa sổ trượt làm mới hàng tháng; ẩn vòng dẫn.

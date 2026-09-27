@@ -152,8 +152,8 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
             return [];
           })
         : Promise.resolve([]),
-      // T14b: chi doc khi man hinh that su liet ke nguoi.
-      moduleDefinition.id === "nhan-su"
+      // Danh bạ cho màn Nhân sự, và cho ô chọn người khi quản lý giao việc.
+      moduleDefinition.id === "nhan-su" || user.role === "manager"
         ? listStaffDirectory()
         : Promise.resolve([]),
       moduleDefinition.id === "suc-chua"
@@ -243,7 +243,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         workdays={workdays}
         workdayEmployees={
           user.role === "manager"
-            ? listWorkdayEmployeeOptions(access, [site.id])
+            ? listWorkdayEmployeeOptions(access, [site.id], staffDirectory)
             : []
         }
         supplierApInvoices={supplierAp.invoices}

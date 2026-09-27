@@ -3,10 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const doubles = vi.hoisted(() => ({
   accountCanAccessModule: vi.fn(),
   accountCanAccessSite: vi.fn(),
-  findDemoErpAccountById: vi.fn(),
+  docTaiKhoanHieuLuc: vi.fn(),
   getAccessState: vi.fn(),
   getCurrentErpUser: vi.fn(),
-  getGrantableModuleIds: vi.fn(),
   isDemoErpAccountActive: vi.fn(),
   recordAttendanceEvent: vi.fn(),
   revalidatePath: vi.fn(),
@@ -18,10 +17,13 @@ vi.mock("next/cache", () => ({
 }));
 
 vi.mock("@/lib/erp/demo-data", () => ({
-  findDemoErpAccountById: doubles.findDemoErpAccountById,
   findDemoErpAccountByUsername: vi.fn(),
-  getGrantableModuleIds: doubles.getGrantableModuleIds,
   isDemoErpAccountActive: doubles.isDemoErpAccountActive,
+}));
+
+// Người được giao việc đọc từ sổ tài khoản từ 28/09/2026.
+vi.mock("@/lib/erp/tai-khoan-hieu-luc", () => ({
+  docTaiKhoanHieuLuc: doubles.docTaiKhoanHieuLuc,
 }));
 
 vi.mock("@/lib/erp/demo-session", () => ({
@@ -155,11 +157,26 @@ const employeeAccount = {
   role: "employee" as const,
 };
 
-const managerAccount = {
-  id: "manager-trang-an",
-  role: "manager" as const,
-  managedSiteIds: ["trang-an"] as const,
-};
+/** Một tài khoản như `docTaiKhoanHieuLuc` trả về: vai và cơ sở theo sổ tài khoản. */
+function taiKhoan(overrides: Partial<{
+  id: string;
+  role: "employee" | "manager" | "accountant";
+  coSo: (string | null)[];
+  daoTao: string[];
+}> = {}) {
+  return {
+    id: overrides.id ?? employeeAccount.id,
+    name: "Người thử",
+    jobTitle: "Nhân viên",
+    role: overrides.role ?? "employee",
+    conHieuLuc: true,
+    quyen: { siteIds: [], moduleIdsBySite: {} },
+    viecDaDaoTao: overrides.daoTao ?? ["check-in-khach", "cham-cong"],
+    registry: {
+      grants: (overrides.coSo ?? ["trang-an"]).map((siteId) => ({ role: "employee", siteId })),
+    },
+  };
+}
 
 const employeeUser = {
   id: "employee-trang-an-01",
@@ -191,11 +208,7 @@ beforeEach(() => {
   }
   doubles.accountCanAccessSite.mockReturnValue(true);
   doubles.accountCanAccessModule.mockReturnValue(true);
-  doubles.findDemoErpAccountById.mockReturnValue(employeeAccount);
-  doubles.getGrantableModuleIds.mockReturnValue([
-    "check-in-khach",
-    "cham-cong",
-  ]);
+  doubles.docTaiKhoanHieuLuc.mockResolvedValue(taiKhoan());
   doubles.getAccessState.mockResolvedValue({
     version: 1,
     employees: {},
@@ -232,44 +245,29 @@ describe("updateEmployeeAccessAction", () => {
     expect(doubles.updateEmployeeAccessGrant).not.toHaveBeenCalled();
   });
 
-  it("rejects reassigning an employee already assigned to another site when the actor is a manager", async () => {
+  it("người chưa được giám đốc cấp cơ sở này thì chưa giao việc được", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(managerUser);
-    doubles.getAccessState.mockResolvedValue({
-      version: 1,
-      employees: {
-        [employeeAccount.id]: {
-          siteIds: ["tam-chuc"],
-          moduleIdsBySite: { "tam-chuc": ["check-in-khach"] },
-        },
-      },
-      audit: [],
-    });
+    doubles.docTaiKhoanHieuLuc.mockResolvedValue(taiKhoan({ coSo: ["tam-chuc"] }));
     await expect(updateEmployeeAccessAction(accessForm())).rejects.toThrow(
-      /cơ sở khác/i,
+      /chưa được cấp cơ sở này/i,
     );
     expect(doubles.updateEmployeeAccessGrant).not.toHaveBeenCalled();
   });
 
-  it("allows a director to override an employee already assigned to another site", async () => {
-    doubles.getCurrentErpUser.mockResolvedValue(directorUser);
-    doubles.getAccessState.mockResolvedValue({
-      version: 1,
-      employees: {
-        [employeeAccount.id]: {
-          siteIds: ["tam-chuc"],
-          moduleIdsBySite: { "tam-chuc": ["check-in-khach"] },
-        },
-      },
-      audit: [],
-    });
-    await updateEmployeeAccessAction(accessForm({ siteId: "trang-an" }));
+  it("người giám đốc vừa tạo (không có hồ sơ mẫu) vẫn nhận việc được", async () => {
+    doubles.getCurrentErpUser.mockResolvedValue(managerUser);
+    doubles.docTaiKhoanHieuLuc.mockResolvedValue(
+      taiKhoan({ id: "nguyen-van-ba", daoTao: ["check-in-khach", "ve-dat-cho", "cham-cong"] }),
+    );
+    await updateEmployeeAccessAction(
+      accessForm({ employeeId: "nguyen-van-ba", moduleIds: ["ve-dat-cho", "cham-cong"] }),
+    );
     expect(doubles.updateEmployeeAccessGrant).toHaveBeenCalledWith(
       expect.objectContaining({
-        employeeId: employeeAccount.id,
+        employeeId: "nguyen-van-ba",
         siteContextId: "trang-an",
         siteActive: true,
-        actorId: directorUser.id,
-        actorRole: "director",
+        actorRole: "manager",
       }),
     );
   });
@@ -286,63 +284,33 @@ describe("updateEmployeeAccessAction", () => {
     expect(call.moduleIds).not.toContain("nhan-su");
   });
 
-  it("revokes the site by passing siteActive=false and an empty module list", async () => {
+  it("không còn gỡ người khỏi cơ sở ở đây: ai thuộc cơ sở nào do màn Tài khoản & phân quyền quyết", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(managerUser);
     await updateEmployeeAccessAction(accessForm({ siteActive: false }));
     expect(doubles.updateEmployeeAccessGrant).toHaveBeenCalledWith(
-      expect.objectContaining({ siteActive: false, siteContextId: "trang-an" }),
+      expect.objectContaining({ siteActive: true, siteContextId: "trang-an" }),
     );
   });
 
-  // --- V14: managers are permissioned through this same grant --------------
-
-  it("lets a director set a site manager's module grant", async () => {
+  it("quản lý cơ sở không giao việc từng module: họ có mọi việc ở cơ sở mình", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(directorUser);
-    doubles.findDemoErpAccountById.mockReturnValue(managerAccount);
-    doubles.getGrantableModuleIds.mockReturnValue(["nhan-su", "su-co", "bao-cao"]);
-    await updateEmployeeAccessAction(
-      accessForm({
-        employeeId: managerAccount.id,
-        moduleIds: ["nhan-su", "su-co"],
-      }),
-    );
-    const call = doubles.updateEmployeeAccessGrant.mock.calls[0][0];
-    expect(call.employeeId).toBe(managerAccount.id);
-    expect(call.actorRole).toBe("director");
-    // "nhan-su" is not employeeAssignable, but a manager may absolutely hold
-    // it -- the employee-only floor must not apply here.
-    expect(call.moduleIds.sort()).toEqual(["nhan-su", "su-co"].sort());
-  });
-
-  it("blocks a manager from editing any manager's grant, including their own", async () => {
-    doubles.getCurrentErpUser.mockResolvedValue(managerUser);
-    doubles.findDemoErpAccountById.mockReturnValue(managerAccount);
+    doubles.docTaiKhoanHieuLuc.mockResolvedValue(taiKhoan({ id: "manager-trang-an", role: "manager" }));
     await expect(
-      updateEmployeeAccessAction(accessForm({ employeeId: managerAccount.id })),
-    ).rejects.toThrow(/chỉ giám đốc/i);
+      updateEmployeeAccessAction(accessForm({ employeeId: "manager-trang-an" })),
+    ).rejects.toThrow(/Quản lý cơ sở có mọi việc/);
     expect(doubles.updateEmployeeAccessGrant).not.toHaveBeenCalled();
   });
 
-  it("blocks granting a manager modules on a site they do not manage", async () => {
+  it("rejects an unknown account and an account that is not an employee", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(directorUser);
-    doubles.findDemoErpAccountById.mockReturnValue(managerAccount);
+    doubles.docTaiKhoanHieuLuc.mockResolvedValue(null);
     await expect(
-      updateEmployeeAccessAction(
-        accessForm({ employeeId: managerAccount.id, siteId: "tam-chuc" }),
-      ),
-    ).rejects.toThrow(/không phụ trách/i);
-    expect(doubles.updateEmployeeAccessGrant).not.toHaveBeenCalled();
-  });
-
-  it("rejects an account that is neither employee nor manager", async () => {
-    doubles.getCurrentErpUser.mockResolvedValue(directorUser);
-    doubles.findDemoErpAccountById.mockReturnValue({
-      id: "accountant-001",
-      role: "accountant" as const,
-    });
+      updateEmployeeAccessAction(accessForm({ employeeId: "khong-co" })),
+    ).rejects.toThrow(/không tìm thấy/i);
+    doubles.docTaiKhoanHieuLuc.mockResolvedValue(taiKhoan({ id: "accountant-001", role: "accountant" }));
     await expect(
       updateEmployeeAccessAction(accessForm({ employeeId: "accountant-001" })),
-    ).rejects.toThrow(/không tìm thấy/i);
+    ).rejects.toThrow(/chỉ giao việc/i);
     expect(doubles.updateEmployeeAccessGrant).not.toHaveBeenCalled();
   });
 });

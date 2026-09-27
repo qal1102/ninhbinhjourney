@@ -1,10 +1,8 @@
 import "server-only";
 
 import type { ErpSiteId } from "@/domain/erp";
-import {
-  isDemoErpAccountActive,
-  listDemoEmployees,
-} from "@/lib/erp/demo-data";
+import { tinhQuyenHieuLuc } from "@/domain/quyen-hieu-luc";
+import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 import type {
   CurrentErpUser,
   ErpAccessState,
@@ -41,32 +39,40 @@ export async function listWorkdaysForUser(
   return [];
 }
 
+/**
+ * Nhân viên quản lý giao việc được, hoặc bàn giao ca được, ở các cơ sở này.
+ *
+ * Đọc từ danh bạ (sổ tài khoản), tính việc được giao bằng đúng luật quyền lúc
+ * người ấy đăng nhập (`domain/quyen-hieu-luc.ts`). Trước 28/09/2026 danh sách
+ * này lấy từ tài khoản mẫu trong mã nguồn, nên người giám đốc vừa tạo không
+ * bao giờ hiện trong ô chọn giao việc hay nhận ca.
+ */
 export function listWorkdayEmployeeOptions(
   access: ErpAccessState,
   managerSiteIds: readonly ErpSiteId[],
+  directory: readonly ErpStaffDirectoryEntry[],
 ) {
   const allowedSites = new Set(managerSiteIds);
-  return listDemoEmployees()
-    .filter((employee) => isDemoErpAccountActive(employee))
-    .map((employee) => {
-      const assigned = access.employees[employee.id];
-      const siteIds = (assigned?.siteIds ?? []).filter(
-        (siteId) => allowedSites.has(siteId),
-      );
-      const moduleIdsBySite = Object.fromEntries(
-        siteIds.map((siteId) => [
-          siteId,
-          assigned?.moduleIdsBySite[siteId] ?? [],
-        ]),
-      );
+  return directory
+    .filter((entry) => entry.role === "employee" && entry.active)
+    .map((entry) => {
+      const quyen = tinhQuyenHieuLuc({
+        role: "employee",
+        coSoDuocCap: entry.siteIds,
+        viecDaGiao: access.employees[entry.accountId]?.moduleIdsBySite,
+        conHieuLuc: entry.active,
+      });
+      const siteIds = quyen.siteIds.filter((siteId) => allowedSites.has(siteId));
       return {
-        id: employee.id,
-        name: employee.name,
-        jobTitle: employee.jobTitle,
+        id: entry.accountId,
+        name: entry.displayName,
+        jobTitle: entry.jobTitle,
         siteIds,
-        moduleIdsBySite,
-        station: employee.workforceProfile?.primaryStation ?? "Theo phân công",
-        shiftLabel: employee.workforceProfile?.shiftLabel ?? "Theo lịch ca",
+        moduleIdsBySite: Object.fromEntries(
+          siteIds.map((siteId) => [siteId, quyen.moduleIdsBySite[siteId] ?? []]),
+        ),
+        station: entry.workforceProfile?.primaryStation ?? "Theo phân công",
+        shiftLabel: entry.workforceProfile?.shiftLabel ?? "Theo lịch ca",
       };
     })
     .filter((employee) => employee.siteIds.length > 0);

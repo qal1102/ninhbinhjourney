@@ -16,6 +16,12 @@ vi.mock("next/cache", () => ({
   revalidatePath: doubles.revalidatePath,
 }));
 
+// Bài này không đụng tới giao việc; chỉ chặn kho sổ tài khoản khỏi bị nạp thật.
+vi.mock("@/lib/erp/tai-khoan-hieu-luc", () => ({
+  docTaiKhoanHieuLuc: vi.fn(),
+  thuocCoSo: vi.fn(),
+}));
+
 vi.mock("@/lib/erp/demo-session", () => ({
   accountCanAccessModule: doubles.accountCanAccessModule,
   accountCanAccessSite: doubles.accountCanAccessSite,

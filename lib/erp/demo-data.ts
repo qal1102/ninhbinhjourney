@@ -370,10 +370,6 @@ export function findDemoErpAccountByUsername(username: string) {
   );
 }
 
-export function listDemoEmployees() {
-  return DEMO_ERP_ACCOUNTS.filter((account) => account.role === "employee");
-}
-
 export function listDemoSiteManagers() {
   return DEMO_ERP_ACCOUNTS.filter((account) => account.role === "manager");
 }

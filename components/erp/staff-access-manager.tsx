@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { updateEmployeeAccessAction } from "@/app/erp/actions";
-import { ERP_MODULES, ERP_SITES, type ErpSite } from "@/domain/erp";
+import { ERP_MODULES, type ErpSite } from "@/domain/erp";
+import { ERP_EMPLOYEE_BASE_MODULE_IDS } from "@/domain/quyen-hieu-luc";
 import type {
   AttendanceEvent,
   CurrentErpUser,
@@ -47,77 +49,28 @@ export function StaffAccessManager({
   const nameByAccountId = new Map(
     directory.map((entry) => [entry.accountId, entry.displayName]),
   );
-  const employees = directory
-    .filter((entry) => entry.role === "employee")
-    .filter((employee) => {
-      const assignedSites = access.employees[employee.accountId]?.siteIds ?? [];
-      if (user.role === "director") return true;
-      return assignedSites.length === 0 || assignedSites.includes(site.id);
-    });
-  // V14: a manager's modules are a real grant now, not a hard-coded all-15.
-  // Only the director may change them, and only for the manager who actually
-  // runs this site -- the server action re-checks both.
-  const siteManagers =
-    user.role === "director"
-      ? directory.filter(
-          (entry) => entry.role === "manager" && entry.siteIds.includes(site.id),
-        )
-      : [];
+  // Ai thuộc cơ sở nào do màn Tài khoản & phân quyền quyết (sổ tài khoản),
+  // không do màn này. Trước 28/09 ở đây còn một ô "cho phép làm việc ở cơ sở"
+  // riêng, tức là một nguồn thứ hai nói khác về cùng một người.
+  const employees = directory.filter(
+    (entry) => entry.role === "employee" && entry.siteIds.includes(site.id),
+  );
+  const siteManagers = directory.filter(
+    (entry) => entry.role === "manager" && entry.siteIds.includes(site.id),
+  );
 
   return (
     <div className="space-y-5">
       {siteManagers.length > 0 ? (
         <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#477565]">Phân quyền cấp quản lý</p>
-          <h2 className="mt-2 text-2xl font-black text-[#20342c]">Quản lý phụ trách {site.shortName}</h2>
-          <p className="mt-2 text-sm text-[#6b7a72]">
-            Quản lý cơ sở chỉ mở được những nghiệp vụ giám đốc giao ở đây — không còn mặc định thấy toàn bộ hệ thống.
-          </p>
-          <div className="mt-5 space-y-3">
-            {siteManagers.map((manager) => {
-              const managerAccess = access.employees[manager.accountId] ?? { siteIds: [], moduleIdsBySite: {} };
-              const selectedModules = managerAccess.moduleIdsBySite[site.id] ?? [];
-              return (
-                <details key={manager.accountId} className="group rounded-xl border border-[#e1e7e3] bg-[#fbfcfb] open:border-[#a9bdb3] open:bg-white">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-black text-[#293a33]">{manager.displayName}</p>
-                        <span className="rounded-full bg-[#e8edf5] px-2 py-0.5 text-xs font-black text-[#49617d]">Quản lý cơ sở</span>
-                      </div>
-                      <p className="mt-1 break-words text-sm text-[#75817b] sm:truncate">{manager.jobTitle} · {manager.email ?? manager.username ?? manager.accountId}</p>
-                    </div>
-                    <p className="shrink-0 text-xs font-bold text-[#586961]">{selectedModules.length}/{ERP_MODULES.length} nghiệp vụ</p>
-                  </summary>
-                  <form action={updateEmployeeAccessAction} className="border-t border-[#e5eae7] p-4 sm:p-5">
-                    <input type="hidden" name="siteId" value={site.id} />
-                    <input type="hidden" name="employeeId" value={manager.accountId} />
-                    {/* A manager's site comes from the org chart, not from this
-                        grant, so the site toggle stays on; the checkboxes below
-                        are the only lever. */}
-                    <input type="hidden" name="siteActive" value="on" />
-                    <fieldset>
-                      <legend className="text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Nghiệp vụ được giao</legend>
-                      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        {ERP_MODULES.map((module) => (
-                          <label key={module.id} className="flex min-h-11 items-center gap-3 rounded-lg border border-[#e0e6e2] px-3 py-2 text-sm font-bold text-[#52635b]">
-                            <input type="checkbox" name="moduleIds" value={module.id} defaultChecked={selectedModules.includes(module.id)} className="h-4 w-4 accent-[#286655]" />
-                            {module.shortName}
-                          </label>
-                        ))}
-                      </div>
-                    </fieldset>
-                    <div className="mt-4 flex items-center justify-between gap-4">
-                      <p className="text-xs text-[#7c8882]">Chỉ giám đốc đổi được mục này; thay đổi được ghi vào nhật ký.</p>
-                      <button type="submit" className="min-h-10 rounded-xl bg-[#183f34] px-5 text-sm font-black text-white">
-                        Lưu quyền quản lý
-                      </button>
-                    </div>
-                  </form>
-                </details>
-              );
-            })}
-          </div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#477565]">Quản lý phụ trách</p>
+          <ul className="mt-2 space-y-1 text-sm text-[#43574e]">
+            {siteManagers.map((manager) => (
+              <li key={manager.accountId}>
+                <strong>{manager.displayName}</strong> · {manager.jobTitle} · có mọi việc ở {site.shortName}
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 
@@ -128,21 +81,35 @@ export function StaffAccessManager({
             <h2 className="mt-2 text-2xl font-black text-[#20342c]">Đội ngũ {site.shortName}</h2>
           </div>
           <span className="w-fit rounded-full bg-[#e8f1ec] px-3 py-1 text-xs font-black text-[#32614f]">
-            {employees.filter((employee) => access.employees[employee.accountId]?.siteIds.includes(site.id)).length} người được gán
+            {employees.length} người thuộc cơ sở
           </span>
         </div>
+        <p className="mt-2 text-sm text-[#6b7a72]">
+          Tích việc cho từng người rồi lưu. Người chưa được giao riêng thì có sẵn
+          chấm công và báo cáo hiện trường.{" "}
+          {user.role === "director" ? (
+            <>
+              Thêm người vào {site.shortName} hay chuyển cơ sở ở màn{" "}
+              <Link href="/erp/tai-khoan" className="font-bold text-[#286655] underline underline-offset-2">
+                Tài khoản & phân quyền
+              </Link>
+              .
+            </>
+          ) : (
+            <>Thêm người hay chuyển cơ sở do giám đốc làm ở màn Tài khoản & phân quyền.</>
+          )}
+        </p>
 
         <div className="mt-6 space-y-3">
           {employees.map((employee) => {
-            const employeeAccess = access.employees[employee.accountId] ?? { siteIds: [], moduleIdsBySite: {} };
-            const assignedHere = employeeAccess.siteIds.includes(site.id);
-            const assignedElsewhere = employeeAccess.siteIds.find((id) => id !== site.id);
-            const selectedModules = employeeAccess.moduleIdsBySite[site.id] ?? [];
+            const daGiao = access.employees[employee.accountId]?.moduleIdsBySite[site.id];
+            // Ô tích hiện đúng việc người ấy đang mở được: việc đã giao, hoặc
+            // bộ cơ bản khi chưa ai giao riêng (cùng luật với lúc đăng nhập).
+            const selectedModules = daGiao ?? [...ERP_EMPLOYEE_BASE_MODULE_IDS];
             const latestAttendance = attendance
               .filter((event) => event.userId === employee.accountId && event.siteId === site.id)
               .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-            const otherSite = assignedElsewhere ? ERP_SITES.find((candidate) => candidate.id === assignedElsewhere) : null;
-            const locked = !employee.active || Boolean(assignedElsewhere && user.role !== "director");
+            const locked = !employee.active;
             // Danh sách module được phép tích do danh bạ quyết định: hồ sơ đào
             // tạo nếu có, còn không thì mọi module giao được cho nhân viên.
             const grantable = new Set(employee.grantableModuleIds);
@@ -157,8 +124,8 @@ export function StaffAccessManager({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-black text-[#293a33]">{employee.displayName}</p>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-black ${assignedHere ? "bg-[#dcefe7] text-[#236148]" : "bg-[#edf0ee] text-[#6f7b75]"}`}>
-                        {assignedHere ? "Đã phân công" : otherSite ? `Thuộc ${otherSite.shortName}` : "Chưa phân công"}
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-black ${daGiao ? "bg-[#dcefe7] text-[#236148]" : "bg-[#edf0ee] text-[#6f7b75]"}`}>
+                        {!employee.active ? "Đang khoá" : daGiao ? `${selectedModules.length} việc được giao` : "Bộ việc cơ bản"}
                       </span>
                       {profile ? <span className={`rounded-full px-2 py-0.5 text-xs font-black ${profile.employmentType === "seasonal" ? "bg-[#fff0ce] text-[#77531c]" : "bg-[#e8edf5] text-[#49617d]"}`}>{profile.employmentType === "seasonal" ? "Thời vụ" : "Chính thức"}</span> : null}
                     </div>
@@ -173,11 +140,8 @@ export function StaffAccessManager({
                 <form action={updateEmployeeAccessAction} className="border-t border-[#e5eae7] p-4 sm:p-5">
                   <input type="hidden" name="siteId" value={site.id} />
                   <input type="hidden" name="employeeId" value={employee.accountId} />
-                  <label className="flex min-h-11 items-center gap-3 rounded-xl bg-[#f2f6f3] p-3 text-sm font-black text-[#34473f]">
-                    <input type="checkbox" name="siteActive" defaultChecked={assignedHere} disabled={locked} className="h-4 w-4 accent-[#286655]" />
-                    Cho phép nhân viên làm việc và xem {site.shortName}
-                  </label>
-                  <fieldset disabled={locked} className="mt-4">
+                  <input type="hidden" name="siteActive" value="on" />
+                  <fieldset disabled={locked}>
                     <legend className="text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Nghiệp vụ được giao</legend>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {assignableModules.map((module) => (
@@ -206,7 +170,7 @@ export function StaffAccessManager({
       </section>
 
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#477565]">Audit log</p>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#477565]">Nhật ký</p>
         <h2 className="mt-2 text-xl font-black text-[#20342c]">Thay đổi quyền gần đây</h2>
         <ol className="mt-4 divide-y divide-[#e5eae7]">
           {access.audit.filter((event) => event.siteId === site.id).slice(-6).reverse().map((event) => {

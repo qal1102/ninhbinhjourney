@@ -81,8 +81,11 @@ vi.mock("@/lib/erp/huong-dan-repository", () => ({
   writeTienDoVongDan: vi.fn(),
 }));
 
+const { getRegistryAccount } = vi.hoisted(() => ({ getRegistryAccount: vi.fn() }));
+
 vi.mock("@/lib/erp/account-registry-repository", () => ({
   confirmPasswordChanged,
+  getRegistryAccount,
 }));
 
 const { checkLoginThrottle, recordLoginFailure, clearLoginFailures } = vi.hoisted(() => ({
@@ -215,6 +218,35 @@ describe("loginErpAction", () => {
       loginErpAction(formOf({ username: "khong-ai-ca", password: "x" })),
     ).rejects.toMatchObject({ url: "/erp/login?error=invalid" });
     expect(recordLoginFailure).toHaveBeenCalledWith("khong-ai-ca");
+  });
+
+  it("người giám đốc tạo mới đăng nhập bằng chính mã tài khoản, mật khẩu vẫn do Supabase Auth kiểm", async () => {
+    vi.mocked(findDemoErpAccountByUsername).mockReturnValue(undefined as never);
+    getRegistryAccount.mockResolvedValue({
+      accountId: "nguyen-van-ba",
+      hasAuthUser: true,
+      email: "nguyen-van-ba@taikhoan.ninhbinhjourney.vn",
+    });
+    signInWithPassword.mockResolvedValue({ error: null });
+    await expect(
+      loginErpAction(formOf({ username: "Nguyen-Van-Ba", password: "MatKhau@2026" })),
+    ).rejects.toMatchObject({ url: "/erp" });
+    expect(getRegistryAccount).toHaveBeenCalledWith("nguyen-van-ba");
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: "nguyen-van-ba@taikhoan.ninhbinhjourney.vn",
+      password: "MatKhau@2026",
+    });
+    expect(setErpSession).not.toHaveBeenCalled();
+  });
+
+  it("mã tài khoản chưa được cấp đăng nhập thì báo sai như mọi tên lạ", async () => {
+    vi.mocked(findDemoErpAccountByUsername).mockReturnValue(undefined as never);
+    getRegistryAccount.mockResolvedValue({ accountId: "nguyen-van-ba", hasAuthUser: false, email: null });
+    await expect(
+      loginErpAction(formOf({ username: "nguyen-van-ba", password: "x" })),
+    ).rejects.toMatchObject({ url: "/erp/login?error=invalid" });
+    expect(signInWithPassword).not.toHaveBeenCalled();
+    expect(recordLoginFailure).toHaveBeenCalledWith("nguyen-van-ba");
   });
 
   it("still signs in a legacy account by shared role password", async () => {

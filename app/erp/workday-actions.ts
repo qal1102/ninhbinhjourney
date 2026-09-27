@@ -17,16 +17,11 @@ import {
 } from "@/domain/erp-role-policy";
 import { isErpSiteId, type ErpSiteId } from "@/domain/erp";
 import {
-  findDemoErpAccountById,
-  getEmployeeAssignableModuleIds,
-  isDemoErpAccountActive,
-} from "@/lib/erp/demo-data";
-import {
   accountCanAccessModule,
   accountCanAccessSite,
   getCurrentErpUser,
 } from "@/lib/erp/demo-session";
-import { getAccessState } from "@/lib/erp/staff-access-repository";
+import { docTaiKhoanHieuLuc, thuocCoSo } from "@/lib/erp/tai-khoan-hieu-luc";
 import {
   createWorkday,
   getWorkday,
@@ -200,24 +195,19 @@ export async function assignWorkdayAction(
       return fail("Cơ sở nằm ngoài phạm vi quản lý.");
     }
     const siteId = siteValue;
-    const employee = findDemoErpAccountById(employeeId);
+    // Đọc từ sổ tài khoản, cùng luật quyền với lúc người ấy đăng nhập: người
+    // giám đốc vừa tạo cũng nhận được việc, và việc giao phải nằm trong đúng
+    // những module người ấy thật sự mở được ở cơ sở này.
+    const employee = await docTaiKhoanHieuLuc(employeeId);
     const template = getWorkdayTaskTemplate(siteId, templateId);
-    if (
-      !employee ||
-      employee.role !== "employee" ||
-      !isDemoErpAccountActive(employee) ||
-      !template
-    ) {
+    if (!employee || employee.role !== "employee" || !employee.conHieuLuc || !template) {
       return fail("Nhân viên hoặc loại công việc không hợp lệ.");
     }
-    const access = await getAccessState();
-    const employeeAccess = access.employees[employee.id];
-    const employeeSiteIds = employeeAccess?.siteIds ?? [];
-    const employeeModules = employeeAccess?.moduleIdsBySite[siteId] ?? [];
+    const employeeModules = employee.quyen.moduleIdsBySite[siteId] ?? [];
     if (
-      !employeeSiteIds.includes(siteId) ||
+      !thuocCoSo(employee, siteId) ||
       !employeeModules.includes(template.moduleId) ||
-      !getEmployeeAssignableModuleIds(employee).includes(template.moduleId)
+      !employee.viecDaDaoTao.includes(template.moduleId)
     ) {
       return fail(
         "Nhân viên chưa được cấp đúng cơ sở hoặc chưa được đào tạo cho công việc này.",
@@ -254,7 +244,7 @@ export async function assignWorkdayAction(
       manager: actorOf(manager),
       moduleId: template.moduleId,
       station: template.station,
-      shiftLabel: employee.workforceProfile?.shiftLabel ?? "Theo lịch phân ca",
+      shiftLabel: employee.demo?.workforceProfile?.shiftLabel ?? "Theo lịch phân ca",
       taskTitle: template.title,
       instructions,
       priority,

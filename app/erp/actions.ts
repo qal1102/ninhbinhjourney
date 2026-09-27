@@ -14,10 +14,9 @@ import {
   type ErpModuleId,
   type ErpSiteId,
 } from "@/domain/erp";
+import { docTaiKhoanHieuLuc } from "@/lib/erp/tai-khoan-hieu-luc";
 import {
-  findDemoErpAccountById,
   findDemoErpAccountByUsername,
-  getGrantableModuleIds,
   isDemoErpAccountActive,
 } from "@/lib/erp/demo-data";
 import {
@@ -29,7 +28,7 @@ import {
   setErpSession,
   startRoleSwitch,
 } from "@/lib/erp/demo-session";
-import { confirmPasswordChanged } from "@/lib/erp/account-registry-repository";
+import { confirmPasswordChanged, getRegistryAccount } from "@/lib/erp/account-registry-repository";
 import { checkLoginThrottle, clearLoginFailures, recordLoginFailure } from "@/lib/erp/login-throttle";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { recordRoleSwitch } from "@/lib/erp/role-switch-audit-repository";
@@ -128,6 +127,31 @@ export async function loginErpAction(formData: FormData) {
   }
 
   const account = findDemoErpAccountByUsername(identifier);
+  if (!account) {
+    // Người giám đốc tạo trên màn Tài khoản & phân quyền đăng nhập bằng chính
+    // mã tài khoản (ví dụ `nguyen-van-ba`), không phải nhớ email. Mã ấy chỉ là
+    // cách tra ra email đăng nhập; mật khẩu vẫn do Supabase Auth kiểm.
+    let registry: Awaited<ReturnType<typeof getRegistryAccount>> = null;
+    try {
+      registry = await getRegistryAccount(identifier.toLowerCase());
+    } catch {
+      // Kho chưa trả lời thì coi như không có mã ấy: sai mật khẩu, không lộ gì.
+      registry = null;
+    }
+    if (registry?.hasAuthUser && registry.email) {
+      const supabase = await createSupabaseServerClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: registry.email,
+        password,
+      });
+      if (error) {
+        await recordLoginFailure(identifier);
+        loginError("invalid");
+      }
+      await clearLoginFailures(identifier);
+      redirect("/erp");
+    }
+  }
   // An empty configured password means the role is closed on this deployment (A15-ACC-02).
   if (
     !account ||
@@ -252,49 +276,35 @@ export async function updateEmployeeAccessAction(formData: FormData) {
     throw new Error("Cơ sở nằm ngoài phạm vi quản lý.");
   }
 
-  const employee = findDemoErpAccountById(employeeId);
-  if (!employee || (employee.role !== "employee" && employee.role !== "manager")) {
-    throw new Error("Không tìm thấy nhân viên.");
+  // Đọc người được giao việc từ sổ tài khoản, như mọi nơi khác. Trước 28/09
+  // chỗ này tra danh sách cứng trong mã nguồn, nên người giám đốc vừa tạo trên
+  // màn Tài khoản & phân quyền bị báo "Không tìm thấy nhân viên".
+  const employee = await docTaiKhoanHieuLuc(employeeId);
+  if (!employee) throw new Error("Không tìm thấy nhân viên.");
+  if (employee.role !== "employee") {
+    throw new Error(
+      "Chỉ giao việc từng module cho nhân viên. Quản lý cơ sở có mọi việc ở cơ sở mình; đổi người phụ trách ở màn Tài khoản & phân quyền.",
+    );
   }
-  // V14: managers are now permissioned through this same grant, so their row
-  // is editable here -- but only by a director, and only on the site they
-  // actually manage. A manager must never be able to widen their own scope
-  // (or a peer's) through the screen they themselves operate.
-  if (employee.role === "manager") {
-    if (actor.role !== "director") {
-      throw new Error("Chỉ giám đốc mới đổi được quyền của quản lý cơ sở.");
-    }
-    if (!employee.managedSiteIds.includes(siteValue)) {
-      throw new Error("Quản lý này không phụ trách cơ sở đang mở.");
-    }
+  // Ai thuộc cơ sở nào do giám đốc cấp ở màn Tài khoản & phân quyền, không
+  // phải ở đây, để hai màn không nói hai điều khác nhau về cùng một người.
+  if (!employee.registry.grants.some((grant) => grant.siteId === siteValue || grant.siteId === null)) {
+    throw new Error(
+      "Người này chưa được cấp cơ sở này. Giám đốc cấp ở màn Tài khoản & phân quyền trước, rồi mới giao việc được.",
+    );
   }
 
   const access = await getAccessState();
-  const current = access.employees[employeeId] ?? {
-    siteIds: [],
-    moduleIdsBySite: {},
-  };
-  const assignedElsewhere = current.siteIds.find((id) => id !== siteValue);
-  if (assignedElsewhere && actor.role !== "director") {
-    throw new Error("Nhân viên đang thuộc một cơ sở khác.");
-  }
-
-  const siteActive = formData.get("siteActive") === "on";
-  const grantableModules = new Set(getGrantableModuleIds(employee));
-  // Only the modules the UI actually renders as a checkbox may be toggled
-  // here (see staff-access-manager.tsx): for an employee that is the
-  // intersection of globally employee-assignable and their trained list; for
-  // a manager it is every module. A module the account already holds outside
-  // that set (e.g. granted directly via a migration seed, never added to
-  // their trainedModuleIds) is invisible to the form and must be preserved
-  // here -- otherwise saving ANY other change silently revokes it, since the
-  // form can only submit what it can show.
+  const current = access.employees[employeeId] ?? { siteIds: [], moduleIdsBySite: {} };
+  // Chỉ module hiện thành ô tích mới được bật tắt ở đây: giao được cho nhân
+  // viên và nằm trong việc người này đã được đào tạo. Module nào người ấy đang
+  // giữ ngoài tập đó (ví dụ cấp thẳng bằng migration) thì giữ nguyên, kẻo lưu
+  // một thay đổi bất kỳ lại lặng lẽ thu hồi nó.
+  const daDaoTao = new Set(employee.viecDaDaoTao);
   const visibleModules = new Set(
-    ERP_MODULES.filter(
-      (module) =>
-        grantableModules.has(module.id) &&
-        (employee.role === "manager" || module.employeeAssignable),
-    ).map((module) => module.id),
+    ERP_MODULES.filter((module) => module.employeeAssignable && daDaoTao.has(module.id)).map(
+      (module) => module.id,
+    ),
   );
   const submittedVisible = formData
     .getAll("moduleIds")
@@ -309,7 +319,7 @@ export async function updateEmployeeAccessAction(formData: FormData) {
   await updateEmployeeAccessGrant({
     employeeId,
     siteContextId: siteValue,
-    siteActive,
+    siteActive: true,
     moduleIds,
     actorId: actor.id,
     actorRole: actor.role as "manager" | "director",

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CurrentErpUser, ErpAccessState } from "@/lib/erp/demo-session";
+import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 
 const repository = vi.hoisted(() => ({
   listWorkdays: vi.fn(),
@@ -17,7 +18,6 @@ import {
   listWorkdayEmployeeOptions,
   listWorkdaysForUser,
 } from "@/lib/erp/workday-view";
-import { seasonalAccessWindow } from "@/lib/erp/demo-data";
 
 const employeeUser: CurrentErpUser = {
   id: "employee-trang-an-01",
@@ -66,42 +66,46 @@ describe("ERP workday scoped views", () => {
     });
   });
 
-  it("omits employees whose employment expired or whose site access was revoked", () => {
-    vi.useFakeTimers();
-    // Một ngày sau khi cửa sổ quyền mùa vụ khép lại — tính từ chính cửa sổ đó,
-    // không chép cứng ngày. Trước đây dòng này là "2026-09-01", đúng hôm hợp
-    // đồng mùa vụ hết hạn theo mốc seed; cửa sổ nay tự trượt nên một ngày cố
-    // định sẽ rơi vào trong cửa sổ và bài mất hẳn ý nghĩa (ERP-SMOKE-02).
-    vi.setSystemTime(
-      new Date(Date.parse(seasonalAccessWindow().accessEndsAt) + 24 * 60 * 60 * 1000),
-    );
+  it("lấy người từ danh bạ theo sổ tài khoản, bỏ người bị thu hồi cơ sở hoặc hết hạn", () => {
+    // Cơ sở do sổ tài khoản quyết (`siteIds` của danh bạ), không còn do kho
+    // module. Người thời vụ hết hạn hợp đồng thì danh bạ đánh `active: false`.
+    const nguoi = (
+      accountId: string,
+      siteIds: ErpStaffDirectoryEntry["siteIds"],
+      active = true,
+    ): ErpStaffDirectoryEntry => ({
+      accountId,
+      displayName: accountId,
+      jobTitle: "Nhân viên",
+      role: "employee",
+      siteIds,
+      active,
+      grantableModuleIds: [],
+      hasTrainingRecord: false,
+      hasAuthUser: false,
+      email: null,
+      username: null,
+    });
+    const directory = [
+      nguoi("employee-trang-an-01", []),
+      nguoi("employee-trang-an-02", ["trang-an"]),
+      nguoi("employee-trang-an-seasonal-01", ["trang-an"], false),
+      nguoi("nguoi-moi-tao", ["trang-an"]),
+      nguoi("employee-bai-dinh-01", ["bai-dinh"]),
+    ];
     const access: ErpAccessState = {
       version: 1,
       employees: {
-        "employee-trang-an-01": {
-          siteIds: [],
-          moduleIdsBySite: {},
-        },
-        "employee-trang-an-02": {
-          siteIds: ["trang-an"],
-          moduleIdsBySite: {
-            "trang-an": ["suc-chua"],
-          },
-        },
-        "employee-trang-an-seasonal-01": {
-          siteIds: ["trang-an"],
-          moduleIdsBySite: {
-            "trang-an": ["check-in-khach"],
-          },
-        },
+        "employee-trang-an-02": { siteIds: ["trang-an"], moduleIdsBySite: { "trang-an": ["suc-chua"] } },
       },
       audit: [],
     };
 
-    const options = listWorkdayEmployeeOptions(access, ["trang-an"]);
+    const options = listWorkdayEmployeeOptions(access, ["trang-an"], directory);
 
-    expect(options.map((employee) => employee.id)).toEqual([
-      "employee-trang-an-02",
-    ]);
+    expect(options.map((employee) => employee.id)).toEqual(["employee-trang-an-02", "nguoi-moi-tao"]);
+    expect(options[0].moduleIdsBySite["trang-an"]).toEqual(["suc-chua"]);
+    // Người tạo mới chưa được giao việc riêng thì có bộ cơ bản, không trống trơn.
+    expect(options[1].moduleIdsBySite["trang-an"]).toEqual(["bao-cao-hien-truong", "cham-cong"]);
   });
 });

@@ -7,6 +7,10 @@ const mocks = vi.hoisted(() => ({
   listRegistryAccounts: vi.fn(),
   upsertRegistryAccount: vi.fn(),
   revalidatePath: vi.fn(),
+  setRegistryRoleAssignment: vi.fn(),
+  createAuthUserForAccount: vi.fn(),
+  generateTemporaryPassword: vi.fn(),
+  linkAuthUser: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -27,21 +31,21 @@ vi.mock("@/lib/erp/account-registry-repository", () => {
     upsertRegistryAccount: mocks.upsertRegistryAccount,
     // Not exercised by these tests, but the module under test imports them.
     AuthEmailAlreadyRegisteredError: AccountRegistryError,
-    createAuthUserForAccount: vi.fn(),
+    createAuthUserForAccount: mocks.createAuthUserForAccount,
     deleteAuthUser: vi.fn(),
     findLoginByEmail: vi.fn(),
-    generateTemporaryPassword: vi.fn(),
+    generateTemporaryPassword: mocks.generateTemporaryPassword,
     getLinkedAuthUserId: vi.fn(),
-    linkAuthUser: vi.fn(),
+    linkAuthUser: mocks.linkAuthUser,
     markLoginPasswordReset: vi.fn(),
     setAuthUserPassword: vi.fn(),
     unlinkAuthUser: vi.fn(),
     setRegistryAccountStatus: vi.fn(),
-    setRegistryRoleAssignment: vi.fn(),
+    setRegistryRoleAssignment: mocks.setRegistryRoleAssignment,
   };
 });
 
-import { upsertAccountAction } from "@/app/erp/account-actions";
+import { setRoleAssignmentAction, upsertAccountAction } from "@/app/erp/account-actions";
 
 const initial = { status: "idle" as const, message: "" };
 
@@ -51,12 +55,14 @@ function formData(values: Record<string, string>) {
   return form;
 }
 
-function accountForm(displayName: string) {
+function accountForm(displayName: string, extra: Record<string, string> = {}) {
   return formData({
     displayName,
     jobTitle: "Nhân viên đón khách",
     employmentType: "permanent",
-    status: "active",
+    role: "employee",
+    siteId: "tam-coc",
+    ...extra,
   });
 }
 
@@ -85,6 +91,10 @@ describe("ERP-UX-06c: máy tự đặt mã tài khoản", () => {
     mocks.hasSystemAdmin.mockReturnValue(true);
     mocks.listRegistryAccounts.mockResolvedValue([]);
     mocks.upsertRegistryAccount.mockResolvedValue(undefined);
+    mocks.setRegistryRoleAssignment.mockResolvedValue(undefined);
+    mocks.createAuthUserForAccount.mockResolvedValue("auth-user-1");
+    mocks.generateTemporaryPassword.mockReturnValue("TamThoi@2026");
+    mocks.linkAuthUser.mockResolvedValue(undefined);
   });
 
   it("bỏ dấu tiếng Việt đúng cách để ra mã đăng nhập", async () => {
@@ -145,5 +155,78 @@ describe("ERP-UX-06c: máy tự đặt mã tài khoản", () => {
     const state = await upsertAccountAction(initial, accountForm("Nguyễn Văn Ba"));
     expect(state.status).toBe("error");
     expect(mocks.upsertRegistryAccount).not.toHaveBeenCalled();
+  });
+});
+
+describe("tạo tài khoản một bước và luật cấp vai", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.user.mockResolvedValue({ id: "director-001", role: "director", mustChangePassword: false });
+    mocks.getRegistryAccount.mockResolvedValue({ grants: [{ role: "system-admin", siteId: null }] });
+    mocks.hasSystemAdmin.mockReturnValue(true);
+    mocks.listRegistryAccounts.mockResolvedValue([]);
+    mocks.upsertRegistryAccount.mockResolvedValue(undefined);
+    mocks.setRegistryRoleAssignment.mockResolvedValue(undefined);
+    mocks.createAuthUserForAccount.mockResolvedValue("auth-user-1");
+    mocks.generateTemporaryPassword.mockReturnValue("TamThoi@2026");
+    mocks.linkAuthUser.mockResolvedValue(undefined);
+  });
+
+  it("một lần bấm là có tài khoản, vai ở đúng cơ sở, và mật khẩu tạm; email để trống thì dùng địa chỉ nội bộ", async () => {
+    const state = await upsertAccountAction(initial, accountForm("Nguyễn Văn Ba"));
+    expect(state).toMatchObject({ status: "success", temporaryPassword: "TamThoi@2026" });
+    expect(state.message).toContain("Tên đăng nhập: nguyen-van-ba");
+    expect(mocks.upsertRegistryAccount).toHaveBeenCalledWith(
+      expect.objectContaining({ accountId: "nguyen-van-ba", status: "active" }),
+    );
+    expect(mocks.setRegistryRoleAssignment).toHaveBeenCalledWith(
+      expect.objectContaining({ accountId: "nguyen-van-ba", role: "employee", siteId: "tam-coc", active: true }),
+    );
+    expect(mocks.createAuthUserForAccount).toHaveBeenCalledWith(
+      expect.objectContaining({ email: "nguyen-van-ba@taikhoan.ninhbinhjourney.vn" }),
+    );
+  });
+
+  it("chưa chọn vai, hoặc nhân viên mà không chọn cơ sở, thì không tạo gì", async () => {
+    expect((await upsertAccountAction(initial, accountForm("Ba", { role: "" }))).status).toBe("error");
+    const khongCoSo = await upsertAccountAction(initial, accountForm("Ba", { siteId: "" }));
+    expect(khongCoSo.message).toMatch(/phải chọn một cơ sở/);
+    const giamDocMotCoSo = await upsertAccountAction(initial, accountForm("Ba", { role: "director" }));
+    expect(giamDocMotCoSo.message).toMatch(/chỉ cấp toàn vùng/);
+    expect(mocks.upsertRegistryAccount).not.toHaveBeenCalled();
+  });
+
+  it("hỏng ở bước cấp vai thì nói rõ đã tạo tài khoản, chưa cấp vai, làm nốt ở thẻ", async () => {
+    mocks.setRegistryRoleAssignment.mockRejectedValue(new Error("Kho chưa trả lời."));
+    const state = await upsertAccountAction(initial, accountForm("Nguyễn Văn Ba"));
+    expect(state.status).toBe("error");
+    expect(state.message).toContain("Đã tạo tài khoản nguyen-van-ba nhưng chưa cấp vai trò");
+    expect(mocks.createAuthUserForAccount).not.toHaveBeenCalled();
+  });
+
+  function capVai(values: Record<string, string>) {
+    return setRoleAssignmentAction(initial, formData({ active: "true", ...values }));
+  }
+
+  it("mỗi người chỉ giữ một vai nghiệp vụ; cùng vai thêm cơ sở thì được", async () => {
+    mocks.getRegistryAccount.mockImplementation(async (id: string) =>
+      id === "director-001"
+        ? { grants: [{ role: "system-admin", siteId: null }] }
+        : { grants: [{ role: "employee", siteId: "tam-coc" }] },
+    );
+    const vaiThuHai = await capVai({ accountId: "nguyen-van-ba", role: "regional-manager", siteId: "tam-coc" });
+    expect(vaiThuHai.message).toMatch(/đang giữ vai Nhân viên/);
+    const themCoSo = await capVai({ accountId: "nguyen-van-ba", role: "employee", siteId: "bai-dinh" });
+    expect(themCoSo.status).toBe("success");
+    expect(mocks.setRegistryRoleAssignment).toHaveBeenCalledTimes(1);
+  });
+
+  it("giám đốc không tự thu hồi vai Giám đốc của mình", async () => {
+    const state = await setRoleAssignmentAction(
+      initial,
+      formData({ accountId: "director-001", role: "director", siteId: "", active: "false" }),
+    );
+    expect(state.message).toMatch(/Không tự thu hồi vai Giám đốc/);
+    expect(mocks.setRegistryRoleAssignment).not.toHaveBeenCalled();
   });
 });

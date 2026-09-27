@@ -16,8 +16,10 @@ import { expect, type Page } from "@playwright/test";
  * chứng minh vai bị chặn đúng chỗ đáng bị chặn).
  *
  * Điều này KHÔNG chứng minh: rằng tài khoản kia tự đăng nhập được. Mật khẩu
- * của họ không còn nằm trên đường đi của bộ smoke nữa. `prod-smoke-t6b-auth`
- * mới là nơi canh giữ việc đăng nhập.
+ * của họ không còn nằm trên đường đi của bộ smoke nữa. Đăng nhập bằng tài
+ * khoản thật được canh ở `tests/integration/erp-auth-actions.test.ts`; hai
+ * bài smoke production cũ tự tạo tài khoản đã gỡ 28/09/2026 vì mỗi lần chạy
+ * để lại một tài khoản rác không xoá được.
  *
  * Có ghi vào nhật ký: mỗi lần chuyển sinh một dòng kiểm toán "started" và một
  * dòng "ended". Không xoá được và cũng không nên xoá — đó là bản ghi trung

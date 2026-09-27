@@ -1223,9 +1223,13 @@ test("mỗi thẻ tài khoản nói rõ trạng thái đăng nhập, nhật ký 
   expect(soThe).toBeGreaterThan(0);
   await expect(trangThai).toHaveCount(soThe);
   for (const chu of await trangThai.allInnerTexts()) {
-    expect(["Chưa cấp đăng nhập", "Đã cấp, chưa đổi mật khẩu", "Đang dùng đăng nhập"]).toContain(chu.trim());
+    expect(["Chưa cấp đăng nhập", "Tài khoản mẫu", "Đã cấp, chưa đổi mật khẩu", "Đang dùng đăng nhập"]).toContain(chu.trim());
   }
-  const chuaCap = await trangThai.filter({ hasText: "Chưa cấp đăng nhập" }).count();
+  // "Tài khoản mẫu" đăng nhập bằng mật khẩu dùng chung, chưa có đăng nhập riêng,
+  // nên cũng hiện nút cấp đăng nhập.
+  const chuaCap =
+    (await trangThai.filter({ hasText: "Chưa cấp đăng nhập" }).count()) +
+    (await trangThai.filter({ hasText: "Tài khoản mẫu" }).count());
   await expect(page.getByRole("button", { name: "Cấp đăng nhập", exact: true })).toHaveCount(chuaCap);
   await expect(page.getByRole("button", { name: "Cấp lại mật khẩu tạm", exact: true })).toHaveCount(soThe - chuaCap);
 

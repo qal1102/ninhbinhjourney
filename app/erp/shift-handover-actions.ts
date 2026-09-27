@@ -9,7 +9,7 @@ import {
   accountCanAccessSite,
   getCurrentErpUser,
 } from "@/lib/erp/demo-session";
-import { findDemoErpAccountById } from "@/lib/erp/demo-data";
+import { docTaiKhoanHieuLuc, thuocCoSo } from "@/lib/erp/tai-khoan-hieu-luc";
 import {
   ShiftHandoverRepositoryError,
   decideShiftHandover,
@@ -94,8 +94,13 @@ export async function submitShiftHandoverAction(
     if (input.incomingAccountId === user.id) {
       throw new Error("Người bàn giao và người nhận ca phải là hai người khác nhau.");
     }
-    const incoming = findDemoErpAccountById(input.incomingAccountId);
-    if (!incoming) throw new Error("Không tìm thấy người nhận ca.");
+    // Người nhận ca đọc từ sổ tài khoản như mọi nơi khác, nên người giám đốc
+    // vừa tạo cũng nhận ca được; và phải đang làm ở chính cơ sở này.
+    const incoming = await docTaiKhoanHieuLuc(input.incomingAccountId);
+    if (!incoming || !incoming.conHieuLuc) throw new Error("Không tìm thấy người nhận ca.");
+    if (!thuocCoSo(incoming, siteId)) {
+      throw new Error("Người nhận ca không thuộc cơ sở này.");
+    }
 
     const canonical = JSON.stringify({ ...input, outgoing: user.id });
     const idempotencyKey =

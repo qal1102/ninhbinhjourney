@@ -1,7 +1,7 @@
 import "server-only";
 
 import { ERP_MODULES, type ErpModuleId, type ErpRole, type ErpSiteId } from "@/domain/erp";
-import { appRoleFromRegistryRole } from "@/domain/erp-account-roles";
+import { vaiTuPhieuCap } from "@/domain/quyen-hieu-luc";
 import { isHiddenErpTestAccount } from "@/domain/erp-data-origin";
 import {
   listRegistryAccounts,
@@ -73,12 +73,9 @@ const EMPLOYEE_ASSIGNABLE_MODULE_IDS: ErpModuleId[] = ERP_MODULES.filter(
 
 const ALL_MODULE_IDS: ErpModuleId[] = ERP_MODULES.map((module) => module.id);
 
+/** Cùng luật chọn vai với lúc đăng nhập (`domain/quyen-hieu-luc.ts`). */
 function primaryAppRole(account: ErpRegistryAccount): ErpRole | null {
-  for (const grant of account.grants) {
-    const role = appRoleFromRegistryRole(grant.role);
-    if (role) return role;
-  }
-  return null;
+  return vaiTuPhieuCap(account.grants);
 }
 
 function grantableModules(role: ErpRole, hasTrainingRecord: boolean, trained: ErpModuleId[]) {

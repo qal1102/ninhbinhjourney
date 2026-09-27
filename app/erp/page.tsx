@@ -10,7 +10,7 @@ import { chonTaiKhoanMau, CO_SO_MAU } from "@/domain/ban-do-chuc-nang";
 import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
 import { readTienDoVongDan } from "@/lib/erp/huong-dan-repository";
 import { getCurrentErpUser, isRoleSwitchEnabled } from "@/lib/erp/demo-session";
-import { listRoleSwitchTargets } from "@/lib/erp/staff-directory";
+import { listRoleSwitchTargets, listStaffDirectory } from "@/lib/erp/staff-directory";
 import { BanDoChucNangPanel } from "@/components/erp/ban-do-chuc-nang-panel";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { listAccountingJournals } from "@/lib/erp/accounting-repository";
@@ -59,6 +59,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
     pendingSopDecisions,
     ticketOverview,
     mucTieuChuyenVai,
+    danhBa,
   ] = await Promise.all([
     getAccessState(),
     listShiftClosures({ siteIds: user.siteIds }),
@@ -100,6 +101,8 @@ export default async function ErpHomePage({ searchParams }: Props) {
     isDirector && !user.actingAs && isRoleSwitchEnabled()
       ? listRoleSwitchTargets()
       : Promise.resolve([]),
+    // Ô chọn người khi quản lý giao việc ngay trên trang đầu.
+    user.role === "manager" ? listStaffDirectory() : Promise.resolve([]),
   ]);
   const params = (await searchParams) ?? {};
   const denied = Array.isArray(params.denied)
@@ -231,7 +234,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
           supplierApInvoices={supplierAp.invoices}
           workdayEmployees={
             user.role === "manager"
-              ? listWorkdayEmployeeOptions(access, user.siteIds)
+              ? listWorkdayEmployeeOptions(access, user.siteIds, danhBa)
               : []
           }
         />

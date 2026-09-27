@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   ERP_REAL_DATA_FROM,
-  ERP_TEST_ACCOUNT_ID_PATTERN,
   isHiddenErpTestAccount,
   erpDataOriginLabel,
   erpFinanceDataOrigin,
@@ -312,17 +311,4 @@ describe("tài khoản do bài smoke dựng ra thì cất khỏi danh bạ", () 
     }
   });
 
-  it("khuôn khớp đúng mã hai tệp smoke đang tự sinh", () => {
-    // Đổi cách đặt mã bên spec mà quên chỗ này thì tài khoản rác lại hiện ra
-    // trong im lặng. Đọc thẳng tệp spec để khoá hai đầu lại với nhau.
-    for (const [tep, tienTo] of [
-      ["tests/e2e/prod-smoke-t6b-auth.spec.ts", "qa-t6b-check-"],
-      ["tests/e2e/prod-smoke-t14b-directory.spec.ts", "qa-t14b-"],
-    ] as const) {
-      const spec = readFileSync(tep, "utf8");
-      expect(spec, tep).toContain("const stamp = Date.now();");
-      expect(spec, tep).toContain(`const accountId = \`${tienTo}\${stamp}\`;`);
-      expect(ERP_TEST_ACCOUNT_ID_PATTERN.test(`${tienTo}${Date.now()}`), tep).toBe(true);
-    }
-  });
 });

@@ -1,13 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import {
-  ERP_MODULES,
-  ERP_SITES,
-  type ErpModuleId,
-  type ErpSiteId,
-} from "@/domain/erp";
-import { appRoleFromRegistryRole, canAccountSignIn } from "@/domain/erp-account-roles";
-import { ERP_ACCOUNTANT_MODULE_IDS } from "@/domain/erp-role-policy";
+import { type ErpModuleId, type ErpSiteId } from "@/domain/erp";
+import { canAccountSignIn } from "@/domain/erp-account-roles";
+import { tinhQuyenHieuLuc, vaiTuPhieuCap } from "@/domain/quyen-hieu-luc";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   findDemoErpAccountById,
@@ -18,9 +13,9 @@ import { getAccessState } from "./staff-access-repository";
 import {
   getRegistryAccount,
   getRegistryAccountByAuthUserId,
-  sitesFromGrants,
   type ErpRegistryAccount,
 } from "./account-registry-repository";
+import { dungTaiKhoanHieuLuc, type TaiKhoanHieuLuc } from "./tai-khoan-hieu-luc";
 
 export type {
   EmployeeAccess,
@@ -67,32 +62,6 @@ export type CurrentErpUser = Omit<DemoErpAccount, "password"> & {
   authUserId?: string;
 };
 
-const ROLE_PRECEDENCE: readonly DemoErpAccount["role"][] = [
-  "director",
-  "chief-accountant",
-  "accountant",
-  "manager",
-  "employee",
-];
-
-/**
- * `system-admin` carries no business role of its own (see
- * domain/erp-account-roles.ts), so an account can hold it alongside exactly
- * one of the five below. Precedence only matters for the theoretical case of
- * more than one business grant on the same account; today's data never does
- * that.
- */
-function deriveRoleFromGrants(
-  account: ErpRegistryAccount,
-): DemoErpAccount["role"] | null {
-  const roles = new Set(
-    account.grants
-      .map((grant) => appRoleFromRegistryRole(grant.role))
-      .filter((role): role is DemoErpAccount["role"] => role !== null),
-  );
-  return ROLE_PRECEDENCE.find((role) => roles.has(role)) ?? null;
-}
-
 /**
  * T14b — danh tính tối thiểu để đổi phiên và ghi nhật ký, tra ở **cả hai** kho.
  *
@@ -119,7 +88,7 @@ async function resolveSwitchIdentity(
   if (demo) return { id: demo.id, name: demo.name, role: demo.role };
   const registry = await getRegistryAccount(accountId).catch(() => null);
   if (!registry || !canAccountSignIn(registry.status)) return null;
-  const role = deriveRoleFromGrants(registry);
+  const role = vaiTuPhieuCap(registry.grants);
   if (!role) return null;
   return { id: registry.accountId, name: registry.displayName, role };
 }
@@ -134,83 +103,67 @@ async function resolveActingAs(
 }
 
 /**
- * Builds a session purely from the registry + grant stores -- no read of
- * `demo-data.ts` at all. This is what makes a director-created account (one
- * that was never hand-written into that file) actually able to sign in and
- * see something: T6/T7 already let a director create the account and grant
- * it sites/modules, but until this function existed, `getCurrentErpUser()`
- * could only resolve an identity that also happened to live in source code.
+ * Dựng người dùng hiện hành từ một tài khoản đã tính quyền. Mọi phiên đều qua
+ * đây, dù đăng nhập bằng email (Supabase Auth) hay bằng tài khoản mẫu, nên
+ * cấp hay thu hồi vai trên màn Tài khoản & phân quyền có hiệu lực ngay ở lượt
+ * tải trang kế tiếp của người đó. Luật quyền nằm ở `domain/quyen-hieu-luc.ts`.
  */
-async function buildCurrentUserFromRegistry(
-  account: ErpRegistryAccount,
-  /**
-   * Vắng mặt khi phiên không đến từ Supabase Auth — trường hợp duy nhất hiện
-   * nay là giám đốc "xem thử" một tài khoản chỉ tồn tại trong registry (T14b).
-   */
-  authUserId?: string,
-  actingAs?: CurrentErpUser["actingAs"],
-): Promise<CurrentErpUser | null> {
-  const role = deriveRoleFromGrants(account);
-  if (!role) return null;
-
-  const grantedSites = sitesFromGrants(account);
-  const base = {
-    id: account.accountId,
-    username: account.email ?? account.accountId,
-    name: account.displayName,
-    role,
-    jobTitle: account.jobTitle,
-    initialModuleIds: [] as ErpModuleId[],
-    // Xem thử thì không được bắt đổi mật khẩu: đó là mật khẩu của người khác,
-    // và giám đốc không có gì để đổi.
-    mustChangePassword: authUserId ? account.mustChangePassword : false,
-    authUserId,
-    actingAs,
-  };
-
-  if (role === "director") {
-    const allModules = ERP_MODULES.map((module) => module.id);
-    return {
-      ...base,
-      siteIds: ERP_SITES.map((site) => site.id),
-      managedSiteIds: ERP_SITES.map((site) => site.id),
-      initialSiteIds: ERP_SITES.map((site) => site.id),
-      moduleIdsBySite: Object.fromEntries(
-        ERP_SITES.map((site) => [site.id, allModules]),
-      ) as Record<ErpSiteId, ErpModuleId[]>,
-    };
-  }
-
-  if (role === "manager" || role === "employee") {
-    // Module access is always a grant (`erp_employee_access`), never a
-    // default this function invents -- a director must hand out modules
-    // explicitly, same as for every account created before T6b.
-    const access = (await getAccessState()).employees[account.accountId];
-    const siteIds = access?.siteIds.length ? access.siteIds : grantedSites;
-    return {
-      ...base,
-      siteIds,
-      // Kept equal to `siteIds` on purpose: `managedSiteIds` is what
-      // workflow-actions.ts checks a manager's scope against, and it must
-      // reflect the registry grant, not a stale org-chart constant.
-      managedSiteIds: siteIds,
-      initialSiteIds: siteIds,
-      moduleIdsBySite: Object.fromEntries(
-        siteIds.map((siteId) => [siteId, access?.moduleIdsBySite[siteId] ?? []]),
-      ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
-    };
-  }
-
-  // accountant / chief-accountant: cấp toàn vùng theo đúng vai trò, không
-  // phải một danh sách module tự bịa.
+function nguoiDungTu(
+  taiKhoan: TaiKhoanHieuLuc,
+  opts: { authUserId?: string; actingAs?: CurrentErpUser["actingAs"] },
+): CurrentErpUser {
+  const { quyen, demo, registry } = taiKhoan;
+  const quanLyCoSo = taiKhoan.role === "director" || taiKhoan.role === "manager";
   return {
-    ...base,
-    siteIds: grantedSites,
-    managedSiteIds: grantedSites,
-    initialSiteIds: grantedSites,
-    moduleIdsBySite: Object.fromEntries(
-      grantedSites.map((siteId) => [siteId, [...ERP_ACCOUNTANT_MODULE_IDS]]),
-    ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
+    id: taiKhoan.id,
+    username: demo?.username ?? registry.accountId,
+    usernameAliases: demo?.usernameAliases,
+    name: taiKhoan.name,
+    role: taiKhoan.role,
+    jobTitle: taiKhoan.jobTitle,
+    initialSiteIds: quyen.siteIds,
+    managedSiteIds: quanLyCoSo ? quyen.siteIds : [],
+    initialModuleIds: demo?.initialModuleIds ?? [],
+    workforceProfile: demo?.workforceProfile,
+    siteIds: quyen.siteIds,
+    moduleIdsBySite: quyen.moduleIdsBySite,
+    actingAs: opts.actingAs,
+    // Xem thử thì không được bắt đổi mật khẩu: đó là mật khẩu của người khác.
+    mustChangePassword: opts.authUserId ? registry.mustChangePassword : false,
+    authUserId: opts.authUserId,
+  };
+}
+
+/**
+ * Sổ tài khoản không đọc được thì lùi về hồ sơ mẫu, cùng một luật quyền, để
+ * một lần kho chập chờn không khoá cả công ty ngoài cửa. Chỉ tài khoản mẫu có
+ * đường lùi này; người tạo mới chỉ có trong sổ nên lúc ấy chờ kho trả lời.
+ */
+async function nguoiDungMauDuPhong(
+  demo: DemoErpAccount,
+  actingAs: CurrentErpUser["actingAs"],
+): Promise<CurrentErpUser> {
+  const access = await getAccessState().catch(() => ({ employees: {} as Record<string, { moduleIdsBySite: Partial<Record<ErpSiteId, ErpModuleId[]>> }> }));
+  const quyen = tinhQuyenHieuLuc({
+    role: demo.role,
+    coSoDuocCap: demo.role === "manager" ? demo.managedSiteIds : demo.initialSiteIds,
+    viecDaGiao: demo.role === "employee" ? access.employees[demo.id]?.moduleIdsBySite : undefined,
+    conHieuLuc: isDemoErpAccountActive(demo),
+  });
+  return {
+    id: demo.id,
+    username: demo.username,
+    usernameAliases: demo.usernameAliases,
+    name: demo.name,
+    role: demo.role,
+    jobTitle: demo.jobTitle,
+    initialSiteIds: demo.initialSiteIds,
+    managedSiteIds: demo.managedSiteIds,
+    initialModuleIds: demo.initialModuleIds,
+    workforceProfile: demo.workforceProfile,
+    siteIds: quyen.siteIds,
+    moduleIdsBySite: quyen.moduleIdsBySite,
+    actingAs,
   };
 }
 
@@ -293,179 +246,42 @@ export async function clearErpSession() {
   store.set(SESSION_COOKIE, "", cookieOptions(0));
 }
 
-/**
- * T6. `erp_account_registry.status` is the switch that lets somebody be locked
- * out without a deploy. A registry that cannot be read must not lock everyone
- * out, so an unreachable store falls through to "allowed" — the same posture
- * every other read in this file takes, and the reason suspension is enforced
- * again inside the RPCs rather than only here.
- */
-async function isRegistryAccountAllowedIn(accountId: string): Promise<boolean> {
-  try {
-    const account = await getRegistryAccount(accountId);
-    if (!account) return true;
-    return account.status === "active";
-  } catch {
-    return true;
-  }
-}
-
-/**
- * T7 lets the registry decide which sites a manager runs. That is only safe
- * once migrations 025 and 027 have actually been applied: before 025 the
- * registry still holds the pre-V12 org chart, where one manager carried
- * `regional-manager` on all four sites, and obeying it would silently widen
- * that account's scope rather than narrow it.
- *
- * So the switch is explicit. Deploy the code, apply the migrations, then set
- * ERP_REGISTRY_SITE_SCOPE=true. Stopping between any two of those steps leaves
- * a working system, which is the rule this project broke last time.
- */
-function isRegistrySiteScopeEnabled() {
-  return process.env.ERP_REGISTRY_SITE_SCOPE === "true";
-}
-
-/** Sites the registry grants this account, empty when it cannot say. */
-async function sitesForAccount(accountId: string): Promise<ErpSiteId[]> {
-  if (!isRegistrySiteScopeEnabled()) return [];
-  try {
-    const account = await getRegistryAccount(accountId);
-    return account ? sitesFromGrants(account) : [];
-  } catch {
-    return [];
-  }
-}
-
 export async function getCurrentErpUser(): Promise<CurrentErpUser | null> {
-  // T6b: an account whose registry row is linked to a real Supabase Auth
-  // user signs in that way from here on. Checked first, and on its own
-  // terms -- a Supabase session that resolves to no active registry account
-  // must NOT fall through to the legacy cookie below, or a stranger with a
-  // valid Auth session on a shared browser could inherit whatever demo
-  // identity that cookie happened to hold.
+  // T6b: một tài khoản đã gắn Supabase Auth thì đăng nhập bằng lối ấy. Xét
+  // trước và theo luật riêng: phiên Auth không khớp tài khoản đang hoạt động
+  // nào thì KHÔNG rơi xuống cookie mẫu bên dưới, kẻo người lạ dùng chung trình
+  // duyệt thừa hưởng danh tính cookie đang giữ.
   const authUser = await getSupabaseAuthUser();
   if (authUser) {
     const registryAccount = await getRegistryAccountByAuthUserId(authUser.id).catch(
       () => null,
     );
     if (!registryAccount || !canAccountSignIn(registryAccount.status)) return null;
-    return buildCurrentUserFromRegistry(registryAccount, authUser.id);
+    const taiKhoan = dungTaiKhoanHieuLuc(registryAccount, await getAccessState());
+    return taiKhoan ? nguoiDungTu(taiKhoan, { authUserId: authUser.id }) : null;
   }
 
   const store = await cookies();
   const session = decodeSigned<SessionPayload>(store.get(SESSION_COOKIE)?.value);
   if (!session || session.expiresAt <= Date.now()) return null;
-  const account = findDemoErpAccountById(session.userId);
-  if (!account) {
-    // T14b: phiên trỏ vào một tài khoản không có trong mã nguồn. Đường duy
-    // nhất tạo ra phiên như vậy là giám đốc xem thử một tài khoản do chính họ
-    // tạo trên `/erp/tai-khoan`. Không phải lỗi, và cũng không nới quyền:
-    // danh tính vẫn dựng từ registry + phiếu cấp quyền, đúng như khi người đó
-    // tự đăng nhập bằng Supabase Auth.
-    const registryOnly = await getRegistryAccount(session.userId).catch(() => null);
-    if (!registryOnly || !canAccountSignIn(registryOnly.status)) return null;
-    return buildCurrentUserFromRegistry(
-      registryOnly,
-      undefined,
-      await resolveActingAs(session.actingAsFor),
-    );
-  }
-  // T6: suspension has to bite on every request, not only at the login form,
-  // or a suspended person keeps working until their cookie expires.
-  if (!(await isRegistryAccountAllowedIn(account.id))) return null;
-  const safeAccount = {
-    id: account.id,
-    username: account.username,
-    name: account.name,
-    role: account.role,
-    jobTitle: account.jobTitle,
-    initialSiteIds: account.initialSiteIds,
-    managedSiteIds: account.managedSiteIds,
-    initialModuleIds: account.initialModuleIds,
-    workforceProfile: account.workforceProfile,
-  };
   const actingAs = await resolveActingAs(session.actingAsFor);
 
-  if (account.role === "director") {
-    const allModules = ERP_MODULES.map((module) => module.id);
-    return {
-      ...safeAccount,
-      siteIds: ERP_SITES.map((site) => site.id),
-      moduleIdsBySite: Object.fromEntries(
-        ERP_SITES.map((site) => [site.id, allModules]),
-      ) as Record<ErpSiteId, ErpModuleId[]>,
-      actingAs,
-    };
+  let registry: ErpRegistryAccount | null | undefined;
+  try {
+    registry = await getRegistryAccount(session.userId);
+  } catch {
+    registry = undefined;
   }
-
-  // V14: a manager's site scope still comes from the org chart
-  // (`managedSiteIds`), but their modules now come from the same grant store
-  // employees use. Before this, managers were handed `ERP_MODULES` outright
-  // and the whole permission story only really applied to employees (L13).
-  if (account.role === "manager") {
-    const managerAccess = (await getAccessState()).employees[account.id];
-    // T7: which sites a manager runs is a grant, not a constant. The org chart
-    // in demo-data.ts is only the starting point now -- a director widening
-    // someone's scope adds a row, and that row has to be what the app obeys,
-    // or the account-management screen would be theatre.
-    const grantedSites = await sitesForAccount(account.id);
-    const siteIds = grantedSites.length
-      ? grantedSites
-      : [...account.managedSiteIds];
-    return {
-      ...safeAccount,
-      siteIds,
-      // Found alongside T6b: this used to stay `account.managedSiteIds` from
-      // demo-data.ts even when `siteIds` above had already been widened by a
-      // registry grant, so a manager given an extra site through
-      // `/erp/tai-khoan` could see it in the nav yet still get
-      // "Hồ sơ nằm ngoài cơ sở bạn quản lý" from workflow-actions.ts, which
-      // checks `managedSiteIds` specifically. `managedSiteIds` has to mean
-      // the same scope `siteIds` does, or the two checks disagree about the
-      // same account -- the exact failure mode mục 3 of HANDOFF.md is about.
-      managedSiteIds: siteIds,
-      moduleIdsBySite: Object.fromEntries(
-        siteIds.map((siteId) => [
-          siteId,
-          managerAccess?.moduleIdsBySite[siteId] ?? [],
-        ]),
-      ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
-      actingAs,
-    };
+  if (registry) {
+    // Khoá tài khoản phải có hiệu lực ở mọi lượt tải trang, không chỉ ở cửa
+    // đăng nhập, kẻo người bị khoá làm tiếp tới khi cookie hết hạn.
+    if (!canAccountSignIn(registry.status)) return null;
+    const taiKhoan = dungTaiKhoanHieuLuc(registry, await getAccessState());
+    return taiKhoan ? nguoiDungTu(taiKhoan, { actingAs }) : null;
   }
-
-  if (
-    account.role === "accountant" ||
-    account.role === "chief-accountant"
-  ) {
-    return {
-      ...safeAccount,
-      siteIds: [...account.initialSiteIds],
-      moduleIdsBySite: Object.fromEntries(
-        account.initialSiteIds.map((siteId) => [
-          siteId,
-          [...account.initialModuleIds],
-        ]),
-      ) as Partial<Record<ErpSiteId, ErpModuleId[]>>,
-      actingAs,
-    };
-  }
-
-  if (!isDemoErpAccountActive(account)) {
-    return { ...safeAccount, siteIds: [], moduleIdsBySite: {}, actingAs };
-  }
-
-  const access = await getAccessState();
-  const employeeAccess = access.employees[account.id] ?? {
-    siteIds: [],
-    moduleIdsBySite: {},
-  };
-  return {
-    ...safeAccount,
-    siteIds: employeeAccess.siteIds,
-    moduleIdsBySite: employeeAccess.moduleIdsBySite,
-    actingAs,
-  };
+  // Không đọc được sổ, hoặc sổ chưa có dòng của tài khoản mẫu này.
+  const demo = findDemoErpAccountById(session.userId);
+  return demo ? nguoiDungMauDuPhong(demo, actingAs) : null;
 }
 
 export function isRoleSwitchEnabled() {

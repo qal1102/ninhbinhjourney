@@ -18,12 +18,10 @@ const doubles = vi.hoisted(() => ({
   accountCanAccessModule: vi.fn(),
   accountCanAccessSite: vi.fn(),
   createWorkday: vi.fn(),
-  findDemoErpAccountById: vi.fn(),
+  docTaiKhoanHieuLuc: vi.fn(),
   getAccessState: vi.fn(),
   getCurrentErpUser: vi.fn(),
-  getEmployeeAssignableModuleIds: vi.fn(),
   getWorkday: vi.fn(),
-  isDemoErpAccountActive: vi.fn(),
   recordWorkdayLocation: vi.fn(),
   removeWorkdayEvidence: vi.fn(),
   revalidatePath: vi.fn(),
@@ -36,10 +34,11 @@ vi.mock("next/cache", () => ({
   revalidatePath: doubles.revalidatePath,
 }));
 
-vi.mock("@/lib/erp/demo-data", () => ({
-  findDemoErpAccountById: doubles.findDemoErpAccountById,
-  getEmployeeAssignableModuleIds: doubles.getEmployeeAssignableModuleIds,
-  isDemoErpAccountActive: doubles.isDemoErpAccountActive,
+// Người được giao việc đọc từ sổ tài khoản (`docTaiKhoanHieuLuc`) từ 28/09/2026.
+vi.mock("@/lib/erp/tai-khoan-hieu-luc", () => ({
+  docTaiKhoanHieuLuc: doubles.docTaiKhoanHieuLuc,
+  thuocCoSo: (taiKhoan: { quyen: { siteIds: string[] } }, siteId: string) =>
+    taiKhoan.quyen.siteIds.includes(siteId),
 }));
 
 vi.mock("@/lib/erp/demo-session", () => ({
@@ -101,6 +100,18 @@ const employeeAccount = {
     shiftLabel: "07:30–12:15",
     trainedModuleIds: ["check-in-khach"] as const,
   },
+};
+
+const employeeTaiKhoan = {
+  id: employee.id,
+  name: employee.name,
+  jobTitle: employeeAccount.jobTitle,
+  role: "employee" as const,
+  conHieuLuc: true,
+  quyen: { siteIds: ["trang-an"], moduleIdsBySite: { "trang-an": ["check-in-khach"] } },
+  viecDaDaoTao: ["check-in-khach"],
+  registry: {},
+  demo: employeeAccount,
 };
 
 const employeeUser = {
@@ -225,7 +236,7 @@ beforeEach(() => {
   }
   doubles.accountCanAccessModule.mockReturnValue(true);
   doubles.accountCanAccessSite.mockReturnValue(true);
-  doubles.findDemoErpAccountById.mockReturnValue(employeeAccount);
+  doubles.docTaiKhoanHieuLuc.mockResolvedValue(employeeTaiKhoan);
   doubles.getAccessState.mockResolvedValue({
     version: 1,
     employees: {
@@ -239,11 +250,7 @@ beforeEach(() => {
     audit: [],
   });
   doubles.getCurrentErpUser.mockResolvedValue(employeeUser);
-  doubles.getEmployeeAssignableModuleIds.mockReturnValue([
-    "check-in-khach",
-  ]);
   doubles.getWorkday.mockResolvedValue(assignedRecord());
-  doubles.isDemoErpAccountActive.mockReturnValue(true);
   doubles.removeWorkdayEvidence.mockResolvedValue(undefined);
   doubles.saveWorkdayTransition.mockImplementation(
     async (_current, next) => next,
@@ -280,27 +287,21 @@ describe("ERP workday server-action guards", () => {
 
   it("rejects assignment to an employee whose employment is inactive", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(managerUser);
-    doubles.isDemoErpAccountActive.mockReturnValue(false);
+    doubles.docTaiKhoanHieuLuc.mockResolvedValue({ ...employeeTaiKhoan, conHieuLuc: false });
 
     const result = await assignWorkdayAction(assignmentForm());
 
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/nhân viên.*không hợp lệ/i);
-    expect(doubles.getAccessState).not.toHaveBeenCalled();
     expect(doubles.createWorkday).not.toHaveBeenCalled();
   });
 
   it("rejects assignment after the employee's site access is revoked", async () => {
     doubles.getCurrentErpUser.mockResolvedValue(managerUser);
-    doubles.getAccessState.mockResolvedValue({
-      version: 1,
-      employees: {
-        [employee.id]: {
-          siteIds: [],
-          moduleIdsBySite: {},
-        },
-      },
-      audit: [],
+    // Giám đốc thu hồi cơ sở trong sổ tài khoản.
+    doubles.docTaiKhoanHieuLuc.mockResolvedValue({
+      ...employeeTaiKhoan,
+      quyen: { siteIds: [], moduleIdsBySite: {} },
     });
 
     const result = await assignWorkdayAction(assignmentForm());

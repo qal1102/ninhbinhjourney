@@ -5,9 +5,14 @@ import { z } from "zod";
 import { generateCode, ACCOUNT_CODE_SHAPE } from "@/domain/auto-code";
 import { isErpSiteId } from "@/domain/erp";
 import {
+  appRoleFromRegistryRole,
+  ERP_REGISTRY_ROLE_LABELS,
   isErpAccountStatus,
   isErpRegistryRole,
+  type ErpRegistryRole,
 } from "@/domain/erp-account-roles";
+import { vaiCanCoSo } from "@/domain/quyen-hieu-luc";
+import type { ErpSiteId } from "@/domain/erp";
 import {
   AccountRegistryError,
   AuthEmailAlreadyRegisteredError,
@@ -96,8 +101,45 @@ const AccountSchema = z.object({
     "finance",
     "executive",
   ]),
-  status: z.enum(["active", "suspended", "revoked"]),
 });
+
+const VAI_NGHIEP_VU = ["employee", "regional-manager", "accountant-maker", "accounting-checker", "director"] as const;
+
+/**
+ * Vai nào phải gắn một cơ sở, vai nào chỉ cấp toàn vùng. Trước 28/09 màn hình
+ * nhận mọi kiểu ghép, kể cả "Nhân viên · Toàn vùng" (một nhân viên thấy cả bốn
+ * cơ sở) hay "Giám đốc · Tam Cốc".
+ */
+function kiemVaiVaCoSo(role: ErpRegistryRole, siteId: ErpSiteId | null) {
+  const can = vaiCanCoSo(role);
+  if (can === "bat-buoc" && siteId === null) {
+    throw new AccountRegistryError(`Vai ${ERP_REGISTRY_ROLE_LABELS[role]} phải chọn một cơ sở cụ thể.`);
+  }
+  if (can === "toan-vung" && siteId !== null) {
+    throw new AccountRegistryError(`Vai ${ERP_REGISTRY_ROLE_LABELS[role]} chỉ cấp toàn vùng.`);
+  }
+}
+
+function docCoSo(value: FormDataEntryValue | null): ErpSiteId | null {
+  const text = String(value ?? "").trim();
+  if (text === "") return null;
+  if (!isErpSiteId(text)) throw new AccountRegistryError("Cơ sở không hợp lệ.");
+  return text;
+}
+
+/**
+ * Email đăng nhập. Để trống thì dùng một địa chỉ nội bộ theo mã tài khoản:
+ * người ấy đăng nhập bằng chính mã tài khoản, không ai phải có email công ty.
+ * Supabase Auth tạo người dùng với `email_confirm: true` nên không có thư nào
+ * được gửi tới địa chỉ này.
+ */
+function emailDangNhap(accountId: string, email: FormDataEntryValue | null): string {
+  const text = String(email ?? "").trim();
+  if (text === "") return `${accountId}@taikhoan.ninhbinhjourney.vn`;
+  const parsed = z.string().email("Email không hợp lệ.").safeParse(text);
+  if (!parsed.success) throw new AccountRegistryError("Email không hợp lệ.");
+  return parsed.data.toLowerCase();
+}
 
 // Mã tài khoản chỉ do máy sinh (xem domain/auto-code.ts), không còn ô nhập
 // tay nào cho nó — nhưng vẫn chốt lại đúng ràng buộc cũ ở đây, phòng khi
@@ -112,44 +154,74 @@ const GeneratedAccountIdSchema = z
     "Mã tài khoản chỉ dùng chữ thường, số và dấu gạch ngang.",
   );
 
+/**
+ * Tạo tài khoản trong một bước: hồ sơ, vai, cơ sở, đăng nhập. Trước 28/09 là
+ * ba bước ở ba chỗ, và tài khoản tạo xong nằm đó "chưa cấp vai trò nào, chưa
+ * đăng nhập được" cho tới khi ai đó nhớ làm nốt.
+ *
+ * Ba bước ghi vào hai hệ thống, không chung một giao dịch được. Hỏng giữa
+ * chừng thì nói rõ bước nào xong, bước nào chưa; tài khoản đã tạo vẫn nằm
+ * trong danh sách để làm nốt bước còn lại ở thẻ của người đó.
+ */
 export async function upsertAccountAction(
   _previous: AccountActionState,
   formData: FormData,
 ): Promise<AccountActionState> {
+  let accountId = "";
+  let buoc = "tạo tài khoản";
   try {
     const actor = await requireSystemAdmin();
     const input = AccountSchema.parse({
       displayName: formData.get("displayName"),
       jobTitle: formData.get("jobTitle"),
       employmentType: formData.get("employmentType"),
-      status: formData.get("status"),
     });
+    const role = String(formData.get("role") ?? "");
+    if (!(VAI_NGHIEP_VU as readonly string[]).includes(role)) {
+      throw new AccountRegistryError("Chọn vai trò cho người này.");
+    }
+    const vai = role as (typeof VAI_NGHIEP_VU)[number];
+    const siteId = docCoSo(formData.get("siteId"));
+    kiemVaiVaCoSo(vai, siteId);
+
     // upsertRegistryAccount ghi đè lặng lẽ nếu trùng mã — vì vậy PHẢI đọc
-    // trước toàn bộ mã đang dùng (gồm cả tài khoản đã ngưng/thu hồi,
-    // listRegistryAccounts() không lọc trạng thái) rồi mới sinh mã mới.
-    // Nếu bước đọc này lỗi, ném ra ngay và dừng ở đây — không được đoán
-    // liều một mã rồi lưu, vì đoán sai nghĩa là ghi đè lên một người thật.
+    // trước toàn bộ mã đang dùng (gồm cả tài khoản đã ngưng/thu hồi) rồi mới
+    // sinh mã mới. Đọc hỏng thì dừng, không đoán liều một mã.
     const existingAccounts = await listRegistryAccounts();
-    // Nền tảng đọc bảng trả về tối đa 1.000 hàng một lượt. Chạm trần nghĩa là
-    // danh sách đã bị cắt bớt, và một mã nằm ở phần bị cắt sẽ trông như còn
-    // trống — sinh trúng mã đó là ghi đè lên một người đang đi làm. Chưa tới
-    // ngưỡng ấy thì thôi, nhưng tới thì phải dừng và nói ra, đừng đoán.
+    // Chạm trần 1.000 dòng mỗi lượt đọc thì danh sách có thể đã bị cắt; một mã
+    // nằm ở phần bị cắt trông như còn trống. Dừng và nói ra, đừng đoán.
     if (existingAccounts.length >= 1000) {
       throw new Error(
         "Danh sách tài khoản đã chạm mức đọc tối đa nên chưa chắc đủ. Em chưa dám tự đặt mã lúc này, xin báo lại để đội kỹ thuật nới chỗ đọc.",
       );
     }
-    const takenAccountIds = existingAccounts.map((account) => account.accountId);
-    const accountId = GeneratedAccountIdSchema.parse(
-      generateCode(input.displayName, takenAccountIds, ACCOUNT_CODE_SHAPE),
+    accountId = GeneratedAccountIdSchema.parse(
+      generateCode(input.displayName, existingAccounts.map((account) => account.accountId), ACCOUNT_CODE_SHAPE),
     );
-    await upsertRegistryAccount({ actorAccountId: actor.id, accountId, ...input });
+    const email = emailDangNhap(accountId, formData.get("email"));
+    await upsertRegistryAccount({ actorAccountId: actor.id, accountId, ...input, status: "active" });
+
+    buoc = "cấp vai trò";
+    await setRegistryRoleAssignment({ actorAccountId: actor.id, accountId, role: vai, siteId, active: true });
+
+    buoc = "cấp đăng nhập";
+    const temporaryPassword = await capDangNhap(actor.id, accountId, email);
+
     revalidateAccounts();
     return {
       status: "success",
-      message: `Đã tạo tài khoản cho ${input.displayName}, mã đăng nhập nội bộ là ${accountId}.`,
+      message: `Đã tạo tài khoản cho ${input.displayName}. Tên đăng nhập: ${accountId}. Gửi mật khẩu tạm dưới đây riêng cho người này; họ đổi mật khẩu ngay lần đăng nhập đầu tiên.`,
+      temporaryPassword,
     };
   } catch (error) {
+    if (accountId && buoc !== "tạo tài khoản") {
+      revalidateAccounts();
+      const loi = errorState(error).message;
+      return {
+        status: "error",
+        message: `Đã tạo tài khoản ${accountId} nhưng chưa ${buoc} được: ${loi} Mời bạn làm nốt ở thẻ của người này bên dưới.`,
+      };
+    }
     return errorState(error);
   }
 }
@@ -196,11 +268,25 @@ export async function setRoleAssignmentAction(
     if (!accountId || !isErpRegistryRole(role)) {
       throw new Error("Vai trò không hợp lệ.");
     }
-    // An empty site means "toàn vùng" — the registry's own null-site grant,
-    // which is how accounting and the director are scoped.
-    const siteId = siteValue === "" ? null : siteValue;
-    if (siteId !== null && !isErpSiteId(siteId)) {
-      throw new Error("Cơ sở không hợp lệ.");
+    // Ô trống là "toàn vùng" — cách sổ tài khoản ghi quyền kế toán và giám đốc.
+    const siteId = docCoSo(siteValue);
+    if (active) {
+      kiemVaiVaCoSo(role, siteId);
+      // Một người chỉ giữ một vai nghiệp vụ. Cấp thêm vai thứ hai thì vai rộng
+      // hơn lặng lẽ thắng, và màn hình nói một đằng quyền chạy một nẻo.
+      if (appRoleFromRegistryRole(role) !== null) {
+        const target = await getRegistryAccount(accountId);
+        const vaiKhac = target?.grants.find(
+          (grant) => grant.role !== role && appRoleFromRegistryRole(grant.role) !== null,
+        );
+        if (vaiKhac) {
+          throw new AccountRegistryError(
+            `${accountId} đang giữ vai ${ERP_REGISTRY_ROLE_LABELS[vaiKhac.role]}. Thu hồi vai ấy trước rồi mới cấp vai mới.`,
+          );
+        }
+      }
+    } else if (accountId === actor.id && role === "director") {
+      throw new AccountRegistryError("Không tự thu hồi vai Giám đốc của chính mình được.");
     }
     await setRegistryRoleAssignment({
       actorAccountId: actor.id,
@@ -221,10 +307,6 @@ export async function setRoleAssignmentAction(
   }
 }
 
-const GrantLoginSchema = z.object({
-  accountId: z.string().trim().min(2).max(100),
-  email: z.string().trim().email("Email không hợp lệ."),
-});
 
 /**
  * T6b: the one step that turns a registry row into an account someone can
@@ -247,74 +329,77 @@ const GrantLoginSchema = z.object({
  *   wired to this or another account gets a message that says which; an Auth
  *   user this ERP never created is left alone.
  */
+async function capDangNhap(actorId: string, accountId: string, email: string): Promise<string> {
+  const input = { accountId, email };
+  const actor = { id: actorId };
+  const temporaryPassword = generateTemporaryPassword();
+  let authUserId: string;
+  let createdHere = false;
+  try {
+    authUserId = await createAuthUserForAccount({
+      accountId: input.accountId,
+      email: input.email,
+      temporaryPassword,
+    });
+    createdHere = true;
+  } catch (error) {
+    if (!(error instanceof AuthEmailAlreadyRegisteredError)) throw error;
+    const existing = await findLoginByEmail({ actorAccountId: actor.id, email: input.email });
+    if (!existing) throw error;
+    if (existing.linkedAccountId === input.accountId) {
+      throw new AccountRegistryError(
+        "Email này đã là email đăng nhập của chính tài khoản này. Cần mật khẩu mới thì bấm “Cấp lại mật khẩu tạm”.",
+      );
+    }
+    if (existing.linkedAccountId) {
+      throw new AccountRegistryError(
+        `Email này đang dùng để đăng nhập cho tài khoản ${existing.linkedAccountId}. Chọn email khác, hoặc gỡ đăng nhập ở tài khoản đó trước.`,
+      );
+    }
+    if (!existing.createdForAccountId) {
+      // Not created by this ERP: never take over an Auth user it does not own.
+      throw new AccountRegistryError(
+        "Email này đã có người dùng đăng nhập không do hệ thống quản lý tạo ra. Chọn email khác, hoặc nhờ người quản trị Supabase kiểm tra trước.",
+      );
+    }
+    await setAuthUserPassword(existing.authUserId, temporaryPassword);
+    authUserId = existing.authUserId;
+  }
+
+  try {
+    await linkAuthUser({
+      actorAccountId: actor.id,
+      accountId: input.accountId,
+      authUserId,
+      email: input.email,
+    });
+  } catch (error) {
+    if (createdHere) {
+      try {
+        await deleteAuthUser(authUserId);
+      } catch (cleanupError) {
+        // Left as an orphan; the next grant with this email reuses it.
+        console.error("Grant login: could not delete the Auth user after a failed link", cleanupError);
+      }
+    }
+    throw error;
+  }
+  return temporaryPassword;
+}
+
 export async function grantLoginAction(
   _previous: AccountActionState,
   formData: FormData,
 ): Promise<AccountActionState> {
   try {
     const actor = await requireSystemAdmin();
-    const input = GrantLoginSchema.parse({
-      accountId: formData.get("accountId"),
-      email: formData.get("email"),
-    });
-    const temporaryPassword = generateTemporaryPassword();
-
-    let authUserId: string;
-    let createdHere = false;
-    try {
-      authUserId = await createAuthUserForAccount({
-        accountId: input.accountId,
-        email: input.email,
-        temporaryPassword,
-      });
-      createdHere = true;
-    } catch (error) {
-      if (!(error instanceof AuthEmailAlreadyRegisteredError)) throw error;
-      const existing = await findLoginByEmail({ actorAccountId: actor.id, email: input.email });
-      if (!existing) throw error;
-      if (existing.linkedAccountId === input.accountId) {
-        throw new AccountRegistryError(
-          "Email này đã là email đăng nhập của chính tài khoản này. Cần mật khẩu mới thì bấm “Cấp lại mật khẩu tạm”.",
-        );
-      }
-      if (existing.linkedAccountId) {
-        throw new AccountRegistryError(
-          `Email này đang dùng để đăng nhập cho tài khoản ${existing.linkedAccountId}. Chọn email khác, hoặc gỡ đăng nhập ở tài khoản đó trước.`,
-        );
-      }
-      if (!existing.createdForAccountId) {
-        // Not created by this ERP: never take over an Auth user it does not own.
-        throw new AccountRegistryError(
-          "Email này đã có người dùng đăng nhập không do hệ thống quản lý tạo ra. Chọn email khác, hoặc nhờ người quản trị Supabase kiểm tra trước.",
-        );
-      }
-      await setAuthUserPassword(existing.authUserId, temporaryPassword);
-      authUserId = existing.authUserId;
-    }
-
-    try {
-      await linkAuthUser({
-        actorAccountId: actor.id,
-        accountId: input.accountId,
-        authUserId,
-        email: input.email,
-      });
-    } catch (error) {
-      if (createdHere) {
-        try {
-          await deleteAuthUser(authUserId);
-        } catch (cleanupError) {
-          // Left as an orphan; the next grant with this email reuses it.
-          console.error("Grant login: could not delete the Auth user after a failed link", cleanupError);
-        }
-      }
-      throw error;
-    }
-
+    const { accountId } = AccountIdSchema.parse({ accountId: formData.get("accountId") });
+    const email = emailDangNhap(accountId, formData.get("email"));
+    const temporaryPassword = await capDangNhap(actor.id, accountId, email);
     revalidateAccounts();
     return {
       status: "success",
-      message: `Đã cấp đăng nhập cho ${input.accountId}. Gửi mật khẩu tạm dưới đây riêng cho người này qua kênh khác; họ phải đổi mật khẩu ngay lần đăng nhập đầu tiên.`,
+      message: `Đã cấp đăng nhập cho ${accountId}. Tên đăng nhập: ${accountId}. Gửi mật khẩu tạm dưới đây riêng cho người này; họ phải đổi mật khẩu ngay lần đăng nhập đầu tiên.`,
       temporaryPassword,
     };
   } catch (error) {

@@ -148,8 +148,9 @@ function shiftHandoverColleagues(
   access: ErpAccessState,
   siteId: ErpSite["id"],
   currentUserId: string,
+  directory: readonly ErpStaffDirectoryEntry[],
 ) {
-  return listWorkdayEmployeeOptions(access, [siteId])
+  return listWorkdayEmployeeOptions(access, [siteId], directory)
     .filter(
       (employee) =>
         employee.id !== currentUserId && employee.siteIds.includes(siteId),
@@ -384,7 +385,7 @@ export function ModuleWorkspace({
           site={site}
           user={user}
           handovers={shiftHandovers}
-          colleagues={shiftHandoverColleagues(access, site.id, user.id)}
+          colleagues={shiftHandoverColleagues(access, site.id, user.id, staffDirectory)}
           businessDate={vietnamBusinessDate()}
         />
         <StaffPerformanceWorkspace

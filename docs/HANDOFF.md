@@ -6,10 +6,10 @@
 
 ---
 
-## A. Hiện trạng thật (26/09/2026, tối)
+## A. Hiện trạng thật (27/09/2026)
 
 - **Production:** https://ninhbinhjourney.vercel.app, deploy từ `main` (`cce096d` trở lên). Repo `qal1102/ninhbinhjourney`, Supabase ref `vzewjfcwhovsxslqfpjt`.
-- **Migration:** local và production khớp tới `202609260093`. Riêng `061` cố ý bỏ.
+- **Migration:** production có tới `202609260093`. Riêng `061` cố ý bỏ. **`094` (`erp_phieu_khach`) đã viết và chạy thử bằng PGlite, CHƯA ÁP**, chờ chủ dự án cho phép `supabase db push`. Mã dùng nó nằm ở nhánh cục bộ `phieu-khoang-thoi-gian` (xem mục C).
 - **ERP có 13 module, module nào cũng chạy thật:**
   - Vé & đặt chỗ, Check-in, Sức chứa & luồng khách (gồm điều phối xe điện), Camera AI, Báo cáo hiện trường.
   - Dự án & sự kiện, Sự cố, Nhân sự, Chấm công, Đối tác & NCC, SOP.
@@ -60,21 +60,27 @@
 
 **Tự làm được, theo thứ tự đề xuất:**
 1. **Chốt ca có số:** ma trận bốn cơ sở toàn 0 vì chưa ai chốt ca. Cân nhắc cho lịch sử mẫu sinh cả hồ sơ chốt ca qua đúng quy trình (bảng tài chính bất biến, xem trong lưu trữ `ERP-FAKE-03`), hoặc hỏi chủ dự án có cần không.
-2. **`A15-ERP-07`:** vé mẫu cũ (`demo-seed`) nằm chung màn check-in thật.
-3. **Phễu khách chỉ nhìn 7 ngày:** thêm chọn khoảng thời gian (so dịp năm nay với năm sau).
-4. **`/journey/[id]` gần như mồ côi,** không có lối vào từ giao diện: nối vào hoặc xoá (hỏi trước khi xoá tệp).
-5. Việc nhỏ còn sót: `A15-LOI-03` (sàn chữ 14px màn vận hành), `QA-ERP-TICKET-05` (bảng giám đốc: phần chia tiền gói nhiều điểm), ACC-04…07, LOI-04, CAN-03, hiệu ứng web `A15-CON-LAI`.
-6. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`.
+2. **Phễu khách chọn khoảng: làm xong ở nhánh `phieu-khoang-thoi-gian`, chờ áp `094`.** Thứ tự bắt buộc: áp `094` → ghép nhánh vào `main` → push (Vercel tự deploy) → chạy `prod-smoke-a5-funnel` với `NBJ_A5_FUNNEL_SMOKE=1`. Deploy mã trước khi áp thì màn marketing hiện "Phễu khách chưa đọc được".
+   - Sửa kèm một lỗi số thật đang chạy trên production: phễu cũ đọc thô rồi đếm bằng TypeScript, PostgREST cắt ở 1.000 dòng, nên ô "Qua cổng" 7 ngày (thật ra khoảng 7.400) bị cắt ở 1.000.
+   - Ô "Qua cổng" nay chỉ đếm vé của đơn web; lượt vé quầy ghi riêng một dòng.
+3. **`/journey/[id]` gần như mồ côi,** không có lối vào từ giao diện: nối vào hoặc xoá (hỏi trước khi xoá tệp).
+4. Việc nhỏ còn sót (chi tiết ở hàng `A15-CON-LAI` trong lưu trữ):
+   - `ACC-04…07`: nhật ký đăng nhập theo tài khoản, xác thực hai lớp cho vai tài chính, thu hồi phiên từ xa, bàn giao khi nghỉ việc. Giá trị thấp khi chỉ dùng tài khoản giám đốc.
+   - `LOI-04`: rà độ sâu nội dung 15 trang điểm đến. `CAN-03`: Lighthouse tại Việt Nam trên 4G.
+   - Hiệu ứng web của `A15-CON-LAI` thuộc phiên sáng tạo, không làm song song.
+5. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`.
 
 **Chờ chủ dự án quyết, không tự làm:**
 - `A15-QUYEN-01`: phân quyền chưa từng kiểm từ tài khoản cấp thấp; cần ba tài khoản thật. Đây là món nợ lớn nhất.
 - `A15-DEMO-01`: kho demo tách production (tốn tiền).
-- `TC-08` / T6c: RLS thật.
-- `QA-PRICE-03`: giá "minh hoạ" trên đơn thật.
+- `QA-ERP-TICKET-05` phần cuối: luật chia tiền vé gói nhiều điểm về từng cơ sở (không suy ra được từ dữ liệu).
 - `ERP-05`: cổng ngoại tuyến cần người cầm máy thật.
 - Thực đơn kỹ năng giao diện `docs/reference/KY_NANG_GIAO_DIEN.md`: chờ chọn món, đừng làm cả bảng.
 
+**Đã khép, đừng làm lại:** `A15-ERP-07` (cờ `ERP_DEMO_TICKETS_ENABLED`), `A15-LOI-03`, `QA-PRICE-03` (chủ dự án: "giá tiền cứ để như vậy"), `TC-13`.
+
 **Đã cân nhắc và bỏ:**
+- `TC-08` / T6c (RLS thật thay service role): chủ dự án gạch bỏ 21/09. Chỉ mở lại khi tài khoản nhân viên thật sự vào vận hành.
 - Mã QR riêng cho từng nhân viên (tài liệu khách mục 7.2): đã có QR vé theo khách và QR động theo điểm; thưởng theo nhân viên chưa có chính sách.
 - Dùng QR ngân hàng thật: web không biết tiền về, lại lộ số tài khoản cá nhân.
 
@@ -93,10 +99,11 @@
 | Báo cáo & dự báo | `domain/bao-cao-co-so.ts`, `lib/erp/bao-cao-repository.ts`, `components/erp/bao-cao-workspace.tsx` (RPC `erp_bao_cao_co_so`) |
 | Lịch sử mẫu | migration `202609260092_lich_su_mau_60_ngay.sql` |
 | Xoá lượt giữ quá hạn | migration `202609260090_tu_nha_cho_giu_qua_han.sql` |
+| Phễu khách theo khoảng (nhánh `phieu-khoang-thoi-gian`) | migration `202609270094_phieu_khach_dem_trong_kho.sql`, `domain/customer-funnel.ts` (`chonKhoangPhieu`), `lib/customer-data/funnel-repository.ts`, `components/customer-data/customer-funnel-dashboard.tsx` |
 
 ## E. Cách kiểm và lệnh hay dùng
 
-- **Đơn vị, bảo mật:** `npx vitest run` (26/09: 1.674 xanh). Có lint, `npx tsc --noEmit`, `npm run build`.
+- **Đơn vị, bảo mật:** `npx vitest run` (27/09: 1.682 xanh). Có lint, `npx tsc --noEmit`, `npm run build`.
 - **Trình duyệt cục bộ, cả bộ:** `node scripts/run-local-e2e.mjs` (26/09: 434 xanh; bài chập chờn quen thuộc `page-continuity:182`). Chạy vài spec: đặt các cờ `NBJ_E2E_CUSTOMER_BOOKING=1 NBJ_E2E_OFFLINE_GATE=1 NBJ_E2E_CUSTOMER_ANALYTICS=1 NBJ_E2E_CUSTOMER_IDENTITY=1` rồi `npx playwright test <spec>`.
 - **Production:** `ERP_DEMO_DIRECTOR_PASSWORD='…' PLAYWRIGHT_BASE_URL=https://ninhbinhjourney.vercel.app npx playwright test <spec>` (một luồng). Muốn chụp màn chỉ đọc: viết script Playwright nhỏ trong scratchpad, đăng nhập `giamdoc`.
 - **Thử migration ở máy trước khi xin áp:** máy không có Docker hay psql. Cài `@electric-sql/pglite` vào scratchpad, giả lập `auth` / `cron` / `storage` / role / `supabase_realtime`, chạy cả 93 migration (cách làm ghi trong bộ nhớ `project_thu_migration_bang_pglite`). Gỡ khi xong.
@@ -105,6 +112,7 @@
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
 
+- 27/09 `2aq`: rút gọn HANDOFF (bản cũ vào lưu trữ, sửa mục C cho đúng). Phễu khách chọn 7/30/90 ngày hoặc một dịp, so kỳ trước hoặc cùng dịp năm trước; đếm trong kho (`094`, chưa áp). Kiểm: Vitest 1.682 xanh, lint, build, PGlite 94 migration (7 ngày: 468 lượt web + 6.914 lượt quầy = 7.382, khớp đếm thẳng; 90 ngày 102 ms), ảnh 390px và 1440px. **Chưa kiểm trên production.**
 - 26/09 tối `2ap`: áp 090–093; xoá hẳn lượt giữ quá hạn; lịch sử mẫu thành cửa sổ trượt làm mới hàng tháng; ẩn vòng dẫn.
 - 26/09 `2ao`: nghĩ lại ERP; bỏ QR nhân viên; gỡ 2 module vỏ; lịch sử mẫu; báo cáo & dự báo thật; trang đầu có số thật.
 - 26/09 `2ah`–`2an`: QR thanh toán giả lập, lưu ảnh vé, hộ chiếu, Khách thấy gì, bản đồ chức năng, dọn mã chết (−6.600 dòng), đối chiếu tài liệu khách.

@@ -10,7 +10,8 @@
 
 - **Production:** https://ninhbinhjourney.vercel.app, deploy từ `main`. Repo `qal1102/ninhbinhjourney`, Supabase ref `vzewjfcwhovsxslqfpjt` (Tokyo, `ap-northeast-1`).
 - **Vùng chạy hàm máy chủ:** `vercel.json` đặt `"regions": ["hnd1"]` (Tokyo, cùng chỗ với kho). Trước 27/09 hàm chạy ở Washington (`iad1`); đo tiêu đề `X-Vercel-Id` thấy `hkg1::iad1`, trang không gọi kho vẫn mất 0,5 giây byte đầu, mỗi truy vấn kho thêm một vòng Mỹ–Tokyo. Kiểm lại bằng `curl -D -`: phải thấy `::hnd1::`.
-- **Migration:** local và production khớp tới `202609270094` (áp 27/09 theo lời cho phép của chủ dự án). Riêng `061` cố ý bỏ.
+- **Migration:** local và production khớp tới `202609280095` (094, 095 áp theo lời cho phép của chủ dự án). Riêng `061` cố ý bỏ.
+- **Tài khoản:** đúng 13 tài khoản nhân sự mẫu. 095 đã dọn 10 tài khoản rác của kiểm thử cũ (`qa-t6b-check-*`, `qa-t14b-*`, "Test" `employee-tamchuc-002`), các dòng phân vai và nhật ký của chúng, cùng 8 đăng nhập Supabase Auth thử. Supabase Auth hiện 0 người dùng: giám đốc đăng nhập bằng lối tài khoản trình diễn. Tạo tài khoản và cấp đăng nhập làm ngay trong ERP ở `/erp/tai-khoan`.
 - **Phễu khách** (`/erp/marketing`): chọn 7/30/90 ngày hoặc một dịp đã qua, so với kỳ liền trước hoặc cùng dịp năm trước. Đếm trong kho bằng `erp_phieu_khach` (094); ô "Qua cổng" chỉ tính vé đơn web, lượt vé quầy ghi riêng.
 - **ERP có 13 module, module nào cũng chạy thật:**
   - Vé & đặt chỗ, Check-in, Sức chứa & luồng khách (gồm điều phối xe điện), Camera AI, Báo cáo hiện trường.
@@ -65,16 +66,15 @@
 **Tự làm được, theo thứ tự đề xuất:**
 1. **Chốt ca có số:** ma trận bốn cơ sở toàn 0 vì chưa ai chốt ca. Cân nhắc cho lịch sử mẫu sinh cả hồ sơ chốt ca qua đúng quy trình (bảng tài chính bất biến, xem trong lưu trữ `ERP-FAKE-03`), hoặc hỏi chủ dự án có cần không.
 2. **Tốc độ còn lại:** trang đầu giám đốc khoảng 1,6 giây, Tài chính khoảng 1,2 giây, Khách hàng khoảng 1,4 giây (đo 28/09, đã đăng nhập). Phần đọc đã song song hết; muốn nhanh hơn phải soi kế hoạch truy vấn của các hàm SQL (`erp_director_ticket_overview`, `erp_doanh_thu_ky`) trên kho production.
-3. **Tài khoản rác "Test · employee-tamchuc-002"** nằm trong Quản trị tài khoản, nhiều khả năng do kiểm thử cũ để lại. Xem nguồn gốc rồi tạm khoá hoặc dọn bằng migration dữ liệu có điều kiện hẹp.
-4. Việc nhỏ còn sót (chi tiết ở hàng `A15-CON-LAI` trong lưu trữ):
+3. Việc nhỏ còn sót (chi tiết ở hàng `A15-CON-LAI` trong lưu trữ):
    - `ACC-04…07`: nhật ký đăng nhập theo tài khoản, xác thực hai lớp cho vai tài chính, thu hồi phiên từ xa, bàn giao khi nghỉ việc. Giá trị thấp khi chỉ dùng tài khoản giám đốc.
    - `LOI-04`: rà độ sâu nội dung 15 trang điểm đến. `CAN-03`: Lighthouse tại Việt Nam trên 4G.
    - Ảnh gốc trong `public/images/destinations` nặng 2,5–4 MB mỗi tấm. Đi qua `next/image` thì không sao; đừng bao giờ dùng chúng làm nền CSS hay thẻ `<img>` thô (27/09 đã gỡ ba chỗ như thế).
    - Hiệu ứng web của `A15-CON-LAI` thuộc phiên sáng tạo, không làm song song.
-5. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`.
+4. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`.
 
 **Chờ chủ dự án quyết, không tự làm:**
-- `A15-QUYEN-01`: phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) **bị bộ chặn tự động từ chối** vì tạo đăng nhập trên production; cần chủ dự án quyết cách làm.
+- `A15-QUYEN-01` (chủ dự án 28/09: người chấm không có thời gian kiểm phần này, không ưu tiên): phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) **bị bộ chặn tự động từ chối** vì tạo đăng nhập trên production; cần chủ dự án quyết cách làm.
 - `A15-DEMO-01`: kho demo tách production (tốn tiền).
 - `QA-ERP-TICKET-05` phần cuối: luật chia tiền vé gói nhiều điểm về từng cơ sở (không suy ra được từ dữ liệu).
 - `ERP-05`: cổng ngoại tuyến cần người cầm máy thật.
@@ -115,6 +115,7 @@
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
 
+- 28/09 `2at`: dọn tài khoản rác bằng 095 (khẳng định từng con số, quét lại mọi cột chữ và JSON; thử PGlite cả trường hợp lệch số phải huỷ). Production sau áp: 13 tài khoản, 17 phân vai, 2 dòng nhật ký quản trị, 0 đăng nhập Auth, giám đốc đăng nhập bình thường.
 - 28/09 `2as`: áp `094`, ghép phễu; bài production phễu 2/2 xanh; phễu bỏ phần trăm quá 100% (nói "có lượt vào thẳng"). Đo ERP đã đăng nhập: đa số màn 0,35–0,65 giây; đọc song song ở trang đầu, Khách hàng (2,7 → 1,4 giây, nhật ký truy cập vẫn đi trước, có bài canh) và màn module (Vé Bái Đính 1,2 → 0,5 giây). Soát tĩnh 79 server action, thêm bài bảo mật canh.
 - 27/09 `2ar`: gỡ chuỗi phòng trình diễn chết (`/journey/[id]`, `/demo/qr`, API sửa lịch, tham số `journey`). Sửa nút "Thêm vào hành trình" vốn không làm gì. Chống trễ: hàm máy chủ sang Tokyo, bỏ ảnh gốc 3–4 MB ở hai màn chờ và poster video, middleware bỏ qua tệp tĩnh. Kiểm: Vitest 1.678, lint, build, Playwright 94 bài (lập lịch, giữ ngữ cảnh, danh tính, hero, trang công khai), ảnh 390px và 1440px. Đo production sau deploy: `hkg1::hnd1`, byte đầu trang công khai khoảng 0,33 giây (trước khoảng 0,5); màn ERP chưa đo vì cần mật khẩu giám đốc.
 - 27/09 `2aq`: rút gọn HANDOFF (bản cũ vào lưu trữ, sửa mục C cho đúng). Phễu khách chọn 7/30/90 ngày hoặc một dịp, so kỳ trước hoặc cùng dịp năm trước; đếm trong kho (`094`, chưa áp). Kiểm: Vitest 1.682 xanh, lint, build, PGlite 94 migration (7 ngày: 468 lượt web + 6.914 lượt quầy = 7.382, khớp đếm thẳng; 90 ngày 102 ms), ảnh 390px và 1440px. **Chưa kiểm trên production.**

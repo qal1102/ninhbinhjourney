@@ -8,7 +8,7 @@ import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
 import { CustomerFunnelDashboard } from "@/components/customer-data/customer-funnel-dashboard";
 import { getCustomerFunnelReport, isCustomerFunnelDashboardEnabled } from "@/lib/customer-data/funnel-repository";
-import type { CustomerFunnelReport } from "@/domain/customer-funnel";
+import { cacKhoangPhieu, chonKhoangPhieu, type CustomerFunnelReport } from "@/domain/customer-funnel";
 import { goiYTen, LichMuaVuPanel } from "@/components/erp/lich-mua-vu-panel";
 import { SoDoiTacPanel } from "@/components/erp/so-doi-tac-panel";
 import { CAC_DIP, lichMuaVu } from "@/domain/lich-mua-vu";
@@ -37,6 +37,9 @@ export default async function ErpMarketingPage({
   const dipChon = maDip ? CAC_DIP.find((d) => d.id === maDip) : undefined;
   const dipTrongLich = dipChon ? lich.find((d) => d.dip.id === dipChon.id) : undefined;
   const goiYTenChienDich = dipTrongLich ? goiYTen(dipTrongLich) : "";
+  // Khoảng của phễu cũng đi qua đường dẫn (`?ky=`), cùng một đồng hồ máy chủ.
+  const maKy = Array.isArray(params.ky) ? params.ky[0] : params.ky;
+  const khoangPhieu = chonKhoangPhieu(maKy, bayGio);
 
   // Sổ đối tác đọc hỏng thì mất đúng khối ấy, không kéo sập cả màn hình.
   const soDoiTac = await docSoDoiTac();
@@ -44,14 +47,15 @@ export default async function ErpMarketingPage({
 
   let config = null;
   let funnel: CustomerFunnelReport | null = null;
+  const phieuBat = isCustomerFunnelDashboardEnabled();
   try {
     config = await listMarketingQrConfig();
   } catch (error) {
     console.error("Marketing QR configuration read failed", error);
   }
-  if (isCustomerFunnelDashboardEnabled()) {
+  if (phieuBat) {
     try {
-      funnel = await getCustomerFunnelReport();
+      funnel = await getCustomerFunnelReport(khoangPhieu, khoangPhieu.soSanh);
     } catch (error) {
       console.error("Customer funnel read failed", error);
     }
@@ -92,7 +96,14 @@ export default async function ErpMarketingPage({
           </Link>
         </section>
         )}
-        {funnel ? <CustomerFunnelDashboard report={funnel} /> : null}
+        {funnel ? (
+          <CustomerFunnelDashboard report={funnel} khoang={khoangPhieu} luaChon={cacKhoangPhieu(bayGio)} />
+        ) : phieuBat ? (
+          <section className="rounded-3xl border border-[#d8e0db] bg-white p-5 sm:p-7" data-testid="customer-funnel-unavailable" id="phieu-khach">
+            <h2 className="text-2xl font-black text-[#203a30]">Phễu khách chưa đọc được</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#66756e]">Kho chưa trả được số phễu, nên màn hình để trống thay vì hiện số thiếu. Xin thử tải lại; nếu vẫn vậy, xin báo bộ phận kỹ thuật.</p>
+          </section>
+        ) : null}
       </div>
     </ErpShell>
   );

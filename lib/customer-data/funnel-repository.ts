@@ -1,10 +1,10 @@
 import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { CustomerFunnelReport, CustomerFunnelSourceRow } from "@/domain/customer-funnel";
+import type { CustomerFunnelReport, CustomerFunnelSourceRow, CustomerFunnelTotals, KyPhieu } from "@/domain/customer-funnel";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
-const MAX_ROWS = 5000;
+const MAX_ROWS = 1000;
 
 export class CustomerFunnelRepositoryError extends Error {
   constructor(message: string, options?: ErrorOptions) {
@@ -27,140 +27,110 @@ function client(): SupabaseClient {
   });
 }
 
-function sourceId(value: unknown) {
-  if (!value || typeof value !== "object") return "unattributed";
-  const source = value as Record<string, unknown>;
-  return typeof source.qr_source_id === "string" && source.qr_source_id ? source.qr_source_id : "unattributed";
+function so(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-function increment(rows: Map<string, CustomerFunnelSourceRow>, id: string, field: keyof Pick<CustomerFunnelSourceRow, "qrScans" | "pageViews" | "holds" | "payments" | "acceptedGateScans">) {
-  const row = rows.get(id) ?? {
-    sourceId: id,
-    sourceLabel: id === "unattributed" ? "Chưa gắn QR nguồn" : id,
-    campaignLabel: id === "unattributed" ? "Trực tiếp / nguồn chưa khớp" : "Chiến dịch chưa khớp",
-    dipId: "",
-    qrScans: 0, pageViews: 0, holds: 0, payments: 0, acceptedGateScans: 0,
+type KetQuaHam = Record<string, unknown>;
+
+/**
+ * Mọi phép đếm nằm trong `erp_phieu_khach` (migration 094). Trước đó tệp này
+ * đọc thô 13 bảng rồi đếm ở đây, và PostgREST chỉ trả 1.000 dòng mỗi lượt:
+ * bảy ngày có khoảng sáu nghìn lượt qua cổng, nên ô "Qua cổng" bị cắt mà
+ * trông vẫn như đúng.
+ */
+async function goiHam(db: SupabaseClient, ky: KyPhieu): Promise<KetQuaHam> {
+  const { data, error } = await db.rpc("erp_phieu_khach", {
+    p_tenant_id: TENANT_ID,
+    p_tu: ky.tu.toISOString(),
+    p_den: ky.den.toISOString(),
+  });
+  if (error) {
+    throw new CustomerFunnelRepositoryError(
+      error.code === "42883" || error.code === "PGRST202"
+        ? "Kho chưa có hàm đếm phễu khách."
+        : "Kho phễu chưa đếm được các nguồn để đối soát.",
+      { cause: new Error(error.message) },
+    );
+  }
+  return (data ?? {}) as KetQuaHam;
+}
+
+function tongCua(ketQua: KetQuaHam): CustomerFunnelTotals {
+  const tong = (ketQua.tong ?? {}) as Record<string, unknown>;
+  return {
+    qrScans: so(tong.qr),
+    pageViews: so(tong.xem),
+    holds: so(tong.giu),
+    payments: so(tong.tra),
+    acceptedGateScans: so(tong.cong),
   };
-  row[field] += 1;
-  rows.set(id, row);
 }
 
-export async function getCustomerFunnelReport(days = 7): Promise<CustomerFunnelReport> {
+export async function getCustomerFunnelReport(
+  ky: KyPhieu,
+  kySoSanh?: KyPhieu,
+): Promise<CustomerFunnelReport> {
   const db = client();
-  const windowEnd = new Date();
-  const windowStart = new Date(windowEnd.getTime() - Math.min(Math.max(days, 1), 31) * 86_400_000);
-  const start = windowStart.toISOString();
-  const end = windowEnd.toISOString();
-  const journeySince = new Date(windowStart.getTime() - 90 * 86_400_000).toISOString();
-
-  const [campaigns, sources, qrScans, pageViews, journeys, holds, payments, orders, bridges, gateScans, slots, holdSlots, offlineItems] = await Promise.all([
+  const [chinh, soSanh, campaigns, sources] = await Promise.all([
+    goiHam(db, ky),
+    kySoSanh ? goiHam(db, kySoSanh) : Promise.resolve(null),
+    // Hai bảng nhãn này chỉ có vài chục dòng; 1.000 là trần của PostgREST.
     db.from("marketing_campaigns").select("id, name, dip_id").eq("tenant_id", TENANT_ID).limit(MAX_ROWS),
     db.from("marketing_qr_sources").select("id, code, placement_label, campaign_id").eq("tenant_id", TENANT_ID).limit(MAX_ROWS),
-    db.from("marketing_qr_scans").select("qr_source_id, occurred_at").eq("tenant_id", TENANT_ID).gte("occurred_at", start).lt("occurred_at", end).limit(MAX_ROWS),
-    db.from("customer_events").select("profile_id, source_context, occurred_at").eq("tenant_id", TENANT_ID).eq("event_name", "page_viewed").gte("occurred_at", start).lt("occurred_at", end).limit(MAX_ROWS),
-    db.from("customer_journeys").select("profile_id, source_context, created_at").eq("tenant_id", TENANT_ID).gte("created_at", journeySince).order("created_at", { ascending: false }).limit(MAX_ROWS),
-    db.from("customer_booking_holds").select("id, profile_id, status, created_at").eq("tenant_id", TENANT_ID).order("created_at", { ascending: false }).limit(MAX_ROWS),
-    db.from("customer_payment_attempts").select("hold_id, status, occurred_at").eq("tenant_id", TENANT_ID).gte("occurred_at", start).lt("occurred_at", end).limit(MAX_ROWS),
-    db.from("customer_orders").select("id, profile_id, created_at").eq("tenant_id", TENANT_ID).limit(MAX_ROWS),
-    db.from("customer_order_tickets").select("order_id, ticket_id, slot_id").eq("tenant_id", TENANT_ID).limit(MAX_ROWS),
-    db.from("erp_gate_scan_events").select("ticket_id, result, scanned_at").eq("tenant_id", TENANT_ID).eq("result", "accepted").gte("scanned_at", start).lt("scanned_at", end).limit(MAX_ROWS),
-    db.from("customer_booking_slots").select("id, site_id, starts_at, capacity_snapshot, capacity_source_kind, threshold_version").eq("tenant_id", TENANT_ID).gte("starts_at", start).lt("starts_at", end).order("starts_at").limit(MAX_ROWS),
-    db.from("customer_booking_hold_slots").select("hold_id, slot_id, quantity").eq("tenant_id", TENANT_ID).limit(MAX_ROWS),
-    db.from("erp_gate_offline_sync_items").select("reconciliation_status, client_scanned_at").eq("tenant_id", TENANT_ID).gte("client_scanned_at", start).lt("client_scanned_at", end).limit(MAX_ROWS),
   ]);
-  const failed = [campaigns, sources, qrScans, pageViews, journeys, holds, payments, orders, bridges, gateScans, slots, holdSlots, offlineItems].find((result) => result.error);
-  if (failed?.error) throw new CustomerFunnelRepositoryError("Kho phễu chưa đọc đủ các nguồn để đối soát.", { cause: new Error(failed.error.message) });
+  const failed = [campaigns, sources].find((result) => result.error);
+  if (failed?.error) throw new CustomerFunnelRepositoryError("Kho phễu chưa đọc được nhãn chiến dịch.", { cause: new Error(failed.error.message) });
 
-  const campaignById = new Map((campaigns.data ?? []).map((row) => [String(row.id), String(row.name)]));
-  const dipByCampaign = new Map((campaigns.data ?? []).map((row) => [String(row.id), typeof row.dip_id === "string" ? row.dip_id : ""]));
-  const rows = new Map<string, CustomerFunnelSourceRow>();
-  for (const source of sources.data ?? []) {
-    rows.set(String(source.id), {
-      sourceId: String(source.id),
-      sourceLabel: `${String(source.code)} · ${String(source.placement_label)}`,
-      campaignLabel: campaignById.get(String(source.campaign_id)) ?? "Chiến dịch chưa khớp",
-      dipId: dipByCampaign.get(String(source.campaign_id)) ?? "",
-      qrScans: 0, pageViews: 0, holds: 0, payments: 0, acceptedGateScans: 0,
-    });
-  }
-  for (const scan of qrScans.data ?? []) increment(rows, String(scan.qr_source_id), "qrScans");
-  for (const view of pageViews.data ?? []) increment(rows, sourceId(view.source_context), "pageViews");
+  const campaignById = new Map((campaigns.data ?? []).map((row) => [String(row.id), { name: String(row.name), dipId: typeof row.dip_id === "string" ? row.dip_id : "" }]));
+  const sourceById = new Map((sources.data ?? []).map((row) => [String(row.id), row]));
 
-  const sourceByProfile = new Map<string, string>();
-  for (const journey of journeys.data ?? []) {
-    const profileId = String(journey.profile_id);
-    if (!sourceByProfile.has(profileId)) sourceByProfile.set(profileId, sourceId(journey.source_context));
-  }
-  const holdById = new Map<string, { profileId: string; status: string }>();
-  let holdsInWindow = 0;
-  for (const hold of holds.data ?? []) {
-    const profileId = String(hold.profile_id);
-    holdById.set(String(hold.id), { profileId, status: String(hold.status) });
-    const createdAt = String(hold.created_at);
-    if (createdAt >= start && createdAt < end) {
-      holdsInWindow += 1;
-      increment(rows, sourceByProfile.get(profileId) ?? "unattributed", "holds");
-    }
-  }
-  for (const payment of payments.data ?? []) {
-    if (String(payment.status) !== "succeeded") continue;
-    const hold = holdById.get(String(payment.hold_id));
-    increment(rows, hold ? sourceByProfile.get(hold.profileId) ?? "unattributed" : "unattributed", "payments");
-  }
-
-  const profileByOrder = new Map((orders.data ?? []).map((row) => [String(row.id), String(row.profile_id)]));
-  const bridgeByTicket = new Map<string, { orderId: string; slotId: string }>();
-  for (const bridge of bridges.data ?? []) bridgeByTicket.set(String(bridge.ticket_id), { orderId: String(bridge.order_id), slotId: String(bridge.slot_id) });
-  const checkinsBySlot = new Map<string, number>();
-  for (const scan of gateScans.data ?? []) {
-    const bridge = bridgeByTicket.get(String(scan.ticket_id));
-    const profileId = bridge ? profileByOrder.get(bridge.orderId) : undefined;
-    increment(rows, profileId ? sourceByProfile.get(profileId) ?? "unattributed" : "unattributed", "acceptedGateScans");
-    if (bridge) checkinsBySlot.set(bridge.slotId, (checkinsBySlot.get(bridge.slotId) ?? 0) + 1);
-  }
-
-  const activeHoldIds = new Set([...holdById].filter(([, hold]) => hold.status === "active" || hold.status === "converted").map(([id]) => id));
-  const convertedHoldIds = new Set([...holdById].filter(([, hold]) => hold.status === "converted").map(([id]) => id));
-  const reservedBySlot = new Map<string, number>();
-  const soldBySlot = new Map<string, number>();
-  for (const bridge of holdSlots.data ?? []) {
-    const holdId = String(bridge.hold_id);
-    const slotId = String(bridge.slot_id);
-    const quantity = Number(bridge.quantity);
-    if (activeHoldIds.has(holdId)) reservedBySlot.set(slotId, (reservedBySlot.get(slotId) ?? 0) + quantity);
-    if (convertedHoldIds.has(holdId)) soldBySlot.set(slotId, (soldBySlot.get(slotId) ?? 0) + quantity);
-  }
-
-  const sourceRows = [...rows.values()].filter((row) => row.qrScans + row.pageViews + row.holds + row.payments + row.acceptedGateScans > 0)
+  const sourceRows: CustomerFunnelSourceRow[] = ((chinh.nguon ?? []) as Record<string, unknown>[]).map((dong) => {
+    const id = String(dong.nguon);
+    const source = sourceById.get(id);
+    const campaign = source ? campaignById.get(String(source.campaign_id)) : undefined;
+    return {
+      sourceId: id,
+      sourceLabel: id === "unattributed" ? "Chưa gắn QR nguồn" : source ? `${String(source.code)} · ${String(source.placement_label)}` : id,
+      campaignLabel: id === "unattributed" ? "Trực tiếp / nguồn chưa khớp" : campaign?.name ?? "Chiến dịch chưa khớp",
+      dipId: campaign?.dipId ?? "",
+      qrScans: so(dong.qr),
+      pageViews: so(dong.xem),
+      holds: so(dong.giu),
+      payments: so(dong.tra),
+      acceptedGateScans: so(dong.cong),
+    };
+  })
+    .filter((row) => row.qrScans + row.pageViews + row.holds + row.payments + row.acceptedGateScans > 0)
     .sort((left, right) => right.qrScans - left.qrScans || left.sourceLabel.localeCompare(right.sourceLabel, "vi"));
-  const profileIds = new Set([...holdById.values()].map((hold) => hold.profileId));
-  const attributedProfiles = [...profileIds].filter((id) => (sourceByProfile.get(id) ?? "unattributed") !== "unattributed").length;
+
+  const hoSoCoGiu = so(chinh.ho_so_co_giu);
+  const hoSoRoNguon = Math.min(so(chinh.ho_so_ro_nguon), hoSoCoGiu);
 
   return {
-    windowStart: start,
-    windowEnd: end,
-    totals: {
-      qrScans: qrScans.data?.length ?? 0,
-      pageViews: pageViews.data?.length ?? 0,
-      holds: holdsInWindow,
-      payments: (payments.data ?? []).filter((row) => String(row.status) === "succeeded").length,
-      acceptedGateScans: gateScans.data?.length ?? 0,
-    },
+    windowStart: ky.tu.toISOString(),
+    windowEnd: ky.den.toISOString(),
+    totals: tongCua(chinh),
+    comparisonTotals: soSanh ? tongCua(soSanh) : null,
     sources: sourceRows,
-    slots: (slots.data ?? []).map((slot) => ({
+    slots: ((chinh.khung ?? []) as Record<string, unknown>[]).map((slot) => ({
       slotId: String(slot.id), siteId: String(slot.site_id), startsAt: String(slot.starts_at),
-      capacitySnapshot: Number(slot.capacity_snapshot),
+      capacitySnapshot: so(slot.capacity_snapshot),
       capacitySourceKind: String(slot.capacity_source_kind) as "estimate" | "customer" | "measured",
-      thresholdVersion: Number(slot.threshold_version),
-      reservedEntries: reservedBySlot.get(String(slot.id)) ?? 0,
-      soldEntries: soldBySlot.get(String(slot.id)) ?? 0,
-      checkedInEntries: checkinsBySlot.get(String(slot.id)) ?? 0,
+      thresholdVersion: so(slot.threshold_version),
+      reservedEntries: so(slot.dang_giu),
+      soldEntries: so(slot.da_ban),
+      checkedInEntries: so(slot.da_toi),
     })),
+    slotCount: so(chinh.so_khung),
+    counterGateScans: so(chinh.cong_quay),
+    hasDemoData: chinh.co_mau === true,
     reconciliation: {
-      attributedProfiles,
-      unattributedProfiles: profileIds.size - attributedProfiles,
-      offlineSyncedItems: offlineItems.data?.length ?? 0,
-      offlineDivergedItems: (offlineItems.data ?? []).filter((item) => item.reconciliation_status === "diverged").length,
+      attributedProfiles: hoSoRoNguon,
+      unattributedProfiles: hoSoCoGiu - hoSoRoNguon,
+      offlineSyncedItems: so(chinh.ngoai_tuyen),
+      offlineDivergedItems: so(chinh.ngoai_tuyen_lech),
     },
   };
 }

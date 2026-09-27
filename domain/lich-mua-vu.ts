@@ -246,6 +246,21 @@ function khoangNgay(tu: string, den: string): number {
 }
 
 /**
+ * Ngày bắt đầu và kết thúc (`YYYY-MM-DD`) của một dịp trong năm `nam`.
+ * Dịp âm lịch thì `nam` là năm âm lịch. Không tra được ngày thì `null`.
+ */
+export function ngayCuaDipTrongNam(dip: DipMuaVu, nam: number): { batDau: string; ketThuc: string } | null {
+  const batDau = ngayCuaDip(dip, nam);
+  return batDau ? { batDau, ketThuc: cong(batDau, (dip.soNgay ?? 1) - 1) } : null;
+}
+
+/** Hôm nay theo giờ Việt Nam, dạng `YYYY-MM-DD`. */
+export function homNayTheoGioVN(bayGio: Date): string {
+  const h = homNayVN(bayGio);
+  return iso(h.ngay, h.thang, h.nam);
+}
+
+/**
  * Các dịp trong `soThang` tháng tới, xếp theo ngày gần nhất trước.
  *
  * Một dịp đã qua trong năm nay sẽ hiện lần tổ chức của **năm sau**, nên cuốn

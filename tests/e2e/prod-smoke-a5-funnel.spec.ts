@@ -57,7 +57,7 @@ test.describe("A5 production funnel dashboard smoke", () => {
     // có. Không chấp nhận một bảng rỗng im lặng.
     const sourceRows = dashboard.locator("tbody tr");
     const emptySources = dashboard.getByText(
-      "Bảy ngày qua chưa có lượt nào.",
+      "Khoảng này chưa có lượt nào.",
     );
     const hasSourceRows = (await sourceRows.count()) > 0;
     expect(
@@ -66,7 +66,7 @@ test.describe("A5 production funnel dashboard smoke", () => {
     ).toBe(true);
 
     // Khung giờ mở bán theo cùng luật.
-    const emptySlots = dashboard.getByText("Bảy ngày qua chưa có khung giờ nào mở bán.");
+    const emptySlots = dashboard.getByText("Khoảng này chưa có khung giờ nào mở bán.");
     const slotCards = dashboard.locator('article:has-text("Công suất")');
     expect(
       (await slotCards.count()) > 0 || (await emptySlots.count()) > 0,
@@ -86,5 +86,16 @@ test.describe("A5 production funnel dashboard smoke", () => {
         () => document.documentElement.scrollWidth - window.innerWidth,
       ),
     ).toBeLessThanOrEqual(1);
+
+    // Chọn khoảng đi qua đường dẫn `?ky=`: bấm "30 ngày gần nhất" thì trang
+    // đếm lại ở máy chủ và đánh dấu đúng lựa chọn đang xem.
+    const chonKhoang = page.getByTestId("phieu-chon-khoang");
+    await expect(chonKhoang.getByRole("link", { name: "7 ngày gần nhất" })).toHaveAttribute("aria-current", "true");
+    await chonKhoang.getByRole("link", { name: "30 ngày gần nhất" }).click();
+    await expect(page).toHaveURL(/[?&]ky=30-ngay/);
+    await expect(
+      page.getByTestId("phieu-chon-khoang").getByRole("link", { name: "30 ngày gần nhất" }),
+    ).toHaveAttribute("aria-current", "true", { timeout: 25_000 });
+    await expect(page.getByTestId("customer-funnel-dashboard")).toContainText("30 ngày gần nhất");
   });
 });

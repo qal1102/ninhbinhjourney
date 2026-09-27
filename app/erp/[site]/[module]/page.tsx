@@ -70,6 +70,47 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   if (!accountCanAccessModule(user, site.id, moduleDefinition.id)) {
     redirect(`/erp/${site.id}?denied=module`);
   }
+  // Bốn lượt đọc riêng của từng module không cần kết quả của nhóm lớn bên
+  // dưới, nên khởi động cùng lúc với nhóm ấy. Trước 27/09 chúng chờ nối đuôi
+  // sau nhóm lớn, mỗi màn mất thêm một vòng đọc.
+  // QA-ERP-POS-04 — bán vé tại quầy. Đọc riêng và bắt lỗi
+  // tại chỗ: kho giá quầy chưa trả lời thì phần bán nói thật là chưa bán được,
+  // còn phần vé đã bán và phiếu đoàn bên dưới vẫn mở bình thường.
+  const counterSaleDangDoc =
+    moduleDefinition.id === "ve-dat-cho"
+      ? getCounterSaleWorkspace({ siteId: site.id, viewerAccountId: user.id }).catch(
+          (error) => {
+            console.error("Counter sale workspace read failed", error);
+            return {
+              available: false as const,
+              message: "Chưa đọc được bảng giá quầy. Xin tải lại trang.",
+            };
+          },
+        )
+      : Promise.resolve(null);
+
+  // QA-DON-DU-LIEU-10 — đơn trả tại điểm còn chờ thu, chỉ cho quản lý và giám đốc.
+  const onSiteDueDangDoc =
+    moduleDefinition.id === "tai-chinh-doi-soat" && (user.role === "manager" || user.role === "director")
+      ? listOnSiteDueOrders({ siteId: site.id, viewerAccountId: user.id }).catch((error) => {
+          console.error("On-site due orders read failed", error);
+          return { available: false as const, message: "Chưa đọc được danh sách đơn trả tại điểm. Xin tải lại trang." };
+        })
+      : Promise.resolve(null);
+
+  // TC-13 — bản giao ca "hôm nay ai cần để ý", chỉ đọc khi thật sự mở màn
+  // check-in. Kho tự nuốt lỗi và trả rỗng, nên máy quét ở cổng không thể chết
+  // vì một khối thông tin phụ trợ.
+  const shiftCareDangDoc =
+    moduleDefinition.id === "check-in-khach"
+      ? readShiftCareBrief({ siteId: site.id, visitDate: ngayVanHanh() })
+      : Promise.resolve([]);
+
+  const baoCaoDangDoc = moduleDefinition.id === "bao-cao" ? docBaoCaoCoSo(site.id) : Promise.resolve(null);
+  // Lỗi của nó vẫn nổi lên ở chỗ chờ phía dưới; dòng này chỉ để nó không bị
+  // coi là lời hứa hỏng không ai bắt trong lúc nhóm lớn còn chạy.
+  baoCaoDangDoc.catch(() => undefined);
+
   const isTicketModule =
     moduleDefinition.id === "check-in-khach" || moduleDefinition.id === "ve-dat-cho";
   const [access, attendance, shiftClosures, workdays, supplierAp, incidents, fieldReports, gateScans, ticketSales, projectWorkspace, shiftHandovers, staffDirectory, capacityWorkspace, sopWorkspace, capacityForecast] =
@@ -139,39 +180,6 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   const requestedShift = Array.isArray(query.ca) ? query.ca[0] : query.ca;
   const backTarget = resolveModuleBackTarget(site);
 
-  // QA-ERP-POS-04 — bán vé tại quầy. Đọc riêng, sau `Promise.all`, và bắt lỗi
-  // tại chỗ: kho giá quầy chưa trả lời thì phần bán nói thật là chưa bán được,
-  // còn phần vé đã bán và phiếu đoàn bên dưới vẫn mở bình thường.
-  const counterSale =
-    moduleDefinition.id === "ve-dat-cho"
-      ? await getCounterSaleWorkspace({ siteId: site.id, viewerAccountId: user.id }).catch(
-          (error) => {
-            console.error("Counter sale workspace read failed", error);
-            return {
-              available: false as const,
-              message: "Chưa đọc được bảng giá quầy. Xin tải lại trang.",
-            };
-          },
-        )
-      : null;
-
-  // QA-DON-DU-LIEU-10 — đơn trả tại điểm còn chờ thu, chỉ cho quản lý và giám đốc.
-  const onSiteDue =
-    moduleDefinition.id === "tai-chinh-doi-soat" && (user.role === "manager" || user.role === "director")
-      ? await listOnSiteDueOrders({ siteId: site.id, viewerAccountId: user.id }).catch((error) => {
-          console.error("On-site due orders read failed", error);
-          return { available: false as const, message: "Chưa đọc được danh sách đơn trả tại điểm. Xin tải lại trang." };
-        })
-      : null;
-
-  // TC-13 — bản giao ca "hôm nay ai cần để ý", chỉ đọc khi thật sự mở màn
-  // check-in. Kho tự nuốt lỗi và trả rỗng, nên máy quét ở cổng không thể chết
-  // vì một khối thông tin phụ trợ.
-  const shiftCare =
-    moduleDefinition.id === "check-in-khach"
-      ? await readShiftCareBrief({ siteId: site.id, visitDate: ngayVanHanh() })
-      : [];
-
   // TC-21 — đối soát cuối ca. Đọc sau `Promise.all` vì nó cần chính danh sách
   // ca vừa đọc về, và cần biết người dùng đang chọn ca nào. Bảng này chỉ đọc,
   // nên hỏng cũng không được kéo cả module tài chính xuống theo.
@@ -187,7 +195,12 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         })
       : null;
 
-  const baoCao = moduleDefinition.id === "bao-cao" ? await docBaoCaoCoSo(site.id) : null;
+  const [counterSale, onSiteDue, shiftCare, baoCao] = await Promise.all([
+    counterSaleDangDoc,
+    onSiteDueDangDoc,
+    shiftCareDangDoc,
+    baoCaoDangDoc,
+  ]);
 
   return (
     <ErpShell user={user} site={site} activeModuleId={moduleDefinition.id}>

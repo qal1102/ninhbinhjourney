@@ -34,13 +34,10 @@ export default function DestinationLoading() {
       aria-label={`Đang mở ${name}`}
     >
       <section className="relative min-h-[68vh] overflow-hidden bg-[#183f34]">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(${image})`,
-            ...(imagePosition ? { backgroundPosition: imagePosition } : {}),
-          }}
-        >
+        {/* Chỉ ảnh đã tối ưu bên dưới. Trước 27/09/2026 khối này còn đặt ảnh
+            gốc (3–4 MB) làm nền CSS, bị ảnh tối ưu che kín mà trình duyệt vẫn
+            tải trọn mỗi lần khách bấm sang một điểm đến. */}
+        <div className="absolute inset-0">
           <SharedImageTransition
             name={destinationImageTransitionName(slug)}
             className="absolute inset-0"

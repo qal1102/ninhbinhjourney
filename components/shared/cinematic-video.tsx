@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 export type CinematicClip = {
@@ -228,13 +229,15 @@ export function CinematicVideo({
       ref={wrapRef}
       className={`cinematic-frame relative h-[78vh] w-full overflow-hidden bg-[#06120f] sm:h-screen ${className}`.trim()}
     >
-      {/* Lop 1 -- luon hien, khong bao gio de lo khung den. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      {/* Lop 1 -- luon hien, khong bao gio de lo khung den. Qua next/image:
+          poster goc la PNG 2,7 MB, the <img> tho bat khach tai tron. */}
+      <Image
         src={clip.poster}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover"
+        fill
+        sizes="100vw"
+        className="object-cover"
       />
 
       {/* Lop 2 -- trinh phat, mo dan len tren poster khi da san sang. */}
@@ -248,7 +251,6 @@ export function CinematicVideo({
               ref={videoRef}
               className="cinematic-local-video absolute inset-0 h-full w-full object-cover"
               src={clip.src}
-              poster={clip.poster}
               autoPlay
               muted
               loop

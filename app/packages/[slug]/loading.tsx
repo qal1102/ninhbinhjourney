@@ -34,8 +34,7 @@ export default function PackageDetailLoading() {
       <div className="mx-auto max-w-6xl">
         <span className="text-sm font-bold text-[#e7c78d]">← So sánh gói</span>
         <div
-          className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-3xl bg-cover bg-center sm:aspect-[21/9]"
-          style={{ backgroundImage: `url(${hero.src})` }}
+          className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-3xl sm:aspect-[21/9]"
         >
           <SharedImageTransition
             name={packageImageTransitionName(item.slug)}

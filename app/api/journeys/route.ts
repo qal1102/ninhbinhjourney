@@ -21,12 +21,6 @@ import {
   isCustomerRecommendationsEnabled,
   refreshCustomerRecommendations,
 } from "@/lib/customer-data/recommendation-repository";
-import { createClient } from "@/lib/supabase/server";
-import type { Json } from "@/types/database.generated";
-
-function asJson(value: unknown): Json {
-  return JSON.parse(JSON.stringify(value)) as Json;
-}
 
 function isSameOriginBrowserRequest(request: Request) {
   const origin = request.headers.get("origin");
@@ -39,15 +33,12 @@ export async function POST(request: Request) {
   try {
     const input = CreateJourneyRequestSchema.parse(await request.json());
 
-    // A demo room is required only to PERSIST a journey. Ordinary visitors who
-    // never joined one still get a fully generated, validated itinerary back —
-    // it simply lives in the browser instead of Supabase.
-    const demoRunId = (await cookies()).get("nbj-active-run")?.value ?? null;
-
     const draft = parseJourneyIntent({ text: input.text, locale: input.locale });
     const intent = confirmJourneyIntent({
       draft,
-      demoRunId: demoRunId ?? randomUUID(),
+      // Trường bắt buộc của lược đồ cũ. "Phòng trình diễn" từng dùng nó đã gỡ
+      // ngày 27/09/2026, nên mỗi lần dựng lấy một mã mới, không nối đi đâu.
+      demoRunId: randomUUID(),
       id: randomUUID(),
       durationMinutes: input.durationMinutes,
       party: input.party,
@@ -58,74 +49,15 @@ export async function POST(request: Request) {
       visitDate: input.visitDate,
     });
 
-    const supabase = demoRunId ? await createClient() : null;
-    let unavailable = new Set<string>();
-
-    if (supabase && demoRunId) {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user || !user.is_anonymous) {
-        throw new DomainError(
-          "PERMISSION_DENIED",
-          "An authenticated anonymous visitor session is required.",
-        );
-      }
-
-      const { data: slots, error: slotError } = await supabase
-        .from("capacity_slots")
-        .select("site_id, capacity, reserved, status")
-        .eq("demo_run_id", demoRunId)
-        .eq("slot_date", input.visitDate);
-      if (slotError) throw slotError;
-      unavailable = new Set(
-        (slots ?? [])
-          .filter(
-            (slot) =>
-              slot.status !== "available" || slot.reserved >= slot.capacity,
-          )
-          .map((slot) => slot.site_id),
-      );
-    }
-
     const itinerary = generateItinerary(intent, {
-      unavailableSiteIds: unavailable,
       visitDate: input.visitDate,
+      uuTienSiteId: input.uuTienSiteId,
     });
     if (!itinerary.validation.valid) {
       throw new DomainError(
         "ITINERARY_INVALID",
         itinerary.validation.issues[0]?.message ??
           "No valid itinerary is available for the confirmed constraints.",
-      );
-    }
-
-    if (supabase && demoRunId) {
-      const { data, error } = await supabase.rpc("save_generated_journey", {
-        p_demo_run_id: demoRunId,
-        p_locale: input.locale,
-        p_raw_text: input.text,
-        p_structured_intent: asJson(intent),
-        p_itinerary: asJson(itinerary),
-      });
-      const saved = data?.[0];
-      if (error || !saved) {
-        throw error ?? new Error("Journey persistence failed.");
-      }
-
-      return Response.json(
-        {
-          intent: { ...intent, id: saved.intent_id },
-          itinerary: {
-            ...itinerary,
-            id: saved.itinerary_id,
-            intentId: saved.intent_id,
-          },
-          persisted: true,
-          persistence: "demo",
-        },
-        { status: 201, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -212,9 +144,7 @@ export async function POST(request: Request) {
             ? 503
             : safeError.code === "PERMISSION_DENIED"
               ? 403
-              : safeError.code === "DEMO_ROOM_NOT_JOINED"
-                ? 409
-                : 400,
+              : 400,
         headers: { "Cache-Control": "no-store" },
       },
     );

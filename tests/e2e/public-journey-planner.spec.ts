@@ -4,9 +4,9 @@ const TEXT_BOX = "Hoặc kể bằng lời của bạn";
 const RUN_BUTTON = "Xem thử một ngày cho tôi";
 const EXPAND_BUTTON = "Chỉnh lại cho đúng";
 
-// Regression cover for the planner being unusable outside an operator demo
-// room: an ordinary visitor never holds an `nbj-active-run` cookie, so the
-// generate step used to fail with DEMO_ROOM_NOT_JOINED every time.
+// Regression cover: the planner once failed with DEMO_ROOM_NOT_JOINED for any
+// visitor outside an operator demo room. The demo room itself was removed on
+// 27/09/2026; this keeps the ordinary-visitor path covered.
 test("an ordinary visitor can generate an itinerary without joining a demo room", async ({
   page,
 }) => {
@@ -320,4 +320,30 @@ test("dùng hành trình sang trang gói vẫn mang theo gói gần nhất, quay
   await page.getByRole("link", { name: "← Quay lại hành trình" }).click();
   await expect(page).toHaveURL(/\/plan/);
   await expect(page.getByRole("heading", { name: "Lịch trình hợp lệ" })).toBeVisible();
+});
+
+/*
+ * "Thêm vào hành trình" ở trang điểm đến dẫn tới `/plan?add=<mã điểm>`.
+ * Trước 27/09/2026 trang lập lịch không đọc tham số ấy: khách bấm xong chỉ
+ * thấy một trang trống, điểm vừa chọn biến mất không một lời.
+ */
+test("thêm một điểm từ trang điểm đến thì lịch dựng ra có điểm ấy đứng đầu", async ({
+  page,
+}) => {
+  test.skip(Boolean(process.env.PLAYWRIGHT_BASE_URL?.trim()), "Ghi một hành trình; chỉ chạy cục bộ.");
+  await page.context().clearCookies();
+  await page.goto("/destination/van-long");
+  await page.getByRole("link", { name: "Thêm vào hành trình" }).click();
+  await expect(page).toHaveURL(/\/plan\?.*add=/);
+
+  const diemChon = page.locator("[data-plan-diem-chon]");
+  await expect(diemChon).toContainText("Vân Long");
+
+  await page.getByRole("button", { name: /Đi cùng bố mẹ/ }).click();
+  await page.getByRole("button", { name: "Xác nhận và tạo hành trình" }).click();
+  await expect(
+    page.getByRole("heading", { name: /Lịch trình hợp lệ|Cần xử lý xung đột/ }),
+  ).toBeVisible();
+  await expect(page.locator("ol > li").first()).toContainText("Vân Long");
+  await expect(page.locator("[data-plan-diem-chua-xep]")).toHaveCount(0);
 });

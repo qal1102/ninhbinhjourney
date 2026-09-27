@@ -8,7 +8,8 @@
 
 ## A. Hiện trạng thật (27/09/2026)
 
-- **Production:** https://ninhbinhjourney.vercel.app, deploy từ `main` (`cce096d` trở lên). Repo `qal1102/ninhbinhjourney`, Supabase ref `vzewjfcwhovsxslqfpjt`.
+- **Production:** https://ninhbinhjourney.vercel.app, deploy từ `main`. Repo `qal1102/ninhbinhjourney`, Supabase ref `vzewjfcwhovsxslqfpjt` (Tokyo, `ap-northeast-1`).
+- **Vùng chạy hàm máy chủ:** `vercel.json` đặt `"regions": ["hnd1"]` (Tokyo, cùng chỗ với kho). Trước 27/09 hàm chạy ở Washington (`iad1`); đo tiêu đề `X-Vercel-Id` thấy `hkg1::iad1`, trang không gọi kho vẫn mất 0,5 giây byte đầu, mỗi truy vấn kho thêm một vòng Mỹ–Tokyo. Kiểm lại bằng `curl -D -`: phải thấy `::hnd1::`.
 - **Migration:** production có tới `202609260093`. Riêng `061` cố ý bỏ. **`094` (`erp_phieu_khach`) đã viết và chạy thử bằng PGlite, CHƯA ÁP**, chờ chủ dự án cho phép `supabase db push`. Mã dùng nó nằm ở nhánh cục bộ `phieu-khoang-thoi-gian` (xem mục C).
 - **ERP có 13 module, module nào cũng chạy thật:**
   - Vé & đặt chỗ, Check-in, Sức chứa & luồng khách (gồm điều phối xe điện), Camera AI, Báo cáo hiện trường.
@@ -33,6 +34,8 @@
   - **Lượt giữ quá 15 phút chưa trả thì bị XOÁ HẲN** (090, `pg_cron` mỗi phút). Khách đặt lại được ngay bằng cùng số điện thoại; bỏ dở 3 lần trong 7 ngày thì mời tới quầy.
   - Khoá "chỉ thêm" của bảng lịch sử chỉ nhả lệnh xoá trong khe giao dịch `nbj.cho_phep_xoa` (`giu-qua-han` | `lich-su-mau`).
 - **Khách:**
+  - `/plan` đọc `?add=<mã điểm>` từ nút "Thêm vào hành trình" (trang điểm đến, Khám phá): điểm ấy đứng đầu lịch nếu vừa sức đi bộ và giờ mở cửa, không thì trang nói lý do. Lịch trình sống trong trình duyệt (bản gốc có thể lưu ẩn danh).
+  - "Phòng trình diễn" cũ (cookie `nbj-active-run`, trang `/journey/[id]`, `/demo/qr`, `PATCH /api/journeys/[id]`, tham số `journey`) đã gỡ 27/09: không còn chỗ nào đặt cookie ấy. Bảng `itineraries` và hai hàm `save_generated_journey`/`update_saved_journey` còn trong kho, không mã nào gọi.
   - Lưu ảnh vé về máy, gửi qua Zalo bằng Web Share.
   - Hộ chiếu Ninh Bình `/ho-so`: 5 nhiệm vụ theo lượt qua cổng ở 4 điểm có cổng.
   - Màn "Khách thấy gì" trong `/erp/khach-hang`.
@@ -63,10 +66,11 @@
 2. **Phễu khách chọn khoảng: làm xong ở nhánh `phieu-khoang-thoi-gian`, chờ áp `094`.** Thứ tự bắt buộc: áp `094` → ghép nhánh vào `main` → push (Vercel tự deploy) → chạy `prod-smoke-a5-funnel` với `NBJ_A5_FUNNEL_SMOKE=1`. Deploy mã trước khi áp thì màn marketing hiện "Phễu khách chưa đọc được".
    - Sửa kèm một lỗi số thật đang chạy trên production: phễu cũ đọc thô rồi đếm bằng TypeScript, PostgREST cắt ở 1.000 dòng, nên ô "Qua cổng" 7 ngày (thật ra khoảng 7.400) bị cắt ở 1.000.
    - Ô "Qua cổng" nay chỉ đếm vé của đơn web; lượt vé quầy ghi riêng một dòng.
-3. **`/journey/[id]` gần như mồ côi,** không có lối vào từ giao diện: nối vào hoặc xoá (hỏi trước khi xoá tệp).
+3. **Đo lại tốc độ sau khi deploy vùng Tokyo**, cả màn ERP khi đăng nhập giám đốc. Nếu màn nào vẫn chậm thì soát chỗ `await` nối tiếp nhau trong trang đó.
 4. Việc nhỏ còn sót (chi tiết ở hàng `A15-CON-LAI` trong lưu trữ):
    - `ACC-04…07`: nhật ký đăng nhập theo tài khoản, xác thực hai lớp cho vai tài chính, thu hồi phiên từ xa, bàn giao khi nghỉ việc. Giá trị thấp khi chỉ dùng tài khoản giám đốc.
    - `LOI-04`: rà độ sâu nội dung 15 trang điểm đến. `CAN-03`: Lighthouse tại Việt Nam trên 4G.
+   - Ảnh gốc trong `public/images/destinations` nặng 2,5–4 MB mỗi tấm. Đi qua `next/image` thì không sao; đừng bao giờ dùng chúng làm nền CSS hay thẻ `<img>` thô (27/09 đã gỡ ba chỗ như thế).
    - Hiệu ứng web của `A15-CON-LAI` thuộc phiên sáng tạo, không làm song song.
 5. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`.
 
@@ -112,6 +116,7 @@
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
 
+- 27/09 `2ar`: gỡ chuỗi phòng trình diễn chết (`/journey/[id]`, `/demo/qr`, API sửa lịch, tham số `journey`). Sửa nút "Thêm vào hành trình" vốn không làm gì. Chống trễ: hàm máy chủ sang Tokyo, bỏ ảnh gốc 3–4 MB ở hai màn chờ và poster video, middleware bỏ qua tệp tĩnh. Kiểm: Vitest 1.678, lint, build, Playwright 94 bài (lập lịch, giữ ngữ cảnh, danh tính, hero, trang công khai), ảnh 390px và 1440px.
 - 27/09 `2aq`: rút gọn HANDOFF (bản cũ vào lưu trữ, sửa mục C cho đúng). Phễu khách chọn 7/30/90 ngày hoặc một dịp, so kỳ trước hoặc cùng dịp năm trước; đếm trong kho (`094`, chưa áp). Kiểm: Vitest 1.682 xanh, lint, build, PGlite 94 migration (7 ngày: 468 lượt web + 6.914 lượt quầy = 7.382, khớp đếm thẳng; 90 ngày 102 ms), ảnh 390px và 1440px. **Chưa kiểm trên production.**
 - 26/09 tối `2ap`: áp 090–093; xoá hẳn lượt giữ quá hạn; lịch sử mẫu thành cửa sổ trượt làm mới hàng tháng; ẩn vòng dẫn.
 - 26/09 `2ao`: nghĩ lại ERP; bỏ QR nhân viên; gỡ 2 module vỏ; lịch sử mẫu; báo cáo & dự báo thật; trang đầu có số thật.

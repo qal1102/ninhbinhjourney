@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const CONTINUITY_SOURCE = "page-continuity-e2e";
-const CONTINUITY_JOURNEY = "continuity-journey";
 
 async function installViewTransitionProbe(page: Page) {
   await page.addInitScript(() => {
@@ -184,7 +183,7 @@ test("package continuity preserves only allowed context across forward navigatio
 }) => {
   await installViewTransitionProbe(page);
   await page.goto(
-    `/packages?lang=en&source=${CONTINUITY_SOURCE}&journey=${CONTINUITY_JOURNEY}`,
+    `/packages?lang=en&source=${CONTINUITY_SOURCE}`,
     { waitUntil: "domcontentloaded" },
   );
   await waitForClientRouter(page);
@@ -203,14 +202,14 @@ test("package continuity preserves only allowed context across forward navigatio
     (link) => (link as HTMLAnchorElement).click(),
   );
   await expect(page).toHaveURL(
-    /\/packages\/heritage-day\?lang=en&source=page-continuity-e2e&journey=continuity-journey&from=catalog$/,
+    /\/packages\/heritage-day\?lang=en&source=page-continuity-e2e&from=catalog$/,
   );
   await expectOneSharedImage(page, "package-image-heritage-day");
   await expect.poll(() => transitionCount(page)).toBeGreaterThan(beforeForward);
 
   await page.goBack({ waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(
-    /\/packages\?lang=en&source=page-continuity-e2e&journey=continuity-journey$/,
+    /\/packages\?lang=en&source=page-continuity-e2e$/,
   );
   await expectOneSharedImage(page, "package-image-heritage-day");
   await expect
@@ -223,7 +222,7 @@ test("explore sheet hands its destination image to the route without duplicate n
 }) => {
   await installViewTransitionProbe(page);
   await page.goto(
-    `/explore?lang=en&source=${CONTINUITY_SOURCE}&journey=${CONTINUITY_JOURNEY}`,
+    `/explore?lang=en&source=${CONTINUITY_SOURCE}`,
     { waitUntil: "domcontentloaded" },
   );
   await waitForClientRouter(page);
@@ -242,7 +241,7 @@ test("explore sheet hands its destination image to the route without duplicate n
     .getByRole("link", { name: "Đọc thêm" })
     .click();
   await expect(page).toHaveURL(
-    /\/destination\/trang-an\?lang=en&source=page-continuity-e2e&journey=continuity-journey&from=explore$/,
+    /\/destination\/trang-an\?lang=en&source=page-continuity-e2e&from=explore$/,
   );
   await expectOneSharedImage(page, "destination-image-trang-an");
   await expect.poll(() => transitionCount(page)).toBeGreaterThan(beforeForward);
@@ -250,7 +249,7 @@ test("explore sheet hands its destination image to the route without duplicate n
 
   await page.goBack({ waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(
-    /\/explore\?lang=en&source=page-continuity-e2e&journey=continuity-journey$/,
+    /\/explore\?lang=en&source=page-continuity-e2e$/,
   );
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
 });
@@ -258,7 +257,7 @@ test("explore sheet hands its destination image to the route without duplicate n
 test("package-to-destination hierarchy returns to the deterministic parent", async ({ page }) => {
   await installViewTransitionProbe(page);
   await page.goto(
-    `/packages/heritage-day?lang=en&source=${CONTINUITY_SOURCE}&journey=${CONTINUITY_JOURNEY}&from=home`,
+    `/packages/heritage-day?lang=en&source=${CONTINUITY_SOURCE}&from=home`,
     { waitUntil: "domcontentloaded" },
   );
   await waitForClientRouter(page);
@@ -267,7 +266,7 @@ test("package-to-destination hierarchy returns to the deterministic parent", asy
   const beforeForward = await transitionCount(page);
   await page.locator('[data-customer-track="package-destination"]').first().click();
   await expect(page).toHaveURL(
-    /\/destination\/trang-an\?lang=en&source=page-continuity-e2e&journey=continuity-journey&from=package&package=heritage-day&parent=home$/,
+    /\/destination\/trang-an\?lang=en&source=page-continuity-e2e&from=package&package=heritage-day&parent=home$/,
   );
   await expectOneSharedImage(page, "destination-image-trang-an");
   await expect.poll(() => transitionCount(page)).toBeGreaterThan(beforeForward);
@@ -275,7 +274,7 @@ test("package-to-destination hierarchy returns to the deterministic parent", asy
   const beforeBack = await transitionCount(page);
   await page.getByRole("link", { name: /Khám phá/ }).click();
   await expect(page).toHaveURL(
-    /\/packages\/heritage-day\?lang=en&source=page-continuity-e2e&journey=continuity-journey&from=home$/,
+    /\/packages\/heritage-day\?lang=en&source=page-continuity-e2e&from=home$/,
   );
   await expectOneSharedImage(page, "package-image-heritage-day");
   await expect.poll(() => transitionCount(page)).toBeGreaterThan(beforeBack);

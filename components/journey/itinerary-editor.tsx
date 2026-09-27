@@ -41,19 +41,16 @@ function timeLabel(value: string) {
 export function ItineraryEditor({
   initialItinerary,
   intent,
-  persisted = false,
   savedAnonymously = false,
   identityCollectionEnabled = false,
 }: {
   initialItinerary: Itinerary;
   intent: JourneyIntent;
-  persisted?: boolean;
   savedAnonymously?: boolean;
   identityCollectionEnabled?: boolean;
 }) {
   const [itinerary, setItinerary] = useState(initialItinerary);
   const [message, setMessage] = useState("");
-  const [pending, setPending] = useState(false);
 
   const siteIds = useMemo(
     () => itinerary.items.map((item) => item.siteId),
@@ -70,61 +67,26 @@ export function ItineraryEditor({
     [itinerary.items],
   );
 
-  async function saveSites(nextSiteIds: string[]) {
+  function saveSites(nextSiteIds: string[]) {
     if (nextSiteIds.length === 0) {
       setMessage("Hành trình cần ít nhất một điểm đến.");
       return;
     }
 
-    // Journeys created outside a demo room live in the browser only, so the
-    // same domain rules are re-run locally instead of round-tripping.
-    if (!persisted) {
-      const rebuilt = rebuildItineraryWithSites({
-        itinerary,
-        intent,
-        siteIds: nextSiteIds,
-      });
-      setItinerary(rebuilt);
-      setMessage(
-        rebuilt.validation.valid
-          ? "Đã tính lại lịch trình theo chỉnh sửa của bạn."
-          : "Đã tính lại; hãy xử lý xung đột trước khi tiếp tục.",
-      );
-      return;
-    }
-
-    setPending(true);
-    setMessage("");
-    try {
-      const response = await fetch(`/api/journeys/${itinerary.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteIds: nextSiteIds }),
-      });
-      const payload = (await response.json()) as {
-        itinerary?: Itinerary;
-        error?: { message: string };
-      };
-      if (!response.ok || !payload.itinerary) {
-        throw new Error(
-          payload.error?.message ?? "Không thể lưu thay đổi hành trình.",
-        );
-      }
-      setItinerary(payload.itinerary);
-      setMessage(
-        payload.itinerary.validation.valid
-          ? "Đã lưu và kiểm tra lại lịch trình trong demo room."
-          : "Đã lưu bản chỉnh sửa; hãy xử lý xung đột trước khi tiếp tục.",
-      );
-    } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Không thể lưu thay đổi hành trình.",
-      );
-    } finally {
-      setPending(false);
-    }
+    // Lịch trình sống trong trình duyệt của khách (bản gốc có thể đã lưu ẩn
+    // danh ở máy chủ), nên mọi chỉnh sửa tính lại ngay tại chỗ bằng đúng luật
+    // của lúc dựng. Lối lưu chỉnh sửa về "phòng trình diễn" đã gỡ 27/09/2026.
+    const rebuilt = rebuildItineraryWithSites({
+      itinerary,
+      intent,
+      siteIds: nextSiteIds,
+    });
+    setItinerary(rebuilt);
+    setMessage(
+      rebuilt.validation.valid
+        ? "Đã tính lại lịch trình theo chỉnh sửa của bạn."
+        : "Đã tính lại; hãy xử lý xung đột trước khi tiếp tục.",
+    );
   }
 
   function move(index: number, direction: -1 | 1) {
@@ -132,7 +94,7 @@ export function ItineraryEditor({
     if (target < 0 || target >= siteIds.length) return;
     const next = [...siteIds];
     [next[index], next[target]] = [next[target], next[index]];
-    void saveSites(next);
+    saveSites(next);
   }
 
   function replace(index: number) {
@@ -145,7 +107,7 @@ export function ItineraryEditor({
     }
     const next = [...siteIds];
     next[index] = replacement.id;
-    void saveSites(next);
+    saveSites(next);
   }
 
   // QA-P2-09: nút này từng dẫn về `/packages` trơn khi hành trình không lưu
@@ -160,7 +122,6 @@ export function ItineraryEditor({
     visitDate: intent.visitDate,
   }).matches[0] ?? null;
   const thamSoGoi = new URLSearchParams();
-  if (persisted) thamSoGoi.set("journey", itinerary.id);
   if (goiGanNhat) thamSoGoi.set("goi", goiGanNhat.slug);
   const huongDiGoi = thamSoGoi.size > 0 ? `/packages?${thamSoGoi.toString()}` : "/packages";
 
@@ -170,9 +131,7 @@ export function ItineraryEditor({
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-              {persisted
-                ? "Lịch trình đã xác nhận · đã lưu"
-                : savedAnonymously
+              {savedAnonymously
                   ? "Bản gốc đã lưu ẩn danh · chỉnh sửa tiếp lưu trên máy bạn"
                   : "Lịch trình đã xác nhận · lưu trên máy bạn"}
             </p>
@@ -216,7 +175,7 @@ export function ItineraryEditor({
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    disabled={pending || index === 0}
+                    disabled={index === 0}
                     onClick={() => move(index, -1)}
                     className="min-h-10 rounded-full border border-[#b9c4bd] px-3 text-xs font-bold disabled:opacity-35"
                   >
@@ -224,7 +183,7 @@ export function ItineraryEditor({
                   </button>
                   <button
                     type="button"
-                    disabled={pending || index === itinerary.items.length - 1}
+                    disabled={index === itinerary.items.length - 1}
                     onClick={() => move(index, 1)}
                     className="min-h-10 rounded-full border border-[#b9c4bd] px-3 text-xs font-bold disabled:opacity-35"
                   >
@@ -232,7 +191,6 @@ export function ItineraryEditor({
                   </button>
                   <button
                     type="button"
-                    disabled={pending}
                     onClick={() => replace(index)}
                     className="min-h-10 rounded-full border border-[#b9c4bd] px-3 text-xs font-bold"
                   >
@@ -240,9 +198,9 @@ export function ItineraryEditor({
                   </button>
                   <button
                     type="button"
-                    disabled={pending || itinerary.items.length === 1}
+                    disabled={itinerary.items.length === 1}
                     onClick={() =>
-                      void saveSites(
+                      saveSites(
                         siteIds.filter((_, itemIndex) => itemIndex !== index),
                       )
                     }

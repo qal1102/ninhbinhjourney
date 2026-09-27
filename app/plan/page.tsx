@@ -7,6 +7,7 @@ import {
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { PlanExperience } from "@/components/journey/plan-experience";
 import { SetupState } from "@/components/shared/setup-state";
+import { DESTINATIONS } from "@/content/destinations";
 
 export const metadata = {
   title: "Lập hành trình | Ninh Bình Journey",
@@ -41,6 +42,12 @@ export default async function PlanPage({
     requestedLang === "en" || (!requestedLang && savedLang === "en")
       ? "en"
       : "vi";
+
+  // "Thêm vào hành trình" ở trang điểm đến và trang Khám phá dẫn tới đây kèm
+  // `?add=<mã điểm>`. Trước 27/09/2026 trang này không đọc tham số ấy: khách
+  // bấm xong chỉ thấy một trang trống, điểm vừa chọn biến mất.
+  const maDiem = firstParam(params.add);
+  const diem = maDiem ? DESTINATIONS.find((d) => d.id === maDiem) : undefined;
 
   const surfaceAttributes = getExperienceSurfaceAttributes(environment, {
     customerBookingEnabled: isCustomerBookingEnabled(),
@@ -82,6 +89,7 @@ export default async function PlanPage({
         <div className="mt-10">
           <PlanExperience
             lang={lang}
+            diemMuonGhe={diem ? { id: diem.id, ten: diem.name[lang], mucDiBo: diem.mobilityLevel } : undefined}
             showDemoCommand={environment.config.voiceDemoFallbackEnabled}
             identityCollectionEnabled={
               process.env.CUSTOMER_IDENTITY_COLLECTION_ENABLED === "true"

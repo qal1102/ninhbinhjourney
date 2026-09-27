@@ -50,8 +50,6 @@ export default async function CheckoutPage({
       </main>
     );
   }
-  const itineraryId =
-    typeof params.journey === "string" ? params.journey : undefined;
   // Lối "thanh toán sandbox" cũ (ghi vào bảng bookings/passes của hệ /ops đã
   // bỏ) đã gỡ ngày 26/09/2026: nó chỉ hiện khi TẮT đặt chỗ thật, mà production
   // luôn bật. Tắt đặt chỗ thì trang nói thẳng là tạm đóng, ở khối phía trên.
@@ -60,7 +58,7 @@ export default async function CheckoutPage({
     <main className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
       <div className="mx-auto max-w-7xl">
         <Link
-          href={`/packages/${packageItem.slug}${itineraryId ? `?journey=${itineraryId}` : ""}`}
+          href={`/packages/${packageItem.slug}`}
           className="text-sm font-bold text-[#356957]"
         >
           ← Chi tiết gói

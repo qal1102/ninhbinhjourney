@@ -19,7 +19,6 @@ export type ContinuityParent = (typeof CONTINUITY_PARENT_VALUES)[number];
 export type ContinuityContext = {
   lang?: "vi" | "en";
   source?: string;
-  journey?: string;
   from?: ContinuityFrom;
   package?: string;
   parent?: ContinuityParent;
@@ -51,7 +50,7 @@ function isPackageSlug(value: string | undefined): value is string {
 
 /**
  * Read navigation context without ever accepting a path or return URL.
- * `source` and `journey` are opaque state that is URL-encoded on output;
+ * `source` is opaque state that is URL-encoded on output;
  * hierarchy is represented only by the three allow-listed fields below.
  */
 export function readContinuityContext(
@@ -65,9 +64,6 @@ export function readContinuityContext(
   return {
     ...(lang === "vi" || lang === "en" ? { lang } : {}),
     ...(opaqueValue(query.source) ? { source: opaqueValue(query.source) } : {}),
-    ...(opaqueValue(query.journey)
-      ? { journey: opaqueValue(query.journey) }
-      : {}),
     ...(from && continuityFrom.has(from)
       ? { from: from as ContinuityFrom }
       : {}),
@@ -107,7 +103,6 @@ function appendContext(
 ) {
   if (context.lang) params.set("lang", context.lang);
   if (context.source) params.set("source", context.source);
-  if (context.journey) params.set("journey", context.journey);
   if (context.from && continuityFrom.has(context.from)) {
     params.set("from", context.from);
   }
@@ -162,12 +157,6 @@ export function packageCatalogBackHref(context: ContinuityContext) {
       context,
       { from: undefined, package: undefined, parent: undefined },
       "packages",
-    );
-  }
-  if (context.journey) {
-    return withContinuityContext(
-      `/journey/${encodeURIComponent(context.journey)}`,
-      { lang: context.lang, source: context.source },
     );
   }
   return withContinuityContext("/plan", {
@@ -266,7 +255,7 @@ export function destinationRelatedHref(
 }
 
 export function planDestinationHref(
-  action: "add" | "replace" | "remove",
+  action: "add",
   destinationId: string,
   context: ContinuityContext,
 ) {

@@ -445,6 +445,13 @@ export type ItineraryGenerationOptions = {
   idFactory?: () => string;
   unavailableSiteIds?: ReadonlySet<string>;
   visitDate?: string;
+  /**
+   * Điểm khách đã tự chọn trước khi vào trang lập lịch. Nó đứng đầu hàng ưu
+   * tiên nhưng vẫn qua đủ luật (mức đi bộ, giờ mở cửa, tổng thời gian): khách
+   * chọn Hang Múa mà nói đi bộ ít thì lịch không lén xếp Hang Múa vào, trang
+   * lập lịch nói lý do.
+   */
+  uuTienSiteId?: string;
 };
 
 export function generateItinerary(
@@ -466,7 +473,10 @@ export function generateItinerary(
       : intent.pace === "active"
         ? ["tam-coc-bich-dong", "hang-mua", "thung-nham", "hoa-lu-old-town"]
         : ["trang-an", "hoa-lu-ancient-capital", "bai-dinh", "hoa-lu-old-town"];
-  const candidates = priorities
+  const uuTien = options.uuTienSiteId
+    ? DESTINATIONS.find((destination) => destination.id === options.uuTienSiteId)?.slug
+    : undefined;
+  const candidates = (uuTien ? [uuTien, ...priorities.filter((slug) => slug !== uuTien)] : priorities)
     .map((slug) => DESTINATIONS.find((destination) => destination.slug === slug))
     .filter((destination): destination is DestinationCatalogItem =>
       Boolean(destination),

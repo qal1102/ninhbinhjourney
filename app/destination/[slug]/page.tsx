@@ -91,7 +91,6 @@ export default async function DestinationPage({
       />
     );
   }
-  const fromJourney = Boolean(navigationContext.journey);
   const fit = typeof query.fit === "string" ? query.fit : null;
   const related = destination.relatedSlugs
     .map(getDestinationBySlug)
@@ -354,30 +353,6 @@ export default async function DestinationPage({
             >
               Thêm vào hành trình
             </Link>
-            {fromJourney ? (
-              <>
-                <Link
-                  href={planDestinationHref(
-                    "replace",
-                    destination.id,
-                    navigationContext,
-                  )}
-                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
-                >
-                  Thay điểm hiện tại
-                </Link>
-                <Link
-                  href={planDestinationHref(
-                    "remove",
-                    destination.id,
-                    navigationContext,
-                  )}
-                  className="inline-flex min-h-12 items-center justify-center rounded-full px-5 font-bold text-[#8f2f2c]"
-                >
-                  Xóa khỏi hành trình
-                </Link>
-              </>
-            ) : null}
           </div>
         </aside>
       </section>

@@ -19,7 +19,6 @@ describe("customer browser tracking contract", () => {
   it("shows the consent center on customer surfaces without blocking ERP or operations", () => {
     expect(isCustomerConsentSurface("/")).toBe(true);
     expect(isCustomerConsentSurface("/checkout")).toBe(true);
-    expect(isCustomerConsentSurface("/journey/demo")).toBe(true);
     expect(isCustomerConsentSurface("/quyen-rieng-tu")).toBe(true);
     expect(isCustomerConsentSurface("/erp/login")).toBe(false);
     expect(isCustomerConsentSurface("/erp/release")).toBe(false);

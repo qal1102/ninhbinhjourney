@@ -26,6 +26,12 @@ const PLAN_RESULT_STORAGE_VERSION = 1;
 
 type Language = "vi" | "en";
 
+type MucDiBo = JourneyIntent["walkingTolerance"];
+const BAC_DI_BO: Record<MucDiBo, number> = { low: 1, moderate: 2, high: 3 };
+
+/** Điểm khách bấm "Thêm vào hành trình" ở trang điểm đến hay Khám phá. */
+export type DiemMuonGhe = { id: string; ten: string; mucDiBo: MucDiBo };
+
 type VoiceState =
   | "idle"
   | "listening"
@@ -302,11 +308,15 @@ export function PlanExperience({
   showDemoCommand,
   identityCollectionEnabled,
   lang = "vi",
+  diemMuonGhe,
 }: {
   showDemoCommand: boolean;
   identityCollectionEnabled: boolean;
   lang?: Language;
+  diemMuonGhe?: DiemMuonGhe;
 }) {
+  const [giuDiem, setGiuDiem] = useState(Boolean(diemMuonGhe));
+  const diemChon = giuDiem ? diemMuonGhe : undefined;
   const [text, setText] = useState("");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [draft, setDraft] = useState<JourneyIntentDraft | null>(null);
@@ -339,8 +349,9 @@ export function PlanExperience({
   const [result, setResult] = useState<{
     intent: JourneyIntent;
     itinerary: Itinerary;
-    persisted: boolean;
-    persistence: "browser" | "demo" | "anonymous";
+    persistence: "browser" | "anonymous";
+    /** Câu giải thích khi điểm khách chọn không xếp được vào lịch. */
+    diemChuaXep?: string;
   } | null>(null);
 
   // QA-P2-09: bấm "Dùng hành trình này" sang trang gói rồi quay lại thì lịch
@@ -522,13 +533,13 @@ export function PlanExperience({
           walkingTolerance: walking,
           budgetVnd: { target: budget, tolerancePercent: 20 },
           visitDate,
+          ...(diemChon ? { uuTienSiteId: diemChon.id } : {}),
         }),
       });
       const payload = (await response.json()) as {
         intent?: JourneyIntent;
         itinerary?: Itinerary;
-        persisted?: boolean;
-        persistence?: "browser" | "demo" | "anonymous";
+        persistence?: "browser" | "anonymous";
         error?: { message: string };
       };
       if (!response.ok || !payload.intent || !payload.itinerary) {
@@ -536,15 +547,19 @@ export function PlanExperience({
           payload.error?.message ?? "Chưa lập được lịch trình, mời bạn thử lại.",
         );
       }
+      // Điểm khách chọn vẫn phải qua luật đi bộ và giờ mở cửa. Không xếp được
+      // thì nói lý do, không lặng lẽ bỏ đi.
+      const diemChuaXep =
+        diemChon && !payload.itinerary.items.some((item) => item.siteId === diemChon.id)
+          ? BAC_DI_BO[diemChon.mucDiBo] > BAC_DI_BO[walking]
+            ? `${diemChon.ten} cần đi bộ nhiều hơn mức bạn chọn nên em chưa xếp vào. Nếu bạn vẫn muốn ghé, mời bạn chỉnh mức đi bộ lên rồi dựng lại ạ.`
+            : `${diemChon.ten} chưa vừa với giờ mở cửa và ${Math.round(durationMinutes / 60)} tiếng bạn có. Mời bạn chọn thêm thời gian rồi dựng lại ạ.`
+          : undefined;
       setResult({
         intent: payload.intent,
         itinerary: payload.itinerary,
-        // The legacy editor can persist subsequent edits only inside a demo
-        // room. CUS-03 still stores the confirmed anonymous original safely;
-        // later browser edits remain local until their dedicated revision
-        // contract exists, rather than silently mutating the saved record.
-        persisted: payload.persistence === "demo",
         persistence: payload.persistence ?? "browser",
+        diemChuaXep,
       });
       setMessage("");
     } catch (error) {
@@ -571,10 +586,14 @@ export function PlanExperience({
         >
           ← Chỉnh yêu cầu
         </button>
+        {result.diemChuaXep ? (
+          <p data-plan-diem-chua-xep className="mb-6 rounded-xl bg-[#f1ede2] px-4 py-3 text-sm leading-6 text-[#59654b]">
+            {result.diemChuaXep}
+          </p>
+        ) : null}
         <ItineraryEditor
           initialItinerary={result.itinerary}
           intent={result.intent}
-          persisted={result.persisted}
           savedAnonymously={result.persistence === "anonymous"}
           identityCollectionEnabled={identityCollectionEnabled}
         />
@@ -583,6 +602,21 @@ export function PlanExperience({
   }
 
   return (
+    <>
+    {diemChon ? (
+      <div data-plan-diem-chon className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-[#cfe0d6] bg-[#eef3ef] py-2 pl-5 pr-2">
+        <p className="min-w-0 text-sm leading-6 text-[#183f34]">
+          Bạn muốn ghé <strong>{diemChon.ten}</strong>. Em xếp nơi này lên đầu lịch, miễn là vừa sức đi bộ và giờ mở cửa ạ.
+        </p>
+        <button
+          type="button"
+          onClick={() => setGiuDiem(false)}
+          className="min-h-11 shrink-0 rounded-full px-3 text-sm font-bold text-[#356957] underline underline-offset-2"
+        >
+          Bỏ chọn
+        </button>
+      </div>
+    ) : null}
     <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
       <section className="rounded-3xl bg-[#183f34] p-6 text-white sm:p-8">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
@@ -864,5 +898,6 @@ export function PlanExperience({
         ) : null}
       </section>
     </div>
+    </>
   );
 }

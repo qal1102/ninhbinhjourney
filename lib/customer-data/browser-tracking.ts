@@ -63,8 +63,7 @@ export function isCustomerConsentSurface(pathname: string) {
   return (
     getVisitorPageType(pathname) !== null ||
     pathname === "/checkout" ||
-    pathname === "/quyen-rieng-tu" ||
-    pathname.startsWith("/journey/")
+    pathname === "/quyen-rieng-tu"
   );
 }
 

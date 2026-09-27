@@ -79,10 +79,8 @@ export const CreateJourneyRequestSchema = z.object({
     })
     .optional(),
   visitDate: z.iso.date().default("2026-08-15"),
-});
-
-export const UpdateJourneyRequestSchema = z.object({
-  siteIds: z.array(z.uuid()).min(1).max(8),
+  /** Điểm khách bấm "Thêm vào hành trình" ở trang điểm đến hay Khám phá. */
+  uuTienSiteId: z.uuid().optional(),
 });
 
 export const InspectPassRequestSchema = z.object({

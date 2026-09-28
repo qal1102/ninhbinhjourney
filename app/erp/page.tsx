@@ -3,11 +3,10 @@ import { ERP_SITES } from "@/domain/erp";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { ExecutiveDashboard } from "@/components/erp/executive-dashboard";
 import { RoleHomeDashboard } from "@/components/erp/role-home-dashboard";
-import { VongDanPanel } from "@/components/erp/vong-dan-panel";
 import { ViecDauTienPanel } from "@/components/erp/viec-dau-tien-panel";
-import { VONG_TIEN, VONG_TIEN_ID, type KhoaSo } from "@/domain/huong-dan-vong-dau";
-import { chonTaiKhoanMau, CO_SO_MAU } from "@/domain/ban-do-chuc-nang";
 import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
+import { chuVongDan, HIEN_VONG_DAN, VONG_TIEN_ID } from "@/domain/huong-dan-vong-dau";
+import { VongDanPanel } from "@/components/erp/vong-dan-panel";
 import { readTienDoVongDan } from "@/lib/erp/huong-dan-repository";
 import { getCurrentErpUser, isRoleSwitchEnabled } from "@/lib/erp/demo-session";
 import { listRoleSwitchTargets, listStaffDirectory } from "@/lib/erp/staff-directory";
@@ -29,13 +28,6 @@ import {
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
-/**
- * Khung "Trình diễn một vòng khách". Ẩn từ 26/09/2026 theo lời chủ dự án
- * ("khung hướng dẫn chỉ nên làm khi xong hết rồi"); bật lại 28/09/2026 sau
- * khi soát từng bước với các màn đã chốt. Tắt thì chỉ cần đổi về `false`.
- */
-const HIEN_VONG_DAN = true;
 
 export default async function ErpHomePage({ searchParams }: Props) {
   const user = await getCurrentErpUser();
@@ -103,11 +95,10 @@ export default async function ErpHomePage({ searchParams }: Props) {
       : Promise.resolve([]),
     // Ô chọn người khi quản lý giao việc ngay trên trang đầu.
     user.role === "manager" ? listStaffDirectory() : Promise.resolve([]),
-    // Mạch dẫn — chỉ giám đốc, vì thực tế chỉ tài khoản này được dùng. Kho tự
-    // nuốt lỗi và trả "chưa từng đi", nên một lượt đọc hỏng cùng lắm làm vòng
-    // dẫn chào lại, không kéo sập trang chủ. Đọc cùng nhóm, không chờ riêng.
-    isDirector && HIEN_VONG_DAN
-      ? readTienDoVongDan({ accountId: user.id, vongId: VONG_TIEN_ID })
+    // Vòng dẫn: đọc CÙNG nhóm này, không `await` riêng phía sau (xem chú thích
+    // trong erp-shell.tsx: tách riêng từng làm kẹt nút duyệt ngoại lệ).
+    HIEN_VONG_DAN && chuVongDan(user)
+      ? readTienDoVongDan({ accountId: chuVongDan(user)!, vongId: VONG_TIEN_ID })
       : Promise.resolve(null),
   ]);
   const params = (await searchParams) ?? {};
@@ -136,38 +127,8 @@ export default async function ErpHomePage({ searchParams }: Props) {
     quyetDinhSop: pendingSopDecisions.length,
   };
 
-  // Con số thật cho từng chặng, lấy từ chính dữ liệu trang này vừa đọc —
-  // không mở thêm một lượt đọc nào. Chặng nào chưa có số thì để trống, và
-  // vòng dẫn sẽ nói thẳng là "chưa có số hôm nay" thay vì bịa một số mẫu.
-  const soThatVongDan: Partial<Record<KhoaSo, string>> = {};
-  if (isDirector) {
-    const veHomNay = ticketOverview?.bySite.reduce((tong, hang) => tong + hang.today, 0) ?? null;
-    if (ticketOverview?.available && veHomNay !== null) {
-      // `bySite.today` đếm lượt khách của vé PHÁT hôm nay, không phải lượt qua cổng.
-      soThatVongDan["ve-hom-nay"] = `Hôm nay đã phát vé cho ${veHomNay.toLocaleString("vi-VN")} lượt khách ở ${ticketOverview.bySite.length} cơ sở${ticketOverview.demoHistoryEntries30d > 0 ? ", gồm số liệu mẫu" : ""}.`;
-    }
-
-    const tongCho = tongViecCho(demViecChoGiamDoc);
-    soThatVongDan["viec-cho-giam-doc"] =
-      tongCho > 0
-        ? `Đang chờ bạn quyết: ${demViecChoGiamDoc.caLechChoQuyet} ca lệch, ${demViecChoGiamDoc.hoaDonChoQuyet} hoá đơn, ${demViecChoGiamDoc.suCoLeoThang} sự cố, ${demViecChoGiamDoc.deNghiDoiDuAn} đề nghị đổi dự án, ${demViecChoGiamDoc.quyetDinhSop} cổng mở cửa.`
-        : "Hôm nay không có việc nào chờ bạn quyết.";
-  }
-
-  const taiKhoanTheoChang: Partial<Record<number, string>> = {};
-  for (const chang of VONG_TIEN) {
-    if (!chang.moMan?.vai) continue;
-    const mau = chonTaiKhoanMau(
-      mucTieuChuyenVai,
-      access.employees,
-      chang.moMan.vai,
-      chang.moMan.duong(CO_SO_MAU),
-    );
-    if (mau) taiKhoanTheoChang[chang.thuTu] = mau.accountId;
-  }
-
   return (
-    <ErpShell user={user}>
+    <ErpShell user={user} trangDau>
       {denied ? (
         <p
           role="alert"
@@ -187,14 +148,9 @@ export default async function ErpHomePage({ searchParams }: Props) {
         />
       ) : null}
 
-      {tienDoVongDan ? (
-        <VongDanPanel
-          taiKhoanTheoChang={taiKhoanTheoChang}
-          tienDoBanDau={tienDoVongDan}
-          soThat={soThatVongDan}
-          siteId={visibleSites[0]?.id ?? ERP_SITES[0].id}
-        />
-      ) : null}
+      {/* Vòng dẫn đứng sau việc thật đang chờ, trước bảng số liệu. */}
+      {tienDoVongDan ? <VongDanPanel tienDoBanDau={tienDoVongDan} trangDau /> : null}
+
 
       {user.role === "director" ? (
         <ExecutiveDashboard

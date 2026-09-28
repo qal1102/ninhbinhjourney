@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   changMoLai,
+  chuVongDan,
+  hienVongDanTai,
   changTheoThuTu,
   laChangCuoi,
   nenTuMo,
@@ -15,15 +17,25 @@ describe("Vòng dẫn: hình dạng tám chặng", () => {
     expect(VONG_TIEN.map((c) => c.thuTu)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   });
 
-  it("chặng nào cũng nói được 'bấm vào đâu' và 'để ý thấy gì'", () => {
+  it("chặng nào cũng nói đang ở đâu, các việc đánh số và sẽ thấy gì", () => {
     for (const chang of VONG_TIEN) {
-      expect(chang.lamGi.trim().length, `chặng ${chang.thuTu}`).toBeGreaterThan(40);
-      expect(chang.deY.trim().length, `chặng ${chang.thuTu}`).toBeGreaterThan(40);
+      expect(chang.oDau.trim().length, `chặng ${chang.thuTu}`).toBeGreaterThan(5);
+      expect(chang.cacViec.length, `chặng ${chang.thuTu}`).toBeGreaterThan(0);
+      expect(chang.seThay.trim().length, `chặng ${chang.thuTu}`).toBeGreaterThan(40);
+    }
+  });
+
+  it("mỗi dòng việc ngắn, đọc một hơi là làm được (chủ dự án chê đoạn văn gộp năm sáu việc)", () => {
+    for (const chang of VONG_TIEN) {
+      expect(chang.cacViec.length, `chặng ${chang.thuTu}`).toBeLessThanOrEqual(4);
+      for (const viec of chang.cacViec) {
+        expect(viec.length, `chặng ${chang.thuTu}: ${viec}`).toBeLessThanOrEqual(180);
+      }
     }
   });
 
   it("chủ dự án chê vì ba chặng liền mở cùng một màn: không để lặp lại", () => {
-    const duong = VONG_TIEN.map((c) => c.moMan?.duong("trang-an") ?? null);
+    const duong = VONG_TIEN.map((c) => c.moMan?.duong ?? null);
     for (let i = 1; i < duong.length; i += 1) {
       if (duong[i] && duong[i - 1]) {
         expect(duong[i], `chặng ${i + 1}`).not.toBe(duong[i - 1]);
@@ -31,17 +43,19 @@ describe("Vòng dẫn: hình dạng tám chặng", () => {
     }
   });
 
-  it("trang của khách mở ở thẻ mới, việc của nhân viên có nút chuyển vai", () => {
-    expect(changTheoThuTu(1)?.moMan).toMatchObject({ theMoi: true });
-    expect(changTheoThuTu(4)?.moMan).toMatchObject({ vai: "employee" });
+  it("bước 1 mở thẳng đúng gói có Tràng An, ngày đi hôm nay, ở thẻ mới", () => {
+    expect(changTheoThuTu(1)?.moMan).toMatchObject({
+      duong: "/checkout?package=family-discovery&ngay=hom-nay",
+      theMoi: true,
+    });
+    // Chỉ trang của khách mới mở thẻ mới; màn ERP mở ngay trong thẻ này.
+    expect(VONG_TIEN.filter((c) => c.moMan?.theMoi).map((c) => c.thuTu)).toEqual([1]);
   });
 
-  it("chặng kết không dẫn đi đâu nữa", () => {
-    expect(VONG_TIEN.at(-1)?.moMan).toBeNull();
-  });
-
-  it("đường dẫn bám theo cơ sở đang xem", () => {
-    expect(changTheoThuTu(4)?.moMan?.duong("tam-coc")).toBe("/erp/tam-coc/check-in-khach");
+  it("không bước nào bắt chuyển vai: giám đốc tự làm được cả vòng", () => {
+    for (const chang of VONG_TIEN) {
+      expect(chang.moMan ?? {}, `chặng ${chang.thuTu}`).not.toHaveProperty("vai");
+    }
   });
 
   it("chặng không có thật thì trả null", () => {
@@ -96,6 +110,49 @@ describe("Vòng dẫn: đọc tiến độ từ kho", () => {
     expect(ra.daXong).toBe(false);
     expect(ra.boQua).toBe(false);
     expect(ra.tungDi).toBe(false);
+  });
+});
+
+describe("Vòng dẫn: hiện ở màn nào", () => {
+  const tien = (p: Partial<ReturnType<typeof tienDoFrom>>) => ({
+    changHienTai: 3,
+    daXong: false,
+    boQua: false,
+    tungDi: true,
+    ...p,
+  });
+
+  it("đang đi dở thì lời dẫn đi theo sang mọi màn", () => {
+    expect(hienVongDanTai(tien({}), false)).toBe(true);
+    expect(hienVongDanTai(tien({}), true)).toBe(true);
+  });
+
+  it("chưa từng bấm gì thì chỉ ở trang đầu, không chen vào màn nghiệp vụ", () => {
+    expect(hienVongDanTai(tien({ tungDi: false, changHienTai: 1 }), true)).toBe(true);
+    expect(hienVongDanTai(tien({ tungDi: false, changHienTai: 1 }), false)).toBe(false);
+  });
+
+  it("đã xong hay đã Để sau thì màn khác không hiện; trang đầu còn dòng mời", () => {
+    expect(hienVongDanTai(tien({ daXong: true }), false)).toBe(false);
+    expect(hienVongDanTai(tien({ boQua: true }), false)).toBe(false);
+    expect(hienVongDanTai(tien({ daXong: true }), true)).toBe(true);
+  });
+});
+
+describe("Vòng dẫn: tiến độ luôn là của giám đốc", () => {
+  it("giám đốc giữ tiến độ của chính mình", () => {
+    expect(chuVongDan({ id: "director-001", role: "director" })).toBe("director-001");
+  });
+
+  it("đang xem thử vai nhân viên thì vẫn ghi cho giám đốc, không cho nhân viên", () => {
+    expect(
+      chuVongDan({ id: "employee-trang-an-01", role: "employee", actingAs: { directorId: "director-001" } }),
+    ).toBe("director-001");
+  });
+
+  it("vai khác đăng nhập thật thì không có vòng dẫn", () => {
+    expect(chuVongDan({ id: "manager-tam-coc", role: "manager" })).toBeNull();
+    expect(chuVongDan({ id: "ketoan", role: "accountant" })).toBeNull();
   });
 });
 

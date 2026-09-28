@@ -18,16 +18,19 @@ import { ErpDesktopNavigation } from "./erp-desktop-navigation";
 import { RoleSwitchBanner } from "./role-switch-banner";
 import { RoleSwitchControl } from "./role-switch-control";
 import { VoiceCommandCenter } from "./voice-command-center";
+import { VongDanTheoTrang } from "./vong-dan-theo-trang";
 import { ErpMobileMenu } from "./erp-mobile-menu";
 
 type Props = {
   user: CurrentErpUser;
   site?: ErpSite;
   activeModuleId?: string;
+  /** Trang đầu `/erp` tự đặt vòng dẫn sau khối "Việc nên làm trước". */
+  trangDau?: boolean;
   children: ReactNode;
 };
 
-export async function ErpShell({ user, site, activeModuleId, children }: Props) {
+export async function ErpShell({ user, site, activeModuleId, trangDau = false, children }: Props) {
   // T6/T7: the account-administration entry point appears only for the
   // `system-admin` grant, which is a separate power from being the director.
   const systemAdmin = hasSystemAdmin(await getRegistryAccount(user.id));
@@ -198,6 +201,10 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           có khoảng trống này thì thẻ cuối trang bị nút đè lên — đúng lỗi đã
           bắt được bằng ảnh chụp thật hồi ERP-UX-01. */}
       <main className="mx-auto w-full max-w-[1600px] px-4 pb-28 pt-6 sm:px-6 sm:pb-28 sm:pt-8">
+        {/* Đi dở vòng dẫn thì lời dẫn theo sang mọi màn. Tự đọc tiến độ trong
+            thành phần riêng: đừng đưa lượt đọc ấy vào khung (xem chú thích
+            trong vong-dan-theo-trang.tsx). */}
+        {trangDau ? null : <VongDanTheoTrang user={user} />}
         {children}
       </main>
     </div>

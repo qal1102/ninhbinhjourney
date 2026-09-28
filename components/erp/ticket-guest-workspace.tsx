@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import {
   listTodayTicketsAction,
@@ -79,9 +79,15 @@ function formatChange(percent: number | null) {
 
 export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScans, ticketSales, offlineGateEnabled = false, counterSale = null, demoTicketsEnabled = true }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [period, setPeriod] = useState<Period>("day");
-  const [scanCode, setScanCode] = useState("");
-  const [scanMessage, setScanMessage] = useState("");
+  // `?ma=` do màn Khách hàng gửi sang khi bấm vào một mã vé: điền sẵn ô quét
+  // để người trình diễn chỉ còn bấm "Xác thực & ghi nhận".
+  const maGuiSang = mode === "checkin" ? (searchParams.get("ma") ?? "").trim().slice(0, 64) : "";
+  const [scanCode, setScanCode] = useState(maGuiSang);
+  const [scanMessage, setScanMessage] = useState(
+    maGuiSang ? `Mã ${maGuiSang} đã điền sẵn. Bấm "Xác thực & ghi nhận" để cho khách vào.` : "",
+  );
   const [scanRefused, setScanRefused] = useState(false);
   // TC-22: mã vừa quét đang nợ tiền. Giữ lại mã và số tiền để nút "đã thu"
   // biết thu cho ai — nhân viên không phải gõ lại mã lần nữa.

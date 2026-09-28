@@ -204,15 +204,20 @@ async function responsePayload(response: Response) {
 
 export function CustomerBookingCheckout({
   packageItem,
+  batDauHomNay = false,
 }: {
   packageItem: PackageCatalogItem;
+  /** `?ngay=hom-nay` từ vòng dẫn ERP: mở sẵn ngày đi là hôm nay. */
+  batDauHomNay?: boolean;
 }) {
   // Mặc định: gói cố định tổng khách thì mọi chỗ tính là người lớn cho tới
   // khi khách tự đổi tỉ lệ; gói thường mặc định hai người lớn như trước đây.
   const [adults, setAdults] = useState(() => (packageItem.fixedPartySize ? Math.max(1, packageItem.fixedPartySize) : 2));
   const [children, setChildren] = useState(0);
   const partySize = adults + children;
-  const [visitDate, setVisitDate] = useState(() => packageItem.bookingStartDate ?? localIsoDate(1));
+  const [visitDate, setVisitDate] = useState(
+    () => packageItem.bookingStartDate ?? localIsoDate(batDauHomNay ? 0 : 1),
+  );
   const [slots, setSlots] = useState<CustomerProductTimeSlot[] | null>(null);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [slotsError, setSlotsError] = useState("");
@@ -1109,6 +1114,16 @@ export function CustomerBookingCheckout({
               <p className="mt-4 hidden text-sm leading-6 lg:block">
                 Mở camera điện thoại hoặc Zalo, quét mã rồi bấm <strong className="font-bold">Xác nhận chuyển khoản</strong>. Vé hiện ra ngay trên màn hình này.
               </p>
+              {/* Máy tính mà không có điện thoại bên cạnh (hay gặp khi trình
+                  diễn): mở đúng trang ấy ở thẻ mới. Thanh toán ở đây là giả lập. */}
+              <a
+                href={qr.payUrl}
+                target="_blank"
+                rel="noopener"
+                className="mt-2 hidden min-h-11 items-center text-sm font-bold text-[#356957] underline underline-offset-4 lg:inline-flex"
+              >
+                Không có điện thoại bên cạnh? Mở trang thanh toán trên máy này
+              </a>
               <p role="status" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#356957]">
                 <span aria-hidden="true" className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#d58c35] motion-reduce:animate-none" />
                 Đang chờ bạn quét mã · còn {formatCountdown(remainingSeconds)}

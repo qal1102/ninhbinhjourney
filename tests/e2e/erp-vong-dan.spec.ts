@@ -70,7 +70,7 @@ test("trang chủ giám đốc có vòng dẫn, và nó không tràn hay chữ b
   await expect(vong).toContainText("Trình diễn một vòng khách");
 });
 
-test("mở ra thì đi được hết mọi bước, mỗi bước nói bấm vào đâu và để ý gì", async ({ page }) => {
+test("mở ra thì đi được hết mọi bước, bước nào cũng nói đang ở đâu, làm gì, sẽ thấy gì", async ({ page }) => {
   test.skip(
     !chayCucBo,
     "Phần bấm nút ghi thật vào kho tiến độ — không chạy trên production.",
@@ -90,8 +90,8 @@ test("mở ra thì đi được hết mọi bước, mỗi bước nói bấm v�
 
   for (let thuTu = 1; thuTu <= VONG_TIEN.length; thuTu += 1) {
     await expect(vong).toHaveAttribute("data-chang", String(thuTu));
-    await expect(vong).toContainText("Bấm vào đâu");
-    await expect(vong).toContainText("Để ý thấy gì");
+    await expect(vong).toContainText("Bạn đang ở");
+    await expect(vong).toContainText("Bạn sẽ thấy");
     if (thuTu < VONG_TIEN.length) {
       await page.getByTestId("vong-dan-tiep").click();
       await expect(vong).toHaveAttribute("data-chang", String(thuTu + 1));
@@ -119,4 +119,23 @@ test("bấm Để sau thì vòng dẫn thu lại và vẫn mời quay lại đư
 
   await expect(vong).toHaveAttribute("data-mo", "false");
   await expect(page.getByTestId("vong-dan-mo")).toBeVisible();
+});
+
+test("thu gọn thì chỉ còn tên bước, mở lại thì hiện đủ các việc", async ({ page }) => {
+  test.skip(
+    !chayCucBo,
+    "Phần bấm nút ghi thật vào kho tiến độ — không chạy trên production.",
+  );
+  await loginAsDirector(page);
+
+  const vong = page.getByTestId("vong-dan");
+  if ((await vong.getAttribute("data-mo")) !== "true") {
+    await page.getByTestId("vong-dan-mo").click();
+  }
+  await expect(vong.locator("ol li").first()).toBeVisible();
+  await page.getByTestId("vong-dan-thu-gon").click();
+  await expect(vong.locator("ol")).toHaveCount(0);
+  await expect(vong.getByRole("heading", { level: 2 })).toBeVisible();
+  await page.getByTestId("vong-dan-thu-gon").click();
+  await expect(vong.locator("ol li").first()).toBeVisible();
 });

@@ -25,7 +25,7 @@ export type ChucNang = {
 
 export type NhomChucNang = { id: string; ten: string; chucNang: readonly ChucNang[] };
 
-export const CO_SO_MAU = "trang-an" as const;
+const CO_SO_MAU = "trang-an" as const;
 
 export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
   {

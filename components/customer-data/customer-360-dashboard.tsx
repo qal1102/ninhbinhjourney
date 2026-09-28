@@ -2,6 +2,12 @@ import type { Customer360Journey } from "@/lib/customer-data/journey-repository"
 import type { Customer360BookingOrder } from "@/lib/customer-data/booking-repository";
 import type { Customer360OutboundAction } from "@/lib/customer-data/recommendation-repository";
 import { nhanCachTra } from "@/domain/customer-booking";
+import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
+
+// Vé web mang uuid cơ sở; màn soát vé đi theo tên cơ sở trong đường dẫn.
+const CO_SO_THEO_UUID = new Map(
+  Object.entries(ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG).map(([slug, uuid]) => [uuid, slug]),
+);
 import { RECOMMENDATION_REASON_LABELS, type CustomerRecommendation } from "@/domain/customer-recommendations";
 
 const EVENT_LABELS: Record<string, string> = {
@@ -227,7 +233,25 @@ export function Customer360Dashboard({
                 <p className="mt-3 font-bold">{order.totalVnd.toLocaleString("vi-VN")} VND · <span data-cach-tra={order.paymentMode ?? ""}>{nhanCachTra(order.paymentMode, order.paymentStatus)}</span></p>
                 {order.tickets.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {order.tickets.map((ticket) => <code key={ticket.ticketCode} className="rounded-lg bg-[#173f34] px-2.5 py-1.5 text-xs font-bold text-[#e7c78d]">{ticket.ticketCode} · {ticket.entriesAllowed} lượt</code>)}
+                    {/* Bấm mã vé là mở màn soát vé đúng cơ sở, mã điền sẵn: trình
+                        diễn "khách tới cổng" không phải gõ tay mười sáu ký tự. */}
+                    {order.tickets.map((ticket) => {
+                      const coSo = CO_SO_THEO_UUID.get(ticket.siteId);
+                      const nhan = `${ticket.ticketCode} · ${ticket.entriesAllowed} lượt`;
+                      return coSo ? (
+                        <a
+                          key={ticket.ticketCode}
+                          href={`/erp/${coSo}/check-in-khach?ma=${encodeURIComponent(ticket.ticketCode)}`}
+                          title="Mở màn soát vé với mã này"
+                          className="inline-flex min-h-11 items-center rounded-lg bg-[#173f34] px-3 text-xs font-bold text-[#e7c78d] underline-offset-2 hover:underline"
+                        >
+                          <code>{nhan}</code>
+                          <span aria-hidden="true" className="ml-1.5">→ quét</span>
+                        </a>
+                      ) : (
+                        <code key={ticket.ticketCode} className="rounded-lg bg-[#173f34] px-2.5 py-1.5 text-xs font-bold text-[#e7c78d]">{nhan}</code>
+                      );
+                    })}
                   </div>
                 ) : null}
               </article>

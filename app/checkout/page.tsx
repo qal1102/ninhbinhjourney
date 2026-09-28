@@ -77,7 +77,7 @@ export default async function CheckoutPage({
           không có khoản tiền bị thu.
         </h1>
         <div className="mt-10">
-          <CustomerBookingCheckout packageItem={packageItem} />
+          <CustomerBookingCheckout packageItem={packageItem} batDauHomNay={params.ngay === "hom-nay"} />
         </div>
       </div>
     </main>

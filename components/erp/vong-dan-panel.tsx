@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
-import { ghiTienDoVongDanAction, switchDemoRoleAction } from "@/app/erp/actions";
-import { ERP_ROLE_LABELS, type ErpSiteId } from "@/domain/erp";
+import { ghiTienDoVongDanAction } from "@/app/erp/actions";
 import {
   changMoLai,
   changTheoThuTu,
@@ -13,43 +12,40 @@ import {
   phanTramDaDi,
   VONG_TIEN,
   VONG_TIEN_COPY,
-  type KhoaSo,
   type TienDoVongDan,
 } from "@/domain/huong-dan-vong-dau";
 
 /**
- * Vòng dẫn "Trình diễn một vòng khách" — kịch bản ở `domain/huong-dan-vong-dau.ts`.
+ * Vòng dẫn "Trình diễn một vòng khách", kịch bản ở `domain/huong-dan-vong-dau.ts`.
+ *
+ * Nằm trong khung ERP, nên khi đang đi dở nó hiện trên MỌI màn: người dùng
+ * bấm sang màn Khách hàng vẫn thấy mình đang ở bước mấy, phải bấm gì. Trước
+ * 28/09/2026 nó chỉ nằm trên trang đầu và biến mất ngay khi rời trang.
  *
  * ## Ba luật đặt ra từ cách tutorial game làm đúng
  *
- * 1. **Không khoá màn.** Người dùng bỏ đi lúc nào cũng được, và "Để sau" luôn
- *    nằm ngay đó. Một bài hướng dẫn giam người đọc là bài không ai đọc lần hai.
- * 2. **Chỉ tự bung ra đúng một lần**, cho người chưa từng đi. Về sau nó thu
- *    lại thành một dòng mời.
- * 3. **Không đèn rọi trỏ vào nút.** Mỗi chặng là một khối chữ cộng một đường
- *    dẫn mở màn thật, nên đổi bố cục bao nhiêu lần cũng không vỡ.
+ * 1. **Không khoá màn.** "Để sau" luôn nằm ngay đó; thu gọn được thành một dòng.
+ * 2. **Chỉ tự hiện khi đang đi dở.** Đã xong hay đã "Để sau" thì chỉ trang đầu
+ *    còn một dòng mời, các màn khác không hiện gì.
+ * 3. **Không đèn rọi trỏ vào nút.** Mỗi bước là chữ cộng một nút mở màn thật,
+ *    nên đổi bố cục bao nhiêu lần cũng không vỡ.
  *
- * ## Vì sao ghi tiến độ ngay khi bấm, không đợi đi hết
+ * ## Vì sao ghi tiến độ ngay khi bấm
  *
- * Người ta đọc dở rồi bị gọi đi họp. Lần sau mở lại mà phải đi từ chặng một là
- * họ bỏ luôn. Mỗi lượt bấm ghi một nhịp; kho chỉ cho số chặng **tiến**, nên một
- * nhịp mạng tới muộn không kéo được người đọc lùi về chặng cũ.
+ * Người ta đọc dở rồi bị gọi đi họp. Mỗi lượt bấm ghi một nhịp; kho chỉ cho số
+ * chặng tiến, nên một nhịp mạng tới muộn không kéo người đọc lùi về chặng cũ.
  */
 export function VongDanPanel({
   tienDoBanDau,
-  soThat,
-  siteId,
-  taiKhoanTheoChang = {},
+  trangDau,
 }: {
-  /** Tài khoản mẫu cho những bước phải chuyển vai, theo số bước. */
-  taiKhoanTheoChang?: Partial<Record<number, string>>;
   tienDoBanDau: TienDoVongDan;
-  /** Con số thật cho từng chặng, do trang chủ điền từ dữ liệu đang có. */
-  soThat: Partial<Record<KhoaSo, string>>;
-  siteId: ErpSiteId;
+  /** Trang đầu giám đốc: nơi duy nhất còn hiện dòng mời khi vòng dẫn đang nghỉ. */
+  trangDau: boolean;
 }) {
   const [tienDo, setTienDo] = useState(tienDoBanDau);
   const [mo, setMo] = useState(() => nenTuMo(tienDoBanDau));
+  const [thuGon, setThuGon] = useState(false);
   const [chang, setChang] = useState(() => changMoLai(tienDoBanDau.changHienTai));
   const [dangGhi, batDauGhi] = useTransition();
 
@@ -66,6 +62,7 @@ export function VongDanPanel({
   }
 
   if (!mo) {
+    if (!trangDau) return null;
     return (
       <section
         data-testid="vong-dan"
@@ -84,6 +81,7 @@ export function VongDanPanel({
               const batDau = tienDo.daXong ? 1 : changMoLai(tienDo.changHienTai);
               setChang(batDau);
               setMo(true);
+              setThuGon(false);
               ghi(tienDo.daXong ? { chang: 1, diLai: true } : { chang: batDau });
             }}
             className="inline-flex min-h-11 items-center rounded-lg border border-[#b6cca7] bg-white px-4 text-sm font-black text-[#3d6b50]"
@@ -100,28 +98,35 @@ export function VongDanPanel({
   }
 
   const hienTai = changTheoThuTu(chang) ?? VONG_TIEN[0];
-  const so = soThat[hienTai.khoaSo];
   const cuoi = laChangCuoi(hienTai.thuTu);
+  const nutMoMan = "inline-flex min-h-11 items-center rounded-lg bg-[#183f34] px-4 text-sm font-black text-white";
 
   return (
     <section
       data-testid="vong-dan"
       data-mo="true"
       data-chang={hienTai.thuTu}
-      className="mb-6 rounded-2xl border border-[#c6dcb4] bg-white p-5 shadow-sm sm:p-6"
+      aria-label={`${VONG_TIEN_COPY.ten}, bước ${hienTai.thuTu} trên ${VONG_TIEN.length}`}
+      className="mb-6 rounded-2xl border-2 border-[#9fc28c] bg-white p-4 shadow-sm sm:p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#3d6b50]">
-          {VONG_TIEN_COPY.ten}
+          {VONG_TIEN_COPY.ten} · Bước {hienTai.thuTu}/{VONG_TIEN.length}
         </p>
-        <p className="text-sm font-black tabular-nums text-[#5f7068]">
-          Bước {hienTai.thuTu}/{VONG_TIEN.length}
-        </p>
+        <button
+          type="button"
+          data-testid="vong-dan-thu-gon"
+          aria-expanded={!thuGon}
+          onClick={() => setThuGon((truoc) => !truoc)}
+          className="inline-flex min-h-11 items-center text-sm font-black text-[#3d6b50] underline underline-offset-4"
+        >
+          {thuGon ? VONG_TIEN_COPY.moRong : VONG_TIEN_COPY.thuGon}
+        </button>
       </div>
 
       {/* Thanh tiến độ: biết còn bao xa là thứ giữ người ta đi tiếp. */}
       <div
-        className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#e6eee0]"
+        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#e6eee0]"
         role="progressbar"
         aria-valuenow={phanTramDaDi(hienTai.thuTu)}
         aria-valuemin={0}
@@ -129,7 +134,7 @@ export function VongDanPanel({
         aria-label={`Đã đi ${hienTai.thuTu} trên ${VONG_TIEN.length} bước`}
       >
         <div
-          className="h-full rounded-full bg-[#3d6b50] transition-[width]"
+          className="h-full rounded-full bg-[#3d6b50] transition-[width] motion-reduce:transition-none"
           style={{ width: `${phanTramDaDi(hienTai.thuTu)}%` }}
         />
       </div>
@@ -137,106 +142,96 @@ export function VongDanPanel({
       <h2 className="mt-3 text-xl font-black text-[#1f2f2a]">
         {hienTai.thuTu}. {hienTai.ten}
       </h2>
-      <div className="mt-3 rounded-xl bg-[#f3f8ef] px-4 py-3">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-[#3d6b50]">Bấm vào đâu</p>
-        <p className="mt-1 text-sm leading-6 text-[#26402f]">{hienTai.lamGi}</p>
-      </div>
 
-      {hienTai.khoaSo !== "khong-can" ? (
-        <p
-          data-testid="vong-dan-so-that"
-          className="mt-3 rounded-xl bg-[#f3f8ef] px-4 py-3 text-base font-black leading-7 text-[#26402f]"
-        >
-          {so && so.trim().length > 0 ? so : VONG_TIEN_COPY.chuaCoSo}
-        </p>
-      ) : null}
+      {thuGon ? null : (
+        <>
+          <p className="mt-1 text-sm font-bold text-[#5f7068]">
+            Bạn đang ở: {hienTai.oDau}
+          </p>
+          <ol className="mt-3 space-y-2 rounded-xl bg-[#f3f8ef] px-4 py-3">
+            {hienTai.cacViec.map((viec, index) => (
+              <li key={viec} className="flex gap-3 text-sm leading-6 text-[#26402f]">
+                <span
+                  aria-hidden="true"
+                  className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#3d6b50] text-xs font-black text-white"
+                >
+                  {index + 1}
+                </span>
+                <span>{viec}</span>
+              </li>
+            ))}
+          </ol>
 
-      <p className="mt-3 text-sm leading-6 text-[#42554c]">
-        <span className="font-black">Để ý thấy gì: </span>
-        {hienTai.deY}
-      </p>
+          <p className="mt-3 text-sm leading-6 text-[#42554c]">
+            <span className="font-black">Bạn sẽ thấy: </span>
+            {hienTai.seThay}
+          </p>
 
-      {hienTai.moMan ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {hienTai.moMan.vai && taiKhoanTheoChang[hienTai.thuTu] ? (
-            // Việc của nhân viên: chuyển vai rồi đứng ngay đúng màn hình.
-            <form action={switchDemoRoleAction}>
-              <input type="hidden" name="targetUserId" value={taiKhoanTheoChang[hienTai.thuTu]} />
-              <input type="hidden" name="next" value={hienTai.moMan.duong(siteId)} />
-              <button
-                type="submit"
-                data-testid="vong-dan-lam-thu"
-                className="inline-flex min-h-11 items-center rounded-lg bg-[#183f34] px-4 text-sm font-black text-white"
-              >
-                Làm thử như {ERP_ROLE_LABELS[hienTai.moMan.vai]}
-              </button>
-            </form>
+          {hienTai.moMan ? (
+            <div className="mt-3">
+              {hienTai.moMan.theMoi ? (
+                <a
+                  href={hienTai.moMan.duong}
+                  target="_blank"
+                  rel="noopener"
+                  data-testid="vong-dan-mo-man"
+                  className={nutMoMan}
+                >
+                  {hienTai.moMan.nhan} ↗
+                </a>
+              ) : (
+                <Link href={hienTai.moMan.duong} data-testid="vong-dan-mo-man" className={nutMoMan}>
+                  {hienTai.moMan.nhan}
+                </Link>
+              )}
+            </div>
           ) : null}
-          {hienTai.moMan.vai && taiKhoanTheoChang[hienTai.thuTu] ? null : hienTai.moMan.theMoi ? (
-            <a
-              href={hienTai.moMan.duong(siteId)}
-              target="_blank"
-              rel="noopener"
-              data-testid="vong-dan-mo-man"
-              className="inline-flex min-h-11 items-center rounded-lg border border-[#2f6f8f] px-4 text-sm font-black text-[#2f6f8f]"
+
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#e3ebdf] pt-4">
+            {hienTai.thuTu > 1 ? (
+              <button
+                type="button"
+                data-testid="vong-dan-lui"
+                onClick={() => setChang((truoc) => Math.max(1, truoc - 1))}
+                className="inline-flex min-h-11 items-center rounded-lg border border-[#ced8d1] bg-white px-4 text-sm font-black text-[#42554c]"
+              >
+                {VONG_TIEN_COPY.lui}
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              data-testid="vong-dan-tiep"
+              disabled={dangGhi}
+              onClick={() => {
+                if (cuoi) {
+                  ghi({ chang: VONG_TIEN.length, xong: true });
+                  setMo(false);
+                  return;
+                }
+                const ke = hienTai.thuTu + 1;
+                setChang(ke);
+                ghi({ chang: ke });
+              }}
+              className="inline-flex min-h-11 items-center rounded-lg border-2 border-[#1f604c] bg-white px-4 text-sm font-black text-[#1f604c] disabled:opacity-60"
             >
-              {hienTai.moMan.nhan} ↗
-            </a>
-          ) : (
-            <Link
-              href={hienTai.moMan.duong(siteId)}
-              data-testid="vong-dan-mo-man"
-              className="inline-flex min-h-11 items-center rounded-lg border border-[#2f6f8f] px-4 text-sm font-black text-[#2f6f8f]"
+              {cuoi ? VONG_TIEN_COPY.xong : `${VONG_TIEN_COPY.tiep} →`}
+            </button>
+
+            <button
+              type="button"
+              data-testid="vong-dan-de-sau"
+              onClick={() => {
+                ghi({ chang: hienTai.thuTu, boQua: true });
+                setMo(false);
+              }}
+              className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-[#5f7068] underline underline-offset-4"
             >
-              {hienTai.moMan.nhan}
-            </Link>
-          )}
-        </div>
-      ) : null}
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {hienTai.thuTu > 1 ? (
-          <button
-            type="button"
-            data-testid="vong-dan-lui"
-            onClick={() => setChang((truoc) => Math.max(1, truoc - 1))}
-            className="inline-flex min-h-11 items-center rounded-lg border border-[#ced8d1] bg-white px-4 text-sm font-black text-[#42554c]"
-          >
-            {VONG_TIEN_COPY.lui}
-          </button>
-        ) : null}
-
-        <button
-          type="button"
-          data-testid="vong-dan-tiep"
-          disabled={dangGhi}
-          onClick={() => {
-            if (cuoi) {
-              ghi({ chang: VONG_TIEN.length, xong: true });
-              setMo(false);
-              return;
-            }
-            const ke = hienTai.thuTu + 1;
-            setChang(ke);
-            ghi({ chang: ke });
-          }}
-          className="inline-flex min-h-11 items-center rounded-lg bg-[#1f604c] px-4 text-sm font-black text-white disabled:opacity-60"
-        >
-          {cuoi ? VONG_TIEN_COPY.xong : VONG_TIEN_COPY.tiep}
-        </button>
-
-        <button
-          type="button"
-          data-testid="vong-dan-de-sau"
-          onClick={() => {
-            ghi({ chang: hienTai.thuTu, boQua: true });
-            setMo(false);
-          }}
-          className="inline-flex min-h-11 items-center rounded-lg border border-[#ced8d1] bg-white px-4 text-sm font-black text-[#5f7068]"
-        >
-          {VONG_TIEN_COPY.boQua}
-        </button>
-      </div>
+              {VONG_TIEN_COPY.boQua}
+            </button>
+          </div>
+        </>
+      )}
     </section>
   );
 }

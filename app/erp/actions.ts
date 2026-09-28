@@ -80,7 +80,7 @@ import {
 } from "@/lib/erp/counter-sale-repository";
 import type { CounterSaleReceipt } from "@/domain/erp-counter-sale";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
-import { changMoLai, VONG_TIEN_ID, type TienDoVongDan } from "@/domain/huong-dan-vong-dau";
+import { changMoLai, chuVongDan, VONG_TIEN_ID, type TienDoVongDan } from "@/domain/huong-dan-vong-dau";
 import { writeTienDoVongDan } from "@/lib/erp/huong-dan-repository";
 import { laDuongDanErpAnToan } from "@/domain/ban-do-chuc-nang";
 
@@ -1209,16 +1209,17 @@ export async function moderateVisitReviewAction(
 /**
  * Mạch dẫn — ghi lại người này đang đi tới chặng nào của vòng dẫn.
  *
- * Không có nhánh phân quyền nào ở đây, cố ý: vòng dẫn chỉ ghi vào hàng của
- * chính tài khoản đang đăng nhập, và nó không mang một mẩu dữ liệu nghiệp vụ
- * nào. Thứ tệ nhất một lượt gọi sai có thể làm là khiến chính người gọi phải
- * xem lại vòng dẫn từ đầu.
+ * Vòng dẫn chỉ dành cho giám đốc, và chỉ ghi vào hàng của chính giám đốc ấy:
+ * đang xem thử vai khác thì vẫn ghi cho giám đốc (`chuVongDan`), không cho vai
+ * kia. Nó không mang một mẩu dữ liệu nghiệp vụ nào; thứ tệ nhất một lượt gọi
+ * sai có thể làm là khiến chính người gọi phải xem lại vòng dẫn từ đầu.
  */
 export async function ghiTienDoVongDanAction(
   formData: FormData,
 ): Promise<{ ok: boolean; tienDo: TienDoVongDan }> {
   const actor = await getCurrentErpUser();
-  if (!actor) {
+  const chuVong = actor ? chuVongDan(actor) : null;
+  if (!chuVong) {
     return {
       ok: false,
       tienDo: { changHienTai: 1, daXong: false, boQua: false, tungDi: false },
@@ -1227,7 +1228,7 @@ export async function ghiTienDoVongDanAction(
 
   const chang = Number(formData.get("chang"));
   const tienDo = await writeTienDoVongDan({
-    accountId: actor.id,
+    accountId: chuVong,
     vongId: VONG_TIEN_ID,
     chang: Number.isFinite(chang) ? changMoLai(chang) : 1,
     xong: formData.get("xong") === "1",

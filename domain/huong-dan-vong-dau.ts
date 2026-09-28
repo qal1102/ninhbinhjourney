@@ -1,26 +1,31 @@
-import type { ErpRole, ErpSiteId } from "@/domain/erp";
-
 /**
- * Vòng dẫn đầu tiên: trình diễn một vị khách đi trọn một vòng.
+ * Vòng dẫn "Trình diễn một vòng khách".
  *
- * ## Vì sao viết lại (26/09/2026)
+ * ## Vì sao viết lại (26/09 rồi 28/09/2026)
  *
- * Bản trước "đi theo một đồng tiền" qua sổ sách: nộp ca, bốn người duyệt,
- * khớp ba chứng từ. Chủ dự án dùng thử và nói thẳng: *"cảm giác không hiểu gì
- * hết"*. Đúng thôi: đó là chuyện của kế toán, toàn chữ, và không chặng nào bảo
- * người đọc phải bấm vào đâu. Ba chặng liền còn mở cùng một màn.
+ * Bản đầu "đi theo một đồng tiền" qua sổ sách: chủ dự án dùng thử và nói *"cảm
+ * giác không hiểu gì hết"*. Bản 26/09 đổi sang một vị khách đi trọn vòng, nhưng
+ * chủ dự án vẫn thấy khó hiểu, và soát tay ngày 28/09 chỉ ra vì sao:
  *
- * Chủ dự án dùng hệ thống để TRÌNH DIỄN cho khách hàng. Nên vòng dẫn nay là
- * một kịch bản làm theo được: một vị khách đặt vé trên điện thoại, quét QR trả
- * tiền, nhân viên quét cổng, hộ chiếu sáng lên. Mỗi chặng có đúng hai phần:
- * **bấm vào đâu** và **để ý thấy gì**, cộng một nút đưa thẳng tới chỗ ấy (kể
- * cả chuyển vai khi việc đó là của nhân viên).
+ * 1. Lời dẫn chỉ nằm trên trang đầu. Bấm sang màn khác là lời dẫn biến mất,
+ *    người dùng phải nhớ đường quay về mới đọc được bước tiếp. Nay vòng dẫn
+ *    nằm trong khung ERP nên theo người dùng sang mọi màn.
+ * 2. Mỗi bước là một đoạn văn gộp năm sáu việc. Nay mỗi việc một dòng đánh số.
+ * 3. Bước quét cổng bắt gõ tay mã vé mười sáu ký tự, giữa hàng chục vé `WEB-`
+ *    khác trong danh sách. Nay mã vé ở màn Khách hàng bấm được, mở màn soát vé
+ *    với mã điền sẵn.
+ * 4. Hai lần chuyển vai. Giám đốc làm được mọi việc trong vòng này, nên bỏ.
+ * 5. Vé web mặc định cho ngày mai nên quét cổng hôm nay bị từ chối. Nay nút ở
+ *    bước 1 mở sẵn đúng gói, ngày đi là hôm nay.
  *
  * ## Không có đèn rọi, không khoá màn
  *
- * Mỗi chặng chỉ là một khối chữ ngắn cộng một nút mở màn thật. Không trỏ vào
- * toạ độ nút (vỡ ngay lần đổi bố cục), không chặn người dùng đi chỗ khác.
+ * Mỗi bước là một khối chữ cộng một nút mở màn thật. Không trỏ vào toạ độ nút
+ * (vỡ ngay lần đổi bố cục), không chặn người dùng đi chỗ khác.
  */
+
+/** Đổi về `false` là ẩn toàn bộ vòng dẫn, tiến độ trong kho giữ nguyên. */
+export const HIEN_VONG_DAN = true;
 
 /**
  * Mã vòng dẫn trong kho tiến độ. Đổi từ "vong-tien" sang mã này khi viết lại
@@ -30,124 +35,147 @@ import type { ErpRole, ErpSiteId } from "@/domain/erp";
  */
 export const VONG_TIEN_ID = "vong-khach-2809";
 
-/** Khoá của con số thật mà trang có thể điền cho từng chặng. */
-export type KhoaSo = "ve-hom-nay" | "viec-cho-giam-doc" | "khong-can";
-
-export type MoMan = {
+type MoMan = {
   nhan: string;
-  duong: (siteId: ErpSiteId) => string;
+  duong: string;
   /** Trang của khách: mở ở thẻ mới để ERP vẫn nằm nguyên chỗ cũ. */
   theMoi?: boolean;
-  /** Việc của vai khác: nút chuyển sang đúng vai rồi đưa tới màn này. */
-  vai?: ErpRole;
 };
 
 export type Chang = {
   thuTu: number;
   ten: string;
-  /** Bấm vào đâu, làm gì. Viết như người đứng cạnh chỉ tay. */
-  lamGi: string;
-  /** Làm xong thì để ý thấy gì, và vì sao điều đó đáng nói với khách hàng. */
-  deY: string;
-  khoaSo: KhoaSo;
-  /** Nút mở màn thật; `null` ở chặng kết vì nó không dẫn đi đâu nữa. */
+  /** Đang đứng ở đâu khi làm bước này — câu đầu tiên người dùng đọc. */
+  oDau: string;
+  /** Mỗi dòng đúng một việc, viết như người đứng cạnh chỉ tay. */
+  cacViec: readonly string[];
+  /** Làm xong thì thấy gì, và vì sao điều đó đáng nói với khách hàng. */
+  seThay: string;
+  /** Nút mở màn thật; `null` khi bước này làm ngay ở màn đang đứng. */
   moMan: MoMan | null;
 };
 
-/*
- * Soát lại từng chữ với màn thật ngày 28/09/2026, khi mọi màn đã chốt. Hai bẫy
- * đã sửa: vé web mặc định cho ngày mai nên đem ra cổng quét hôm nay sẽ bị báo
- * "Vé không dùng cho hôm nay" (nay trang đặt chỗ nhận đặt cho hôm nay, và
- * bước 1 dặn chọn hôm nay); gói không có Tràng An thì quét ở cổng Tràng An bị
- * báo "Vé của cơ sở khác" (bước 1 dặn chọn gói có Tràng An).
- */
 export const VONG_TIEN: readonly Chang[] = [
   {
     thuTu: 1,
-    ten: "Khách đặt vé trên điện thoại",
-    lamGi:
-      "Bấm nút bên dưới, trang đặt chỗ mở ở thẻ mới. Chọn gói \"Gia đình khám phá\" (Tràng An và Bái Đính), đổi ngày đi thành hôm nay, chọn một khung giờ còn mở rồi bấm \"Giữ chỗ 15 phút\". Gõ một số điện thoại, bấm \"Lấy mã QR thanh toán\".",
-    deY: "Chỗ được giữ thật trong 15 phút, có đồng hồ đếm ngược; quá giờ không trả thì chỗ tự nhả cho khách khác. Khung giờ đã qua tự khoá. Hôm nay hết khung thì đặt cho ngày mai: tới bước 4 máy sẽ báo \"Vé không dùng cho hôm nay\", đúng luật cổng.",
-    khoaSo: "khong-can",
-    moMan: { nhan: "Mở trang đặt chỗ", duong: () => "/packages", theMoi: true },
+    ten: "Khách đặt vé",
+    oDau: "Trang đặt vé của khách, mở ở thẻ mới.",
+    cacViec: [
+      "Bấm nút \"Mở trang đặt vé\" bên dưới. Trang mở sẵn gói \"Gia đình khám phá\", ngày đi là hôm nay.",
+      "Bấm một khung giờ còn sáng. Khung đã qua giờ bị mờ, không bấm được.",
+      "Bấm \"Giữ chỗ 15 phút\".",
+      "Gõ một số điện thoại bất kỳ, ví dụ 0912345678, rồi bấm \"Lấy mã QR thanh toán\".",
+    ],
+    seThay:
+      "Mã QR thanh toán và đồng hồ đếm ngược 15 phút: chỗ đã được giữ thật, quá giờ không trả thì tự nhả cho khách khác. Nếu hôm nay mọi khung đều mờ, đổi ngày đi sang ngày mai rồi làm tiếp; riêng bước 4, máy sẽ báo \"Vé không dùng cho hôm nay\".",
+    moMan: {
+      nhan: "Mở trang đặt vé",
+      duong: "/checkout?package=family-discovery&ngay=hom-nay",
+      theMoi: true,
+    },
   },
   {
     thuTu: 2,
-    ten: "Quét mã QR để trả tiền",
-    lamGi:
-      "Giơ điện thoại quét mã QR trên màn hình (camera hoặc Zalo đều được), rồi bấm \"Xác nhận chuyển khoản\". Đang đặt bằng điện thoại thì bấm \"Thanh toán ngay\".",
-    deY: "Màn hình đặt chỗ tự chuyển sang vé, không phải bấm gì thêm. Khách bấm \"Lưu ảnh vé về máy\" là có vé trong thư viện ảnh. Tiền ở đây là giả lập, không ai mất đồng nào.",
-    khoaSo: "khong-can",
+    ten: "Khách trả tiền bằng mã QR",
+    oDau: "Vẫn ở thẻ đặt vé vừa mở.",
+    cacViec: [
+      "Mở camera điện thoại (hoặc Zalo), quét mã QR trên màn hình, rồi bấm \"Xác nhận chuyển khoản\" trên điện thoại.",
+      "Không có điện thoại bên cạnh thì bấm dòng \"Mở trang thanh toán trên máy này\" ngay dưới mã QR, rồi bấm \"Xác nhận chuyển khoản\".",
+    ],
+    seThay:
+      "Thẻ đặt vé tự chuyển sang tấm vé có mã WEB-…, không phải bấm gì thêm. Tiền ở đây là giả lập, không ai mất đồng nào.",
     moMan: null,
   },
   {
     thuTu: 3,
-    ten: "Đơn vừa đặt hiện trong ERP",
-    lamGi: "Quay lại thẻ ERP này, bấm nút bên dưới để mở màn Khách hàng, tìm đơn trên cùng.",
-    deY: "Dòng đơn ghi \"Đã thanh toán bằng QR\" cùng mã vé. Không ai phải gõ lại gì: khách đặt xong là đơn nằm đây.",
-    khoaSo: "khong-can",
-    moMan: { nhan: "Mở màn Khách hàng", duong: () => "/erp/khach-hang" },
+    ten: "Đơn vừa đặt nằm trong ERP",
+    oDau: "Quay lại thẻ ERP này.",
+    cacViec: [
+      "Bấm nút \"Mở màn Khách hàng\" bên dưới.",
+      "Tìm khối \"Đơn, tiền và vé của từng khách\": đơn đầu tiên là đơn bạn vừa đặt.",
+    ],
+    seThay:
+      "Đơn ghi \"Đã thanh toán bằng QR\" cùng hai mã vé, một cho Tràng An, một cho Bái Đính. Khách đặt xong là đơn nằm đây, không ai phải nhập lại.",
+    moMan: { nhan: "Mở màn Khách hàng", duong: "/erp/khach-hang" },
   },
   {
     thuTu: 4,
-    ten: "Nhân viên quét vé ở cổng",
-    lamGi:
-      "Bấm \"Làm thử như Nhân viên\": bạn thành nhân viên cổng Tràng An. Gõ mã vé WEB-… vừa nhận vào ô quét (hoặc bấm \"Quét bằng camera\" rồi quét ảnh vé), bấm \"Xác thực & ghi nhận\".",
-    deY: "Máy báo \"Vé hợp lệ · Đã thanh toán bằng QR\" kèm số lượt đã dùng. Vé cho mấy người thì quét được mấy lượt; quét quá số ấy máy báo \"Vé đã dùng hết lượt\". Xong bấm \"Quay lại giám đốc\" trên dải nâu.",
-    khoaSo: "ve-hom-nay",
-    moMan: { nhan: "Mở màn quét vé", duong: (site) => `/erp/${site}/check-in-khach`, vai: "employee" },
+    ten: "Khách qua cổng Tràng An",
+    oDau: "Màn Khách hàng, ở đơn đầu tiên.",
+    cacViec: [
+      "Bấm vào mã vé có chữ \"→ quét\" của Tràng An. Màn soát vé Tràng An mở ra, mã đã điền sẵn.",
+      "Bấm \"Xác thực & ghi nhận\".",
+    ],
+    seThay:
+      "Máy báo \"Vé hợp lệ · Đã thanh toán bằng QR\" kèm số lượt đã dùng. Vé cho mấy người thì quét được mấy lượt; quét quá số ấy, máy báo \"Vé đã dùng hết lượt\".",
+    moMan: null,
   },
   {
     thuTu: 5,
     ten: "Hộ chiếu của khách sáng lên",
-    lamGi: "Mở màn Khách hàng, kéo xuống khối \"Khách thấy gì\".",
-    deY: "Khung điện thoại hiện đúng thứ khách thấy: Tràng An đã sáng, nhiệm vụ \"Bước chân đầu tiên\" xong và có mã quà. Đi đủ các vùng thì mở thêm quà, lý do để khách quay lại.",
-    khoaSo: "khong-can",
-    moMan: { nhan: "Xem Khách thấy gì", duong: () => "/erp/khach-hang#khach-thay-gi" },
+    oDau: "Màn Khách hàng, khối \"Khách thấy gì\".",
+    cacViec: [
+      "Bấm nút \"Xem Khách thấy gì\" bên dưới.",
+      "Nhìn khung điện thoại: đó đúng là thứ vị khách vừa đặt vé đang thấy.",
+    ],
+    seThay:
+      "Tràng An đã sáng trên tấm hộ chiếu, nhiệm vụ \"Bước chân đầu tiên\" xong và có mã quà. Đi đủ các vùng thì mở thêm quà: lý do để khách quay lại.",
+    moMan: { nhan: "Xem Khách thấy gì", duong: "/erp/khach-hang#khach-thay-gi" },
   },
   {
     thuTu: 6,
-    ten: "Bán vé tại quầy, cuối ca đếm tiền",
-    lamGi:
-      "Bấm \"Làm thử như Nhân viên\" để đứng ở quầy vé Tràng An. Để 1 người lớn, bấm \"Đủ tiền\", tích ô \"Tôi đã đếm đủ…\" rồi bấm \"Xác nhận bán\". Phiếu bán ghi thật vào sổ, nên chỉ bán thử 1 vé.",
-    deY: "Phiếu in được ngay, tiền quầy tự cộng vào bảng đối soát cuối ca. Người bán không tự huỷ được phiếu: chỉ quản lý hoặc giám đốc được huỷ, và phải ghi lý do.",
-    khoaSo: "khong-can",
-    moMan: { nhan: "Mở quầy vé", duong: (site) => `/erp/${site}/ve-dat-cho`, vai: "employee" },
+    ten: "Bán một vé tại quầy",
+    oDau: "Màn Vé & đặt chỗ của Tràng An.",
+    cacViec: [
+      "Bấm nút \"Mở quầy vé Tràng An\" bên dưới.",
+      "Ở khối \"Ra đơn, thu tiền, đưa vé cho khách\", giữ nguyên 1 người lớn, bấm \"Đủ tiền\".",
+      "Tích ô \"Tôi đã đếm đủ…\", rồi bấm \"Xác nhận bán\".",
+    ],
+    seThay:
+      "Phiếu thu hiện ra, in được ngay; tiền quầy tự cộng vào đối soát cuối ca. Phiếu ghi thật vào sổ nên chỉ bán thử 1 vé. Người bán không tự huỷ được phiếu: chỉ quản lý hoặc giám đốc huỷ, và phải ghi lý do.",
+    moMan: { nhan: "Mở quầy vé Tràng An", duong: "/erp/trang-an/ve-dat-cho" },
   },
   {
     thuTu: 7,
     ten: "Khách đến từ đâu",
-    lamGi:
-      "Bấm nút bên dưới để mở màn Kênh khách, chọn \"7 ngày gần nhất\". Nhìn dải năm ô từ \"Quét mã QR\" tới \"Qua cổng\", rồi bảng \"Khách đến từ đâu\" ngay dưới.",
-    deY: "Vé vừa đặt ở bước 1 và lượt quét ở bước 4 đã nằm trong phễu. Mỗi ô ghi rõ đếm từ đâu; khách chưa rõ nguồn để riêng một ô, không chia bừa vào chiến dịch nào.",
-    khoaSo: "khong-can",
-    moMan: { nhan: "Mở màn Kênh khách", duong: () => "/erp/marketing" },
+    oDau: "Màn Kênh khách.",
+    cacViec: [
+      "Bấm nút \"Mở màn Kênh khách\" bên dưới.",
+      "Chọn \"7 ngày gần nhất\".",
+      "Đọc dải năm ô từ \"Quét mã QR\" tới \"Qua cổng\", rồi bảng \"Khách đến từ đâu\" ngay dưới.",
+    ],
+    seThay:
+      "Lượt giữ chỗ, thanh toán và qua cổng bạn vừa làm đã nằm trong phễu. Mỗi ô ghi rõ đếm từ đâu; khách chưa rõ nguồn để riêng một ô, không chia bừa vào chiến dịch nào.",
+    moMan: { nhan: "Mở màn Kênh khách", duong: "/erp/marketing" },
   },
   {
     thuTu: 8,
-    ten: "Mỗi sáng giám đốc chỉ cần xem trang này",
-    lamGi:
-      "Quay về trang đầu. Bốn ô lớn là khách, tiền thu hôm nay (quầy và web), công việc hiện trường, bút toán. Khối \"Cần giám đốc quyết định\" gom mọi việc đang chờ bạn.",
-    deY: "Tấm vé quầy và đơn web vừa làm đã cộng vào ô tiền hôm nay. Muốn trình diễn việc của vai khác, kéo xuống cuối trang mở \"Bản đồ mọi chức năng\": mỗi việc một nút \"Làm thử\".",
-    khoaSo: "viec-cho-giam-doc",
-    moMan: null,
+    ten: "Mỗi sáng chỉ cần xem trang đầu",
+    oDau: "Trang đầu giám đốc.",
+    cacViec: [
+      "Bấm nút \"Về trang đầu\" bên dưới.",
+      "Đọc bốn ô lớn: khách hôm nay, tiền thu hôm nay (quầy và web), công việc hiện trường, bút toán.",
+      "Kéo xuống khối \"Cần giám đốc quyết định\": mọi việc đang chờ bạn nằm ở đó.",
+    ],
+    seThay:
+      "Vé quầy và đơn web vừa làm đã cộng vào ô tiền hôm nay. Muốn thử việc của vai khác, kéo xuống cuối trang mở \"Bản đồ mọi chức năng\": mỗi việc một nút \"Làm thử\".",
+    moMan: { nhan: "Về trang đầu", duong: "/erp" },
   },
 ];
 
 export const VONG_TIEN_COPY = {
   ten: "Trình diễn một vòng khách",
-  moiChao:
-    "Tám bước, chừng mười lăm phút: một vị khách đặt vé trên điện thoại, quét QR trả tiền, qua cổng, hộ chiếu của họ sáng lên, rồi xem khách ấy hiện trong phễu và trên trang đầu. Làm theo từng bước là trình diễn được cho khách hàng.",
-  moiChaoLai: "Làm lại tám bước trình diễn: từ lúc khách đặt vé tới lúc số liệu hiện trên trang đầu.",
+  moiChaoLai: "Tám bước, chừng mười lăm phút: một vị khách đặt vé, trả tiền bằng QR, qua cổng, rồi hiện trên phễu và trang đầu.",
   batDau: "Bắt đầu",
   diLai: "Làm lại từ đầu",
-  tiep: "Bước tiếp theo",
+  tiep: "Xong, sang bước tiếp",
   lui: "Quay lại",
   boQua: "Để sau",
   xong: "Xong rồi",
+  thuGon: "Thu gọn",
+  moRong: "Xem hướng dẫn",
   daXong:
     "Bạn đã đi hết tám bước. Cần trình diễn lại lúc nào cũng được.",
-  chuaCoSo: "chưa có số hôm nay",
 } as const;
 
 export function changTheoThuTu(thuTu: number): Chang | null {
@@ -199,11 +227,36 @@ export function tienDoFrom(value: unknown): TienDoVongDan {
 /**
  * Có nên tự mở vòng dẫn ra không.
  *
- * Mở khi đang đi dở: kịch bản trình diễn bắt người dùng rời trang (sang trang
- * khách, chuyển vai) rồi quay về, và lúc quay về phải thấy ngay bước kế tiếp.
- * Đã đi hết, hay đã bấm "Để sau", thì thu về một dòng mời: tự bung ra mãi là
- * thứ khiến người ta ghét phần mềm.
+ * Mở khi đang đi dở: kịch bản bắt người dùng sang màn khác, và ở màn nào cũng
+ * phải thấy ngay bước đang làm. Đã đi hết, hay đã bấm "Để sau", thì thôi: tự
+ * bung ra mãi là thứ khiến người ta ghét phần mềm.
  */
 export function nenTuMo(tienDo: TienDoVongDan): boolean {
   return !tienDo.daXong && !tienDo.boQua;
+}
+
+/**
+ * Vòng dẫn có hiện ở màn này không.
+ *
+ * Trang đầu luôn hiện: đang đi thì hiện bước, đang nghỉ thì một dòng mời.
+ * Màn khác chỉ hiện khi người dùng đã thật sự bắt đầu (kho ghi `tung_di`) và
+ * chưa xong, chưa "Để sau": đi dở thì lời dẫn đi theo sang màn Khách hàng,
+ * màn soát vé…; chưa từng bấm gì thì không chen vào màn nghiệp vụ.
+ */
+export function hienVongDanTai(tienDo: TienDoVongDan, trangDau: boolean): boolean {
+  if (trangDau) return true;
+  return tienDo.tungDi && nenTuMo(tienDo);
+}
+
+/**
+ * Tài khoản giữ tiến độ vòng dẫn. Vòng dẫn chỉ dành cho giám đốc; đang xem
+ * thử một vai khác thì vẫn là tiến độ của giám đốc ấy, không phải của vai kia.
+ */
+export function chuVongDan(user: {
+  id: string;
+  role: string;
+  actingAs?: { directorId: string } | undefined;
+}): string | null {
+  if (user.actingAs) return user.actingAs.directorId;
+  return user.role === "director" ? user.id : null;
 }

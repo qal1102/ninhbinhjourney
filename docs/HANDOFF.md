@@ -26,7 +26,7 @@
 - **Trang đầu giám đốc (`/erp`):**
   - Bốn ô lớn: Khách hôm nay, Tiền thu hôm nay (quầy + web), Công việc hiện trường, Bút toán.
   - Bảng vé ghi "gồm số liệu mẫu"; khối tiền 30 ngày tách quầy và web.
-  - Khối "Cần giám đốc quyết định", ma trận bốn cơ sở (số khai lúc chốt ca, hiện 0 vì chưa ai chốt ca).
+  - Khối "Cần giám đốc quyết định", ma trận bốn cơ sở (số khai lúc chốt ca; cơ sở chưa có hồ sơ ca ghi "Chưa chốt ca", production hiện cả bốn như vậy).
   - "Bản đồ mọi chức năng" (19 việc, một chạm chuyển vai) ở cuối trang.
   - "Việc nên làm trước" chỉ hiện khi có việc chờ.
 - **Vòng dẫn (tutorial) đang TẠM ẨN** bằng `HIEN_VONG_DAN = false` trong `app/erp/page.tsx`. Spec `erp-vong-dan` đang bỏ qua. Xem mục C, việc cuối.
@@ -70,17 +70,19 @@
 
 ## C. Việc tiếp theo
 
-**Tự làm được, theo thứ tự đề xuất:**
-1. **Chốt ca có số:** ma trận bốn cơ sở toàn 0 vì chưa ai chốt ca. Cân nhắc cho lịch sử mẫu sinh cả hồ sơ chốt ca qua đúng quy trình (bảng tài chính bất biến, xem trong lưu trữ `ERP-FAKE-03`), hoặc hỏi chủ dự án có cần không.
-2. **Tốc độ còn lại:** trang đầu giám đốc khoảng 1,6 giây, Tài chính khoảng 1,2 giây, Khách hàng khoảng 1,4 giây (đo 28/09, đã đăng nhập). Phần đọc đã song song hết; muốn nhanh hơn phải soi kế hoạch truy vấn của các hàm SQL (`erp_director_ticket_overview`, `erp_doanh_thu_ky`) trên kho production.
-3. Việc nhỏ còn sót (chi tiết ở hàng `A15-CON-LAI` trong lưu trữ):
-   - `ACC-04…07`: nhật ký đăng nhập theo tài khoản, xác thực hai lớp cho vai tài chính, thu hồi phiên từ xa, bàn giao khi nghỉ việc. Giá trị thấp khi chỉ dùng tài khoản giám đốc.
-   - `LOI-04`: rà độ sâu nội dung 15 trang điểm đến. `CAN-03`: Lighthouse tại Việt Nam trên 4G.
-   - Ảnh gốc trong `public/images/destinations` nặng 2,5–4 MB mỗi tấm. Đi qua `next/image` thì không sao; đừng bao giờ dùng chúng làm nền CSS hay thẻ `<img>` thô (27/09 đã gỡ ba chỗ như thế).
-   - Hiệu ứng web của `A15-CON-LAI` thuộc phiên sáng tạo, không làm song song.
-4. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`.
+**Tự làm được:**
+1. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`. Hàng đợi tự làm nay chỉ còn việc này; hỏi chủ dự án đã tới lúc chưa (luật B8) rồi mới bắt tay.
+
+**Đã soát 28/09 và gạch, đừng làm lại** (chủ dự án: việc nào không cần thì gạch khỏi kế hoạch):
+- ~~Chốt ca có số~~: ma trận bốn cơ sở ra 0 **không phải lỗi**. Nó chỉ đếm hồ sơ chốt ca thật, và chưa ai chốt ca. Khách và tiền trong ngày theo cơ sở đã có ở khối "Vé đã bán" cùng trang, nên chép vào ma trận là trùng. Còn sinh hồ sơ chốt ca mẫu thì phải có migration và phải ghi số giả vào sổ tài chính bất biến: rủi ro lớn hơn giá trị. Chỉ sửa chữ: cơ sở chưa có hồ sơ ca hiện "Chưa chốt ca" thay vì ba ô "0 vé · 0 đ · 0 đ".
+- ~~Tốc độ ERP còn lại~~ (trang đầu khoảng 1,6 giây): chấp nhận được cho buổi chấm. Đo lại cần mật khẩu giám đốc và kho production. Manh mối nếu có ngày cần: `erp_director_ticket_overview` lọc `erp_tickets.issued_at` mà bảng chưa có chỉ mục cột này (chỉ có `(site_id, valid_on)`).
+- ~~`ACC-04…07`~~ (nhật ký đăng nhập theo tài khoản, hai lớp cho vai tài chính, thu hồi phiên, bàn giao khi nghỉ): chỉ dùng tài khoản giám đốc, người chấm không kiểm phần quyền.
+- ~~`LOI-04`~~: chín trang hồ sơ sâu đủ câu chuyện, trích báo, giới hạn thật. Sáu trang còn lại (Cúc Phương, Phát Diệm, Am Tiên, Bích Động, Thái Vi, bảo tồn gấu) ngắn hơn nhưng đủ giới thiệu, lịch sử, điểm nhấn và lưu ý thực dụng, không có chữ tạm. Viết sâu thêm phải tra nguồn từng dữ kiện, mà web đứng sau ERP.
+- ~~`CAN-03`~~: đo Lighthouse điện thoại (giả lập 4G chậm) trên production 28/09. Tốc độ: trang chủ 52, điểm đến 78, `/plan` 78, `/explore` 70. Truy cập, thực hành tốt, SEO đều 93–100; sau đợt `2av` truy cập lên 100 cả bốn trang (đo bản build ở máy). LCP trang chủ khoảng 5 giây **do màn mở đầu phủ hero ở lượt ghé đầu phiên** (93% là chờ vẽ, ảnh tải xong từ 38 ms): đó là thiết kế, đổi thì hỏi chủ dự án. PageSpeed của Google hết hạn mức chung trong ngày, nên đo bằng Lighthouse chạy ở máy.
+- Luật giữ nguyên, không phải việc: ảnh gốc trong `public/images/destinations` nặng 2,5–4 MB mỗi tấm; chỉ dùng qua `next/image`, không bao giờ làm nền CSS hay thẻ `<img>` thô.
 
 **Chờ chủ dự án quyết, không tự làm:**
+- Hiệu ứng web của `A15-CON-LAI` (shader hero, chuyển cảnh, preloader, con trỏ): thuộc phiên sáng tạo, chỉ làm khi chủ dự án mở phiên ấy. Màn mở đầu trang chủ cũng thuộc phần này (xem `CAN-03` ở trên).
 - `A15-QUYEN-01` (chủ dự án 28/09: người chấm không có thời gian kiểm phần này, không ưu tiên): phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) **bị bộ chặn tự động từ chối** vì tạo đăng nhập trên production; cần chủ dự án quyết cách làm.
 - `A15-DEMO-01`: kho demo tách production (tốn tiền).
 - `QA-ERP-TICKET-05` phần cuối: luật chia tiền vé gói nhiều điểm về từng cơ sở (không suy ra được từ dữ liệu).
@@ -122,6 +124,7 @@
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
 
+- 28/09 `2av`: soát cả hàng đợi, gạch 5 việc không cần (lý do ở mục C). Ma trận bốn cơ sở ghi "Chưa chốt ca" thay vì ba ô 0. Sửa 4 lỗi Lighthouse: ảnh lớn nhất màn đầu trang chủ thôi `lazy`, chữ nguồn trích báo đậm lên (tương phản 5,5–6), bỏ thẻ `<p>` lạc trong `<dl>` ở trang điểm đến, tên đọc của ghim bản đồ chứa số in trên ghim. Kiểm: `tsc`, lint, build, Vitest 1.705, Playwright 27 bài (bản đồ, Khám phá, trang đầu giám đốc), Lighthouse truy cập 100 ở 4 trang (bản build ở máy), ảnh 390px/1440px.
 - 28/09 `2au`: sửa logic phân quyền từ gốc (một nguồn: sổ tài khoản); quản lý có thêm module Báo cáo vốn bị thiếu; người tạo mới giao việc, nhận ca, đăng nhập bằng mã được; màn Tài khoản tạo một bước, hiện "Đang vào được" tính bằng đúng luật thật, thu hồi vai bằng nút ×; màn Nhân sự bỏ ô gán cơ sở riêng. Kiểm: Vitest 1.705, Playwright ERP 78 + 80, ảnh 390px/1440px.
 - 28/09 `2at`: dọn tài khoản rác bằng 095 (khẳng định từng con số, quét lại mọi cột chữ và JSON; thử PGlite cả trường hợp lệch số phải huỷ). Production sau áp: 13 tài khoản, 17 phân vai, 2 dòng nhật ký quản trị, 0 đăng nhập Auth, giám đốc đăng nhập bình thường.
 - 28/09 `2as`: áp `094`, ghép phễu; bài production phễu 2/2 xanh; phễu bỏ phần trăm quá 100% (nói "có lượt vào thẳng"). Đo ERP đã đăng nhập: đa số màn 0,35–0,65 giây; đọc song song ở trang đầu, Khách hàng (2,7 → 1,4 giây, nhật ký truy cập vẫn đi trước, có bài canh) và màn module (Vé Bái Đính 1,2 → 0,5 giây). Soát tĩnh 79 server action, thêm bài bảo mật canh.

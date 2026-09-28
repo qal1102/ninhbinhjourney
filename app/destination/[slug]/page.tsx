@@ -211,9 +211,9 @@ export default async function DestinationPage({
                         >
                           {entry.publisher}
                         </a>
-                        <span className="text-[#6b7973]">, {entry.year}</span>
+                        <span className="text-[#56645e]">, {entry.year}</span>
                         {entry.via ? (
-                          <span className="text-[#6b7973]">
+                          <span className="text-[#56645e]">
                             {" · dẫn lại theo "}
                             <a
                               href={entry.via.url}
@@ -232,7 +232,7 @@ export default async function DestinationPage({
                       <blockquote className="border-l-2 border-[#b8cfbf] pl-5 text-base leading-7 text-[#3f4f48]">
                         {entry.text.vi}
                       </blockquote>
-                      <figcaption className="mt-3 pl-5 text-xs text-[#6b7973]">
+                      <figcaption className="mt-3 pl-5 text-xs text-[#56645e]">
                         <a
                           href={entry.url}
                           target="_blank"
@@ -288,10 +288,11 @@ export default async function DestinationPage({
               </dt>
               <dd className="mt-1 text-lg">
                 {destination.demoOpeningWindow}
+                {/* Nằm trong `dd`: `dl > div` chỉ được chứa `dt` và `dd`. */}
+                <span className="mt-1 block text-xs text-[#8a6b38]">
+                  Giờ minh hoạ, chưa phải giờ mở cửa chính thức.
+                </span>
               </dd>
-              <p className="mt-1 text-xs text-[#8a6b38]">
-                Giờ minh hoạ, chưa phải giờ mở cửa chính thức.
-              </p>
             </div>
             <div>
               <dt className="font-bold text-[#59654b]">Di chuyển</dt>

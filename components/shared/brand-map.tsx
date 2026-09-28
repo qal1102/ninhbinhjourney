@@ -162,6 +162,12 @@ function lopGhim(ghim: GhimBanDo, dangChon: boolean) {
 /** Đổ lại phần ruột của ghim: số thứ tự, rồi tên đặt cạnh nếu có. */
 function doRuotGhim(el: HTMLElement, ghim: GhimBanDo) {
   el.textContent = ghim.thuTu ? String(ghim.thuTu) : "";
+  // Tên đọc của nút phải chứa đúng chữ đang in trên ghim (WCAG 2.5.3):
+  // người dùng giọng nói nói "bấm 1" thì phải trúng ghim số 1. Đặt ở đây để
+  // số thứ tự đổi thì tên đọc đổi theo.
+  if (el.tagName === "BUTTON") {
+    el.setAttribute("aria-label", ghim.thuTu ? `${ghim.thuTu}. ${ghim.nhan}` : ghim.nhan);
+  }
   if (!ghim.nhanPhu) return;
   const ten = document.createElement("span");
   if (ghim.lopNhanPhu) ten.className = ghim.lopNhanPhu;
@@ -178,7 +184,6 @@ function dungPhanTuGhim(ghim: GhimBanDo, dangChon: boolean) {
   const el = document.createElement(bamDuoc ? "button" : "div");
   if (bamDuoc) {
     (el as HTMLButtonElement).type = "button";
-    el.setAttribute("aria-label", ghim.nhan);
   } else {
     el.setAttribute("aria-hidden", "true");
   }

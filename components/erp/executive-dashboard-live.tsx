@@ -746,24 +746,37 @@ export function ExecutiveDashboard({
                   </span>
                 </div>
                 <dl className="mt-5 grid grid-cols-2 gap-4 text-xs sm:grid-cols-3">
-                  <div>
-                    <dt className="text-[#849089]">Vé trong ca</dt>
-                    <dd className="mt-1 font-black">
-                      {siteTickets.toLocaleString("vi-VN")}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-[#849089]">Doanh thu khai báo</dt>
-                    <dd className="mt-1 break-words font-black">
-                      {formatVnd(siteRevenue)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-[#849089]">Chênh lệch ca</dt>
-                    <dd className="mt-1 break-words font-black">
-                      {formatVnd(siteDifference)}
-                    </dd>
-                  </div>
+                  {/* Chưa có hồ sơ ca thì ba ô "0 vé · 0 đ · 0 đ" đọc như
+                      cơ sở cả ngày không thu đồng nào, trong khi khối Vé đã bán
+                      ngay phía trên đang đếm khách qua cổng. Nói thẳng là chưa
+                      ai chốt ca; khách và tiền trong ngày xem ở khối ấy. */}
+                  {siteShifts.length === 0 ? (
+                    <div>
+                      <dt className="text-[#849089]">Chốt ca</dt>
+                      <dd className="mt-1 font-black">Chưa chốt ca</dd>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <dt className="text-[#849089]">Vé trong ca</dt>
+                        <dd className="mt-1 font-black">
+                          {siteTickets.toLocaleString("vi-VN")}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[#849089]">Doanh thu khai báo</dt>
+                        <dd className="mt-1 break-words font-black">
+                          {formatVnd(siteRevenue)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[#849089]">Chênh lệch ca</dt>
+                        <dd className="mt-1 break-words font-black">
+                          {formatVnd(siteDifference)}
+                        </dd>
+                      </div>
+                    </>
+                  )}
                   <div>
                     <dt className="text-[#849089]">Công việc</dt>
                     <dd className="mt-1 font-black">

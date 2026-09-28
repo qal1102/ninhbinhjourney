@@ -1351,7 +1351,11 @@ export default function NinhBinhLanding({
         <div className="hero-scene-scrim absolute inset-0" />
         {/* The opening rain frame returns as a clipped limestone aperture. */}
         <div className="hero-depth-window pointer-events-none absolute" data-hero-depth-window aria-hidden="true">
-          <Image src="/images/destinations/intro-trang-an-rain.png" alt="" fill sizes="(max-width: 767px) 118vw, 54vw" className="hero-depth-image object-cover" />
+          {/* `eager`: Lighthouse trên điện thoại chấm lớp này là ảnh lớn nhất màn
+              đầu (khung rộng 118vw), mà mặc định `lazy` bắt nó chờ tới lượt.
+              LCP trang chủ vẫn khoảng 5 giây vì màn mở đầu phủ hero vài giây ở
+              lượt ghé đầu phiên: đó là thiết kế, không phải ảnh chậm (28/09/2026). */}
+          <Image src="/images/destinations/intro-trang-an-rain.png" alt="" fill loading="eager" sizes="(max-width: 767px) 118vw, 54vw" className="hero-depth-image object-cover" />
           <span className="hero-depth-grade" />
         </div>
         {/*

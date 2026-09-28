@@ -67,7 +67,7 @@ export const VONG_TIEN: readonly Chang[] = [
     ten: "Khách đặt vé trên điện thoại",
     lamGi:
       "Bấm nút bên dưới, trang đặt chỗ mở ở thẻ mới. Chọn gói \"Gia đình khám phá\" (Tràng An và Bái Đính), đổi ngày đi thành hôm nay, chọn một khung giờ còn mở rồi bấm \"Giữ chỗ 15 phút\". Gõ một số điện thoại, bấm \"Lấy mã QR thanh toán\".",
-    deY: "Chỗ được giữ thật trong 15 phút, có đồng hồ đếm ngược; quá giờ không trả thì chỗ tự nhả cho khách khác. Khung giờ đã qua tự khoá, khách không bấm nhầm được.",
+    deY: "Chỗ được giữ thật trong 15 phút, có đồng hồ đếm ngược; quá giờ không trả thì chỗ tự nhả cho khách khác. Khung giờ đã qua tự khoá. Hôm nay hết khung thì đặt cho ngày mai: tới bước 4 máy sẽ báo \"Vé không dùng cho hôm nay\", đúng luật cổng.",
     khoaSo: "khong-can",
     moMan: { nhan: "Mở trang đặt chỗ", duong: () => "/packages", theMoi: true },
   },

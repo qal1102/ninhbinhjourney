@@ -88,6 +88,17 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   const [scanMessage, setScanMessage] = useState(
     maGuiSang ? `Mã ${maGuiSang} đã điền sẵn. Bấm "Xác thực & ghi nhận" để cho khách vào.` : "",
   );
+  // Mở từ mã vé ở màn Khách hàng: cuộn tới ô quét. Trên điện thoại khối "Quét
+  // tiếp khi mất mạng" đứng trên cùng, ô quét đã điền mã nằm khuất bên dưới,
+  // người mới tưởng bấm vào mã mà không có gì xảy ra (soát production 28/09).
+  useEffect(() => {
+    if (!maGuiSang) return;
+    const giamChuyenDong = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("khoi-quet-ve")?.scrollIntoView({
+      block: "start",
+      behavior: giamChuyenDong ? "auto" : "smooth",
+    });
+  }, [maGuiSang]);
   const [scanRefused, setScanRefused] = useState(false);
   // TC-22: mã vừa quét đang nợ tiền. Giữ lại mã và số tiền để nút "đã thu"
   // biết thu cho ai — nhân viên không phải gõ lại mã lần nữa.
@@ -318,7 +329,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
     <div className="space-y-5">
       {mode === "checkin" && offlineGateEnabled ? <OfflineGateConsole siteId={site.id} siteName={site.shortName} /> : null}
       {mode === "checkin" ? (
-        <section className="rounded-3xl bg-[#183f34] p-5 text-white sm:p-7">
+        <section id="khoi-quet-ve" className="scroll-mt-24 rounded-3xl bg-[#183f34] p-5 text-white sm:p-7">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#acd1c3]">Cổng A · {site.shortName}</p>
           <h2 className="mt-2 text-3xl font-black">Quét và ghi nhận QR</h2>
           <form onSubmit={recordScan} className="mt-5 flex flex-col gap-2 sm:flex-row">

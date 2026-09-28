@@ -152,8 +152,16 @@ export type CustomerProductTimeSlot = {
   remaining: number;
   capacitySourceKind: "estimate" | "customer" | "measured";
   bookable: boolean;
-  blockedReason: "paused" | "full" | null;
+  blockedReason: "passed" | "paused" | "full" | null;
 };
+
+/**
+ * Máy chủ từ chối giữ chỗ cho chuyến bắt đầu trong vòng 5 phút tới
+ * (`customer_create_booking_hold`: `v_starts_at <= now() + interval '5 minutes'`).
+ * Danh sách khung giờ dùng đúng mốc ấy để khách không bấm trúng một khung
+ * nhìn thì mở mà giữ không được.
+ */
+const SLOT_HOLD_LEAD_MS = 5 * 60 * 1000;
 
 const CAPACITY_SOURCE_WEAKNESS: Record<CustomerProductSlotRow["capacitySourceKind"], number> = {
   estimate: 0,
@@ -172,7 +180,13 @@ const CAPACITY_SOURCE_WEAKNESS: Record<CustomerProductSlotRow["capacitySourceKin
  */
 export function mergeProductSlotRows(
   rows: readonly CustomerProductSlotRow[],
+  /**
+   * Có mốc "bây giờ" thì khung đã qua (hoặc bắt đầu trong 5 phút tới) bị
+   * khoá với lý do `passed`. Cần từ khi web nhận đặt cho chính hôm nay.
+   */
+  now?: Date,
 ): CustomerProductTimeSlot[] {
+  const hanGiuCho = now ? now.getTime() + SLOT_HOLD_LEAD_MS : null;
   const byStartsAt = new Map<string, CustomerProductSlotRow[]>();
   for (const row of rows) {
     const bucket = byStartsAt.get(row.departureStartsAt);
@@ -186,6 +200,7 @@ export function mergeProductSlotRows(
     .map(([startsAt, group]) => {
       const remaining = Math.min(...group.map((row) => row.remaining));
       const paused = group.some((row) => row.slotStatus === "paused");
+      const passed = hanGiuCho !== null && Date.parse(startsAt) <= hanGiuCho;
       const endsAt = group.reduce(
         (latest, row) => (row.endsAt > latest ? row.endsAt : latest),
         group[0].endsAt,
@@ -203,8 +218,14 @@ export function mergeProductSlotRows(
         siteIds: [...new Set(group.map((row) => row.siteId))].sort(),
         remaining,
         capacitySourceKind,
-        bookable: !paused && remaining > 0,
-        blockedReason: paused ? ("paused" as const) : remaining <= 0 ? ("full" as const) : null,
+        bookable: !passed && !paused && remaining > 0,
+        blockedReason: passed
+          ? ("passed" as const)
+          : paused
+            ? ("paused" as const)
+            : remaining <= 0
+              ? ("full" as const)
+              : null,
       };
     })
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));

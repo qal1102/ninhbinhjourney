@@ -34,7 +34,7 @@ export async function GET(request: Request) {
       visitDate: parsedInput.data.visit_date,
     });
     return Response.json(
-      { accepted: true, slots: mergeProductSlotRows(rows) },
+      { accepted: true, slots: mergeProductSlotRows(rows, new Date()) },
       { status: 200, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

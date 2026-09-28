@@ -10,9 +10,9 @@ import {
   VONG_TIEN,
 } from "@/domain/huong-dan-vong-dau";
 
-describe("Vòng dẫn: hình dạng bảy chặng", () => {
+describe("Vòng dẫn: hình dạng tám chặng", () => {
   it("số chặng chạy liền từ 1, không nhảy cóc", () => {
-    expect(VONG_TIEN.map((c) => c.thuTu)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(VONG_TIEN.map((c) => c.thuTu)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   });
 
   it("chặng nào cũng nói được 'bấm vào đâu' và 'để ý thấy gì'", () => {
@@ -63,13 +63,13 @@ describe("Vòng dẫn: mở lại đúng chỗ đã dừng", () => {
   });
 
   it("biết đâu là chặng cuối", () => {
-    expect(laChangCuoi(6)).toBe(false);
-    expect(laChangCuoi(7)).toBe(true);
+    expect(laChangCuoi(7)).toBe(false);
+    expect(laChangCuoi(8)).toBe(true);
   });
 
-  it("thanh tiến độ chạy từ một phần bảy tới tròn trăm", () => {
-    expect(phanTramDaDi(1)).toBe(14);
-    expect(phanTramDaDi(7)).toBe(100);
+  it("thanh tiến độ chạy từ một phần tám tới tròn trăm", () => {
+    expect(phanTramDaDi(1)).toBe(13);
+    expect(phanTramDaDi(8)).toBe(100);
     expect(phanTramDaDi(99)).toBe(100);
   });
 });

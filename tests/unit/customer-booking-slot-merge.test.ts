@@ -80,6 +80,25 @@ describe("TC-02 mergeProductSlotRows", () => {
   it("mảng rỗng trả về mảng rỗng, không bịa một khung nào", () => {
     expect(mergeProductSlotRows([])).toEqual([]);
   });
+
+  it("đặt cho hôm nay: khung đã qua hoặc bắt đầu trong 5 phút tới bị khoá, như máy chủ", () => {
+    // 09:00 giờ Việt Nam = 02:00Z. Bây giờ là 08:56 → còn 4 phút, máy chủ từ chối.
+    const rows = [
+      row({ startsAt: "2026-08-22T00:00:00.000Z", endsAt: "2026-08-22T02:00:00.000Z" }),
+      row({ startsAt: "2026-08-22T02:00:00.000Z" }),
+      row({ startsAt: "2026-08-22T02:10:00.000Z", endsAt: "2026-08-22T04:10:00.000Z", remaining: 0 }),
+      row({ startsAt: "2026-08-22T03:00:00.000Z", endsAt: "2026-08-22T05:00:00.000Z" }),
+    ];
+    const merged = mergeProductSlotRows(rows, new Date("2026-08-22T01:56:00.000Z"));
+    expect(merged.map((slot) => [slot.bookable, slot.blockedReason])).toEqual([
+      [false, "passed"],
+      [false, "passed"],
+      [false, "full"],
+      [true, null],
+    ]);
+    // Không truyền mốc "bây giờ" thì không xét giờ, giữ hành vi cũ.
+    expect(mergeProductSlotRows(rows).filter((slot) => slot.blockedReason === "passed")).toEqual([]);
+  });
 });
 
 describe("TC-02 vá gấp: chuyến nhiều chặng không bị cắt đôi", () => {

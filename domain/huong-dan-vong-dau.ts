@@ -25,14 +25,7 @@ import type { ErpRole, ErpSiteId } from "@/domain/erp";
 export const VONG_TIEN_ID = "vong-tien";
 
 /** Khoá của con số thật mà trang có thể điền cho từng chặng. */
-export type KhoaSo =
-  | "ve-hom-nay"
-  | "ca-trong-ky"
-  | "ca-dang-cho-nguoi-khac"
-  | "viec-cho-giam-doc"
-  | "hoa-don-doi-tac"
-  | "diem-khach-cham"
-  | "khong-can";
+export type KhoaSo = "ve-hom-nay" | "viec-cho-giam-doc" | "khong-can";
 
 export type MoMan = {
   nhan: string;
@@ -55,13 +48,20 @@ export type Chang = {
   moMan: MoMan | null;
 };
 
+/*
+ * Soát lại từng chữ với màn thật ngày 28/09/2026, khi mọi màn đã chốt. Hai bẫy
+ * đã sửa: vé web mặc định cho ngày mai nên đem ra cổng quét hôm nay sẽ bị báo
+ * "Vé không dùng cho hôm nay" (nay trang đặt chỗ nhận đặt cho hôm nay, và
+ * bước 1 dặn chọn hôm nay); gói không có Tràng An thì quét ở cổng Tràng An bị
+ * báo "Vé của cơ sở khác" (bước 1 dặn chọn gói có Tràng An).
+ */
 export const VONG_TIEN: readonly Chang[] = [
   {
     thuTu: 1,
     ten: "Khách đặt vé trên điện thoại",
     lamGi:
-      "Bấm nút bên dưới, trang đặt chỗ mở ở thẻ mới. Chọn một gói, chọn giờ, bấm \"Giữ chỗ 15 phút\", gõ một số điện thoại rồi bấm \"Lấy mã QR thanh toán\".",
-    deY: "Chỗ được giữ thật trong 15 phút, có đồng hồ đếm ngược. Quá giờ không trả thì chỗ tự nhả cho khách khác.",
+      "Bấm nút bên dưới, trang đặt chỗ mở ở thẻ mới. Chọn gói \"Gia đình khám phá\" (Tràng An và Bái Đính), đổi ngày đi thành hôm nay, chọn một khung giờ còn mở rồi bấm \"Giữ chỗ 15 phút\". Gõ một số điện thoại, bấm \"Lấy mã QR thanh toán\".",
+    deY: "Chỗ được giữ thật trong 15 phút, có đồng hồ đếm ngược; quá giờ không trả thì chỗ tự nhả cho khách khác. Khung giờ đã qua tự khoá, khách không bấm nhầm được.",
     khoaSo: "khong-can",
     moMan: { nhan: "Mở trang đặt chỗ", duong: () => "/packages", theMoi: true },
   },
@@ -86,9 +86,9 @@ export const VONG_TIEN: readonly Chang[] = [
     thuTu: 4,
     ten: "Nhân viên quét vé ở cổng",
     lamGi:
-      "Bấm \"Làm thử như Nhân viên\": anh thành nhân viên cổng Tràng An. Gõ mã vé WEB-… vừa nhận vào ô quét (hoặc bấm \"Quét bằng camera\" rồi quét ảnh vé), bấm \"Xác thực & ghi nhận\".",
-    deY: "Máy báo \"Vé hợp lệ · Đã thanh toán bằng QR\". Quét lần hai thì máy báo đã ghi trước đó, không cho vào thêm. Xong bấm \"Quay lại giám đốc\" trên dải nâu.",
-    khoaSo: "khong-can",
+      "Bấm \"Làm thử như Nhân viên\": bạn thành nhân viên cổng Tràng An. Gõ mã vé WEB-… vừa nhận vào ô quét (hoặc bấm \"Quét bằng camera\" rồi quét ảnh vé), bấm \"Xác thực & ghi nhận\".",
+    deY: "Máy báo \"Vé hợp lệ · Đã thanh toán bằng QR\" kèm số lượt đã dùng. Vé cho mấy người thì quét được mấy lượt; quét quá số ấy máy báo \"Vé đã dùng hết lượt\". Xong bấm \"Quay lại giám đốc\" trên dải nâu.",
+    khoaSo: "ve-hom-nay",
     moMan: { nhan: "Mở màn quét vé", duong: (site) => `/erp/${site}/check-in-khach`, vai: "employee" },
   },
   {
@@ -103,16 +103,26 @@ export const VONG_TIEN: readonly Chang[] = [
     thuTu: 6,
     ten: "Bán vé tại quầy, cuối ca đếm tiền",
     lamGi:
-      "Bấm \"Làm thử như Nhân viên\" để đứng ở quầy vé Tràng An. Chọn 1 vé, gõ tiền khách đưa, tick ô đã đếm tiền rồi bấm bán. Phiếu bán ghi thật vào sổ, nên chỉ bán thử 1 vé.",
-    deY: "Tiền quầy tự cộng vào bảng đối soát cuối ca. Người bán không tự huỷ được phiếu của mình, chỉ quản lý mới huỷ, và phải ghi lý do.",
-    khoaSo: "ve-hom-nay",
+      "Bấm \"Làm thử như Nhân viên\" để đứng ở quầy vé Tràng An. Để 1 người lớn, bấm \"Đủ tiền\", tích ô \"Tôi đã đếm đủ…\" rồi bấm \"Xác nhận bán\". Phiếu bán ghi thật vào sổ, nên chỉ bán thử 1 vé.",
+    deY: "Phiếu in được ngay, tiền quầy tự cộng vào bảng đối soát cuối ca. Người bán không tự huỷ được phiếu: chỉ quản lý hoặc giám đốc được huỷ, và phải ghi lý do.",
+    khoaSo: "khong-can",
     moMan: { nhan: "Mở quầy vé", duong: (site) => `/erp/${site}/ve-dat-cho`, vai: "employee" },
   },
   {
     thuTu: 7,
+    ten: "Khách đến từ đâu",
+    lamGi:
+      "Bấm nút bên dưới để mở màn Kênh khách, chọn \"7 ngày gần nhất\". Nhìn dải năm ô từ \"Quét mã QR\" tới \"Qua cổng\", rồi bảng \"Khách đến từ đâu\" ngay dưới.",
+    deY: "Vé vừa đặt ở bước 1 và lượt quét ở bước 4 đã nằm trong phễu. Mỗi ô ghi rõ đếm từ đâu; khách chưa rõ nguồn để riêng một ô, không chia bừa vào chiến dịch nào.",
+    khoaSo: "khong-can",
+    moMan: { nhan: "Mở màn Kênh khách", duong: () => "/erp/marketing" },
+  },
+  {
+    thuTu: 8,
     ten: "Mỗi sáng giám đốc chỉ cần xem trang này",
-    lamGi: "Quay về trang đầu. Ô trên cùng là việc đang chờ anh quyết; dưới nữa là vé, doanh thu và điểm khách chấm.",
-    deY: "Muốn trình diễn việc của vai nào khác, mở \"Bản đồ mọi chức năng\" ngay trên đầu trang: mỗi việc một nút \"Làm thử\".",
+    lamGi:
+      "Quay về trang đầu. Bốn ô lớn là khách, tiền thu hôm nay (quầy và web), công việc hiện trường, bút toán. Khối \"Cần giám đốc quyết định\" gom mọi việc đang chờ bạn.",
+    deY: "Tấm vé quầy và đơn web vừa làm đã cộng vào ô tiền hôm nay. Muốn trình diễn việc của vai khác, kéo xuống cuối trang mở \"Bản đồ mọi chức năng\": mỗi việc một nút \"Làm thử\".",
     khoaSo: "viec-cho-giam-doc",
     moMan: null,
   },
@@ -121,8 +131,8 @@ export const VONG_TIEN: readonly Chang[] = [
 export const VONG_TIEN_COPY = {
   ten: "Trình diễn một vòng khách",
   moiChao:
-    "Bảy bước, chừng mười phút: một vị khách đặt vé trên điện thoại, quét QR trả tiền, qua cổng, và hộ chiếu của họ sáng lên. Làm theo từng bước là trình diễn được cho khách hàng.",
-  moiChaoLai: "Làm lại bảy bước trình diễn: từ lúc khách đặt vé tới lúc hộ chiếu sáng lên.",
+    "Tám bước, chừng mười lăm phút: một vị khách đặt vé trên điện thoại, quét QR trả tiền, qua cổng, hộ chiếu của họ sáng lên, rồi xem khách ấy hiện trong phễu và trên trang đầu. Làm theo từng bước là trình diễn được cho khách hàng.",
+  moiChaoLai: "Làm lại tám bước trình diễn: từ lúc khách đặt vé tới lúc số liệu hiện trên trang đầu.",
   batDau: "Bắt đầu",
   diLai: "Làm lại từ đầu",
   tiep: "Bước tiếp theo",
@@ -130,7 +140,7 @@ export const VONG_TIEN_COPY = {
   boQua: "Để sau",
   xong: "Xong rồi",
   daXong:
-    "Anh đã đi hết bảy bước. Cần trình diễn lại lúc nào cũng được.",
+    "Bạn đã đi hết tám bước. Cần trình diễn lại lúc nào cũng được.",
   chuaCoSo: "chưa có số hôm nay",
 } as const;
 

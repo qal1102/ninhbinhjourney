@@ -285,9 +285,13 @@ describe("CUS-06 booking routes", () => {
         slotStatus: "open",
       },
     ]);
+    // API nay khoá khung đã qua giờ theo đồng hồ thật; cố định "bây giờ" về
+    // trước khung 09:00 ngày 22/08 để bài này chỉ kiểm cách gộp.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-21T12:00:00.000Z"));
     const response = await listSlots(getRequest(
       "/api/customer-booking-slots?product_id=40000000-0000-4000-8000-000000000001&visit_date=2026-08-22",
-    ));
+    )).finally(() => vi.useRealTimers());
     expect(response.status).toBe(200);
     const payload = await response.json();
     expect(payload.slots).toEqual([

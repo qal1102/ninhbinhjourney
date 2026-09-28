@@ -719,6 +719,32 @@ export function ExecutiveDashboard({
               .filter((invoice) => invoice.status === "posted")
               .reduce((total, invoice) => total + invoice.totalVnd, 0);
 
+            // Cơ sở chưa có hồ sơ nào thì năm ô toàn 0 chỉ chiếm chỗ mà
+            // không nói được gì (production 28/09: cả bốn cơ sở như vậy).
+            // Thu về một dòng; có hồ sơ đầu tiên là thẻ tự hiện đủ ô.
+            const siteTrong =
+              siteShifts.length === 0 &&
+              siteWorkdays.length === 0 &&
+              siteJournals.length === 0 &&
+              siteSupplierAp.length === 0;
+            if (siteTrong) {
+              return (
+                <Link
+                  key={site.id}
+                  href={`/erp/${site.id}`}
+                  data-co-so-trong="true"
+                  className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 bg-white px-5 py-4 transition hover:bg-[#f7faf8] sm:px-6"
+                >
+                  <h3 className="font-black text-[#2b4037]">
+                    {site.shortName}
+                  </h3>
+                  <p className="text-xs text-[#66736c]">
+                    Chưa chốt ca, chưa có phiếu việc hay bút toán
+                  </p>
+                </Link>
+              );
+            }
+
             return (
               <Link
                 key={site.id}

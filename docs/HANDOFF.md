@@ -26,10 +26,12 @@
 - **Trang đầu giám đốc (`/erp`):**
   - Bốn ô lớn: Khách hôm nay, Tiền thu hôm nay (quầy + web), Công việc hiện trường, Bút toán.
   - Bảng vé ghi "gồm số liệu mẫu"; khối tiền 30 ngày tách quầy và web.
-  - Khối "Cần giám đốc quyết định", ma trận bốn cơ sở (số khai lúc chốt ca; cơ sở chưa có hồ sơ ca ghi "Chưa chốt ca", production hiện cả bốn như vậy).
+  - Khối "Cần giám đốc quyết định", ma trận bốn cơ sở (số khai lúc chốt ca; cơ sở chưa có hồ sơ ca, phiếu việc, bút toán hay công nợ nào thì thu về một dòng "Chưa chốt ca, chưa có phiếu việc hay bút toán").
   - "Bản đồ mọi chức năng" (19 việc, một chạm chuyển vai) ở cuối trang.
   - "Việc nên làm trước" chỉ hiện khi có việc chờ.
-- **Vòng dẫn (tutorial) đang TẠM ẨN** bằng `HIEN_VONG_DAN = false` trong `app/erp/page.tsx`. Spec `erp-vong-dan` đang bỏ qua. Xem mục C, việc cuối.
+- **Vòng dẫn "Trình diễn một vòng khách" ĐANG BẬT** (`HIEN_VONG_DAN = true` trong `app/erp/page.tsx`, kịch bản ở `domain/huong-dan-vong-dau.ts`), 8 bước: đặt vé hôm nay (gói "Gia đình khám phá") → quét QR trả tiền → đơn trong màn Khách hàng → nhân viên quét cổng Tràng An → hộ chiếu sáng → bán 1 vé quầy → phễu Kênh khách → trang đầu. Mọi tên nút đã soát với màn thật 28/09. Spec `erp-vong-dan` đã bật lại. Đổi màn nào có tên nút nằm trong kịch bản thì sửa kịch bản cùng lúc.
+  - **Bẫy đã gặp:** đọc tiến độ vòng dẫn bằng một `await` riêng SAU nhóm `Promise.all` làm nút duyệt ngoại lệ chốt ca kẹt "đang gửi" mãi khi bấm ngay sau lúc đăng nhập (đo ở máy: 7/12 lần kẹt; tắt vòng dẫn 11/11 sạch). Gộp lượt đọc vào nhóm song song thì 10/10 sạch. Đã chứng minh bằng thực nghiệm, **chưa giải thích được tận gốc** trong bộ định tuyến Next. Đừng tách lượt đọc ấy ra lại.
+- **Đặt vé web nhận đặt cho chính hôm nay** (trước đây ô ngày tự chặn từ ngày mai, dù máy chủ vẫn cho). Khung giờ bắt đầu trong vòng 5 phút tới hoặc đã qua bị khoá với nhãn "Đã qua giờ" (`mergeProductSlotRows(rows, now)`, cùng mốc 5 phút với `customer_create_booking_hold`).
 - **Lịch sử mẫu (092):** cửa sổ trượt 60 ngày ở bốn cơ sở có cổng, gồm vé quầy, đơn web trả QR, lượt qua cổng.
   - Nguồn `data_origin = 'demo-history'`, mọi mã bắt đầu `de000000`.
   - Được cộng vào số và luôn ghi rõ "gồm số liệu mẫu". Vé gieo cũ `demo-seed` vẫn bị loại khỏi số.
@@ -70,8 +72,7 @@
 
 ## C. Việc tiếp theo
 
-**Tự làm được:**
-1. **Việc cuối cùng của dự án: viết lại vòng dẫn** theo đúng các màn đã chốt, bật `HIEN_VONG_DAN`, bật lại spec `erp-vong-dan`. Hàng đợi tự làm nay chỉ còn việc này; hỏi chủ dự án đã tới lúc chưa (luật B8) rồi mới bắt tay.
+**Tự làm được:** hàng đợi tự làm đã hết. Vòng dẫn (việc cuối) xong 28/09 `2aw`. Việc mới chỉ mở khi chủ dự án giao hoặc khi mục "Chờ chủ dự án quyết" có lời.
 
 **Đã soát 28/09 và gạch, đừng làm lại** (chủ dự án: việc nào không cần thì gạch khỏi kế hoạch):
 - ~~Chốt ca có số~~: ma trận bốn cơ sở ra 0 **không phải lỗi**. Nó chỉ đếm hồ sơ chốt ca thật, và chưa ai chốt ca. Khách và tiền trong ngày theo cơ sở đã có ở khối "Vé đã bán" cùng trang, nên chép vào ma trận là trùng. Còn sinh hồ sơ chốt ca mẫu thì phải có migration và phải ghi số giả vào sổ tài chính bất biến: rủi ro lớn hơn giá trị. Chỉ sửa chữ: cơ sở chưa có hồ sơ ca hiện "Chưa chốt ca" thay vì ba ô "0 vé · 0 đ · 0 đ".
@@ -124,6 +125,7 @@
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
 
+- 28/09 `2aw`: viết lại và bật vòng dẫn 8 bước, soát từng tên nút với màn thật; sửa hai chỗ làm gãy kịch bản trình diễn (vé web chỉ đặt được từ ngày mai nên quét cổng hôm nay bị từ chối; gói không có Tràng An). Web nhận đặt hôm nay, khung đã qua khoá "Đã qua giờ". Ma trận thu gọn cơ sở trống. Bỏ các khoá số vòng dẫn không còn chặng nào dùng; xưng "bạn" thay "anh". Kiểm: `tsc`, lint, build, Vitest 1.706, Playwright 75 bài (vòng dẫn, trang đầu ERP, đặt chỗ, bản đồ chức năng), ảnh 390px/1440px.
 - 28/09 `2av`: soát cả hàng đợi, gạch 5 việc không cần (lý do ở mục C). Ma trận bốn cơ sở ghi "Chưa chốt ca" thay vì ba ô 0. Sửa 4 lỗi Lighthouse: ảnh lớn nhất màn đầu trang chủ thôi `lazy`, chữ nguồn trích báo đậm lên (tương phản 5,5–6), bỏ thẻ `<p>` lạc trong `<dl>` ở trang điểm đến, tên đọc của ghim bản đồ chứa số in trên ghim. Kiểm: `tsc`, lint, build, Vitest 1.705, Playwright 27 bài (bản đồ, Khám phá, trang đầu giám đốc), ảnh 390px/1440px. Đã deploy; Lighthouse điện thoại trên production sau deploy (một lượt mỗi trang): truy cập 100 cả bốn trang; tốc độ trang chủ 71 (trước 52–53), LCP 3,8 giây (trước 5,2). Trang đầu giám đốc trên production (đăng nhập thật, chỉ đọc) 390px và 1440px: cả bốn cơ sở ghi "Chưa chốt ca", không còn ô "Vé trong ca" nào.
 - 28/09 `2au`: sửa logic phân quyền từ gốc (một nguồn: sổ tài khoản); quản lý có thêm module Báo cáo vốn bị thiếu; người tạo mới giao việc, nhận ca, đăng nhập bằng mã được; màn Tài khoản tạo một bước, hiện "Đang vào được" tính bằng đúng luật thật, thu hồi vai bằng nút ×; màn Nhân sự bỏ ô gán cơ sở riêng. Kiểm: Vitest 1.705, Playwright ERP 78 + 80, ảnh 390px/1440px.
 - 28/09 `2at`: dọn tài khoản rác bằng 095 (khẳng định từng con số, quét lại mọi cột chữ và JSON; thử PGlite cả trường hợp lệch số phải huỷ). Production sau áp: 13 tài khoản, 17 phân vai, 2 dòng nhật ký quản trị, 0 đăng nhập Auth, giám đốc đăng nhập bình thường.

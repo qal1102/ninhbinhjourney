@@ -635,7 +635,9 @@ export function CustomerBookingCheckout({
               aria-label="Ngày đi"
               type="date"
               value={visitDate}
-              min={packageItem.bookingStartDate ?? localIsoDate(1)}
+              // Nhận đặt cho chính hôm nay: máy chủ vốn cho phép, chỉ ô ngày
+              // từng tự chặn. Khung giờ đã qua bị khoá ở danh sách khung giờ.
+              min={packageItem.bookingStartDate ?? localIsoDate(0)}
               max={packageItem.bookingEndDate ?? localIsoDate(90)}
               onChange={(event) => {
                 setVisitDate(event.target.value);
@@ -661,7 +663,9 @@ export function CustomerBookingCheckout({
                 {slots.map((slot) => {
                   const selected = slot.startsAt === selectedSlotStartsAt;
                   const timeLabel = formatSlotTime(slot.startsAt);
-                  const statusLabel = slot.blockedReason === "paused"
+                  const statusLabel = slot.blockedReason === "passed"
+                    ? "Đã qua giờ"
+                    : slot.blockedReason === "paused"
                     ? "Đang tạm dừng nhận khách"
                     : slot.blockedReason === "full"
                       ? "Đã hết chỗ"

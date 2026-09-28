@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { VONG_TIEN } from "@/domain/huong-dan-vong-dau";
 import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 /**
- * Vòng dẫn "đi theo một đồng tiền" trên trang chủ giám đốc.
+ * Vòng dẫn "Trình diễn một vòng khách" trên trang chủ giám đốc.
  *
  * ## Vì sao phần bấm nút chỉ chạy ở máy cục bộ
  *
@@ -22,9 +23,6 @@ import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
 const chayCucBo = baseUrl === "" || /localhost|127\.0\.0\.1/i.test(baseUrl);
 
-// Khung tạm ẩn từ 26/09/2026 (`HIEN_VONG_DAN` trong app/erp/page.tsx): chủ dự án
-// muốn dựng hướng dẫn sau cùng, khi mọi màn đã chốt. Bật lại cùng lúc với khung.
-test.skip(true, "Vòng dẫn tạm ẩn cho tới khi viết kịch bản cuối cùng.");
 
 async function loginAsDirector(page: import("@playwright/test").Page) {
   await page.goto("/erp/login");
@@ -72,7 +70,7 @@ test("trang chủ giám đốc có vòng dẫn, và nó không tràn hay chữ b
   await expect(vong).toContainText("Trình diễn một vòng khách");
 });
 
-test("mở ra thì đi được hết bảy bước, mỗi bước nói bấm vào đâu và để ý gì", async ({ page }) => {
+test("mở ra thì đi được hết mọi bước, mỗi bước nói bấm vào đâu và để ý gì", async ({ page }) => {
   test.skip(
     !chayCucBo,
     "Phần bấm nút ghi thật vào kho tiến độ — không chạy trên production.",
@@ -90,11 +88,11 @@ test("mở ra thì đi được hết bảy bước, mỗi bước nói bấm v�
   await expect(page.getByTestId("vong-dan-lui")).toHaveCount(0);
   await expect(page.getByRole("progressbar")).toBeVisible();
 
-  for (let thuTu = 1; thuTu <= 7; thuTu += 1) {
+  for (let thuTu = 1; thuTu <= VONG_TIEN.length; thuTu += 1) {
     await expect(vong).toHaveAttribute("data-chang", String(thuTu));
     await expect(vong).toContainText("Bấm vào đâu");
     await expect(vong).toContainText("Để ý thấy gì");
-    if (thuTu < 7) {
+    if (thuTu < VONG_TIEN.length) {
       await page.getByTestId("vong-dan-tiep").click();
       await expect(vong).toHaveAttribute("data-chang", String(thuTu + 1));
     }

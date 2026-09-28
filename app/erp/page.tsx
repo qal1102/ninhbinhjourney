@@ -31,12 +31,11 @@ type Props = {
 };
 
 /**
- * Khung "Trình diễn một vòng khách" tạm ẩn từ 26/09/2026. Chủ dự án: "khung
- * hướng dẫn chỉ nên làm khi xong hết rồi". ERP còn đang đổi (bỏ module vỏ,
- * thêm báo cáo, số liệu mẫu), nên kịch bản viết bây giờ sẽ sai ngay. Tiến độ
- * đã lưu trong kho giữ nguyên; bật lại khi viết kịch bản cuối cùng.
+ * Khung "Trình diễn một vòng khách". Ẩn từ 26/09/2026 theo lời chủ dự án
+ * ("khung hướng dẫn chỉ nên làm khi xong hết rồi"); bật lại 28/09/2026 sau
+ * khi soát từng bước với các màn đã chốt. Tắt thì chỉ cần đổi về `false`.
  */
-const HIEN_VONG_DAN = false;
+const HIEN_VONG_DAN = true;
 
 export default async function ErpHomePage({ searchParams }: Props) {
   const user = await getCurrentErpUser();
@@ -60,6 +59,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
     ticketOverview,
     mucTieuChuyenVai,
     danhBa,
+    tienDoVongDan,
   ] = await Promise.all([
     getAccessState(),
     listShiftClosures({ siteIds: user.siteIds }),
@@ -103,6 +103,12 @@ export default async function ErpHomePage({ searchParams }: Props) {
       : Promise.resolve([]),
     // Ô chọn người khi quản lý giao việc ngay trên trang đầu.
     user.role === "manager" ? listStaffDirectory() : Promise.resolve([]),
+    // Mạch dẫn — chỉ giám đốc, vì thực tế chỉ tài khoản này được dùng. Kho tự
+    // nuốt lỗi và trả "chưa từng đi", nên một lượt đọc hỏng cùng lắm làm vòng
+    // dẫn chào lại, không kéo sập trang chủ. Đọc cùng nhóm, không chờ riêng.
+    isDirector && HIEN_VONG_DAN
+      ? readTienDoVongDan({ accountId: user.id, vongId: VONG_TIEN_ID })
+      : Promise.resolve(null),
   ]);
   const params = (await searchParams) ?? {};
   const denied = Array.isArray(params.denied)
@@ -112,12 +118,6 @@ export default async function ErpHomePage({ searchParams }: Props) {
     user.siteIds.includes(site.id),
   );
 
-  // Mạch dẫn (giai đoạn 3) — chỉ giám đốc, vì thực tế chỉ tài khoản này được
-  // dùng. Kho tự nuốt lỗi và trả "chưa từng đi", nên một lượt đọc hỏng cùng
-  // lắm làm vòng dẫn chào lại, không kéo sập trang chủ.
-  const tienDoVongDan = isDirector && HIEN_VONG_DAN
-    ? await readTienDoVongDan({ accountId: user.id, vongId: VONG_TIEN_ID })
-    : null;
 
   // Giai đoạn 5 — "hôm nay nên làm gì trước". Đếm từ chính dữ liệu trang này
   // vừa đọc, không mở thêm lượt đọc nào; luật xếp hạng nằm trong domain.
@@ -143,30 +143,15 @@ export default async function ErpHomePage({ searchParams }: Props) {
   if (isDirector) {
     const veHomNay = ticketOverview?.bySite.reduce((tong, hang) => tong + hang.today, 0) ?? null;
     if (ticketOverview?.available && veHomNay !== null) {
-      soThatVongDan["ve-hom-nay"] = `Hôm nay: ${veHomNay.toLocaleString("vi-VN")} lượt qua cổng trên ${ticketOverview.bySite.length} cơ sở.`;
+      // `bySite.today` đếm lượt khách của vé PHÁT hôm nay, không phải lượt qua cổng.
+      soThatVongDan["ve-hom-nay"] = `Hôm nay đã phát vé cho ${veHomNay.toLocaleString("vi-VN")} lượt khách ở ${ticketOverview.bySite.length} cơ sở${ticketOverview.demoHistoryEntries30d > 0 ? ", gồm số liệu mẫu" : ""}.`;
     }
 
-    soThatVongDan["ca-trong-ky"] = `Đang có ${shiftClosures.length.toLocaleString("vi-VN")} hồ sơ ca trong kỳ này.`;
-
-    const caChuaKhep = shiftClosures.filter((record) => record.status !== "posted").length;
-    soThatVongDan["ca-dang-cho-nguoi-khac"] =
-      caChuaKhep > 0
-        ? `${caChuaKhep.toLocaleString("vi-VN")} hồ sơ ca chưa ghi sổ xong, hồ sơ nào cũng đang chờ một người cụ thể.`
-        : "Mọi hồ sơ ca trong kỳ đã ghi sổ xong.";
-
-    const tongChoAnh = tongViecCho(demViecChoGiamDoc);
+    const tongCho = tongViecCho(demViecChoGiamDoc);
     soThatVongDan["viec-cho-giam-doc"] =
-      tongChoAnh > 0
-        ? `Đang chờ anh quyết: ${demViecChoGiamDoc.caLechChoQuyet} ca lệch, ${demViecChoGiamDoc.hoaDonChoQuyet} hoá đơn, ${demViecChoGiamDoc.suCoLeoThang} sự cố, ${demViecChoGiamDoc.deNghiDoiDuAn} đề nghị đổi dự án.`
-        : "Hôm nay không có việc nào chờ anh quyết.";
-
-    const apChuaTra = supplierAp.invoices.filter(
-      (invoice) => invoice.status !== "paid" && invoice.status !== "reversed",
-    ).length;
-    soThatVongDan["hoa-don-doi-tac"] = `${apChuaTra.toLocaleString("vi-VN")} hoá đơn đối tác chưa thanh toán xong, trên tổng ${supplierAp.invoices.length.toLocaleString("vi-VN")} hoá đơn.`;
-
-    soThatVongDan["diem-khach-cham"] =
-      "Xem điểm khách chấm ở màn Khách hàng.";
+      tongCho > 0
+        ? `Đang chờ bạn quyết: ${demViecChoGiamDoc.caLechChoQuyet} ca lệch, ${demViecChoGiamDoc.hoaDonChoQuyet} hoá đơn, ${demViecChoGiamDoc.suCoLeoThang} sự cố, ${demViecChoGiamDoc.deNghiDoiDuAn} đề nghị đổi dự án, ${demViecChoGiamDoc.quyetDinhSop} cổng mở cửa.`
+        : "Hôm nay không có việc nào chờ bạn quyết.";
   }
 
   const taiKhoanTheoChang: Partial<Record<number, string>> = {};

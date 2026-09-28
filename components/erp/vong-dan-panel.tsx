@@ -18,7 +18,7 @@ import {
 } from "@/domain/huong-dan-vong-dau";
 
 /**
- * Vòng dẫn "đi theo một đồng tiền" — bảy chặng, mỗi chặng một con số thật.
+ * Vòng dẫn "Trình diễn một vòng khách" — kịch bản ở `domain/huong-dan-vong-dau.ts`.
  *
  * ## Ba luật đặt ra từ cách tutorial game làm đúng
  *

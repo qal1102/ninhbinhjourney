@@ -43,9 +43,9 @@ describe("Vòng dẫn: hình dạng tám chặng", () => {
     }
   });
 
-  it("bước 1 mở thẳng đúng gói có Tràng An, ngày đi hôm nay, ở thẻ mới", () => {
+  it("bước 1 mở thẳng gói bán vé Tràng An có chuyến rải suốt ngày, ngày đi hôm nay, ở thẻ mới", () => {
     expect(changTheoThuTu(1)?.moMan).toMatchObject({
-      duong: "/checkout?package=family-discovery&ngay=hom-nay",
+      duong: "/checkout?package=slow-ninh-binh&ngay=hom-nay",
       theMoi: true,
     });
     // Chỉ trang của khách mới mở thẻ mới; màn ERP mở ngay trong thẻ này.

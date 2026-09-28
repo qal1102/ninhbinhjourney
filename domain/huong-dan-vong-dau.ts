@@ -61,7 +61,7 @@ export const VONG_TIEN: readonly Chang[] = [
     ten: "Khách đặt vé",
     oDau: "Trang đặt vé của khách, mở ở thẻ mới.",
     cacViec: [
-      "Bấm nút \"Mở trang đặt vé\" bên dưới. Trang mở sẵn gói \"Gia đình khám phá\", ngày đi là hôm nay.",
+      "Bấm nút \"Mở trang đặt vé\" bên dưới. Trang mở sẵn gói \"Nhịp chậm Ninh Bình\" (vé Tràng An), ngày đi là hôm nay.",
       "Bấm một khung giờ còn sáng. Khung đã qua giờ bị mờ, không bấm được.",
       "Bấm \"Giữ chỗ 15 phút\".",
       "Gõ một số điện thoại bất kỳ, ví dụ 0912345678, rồi bấm \"Lấy mã QR thanh toán\".",
@@ -70,7 +70,9 @@ export const VONG_TIEN: readonly Chang[] = [
       "Mã QR thanh toán và đồng hồ đếm ngược 15 phút: chỗ đã được giữ thật, quá giờ không trả thì tự nhả cho khách khác. Nếu hôm nay mọi khung đều mờ, đổi ngày đi sang ngày mai rồi làm tiếp; riêng bước 4, máy sẽ báo \"Vé không dùng cho hôm nay\".",
     moMan: {
       nhan: "Mở trang đặt vé",
-      duong: "/checkout?package=family-discovery&ngay=hom-nay",
+      // "Nhịp chậm" chỉ bán chặng Tràng An và có chuyến rải suốt ngày, nên
+      // trình diễn được tới đầu giờ chiều; gói gia đình chỉ có 08:00, 09:30.
+      duong: "/checkout?package=slow-ninh-binh&ngay=hom-nay",
       theMoi: true,
     },
   },
@@ -95,7 +97,7 @@ export const VONG_TIEN: readonly Chang[] = [
       "Tìm khối \"Đơn, tiền và vé của từng khách\": đơn đầu tiên là đơn bạn vừa đặt.",
     ],
     seThay:
-      "Đơn ghi \"Đã thanh toán bằng QR\" cùng hai mã vé, một cho Tràng An, một cho Bái Đính. Khách đặt xong là đơn nằm đây, không ai phải nhập lại.",
+      "Đơn ghi \"Đã thanh toán bằng QR\" cùng mã vé Tràng An. Khách đặt xong là đơn nằm đây, không ai phải nhập lại.",
     moMan: { nhan: "Mở màn Khách hàng", duong: "/erp/khach-hang" },
   },
   {

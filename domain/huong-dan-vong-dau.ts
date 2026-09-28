@@ -22,7 +22,13 @@ import type { ErpRole, ErpSiteId } from "@/domain/erp";
  * toạ độ nút (vỡ ngay lần đổi bố cục), không chặn người dùng đi chỗ khác.
  */
 
-export const VONG_TIEN_ID = "vong-tien";
+/**
+ * Mã vòng dẫn trong kho tiến độ. Đổi từ "vong-tien" sang mã này khi viết lại
+ * kịch bản 28/09/2026: tiến độ cũ (giám đốc đang dừng ở bước 2 của bản trước)
+ * mở ra giữa chừng một kịch bản khác hẳn. Mã mới thì ai cũng bắt đầu từ bước 1.
+ * Viết lại kịch bản lần nữa thì đổi mã lần nữa.
+ */
+export const VONG_TIEN_ID = "vong-khach-2809";
 
 /** Khoá của con số thật mà trang có thể điền cho từng chặng. */
 export type KhoaSo = "ve-hom-nay" | "viec-cho-giam-doc" | "khong-can";

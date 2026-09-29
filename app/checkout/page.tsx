@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { ChiDiem } from "@/components/shared/chi-diem";
 import { readPublicEnvironment } from "@/config/experience";
 import { getPackageBySlug } from "@/content/packages";
 import { CustomerBookingCheckout } from "@/components/commerce/customer-booking-checkout";
@@ -80,6 +82,12 @@ export default async function CheckoutPage({
           <CustomerBookingCheckout packageItem={packageItem} batDauHomNay={params.ngay === "hom-nay"} />
         </div>
       </div>
+      {/* Bước 1 của màn Hướng dẫn trong ERP mở trang này kèm `?chi=`. */}
+      {typeof params.chi === "string" ? (
+        <Suspense fallback={null}>
+          <ChiDiem />
+        </Suspense>
+      ) : null}
     </main>
   );
 }

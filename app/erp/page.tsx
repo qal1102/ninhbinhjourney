@@ -5,12 +5,9 @@ import { ExecutiveDashboard } from "@/components/erp/executive-dashboard";
 import { RoleHomeDashboard } from "@/components/erp/role-home-dashboard";
 import { ViecDauTienPanel } from "@/components/erp/viec-dau-tien-panel";
 import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
-import { chuVongDan, HIEN_VONG_DAN, VONG_TIEN_ID } from "@/domain/huong-dan-vong-dau";
-import { VongDanPanel } from "@/components/erp/vong-dan-panel";
-import { readTienDoVongDan } from "@/lib/erp/huong-dan-repository";
-import { getCurrentErpUser, isRoleSwitchEnabled } from "@/lib/erp/demo-session";
-import { listRoleSwitchTargets, listStaffDirectory } from "@/lib/erp/staff-directory";
-import { BanDoChucNangPanel } from "@/components/erp/ban-do-chuc-nang-panel";
+import Link from "next/link";
+import { getCurrentErpUser } from "@/lib/erp/demo-session";
+import { listStaffDirectory } from "@/lib/erp/staff-directory";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
 import { listAccountingJournals } from "@/lib/erp/accounting-repository";
 import { listEscalatedIncidents } from "@/lib/erp/incident-repository";
@@ -49,9 +46,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
     pendingProjectChangeRequests,
     pendingSopDecisions,
     ticketOverview,
-    mucTieuChuyenVai,
     danhBa,
-    tienDoVongDan,
   ] = await Promise.all([
     getAccessState(),
     listShiftClosures({ siteIds: user.siteIds }),
@@ -87,19 +82,8 @@ export default async function ErpHomePage({ searchParams }: Props) {
           return null;
         })
       : Promise.resolve(null),
-    // Bước trình diễn nào là việc của nhân viên thì chuẩn bị sẵn tài khoản
-    // đúng người, để nút "Làm thử" chuyển vai và vào thẳng màn hình ấy. Đọc
-    // cùng nhóm với phần trên: trước 27/09 nó chờ riêng một lượt phía sau.
-    isDirector && !user.actingAs && isRoleSwitchEnabled()
-      ? listRoleSwitchTargets()
-      : Promise.resolve([]),
     // Ô chọn người khi quản lý giao việc ngay trên trang đầu.
     user.role === "manager" ? listStaffDirectory() : Promise.resolve([]),
-    // Vòng dẫn: đọc CÙNG nhóm này, không `await` riêng phía sau (xem chú thích
-    // trong erp-shell.tsx: tách riêng từng làm kẹt nút duyệt ngoại lệ).
-    HIEN_VONG_DAN && chuVongDan(user)
-      ? readTienDoVongDan({ accountId: chuVongDan(user)!, vongId: VONG_TIEN_ID })
-      : Promise.resolve(null),
   ]);
   const params = (await searchParams) ?? {};
   const denied = Array.isArray(params.denied)
@@ -128,7 +112,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
   };
 
   return (
-    <ErpShell user={user} trangDau>
+    <ErpShell user={user}>
       {denied ? (
         <p
           role="alert"
@@ -148,8 +132,21 @@ export default async function ErpHomePage({ searchParams }: Props) {
         />
       ) : null}
 
-      {/* Vòng dẫn đứng sau việc thật đang chờ, trước bảng số liệu. */}
-      {tienDoVongDan ? <VongDanPanel tienDoBanDau={tienDoVongDan} trangDau /> : null}
+      {/* Lối vào màn Hướng dẫn: một dòng, không đẩy bảng số liệu xuống. */}
+      {isDirector ? (
+        <p
+          data-testid="loi-vao-huong-dan"
+          className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#5f7068]"
+        >
+          <span>Mới dùng, hay cần trình diễn cho khách?</span>
+          <Link
+            href="/erp/huong-dan"
+            className="inline-flex min-h-11 items-center font-black text-[#1f604c] underline underline-offset-4"
+          >
+            Mở Hướng dẫn: bấm một việc là tới đúng chỗ cần bấm →
+          </Link>
+        </p>
+      ) : null}
 
 
       {user.role === "director" ? (
@@ -181,16 +178,6 @@ export default async function ErpHomePage({ searchParams }: Props) {
         />
       )}
 
-      {/* Bản đồ là chỗ tra cứu, không phải việc hằng ngày: đứng sau số liệu. */}
-      {isDirector && !user.actingAs ? (
-        <div className="mt-6">
-          <BanDoChucNangPanel
-            targets={mucTieuChuyenVai}
-            quyen={access.employees}
-            chuyenVaiDuoc={isRoleSwitchEnabled()}
-          />
-        </div>
-      ) : null}
     </ErpShell>
   );
 }

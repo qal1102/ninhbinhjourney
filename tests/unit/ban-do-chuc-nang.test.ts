@@ -12,7 +12,9 @@ describe("bản đồ mọi chức năng", () => {
       const duongDan = duongDanChucNang(cn);
       expect(laDuongDanErpAnToan(duongDan), duongDan).toBe(true);
       const phan = duongDan.split("/").filter(Boolean);
-      if (phan.length === 3) {
+      if (phan.length === 1) {
+        expect(existsSync("app/erp/page.tsx")).toBe(true);
+      } else if (phan.length === 3) {
         expect(moduleIds.has(phan[2] as never), `${cn.id}: module ${phan[2]}`).toBe(true);
       } else {
         expect(existsSync(`app/erp/${phan[1]}/page.tsx`), `${cn.id}: ${duongDan}`).toBe(true);

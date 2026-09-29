@@ -49,7 +49,10 @@ export function KhachThayGi({ hoSo, maKhach }: { hoSo: HoSoKhach | null; maKhach
           <p className="text-sm font-bold text-[#20342c]">
             Hộ chiếu của khách {maKhach ? maKhach.slice(0, 8) : ""} trên điện thoại
           </p>
-          <div className="mx-auto mt-3 max-w-[400px] rounded-[2.2rem] border-[10px] border-[#1d2521] bg-[#f4f0e7] shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
+          <div
+            data-chi="khach-thay-gi"
+            data-chi-loi="Khung điện thoại này là hộ chiếu vị khách của đơn mới nhất đang cầm. Cuộn trong khung để xem nhiệm vụ và mã quà."
+            className="mx-auto mt-3 max-w-[400px] rounded-[2.2rem] border-[10px] border-[#1d2521] bg-[#f4f0e7] shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
             <div className="max-h-[720px] overflow-y-auto rounded-[1.6rem] p-3">
               {hoSo ? (
                 <HoSoKhachView hoSo={hoSo} xemThu />

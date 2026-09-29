@@ -121,6 +121,7 @@ const moduleCommands: ModuleCommand[] = [
 
 const suggestionsByRole: Record<ErpRole, string[]> = {
   director: [
+    "Mở hướng dẫn",
     "Hôm nay doanh thu bao nhiêu?",
     "Công nợ nhà cung cấp đã ghi nhận bao nhiêu?",
     "Mở báo cáo hiện trường Tràng An",
@@ -129,8 +130,6 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở sức chứa Tam Chúc",
     "Mở sự cố Tràng An",
     "Mở nhân sự Bái Đính",
-    "Mở xe trung chuyển Tam Chúc",
-    "Mở tài sản Tràng An",
     "Mở SOP Tam Cốc",
     "Mở dự án lễ hội Tràng An",
     "Mở báo cáo dự báo",
@@ -144,8 +143,6 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở sự cố",
     "Mở nhân sự và ca trực",
     "Mở check-in khách",
-    "Mở xe trung chuyển",
-    "Mở tài sản bảo trì",
     "Mở SOP diễn tập",
     "Mở dự án sự kiện",
     "Mở tài chính đối soát",
@@ -157,7 +154,6 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở hóa đơn điện tử",
     "Mở chứng từ kế toán",
     "Mở đóng kỳ tháng 7",
-    "Mở tài sản Tam Chúc",
     "Mở báo cáo hiện trường Tràng An",
     "Mở dự án sự kiện Bái Đính",
   ],
@@ -175,8 +171,6 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở check-in khách",
     "Mở sự cố",
     "Mở sức chứa",
-    "Mở xe trung chuyển",
-    "Mở tài sản bảo trì",
     "Mở SOP",
   ],
 };
@@ -234,6 +228,7 @@ function describeDestination(href: string) {
   const [path] = href.split("#");
   const segments = path.split("/").filter(Boolean);
   if (path === "/erp") return "Tổng quan điều hành";
+  if (path === "/erp/huong-dan") return "Hướng dẫn";
   if (segments[1] === "finance") return "Tài chính tổng hợp";
   const site = ERP_SITES.find((item) => item.id === segments[1]);
   const moduleName = ERP_MODULES.find((item) => item.id === segments[2])?.name;
@@ -252,6 +247,7 @@ export function resolveErpNavigationCommand(rawCommand: string, role: ErpRole, s
   const isShortModuleCommand = Boolean(matchedModule) && command.split(" ").length <= 5 && !isQuestion;
 
   if (asksToOpen && /(trang chu|tong quan|dashboard|man hinh chinh)/.test(command)) return "/erp";
+  if (role === "director" && /(huong dan|chi dan|tro giup|trinh dien)/.test(command)) return "/erp/huong-dan";
   if (asksToOpen && isSupplierApCommand(command)) {
     if (role === "employee") return null;
     if (role === "manager") {

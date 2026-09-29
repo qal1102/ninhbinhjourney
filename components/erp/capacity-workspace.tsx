@@ -154,7 +154,11 @@ export function CapacityWorkspace({
   return (
     <div className="space-y-5">
       {khoiDuBao}
-            <header className="overflow-hidden rounded-3xl bg-[#173f34] text-white shadow-[0_20px_55px_rgba(23,63,52,0.16)]">
+      <header
+        className="overflow-hidden rounded-3xl bg-[#173f34] text-white shadow-[0_20px_55px_rgba(23,63,52,0.16)]"
+        data-chi="suc-chua"
+        data-chi-loi={"So ô \"Lượt cổng trong giờ\" với \"Năng lực nhỏ nhất\", rồi kéo xuống từng ngưỡng: vượt mức nào thì thẻ đổi màu."}
+      >
         <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b8d8cb]">

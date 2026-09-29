@@ -2077,3 +2077,31 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   background: rgba(251, 250, 246, 0.86);
   font-size: 12px;
 }
+
+/*
+ * Màn Hướng dẫn: khoanh sáng chỗ cần bấm (components/shared/chi-diem.tsx).
+ * Viền cam đậm đọc được trên cả nền trắng lẫn nền xanh đậm của ERP.
+ */
+.chi-diem-sang {
+  outline: 3px solid #d58c35;
+  outline-offset: 3px;
+  scroll-margin: 6rem;
+  animation: chi-diem-nhip 1.6s ease-in-out infinite;
+}
+
+@keyframes chi-diem-nhip {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(213, 140, 53, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(213, 140, 53, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chi-diem-sang {
+    animation: none;
+    box-shadow: 0 0 0 6px rgba(213, 140, 53, 0.3);
+  }
+}

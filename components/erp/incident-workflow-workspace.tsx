@@ -212,7 +212,11 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
         </p>
       ) : null}
 
-      <section className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm">
+      <section
+        className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm"
+        data-chi="su-co"
+        data-chi-loi="Mở một hồ sơ trong hàng việc, giao người xử lý hoặc chuyển bước. Quá hạn thì hồ sơ tự lên giám đốc."
+      >
         <div className="border-b border-[#e3e9e5] p-5 sm:p-6">
           <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
             Hàng việc theo mức ưu tiên

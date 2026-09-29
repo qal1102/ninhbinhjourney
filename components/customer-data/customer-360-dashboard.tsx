@@ -213,12 +213,26 @@ export function Customer360Dashboard({
       </section>
 
       {orders.length > 0 ? (
-        <section className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+        <section
+          className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6"
+          data-chi="don-web"
+          data-chi-loi={"Mỗi thẻ là một đơn web, đơn mới nhất đứng đầu. Bấm \"Xem như khách\" để thấy hộ chiếu khách ấy đang cầm."}
+        >
           <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Đặt chỗ trên web · mọi khách đã có đơn</p>
           <h2 className="mt-2 text-2xl font-black text-[#203a30]">Đơn, tiền và vé của từng khách</h2>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            {orders.map((order) => (
-              <article key={order.orderId} className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]">
+            {orders.map((order, thuTuDon) => (
+              <article
+                key={order.orderId}
+                className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]"
+                // Màn Hướng dẫn: đơn mới nhất là đơn người trình diễn vừa đặt.
+                {...(thuTuDon === 0
+                  ? {
+                      "data-chi": "don-moi",
+                      "data-chi-loi": `Đơn mới nhất ${order.orderCode} ghi "${nhanCachTra(order.paymentMode, order.paymentStatus)}". Mã vé nằm ngay dưới.`,
+                    }
+                  : {})}
+              >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <strong>{order.productName}</strong>
@@ -243,6 +257,9 @@ export function Customer360Dashboard({
                           key={ticket.ticketCode}
                           href={`/erp/${coSo}/check-in-khach?ma=${encodeURIComponent(ticket.ticketCode)}`}
                           title="Mở màn soát vé với mã này"
+                          {...(thuTuDon === 0
+                            ? { "data-chi": "ma-ve", "data-chi-loi": "Bấm mã vé này. Màn soát vé mở ra với mã điền sẵn." }
+                            : {})}
                           className="inline-flex min-h-11 items-center rounded-lg bg-[#173f34] px-3 text-xs font-bold text-[#e7c78d] underline-offset-2 hover:underline"
                         >
                           <code>{nhan}</code>

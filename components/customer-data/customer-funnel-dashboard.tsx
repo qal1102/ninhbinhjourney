@@ -69,7 +69,13 @@ export function CustomerFunnelDashboard({
     ? [soSanh.qrScans, soSanh.pageViews, soSanh.holds, soSanh.payments, soSanh.acceptedGateScans]
     : [];
   return (
-    <section className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-7" data-testid="customer-funnel-dashboard" id="phieu-khach">
+    <section
+      className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-7"
+      data-testid="customer-funnel-dashboard"
+      id="phieu-khach"
+      data-chi="phieu-khach"
+      data-chi-loi={`Đọc dải năm ô từ "Quét mã QR" tới "Qua cổng" (${khoang.nhan.toLowerCase()}), rồi bảng "Khách đến từ đâu" ngay dưới.`}
+    >
       <p className="text-xs font-black uppercase tracking-[0.16em] text-[#607b70]">
         {khoang.nhan}
         {report.hasDemoData ? " · gồm số liệu mẫu" : ""}

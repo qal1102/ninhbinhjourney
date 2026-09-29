@@ -5,7 +5,7 @@ import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
  * "Việc nên làm trước" — một câu duy nhất ở đầu trang chủ giám đốc, chỉ khi có việc.
  *
  * Bài này canh thứ dễ mất nhất khi trang chủ được xếp lại: khối phải đứng
- * **trên cùng**, trước cả vòng dẫn và bảng điều hành. Nó là mũi tên chỉ
+ * **trên cùng**, trước cả dòng mời mở Hướng dẫn và bảng điều hành. Nó là mũi tên chỉ
  * đường; tụt xuống giữa trang thì thành một ô thống kê nữa, và hết tác dụng.
  *
  * Chỉ đọc, không ghi một hàng nào, nên chạy thẳng trên production cũng sạch.
@@ -31,7 +31,7 @@ test("việc nên làm trước đứng trên cùng và nói rõ vì sao nó đ�
 
   const viTri = await page.evaluate(() => {
     const v = document.querySelector('[data-testid="viec-dau-tien"]');
-    const vong = document.querySelector('[data-testid="vong-dan"]');
+    const vong = document.querySelector('[data-testid="loi-vao-huong-dan"]');
     const main = document.querySelector("main");
     if (!v || !main) return null;
     const conCuaMain = Array.from(main.children);

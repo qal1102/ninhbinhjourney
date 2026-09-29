@@ -274,15 +274,18 @@ export function CustomerBookingCheckout({
     });
   }
 
+  // Đã trả tiền (hay đã xác nhận trả tại điểm) thì chỗ không còn "giữ" nữa:
+  // dừng đồng hồ. Trước 29/09/2026 đồng hồ cứ chạy về 00:00 cạnh tấm vé đã
+  // trả, khách tưởng vé mình hết hạn.
   useEffect(() => {
-    if (!hold) return;
+    if (!hold || confirmation) return;
     const update = () => {
       setRemainingSeconds(Math.max(0, Math.ceil((new Date(hold.hold.expires_at).getTime() - Date.now()) / 1000)));
     };
     update();
     const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
-  }, [hold]);
+  }, [hold, confirmation]);
 
   // Bước 1 → 2: đổi ngày thì tải lại khung giờ còn mở, và bỏ khung đang chọn —
   // một khung giờ hợp lệ ở ngày cũ chưa chắc còn đúng ở ngày mới.
@@ -324,6 +327,21 @@ export function CustomerBookingCheckout({
   }, [packageItem.id, visitDate]);
 
   const selectedSlot = slots?.find((slot) => slot.startsAt === selectedSlotStartsAt) ?? null;
+  // Màn Hướng dẫn khoanh đúng một chỗ cho mỗi bước (components/shared/chi-diem.tsx).
+  const hetKhung = Boolean(slots && slots.length > 0 && !slots.some((slot) => slot.bookable));
+  const buocChi = confirmation
+    ? "xong"
+    : qr
+      ? "qr"
+      : hold
+        ? "lien-he"
+        : selectedSlot?.bookable
+          ? "giu"
+          : hetKhung || (!slotsLoading && !slotsError && slots?.length === 0)
+            ? "ngay"
+            : "gio";
+  const chi = (buoc: typeof buocChi, loi: string) =>
+    buocChi === buoc ? { "data-chi": "dat-ve", "data-chi-loi": loi } : {};
   const partySizeExceedsSlot = Boolean(selectedSlot && partySize > selectedSlot.remaining);
   const partySizeInvalid =
     adults < 1 || partySize < 1 || partySize > WEB_BOOKING_MAX_PARTY_SIZE;
@@ -634,7 +652,10 @@ export function CustomerBookingCheckout({
         </div>
 
         <div className="p-6 sm:p-8">
-          <label className="block max-w-xs text-sm font-bold text-[#27362f]">
+          <label
+            className="block max-w-xs text-sm font-bold text-[#27362f]"
+            {...chi("ngay", "Ngày này đã hết khung giờ đặt được. Đổi ngày đi sang ngày mai, rồi chọn một khung giờ.")}
+          >
             Ngày đi
             <input
               aria-label="Ngày đi"
@@ -655,7 +676,15 @@ export function CustomerBookingCheckout({
             ) : null}
           </label>
 
-          <div className="mt-7">
+          <div
+            className="mt-7"
+            {...chi(
+              "gio",
+              slotsError
+                ? "Chưa tải được khung giờ. Mời bạn tải lại trang."
+                : "Bấm một khung giờ còn sáng. Khung đã qua giờ bị mờ, không bấm được.",
+            )}
+          >
             <p className="text-sm font-bold text-[#27362f]">Khung giờ</p>
             {slotsLoading ? (
               <p className="mt-3 text-sm text-[#6b786f]">Đang tải khung giờ còn trống…</p>
@@ -763,12 +792,16 @@ export function CustomerBookingCheckout({
 
               Nên nói cái CÓ trước, rồi mới nói cái chưa có — vẫn đủ thật,
               nhưng không mời người ta bỏ đi ngay từ dòng đầu. */}
-          <div className="mt-7 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
-            <p className="font-extrabold">Giữ chỗ 15 phút, quét mã QR là xong</p>
-            <p className="mt-2 text-sm leading-6">
-              Chỗ giữ là thật, vé có mã QR mà máy ở cổng quét được. Quá 15 phút chưa thanh toán thì chỗ tự nhả cho khách khác. Ở bản trình diễn này, bước chuyển khoản là giả lập: quét mã, bấm xác nhận là xong, <strong className="font-bold">không có tiền thật nào bị trừ</strong>.
-            </p>
-          </div>
+          {/* Đã có vé thì thôi nhắc hạn 15 phút: khách đọc câu "quá 15 phút thì
+              nhả chỗ" cạnh tấm vé đã trả sẽ tưởng vé mình sắp mất. */}
+          {confirmation ? null : (
+            <div className="mt-7 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
+              <p className="font-extrabold">Giữ chỗ 15 phút, quét mã QR là xong</p>
+              <p className="mt-2 text-sm leading-6">
+                Chỗ giữ là thật, vé có mã QR mà máy ở cổng quét được. Quá 15 phút chưa thanh toán thì chỗ tự nhả cho khách khác. Ở bản trình diễn này, bước chuyển khoản là giả lập: quét mã, bấm xác nhận là xong, <strong className="font-bold">không có tiền thật nào bị trừ</strong>.
+              </p>
+            </div>
+          )}
 
           {hold ? (
             <div className="mt-7">
@@ -777,17 +810,26 @@ export function CustomerBookingCheckout({
                   <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">Các điểm đã giữ chỗ</p>
                   <p className="mt-2 text-sm text-[#59654b]">Điểm nào chưa nhận giữ chỗ trước thì vẫn nằm trong lịch trình, nhưng bạn vào theo lượt bình thường ở cổng.</p>
                 </div>
-                <div className="rounded-2xl bg-[#183f34] px-5 py-3 text-right text-white">
-                  <p className="text-xs uppercase tracking-[0.16em] text-white/60">Còn lại</p>
-                  <p className="font-display mt-1 text-3xl text-[#e7c78d]">{formatCountdown(remainingSeconds)}</p>
-                </div>
+                {confirmation ? (
+                  <div data-testid="giu-cho-da-xong" className="rounded-2xl bg-[#dceadd] px-5 py-3 text-right text-[#183f34]">
+                    <p className="text-xs uppercase tracking-[0.16em] text-[#356957]">Chỗ của bạn</p>
+                    <p className="font-display mt-1 text-2xl">
+                      {confirmation.payment.mode === "qr-transfer" ? "Đã thanh toán" : "Đã xác nhận"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-[#183f34] px-5 py-3 text-right text-white">
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/60">Còn lại</p>
+                    <p className="font-display mt-1 text-3xl text-[#e7c78d]">{formatCountdown(remainingSeconds)}</p>
+                  </div>
+                )}
               </div>
               <ul className="mt-4 grid gap-3">
                 {hold.slots.map((slot) => (
                   <li key={slot.slotId} className="rounded-2xl border border-[#dde1db] p-4">
                     <div className="flex flex-wrap justify-between gap-2">
                       <strong>{new Date(slot.startsAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })}</strong>
-                      <span className="text-xs font-bold text-[#557568]">Đã giữ chỗ</span>
+                      <span className="text-xs font-bold text-[#557568]">{confirmation ? "Đã có vé" : "Đã giữ chỗ"}</span>
                     </div>
                     <p className="mt-2 text-sm text-[#59654b]">{SOURCE_LABEL[slot.capacitySource]}</p>
                   </li>
@@ -814,7 +856,11 @@ export function CustomerBookingCheckout({
         </dl>
 
         {confirmation ? (
-          <div className="mt-6" data-testid="customer-booking-confirmed">
+          <div
+            className="mt-6"
+            data-testid="customer-booking-confirmed"
+            {...chi("xong", "Xong: vé đã phát, đồng hồ giữ chỗ đã dừng. Bấm \"Sang bước 2\" để xem đơn này trong ERP.")}
+          >
             <p className="rounded-2xl bg-[#dceadd] p-4 font-bold text-[#183f34]">
               {confirmation.payment.mode === "qr-transfer" ? "Đã thanh toán bằng QR" : "Đã xác nhận"} · {confirmation.order.code}
             </p>
@@ -1067,6 +1113,7 @@ export function CustomerBookingCheckout({
             <button
               type="button"
               onClick={createHold}
+              {...chi("giu", "Bấm \"Giữ chỗ 15 phút\".")}
               // `partySizeInvalid` hiện không thể xảy ra: hai hàm `updateAdults`
               // và `updateChildren` đã kẹp số ngay lúc khách gõ. Giữ lại làm
               // lưới an toàn cho ngày ai đó nới chỗ kẹp ấy ra — nhưng không kèm
@@ -1091,7 +1138,11 @@ export function CustomerBookingCheckout({
             // Mã QR thanh toán. Máy tính: khách giơ điện thoại quét. Điện
             // thoại: không tự quét được màn hình của chính mình, nên có nút mở
             // thẳng trang thanh toán ở thẻ mới — thẻ này vẫn tự chuyển sang vé.
-            <div data-testid="qr-thanh-toan" className="mt-7 rounded-2xl bg-[#f4f0e7] p-5 text-center text-[#27362f]">
+            <div
+              data-testid="qr-thanh-toan"
+              className="mt-7 rounded-2xl bg-[#f4f0e7] p-5 text-center text-[#27362f]"
+              {...chi("qr", "Quét mã bằng điện thoại, hoặc bấm \"Mở trang thanh toán trên máy này\" (trên điện thoại: \"Thanh toán ngay\"), rồi bấm \"Xác nhận chuyển khoản\". Trang này tự chuyển sang vé.")}
+            >
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Quét mã để thanh toán</p>
               <p className="font-display mt-2 text-3xl text-[#183f34]">{(hold.amount.total_vnd).toLocaleString("vi-VN")} đ</p>
               {/* Điện thoại không tự quét được màn hình của chính nó, nên trên
@@ -1137,7 +1188,7 @@ export function CustomerBookingCheckout({
               </button>
             </div>
           ) : (
-          <>
+          <div {...chi("lien-he", "Gõ một số điện thoại bất kỳ, ví dụ 0912345678, rồi bấm \"Lấy mã QR thanh toán\".")}>
           {/* Nền kem đục trên thẻ xanh đậm: chữ trong khối lấy màu nền sáng.
               Trước đây nền trong suốt một nửa, axe đo chữ chỉ đạt 2:1. */}
           <fieldset className="mt-7 rounded-2xl border border-[#d7d5cd] bg-[#f4f0e7] p-4 text-[#27362f]">
@@ -1182,7 +1233,7 @@ export function CustomerBookingCheckout({
                 ? "Giữ chỗ đã hết hạn"
                 : payAtSite ? "Giữ chỗ, trả tiền tại điểm" : "Lấy mã QR thanh toán"}
           </button>
-          </>
+          </div>
           )}
           </>
         )}

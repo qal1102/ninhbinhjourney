@@ -106,7 +106,12 @@ export function BaoCaoWorkspace({ site, baoCao }: { site: ErpSite; baoCao: BaoCa
         ))}
       </section>
 
-      <section className="rounded-2xl border border-[#dbe2de] bg-white p-5 shadow-sm sm:p-6" data-testid="du-bao-7-ngay">
+      <section
+        className="rounded-2xl border border-[#dbe2de] bg-white p-5 shadow-sm sm:p-6"
+        data-testid="du-bao-7-ngay"
+        data-chi="du-bao"
+        data-chi-loi="Dự báo khách bảy ngày tới, tính từ cùng thứ bốn tuần gần nhất. Kéo xuống xem ngày đông, giờ đông trong tám tuần qua."
+      >
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Dự báo bảy ngày tới</p>
         <h2 className="mt-2 text-xl font-black text-[#20342c]">
           {canhBao.length > 0

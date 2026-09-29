@@ -325,6 +325,14 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
     }
   }
 
+  // Chỗ màn Hướng dẫn khoanh (components/shared/chi-diem.tsx): ô quét, rồi ô
+  // thu tiền khi vé chưa trả, rồi dòng kết quả khi đã ghi nhận xong.
+  const buocQuet: "quet" | "thu" | "xong" = scanDue
+    ? "thu"
+    : scanMessage && !scanRefused && !scanCode.trim()
+      ? "xong"
+      : "quet";
+
   return (
     <div className="space-y-5">
       {mode === "checkin" && offlineGateEnabled ? <OfflineGateConsole siteId={site.id} siteName={site.shortName} /> : null}
@@ -332,7 +340,19 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
         <section id="khoi-quet-ve" className="scroll-mt-24 rounded-3xl bg-[#183f34] p-5 text-white sm:p-7">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#acd1c3]">Cổng A · {site.shortName}</p>
           <h2 className="mt-2 text-3xl font-black">Quét và ghi nhận QR</h2>
-          <form onSubmit={recordScan} className="mt-5 flex flex-col gap-2 sm:flex-row">
+          <form
+            onSubmit={recordScan}
+            className="mt-5 flex flex-col gap-2 sm:flex-row"
+            // Màn Hướng dẫn khoanh ô quét, rồi dời sang kết quả hoặc ô thu tiền.
+            {...(buocQuet === "quet"
+              ? {
+                  "data-chi": "quet-ve",
+                  "data-chi-loi": scanCode.trim()
+                    ? "Mã đã nằm trong ô. Bấm \"Xác thực & ghi nhận\"."
+                    : "Đưa mã vé vào máy quét, hoặc gõ mã vào ô này, rồi bấm \"Xác thực & ghi nhận\".",
+                }
+              : {})}
+          >
             <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} required autoComplete="off" className="min-h-12 min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 font-mono text-white placeholder:text-white/40" placeholder="Đưa mã vào máy quét hoặc nhập mã QR" />
             <button type="submit" disabled={scanPending} className="min-h-12 rounded-xl bg-white px-5 font-black text-[#183f34] disabled:cursor-wait disabled:opacity-60">{scanPending ? "Đang ghi nhận..." : "Xác thực & ghi nhận"}</button>
             {/* TC-16: nút luôn hiện. Máy nào không quét được thì bấm vào là
@@ -352,12 +372,26 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
             </div>
           ) : null}
           {camera.message ? <p role="status" className="mt-2 text-xs leading-5 text-white/80">{camera.message}</p> : null}
-          {scanMessage ? <p role={scanRefused ? "alert" : "status"} className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${scanRefused ? "bg-[#7d3226] text-[#ffd9d1]" : "bg-white/10"}`}>{scanMessage}</p> : null}
+          {scanMessage ? (
+            <p
+              role={scanRefused ? "alert" : "status"}
+              className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${scanRefused ? "bg-[#7d3226] text-[#ffd9d1]" : "bg-white/10"}`}
+              {...(buocQuet === "xong"
+                ? { "data-chi": "quet-ve", "data-chi-loi": "Máy đã ghi nhận lượt qua cổng. Đọc dòng kết quả được khoanh." }
+                : {})}
+            >
+              {scanMessage}
+            </p>
+          ) : null}
           {/* TC-22: khách chọn trả tiền tại điểm. Ô này chỉ hiện đúng lúc cần,
               và ghi rõ số tiền — nhân viên đứng ở cổng không có thời gian đi
               tra xem phải thu bao nhiêu. */}
           {scanDue ? (
-            <div className="mt-3 rounded-xl border border-[#e6c07a]/60 bg-[#5a4620]/60 px-4 py-4">
+            <div
+              className="mt-3 rounded-xl border border-[#e6c07a]/60 bg-[#5a4620]/60 px-4 py-4"
+              data-chi="quet-ve"
+              data-chi-loi={"Thu đủ số tiền này, bấm \"Đã thu tiền\", rồi quét lại mã một lần nữa là khách vào."}
+            >
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#f0d79a]">Chưa thu tiền</p>
               <p className="mt-2 text-2xl font-black text-white">
                 {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(scanDue.amountVnd)}

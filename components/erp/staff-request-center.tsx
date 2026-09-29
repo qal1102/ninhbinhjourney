@@ -577,7 +577,13 @@ export function StaffRequestCenter({ viewer, sites, requests, today, storage, un
           <h2 id="dx-danh-sach" className="sr-only">
             Danh sách đề xuất
           </h2>
-          <div role="tablist" aria-label="Lọc đề xuất" className="flex flex-wrap gap-2">
+          <div
+            role="tablist"
+            aria-label="Lọc đề xuất"
+            className="flex flex-wrap gap-2"
+            data-chi="de-xuat"
+            data-chi-loi="Chọn nhóm đề xuất ở đây. Mở từng đề xuất ngay dưới, đọc lý do rồi duyệt hoặc trả lại."
+          >
             {tabs.map((tab) => (
               <button
                 key={tab.id}

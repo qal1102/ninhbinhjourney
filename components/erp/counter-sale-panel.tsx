@@ -269,6 +269,18 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
   const change = counterChange(cash, cart.totalVnd);
   const readiness = counterSaleReadiness({ cart, cashReceivedVnd: cash, cashCountedConfirmed: confirmed, paymentMethod });
   const canVoid = userRole === "manager" || userRole === "director";
+  // Chỗ màn Hướng dẫn khoanh (components/shared/chi-diem.tsx), dời theo từng
+  // bước: tiền khách đưa → ô xác nhận đã đếm → nút bán → phiếu thu.
+  const buocChi =
+    receipt && cash === 0 && !confirmed
+      ? "xong"
+      : paymentMethod === "cash" && cash === 0
+        ? "tien"
+        : !confirmed
+          ? "dem"
+          : "ban";
+  const chi = (buoc: typeof buocChi, loi: string) =>
+    buocChi === buoc ? { "data-chi": "ban-quay", "data-chi-loi": loi } : {};
   const inThu = () =>
     void printer.print({ elementId: "counter-test-print", lines: testPrintLines(site.name, printer.settings.paper) });
 
@@ -419,7 +431,10 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                   placeholder="Ví dụ: 500.000"
                   className="mt-1 min-h-12 w-full rounded-xl border border-[#ccd8d1] px-4 text-xl font-black tabular-nums text-[#183f34] outline-none focus:border-[#4f806f]"
                 />
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div
+                  className="mt-2 flex flex-wrap gap-2"
+                  {...chi("tien", "Bấm \"Đủ tiền\", hoặc gõ số tiền khách đưa vào ô ngay trên.")}
+                >
                   {counterCashSuggestions(cart.totalVnd).map((goiY) => (
                     <button
                       key={goiY}
@@ -454,7 +469,10 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
               </div>
             )}
 
-            <label className="flex gap-3 rounded-xl border-2 border-[#e7c78d] bg-[#fff8eb] p-4 text-sm leading-6 text-[#5d5037]">
+            <label
+              className="flex gap-3 rounded-xl border-2 border-[#e7c78d] bg-[#fff8eb] p-4 text-sm leading-6 text-[#5d5037]"
+              {...chi("dem", "Tích ô này: bạn xác nhận đã đếm đủ tiền.")}
+            >
               <input
                 type="checkbox"
                 checked={confirmed}
@@ -477,6 +495,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
               type="button"
               onClick={xacNhanBan}
               disabled={!readiness.ok || pending}
+              {...chi("ban", "Bấm \"Xác nhận bán\". Phiếu ghi thật vào sổ.")}
               className="min-h-12 w-full rounded-xl bg-[#183f34] px-5 text-base font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {pending ? "Đang lưu phiếu…" : "Xác nhận bán"}
@@ -499,7 +518,10 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
           <div className="space-y-3">
             <ReceiptPrinterSettings printer={printer} onTestPrint={inThu} />
             {receipt ? (
-              <>
+              <div
+                className="space-y-3"
+                {...chi("xong", "Phiếu thu đã ra, in được ngay. Tiền quầy tự cộng vào đối soát cuối ca.")}
+              >
                 <ReceiptSheet id="counter-receipt" site={site} receipt={receipt} />
                 <div className="mx-auto flex max-w-sm gap-2">
                   <button
@@ -520,7 +542,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                     Đóng
                   </button>
                 </div>
-              </>
+              </div>
             ) : (
               <p className="rounded-xl border border-dashed border-[#b8c6bf] px-4 py-10 text-center text-sm text-[#6e7b75]">
                 Bán xong, phiếu thu và mã QR hiện ở đây để đưa khách quét hoặc in ra.

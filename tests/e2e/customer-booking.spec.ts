@@ -211,6 +211,11 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     // TC-03: khách phải đọc được mình cầm vé của những ai.
     await expect(page.getByTestId("customer-booking-confirmed"))
       .toContainText("2 vé · 1 trẻ dưới 1m3 (không mất vé)");
+    // Trả xong thì đồng hồ giữ chỗ dừng hẳn. Trước 29/09/2026 nó cứ đếm về
+    // 00:00 cạnh tấm vé đã trả, khách tưởng vé mình hết hạn.
+    await expect(page.getByTestId("giu-cho-da-xong")).toContainText("Đã thanh toán");
+    await expect(page.getByText("Còn lại", { exact: true })).toHaveCount(0);
+    await expect(page.getByText(/Giữ chỗ 15 phút, quét mã QR là xong/i)).toHaveCount(0);
   });
 
   test("trả tại điểm vẫn là lối phụ chạy được, và ảnh vé tải về đúng tên", async ({ page }) => {

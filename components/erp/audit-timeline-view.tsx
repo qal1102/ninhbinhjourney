@@ -179,7 +179,12 @@ export function AuditTimelineView({
 
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
         {!compact ? (
-          <form method="get" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <form
+            method="get"
+            className="flex flex-col gap-3 sm:flex-row sm:items-end"
+            data-chi="nhat-ky"
+            data-chi-loi={"Gõ tên người, chọn khu vực rồi bấm \"Lọc\". Mỗi dòng ngay dưới ghi ai làm gì, lúc nào."}
+          >
             <label className="grid flex-1 gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#718078]">
               Tìm theo tên
               <input

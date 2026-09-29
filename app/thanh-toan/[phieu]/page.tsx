@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TrangQuetThanhToan } from "@/components/commerce/trang-quet-thanh-toan";
+import { TrangQuetThanhToan, type KetQuaDaTra } from "@/components/commerce/trang-quet-thanh-toan";
 import { PACKAGES } from "@/content/packages";
-import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
+import { docKetQuaQr, isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { moPhieu, PhieuQrError } from "@/lib/customer-data/phieu-qr-thanh-toan";
 
 export const metadata: Metadata = {
@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 };
 
 // Trang mở ra trên điện thoại vừa quét mã QR ở màn hình đặt chỗ. Chỉ ĐỌC
-// phiếu để hiện số tiền; chưa ghi gì cho tới khi khách bấm xác nhận.
+// phiếu để hiện số tiền (hay vé, nếu đã trả); chưa ghi gì cho tới khi khách
+// bấm xác nhận.
 export default async function TrangThanhToanQr({
   params,
 }: {
@@ -19,16 +20,35 @@ export default async function TrangThanhToanQr({
 }) {
   const { phieu } = await params;
   let loi = "";
-  let thongTin: { amountVnd: number; productName: string; expiresAt: number } | null = null;
+  let thongTin: {
+    amountVnd: number;
+    productName: string;
+    expiresAt: number;
+    ketQuaBanDau: KetQuaDaTra | null;
+  } | null = null;
   if (!isCustomerBookingEnabled()) {
     loi = "Đặt chỗ trên web đang tạm đóng, nên mã QR này chưa dùng được ạ.";
   } else {
     try {
-      const mo = moPhieu(decodeURIComponent(phieu));
+      // Mở cả phiếu đã quá hạn, vì chỉ để hỏi "trả chưa?". Khách quét lại mã
+      // sau khi đã trả thì thấy ngay vé, không thấy đồng hồ đếm ngược hay câu
+      // "mã hết hạn" (chủ dự án gặp 29/09/2026).
+      const mo = moPhieu(decodeURIComponent(phieu), undefined, undefined, { choPhepHetHan: true });
+      const daTra = await docKetQuaQr({
+        holdId: mo.holdId,
+        paymentRequestId: mo.paymentRequestId,
+        anonymousId: mo.anonymousId,
+      }).catch((error) => {
+        console.error("Đọc trạng thái phiếu QR không thành", error);
+        return null;
+      });
+      // Chưa trả thì mở lại đúng luật thường: phiếu quá hạn báo hết hạn.
+      if (!daTra) moPhieu(decodeURIComponent(phieu));
       thongTin = {
         amountVnd: mo.amountVnd,
         productName: PACKAGES.find((item) => item.id === mo.productId)?.name ?? "Gói tham quan Ninh Bình",
         expiresAt: mo.expiresAt,
+        ketQuaBanDau: daTra ? { orderCode: daTra.orderCode, tickets: daTra.tickets } : null,
       };
     } catch (error) {
       loi = error instanceof PhieuQrError ? error.message : "Mã QR này không đọc được.";

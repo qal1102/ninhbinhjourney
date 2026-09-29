@@ -80,8 +80,6 @@ import {
 } from "@/lib/erp/counter-sale-repository";
 import type { CounterSaleReceipt } from "@/domain/erp-counter-sale";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
-import { changMoLai, chuVongDan, VONG_TIEN_ID, type TienDoVongDan } from "@/domain/huong-dan-vong-dau";
-import { writeTienDoVongDan } from "@/lib/erp/huong-dan-repository";
 import { laDuongDanErpAnToan } from "@/domain/ban-do-chuc-nang";
 
 function safePasswordEqual(actual: string, expected: string) {
@@ -251,7 +249,7 @@ export async function switchDemoRoleAction(formData: FormData) {
   redirect(laDuongDanErpAnToan(tiepTheo) ? tiepTheo : "/erp");
 }
 
-export async function endRoleSwitchAction() {
+export async function endRoleSwitchAction(formData?: FormData) {
   const { director, target } = await endRoleSwitch();
   await recordRoleSwitch({
     directorId: director.id,
@@ -261,7 +259,9 @@ export async function endRoleSwitchAction() {
     targetRole: target.role,
     action: "ended",
   });
-  redirect("/erp");
+  // Thẻ chỉ dẫn đưa giám đốc về thẳng màn Hướng dẫn sau khi làm thử vai khác.
+  const tiepTheo = String(formData?.get("next") ?? "");
+  redirect(laDuongDanErpAnToan(tiepTheo) ? tiepTheo : "/erp");
 }
 
 export async function updateEmployeeAccessAction(formData: FormData) {
@@ -1204,36 +1204,4 @@ export async function moderateVisitReviewAction(
             ket_qua.quotaLimit === null ? null : Math.max(0, ket_qua.quotaLimit - (ket_qua.quotaUsed ?? 0)),
           )}`,
   };
-}
-
-/**
- * Mạch dẫn — ghi lại người này đang đi tới chặng nào của vòng dẫn.
- *
- * Vòng dẫn chỉ dành cho giám đốc, và chỉ ghi vào hàng của chính giám đốc ấy:
- * đang xem thử vai khác thì vẫn ghi cho giám đốc (`chuVongDan`), không cho vai
- * kia. Nó không mang một mẩu dữ liệu nghiệp vụ nào; thứ tệ nhất một lượt gọi
- * sai có thể làm là khiến chính người gọi phải xem lại vòng dẫn từ đầu.
- */
-export async function ghiTienDoVongDanAction(
-  formData: FormData,
-): Promise<{ ok: boolean; tienDo: TienDoVongDan }> {
-  const actor = await getCurrentErpUser();
-  const chuVong = actor ? chuVongDan(actor) : null;
-  if (!chuVong) {
-    return {
-      ok: false,
-      tienDo: { changHienTai: 1, daXong: false, boQua: false, tungDi: false },
-    };
-  }
-
-  const chang = Number(formData.get("chang"));
-  const tienDo = await writeTienDoVongDan({
-    accountId: chuVong,
-    vongId: VONG_TIEN_ID,
-    chang: Number.isFinite(chang) ? changMoLai(chang) : 1,
-    xong: formData.get("xong") === "1",
-    boQua: formData.get("boQua") === "1",
-    diLai: formData.get("diLai") === "1",
-  });
-  return { ok: true, tienDo };
 }

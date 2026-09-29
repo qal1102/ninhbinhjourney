@@ -311,7 +311,12 @@ function EmployeeSubmissionForm({
   }
 
   return (
-    <form action={formAction} className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+    <form
+      action={formAction}
+      className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6"
+      data-chi="chot-ca"
+      data-chi-loi={"Nhập số vé và tiền đếm được trong ca. Máy tự tính chênh lệch; bấm \"Gửi quản lý xác nhận\"."}
+    >
       <input type="hidden" name="siteId" value={site.id} />
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>

@@ -547,7 +547,15 @@ function EmployeeWorkday({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm">
+    <section
+      className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm"
+      data-chi="cham-cong"
+      data-chi-loi={
+        record.status === "assigned"
+          ? "Bấm \"Cho phép GPS và vào ca\" ở thẻ này. Máy kiểm bạn đang đứng trong cơ sở."
+          : "Đây là ca hôm nay của bạn: ghi cập nhật trong ca, hết ca thì bàn giao ngay trên thẻ này."
+      }
+    >
       <div className="border-b border-[#e4e9e6] p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -926,7 +934,11 @@ function ManagerWorkdays({
 
   return (
     <section className="space-y-5">
-      <div className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm">
+      <div
+        className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm"
+        data-chi="giao-viec"
+        data-chi-loi={"Chọn nhân viên, công việc, hạn hoàn thành rồi bấm \"Giao việc\". Ai đã vào ca thì hiện ngay bên dưới."}
+      >
         <div className="flex flex-col gap-4 border-b border-[#e4e9e6] p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#477565]">

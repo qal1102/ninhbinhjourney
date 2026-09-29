@@ -149,7 +149,15 @@ export function SopWorkspace({
       ) : null}
 
       {assessment ? (
-        <section className="overflow-hidden rounded-3xl border border-[#d8e0db] bg-white shadow-sm">
+        <section
+          className="overflow-hidden rounded-3xl border border-[#d8e0db] bg-white shadow-sm"
+          {...(canSubmit
+            ? {}
+            : {
+                "data-chi": "sop",
+                "data-chi-loi": "Checklist hôm nay đã nộp. Đọc kết quả từng mục; giám đốc là người quyết định cuối.",
+              })}
+        >
           <div className="grid gap-4 border-b border-[#e4eae7] p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-start">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -279,7 +287,11 @@ export function SopWorkspace({
       )}
 
       {canSubmit && data.items.length > 0 ? (
-        <section className="rounded-3xl border border-[#cfdad5] bg-[#f7faf8] p-4 sm:p-6">
+        <section
+          className="rounded-3xl border border-[#cfdad5] bg-[#f7faf8] p-4 sm:p-6"
+          data-chi="sop"
+          data-chi-loi="Trả lời đủ từng hạng mục kiểm tra trước giờ mở cửa, rồi gửi để giám đốc chốt."
+        >
           <div className="mb-4">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#547064]">
               {assessment ? "Khắc phục và gửi lại" : "Quản lý cơ sở xác nhận"}

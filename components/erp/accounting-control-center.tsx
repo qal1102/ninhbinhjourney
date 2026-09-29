@@ -796,7 +796,11 @@ export function AccountingControlCenter({
 
       {user.role === "accountant" ? (
         <section className="space-y-3">
-          <div className="rounded-2xl border border-[#cbdad3] bg-[#f5faf7] p-5 sm:p-6">
+          <div
+            className="rounded-2xl border border-[#cbdad3] bg-[#f5faf7] p-5 sm:p-6"
+            data-chi="lap-but-toan"
+            data-chi-loi="Mỗi thẻ ngay dưới là một ca đã được duyệt. Mở một ca, đối chiếu nguồn, lập bút toán rồi chuyển kế toán trưởng."
+          >
             <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
               Hàng lập bút toán
             </p>
@@ -876,7 +880,11 @@ export function AccountingControlCenter({
       />
 
       <section className="space-y-3" aria-label="Sổ nhật ký kế toán">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div
+          className="flex flex-wrap items-end justify-between gap-3"
+          data-chi="so-nhat-ky"
+          data-chi-loi="Mở từng bút toán ngay dưới để soát nguồn và ghi sổ. Khoá kỳ ở khối kỳ kế toán."
+        >
           <div>
             <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
               Sổ nhật ký

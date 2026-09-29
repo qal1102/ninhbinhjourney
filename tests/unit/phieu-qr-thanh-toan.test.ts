@@ -60,6 +60,14 @@ describe("phiếu thanh toán QR", () => {
     }
   });
 
+  it("quá hạn vẫn mở được khi chỉ để đọc xem đã trả chưa, và vẫn chặn phiếu sửa bậy", () => {
+    const chuoi = niemPhieu(PHIEU, KHOA);
+    expect(moPhieu(chuoi, KHOA, PHIEU.expiresAt + 60_000, { choPhepHetHan: true }).holdId).toBe(PHIEU.holdId);
+    const giua = Math.floor(chuoi.length / 2);
+    const suaBay = `${chuoi.slice(0, giua)}${chuoi[giua] === "A" ? "B" : "A"}${chuoi.slice(giua + 1)}`;
+    expect(() => moPhieu(suaBay, KHOA, PHIEU.expiresAt + 60_000, { choPhepHetHan: true })).toThrow(PhieuQrError);
+  });
+
   it("rác thì báo phiếu hỏng, không văng lỗi lạ", () => {
     for (const rac of ["", "abc", "!!!!", "A".repeat(3000)]) {
       expect(() => moPhieu(rac, KHOA, BAY_GIO)).toThrow(PhieuQrError);

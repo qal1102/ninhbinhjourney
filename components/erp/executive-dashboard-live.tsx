@@ -270,7 +270,11 @@ export function ExecutiveDashboard({
           </p>
         </div>
 
-        <div className="mt-7 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div
+          className="mt-7 grid grid-cols-2 gap-3 xl:grid-cols-4"
+          data-chi="bon-o"
+          data-chi-loi="Bốn ô này là việc mỗi sáng: khách hôm nay, tiền thu hôm nay (quầy và web), công việc hiện trường, bút toán."
+        >
           {[
             // Kho vé đọc được thì hai ô đầu là số hệ thống tự ghi trong ngày.
             // Số người trực khai lúc chốt ca vẫn nằm ở ma trận bốn cơ sở phía
@@ -439,6 +443,12 @@ export function ExecutiveDashboard({
 
       <section
         id="quyet-dinh-giam-doc"
+        data-chi="can-quyet"
+        data-chi-loi={
+          directorDecisionCount > 0
+            ? "Mọi hồ sơ chờ giám đốc nằm ở đây. Mở một hồ sơ để duyệt hoặc trả lại kèm lý do."
+            : "Hôm nay chưa có hồ sơ nào chờ giám đốc. Khi có lệch quỹ hay công nợ vượt mức, hồ sơ hiện ở đây."
+        }
         className="scroll-mt-24 rounded-2xl border border-[#e2d4b9] bg-[#fffaf0] p-5 sm:p-6"
       >
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">

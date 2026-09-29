@@ -150,7 +150,11 @@ function CreateAccountForm() {
     INITIAL_ACCOUNT_ACTION_STATE,
   );
   return (
-    <details className="rounded-2xl border border-[#ccd9d3] bg-white shadow-sm">
+    <details
+      className="rounded-2xl border border-[#ccd9d3] bg-white shadow-sm"
+      data-chi="tao-tai-khoan"
+      data-chi-loi={"Bấm \"Thêm người vào hệ thống\", điền họ tên, chức danh, vai, cơ sở rồi bấm \"Tạo tài khoản\"."}
+    >
       <summary className="cursor-pointer list-none p-5 sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
           Tài khoản mới

@@ -80,6 +80,12 @@ export function moPhieu(
   chuoi: string,
   khoa: Buffer = khoaPhieu(),
   bayGio: number = Date.now(),
+  /**
+   * Chỉ để ĐỌC xem phiếu đã trả chưa: khách quét lại mã sau khi trả (có khi
+   * quá 15 phút) vẫn phải thấy vé, không phải câu "mã hết hạn". Lối xác nhận
+   * trả tiền không bao giờ bật cờ này.
+   */
+  opts: { choPhepHetHan?: boolean } = {},
 ): PhieuQr {
   let nen: Record<string, unknown>;
   try {
@@ -104,7 +110,7 @@ export function moPhieu(
   ) {
     throw new PhieuQrError("Mã QR này không đọc được. Mời bạn quét lại mã trên màn hình đặt chỗ.", "PHIEU_HONG");
   }
-  if (e <= bayGio) {
+  if (e <= bayGio && !opts.choPhepHetHan) {
     throw new PhieuQrError(
       "Mã QR này đã hết hạn cùng lượt giữ chỗ. Mời bạn giữ chỗ lại trên màn hình đặt chỗ.",
       "PHIEU_HET_HAN",

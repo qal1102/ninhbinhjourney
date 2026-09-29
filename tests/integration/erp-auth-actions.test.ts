@@ -76,11 +76,6 @@ vi.mock("@/lib/erp/visit-review-moderation-repository", () => ({
   hideQuotaUsed: vi.fn(),
 }));
 
-vi.mock("@/lib/erp/huong-dan-repository", () => ({
-  readTienDoVongDan: vi.fn(),
-  writeTienDoVongDan: vi.fn(),
-}));
-
 const { getRegistryAccount } = vi.hoisted(() => ({ getRegistryAccount: vi.fn() }));
 
 vi.mock("@/lib/erp/account-registry-repository", () => ({

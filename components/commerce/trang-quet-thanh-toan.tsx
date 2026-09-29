@@ -17,7 +17,7 @@ import { DESTINATIONS } from "@/content/destinations";
 
 type Ve = VeDeLuu & { ticketId: string };
 
-type KetQua = { orderCode: string; tickets: Ve[] };
+export type KetQuaDaTra = { orderCode: string; tickets: Ve[] };
 
 function MaQrVe({ ticketCode }: { ticketCode: string }) {
   const [src, setSrc] = useState("");
@@ -45,16 +45,19 @@ export function TrangQuetThanhToan({
   amountVnd,
   productName,
   expiresAt,
+  ketQuaBanDau = null,
 }: {
   phieu: string;
   amountVnd: number;
   productName: string;
   expiresAt: number;
+  /** Phiếu này đã trả từ trước (khách quét lại mã): hiện vé ngay. */
+  ketQuaBanDau?: KetQuaDaTra | null;
 }) {
   const [conLai, setConLai] = useState(() => Math.ceil((expiresAt - Date.now()) / 1000));
   const [dangGui, setDangGui] = useState(false);
   const [loi, setLoi] = useState("");
-  const [ketQua, setKetQua] = useState<KetQua | null>(null);
+  const [ketQua, setKetQua] = useState<KetQuaDaTra | null>(ketQuaBanDau);
 
   useEffect(() => {
     if (ketQua) return;

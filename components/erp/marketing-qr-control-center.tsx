@@ -178,7 +178,12 @@ export function MarketingQrControlCenter({
           <div className="mt-4 flex flex-wrap items-center gap-3"><SubmitButton>Tạo chiến dịch</SubmitButton><ActionMessage state={campaignState} /></div>
         </form>
 
-        <form action={sourceAction} className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm">
+        <form
+          action={sourceAction}
+          className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm"
+          data-chi="tao-qr"
+          data-chi-loi={"Chọn chiến dịch, gõ nhãn vị trí (ví dụ: bảng tại bến Tam Cốc) và trang mở ra khi quét, rồi bấm \"Tạo QR động\"."}
+        >
           <h2 className="text-lg font-black text-[#203a30]">Tạo mã QR động</h2>
           {config.campaigns.length === 0 ? <p className="mt-4 text-sm text-[#66756e]">Cần tạo chiến dịch trước khi tạo mã QR.</p> : <>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">

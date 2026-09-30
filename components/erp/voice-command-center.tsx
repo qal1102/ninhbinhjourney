@@ -229,6 +229,8 @@ function describeDestination(href: string) {
   const segments = path.split("/").filter(Boolean);
   if (path === "/erp") return "Tổng quan điều hành";
   if (path === "/erp/huong-dan") return "Hướng dẫn";
+  if (path === "/erp/dai-ly") return "Đại lý & hoa hồng";
+  if (path === "/erp/tam-coc/suc-chua") return "Sức chứa & hàng chờ bến đò · Tam Cốc";
   if (segments[1] === "finance") return "Tài chính tổng hợp";
   const site = ERP_SITES.find((item) => item.id === segments[1]);
   const moduleName = ERP_MODULES.find((item) => item.id === segments[2])?.name;
@@ -248,6 +250,8 @@ export function resolveErpNavigationCommand(rawCommand: string, role: ErpRole, s
 
   if (asksToOpen && /(trang chu|tong quan|dashboard|man hinh chinh)/.test(command)) return "/erp";
   if (role === "director" && /(huong dan|chi dan|tro giup|trinh dien)/.test(command)) return "/erp/huong-dan";
+  if ((role === "director" || role === "accountant" || role === "chief-accountant") && /(dai ly|hoa hong)/.test(command)) return "/erp/dai-ly";
+  if (/(hang cho|lay so|goi luot|ben do)/.test(command) && siteIds.includes("tam-coc")) return "/erp/tam-coc/suc-chua";
   if (asksToOpen && isSupplierApCommand(command)) {
     if (role === "employee") return null;
     if (role === "manager") {

@@ -6,11 +6,11 @@
 
 ---
 
-## A. Hiện trạng thật (27/09/2026)
+## A. Hiện trạng thật (30/09/2026)
 
 - **Production:** https://ninhbinhjourney.vercel.app, deploy từ `main`. Repo `qal1102/ninhbinhjourney`, Supabase ref `vzewjfcwhovsxslqfpjt` (Tokyo, `ap-northeast-1`).
 - **Vùng chạy hàm máy chủ:** `vercel.json` đặt `"regions": ["hnd1"]` (Tokyo, cùng chỗ với kho). Trước 27/09 hàm chạy ở Washington (`iad1`); đo tiêu đề `X-Vercel-Id` thấy `hkg1::iad1`, trang không gọi kho vẫn mất 0,5 giây byte đầu, mỗi truy vấn kho thêm một vòng Mỹ–Tokyo. Kiểm lại bằng `curl -D -`: phải thấy `::hnd1::`.
-- **Migration:** production có tới `202609290096` (094, 095, 096 áp theo lời cho phép của chủ dự án; 096 áp 29/09). Riêng `061` cố ý bỏ.
+- **Migration:** production có tới `202609300099` (094–099 áp theo lời cho phép của chủ dự án; 097–099 áp 30/09). Riêng `061` cố ý bỏ.
 - **Tài khoản:** đúng 13 tài khoản nhân sự mẫu. 095 đã dọn 10 tài khoản rác của kiểm thử cũ (`qa-t6b-check-*`, `qa-t14b-*`, "Test" `employee-tamchuc-002`), các dòng phân vai và nhật ký của chúng, cùng 8 đăng nhập Supabase Auth thử. Supabase Auth hiện 0 người dùng: giám đốc đăng nhập bằng lối tài khoản trình diễn. Tạo tài khoản và cấp đăng nhập làm ngay trong ERP ở `/erp/tai-khoan`.
 - **Phân quyền một nguồn (28/09):** vai và cơ sở của MỌI tài khoản (kể cả 13 tài khoản mẫu) lấy từ sổ tài khoản, tức màn `/erp/tai-khoan`; `demo-data.ts` chỉ còn góp mật khẩu dùng chung, hạn thời vụ, việc đã đào tạo. Luật ở `domain/quyen-hieu-luc.ts`: giám đốc mọi thứ; quản lý mọi module ở cơ sở mình; kế toán bộ tài chính; nhân viên theo việc quản lý giao ở màn Nhân sự, chưa giao thì có chấm công + báo cáo hiện trường. Mọi chỗ giao việc, giao ca, bàn giao đọc người qua `lib/erp/tai-khoan-hieu-luc.ts`, nên người tạo mới làm việc được ngay.
   - Tạo tài khoản một bước: họ tên, chức danh, vai, cơ sở, email tuỳ chọn → ra tên đăng nhập (mã tài khoản, ví dụ `nguyen-van-ba`) và mật khẩu tạm. Email trống thì dùng `<mã>@taikhoan.ninhbinhjourney.vn` (không gửi thư). Đăng nhập bằng mã hoặc email.
@@ -31,7 +31,7 @@
   - "Việc nên làm trước" chỉ hiện khi có việc chờ.
 - **Màn Hướng dẫn `/erp/huong-dan` (29/09, thay vòng dẫn cũ).** Chủ dự án thấy vòng dẫn bám đầu mọi màn "ngáo", muốn kiểu Trợ lý: bấm là "dịch chuyển" tới đúng chỗ. Nay:
   - Màn riêng, lối vào ở thanh đầu trang (nút "Hướng dẫn"), ngăn kéo điện thoại, trang đầu, và Trợ lý ("Mở hướng dẫn"). Chỉ giám đốc; đang xem thử vai khác thì màn mời quay về giám đốc.
-  - Hai phần: **vòng khách 7 bước** (`VONG_KHACH` trong `domain/huong-dan.ts`: đặt vé + trả QR → đơn trong Khách hàng → bấm mã vé "→ quét", xác thực ở cổng Tràng An → hộ chiếu → bán 1 vé quầy → phễu 7 ngày → trang đầu) và **19 việc tra cứu** (`BAN_DO_CHUC_NANG` trong `domain/ban-do-chuc-nang.ts`, việc vai khác đi bằng "Làm thử như …" chuyển vai).
+  - Hai phần: **vòng khách 7 bước** (`VONG_KHACH` trong `domain/huong-dan.ts`: đặt vé + trả QR → đơn trong Khách hàng → bấm mã vé "→ quét", xác thực ở cổng Tràng An → hộ chiếu → bán 1 vé quầy → phễu 7 ngày → trang đầu) và **21 việc tra cứu** (`BAN_DO_CHUC_NANG` trong `domain/ban-do-chuc-nang.ts`, việc vai khác đi bằng "Làm thử như …" chuyển vai).
   - **Cách khoanh:** mọi nút đi kèm `?chi=<mã việc>`. `components/shared/chi-diem.tsx` (gắn trong `ErpShell` và trang `/checkout`) tìm phần tử `data-chi="<điểm>"`, viền cam nhấp nháy (tắt nhịp khi giảm chuyển động), cuộn tới, và hiện thẻ nhỏ góc dưới: "Bây giờ: …" (lấy từ `data-chi-loi` của phần tử), "← Hướng dẫn", "Sang bước N →", nút × tắt. Trang đặt vé và quầy vé tự dời `data-chi` theo từng bước (khung giờ → giữ chỗ → số điện thoại → QR → vé; tiền → tích ô → bán → phiếu thu). Bấm mã vé đang khoanh thì màn soát vé mở kèm `diem=quet-ve` (`DIEM_SAU_KHI_BAM`). Không thấy điểm sau 5 giây thì thẻ nói thẳng.
   - Chạy trên dữ liệu thật như ngày thường. Không lưu tiến độ vào kho: dấu "✓ Đã mở" nằm trong `localStorage` (`lib/huong-dan-da-mo.ts`). Bảng `erp_huong_dan_tien_do` và hai hàm RPC đọc/ghi tiến độ còn trong kho, không mã nào gọi (gỡ bằng migration khi chủ dự án cho phép).
   - **Luật giữ đúng:** đổi tên nút hay khối trên màn nào có trong kịch bản thì sửa cả `cacViec` lẫn `data-chi-loi`. Bài `tests/unit/huong-dan.test.ts` canh mọi điểm trong kịch bản đều có `data-chi` thật trong mã.
@@ -55,6 +55,10 @@
   - Chữ lý do từng chặng, lời giải thích và cảnh báo của lịch trình vẫn do `domain/journey.ts` viết tiếng Việt; bản tiếng Anh dựng lại ở `components/journey/itinerary-editor.tsx`. Thông báo lỗi từ API vẫn tiếng Việt.
 - **Hết mùa Bàn Trăng (30/09):** `goiDaHetMua` (`content/packages-en.ts`) theo `bookingEndDate`: trang Gói, chi tiết gói và trang đặt vé tắt nút giữ chỗ, nói "Mùa 2026 đã khép". Trang chủ và trang mùa vốn đã tự khép theo `lib/seasonal/mid-autumn-season.ts`; bài e2e mùa Trung thu nay rẽ nhánh theo đúng hàm ấy.
 - **Nghe thuyết minh (30/09):** 15 trang điểm đến có khối "Nghe thuyết minh" (`components/discovery/thuyet-minh.tsx`): giọng đọc có sẵn trên máy khách (Web Speech API) đọc tên, giới thiệu, câu chuyện, dòng thời gian theo ngôn ngữ đang chọn; phát/tạm dừng/dừng, ba tốc độ. Không có tệp âm thanh, không gửi chữ đi đâu. Máy không hỗ trợ thì khối tự ẩn; không có giọng tiếng Việt thì nói thẳng.
+- **Hàng chờ ảo bến đò Tam Cốc (30/09, `097`, `098`):** khách lấy số ở `/xep-hang/tam-coc` (lối vào trên trang Tam Cốc, mã QR dán ở bến, kiosk), thấy còn mấy nhóm trước, giờ chờ ước tính; tới lượt thì máy rung, kêu, tiêu đề thẻ đổi. Nhân viên gọi lượt ở màn Sức chứa Tam Cốc (khối "Hàng chờ ảo"): gọi n nhóm theo thứ tự số, ghi lên đò, bỏ lượt, gọi lại, huỷ hẳn; quản lý/giám đốc tạm dừng nhận số kèm lời nhắn. Kho chỉ giữ băm của chuỗi bí mật từng lượt; một máy giữ một số còn hiệu lực. Số đánh lại từ 1 mỗi ngày giờ Việt Nam. Không có hàm xoá lượt (cố ý).
+- **Thuyết minh theo vị trí (30/09):** `/nghe` bật định vị, bước vào vùng 1,5 km quanh một trong 15 điểm đến thì tự đọc thuyết minh nơi ấy (mỗi nơi một lần; tắt được); không cho vị trí thì chọn tay. Vị trí không rời máy khách. Khối "Nghe thuyết minh" ở trang điểm đến có lối sang `/nghe`.
+- **Cổng đại lý kèm hoa hồng (30/09, `099`):** `/dl/<mã>` nhớ mã đại lý 30 ngày (cookie `nbj-dai-ly`), giữ chỗ web lúc đó thì đơn ghi cho đại lý (`dai_ly_don`, xoá theo đơn quá hạn). **Luật hoa hồng (em tự chốt, chủ dự án sửa được):** chỉ tính đơn đã trả mà khách đã qua cổng, theo tháng ngày đi, tiền đơn × tỷ lệ đại lý (0–30%); tháng khép thì giám đốc/kế toán "Ghi đã chi" đúng số kho tính (không gõ tay, mỗi tháng một lần; chưa ghi thành bút toán). Màn `/erp/dai-ly` (menu Quản trị): bảng theo tháng, thêm đại lý, cấp lại khoá, tạm ngưng, "Xem cổng như đại lý thấy". Đại lý mở cổng riêng `/dai-ly/<mã>?k=<khoá>` (khoá chỉ hiện một lần lúc cấp; kho giữ băm). Hai **đại lý mẫu** HONGHA 8%, VANLONG 5% nhận phần băm cố định của đơn web lịch sử mẫu, tính lúc đọc nên trượt theo lịch sử mẫu.
+- **Kiosk tại điểm (30/09):** `/kiosk/<cơ sở>` cho bốn cơ sở bán vé (Hoa Lư không có). Đặt vé, tra vé, nghe thuyết minh đi tiếp trên điện thoại khách bằng mã QR; Tam Cốc lấy số đò ngay trên kiosk rồi quét mã để điện thoại nhận lượt (`/xep-hang/tam-coc?luot=…`, trang tự xoá chuỗi khỏi đường dẫn). Kiosk không lưu gì của khách, bỏ trống 60 giây thì về màn đầu và tiếng Việt. Trang đầu giám đốc có lối mở kiosk và hàng chờ.
 - **Khách:**
   - `/plan` đọc `?add=<mã điểm>` từ nút "Thêm vào hành trình" (trang điểm đến, Khám phá): điểm ấy đứng đầu lịch nếu vừa sức đi bộ và giờ mở cửa, không thì trang nói lý do. Lịch trình sống trong trình duyệt (bản gốc có thể lưu ẩn danh).
   - "Phòng trình diễn" cũ (cookie `nbj-active-run`, trang `/journey/[id]`, `/demo/qr`, `PATCH /api/journeys/[id]`, tham số `journey`) đã gỡ 27/09: không còn chỗ nào đặt cookie ấy. Bảng `itineraries` và hai hàm `save_generated_journey`/`update_saved_journey` còn trong kho, không mã nào gọi.
@@ -98,6 +102,8 @@
 - Luật giữ nguyên, không phải việc: ảnh gốc trong `public/images/destinations` nặng 2,5–4 MB mỗi tấm; chỉ dùng qua `next/image`, không bao giờ làm nền CSS hay thẻ `<img>` thô.
 
 **Chờ chủ dự án quyết, không tự làm:**
+- **Số liệu mẫu cũ dần giữa tháng:** lịch sử mẫu chỉ làm mới mùng 2 hằng tháng, nên tới cuối tháng trang đầu giám đốc ghi "Hôm nay 0 lượt khách", 7 ngày "−48%" (soát production 30/09). Lệnh làm mới một lần `select public.erp_lich_su_mau_lam_moi(60);` **bị bộ chặn tự động từ chối** ngày 30/09. Cách gốc: đổi lịch `pg_cron` từ hằng tháng sang hằng đêm (cửa sổ vẫn 60 ngày, không phình dữ liệu) — cần lời cho phép riêng theo luật B11.
+- Luật hoa hồng đại lý (mục A) là em tự chốt; ghi đã chi chưa đi vào sổ kế toán.
 - Hiệu ứng web của `A15-CON-LAI` (shader hero, chuyển cảnh, preloader, con trỏ): thuộc phiên sáng tạo, chỉ làm khi chủ dự án mở phiên ấy. Màn mở đầu trang chủ cũng thuộc phần này (xem `CAN-03` ở trên).
 - `A15-QUYEN-01` (chủ dự án 28/09: người chấm không có thời gian kiểm phần này, không ưu tiên): phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) **bị bộ chặn tự động từ chối** vì tạo đăng nhập trên production; cần chủ dự án quyết cách làm.
 - `A15-DEMO-01`: kho demo tách production (tốn tiền).
@@ -113,7 +119,8 @@
 - Dùng QR ngân hàng thật: web không biết tiền về, lại lộ số tài khoản cá nhân.
 
 **Tài liệu khách hàng**, bản gốc `Bao_cao_tong_the_he_sinh_thai_so_du_lich_Ninh_Binh.docx` trên máy chủ dự án (lưu trữ `2am`):
-- Chưa có: hàng chờ ảo (Tam Cốc), audio guide **theo vị trí** (bản đọc theo trang đã có, xem mục A), cổng đại lý kèm hoa hồng, chăm sóc sau chuyến đi thật, Zalo Mini App, Wallet, kiosk.
+- Đã làm 30/09: hàng chờ ảo Tam Cốc, audio guide theo vị trí, cổng đại lý kèm hoa hồng, kiosk (mục A).
+- Không làm: chăm sóc sau chuyến đi bằng tin nhắn/email (chủ dự án chốt không mua dịch vụ gửi tin), Zalo Mini App, Wallet (cần tài khoản bên thứ ba).
 
 ## D. Chỗ nằm của các phần mới (26/09)
 
@@ -127,6 +134,10 @@
 | Báo cáo & dự báo | `domain/bao-cao-co-so.ts`, `lib/erp/bao-cao-repository.ts`, `components/erp/bao-cao-workspace.tsx` (RPC `erp_bao_cao_co_so`) |
 | Lịch sử mẫu | migration `202609260092_lich_su_mau_60_ngay.sql` |
 | Xoá lượt giữ quá hạn | migration `202609260090_tu_nha_cho_giu_qua_han.sql` |
+| Hàng chờ bến đò | `supabase/migrations/202609300097_hang_cho_ben_do.sql`, `…098_hang_cho_huy_ho.sql`, `domain/hang-cho.ts`, `lib/hang-cho-repository.ts`, `app/api/hang-cho`, `app/xep-hang/[ben]`, `components/commerce/hang-cho-khach.tsx`, `components/erp/hang-cho-panel.tsx`, `app/erp/hang-cho-actions.ts` |
+| Thuyết minh theo vị trí | `app/nghe`, `components/discovery/nghe-theo-vi-tri.tsx`, `domain/thuyet-minh-vi-tri.ts` |
+| Đại lý & hoa hồng | `…099_dai_ly_hoa_hong.sql`, `domain/dai-ly.ts`, `lib/dai-ly-repository.ts`, `lib/dai-ly-cong.ts`, `app/dl/[ma]`, `app/dai-ly/[ma]`, `app/erp/dai-ly/**`, `app/erp/dai-ly-actions.ts`, `components/erp/dai-ly-workspace.tsx`, `components/commerce/dai-ly-cong.tsx` |
+| Kiosk | `app/kiosk/[coSo]`, `components/commerce/kiosk-diem.tsx`, `domain/kiosk.ts` |
 | Phễu khách theo khoảng | migration `202609270094_phieu_khach_dem_trong_kho.sql`, `domain/customer-funnel.ts` (`chonKhoangPhieu`), `lib/customer-data/funnel-repository.ts`, `components/customer-data/customer-funnel-dashboard.tsx` |
 
 ## E. Cách kiểm và lệnh hay dùng
@@ -139,6 +150,8 @@
 - **Tệp CRLF:** sửa bằng script xong, soát `git ls-files --eol`.
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
+
+- 30/09 tối `2ba`: soát ERP trên production bằng tài khoản giám đốc (70 màn × 390/1440: đều 200, không lỗi console, không tràn ngang; lỗi thật duy nhất là số liệu mẫu cũ, xem mục C). Làm bốn mục tài liệu khách: hàng chờ ảo Tam Cốc (`097`, `098`), thuyết minh theo vị trí `/nghe`, cổng đại lý kèm hoa hồng (`099`), kiosk bốn cơ sở; Hướng dẫn thêm hai việc (gọi lượt hàng chờ, đại lý), Trợ lý hiểu "hàng chờ", "đại lý". Bài production đầu tiên của hàng chờ vỡ giữa chừng và để lại một số đang chờ; đã dọn qua ERP (gọi → bỏ lượt → huỷ hẳn) và bài nay tự huỷ lượt ở `finally`. Kiểm: `tsc`, lint, Vitest 1.712, PGlite cho 097–099, Playwright ở máy (hàng chờ 6, thuyết minh 8, kiosk 8, Hướng dẫn 8, trang đầu/quyền 66 + 1 chập chờn chạy lại 6/6), production `prod-smoke-hang-cho` 1/1 (ghi rồi tự huỷ), `prod-smoke-dai-ly` 3/3 (chỉ đọc), ảnh 390/1440.
 
 - 30/09 `2az`: soát web khách trên production (35 trang × 2 khổ × 2 ngôn ngữ, 114 liên kết nội bộ không hỏng, không tràn ngang, không lỗi console) và thấy bật EN thì chỉ trang chủ, Hợp tác, Sự kiện theo mùa đổi tiếng. Làm song ngữ cho toàn bộ web khách; sửa trang điểm đến in mã sở thích thô ("heritage") cả ở bản tiếng Việt; Bàn Trăng hết mùa không còn mời giữ chỗ; bỏ chữ lai "QR Pass chung cho booking" và lời hứa "đang đấu nối Zalo". Kiểm: `tsc`, lint, build, Vitest 1.697, Playwright 191/195 bài công khai (4 hỏng đã sửa bài; còn chập chờn quen `page-continuity:182`), bài mới `public-ngon-ngu`, ảnh 390px/1440px tiếng Anh. Thêm "Nghe thuyết minh" cho 15 trang điểm đến (bài `public-thuyet-minh`). Đã deploy; trên production `public-ngon-ngu` + `public-thuyet-minh` 12/12 (chỉ đọc). **ERP trên production chưa soát lại** vì cần mật khẩu giám đốc.
 

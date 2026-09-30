@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { VONG_KHACH } from "@/domain/huong-dan";
+import { TONG_VIEC_TRA_CUU, VONG_KHACH } from "@/domain/huong-dan";
 import { loginAsDirector } from "./support/erp-login";
 import { endRoleSwitch } from "./support/erp-role-switch";
 
@@ -10,13 +10,13 @@ import { endRoleSwitch } from "./support/erp-role-switch";
  * luôn trả phiên về giám đốc.
  */
 test.describe("ERP: màn Hướng dẫn", () => {
-  test("đủ bảy bước và 19 việc; trang đầu có lối vào", async ({ page }) => {
+  test("đủ bảy bước và mọi việc tra cứu; trang đầu có lối vào", async ({ page }) => {
     await loginAsDirector(page);
     await expect(page.getByTestId("loi-vao-huong-dan")).toBeVisible();
     await page.getByTestId("loi-vao-huong-dan").getByRole("link").click();
     await expect(page).toHaveURL(/\/erp\/huong-dan$/);
     await expect(page.locator("[data-buoc]")).toHaveCount(VONG_KHACH.length);
-    await expect(page.locator("[data-chuc-nang]")).toHaveCount(19);
+    await expect(page.locator("[data-chuc-nang]")).toHaveCount(TONG_VIEC_TRA_CUU);
     const tranNgang = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     expect(tranNgang).toBe(false);
   });

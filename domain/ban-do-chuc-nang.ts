@@ -19,7 +19,8 @@ export type ChucNang = {
   vai: ErpRole;
   /**
    * Giám đốc làm thử được ngay bằng tài khoản mình, không cần chuyển vai.
-   * Chỉ đặt cho việc đã đi thật trong vòng khách (bán quầy, quét cổng).
+   * Chỉ đặt cho việc đã đi thật trong vòng khách (bán quầy, quét cổng) và
+   * việc giám đốc vốn vào được (gọi lượt hàng chờ ở màn Sức chứa).
    */
   giamDocLamDuoc?: true;
   /** Màn hình của việc này; `{site}` thay bằng cơ sở làm mẫu. */
@@ -133,6 +134,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
           "So ô \"Lượt cổng trong giờ\" với \"Năng lực nhỏ nhất\".",
           "Kéo xuống từng ngưỡng: vượt mức nào thì thẻ đổi màu.",
           "Giám đốc sửa ngưỡng ngay trên thẻ rồi bấm \"Lưu và ghi lịch sử\".",
+        ],
+      },
+      {
+        id: "hang-cho",
+        ten: "Gọi lượt hàng chờ bến đò",
+        moTa: "Khách lấy số trên điện thoại hay ở kiosk; nhân viên bến gọi lượt, ghi lên đò.",
+        vai: "employee",
+        giamDocLamDuoc: true,
+        duongDan: "/erp/tam-coc/suc-chua",
+        diem: "goi-luot",
+        cacViec: [
+          "Bấm \"Mở trang khách ↗\" (hay quét mã dán ở bến) và lấy thử một số.",
+          "Quay lại đây, chọn số đò đang trống rồi bấm \"Gọi … nhóm tiếp\": máy khách tự báo tới lượt.",
+          "Khách ra bến thì bấm \"Đã lên đò\"; quá 10 phút không tới thì \"Bỏ lượt\", khách không đi nữa thì \"Huỷ hẳn\".",
         ],
       },
       {
@@ -273,6 +288,19 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         cacViec: [
           "Chọn chiến dịch, gõ nhãn vị trí (ví dụ: bảng tại bến Tam Cốc) và trang mở ra khi quét.",
           "Bấm \"Tạo QR động\". In mã lên biển là khách quét được ngay.",
+        ],
+      },
+      {
+        id: "dai-ly",
+        ten: "Đại lý và hoa hồng",
+        moTa: "Đường dẫn giới thiệu của từng đại lý, đơn họ mang về, hoa hồng từng tháng.",
+        vai: "director",
+        duongDan: "/erp/dai-ly",
+        diem: "dai-ly",
+        cacViec: [
+          "Chọn một tháng đã khép ở hàng nút trên cùng.",
+          "Mỗi đại lý một thẻ: đơn đã trả, khách đã tới, hoa hồng (chỉ tính khách đã qua cổng).",
+          "Bấm \"Xem cổng như đại lý thấy\"; chuyển khoản xong thì \"Ghi đã chi\".",
         ],
       },
       {

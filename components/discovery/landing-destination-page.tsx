@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MiniRouteMap } from "@/components/discovery/mini-route-map";
+import { ThuyetMinh } from "@/components/discovery/thuyet-minh";
 import {
   DESTINATION_PAGE_SLUGS,
   destinations,
@@ -116,6 +117,11 @@ export function LandingDestinationPage({
           <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{destination.description[lang]}</p>
           <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{destination.history[lang]}</p>
           <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{facts.significance[lang]}</p>
+          <ThuyetMinh
+            ten={destination.name[lang]}
+            lang={lang}
+            doan={[destination.description[lang], destination.history[lang], facts.significance[lang]]}
+          />
 
           <h2 className="font-display mt-12 text-3xl text-[#183f34]">{ch(lang, "Đáng để ý", "Worth noticing")}</h2>
           <ul className="mt-5 grid gap-3 sm:grid-cols-2">

@@ -54,6 +54,7 @@
   - **Luật:** trang dựng `lang` trên thẻ `<main>` từ máy chủ; **không đổi `<html lang>` sau khi trang hiện** (phông dàn lại glyph tiếng Việt, cuộn bị xô). Dải quyền riêng tư đọc `<main lang>`.
   - Chữ lý do từng chặng, lời giải thích và cảnh báo của lịch trình vẫn do `domain/journey.ts` viết tiếng Việt; bản tiếng Anh dựng lại ở `components/journey/itinerary-editor.tsx`. Thông báo lỗi từ API vẫn tiếng Việt.
 - **Hết mùa Bàn Trăng (30/09):** `goiDaHetMua` (`content/packages-en.ts`) theo `bookingEndDate`: trang Gói, chi tiết gói và trang đặt vé tắt nút giữ chỗ, nói "Mùa 2026 đã khép". Trang chủ và trang mùa vốn đã tự khép theo `lib/seasonal/mid-autumn-season.ts`; bài e2e mùa Trung thu nay rẽ nhánh theo đúng hàm ấy.
+- **Nghe thuyết minh (30/09):** 15 trang điểm đến có khối "Nghe thuyết minh" (`components/discovery/thuyet-minh.tsx`): giọng đọc có sẵn trên máy khách (Web Speech API) đọc tên, giới thiệu, câu chuyện, dòng thời gian theo ngôn ngữ đang chọn; phát/tạm dừng/dừng, ba tốc độ. Không có tệp âm thanh, không gửi chữ đi đâu. Máy không hỗ trợ thì khối tự ẩn; không có giọng tiếng Việt thì nói thẳng.
 - **Khách:**
   - `/plan` đọc `?add=<mã điểm>` từ nút "Thêm vào hành trình" (trang điểm đến, Khám phá): điểm ấy đứng đầu lịch nếu vừa sức đi bộ và giờ mở cửa, không thì trang nói lý do. Lịch trình sống trong trình duyệt (bản gốc có thể lưu ẩn danh).
   - "Phòng trình diễn" cũ (cookie `nbj-active-run`, trang `/journey/[id]`, `/demo/qr`, `PATCH /api/journeys/[id]`, tham số `journey`) đã gỡ 27/09: không còn chỗ nào đặt cookie ấy. Bảng `itineraries` và hai hàm `save_generated_journey`/`update_saved_journey` còn trong kho, không mã nào gọi.
@@ -112,7 +113,7 @@
 - Dùng QR ngân hàng thật: web không biết tiền về, lại lộ số tài khoản cá nhân.
 
 **Tài liệu khách hàng**, bản gốc `Bao_cao_tong_the_he_sinh_thai_so_du_lich_Ninh_Binh.docx` trên máy chủ dự án (lưu trữ `2am`):
-- Chưa có: hàng chờ ảo (Tam Cốc), audio guide, cổng đại lý kèm hoa hồng, chăm sóc sau chuyến đi thật, Zalo Mini App, Wallet, kiosk.
+- Chưa có: hàng chờ ảo (Tam Cốc), audio guide **theo vị trí** (bản đọc theo trang đã có, xem mục A), cổng đại lý kèm hoa hồng, chăm sóc sau chuyến đi thật, Zalo Mini App, Wallet, kiosk.
 
 ## D. Chỗ nằm của các phần mới (26/09)
 

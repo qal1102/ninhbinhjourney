@@ -17,6 +17,8 @@ test("kiosk Tam Cốc: đặt vé bằng QR, lấy số đò rồi chuyển lư�
   await page.getByRole("button", { name: /Đặt vé/ }).click();
   await expect(page.getByTestId("kiosk")).toHaveAttribute("data-man", "dat-ve");
   await expect(page.getByRole("img", { name: "Quét để đặt" }).first()).toBeVisible();
+  // Bản đầu tràn ngang ở khổ điện thoại: mã QR rộng cố định đẩy tên gói ra ngoài.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   await page.getByRole("button", { name: "← Về màn đầu" }).click();
 
   await page.getByRole("button", { name: /Lấy số đò/ }).click();
@@ -24,6 +26,7 @@ test("kiosk Tam Cốc: đặt vé bằng QR, lấy số đò rồi chuyển lư�
   await page.getByRole("button", { name: "Lấy số", exact: true }).click();
   await expect(page.getByTestId("kiosk-so-do")).toContainText("A012");
   await expect(page.getByRole("img", { name: "Quét để theo dõi lượt" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
 
   // Kiosk không giữ chuỗi bí mật của khách.
   expect(await page.evaluate(() => JSON.stringify(window.localStorage))).not.toContain(BI_MAT);

@@ -30,7 +30,7 @@ function MaQr({ duong, nhan }: { duong: string; nhan: string }) {
   }, [duong]);
   return (
     <figure className="flex flex-col items-center gap-3">
-      <div className="grid h-60 w-60 place-items-center rounded-3xl bg-white p-3 shadow-sm">
+      <div className="grid h-48 w-48 place-items-center rounded-3xl bg-white p-3 shadow-sm sm:h-60 sm:w-60">
         {/* eslint-disable-next-line @next/next/no-img-element -- ảnh QR sinh tại chỗ dạng data URL */}
         {anh ? <img src={anh} alt={nhan} className="h-full w-full" /> : null}
       </div>
@@ -124,7 +124,7 @@ export function KioskDiem({
     }
   }
 
-  const oLon = "flex min-h-40 flex-col justify-between rounded-[2rem] p-6 text-left transition active:scale-[0.98]";
+  const oLon = "flex min-h-40 flex-col lg:min-h-56 justify-between rounded-[2rem] p-6 text-left transition active:scale-[0.98]";
   const nutVe = (
     <button type="button" onClick={veDau} className="inline-flex min-h-16 items-center rounded-full border-2 border-[#183f34] px-8 text-xl font-extrabold text-[#183f34]">
       ← {t("Về màn đầu", "Back to start")}
@@ -198,7 +198,7 @@ export function KioskDiem({
           </p>
           <ul className="mt-6 grid gap-6 lg:grid-cols-2">
             {goi.map((g) => (
-              <li key={g.slug} className="flex flex-wrap items-center gap-6 rounded-[2rem] border-2 border-[#d7d5cd] bg-white p-6" data-testid={`kiosk-goi-${g.slug}`}>
+              <li key={g.slug} className="flex min-w-0 flex-col items-center gap-6 rounded-[2rem] border-2 border-[#d7d5cd] bg-white p-6 sm:flex-row" data-testid={`kiosk-goi-${g.slug}`}>
                 <MaQr duong={`/checkout?package=${g.slug}&ngay=hom-nay&lang=${lang}`} nhan={t("Quét để đặt", "Scan to book")} />
                 <div className="min-w-0 flex-1">
                   <p className="text-2xl font-extrabold text-[#183f34]">{g.ten[lang]}</p>
@@ -219,7 +219,7 @@ export function KioskDiem({
             <div className="flex flex-wrap items-center gap-10" data-testid="kiosk-so-do">
               <div>
                 <p className="text-2xl font-bold text-[#59654b]">{t("Số của bạn", "Your number")}</p>
-                <p className="font-display text-[9rem] leading-none text-[#183f34]">{soHienThi(soDo.so)}</p>
+                <p className="font-display text-8xl leading-none text-[#183f34] sm:text-[9rem]">{soHienThi(soDo.so)}</p>
                 <p className="mt-4 max-w-md text-xl leading-8 text-[#4d5b55]">
                   {t(
                     "Quét mã bên cạnh để điện thoại nhận số này và báo khi tới lượt. Không quét cũng được: nhớ số này, nghe gọi ở bến.",

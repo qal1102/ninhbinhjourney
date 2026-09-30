@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   BEN_CO_HANG_CHO,
-  docTongQuan,
+  laTongQuan,
   soHienThi,
   uocPhutCho,
   type LuotCuaKhach,
@@ -109,7 +109,8 @@ export function HangChoKhach({
     const body = (await res.json().catch(() => null)) as { ok?: boolean; ma?: string; tong_quan?: unknown } | null;
     if (res.status === 503 || res.status === 404) return setTrang({ loai: "chua-mo" });
     if (!res.ok || !body?.ok) return setTrang({ loai: "loi" });
-    const tq = docTongQuan(body.tong_quan);
+    // Máy chủ đã đọc số liệu kho thành `TongQuanHangCho` (camelCase) rồi.
+    const tq = laTongQuan(body.tong_quan) ? body.tong_quan : null;
     setTrang(tq ? { loai: "chua-lay", tongQuan: tq } : { loai: "chua-mo" });
   }, [ben]);
 

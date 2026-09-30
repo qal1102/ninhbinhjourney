@@ -104,6 +104,13 @@ export function docTongQuan(raw: unknown): TongQuanHangCho | null {
   };
 }
 
+/** Kiểm dạng `TongQuanHangCho` mà API trả cho trình duyệt (đã đổi sang camelCase). */
+export function laTongQuan(x: unknown): x is TongQuanHangCho {
+  if (!x || typeof x !== "object") return false;
+  const r = x as Record<string, unknown>;
+  return typeof r.dangNhan === "boolean" && typeof r.soNhomCho === "number" && Array.isArray(r.dangGoi);
+}
+
 const TRANG_THAI: readonly TrangThaiLuot[] = ["cho", "da-goi", "da-len", "bo-luot", "khach-huy", "het-ngay"];
 
 export function docLuotCuaKhach(raw: unknown): LuotCuaKhach | null {

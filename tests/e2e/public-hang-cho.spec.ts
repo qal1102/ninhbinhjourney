@@ -29,16 +29,10 @@ async function giaKho(page: Page) {
   await page.route("**/api/hang-cho**", async (route) => {
     const req = route.request();
     if (req.method() === "GET") {
-      return route.fulfill({
-        json: {
-          ok: true,
-          tong_quan: {
-            dang_nhan: true, loi_tam_dung: null, khach_moi_phut_khai: 5, phut_giu_luot: 10,
-            so_nhom_cho: 3, so_khach_cho: 9, dang_goi: [1], goi_toi_so: 1, so_cap: 4,
-            khach_len_30_phut: 0, da_len_hom_nay: 0, nhom_da_len: 0, nhom_bo_luot: 0, nhom_huy: 0, phut_cho_tb: null,
-          },
-        },
-      });
+      // Đúng dạng API thật trả (camelCase, máy chủ đã đọc kho xong). Bản đầu
+      // của bài này giả dạng snake_case của kho, nên lọt một lỗi: trang khách
+      // đọc sai dạng và báo "bến tạm dừng" trên production.
+      return route.fulfill({ json: { ok: true, tong_quan: TONG_QUAN } });
     }
     const body = req.postDataJSON() as { hanh_dong: string; so_khach?: number };
     trangThai.yeuCau.push(body.hanh_dong);

@@ -26,13 +26,15 @@ describe("khung ngày Việt Nam", () => {
     expect(vietnamDayStart(at, 0).toISOString()).toBe("2026-08-30T17:00:00.000Z");
   });
 
-  it("hôm qua kết thúc đúng lúc hôm nay bắt đầu, không hở và không chồng", () => {
+  it("hôm qua chỉ tính tới cùng giờ này, để so ngang với phần đã qua của hôm nay", () => {
     const at = new Date("2026-08-31T09:00:00Z");
     const homNay = vietnamTodayWindow(at);
     const homQua = vietnamYesterdayWindow(at);
-    expect(homQua.to.getTime()).toBe(homNay.from.getTime());
     expect(homQua.from.toISOString()).toBe("2026-08-29T17:00:00.000Z");
-    expect(homNay.to).toBe(at);
+    expect(homQua.to.toISOString()).toBe("2026-08-30T09:00:00.000Z");
+    // Hai khoảng dài bằng nhau, và hôm qua không lấn sang hôm nay.
+    expect(homQua.to.getTime() - homQua.from.getTime()).toBe(homNay.to.getTime() - homNay.from.getTime());
+    expect(homQua.to.getTime()).toBeLessThanOrEqual(homNay.from.getTime());
   });
 
   it("cửa sổ hôm nay không kéo sang tương lai", () => {

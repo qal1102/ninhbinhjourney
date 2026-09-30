@@ -35,8 +35,12 @@ export function vietnamTodayWindow(at: Date): TicketWindow {
   return { from: vietnamDayStart(at, 0), to: at };
 }
 
+/**
+ * Hôm qua tính tới đúng giờ này: mốc so sánh của "hôm nay". So phần đã qua
+ * của hôm nay với trọn ngày hôm qua thì sáng nào cũng thấy tụt (soát 01/10).
+ */
 export function vietnamYesterdayWindow(at: Date): TicketWindow {
-  return { from: vietnamDayStart(at, 1), to: vietnamDayStart(at, 0) };
+  return { from: vietnamDayStart(at, 1), to: new Date(at.getTime() - DAY_MS) };
 }
 
 /**

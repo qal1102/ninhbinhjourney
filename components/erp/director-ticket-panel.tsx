@@ -24,14 +24,20 @@ function formatVnd(value: number) {
   }).format(value);
 }
 
-function formatChange(percent: number | null, previous: number, measure: TicketMeasure) {
+/**
+ * Hôm nay so với cùng giờ hôm qua, không phải cả ngày hôm qua: so phần đã qua
+ * của hôm nay với trọn ngày hôm qua thì sáng nào cũng "−60%" (soát 01/10).
+ */
+const KY_SO_SANH = ["cùng giờ hôm qua", "7 ngày liền trước", "30 ngày liền trước"] as const;
+
+function formatChange(percent: number | null, previous: number, measure: TicketMeasure, ky: string) {
   if (percent === null) {
     // Kỳ trước 0 lượt khách cũng chính là 0 tấm vé, nên một câu dùng được cho cả hai.
-    return previous === 0 ? "Kỳ trước chưa bán tấm vé nào" : "Chưa so sánh được";
+    return previous === 0 ? `${ky[0].toUpperCase()}${ky.slice(1)} chưa bán tấm vé nào` : "Chưa so sánh được";
   }
   const sign = percent > 0 ? "+" : "";
   const unit = measure === "entries" ? " lượt khách" : "";
-  return `${sign}${percent.toLocaleString("vi-VN")}% so với kỳ trước (${previous.toLocaleString("vi-VN")}${unit})`;
+  return `${sign}${percent.toLocaleString("vi-VN")}% so với ${ky} (${previous.toLocaleString("vi-VN")}${unit})`;
 }
 
 export function DirectorTicketPanel({
@@ -123,7 +129,7 @@ export function DirectorTicketPanel({
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        {[today, week, month].map((window) => (
+        {[today, week, month].map((window, i) => (
           <article
             key={window.label}
             className="rounded-xl border border-[#e3e9e5] bg-[#f6f9f7] p-4"
@@ -146,7 +152,7 @@ export function DirectorTicketPanel({
                     : "text-[#8b3d31]"
               }`}
             >
-              {formatChange(window.changePercent, window.previous, overview.measure)}
+              {formatChange(window.changePercent, window.previous, overview.measure, KY_SO_SANH[i])}
             </p>
           </article>
         ))}

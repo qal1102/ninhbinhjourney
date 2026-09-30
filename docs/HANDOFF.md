@@ -10,7 +10,7 @@
 
 - **Production:** https://ninhbinhjourney.vercel.app, deploy từ `main`. Repo `qal1102/ninhbinhjourney`, Supabase ref `vzewjfcwhovsxslqfpjt` (Tokyo, `ap-northeast-1`).
 - **Vùng chạy hàm máy chủ:** `vercel.json` đặt `"regions": ["hnd1"]` (Tokyo, cùng chỗ với kho). Trước 27/09 hàm chạy ở Washington (`iad1`); đo tiêu đề `X-Vercel-Id` thấy `hkg1::iad1`, trang không gọi kho vẫn mất 0,5 giây byte đầu, mỗi truy vấn kho thêm một vòng Mỹ–Tokyo. Kiểm lại bằng `curl -D -`: phải thấy `::hnd1::`.
-- **Migration:** production có tới `202609300099` (094–099 áp theo lời cho phép của chủ dự án; 097–099 áp 30/09). Riêng `061` cố ý bỏ.
+- **Migration:** production có tới `202610010100` (094–100 áp theo lời cho phép của chủ dự án; 097–099 áp 30/09, 100 áp 01/10). Riêng `061` cố ý bỏ.
 - **Tài khoản:** đúng 13 tài khoản nhân sự mẫu. 095 đã dọn 10 tài khoản rác của kiểm thử cũ (`qa-t6b-check-*`, `qa-t14b-*`, "Test" `employee-tamchuc-002`), các dòng phân vai và nhật ký của chúng, cùng 8 đăng nhập Supabase Auth thử. Supabase Auth hiện 0 người dùng: giám đốc đăng nhập bằng lối tài khoản trình diễn. Tạo tài khoản và cấp đăng nhập làm ngay trong ERP ở `/erp/tai-khoan`.
 - **Phân quyền một nguồn (28/09):** vai và cơ sở của MỌI tài khoản (kể cả 13 tài khoản mẫu) lấy từ sổ tài khoản, tức màn `/erp/tai-khoan`; `demo-data.ts` chỉ còn góp mật khẩu dùng chung, hạn thời vụ, việc đã đào tạo. Luật ở `domain/quyen-hieu-luc.ts`: giám đốc mọi thứ; quản lý mọi module ở cơ sở mình; kế toán bộ tài chính; nhân viên theo việc quản lý giao ở màn Nhân sự, chưa giao thì có chấm công + báo cáo hiện trường. Mọi chỗ giao việc, giao ca, bàn giao đọc người qua `lib/erp/tai-khoan-hieu-luc.ts`, nên người tạo mới làm việc được ngay.
   - Tạo tài khoản một bước: họ tên, chức danh, vai, cơ sở, email tuỳ chọn → ra tên đăng nhập (mã tài khoản, ví dụ `nguyen-van-ba`) và mật khẩu tạm. Email trống thì dùng `<mã>@taikhoan.ninhbinhjourney.vn` (không gửi thư). Đăng nhập bằng mã hoặc email.
@@ -43,7 +43,7 @@
 - **Lịch sử mẫu (092):** cửa sổ trượt 60 ngày ở bốn cơ sở có cổng, gồm vé quầy, đơn web trả QR, lượt qua cổng.
   - Nguồn `data_origin = 'demo-history'`, mọi mã bắt đầu `de000000`.
   - Được cộng vào số và luôn ghi rõ "gồm số liệu mẫu". Vé gieo cũ `demo-seed` vẫn bị loại khỏi số.
-  - `pg_cron` mỗi tháng chạy `erp_lich_su_mau_lam_moi(60)`: xoá mẫu cũ hơn 60 ngày, sinh tiếp tới hiện tại. **Không sinh liên tục.**
+  - `pg_cron` **mỗi giờ** (phút 05, job `erp-lich-su-mau-hang-gio`, từ `100`, chủ dự án cho phép 01/10) chạy `erp_lich_su_mau_lam_moi(60)`: xoá mẫu cũ hơn 60 ngày, sinh tiếp tới hiện tại. Cửa sổ giữ đúng 60 ngày nên không phình; mã từng dòng cố định nên chạy lại không trùng. Trước đó làm mới mỗi tháng, cuối tháng trang đầu ghi "Hôm nay 0", 7 ngày "−48%".
   - Muốn số tươi trước buổi trình diễn: chạy `select public.erp_lich_su_mau_lam_moi(60);`.
   - Gỡ sạch mọi mẫu: `select public.erp_lich_su_mau_xoa();`. Công tắc: `erp_lich_su_mau_cau_hinh.bat`.
 - **Đặt vé web:**
@@ -77,7 +77,7 @@
 6. **Hai điểm Hoa Lư không bán vé ở đây.** Chỉ nói "không bán vé tại đây"; không ghi lý do sở hữu vào repo.
 7. **Hàm hay module không có chức năng thật thì xoá**, sau khi kiểm kỹ (knip + soát tay). Không để vỏ "giai đoạn sau".
 8. **Khung hướng dẫn chỉ làm khi mọi thứ đã xong.** Đừng thêm hay sửa hướng dẫn giữa chừng.
-9. **Không sinh dữ liệu mẫu liên tục** (thành rác): cửa sổ trượt, làm mới theo tháng.
+9. **Không sinh dữ liệu mẫu thành rác:** chỉ cửa sổ trượt 60 ngày (làm mới mỗi giờ theo lời cho phép 01/10); không thêm nguồn sinh mẫu nào khác.
 10. **Ưu tiên QR** trong đặt vé; mobile-friendly không kém máy tính.
 11. **Việc phá huỷ và việc "chạy mãi":**
     - `supabase db push`, `db query` lên production, lệnh chứa `drop table`, gỡ bài trong `tests/security`: bộ chặn tự động thường từ chối.
@@ -102,7 +102,6 @@
 - Luật giữ nguyên, không phải việc: ảnh gốc trong `public/images/destinations` nặng 2,5–4 MB mỗi tấm; chỉ dùng qua `next/image`, không bao giờ làm nền CSS hay thẻ `<img>` thô.
 
 **Chờ chủ dự án quyết, không tự làm:**
-- **Số liệu mẫu cũ dần giữa tháng:** lịch sử mẫu chỉ làm mới mùng 2 hằng tháng, nên tới cuối tháng trang đầu giám đốc ghi "Hôm nay 0 lượt khách", 7 ngày "−48%" (soát production 30/09). Lệnh làm mới một lần `select public.erp_lich_su_mau_lam_moi(60);` **bị bộ chặn tự động từ chối** ngày 30/09. Cách gốc: đổi lịch `pg_cron` từ hằng tháng sang hằng đêm (cửa sổ vẫn 60 ngày, không phình dữ liệu) — cần lời cho phép riêng theo luật B11.
 - Luật hoa hồng đại lý (mục A) là em tự chốt; ghi đã chi chưa đi vào sổ kế toán.
 - Hiệu ứng web của `A15-CON-LAI` (shader hero, chuyển cảnh, preloader, con trỏ): thuộc phiên sáng tạo, chỉ làm khi chủ dự án mở phiên ấy. Màn mở đầu trang chủ cũng thuộc phần này (xem `CAN-03` ở trên).
 - `A15-QUYEN-01` (chủ dự án 28/09: người chấm không có thời gian kiểm phần này, không ưu tiên): phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) **bị bộ chặn tự động từ chối** vì tạo đăng nhập trên production; cần chủ dự án quyết cách làm.
@@ -150,6 +149,8 @@
 - **Tệp CRLF:** sửa bằng script xong, soát `git ls-files --eol`.
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
+
+- 01/10 `2bb`: chủ dự án cho phép; `100` đổi lịch sử mẫu sang làm mới mỗi giờ và bù ngay phần hụt từ 26/09 (production sau áp: 7 ngày +8,2%, 30 ngày +10%, tám tuần đều). Ô "Hôm nay" trang đầu nay so với **cùng giờ hôm qua** (trước so phần đã qua của hôm nay với trọn ngày hôm qua, sáng nào cũng tụt). Kiểm: `tsc`, lint, Vitest 1.712.
 
 - 30/09 tối `2ba`: soát ERP trên production bằng tài khoản giám đốc (70 màn × 390/1440: đều 200, không lỗi console, không tràn ngang; lỗi thật duy nhất là số liệu mẫu cũ, xem mục C). Làm bốn mục tài liệu khách: hàng chờ ảo Tam Cốc (`097`, `098`), thuyết minh theo vị trí `/nghe`, cổng đại lý kèm hoa hồng (`099`), kiosk bốn cơ sở; Hướng dẫn thêm hai việc (gọi lượt hàng chờ, đại lý), Trợ lý hiểu "hàng chờ", "đại lý". Bài production đầu tiên của hàng chờ vỡ giữa chừng và để lại một số đang chờ; đã dọn qua ERP (gọi → bỏ lượt → huỷ hẳn) và bài nay tự huỷ lượt ở `finally`. Kiểm: `tsc`, lint, Vitest 1.712, PGlite cho 097–099, Playwright ở máy (hàng chờ 6, thuyết minh 8, kiosk 10 (có phép kiểm tràn ngang: bản đầu tràn ở 390px, đã sửa), Hướng dẫn 8, trang đầu/quyền 66 + 1 chập chờn chạy lại 6/6), production `prod-smoke-hang-cho` 1/1 (ghi rồi tự huỷ), `prod-smoke-dai-ly` 3/3 (chỉ đọc), ảnh 390/1440.
 

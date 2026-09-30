@@ -204,14 +204,15 @@ describe("A15-ERP-04 — dựng bảng cho giám đốc", () => {
 });
 
 describe("A15-ERP-04 — khung giờ chỉ tính một nơi rồi truyền vào kho", () => {
-  it("gửi đủ sáu khung, khoảng nửa mở nối liền nhau, hôm nay theo ngày Việt Nam", () => {
+  it("gửi đủ sáu khung, khoảng nửa mở, hôm nay theo ngày Việt Nam, hôm qua tới cùng giờ", () => {
     const at = new Date("2026-09-17T03:00:00.000Z");
     const payload = directorTicketWindowsForRpc(directorTicketWindows(at));
     expect(payload.map((item) => item.key)).toEqual([...DIRECTOR_TICKET_WINDOW_KEYS]);
     const theoKhoa = Object.fromEntries(payload.map((item) => [item.key, item]));
 
     expect(theoKhoa.today).toEqual({ key: "today", from: "2026-09-16T17:00:00.000Z", to: "2026-09-17T03:00:00.000Z" });
-    expect(theoKhoa.yesterday).toEqual({ key: "yesterday", from: "2026-09-15T17:00:00.000Z", to: "2026-09-16T17:00:00.000Z" });
+    // Hôm qua tới cùng giờ này (10 giờ sáng hôm qua theo giờ Việt Nam), không phải trọn ngày.
+    expect(theoKhoa.yesterday).toEqual({ key: "yesterday", from: "2026-09-15T17:00:00.000Z", to: "2026-09-16T03:00:00.000Z" });
     expect(theoKhoa.week.to).toBe(at.toISOString());
     expect(theoKhoa.week_before.to).toBe(theoKhoa.week.from);
     expect(theoKhoa.month.from).toBe("2026-08-18T03:00:00.000Z");

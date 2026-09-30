@@ -196,6 +196,17 @@ export function KioskDiem({
           <p className="mt-3 text-xl text-[#4d5b55]">
             {t("Chọn gói, quét mã bằng camera điện thoại. Giữ chỗ 15 phút, trả bằng QR, vé về ngay máy bạn.", "Pick a package and scan with your phone camera. Seats are held 15 minutes, you pay by QR and the ticket lands on your phone.")}
           </p>
+          {goi.length === 0 ? (
+            <div className="mt-6 flex flex-col items-center gap-6 rounded-[2rem] border-2 border-[#d7d5cd] bg-white p-6 sm:flex-row" data-testid="kiosk-khong-goi">
+              <MaQr duong={`/packages?lang=${lang}`} nhan={t("Xem các gói khác", "See other packages")} />
+              <p className="max-w-lg text-xl leading-8 text-[#4d5b55]">
+                {t(
+                  `${ten.vi} chưa có gói đặt trước trên web. Mời bạn mua vé ngay tại quầy bên cạnh, hoặc quét mã để xem các gói ở những điểm khác.`,
+                  `${ten.en} has no online package yet. Please buy at the ticket desk next to this kiosk, or scan to see packages for other places.`,
+                )}
+              </p>
+            </div>
+          ) : null}
           <ul className="mt-6 grid gap-6 lg:grid-cols-2">
             {goi.map((g) => (
               <li key={g.slug} className="flex min-w-0 flex-col items-center gap-6 rounded-[2rem] border-2 border-[#d7d5cd] bg-white p-6 sm:flex-row" data-testid={`kiosk-goi-${g.slug}`}>

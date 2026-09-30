@@ -79,3 +79,9 @@ test("không có kiosk ở nơi không bán vé tại đây", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Không tìm thấy trang này." })).toBeVisible();
   await expect(page.getByTestId("kiosk")).toHaveCount(0);
 });
+
+test("kiosk nơi chưa có gói bán trên web thì nói thẳng, mời ra quầy", async ({ page }) => {
+  await page.goto("/kiosk/tam-chuc?lang=vi");
+  await page.getByRole("button", { name: /Đặt vé/ }).click();
+  await expect(page.getByTestId("kiosk-khong-goi")).toContainText("mua vé ngay tại quầy");
+});

@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   createHold: vi.fn(),
   confirm: vi.fn(),
   listSlots: vi.fn(),
+  ganDon: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
@@ -21,6 +22,8 @@ vi.mock("@/lib/customer-data/booking-repository", () => {
     listCustomerProductSlots: mocks.listSlots,
   };
 });
+
+vi.mock("@/lib/dai-ly-repository", () => ({ ganDonChoDaiLy: mocks.ganDon }));
 
 import { POST as createHold } from "@/app/api/customer-booking-holds/route";
 import { POST as confirmBooking } from "@/app/api/customer-booking-confirmations/route";
@@ -115,6 +118,29 @@ describe("CUS-06 booking routes", () => {
       partySize: 2,
       slotStartsAt,
     }));
+  });
+
+  it("khách tới qua đường dẫn đại lý thì đơn mới được ghi cho đại lý, đơn trùng thì không", async () => {
+    mocks.cookies.mockResolvedValue({
+      get: vi.fn((ten: string) => (ten === "nbj-dai-ly" ? { value: "HONGHA" } : undefined)),
+    });
+    const res = await createHold(request("/api/customer-booking-holds", holdBody));
+    expect(res.status).toBe(201);
+    expect(mocks.ganDon).toHaveBeenCalledWith("HONGHA", "50000000-0000-4000-8000-000000000001");
+    mocks.ganDon.mockClear();
+    mocks.createHold.mockResolvedValueOnce({
+      orderId: "50000000-0000-4000-8000-000000000001",
+      orderCode: "NBJ-ABCDEF123456",
+      holdId: "60000000-0000-4000-8000-000000000001",
+      holdStatus: "active",
+      expiresAt: "2026-08-20T09:15:00.000Z",
+      totalVnd: 1_780_000,
+      currency: "VND",
+      slots: [],
+      duplicate: true,
+    });
+    await createHold(request("/api/customer-booking-holds", holdBody));
+    expect(mocks.ganDon).not.toHaveBeenCalled();
   });
 
   it("TC-02: rejects a hold with no chosen time slot", async () => {

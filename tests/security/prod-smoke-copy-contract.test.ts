@@ -74,6 +74,14 @@ const MIEN_TRU: ReadonlyMap<string, string> = new Map([
     "Ghép lúc chạy từ nhãn nguồn sức chứa trong capacity-workspace.",
   ],
   [
+    "Đã gọi 1 nhóm",
+    "Ghép lúc chạy: `Đã gọi ${da} nhóm` trong app/erp/hang-cho-actions.ts.",
+  ],
+  [
+    "Gọi 1 nhóm tiếp",
+    "Ghép lúc chạy: `Gọi ${soNhom} nhóm tiếp` trong components/erp/hang-cho-panel.tsx.",
+  ],
+  [
     "SOP-CMD-03 · Chỉ huy và bàn giao đầu ngày",
     "Ghép lúc chạy: `{mã SOP} · {tiêu đề}`, cả hai đọc từ hồ sơ SOP trong kho.",
   ],

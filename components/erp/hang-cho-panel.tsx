@@ -95,9 +95,9 @@ export function HangChoPanel({
             {tongQuan.soNhomCho === 0 ? "Không ai đang chờ" : `${tongQuan.soNhomCho} nhóm đang chờ · ${tongQuan.soKhachCho} khách`}
           </h2>
           <p className="mt-1 text-sm text-[#59654b]">
-            Người mới lấy số chờ {phutCuoi === 0 ? "không phút nào" : `khoảng ${phutCuoi} phút`} · tốc độ{" "}
+            {phutCuoi === 0 ? "Người mới lấy số được gọi ngay" : `Người mới lấy số chờ khoảng ${phutCuoi} phút`} · tốc độ{" "}
             {toc.nguon === "do"
-              ? `đo được ${toc.khachMoiPhut.toFixed(1)} khách/phút (30 phút qua)`
+              ? `đo được ${toc.khachMoiPhut.toFixed(1).replace(".", ",")} khách/phút (30 phút qua)`
               : `khai ${toc.khachMoiPhut} khách/phút (chưa đủ khách lên đò để đo)`}
           </p>
         </div>
@@ -109,7 +109,7 @@ export function HangChoPanel({
       <dl className="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
         {[
           ["Đã lên đò hôm nay", `${tongQuan.daLenHomNay} khách · ${tongQuan.nhomDaLen} nhóm`],
-          ["Chờ trung bình", tongQuan.phutChoTrungBinh === null ? "—" : `${tongQuan.phutChoTrungBinh} phút`],
+          ["Chờ trung bình", tongQuan.phutChoTrungBinh === null ? "—" : `${String(tongQuan.phutChoTrungBinh).replace(".", ",")} phút`],
           ["Bỏ lượt", String(tongQuan.nhomBoLuot)],
           ["Khách tự huỷ", String(tongQuan.nhomHuy)],
         ].map(([nhan, giaTri]) => (

@@ -527,6 +527,10 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   HANG_CHO_SO_KHACH: "Mỗi số thứ tự dành cho nhóm từ 1 tới 6 khách.",
   HANG_CHO_DAY: "Hàng chờ hôm nay đã đủ 400 nhóm.",
   HANG_CHO_SO_NHOM: "Mỗi lần gọi từ 1 tới 20 nhóm.",
+  DAI_LY_TRUNG_MA: "Mã này đã có đại lý khác dùng. Chọn mã khác.",
+  DAI_LY_DA_CHI: "Tháng này đã ghi chi cho đại lý này rồi.",
+  DAI_LY_THANG_CHUA_KHEP: "Tháng chưa khép, chưa ghi chi được.",
+  DAI_LY_KHONG_CO: "Không tìm thấy đại lý này.",
   PAYMENT_COLLECT_INPUT_INVALID:
     "Thời điểm thu tiền gửi lên chưa hợp lệ.",
   PAYMENT_COLLECT_ACTOR_REQUIRED:

@@ -10,6 +10,8 @@ import {
   CustomerBookingRepositoryError,
   isCustomerBookingEnabled,
 } from "@/lib/customer-data/booking-repository";
+import { COOKIE_DAI_LY } from "@/domain/dai-ly";
+import { ganDonChoDaiLy } from "@/lib/dai-ly-repository";
 
 const MAX_BODY_BYTES = 8 * 1024;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -50,6 +52,10 @@ export async function POST(request: Request) {
       children: input.children,
       slotStartsAt: input.slot_starts_at,
     });
+    // Khách tới qua đường dẫn đại lý (`/dl/<mã>`): ghi đơn cho đại lý. Hàm
+    // không bao giờ ném, nên hỏng thì đơn vẫn giữ chỗ như thường.
+    const maDaiLy = (await cookies()).get(COOKIE_DAI_LY)?.value;
+    if (maDaiLy && !result.duplicate) await ganDonChoDaiLy(maDaiLy, result.orderId);
     const response = Response.json(
       {
         accepted: true,

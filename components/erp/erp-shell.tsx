@@ -57,6 +57,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
       ? [
           { href: "/erp/khach-hang", label: "Khách hàng", hint: "Hành trình, đơn đặt và gợi ý chăm sóc khách" },
           { href: "/erp/marketing", label: "Kênh khách", hint: "Mã QR và nguồn khách theo từng kênh" },
+          { href: "/erp/dai-ly", label: "Đại lý & hoa hồng", hint: "Đường dẫn giới thiệu, đơn và hoa hồng từng đại lý" },
           { href: "/erp/bang-gia-quay", label: "Giá vé quầy", hint: "Đặt giá bán tại quầy của bốn cơ sở" },
         ]
       : []),

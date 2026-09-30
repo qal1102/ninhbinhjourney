@@ -27,8 +27,8 @@ export type VeDeLuu = {
   entriesAllowed: number;
 };
 
-function tenDiem(siteId: string) {
-  return DESTINATIONS.find((item) => item.id === siteId)?.name.vi ?? "Điểm tham quan";
+function tenDiem(siteId: string, lang: "vi" | "en") {
+  return DESTINATIONS.find((item) => item.id === siteId)?.name[lang] ?? (lang === "en" ? "Site" : "Điểm tham quan");
 }
 
 // Máy có chia sẻ được tệp ảnh không. Đo một lần, đọc qua
@@ -60,7 +60,9 @@ async function veAnhVe(input: {
   orderCode: string;
   productName: string;
   tickets: VeDeLuu[];
+  lang: "vi" | "en";
 }): Promise<Blob> {
+  const en = input.lang === "en";
   const rong = 1080;
   const le = 72;
   const oQr = 360;
@@ -79,14 +81,14 @@ async function veAnhVe(input: {
 
   ctx.fillStyle = "#e7c78d";
   ctx.font = "700 30px system-ui, sans-serif";
-  ctx.fillText("NINH BÌNH JOURNEY · VÉ VÀO CỔNG", le, 96);
+  ctx.fillText(en ? "NINH BINH JOURNEY · GATE TICKET" : "NINH BÌNH JOURNEY · VÉ VÀO CỔNG", le, 96);
   ctx.fillStyle = "#ffffff";
   ctx.font = "700 54px Georgia, serif";
   const ten = input.productName.length > 34 ? `${input.productName.slice(0, 33)}…` : input.productName;
   ctx.fillText(ten, le, 180);
   ctx.fillStyle = "rgba(255,255,255,0.72)";
   ctx.font = "400 32px system-ui, sans-serif";
-  ctx.fillText("Mã đặt chỗ", le, 262);
+  ctx.fillText(en ? "Booking code" : "Mã đặt chỗ", le, 262);
   ctx.fillStyle = "#e7c78d";
   ctx.font = "800 48px ui-monospace, monospace";
   ctx.fillText(input.orderCode, le, 318);
@@ -107,15 +109,17 @@ async function veAnhVe(input: {
     const x = le + oQr + 40;
     ctx.fillStyle = "#183f34";
     ctx.font = "700 38px system-ui, sans-serif";
-    ctx.fillText(tenDiem(ve.siteId), x, y + 70);
+    ctx.fillText(tenDiem(ve.siteId, input.lang), x, y + 70);
     ctx.fillStyle = "#27362f";
     ctx.font = "800 36px ui-monospace, monospace";
     ctx.fillText(ve.ticketCode, x, y + 140);
     ctx.fillStyle = "#59654b";
     ctx.font = "400 30px system-ui, sans-serif";
-    ctx.fillText(`${ve.entriesAllowed} lượt vào`, x, y + 200);
+    ctx.fillText(en ? `${ve.entriesAllowed} entries` : `${ve.entriesAllowed} lượt vào`, x, y + 200);
     ctx.fillText(
-      `Ngày ${new Date(`${ve.validOn}T00:00:00`).toLocaleDateString("vi-VN")}`,
+      en
+        ? `Date ${new Date(`${ve.validOn}T00:00:00`).toLocaleDateString("en-GB")}`
+        : `Ngày ${new Date(`${ve.validOn}T00:00:00`).toLocaleDateString("vi-VN")}`,
       x,
       y + 250,
     );
@@ -124,7 +128,7 @@ async function veAnhVe(input: {
 
   ctx.fillStyle = "#59654b";
   ctx.font = "400 30px system-ui, sans-serif";
-  ctx.fillText("Tới cổng, mở ảnh này cho nhân viên quét mã là vào.", le, cao - 56);
+  ctx.fillText(en ? "At the gate, show this image to be scanned and walk in." : "Tới cổng, mở ảnh này cho nhân viên quét mã là vào.", le, cao - 56);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob"))), "image/png");
@@ -136,12 +140,15 @@ export function LuuAnhVe({
   productName,
   tickets,
   tone = "dark",
+  lang = "vi",
 }: {
   orderCode: string;
   productName: string;
   tickets: VeDeLuu[];
   tone?: "dark" | "light";
+  lang?: "vi" | "en";
 }) {
+  const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const chiaSeDuoc = useSyncExternalStore(khongDoi, doChiaSe, () => false);
   const [dangLam, setDangLam] = useState(false);
   const [loi, setLoi] = useState("");
@@ -151,7 +158,7 @@ export function LuuAnhVe({
     setDangLam(true);
     setLoi("");
     try {
-      const blob = await veAnhVe({ orderCode, productName, tickets });
+      const blob = await veAnhVe({ orderCode, productName, tickets, lang });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -161,7 +168,7 @@ export function LuuAnhVe({
       a.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch {
-      setLoi("Máy chưa lưu được ảnh. Bạn chụp màn hình phần vé giúp em ạ.");
+      setLoi(t("Máy chưa lưu được ảnh. Bạn chụp màn hình phần vé giúp em ạ.", "Could not save the image. Please take a screenshot of the ticket."));
     } finally {
       setDangLam(false);
     }
@@ -171,13 +178,13 @@ export function LuuAnhVe({
     setDangLam(true);
     setLoi("");
     try {
-      const blob = await veAnhVe({ orderCode, productName, tickets });
+      const blob = await veAnhVe({ orderCode, productName, tickets, lang });
       const tep = new File([blob], tenTep, { type: "image/png" });
-      await navigator.share({ files: [tep], title: `Vé ${orderCode}` });
+      await navigator.share({ files: [tep], title: t(`Vé ${orderCode}`, `Ticket ${orderCode}`) });
     } catch (error) {
       // Khách tự bấm huỷ bảng chia sẻ thì không phải lỗi.
       if (!(error instanceof DOMException && error.name === "AbortError")) {
-        setLoi("Chưa gửi được ảnh. Bạn bấm \"Lưu ảnh vé\" rồi gửi từ thư viện ảnh giúp em ạ.");
+        setLoi(t("Chưa gửi được ảnh. Bạn bấm \"Lưu ảnh vé\" rồi gửi từ thư viện ảnh giúp em ạ.", "Could not share the image. Save it first, then send it from your photos."));
       }
     } finally {
       setDangLam(false);
@@ -199,7 +206,7 @@ export function LuuAnhVe({
         disabled={dangLam}
         className={`min-h-12 rounded-full px-5 text-sm font-extrabold disabled:opacity-60 ${nutChinh}`}
       >
-        {dangLam ? "Đang dựng ảnh vé…" : "Lưu ảnh vé về máy"}
+        {dangLam ? t("Đang dựng ảnh vé…", "Making the ticket image…") : t("Lưu ảnh vé về máy", "Save ticket image")}
       </button>
       {chiaSeDuoc ? (
         <button
@@ -208,7 +215,7 @@ export function LuuAnhVe({
           disabled={dangLam}
           className={`min-h-12 rounded-full px-5 text-sm font-extrabold disabled:opacity-60 ${nutPhu}`}
         >
-          Gửi ảnh vé qua Zalo…
+          {t("Gửi ảnh vé qua Zalo…", "Share ticket image…")}
         </button>
       ) : null}
       {loi ? <p role="alert" className="text-sm sm:col-span-2">{loi}</p> : null}

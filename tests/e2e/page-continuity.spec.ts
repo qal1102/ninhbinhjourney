@@ -226,7 +226,7 @@ test("explore sheet hands its destination image to the route without duplicate n
     { waitUntil: "domcontentloaded" },
   );
   await waitForClientRouter(page);
-  await page.getByRole("button", { name: "Danh sách" }).click();
+  await page.getByRole("button", { name: "List" }).click();
   await page
     .locator('[data-testid="explore-detail-trang-an"]:visible')
     .first()
@@ -238,7 +238,7 @@ test("explore sheet hands its destination image to the route without duplicate n
   const beforeForward = await transitionCount(page);
   await page
     .getByTestId("explore-detail-sheet")
-    .getByRole("link", { name: "Đọc thêm" })
+    .getByRole("link", { name: "Read more" })
     .click();
   await expect(page).toHaveURL(
     /\/destination\/trang-an\?lang=en&source=page-continuity-e2e&from=explore$/,
@@ -272,7 +272,7 @@ test("package-to-destination hierarchy returns to the deterministic parent", asy
   await expect.poll(() => transitionCount(page)).toBeGreaterThan(beforeForward);
 
   const beforeBack = await transitionCount(page);
-  await page.getByRole("link", { name: /Khám phá/ }).click();
+  await page.getByRole("link", { name: /Explore/ }).click();
   await expect(page).toHaveURL(
     /\/packages\/heritage-day\?lang=en&source=page-continuity-e2e&from=home$/,
   );

@@ -18,6 +18,21 @@ type ConsentResponse = {
   error?: { message?: string };
 };
 
+/**
+ * Ngôn ngữ của trang đang xem. Các trang web khách dựng `lang` ngay trên thẻ
+ * <main> từ máy chủ (đổi <html> sau khi trang hiện làm phông dàn lại chữ và
+ * xô lệch vị trí cuộn), nên đọc theo thứ tự: <main>, tham số `?lang=`,
+ * thẻ <html> (trang chủ tự đặt), cookie.
+ */
+function ngonNguTrang(): "en" | "vi" {
+  const main = document.querySelector("main[lang]")?.getAttribute("lang");
+  if (main === "en" || main === "vi") return main;
+  const q = new URLSearchParams(window.location.search).get("lang");
+  if (q === "en" || q === "vi") return q;
+  if (document.documentElement.lang === "en") return "en";
+  return /(?:^|;s*)ninh-binh-lang=en(?:;|$)/.test(document.cookie) ? "en" : "vi";
+}
+
 export function CustomerConsentCenter() {
   const pathname = usePathname();
   const [language, setLanguage] = useState<"en" | "vi">("vi");
@@ -33,7 +48,7 @@ export function CustomerConsentCenter() {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      setLanguage(document.documentElement.lang === "en" ? "en" : "vi");
+      setLanguage(ngonNguTrang());
       const stored = parseCustomerConsentPreferences(
         window.localStorage.getItem(CUSTOMER_ANALYTICS_CONSENT_STORAGE_KEY),
       );
@@ -51,10 +66,9 @@ export function CustomerConsentCenter() {
 
   useEffect(() => {
     const root = document.documentElement;
-    const observer = new MutationObserver(() => {
-      setLanguage(root.lang === "en" ? "en" : "vi");
-    });
-    observer.observe(root, { attributes: true, attributeFilter: ["lang"] });
+    const observer = new MutationObserver(() => setLanguage(ngonNguTrang()));
+    // Theo dõi cả cây: trang mới dựng xong mang `<main lang>` của nó.
+    observer.observe(root, { attributes: true, attributeFilter: ["lang"], subtree: true, childList: true });
     return () => observer.disconnect();
   }, []);
 

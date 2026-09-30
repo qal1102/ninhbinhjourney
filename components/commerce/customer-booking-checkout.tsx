@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import QRCode from "qrcode";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PackageCatalogItem } from "@/content/packages";
 import type { CustomerProductTimeSlot } from "@/domain/customer-booking";
 import { WEB_BOOKING_MAX_PARTY_SIZE } from "@/domain/customer-booking";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import { getOrCreateCustomerAnonymousId } from "@/lib/customer-data/browser-tracking";
 import { formatVietnameseDate } from "@/lib/vietnamese-date";
+import { maVung, type NgonNgu } from "@/lib/ngon-ngu";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 
 type VisitorGroupApiResponse =
@@ -26,7 +27,7 @@ type VisitorGroupApiResponse =
 //
 // Cách vẽ lấy nguyên của `pass-experience.tsx`, dùng lại gói `qrcode` đã có
 // trong dự án, không phát minh thêm cách khác.
-function MemberQrCode({ memberCode }: { memberCode: string }) {
+function MemberQrCode({ memberCode, lang }: { memberCode: string; lang: NgonNgu }) {
   const [qrDataUrl, setQrDataUrl] = useState("");
 
   useEffect(() => {
@@ -45,13 +46,13 @@ function MemberQrCode({ memberCode }: { memberCode: string }) {
   }, [memberCode]);
 
   if (!qrDataUrl) {
-    return <div className="grid size-16 shrink-0 place-items-center rounded-xl bg-[#f4f0e7] text-[10px] text-[#6b786f]">Đang tạo…</div>;
+    return <div className="grid size-16 shrink-0 place-items-center rounded-xl bg-[#f4f0e7] text-[10px] text-[#6b786f]">{lang === "en" ? "Making…" : "Đang tạo…"}</div>;
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={qrDataUrl}
-      alt={`Mã QR để tự khai tên, mã thành viên ${memberCode}`}
+      alt={lang === "en" ? `QR code to add your name, member code ${memberCode}` : `Mã QR để tự khai tên, mã thành viên ${memberCode}`}
       className="size-16 shrink-0 rounded-xl bg-[#f4f0e7]"
     />
   );
@@ -63,7 +64,7 @@ function MemberQrCode({ memberCode }: { memberCode: string }) {
 // không quét được nữa.
 //
 // Cách vẽ giữ nguyên `MemberQrCode`, dùng lại gói `qrcode` đã có trong dự án.
-function TicketQrCode({ ticketCode }: { ticketCode: string }) {
+function TicketQrCode({ ticketCode, lang }: { ticketCode: string; lang: NgonNgu }) {
   const [qrDataUrl, setQrDataUrl] = useState("");
 
   useEffect(() => {
@@ -82,13 +83,13 @@ function TicketQrCode({ ticketCode }: { ticketCode: string }) {
   }, [ticketCode]);
 
   if (!qrDataUrl) {
-    return <div className="grid size-16 shrink-0 place-items-center rounded-xl bg-[#f4f0e7] text-[10px] text-[#6b786f]">Đang tạo…</div>;
+    return <div className="grid size-16 shrink-0 place-items-center rounded-xl bg-[#f4f0e7] text-[10px] text-[#6b786f]">{lang === "en" ? "Making…" : "Đang tạo…"}</div>;
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={qrDataUrl}
-      alt={`Mã QR để quét ở cổng, mã vé ${ticketCode}`}
+      alt={lang === "en" ? `QR code for the gate, ticket ${ticketCode}` : `Mã QR để quét ở cổng, mã vé ${ticketCode}`}
       className="size-16 shrink-0 rounded-xl bg-[#f4f0e7]"
     />
   );
@@ -136,34 +137,35 @@ function clamp(value: number, min: number, max: number) {
 // Nói theo cách khách hiểu, không theo cách bảng dữ liệu gọi. "child" ở đây
 // nghĩa hẹp là trẻ dưới 1m3 — nhóm không mất vé. Vé cũ phát trước TC-03 gộp cả
 // đoàn vào một tấm, vẫn ghi đúng số khách chứ không gọi nhầm thành vé thường.
-function formatGuestGroupSummary(tickets: ConfirmationResult["tickets"]) {
+function formatGuestGroupSummary(tickets: ConfirmationResult["tickets"], lang: NgonNgu) {
   const adultTicket = tickets.find((ticket) => ticket.guestGroup === "adult");
   const childTicket = tickets.find((ticket) => ticket.guestGroup === "child");
   const groupTicket = tickets.find((ticket) => ticket.guestGroup === "group");
   const parts: string[] = [];
-  if (adultTicket) parts.push(`${adultTicket.entriesAllowed} vé`);
-  if (childTicket) parts.push(`${childTicket.entriesAllowed} trẻ dưới 1m3 (không mất vé)`);
-  if (groupTicket) parts.push(`${groupTicket.entriesAllowed} khách`);
+  const en = lang === "en";
+  if (adultTicket) parts.push(en ? `${adultTicket.entriesAllowed} tickets` : `${adultTicket.entriesAllowed} vé`);
+  if (childTicket) parts.push(en ? `${childTicket.entriesAllowed} under 1.3 m (free)` : `${childTicket.entriesAllowed} trẻ dưới 1m3 (không mất vé)`);
+  if (groupTicket) parts.push(en ? `${groupTicket.entriesAllowed} guests` : `${groupTicket.entriesAllowed} khách`);
   return parts.join(" · ");
 }
 
 // "T11a" là số hiệu một phiếu việc trong hàng đợi nội bộ, không phải chữ khách
 // hiểu được. Khách chỉ cần biết con số sức chứa này lấy từ đâu ra.
 const SOURCE_LABEL = {
-  estimate: "Số chỗ ước tính",
-  customer: "Số chỗ do điểm tham quan báo",
-  measured: "Số chỗ đã đếm thực tế",
+  estimate: { vi: "Số chỗ ước tính", en: "Estimated seats" },
+  customer: { vi: "Số chỗ do điểm tham quan báo", en: "Seats reported by the site" },
+  measured: { vi: "Số chỗ đã đếm thực tế", en: "Seats actually counted" },
 } as const;
 
 // TC-15 — nhu cầu chăm sóc thay cho tuổi, đúng chủ đích của domain/visitor-group.ts.
 // Giữ nguyên bốn giá trị và nhãn này, vì máy trực cổng đọc theo đúng chữ trong danh sách.
 type CareNeedValue = VisitorGroupStatus["members"][number]["careNeed"];
 
-const CARE_NEED_OPTIONS: Array<{ value: CareNeedValue; label: string }> = [
-  { value: "none", label: "Không cần gì thêm" },
-  { value: "young-child", label: "Đi cùng trẻ nhỏ" },
-  { value: "elderly", label: "Người cao tuổi" },
-  { value: "mobility", label: "Khó đi lại" },
+const CARE_NEED_OPTIONS: Array<{ value: CareNeedValue; label: string; labelEn: string }> = [
+  { value: "none", label: "Không cần gì thêm", labelEn: "Nothing extra" },
+  { value: "young-child", label: "Đi cùng trẻ nhỏ", labelEn: "With a small child" },
+  { value: "elderly", label: "Người cao tuổi", labelEn: "Older traveller" },
+  { value: "mobility", label: "Khó đi lại", labelEn: "Limited mobility" },
 ];
 
 function localIsoDate(daysFromToday: number) {
@@ -181,6 +183,7 @@ function formatCountdown(seconds: number) {
 }
 
 function formatSlotTime(iso: string) {
+  // Giờ 24h như "08:00" đọc được bằng cả hai thứ tiếng.
   return new Date(iso).toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -192,12 +195,12 @@ type SlotsApiResponse =
   | { accepted: true; slots: CustomerProductTimeSlot[] }
   | { accepted: false; error?: { message?: string } };
 
-async function responsePayload(response: Response) {
+async function responsePayload(response: Response, lang: NgonNgu = "vi") {
   const payload = await response.json().catch(() => null) as
     | { error?: { message?: string } }
     | null;
   if (!response.ok) {
-    throw new Error(payload?.error?.message ?? "Hệ thống đặt chỗ chưa trả lời, mời bạn thử lại.");
+    throw new Error(payload?.error?.message ?? (lang === "en" ? "The booking system did not answer. Please try again." : "Hệ thống đặt chỗ chưa trả lời, mời bạn thử lại."));
   }
   return payload;
 }
@@ -205,11 +208,18 @@ async function responsePayload(response: Response) {
 export function CustomerBookingCheckout({
   packageItem,
   batDauHomNay = false,
+  lang = "vi",
+  chuGoi,
 }: {
   packageItem: PackageCatalogItem;
-  /** `?ngay=hom-nay` từ vòng dẫn ERP: mở sẵn ngày đi là hôm nay. */
+  /** `?ngay=hom-nay` từ màn Hướng dẫn trong ERP: mở sẵn ngày đi là hôm nay. */
   batDauHomNay?: boolean;
+  lang?: NgonNgu;
+  /** Tên, đối tượng, thời lượng của gói theo ngôn ngữ đang chọn. */
+  chuGoi?: { name: string; audience: string; durationLabel: string };
 }) {
+  const t = useCallback((vi: string, en: string) => (lang === "en" ? en : vi), [lang]);
+  const tenGoi = chuGoi?.name ?? packageItem.name;
   // Mặc định: gói cố định tổng khách thì mọi chỗ tính là người lớn cho tới
   // khi khách tự đổi tỉ lệ; gói thường mặc định hai người lớn như trước đây.
   const [adults, setAdults] = useState(() => (packageItem.fixedPartySize ? Math.max(1, packageItem.fixedPartySize) : 2));
@@ -306,7 +316,7 @@ export function CustomerBookingCheckout({
           setSlots(null);
           setSlotsError(
             (payload && !payload.accepted && payload.error?.message)
-              || "Chưa lấy được khung giờ còn trống, mời bạn thử lại.",
+          || t("Chưa lấy được khung giờ còn trống, mời bạn thử lại.", "Could not load the free times. Please try again."),
           );
           return;
         }
@@ -314,7 +324,7 @@ export function CustomerBookingCheckout({
       } catch {
         if (!cancelled) {
           setSlots(null);
-          setSlotsError("Chưa lấy được khung giờ còn trống, mời bạn thử lại.");
+          setSlotsError(t("Chưa lấy được khung giờ còn trống, mời bạn thử lại.", "Could not load the free times. Please try again."));
         }
       } finally {
         if (!cancelled) setSlotsLoading(false);
@@ -324,7 +334,7 @@ export function CustomerBookingCheckout({
     return () => {
       cancelled = true;
     };
-  }, [packageItem.id, visitDate]);
+  }, [packageItem.id, visitDate, t]);
 
   const selectedSlot = slots?.find((slot) => slot.startsAt === selectedSlotStartsAt) ?? null;
   // Màn Hướng dẫn khoanh đúng một chỗ cho mỗi bước (components/shared/chi-diem.tsx).
@@ -400,7 +410,7 @@ export function CustomerBookingCheckout({
 
   async function createHold() {
     if (!selectedSlotStartsAt) {
-      setMessage("Mời bạn chọn một khung giờ trước khi giữ chỗ.");
+      setMessage(t("Mời bạn chọn một khung giờ trước khi giữ chỗ.", "Please pick a time before holding seats."));
       return;
     }
     setPending("hold");
@@ -422,14 +432,14 @@ export function CustomerBookingCheckout({
           slot_starts_at: selectedSlotStartsAt,
         }),
       });
-      const payload = await responsePayload(response) as HoldResult;
+      const payload = await responsePayload(response, lang) as HoldResult;
       setHold(payload);
       setQr(null);
       setConfirmation(null);
       paymentRequestId.current = crypto.randomUUID();
-      setMessage("Chỗ của bạn đã được giữ. Bạn có 15 phút để hoàn tất ạ.");
+      setMessage(t("Chỗ của bạn đã được giữ. Bạn có 15 phút để hoàn tất ạ.", "Your seats are held. You have 15 minutes to finish."));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Lúc này chưa giữ chỗ được, mời bạn thử lại.");
+      setMessage(error instanceof Error ? error.message : t("Lúc này chưa giữ chỗ được, mời bạn thử lại.", "Could not hold seats right now. Please try again."));
     } finally {
       setPending(null);
     }
@@ -440,7 +450,7 @@ export function CustomerBookingCheckout({
     // TC-22: chọn trả tiền tại điểm thì phải có liên hệ. Chặn ngay ở đây để
     // khách thấy lý do tại chỗ, thay vì bấm xong mới nhận một câu từ chối.
     if (contact.trim().length < 6) {
-      setMessage("Bạn để lại giúp em số điện thoại hoặc email trước đã ạ. Lỡ mất trang, bạn dùng chính số này để mở lại vé.");
+      setMessage(t("Bạn để lại giúp em số điện thoại hoặc email trước đã ạ. Lỡ mất trang, bạn dùng chính số này để mở lại vé.", "Please leave a phone number or email first. If you lose this page, you use it to open your ticket again."));
       return;
     }
     if (!payAtSite) {
@@ -461,12 +471,12 @@ export function CustomerBookingCheckout({
           contact: contact.trim(),
         }),
       });
-      const payload = await responsePayload(response) as ConfirmationResult;
+      const payload = await responsePayload(response, lang) as ConfirmationResult;
       setConfirmation(payload);
       setContactSaved(contact.trim().length >= 6);
-      setMessage("Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào ạ.");
+      setMessage(t("Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào ạ.", "Seats held. Your ticket and QR code are below; at the gate, show the code, pay and go in."));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Lúc này chưa xác nhận được, mời bạn thử lại.");
+      setMessage(error instanceof Error ? error.message : t("Lúc này chưa xác nhận được, mời bạn thử lại.", "Could not confirm right now. Please try again."));
     } finally {
       setPending(null);
     }
@@ -491,16 +501,18 @@ export function CustomerBookingCheckout({
           product_id: packageItem.id,
         }),
       });
-      const payload = await responsePayload(response) as { pay_url: string };
-      const dataUrl = await QRCode.toDataURL(payload.pay_url, {
+      const payload = await responsePayload(response, lang) as { pay_url: string };
+      // Điện thoại quét mã chưa chắc có cookie ngôn ngữ: gửi kèm trong đường dẫn.
+      const payUrl = lang === "en" ? `${payload.pay_url}?lang=en` : payload.pay_url;
+      const dataUrl = await QRCode.toDataURL(payUrl, {
         margin: 1,
         width: 440,
         errorCorrectionLevel: "L",
         color: { dark: "#10231d", light: "#ffffff" },
       });
-      setQr({ payUrl: payload.pay_url, dataUrl });
+      setQr({ payUrl, dataUrl });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Lúc này chưa lấy được mã QR, mời bạn thử lại.");
+      setMessage(error instanceof Error ? error.message : t("Lúc này chưa lấy được mã QR, mời bạn thử lại.", "Could not get the QR code right now. Please try again."));
     } finally {
       setPending(null);
     }
@@ -525,7 +537,7 @@ export function CustomerBookingCheckout({
         setConfirmation(payload);
         setContactSaved(true);
         setQr(null);
-        setMessage("Đã nhận thanh toán qua mã QR. Vé của bạn ở ngay bên dưới ạ.");
+        setMessage(t("Đã nhận thanh toán qua mã QR. Vé của bạn ở ngay bên dưới ạ.", "Payment received by QR code. Your ticket is right below."));
       } catch {
         // Mạng chập chờn thì lần sau hỏi lại, không làm phiền khách.
       }
@@ -536,7 +548,7 @@ export function CustomerBookingCheckout({
       dung = true;
       window.clearInterval(timer);
     };
-  }, [qr, hold, confirmation]);
+  }, [qr, hold, confirmation, t]);
 
   async function createVisitorGroup(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -561,13 +573,13 @@ export function CustomerBookingCheckout({
       if (!response.ok || !payload?.accepted) {
         setGroupMessage(
           (payload && !payload.accepted && payload.error?.message)
-            || "Chưa tạo được mã đoàn, mời bạn thử lại.",
+            || t("Chưa tạo được mã đoàn, mời bạn thử lại.", "Could not create the group code. Please try again."),
         );
         return;
       }
       setGroup(payload.group);
     } catch {
-      setGroupMessage("Chưa tạo được mã đoàn, mời bạn thử lại.");
+      setGroupMessage(t("Chưa tạo được mã đoàn, mời bạn thử lại.", "Could not create the group code. Please try again."));
     } finally {
       setGroupPending(false);
     }
@@ -622,15 +634,15 @@ export function CustomerBookingCheckout({
       if (!response.ok || !payload?.accepted) {
         setMemberDetailsMessage(
           (payload && !payload.accepted && payload.error?.message)
-            || "Chưa lưu được, mời bạn thử lại.",
+            || t("Chưa lưu được, mời bạn thử lại.", "Could not save. Please try again."),
         );
         return;
       }
       setGroup(payload.group);
       setMemberEdits({});
-      setMemberDetailsMessage("Đã lưu tên cả đoàn.");
+      setMemberDetailsMessage(t("Đã lưu tên cả đoàn.", "Saved the names for the whole group."));
     } catch {
-      setMemberDetailsMessage("Chưa lưu được, mời bạn thử lại.");
+      setMemberDetailsMessage(t("Chưa lưu được, mời bạn thử lại.", "Could not save. Please try again."));
     } finally {
       setMemberDetailsPending(false);
     }
@@ -641,13 +653,13 @@ export function CustomerBookingCheckout({
       <section className="overflow-hidden rounded-[2rem] border border-[#d4d1c7] bg-white shadow-[0_24px_70px_rgba(24,63,52,0.08)]">
         <div className="border-b border-[#e5e1d8] bg-[#fbfaf6] p-6 sm:p-8">
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#9a6328]">
-            Giữ chỗ theo số chỗ còn trống trong ngày
+            {t("Giữ chỗ theo số chỗ còn trống trong ngày", "Hold seats from what is still free that day")}
           </p>
           <h2 className="font-display mt-3 text-4xl leading-tight text-[#183f34] sm:text-5xl">
-            Chọn ngày. Chúng tôi giữ chỗ trong 15 phút.
+            {t("Chọn ngày. Chúng tôi giữ chỗ trong 15 phút.", "Pick a day. We hold your seats for 15 minutes.")}
           </h2>
           <p className="mt-4 max-w-2xl leading-7 text-[#59654b]">
-            Bạn không cần tạo tài khoản. Chỉ xin một số điện thoại để gửi lại vé khi cần, và chúng tôi không tự đăng ký cho bạn nhận tin quảng cáo.
+            {t("Bạn không cần tạo tài khoản. Chỉ xin một số điện thoại để gửi lại vé khi cần, và chúng tôi không tự đăng ký cho bạn nhận tin quảng cáo.", "No account needed. We only ask for a phone number so you can get your ticket back, and we never sign you up for marketing.")}
           </p>
         </div>
 
@@ -656,9 +668,9 @@ export function CustomerBookingCheckout({
             className="block max-w-xs text-sm font-bold text-[#27362f]"
             {...chi("ngay", "Ngày này đã hết khung giờ đặt được. Đổi ngày đi sang ngày mai, rồi chọn một khung giờ.")}
           >
-            Ngày đi
+            {t("Ngày đi", "Date")}
             <input
-              aria-label="Ngày đi"
+              aria-label={t("Ngày đi", "Date")}
               type="date"
               value={visitDate}
               // Nhận đặt cho chính hôm nay: máy chủ vốn cho phép, chỉ ô ngày
@@ -672,7 +684,11 @@ export function CustomerBookingCheckout({
               className="mt-2 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal"
             />
             {visitDate ? (
-              <span className="mt-1 block text-xs font-normal text-[#59654b]">{formatVietnameseDate(visitDate)}</span>
+              <span className="mt-1 block text-xs font-normal text-[#59654b]">
+                {lang === "en"
+                  ? new Date(`${visitDate}T00:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+                  : formatVietnameseDate(visitDate)}
+              </span>
             ) : null}
           </label>
 
@@ -685,38 +701,38 @@ export function CustomerBookingCheckout({
                 : "Bấm một khung giờ còn sáng. Khung đã qua giờ bị mờ, không bấm được.",
             )}
           >
-            <p className="text-sm font-bold text-[#27362f]">Khung giờ</p>
+            <p className="text-sm font-bold text-[#27362f]">{t("Khung giờ", "Time")}</p>
             {slotsLoading ? (
-              <p className="mt-3 text-sm text-[#6b786f]">Đang tải khung giờ còn trống…</p>
+              <p className="mt-3 text-sm text-[#6b786f]">{t("Đang tải khung giờ còn trống…", "Loading free times…")}</p>
             ) : slotsError ? (
               <p role="alert" className="mt-3 text-sm text-[#9a3b2f]">{slotsError}</p>
             ) : !slots || slots.length === 0 ? (
-              <p className="mt-3 text-sm text-[#6b786f]">Ngày này chưa mở khung giờ nào, mời bạn chọn ngày khác.</p>
+              <p className="mt-3 text-sm text-[#6b786f]">{t("Ngày này chưa mở khung giờ nào, mời bạn chọn ngày khác.", "No times are open on this day. Please pick another day.")}</p>
             ) : (
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {slots.map((slot) => {
                   const selected = slot.startsAt === selectedSlotStartsAt;
                   const timeLabel = formatSlotTime(slot.startsAt);
                   const statusLabel = slot.blockedReason === "passed"
-                    ? "Đã qua giờ"
+                    ? t("Đã qua giờ", "Already passed")
                     : slot.blockedReason === "paused"
-                    ? "Đang tạm dừng nhận khách"
+                    ? t("Đang tạm dừng nhận khách", "Paused for now")
                     : slot.blockedReason === "full"
-                      ? "Đã hết chỗ"
+                      ? t("Đã hết chỗ", "Full")
                       : slot.capacitySourceKind === "estimate"
                         // QA-P2-09: bốn khung giờ cùng hiện "Còn 800 chỗ" y hệt nhau vì
                         // sức chứa mới là ước tính. Con số tròn trĩnh ấy trông như đếm
                         // thật; ước tính thì nói ước tính, và chỉ nói số khi sắp hết.
                         ? slot.remaining > 50
-                          ? "Còn nhiều chỗ"
-                          : `Còn khoảng ${slot.remaining} chỗ`
-                        : `Còn ${slot.remaining} chỗ`;
+                          ? t("Còn nhiều chỗ", "Plenty of seats")
+                          : t(`Còn khoảng ${slot.remaining} chỗ`, `About ${slot.remaining} seats left`)
+                        : t(`Còn ${slot.remaining} chỗ`, `${slot.remaining} seats left`);
                   return (
                     <button
                       key={slot.startsAt}
                       type="button"
                       aria-pressed={selected}
-                      aria-label={`Khung ${timeLabel}, ${statusLabel.toLowerCase()}`}
+                      aria-label={t(`Khung ${timeLabel}, ${statusLabel.toLowerCase()}`, `${timeLabel}, ${statusLabel.toLowerCase()}`)}
                       disabled={!slot.bookable}
                       onClick={() => selectSlot(slot.startsAt)}
                       className={`min-h-[4.25rem] rounded-2xl border px-3 py-2 text-left transition-colors ${
@@ -735,17 +751,17 @@ export function CustomerBookingCheckout({
               </div>
             )}
             {slots?.some((slot) => slot.capacitySourceKind === "estimate") ? (
-              <p className="mt-2 text-xs text-[#6b786f]">Số chỗ còn lại là ước tính theo sức chứa của điểm tham quan.</p>
+              <p className="mt-2 text-xs text-[#6b786f]">{t("Số chỗ còn lại là ước tính theo sức chứa của điểm tham quan.", "Seats left are estimated from the site's capacity.")}</p>
             ) : null}
           </div>
 
           <div className="mt-7 max-w-xs">
-            <p className="text-sm font-bold text-[#27362f]">Số khách</p>
+            <p className="text-sm font-bold text-[#27362f]">{t("Số khách", "Guests")}</p>
             <div className="mt-2 grid grid-cols-2 gap-3">
               <label className="block text-xs font-bold text-[#59654b]">
-                Từ 1m3 trở lên
+                {t("Từ 1m3 trở lên", "1.3 m and taller")}
                 <input
-                  aria-label="Số khách cao từ 1m3 trở lên"
+                  aria-label={t("Số khách cao từ 1m3 trở lên", "Guests 1.3 m and taller")}
                   type="number"
                   min={1}
                   max={packageItem.fixedPartySize ?? WEB_BOOKING_MAX_PARTY_SIZE}
@@ -755,9 +771,9 @@ export function CustomerBookingCheckout({
                 />
               </label>
               <label className="block text-xs font-bold text-[#59654b]">
-                Dưới 1m3
+                {t("Dưới 1m3", "Under 1.3 m")}
                 <input
-                  aria-label="Số trẻ cao dưới 1m3"
+                  aria-label={t("Số trẻ cao dưới 1m3", "Children under 1.3 m")}
                   type="number"
                   min={0}
                   max={packageItem.fixedPartySize ? Math.max(0, packageItem.fixedPartySize - 1) : WEB_BOOKING_MAX_PARTY_SIZE - 1}
@@ -769,16 +785,25 @@ export function CustomerBookingCheckout({
             </div>
             {packageItem.fixedPartySize ? (
               <span className="mt-2 block text-xs font-normal text-[#6b786f]">
-                Bàn đã đặt sẵn cho {packageItem.fixedPartySize} khách. Trẻ dưới 1m3 không mất vé, và tổng số chỗ vẫn giữ nguyên ạ.
+                {t(
+                  `Bàn đã đặt sẵn cho ${packageItem.fixedPartySize} khách. Trẻ dưới 1m3 không mất vé, và tổng số chỗ vẫn giữ nguyên ạ.`,
+                  `The table is set for ${packageItem.fixedPartySize} guests. Children under 1.3 m are free, and the total stays the same.`,
+                )}
               </span>
             ) : (
               <span className="mt-2 block text-xs font-normal text-[#6b786f]">
-                Trẻ dưới 1m3 không mất vé, nhưng vẫn được giữ một chỗ trên thuyền. Mỗi lượt đặt tối đa {WEB_BOOKING_MAX_PARTY_SIZE} khách, vừa một xe lớn. Đoàn đông hơn, mời bạn gọi cho bên em để bên em xếp riêng.
+                {t(
+                  `Trẻ dưới 1m3 không mất vé, nhưng vẫn được giữ một chỗ trên thuyền. Mỗi lượt đặt tối đa ${WEB_BOOKING_MAX_PARTY_SIZE} khách, vừa một xe lớn. Đoàn đông hơn, mời bạn gọi cho bên em để bên em xếp riêng.`,
+                  `Children under 1.3 m travel free but still get a seat on the boat. Up to ${WEB_BOOKING_MAX_PARTY_SIZE} guests per booking, one large coach. For bigger groups, please call us and we will arrange it.`,
+                )}
               </span>
             )}
             {partySizeExceedsSlot ? (
               <span className="mt-2 block text-xs font-normal text-[#9a3b2f]">
-                Khung giờ này còn {selectedSlot?.remaining} chỗ, ít hơn số khách bạn chọn. Mời bạn giảm số khách hoặc chọn khung khác.
+                {t(
+                  `Khung giờ này còn ${selectedSlot?.remaining} chỗ, ít hơn số khách bạn chọn. Mời bạn giảm số khách hoặc chọn khung khác.`,
+                  `This time has ${selectedSlot?.remaining} seats left, fewer than your group. Please lower the number of guests or pick another time.`,
+                )}
               </span>
             ) : null}
           </div>
@@ -796,9 +821,13 @@ export function CustomerBookingCheckout({
               nhả chỗ" cạnh tấm vé đã trả sẽ tưởng vé mình sắp mất. */}
           {confirmation ? null : (
             <div className="mt-7 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
-              <p className="font-extrabold">Giữ chỗ 15 phút, quét mã QR là xong</p>
+              <p className="font-extrabold">{t("Giữ chỗ 15 phút, quét mã QR là xong", "Hold for 15 minutes, scan a QR code and you are done")}</p>
               <p className="mt-2 text-sm leading-6">
-                Chỗ giữ là thật, vé có mã QR mà máy ở cổng quét được. Quá 15 phút chưa thanh toán thì chỗ tự nhả cho khách khác. Ở bản trình diễn này, bước chuyển khoản là giả lập: quét mã, bấm xác nhận là xong, <strong className="font-bold">không có tiền thật nào bị trừ</strong>.
+                {t(
+                  "Chỗ giữ là thật, vé có mã QR mà máy ở cổng quét được. Quá 15 phút chưa thanh toán thì chỗ tự nhả cho khách khác. Ở bản trình diễn này, bước chuyển khoản là giả lập: quét mã, bấm xác nhận là xong, ",
+                  "The hold is real, and the ticket has a QR code the gate scanners read. If you do not pay within 15 minutes, the seats go back to other guests. In this demo the transfer is simulated: scan, press confirm and you are done — ",
+                )}
+                <strong className="font-bold">{t("không có tiền thật nào bị trừ", "no real money is taken")}</strong>.
               </p>
             </div>
           )}
@@ -807,19 +836,19 @@ export function CustomerBookingCheckout({
             <div className="mt-7">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">Các điểm đã giữ chỗ</p>
-                  <p className="mt-2 text-sm text-[#59654b]">Điểm nào chưa nhận giữ chỗ trước thì vẫn nằm trong lịch trình, nhưng bạn vào theo lượt bình thường ở cổng.</p>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">{t("Các điểm đã giữ chỗ", "Seats held at")}</p>
+                  <p className="mt-2 text-sm text-[#59654b]">{t("Điểm nào chưa nhận giữ chỗ trước thì vẫn nằm trong lịch trình, nhưng bạn vào theo lượt bình thường ở cổng.", "Stops that do not take advance holds stay on your route; you just join the normal queue at the gate.")}</p>
                 </div>
                 {confirmation ? (
                   <div data-testid="giu-cho-da-xong" className="rounded-2xl bg-[#dceadd] px-5 py-3 text-right text-[#183f34]">
-                    <p className="text-xs uppercase tracking-[0.16em] text-[#356957]">Chỗ của bạn</p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-[#356957]">{t("Chỗ của bạn", "Your seats")}</p>
                     <p className="font-display mt-1 text-2xl">
-                      {confirmation.payment.mode === "qr-transfer" ? "Đã thanh toán" : "Đã xác nhận"}
+                      {confirmation.payment.mode === "qr-transfer" ? t("Đã thanh toán", "Paid") : t("Đã xác nhận", "Confirmed")}
                     </p>
                   </div>
                 ) : (
                   <div className="rounded-2xl bg-[#183f34] px-5 py-3 text-right text-white">
-                    <p className="text-xs uppercase tracking-[0.16em] text-white/60">Còn lại</p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/60">{t("Còn lại", "Time left")}</p>
                     <p className="font-display mt-1 text-3xl text-[#e7c78d]">{formatCountdown(remainingSeconds)}</p>
                   </div>
                 )}
@@ -828,10 +857,10 @@ export function CustomerBookingCheckout({
                 {hold.slots.map((slot) => (
                   <li key={slot.slotId} className="rounded-2xl border border-[#dde1db] p-4">
                     <div className="flex flex-wrap justify-between gap-2">
-                      <strong>{new Date(slot.startsAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })}</strong>
-                      <span className="text-xs font-bold text-[#557568]">{confirmation ? "Đã có vé" : "Đã giữ chỗ"}</span>
+                      <strong>{new Date(slot.startsAt).toLocaleString(maVung(lang), { dateStyle: "medium", timeStyle: "short" })}</strong>
+                      <span className="text-xs font-bold text-[#557568]">{confirmation ? t("Đã có vé", "Ticketed") : t("Đã giữ chỗ", "Held")}</span>
                     </div>
-                    <p className="mt-2 text-sm text-[#59654b]">{SOURCE_LABEL[slot.capacitySource]}</p>
+                    <p className="mt-2 text-sm text-[#59654b]">{SOURCE_LABEL[slot.capacitySource][lang]}</p>
                   </li>
                 ))}
               </ul>
@@ -843,16 +872,16 @@ export function CustomerBookingCheckout({
       </section>
 
       <aside className="h-fit rounded-[2rem] bg-[#183f34] p-6 text-white shadow-[0_24px_70px_rgba(12,38,31,0.2)] sm:p-8">
-        <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">Gói đã chọn</p>
-        <h2 className="font-display mt-3 text-4xl leading-tight">{packageItem.name}</h2>
-        <p className="mt-3 leading-7 text-white/65">{packageItem.durationLabel} · {packageItem.audience}</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">{t("Gói đã chọn", "Your package")}</p>
+        <h2 className="font-display mt-3 text-4xl leading-tight">{tenGoi}</h2>
+        <p className="mt-3 leading-7 text-white/65">{chuGoi?.durationLabel ?? packageItem.durationLabel} · {chuGoi?.audience ?? packageItem.audience}</p>
         <dl className="mt-7 space-y-4 border-y border-white/15 py-5 text-sm">
-          <div className="flex justify-between gap-4"><dt className="text-white/55">Đơn giá mỗi vé</dt><dd>{packageItem.demoPriceVnd.toLocaleString("vi-VN")} VND</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-white/55">Số vé</dt><dd>{adults}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/55">{t("Đơn giá mỗi vé", "Price per ticket")}</dt><dd>{packageItem.demoPriceVnd.toLocaleString("vi-VN")} VND</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/55">{t("Số vé", "Tickets")}</dt><dd>{adults}</dd></div>
           {children > 0 ? (
-            <div className="flex justify-between gap-4"><dt className="text-white/55">Trẻ dưới 1m3</dt><dd>{children} · không mất vé</dd></div>
+            <div className="flex justify-between gap-4"><dt className="text-white/55">{t("Trẻ dưới 1m3", "Under 1.3 m")}</dt><dd>{children} · {t("không mất vé", "free")}</dd></div>
           ) : null}
-          <div className="flex justify-between gap-4 text-lg font-bold"><dt>Tổng</dt><dd className="text-[#e7c78d]">{(hold?.amount.total_vnd ?? packageItem.demoPriceVnd * Math.max(0, adults)).toLocaleString("vi-VN")} VND</dd></div>
+          <div className="flex justify-between gap-4 text-lg font-bold"><dt>{t("Tổng", "Total")}</dt><dd className="text-[#e7c78d]">{(hold?.amount.total_vnd ?? packageItem.demoPriceVnd * Math.max(0, adults)).toLocaleString("vi-VN")} VND</dd></div>
         </dl>
 
         {confirmation ? (
@@ -862,7 +891,7 @@ export function CustomerBookingCheckout({
             {...chi("xong", "Xong: vé đã phát, đồng hồ giữ chỗ đã dừng. Bấm \"Sang bước 2\" để xem đơn này trong ERP.")}
           >
             <p className="rounded-2xl bg-[#dceadd] p-4 font-bold text-[#183f34]">
-              {confirmation.payment.mode === "qr-transfer" ? "Đã thanh toán bằng QR" : "Đã xác nhận"} · {confirmation.order.code}
+              {confirmation.payment.mode === "qr-transfer" ? t("Đã thanh toán bằng QR", "Paid by QR code") : t("Đã xác nhận", "Confirmed")} · {confirmation.order.code}
             </p>
 
             {/* Hệ thống chưa gửi tin nhắn hay email nào, nên không viết chữ
@@ -870,14 +899,18 @@ export function CustomerBookingCheckout({
                 (nút bên dưới), cộng trang tra cứu vé bằng liên hệ. */}
             <div className="mt-5 rounded-2xl border border-[#e7c78d]/45 bg-[#e7c78d]/12 p-4">
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#e7c78d]">
-                Xin bạn giữ lấy mã này
+                {t("Xin bạn giữ lấy mã này", "Please keep this code")}
               </p>
               <p className="font-display mt-2 text-2xl tracking-[0.06em] text-[#e7c78d]">
                 {confirmation.order.code}
               </p>
               <p className="mt-3 text-sm leading-6 text-white/75">
-                Bạn bấm <strong className="font-bold text-white">Lưu ảnh vé về máy</strong> ở dưới:
-                ảnh vé nằm trong thư viện ảnh, tới cổng mở ra cho nhân viên quét là vào.
+                {t("Bạn bấm ", "Press ")}
+                <strong className="font-bold text-white">{t("Lưu ảnh vé về máy", "Save ticket image")}</strong>
+                {t(
+                  " ở dưới: ảnh vé nằm trong thư viện ảnh, tới cổng mở ra cho nhân viên quét là vào.",
+                  " below: the ticket goes into your photos, and at the gate you just show it to be scanned.",
+                )}
                 {/* TC-25: câu này nay tuỳ vào việc khách CÓ để lại liên hệ hay
                     không, chứ không tuỳ vào cách trả tiền. Trước đây lối trả
                     ngay luôn nhận câu "trang tra cứu chưa có gì để đối chiếu",
@@ -886,28 +919,32 @@ export function CustomerBookingCheckout({
                 {contactSaved ? (
                   <>
                     {" "}
-                    Lỡ mất trang, mời bạn vào{" "}
+                    {t("Lỡ mất trang, mời bạn vào", "If you lose this page, open")}{" "}
                     <Link
                       href="/tra-cuu-ve"
                       className="font-bold text-[#e7c78d] underline decoration-[#e7c78d]/50 underline-offset-4"
                     >
-                      tra cứu vé
+                      {t("tra cứu vé", "ticket lookup")}
                     </Link>{" "}
-                    rồi nhập mã trên cùng số điện thoại hoặc email bạn vừa để lại là vé hiện lại
-                    đầy đủ.
+                    {t(
+                      "rồi nhập mã trên cùng số điện thoại hoặc email bạn vừa để lại là vé hiện lại đầy đủ.",
+                      "and enter this code with the phone number or email you just left; the full ticket comes back.",
+                    )}
                   </>
                 ) : (
                   <>
                     {" "}
-                    Lần này bạn không để lại số nào, nên trang tra cứu chưa có gì để đối chiếu —
-                    tấm ảnh chụp màn hình là bản lưu duy nhất của bạn ạ.
+                    {t(
+                      "Lần này bạn không để lại số nào, nên trang tra cứu chưa có gì để đối chiếu — tấm ảnh chụp màn hình là bản lưu duy nhất của bạn ạ.",
+                      "You did not leave a number this time, so ticket lookup has nothing to match — a screenshot is your only copy.",
+                    )}
                   </>
                 )}
               </p>
             </div>
 
-            <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Vé của bạn</p>
-            <p className="mt-1 text-sm leading-6 text-white/70">Tới cổng, bạn đưa mã cho nhân viên quét là vào được ngay ạ.</p>
+            <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">{t("Vé của bạn", "Your tickets")}</p>
+            <p className="mt-1 text-sm leading-6 text-white/70">{t("Tới cổng, bạn đưa mã cho nhân viên quét là vào được ngay ạ.", "At the gate, show the code to be scanned and walk straight in.")}</p>
             <ul className="mt-3 space-y-3">
               {Array.from(
                 confirmation.tickets.reduce((bySite, ticket) => {
@@ -918,14 +955,14 @@ export function CustomerBookingCheckout({
                 }, new Map<string, ConfirmationResult["tickets"]>()),
               ).map(([siteId, ticketsForSite]) => (
                 <li key={siteId} className="rounded-2xl border border-white/15 bg-white/8 p-4">
-                  <p className="text-sm font-bold text-white/85">{formatGuestGroupSummary(ticketsForSite)}</p>
+                  <p className="text-sm font-bold text-white/85">{formatGuestGroupSummary(ticketsForSite, lang)}</p>
                   <ul className="mt-3 space-y-3 border-t border-white/10 pt-3">
                     {ticketsForSite.map((ticket) => (
                       <li key={ticket.ticketId} className="flex items-center gap-3">
-                        <TicketQrCode ticketCode={ticket.ticketCode} />
+                        <TicketQrCode ticketCode={ticket.ticketCode} lang={lang} />
                         <div className="min-w-0">
                           <code className="text-lg font-extrabold tracking-[0.08em] text-[#e7c78d]">{ticket.ticketCode}</code>
-                          <p className="mt-1 text-sm text-white/62">{ticket.entriesAllowed} lượt vào · hiệu lực {new Date(`${ticket.validOn}T00:00:00`).toLocaleDateString("vi-VN")}</p>
+                          <p className="mt-1 text-sm text-white/62">{t(`${ticket.entriesAllowed} lượt vào · hiệu lực`, `${ticket.entriesAllowed} entries · valid on`)} {new Date(`${ticket.validOn}T00:00:00`).toLocaleDateString(maVung(lang))}</p>
                         </div>
                       </li>
                     ))}
@@ -935,50 +972,51 @@ export function CustomerBookingCheckout({
             </ul>
             <LuuAnhVe
               orderCode={confirmation.order.code}
-              productName={packageItem.name}
+              productName={tenGoi}
               tickets={confirmation.tickets}
+              lang={lang}
             />
             <Link
               href="/ho-so"
               className="mt-3 block text-center text-sm font-bold text-[#e7c78d] underline decoration-[#e7c78d]/50 underline-offset-4"
             >
-              Xem hộ chiếu Ninh Bình: đi đủ các vùng để mở quà
+              {t("Xem hộ chiếu Ninh Bình: đi đủ các vùng để mở quà", "See your Ninh Binh passport: visit every area to unlock gifts")}
             </Link>
 
             <div className="mt-8 border-t border-white/15 pt-6">
               {!group ? (
                 <>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Nếu bạn đi theo đoàn</p>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">{t("Nếu bạn đi theo đoàn", "Travelling as a group?")}</p>
                   <p className="mt-2 text-sm leading-6 text-white/70">
-                    Mời trưởng đoàn ghi tên vào đây, mỗi người trong đoàn sẽ có một mã riêng để tự quét vào cổng. Không ghi cũng không sao — cả đoàn vẫn vào bằng đúng những tấm vé bên trên.
+                    {t("Mời trưởng đoàn ghi tên vào đây, mỗi người trong đoàn sẽ có một mã riêng để tự quét vào cổng. Không ghi cũng không sao — cả đoàn vẫn vào bằng đúng những tấm vé bên trên.", "The group leader can add a name here, and everyone gets their own code for the gate. You can skip it — the whole group still enters with the tickets above.")}
                   </p>
                   <form onSubmit={createVisitorGroup} className="mt-4 space-y-3">
                     <label className="block text-xs font-bold text-white/70">
-                      Tên trưởng đoàn
+                      {t("Tên trưởng đoàn", "Group leader's name")}
                       <input
                         required
                         value={leaderName}
                         onChange={(event) => setLeaderName(event.target.value)}
-                        placeholder="Ví dụ: Nguyễn Văn A"
+                        placeholder={t("Ví dụ: Nguyễn Văn A", "e.g. Anna Smith")}
                         className="mt-1 min-h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 font-normal text-white placeholder:text-white/40"
                       />
                     </label>
                     <label className="block text-xs font-bold text-white/70">
-                      Số điện thoại (không bắt buộc)
+                      {t("Số điện thoại (không bắt buộc)", "Phone (optional)")}
                       <input
                         type="tel"
                         value={leaderPhone}
                         onChange={(event) => setLeaderPhone(event.target.value)}
-                        placeholder="Để trống nếu bạn muốn"
+                        placeholder={t("Để trống nếu bạn muốn", "Leave blank if you like")}
                         className="mt-1 min-h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 font-normal text-white placeholder:text-white/40"
                       />
                     </label>
                     <label className="block text-xs font-bold text-white/70">
-                      Đặt tên cho đoàn (không bắt buộc)
+                      {t("Đặt tên cho đoàn (không bắt buộc)", "Group name (optional)")}
                       <input
                         value={groupLabel}
                         onChange={(event) => setGroupLabel(event.target.value)}
-                        placeholder="Ví dụ: Đoàn Hà Nội, công ty ABC Travel"
+                        placeholder={t("Ví dụ: Đoàn Hà Nội, công ty ABC Travel", "e.g. Hanoi friends, ABC Travel")}
                         className="mt-1 min-h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 font-normal text-white placeholder:text-white/40"
                       />
                     </label>
@@ -988,13 +1026,13 @@ export function CustomerBookingCheckout({
                       disabled={groupPending}
                       className="min-h-12 w-full rounded-full bg-white/15 px-6 font-extrabold text-white transition-colors hover:bg-white/25 disabled:opacity-50"
                     >
-                      {groupPending ? "Đang tạo mã đoàn…" : "Tạo mã cho cả đoàn"}
+                      {groupPending ? t("Đang tạo mã đoàn…", "Creating group code…") : t("Tạo mã cho cả đoàn", "Create codes for the group")}
                     </button>
                   </form>
                 </>
               ) : (
                 <>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Mã đoàn của bạn</p>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">{t("Mã đoàn của bạn", "Your group code")}</p>
                   <div className="mt-2 flex flex-wrap items-baseline gap-3">
                     <p className="font-display text-3xl text-[#e7c78d]">{group.groupCode}</p>
                     {group.groupLabel ? (
@@ -1002,30 +1040,30 @@ export function CustomerBookingCheckout({
                     ) : null}
                   </div>
                   <p className="mt-2 text-sm leading-6 text-white/70">
-                    Trưởng đoàn gửi mã này cho cả đoàn. Mỗi người quét mã riêng để ghi tên mình vào chuyến đi — không quét vẫn vào cổng bình thường như mọi khách khác.
+                    {t("Trưởng đoàn gửi mã này cho cả đoàn. Mỗi người quét mã riêng để ghi tên mình vào chuyến đi — không quét vẫn vào cổng bình thường như mọi khách khác.", "The leader shares this code with the group. Each person scans their own code to add their name — without it they still enter like any other guest.")}
                   </p>
                   {/* TC-19: trang theo dõi của trưởng đoàn dựng xong rồi mà
                       không có lối vào thì coi như chưa có. Đây là chỗ duy
                       nhất mã đoàn hiện ra lần đầu, nên đường dẫn phải nằm
                       ngay cạnh nó. */}
                   <p className="mt-3 text-sm leading-6 text-white/70">
-                    Đứng ở cổng mà muốn biết còn ai chưa vào, mời trưởng đoàn mở{" "}
+                    {t("Đứng ở cổng mà muốn biết còn ai chưa vào, mời trưởng đoàn mở", "To see who has not gone in yet, the leader can open the")}{" "}
                     <Link
                       href={`/doan/truong/${group.groupCode}`}
                       className="font-bold text-[#e7c78d] underline decoration-[#e7c78d]/50 underline-offset-4"
                     >
-                      trang theo dõi đoàn
+                      {t("trang theo dõi đoàn", "group tracker")}
                     </Link>
-                    {" "}— trang tự đếm lại sau mỗi nửa phút ạ.
+                    {" "}{t("— trang tự đếm lại sau mỗi nửa phút ạ.", "— it recounts every half minute.")}
                   </p>
                   <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                     {group.members.map((member) => {
                       const hasEntered = member.entries.length > 0;
                       return (
                         <li key={member.memberCode} className="flex gap-3 rounded-2xl bg-white/8 p-4">
-                          <MemberQrCode memberCode={member.memberCode} />
+                          <MemberQrCode memberCode={member.memberCode} lang={lang} />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-bold text-white/90">{member.displayName || "Chưa ghi tên"}</p>
+                            <p className="truncate font-bold text-white/90">{member.displayName || t("Chưa ghi tên", "No name yet")}</p>
                             <p className="mt-1 text-xs text-white/55">
                               {member.guestGroup === "child" ? "Dưới 1m3" : "Từ 1m3 trở lên"}
                             </p>
@@ -1033,7 +1071,7 @@ export function CustomerBookingCheckout({
                                 `bg-white/8` chỉ được 3,26:1 — cùng một lỗi
                                 với khối chọn cách trả tiền. /70 cho 5,5:1. */}
                             <p className={`mt-2 text-xs font-bold ${hasEntered ? "text-[#9ee6b8]" : "text-white/70"}`}>
-                              {hasEntered ? "Đã vào cổng" : "Chưa vào cổng"}
+                              {hasEntered ? t("Đã vào cổng", "Entered") : t("Chưa vào cổng", "Not in yet")}
                             </p>
                           </div>
                         </li>
@@ -1046,15 +1084,16 @@ export function CustomerBookingCheckout({
                     disabled={groupRefreshing}
                     className="mt-4 text-xs font-bold text-white/60 underline decoration-white/30 underline-offset-4 hover:text-white/85 disabled:opacity-50"
                   >
-                    {groupRefreshing ? "Đang cập nhật…" : "Cập nhật trạng thái cả đoàn"}
+                    {groupRefreshing ? t("Đang cập nhật…", "Updating…") : t("Cập nhật trạng thái cả đoàn", "Refresh the group")}
                   </button>
 
                   <div className="mt-8 border-t border-white/10 pt-6">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">Điền hộ cho cả đoàn</p>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">{t("Điền hộ cho cả đoàn", "Fill in for the group")}</p>
                     <p className="mt-2 text-sm leading-6 text-white/70">
-                      Muốn ghi tên và nhu cầu chăm sóc cho cả đoàn cùng lúc, mời trưởng đoàn điền vào đây rồi lưu một lần.
-                      Trưởng đoàn chỉ cần ghi tên gọi cho từng người thôi ạ — ai tự quét mã riêng khai tên mình, tên đó
-                      thay cho tên trưởng đoàn ghi ở đây.
+                        {t(
+                          "Muốn ghi tên và nhu cầu chăm sóc cho cả đoàn cùng lúc, mời trưởng đoàn điền vào đây rồi lưu một lần. Trưởng đoàn chỉ cần ghi tên gọi cho từng người thôi ạ — ai tự quét mã riêng khai tên mình, tên đó thay cho tên trưởng đoàn ghi ở đây.",
+                          "To add names and care needs for everyone at once, the leader fills this in and saves once. A first name each is enough — anyone who scans their own code and adds a name replaces what the leader wrote.",
+                        )}
                     </p>
                     <form onSubmit={saveMemberDetails} className="mt-4">
                       <div className="max-h-[28rem] space-y-3 overflow-y-auto rounded-2xl border border-white/10 p-3">
@@ -1063,27 +1102,27 @@ export function CustomerBookingCheckout({
                           return (
                             <div key={member.memberCode} className="rounded-xl bg-white/8 p-3">
                               <p className="text-xs font-bold text-white/55">
-                                Khách số {member.memberIndex} · {member.guestGroup === "child" ? "Dưới 1m3" : "Từ 1m3 trở lên"}
+                            {t("Khách số", "Guest")} {member.memberIndex} · {member.guestGroup === "child" ? t("Dưới 1m3", "Under 1.3 m") : t("Từ 1m3 trở lên", "1.3 m and taller")}
                               </p>
                               <label className="mt-2 block text-xs font-bold text-white/70">
-                                Tên gọi
-                                <input
+                              {t("Tên gọi", "Name")}
+                              <input
                                   value={edit?.displayName ?? member.displayName}
                                   onChange={(event) => updateMemberEdit(member.memberIndex, member, { displayName: event.target.value })}
-                                  placeholder="Chưa ghi tên"
+                                  placeholder={t("Chưa ghi tên", "No name yet")}
                                   className="mt-1 min-h-11 w-full rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-normal text-white placeholder:text-white/40"
                                 />
                               </label>
                               <label className="mt-2 block text-xs font-bold text-white/70">
-                                Nhu cầu chăm sóc
-                                <select
+                              {t("Nhu cầu chăm sóc", "Care needs")}
+                              <select
                                   value={edit?.careNeed ?? member.careNeed}
                                   onChange={(event) => updateMemberEdit(member.memberIndex, member, { careNeed: event.target.value as CareNeedValue })}
                                   className="mt-1 min-h-11 w-full rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-normal text-white"
                                 >
                                   {CARE_NEED_OPTIONS.map((option) => (
                                     <option key={option.value} value={option.value} className="text-[#151a17]">
-                                      {option.label}
+                                      {lang === "en" ? option.labelEn : option.label}
                                     </option>
                                   ))}
                                 </select>
@@ -1100,7 +1139,7 @@ export function CustomerBookingCheckout({
                         disabled={memberDetailsPending || Object.keys(memberEdits).length === 0}
                         className="mt-4 min-h-12 w-full rounded-full bg-white/15 px-6 font-extrabold text-white transition-colors hover:bg-white/25 disabled:opacity-50"
                       >
-                        {memberDetailsPending ? "Đang lưu…" : "Lưu tên cả đoàn"}
+                        {memberDetailsPending ? t("Đang lưu…", "Saving…") : t("Lưu tên cả đoàn", "Save the group's names")}
                       </button>
                     </form>
                   </div>
@@ -1129,7 +1168,7 @@ export function CustomerBookingCheckout({
               }
               className="mt-7 min-h-12 w-full rounded-full bg-[#f4f0e7] px-6 font-extrabold text-[#183f34] disabled:opacity-50"
             >
-              {pending === "hold" ? "Đang khóa chỗ…" : "Giữ chỗ 15 phút"}
+              {pending === "hold" ? t("Đang khóa chỗ…", "Holding seats…") : t("Giữ chỗ 15 phút", "Hold for 15 minutes")}
             </button>
           </>
         ) : (
@@ -1143,7 +1182,7 @@ export function CustomerBookingCheckout({
               className="mt-7 rounded-2xl bg-[#f4f0e7] p-5 text-center text-[#27362f]"
               {...chi("qr", "Quét mã bằng điện thoại, hoặc bấm \"Mở trang thanh toán trên máy này\" (trên điện thoại: \"Thanh toán ngay\"), rồi bấm \"Xác nhận chuyển khoản\". Trang này tự chuyển sang vé.")}
             >
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Quét mã để thanh toán</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">{t("Quét mã để thanh toán", "Scan to pay")}</p>
               <p className="font-display mt-2 text-3xl text-[#183f34]">{(hold.amount.total_vnd).toLocaleString("vi-VN")} đ</p>
               {/* Điện thoại không tự quét được màn hình của chính nó, nên trên
                   màn hẹp nút mở trang thanh toán đứng TRƯỚC mã QR. */}
@@ -1153,17 +1192,19 @@ export function CustomerBookingCheckout({
                 rel="noopener"
                 className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-[#183f34] px-5 text-sm font-extrabold text-white lg:hidden"
               >
-                Thanh toán ngay
+                {t("Thanh toán ngay", "Pay now")}
               </a>
-              <p className="mt-4 text-xs font-bold text-[#59654b] lg:hidden">Hoặc đưa mã này cho người đi cùng quét</p>
+              <p className="mt-4 text-xs font-bold text-[#59654b] lg:hidden">{t("Hoặc đưa mã này cho người đi cùng quét", "Or let someone with you scan this code")}</p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={qr.dataUrl}
-                alt="Mã QR thanh toán, quét bằng camera điện thoại hoặc Zalo"
+                alt={t("Mã QR thanh toán, quét bằng camera điện thoại hoặc Zalo", "Payment QR code, scan with your phone camera")}
                 className="mx-auto mt-4 aspect-square w-full max-w-[15rem] rounded-2xl border border-[#d7d5cd] bg-white p-3"
               />
               <p className="mt-4 hidden text-sm leading-6 lg:block">
-                Mở camera điện thoại hoặc Zalo, quét mã rồi bấm <strong className="font-bold">Xác nhận chuyển khoản</strong>. Vé hiện ra ngay trên màn hình này.
+                {t("Mở camera điện thoại hoặc Zalo, quét mã rồi bấm ", "Open your phone camera, scan the code and press ")}
+                <strong className="font-bold">{t("Xác nhận chuyển khoản", "Confirm transfer")}</strong>
+                {t(". Vé hiện ra ngay trên màn hình này.", ". Your ticket appears right here on this screen.")}
               </p>
               {/* Máy tính mà không có điện thoại bên cạnh (hay gặp khi trình
                   diễn): mở đúng trang ấy ở thẻ mới. Thanh toán ở đây là giả lập. */}
@@ -1173,18 +1214,18 @@ export function CustomerBookingCheckout({
                 rel="noopener"
                 className="mt-2 hidden min-h-11 items-center text-sm font-bold text-[#356957] underline underline-offset-4 lg:inline-flex"
               >
-                Không có điện thoại bên cạnh? Mở trang thanh toán trên máy này
+                {t("Không có điện thoại bên cạnh? Mở trang thanh toán trên máy này", "No phone at hand? Open the payment page on this computer")}
               </a>
               <p role="status" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#356957]">
                 <span aria-hidden="true" className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#d58c35] motion-reduce:animate-none" />
-                Đang chờ bạn quét mã · còn {formatCountdown(remainingSeconds)}
+                {t("Đang chờ bạn quét mã · còn", "Waiting for your scan ·")} {formatCountdown(remainingSeconds)}{t("", " left")}
               </p>
               <button
                 type="button"
                 onClick={() => setQr(null)}
                 className="mx-auto mt-3 block min-h-11 text-sm font-bold text-[#59654b] underline underline-offset-4"
               >
-                Đổi cách trả tiền
+                {t("Đổi cách trả tiền", "Change how to pay")}
               </button>
             </div>
           ) : (
@@ -1195,29 +1236,29 @@ export function CustomerBookingCheckout({
             {/* `legend` vắt lên viền trên và KHÔNG được nền fieldset sơn phía
                 sau, nên phải tự sơn nền kem cho nó, không thì chữ xanh rơi
                 thẳng xuống nền xanh đậm (1,8:1). */}
-            <legend className="rounded bg-[#f4f0e7] px-2 text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">Trả tiền thế nào</legend>
+            <legend className="rounded bg-[#f4f0e7] px-2 text-xs font-extrabold uppercase tracking-[0.16em] text-[#356957]">{t("Trả tiền thế nào", "How to pay")}</legend>
             <label className="flex min-h-11 items-start gap-3 text-sm text-[#27362f]">
               <input type="radio" name="cach-tra-tien" checked={!payAtSite} onChange={() => setPayAtSite(false)} className="mt-1" />
-              <span><strong className="font-bold">Quét mã QR (nên chọn)</strong> — quét bằng camera hoặc Zalo trong 15 phút giữ chỗ, vé có ngay.</span>
+              <span><strong className="font-bold">{t("Quét mã QR (nên chọn)", "QR code (recommended)")}</strong> {t("— quét bằng camera hoặc Zalo trong 15 phút giữ chỗ, vé có ngay.", "— scan with your camera within the 15-minute hold and get your ticket at once.")}</span>
             </label>
             <label className="mt-3 flex min-h-11 items-start gap-3 text-sm text-[#27362f]">
               <input type="radio" name="cach-tra-tien" checked={payAtSite} onChange={() => setPayAtSite(true)} className="mt-1" />
-              <span><strong className="font-bold">Trả tại điểm</strong> — giữ chỗ ngay, tới nơi đưa mã cho nhân viên rồi trả tiền mặt.</span>
+              <span><strong className="font-bold">{t("Trả tại điểm", "Pay on site")}</strong> {t("— giữ chỗ ngay, tới nơi đưa mã cho nhân viên rồi trả tiền mặt.", "— hold now, then show the code at the gate and pay in cash.")}</span>
             </label>
             {/* Liên hệ bắt buộc ở cả hai lối: nó là đường mở lại vé ở trang
                 tra cứu, và là thứ để đếm ai giữ chỗ rồi bỏ nhiều lần. */}
             <label className="mt-4 grid gap-1 text-xs font-bold text-[#5f6f66]">
-              Số điện thoại hoặc email
+              {t("Số điện thoại hoặc email", "Phone or email")}
               <input
                 value={contact}
                 onChange={(event) => setContact(event.target.value)}
                 // Ô nhận CẢ số điện thoại lẫn email, nên không ghim
                 // `inputMode="tel"`: bàn phím số không gõ nổi dấu @.
-                placeholder="0912 345 678 hoặc ban@email.com"
+                placeholder={t("0912 345 678 hoặc ban@email.com", "0912 345 678 or you@email.com")}
                 className="min-h-11 rounded-xl border border-[#cbd7d1] bg-white px-3 text-sm font-medium"
               />
               <span className="mt-1 font-normal leading-5 text-[#59654b]">
-                Lỡ mất trang, bạn dùng số này để mở lại vé ở mục tra cứu vé. Giữ chỗ rồi bỏ ba lần trong tuần thì số này phải đặt tại quầy. Số của bạn được mã hoá trước khi lưu.
+                {t("Lỡ mất trang, bạn dùng số này để mở lại vé ở mục tra cứu vé. Giữ chỗ rồi bỏ ba lần trong tuần thì số này phải đặt tại quầy. Số của bạn được mã hoá trước khi lưu.", "If you lose this page, this number opens your ticket again in ticket lookup. Hold and abandon three times in a week and this number must book at the counter. It is encrypted before it is stored.")}
               </span>
             </label>
           </fieldset>
@@ -1228,10 +1269,10 @@ export function CustomerBookingCheckout({
             className="mt-4 min-h-12 w-full rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17] disabled:opacity-50"
           >
             {pending === "confirm"
-              ? payAtSite ? "Đang phát hành vé…" : "Đang tạo mã QR…"
+              ? payAtSite ? t("Đang phát hành vé…", "Issuing tickets…") : t("Đang tạo mã QR…", "Creating QR code…")
               : remainingSeconds <= 0
-                ? "Giữ chỗ đã hết hạn"
-                : payAtSite ? "Giữ chỗ, trả tiền tại điểm" : "Lấy mã QR thanh toán"}
+                ? t("Giữ chỗ đã hết hạn", "Hold has expired")
+                : payAtSite ? t("Giữ chỗ, trả tiền tại điểm", "Hold, pay on site") : t("Lấy mã QR thanh toán", "Get payment QR code")}
           </button>
           </div>
           )}
@@ -1239,7 +1280,7 @@ export function CustomerBookingCheckout({
         )}
         {/* `text-white/45` trên nền #183F34 chỉ đạt 3,67:1. Nâng lên /60 là
             5,3:1 mà vẫn giữ đúng vai trò dòng chú thích mờ. */}
-        <p className="mt-5 text-xs leading-5 text-white/60">Lỡ bấm hai lần cũng không sao, bạn vẫn chỉ có một đơn và một bộ vé.</p>
+        <p className="mt-5 text-xs leading-5 text-white/60">{t("Lỡ bấm hai lần cũng không sao, bạn vẫn chỉ có một đơn và một bộ vé.", "Pressed twice by mistake? No problem — you still get one order and one set of tickets.")}</p>
       </aside>
     </div>
   );

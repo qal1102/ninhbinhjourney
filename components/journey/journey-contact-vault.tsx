@@ -17,7 +17,8 @@ type ContactResponse = {
   error?: { message?: string };
 };
 
-export function JourneyContactVault({ journeyId }: { journeyId: string }) {
+export function JourneyContactVault({ journeyId, lang = "vi" }: { journeyId: string; lang?: "vi" | "en" }) {
+  const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const [contact, setContact] = useState("");
   const [marketing, setMarketing] = useState(false);
   const [pending, setPending] = useState(false);
@@ -42,7 +43,7 @@ export function JourneyContactVault({ journeyId }: { journeyId: string }) {
       });
       const payload = (await response.json()) as ContactResponse;
       if (!response.ok || !payload.accepted) {
-        throw new Error(payload.error?.message ?? "Chưa thể lưu cách nhận hành trình.");
+        throw new Error(payload.error?.message ?? t("Chưa thể lưu cách nhận hành trình.", "Could not save how to get your plan back."));
       }
 
       const current = parseCustomerConsentPreferences(
@@ -65,11 +66,11 @@ export function JourneyContactVault({ journeyId }: { journeyId: string }) {
       setContact("");
       setMessage(
         payload.contact_type === "phone"
-          ? "Đã lưu số điện thoại đã bảo vệ cho hành trình này. Bản thử nghiệm chưa gửi SMS thật."
-          : "Đã lưu email đã bảo vệ cho hành trình này. Bản thử nghiệm chưa gửi email thật.",
+          ? t("Đã lưu số điện thoại đã bảo vệ cho hành trình này. Bản thử nghiệm chưa gửi SMS thật.", "Saved your protected phone number for this plan. This trial does not send real SMS yet.")
+          : t("Đã lưu email đã bảo vệ cho hành trình này. Bản thử nghiệm chưa gửi email thật.", "Saved your protected email for this plan. This trial does not send real email yet."),
       );
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Chưa thể lưu cách nhận hành trình.");
+      setMessage(error instanceof Error ? error.message : t("Chưa thể lưu cách nhận hành trình.", "Could not save how to get your plan back."));
     } finally {
       setPending(false);
     }
@@ -77,21 +78,21 @@ export function JourneyContactVault({ journeyId }: { journeyId: string }) {
 
   return (
     <section className="rounded-3xl border border-[#c8d8d0] bg-[#f7faf8] p-5 sm:p-6" data-customer-section="journey-contact">
-      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#56766a]">Giữ lại hành trình</p>
-      <h3 className="font-display mt-2 text-2xl text-[#183f34]">Một cách liên hệ, do bạn tự chọn.</h3>
+      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#56766a]">{t("Giữ lại hành trình", "Keep this plan")}</p>
+      <h3 className="font-display mt-2 text-2xl text-[#183f34]">{t("Một cách liên hệ, do bạn tự chọn.", "One way to reach you, your choice.")}</h3>
       <p className="mt-2 text-sm leading-6 text-[#596b63]">
-        Nhập email hoặc số điện thoại để lưu yêu cầu nhận lại hành trình. Liên hệ được bảo vệ riêng; quyền phục vụ không tự biến thành quyền nhận giới thiệu.
+        {t("Nhập email hoặc số điện thoại để lưu yêu cầu nhận lại hành trình. Liên hệ được bảo vệ riêng; quyền phục vụ không tự biến thành quyền nhận giới thiệu.", "Enter an email or phone number to get this plan back later. It is protected separately; letting us serve you never turns into permission to market to you.")}
       </p>
       <form onSubmit={submit} className="mt-5 space-y-4">
         <label className="block text-sm font-bold text-[#29463b]">
-          Email hoặc số điện thoại
+          {t("Email hoặc số điện thoại", "Email or phone")}
           <input
             type="text"
             inputMode="email"
             autoComplete="email tel"
             value={contact}
             onChange={(event) => setContact(event.target.value)}
-            placeholder="ten@example.com hoặc 09…"
+            placeholder={t("ten@example.com hoặc 09…", "you@example.com or +84…")}
             required
             minLength={6}
             maxLength={254}
@@ -100,13 +101,14 @@ export function JourneyContactVault({ journeyId }: { journeyId: string }) {
         </label>
         <label className="flex gap-3 rounded-2xl bg-white p-4 text-sm leading-6 text-[#4f6259]">
           <input type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-[#27634f]" />
-          <span><strong className="block text-[#29463b]">Tôi muốn nhận thông tin giới thiệu phù hợp</strong>Mặc định tắt. Có thể rút lại ở nút “Quyền riêng tư” bất cứ lúc nào.</span>
+          <span><strong className="block text-[#29463b]">{t("Tôi muốn nhận thông tin giới thiệu phù hợp", "I would like relevant suggestions")}</strong>{t("Mặc định tắt. Có thể rút lại ở nút “Quyền riêng tư” bất cứ lúc nào.", "Off by default. Withdraw any time with the “Privacy” button.")}</span>
         </label>
         <p className="text-xs leading-5 text-[#687970]">
-          Khi lưu, bạn đồng ý Xuân Trường xử lý liên hệ để giữ yêu cầu hành trình này. Xem <Link href="/quyen-rieng-tu" className="font-bold underline underline-offset-2">thông báo xử lý dữ liệu</Link>.
+          {t("Khi lưu, bạn đồng ý Xuân Trường xử lý liên hệ để giữ yêu cầu hành trình này. Xem", "By saving, you agree that Xuan Truong processes this contact to keep your plan. See the")}{" "}
+          <Link href="/quyen-rieng-tu" className="font-bold underline underline-offset-2">{t("thông báo xử lý dữ liệu", "data notice")}</Link>.
         </p>
         <button type="submit" disabled={pending || saved || contact.trim().length < 6} className="min-h-12 w-full rounded-full bg-[#183f34] px-5 font-extrabold text-white disabled:opacity-50">
-          {pending ? "Đang bảo vệ và lưu…" : saved ? "Đã lưu yêu cầu" : "Lưu cách nhận hành trình"}
+          {pending ? t("Đang bảo vệ và lưu…", "Protecting and saving…") : saved ? t("Đã lưu yêu cầu", "Saved") : t("Lưu cách nhận hành trình", "Save how to reach me")}
         </button>
       </form>
       {message ? <p className={`mt-4 rounded-xl p-3 text-sm ${saved ? "bg-[#e8f3ed] text-[#24513f]" : "bg-[#fff0ef] text-[#8f2f2c]"}`} role="status">{message}</p> : null}

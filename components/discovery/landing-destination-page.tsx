@@ -16,6 +16,8 @@ import {
   withContinuityContext,
   type ContinuityContext,
 } from "@/lib/page-continuity";
+import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ch, type NgonNgu } from "@/lib/ngon-ngu";
 
 /**
  * Trang riêng cho những điểm đến chưa có hồ sơ sâu trong
@@ -30,10 +32,12 @@ export function LandingDestinationPage({
   destination,
   facts,
   navigationContext,
+  lang = "vi",
 }: {
   destination: Destination;
   facts: DestinationFacts;
   navigationContext: ContinuityContext;
+  lang?: NgonNgu;
 }) {
   const [latitude, longitude] = destination.position;
   const pairs = facts.pairWith
@@ -41,16 +45,16 @@ export function LandingDestinationPage({
     .filter((item): item is Destination => item !== undefined);
 
   const thongTin: { nhan: string; noiDung: string }[] = [
-    { nhan: "Loại hình", noiDung: destination.category.vi },
-    { nhan: "Nên dành", noiDung: destination.duration.vi },
-    { nhan: "Lúc nên tới", noiDung: facts.bestTime.vi },
-    { nhan: "Tránh đông", noiDung: facts.crowdTip.vi },
-    { nhan: "Đường tới", noiDung: facts.gettingThere.vi },
-    { nhan: "Vé vào cửa", noiDung: facts.entranceFee.vi },
+    { nhan: ch(lang, "Loại hình", "Type"), noiDung: destination.category[lang] },
+    { nhan: ch(lang, "Nên dành", "Allow"), noiDung: destination.duration[lang] },
+    { nhan: ch(lang, "Lúc nên tới", "Best time"), noiDung: facts.bestTime[lang] },
+    { nhan: ch(lang, "Tránh đông", "Avoiding crowds"), noiDung: facts.crowdTip[lang] },
+    { nhan: ch(lang, "Đường tới", "Getting there"), noiDung: facts.gettingThere[lang] },
+    { nhan: ch(lang, "Vé vào cửa", "Entrance"), noiDung: facts.entranceFee[lang] },
   ];
 
   return (
-    <main className="min-h-screen bg-[#fbfaf6] text-[#151a17]">
+    <main lang={lang} className="min-h-screen bg-[#fbfaf6] text-[#151a17]">
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 text-white sm:px-8">
           <Link
@@ -58,11 +62,14 @@ export function LandingDestinationPage({
             transitionTypes={["nav-back"]}
             className="rounded-full bg-black/25 px-4 py-2 text-sm font-bold backdrop-blur"
           >
-            ← Khám phá
+            ← {ch(lang, "Khám phá", "Explore")}
           </Link>
-          <span className="rounded-full bg-black/25 px-3 py-1 text-xs font-bold backdrop-blur">
-            Thông tin tham khảo
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="hidden rounded-full bg-black/25 px-3 py-1 text-xs font-bold backdrop-blur sm:inline">
+              {ch(lang, "Thông tin tham khảo", "For reference")}
+            </span>
+            <NutNgonNgu lang={lang} tone="dark" />
+          </div>
         </div>
       </header>
 
@@ -78,7 +85,7 @@ export function LandingDestinationPage({
         >
           <Image
             src={destination.image}
-            alt={destination.name.vi}
+            alt={destination.name[lang]}
             fill
             priority
             sizes="100vw"
@@ -89,13 +96,13 @@ export function LandingDestinationPage({
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,28,23,.12),rgba(12,28,23,.84))]" />
         <div className="relative z-10 mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-end px-5 pb-12 text-white sm:px-8 sm:pb-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#e7c78d]">
-            {destination.category.vi} · {destination.duration.vi}
+            {destination.category[lang]} · {destination.duration[lang]}
           </p>
           <h1 className="font-display mt-4 max-w-5xl text-6xl leading-[0.9] text-balance sm:text-8xl">
-            {destination.name.vi}
+            {destination.name[lang]}
           </h1>
           <p className="mt-6 max-w-2xl text-xl leading-8 text-white/82">
-            {destination.tagline.vi}
+            {destination.tagline[lang]}
           </p>
         </div>
       </section>
@@ -105,14 +112,14 @@ export function LandingDestinationPage({
         className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_0.58fr] lg:py-18"
       >
         <article>
-          <h2 className="font-display text-4xl text-[#183f34]">Câu chuyện của điểm đến</h2>
-          <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{destination.description.vi}</p>
-          <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{destination.history.vi}</p>
-          <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{facts.significance.vi}</p>
+          <h2 className="font-display text-4xl text-[#183f34]">{ch(lang, "Câu chuyện của điểm đến", "The story of this place")}</h2>
+          <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{destination.description[lang]}</p>
+          <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{destination.history[lang]}</p>
+          <p className="mt-5 text-lg leading-8 text-[#4d5b55]">{facts.significance[lang]}</p>
 
-          <h2 className="font-display mt-12 text-3xl text-[#183f34]">Đáng để ý</h2>
+          <h2 className="font-display mt-12 text-3xl text-[#183f34]">{ch(lang, "Đáng để ý", "Worth noticing")}</h2>
           <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-            {destination.highlights.vi.map((item) => (
+            {destination.highlights[lang].map((item) => (
               <li
                 key={item}
                 className="rounded-2xl border border-[#dcd9d1] bg-white px-4 py-3 font-semibold text-[#365247]"
@@ -122,11 +129,11 @@ export function LandingDestinationPage({
             ))}
           </ul>
 
-          {facts.practical.vi.length > 0 ? (
+          {facts.practical[lang].length > 0 ? (
             <>
-              <h2 className="font-display mt-12 text-3xl text-[#183f34]">Trước khi đi</h2>
+              <h2 className="font-display mt-12 text-3xl text-[#183f34]">{ch(lang, "Trước khi đi", "Before you go")}</h2>
               <ul className="mt-5 space-y-3">
-                {facts.practical.vi.map((item) => (
+                {facts.practical[lang].map((item) => (
                   <li key={item} className="flex gap-3 text-base leading-7 text-[#4d5b55]">
                     <span aria-hidden="true" className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c9a15c]" />
                     <span>{item}</span>
@@ -137,7 +144,7 @@ export function LandingDestinationPage({
           ) : null}
 
           <div className="mt-8 flex flex-wrap gap-2">
-            {destination.tags.vi.map((tag) => (
+            {destination.tags[lang].map((tag) => (
               <span
                 key={tag}
                 className="rounded-full bg-[#e9ede8] px-3 py-1 text-sm font-bold text-[#365247]"
@@ -149,10 +156,10 @@ export function LandingDestinationPage({
         </article>
 
         <aside className="h-fit rounded-3xl border border-[#d7d5cd] bg-white p-6 shadow-sm">
-          <h2 className="font-display text-2xl text-[#183f34]">Đi thế nào</h2>
+          <h2 className="font-display text-2xl text-[#183f34]">{ch(lang, "Đi thế nào", "How to visit")}</h2>
           {facts.operatorNote ? (
             <p className="mt-4 rounded-2xl border border-[#b8cfbf] bg-[#edf3f0] p-4 text-sm leading-6 text-[#365247]">
-              {facts.operatorNote.vi}
+              {facts.operatorNote[lang]}
             </p>
           ) : null}
           <dl className="mt-5 space-y-5 text-sm">
@@ -163,13 +170,13 @@ export function LandingDestinationPage({
               </div>
             ))}
             <div>
-              <dt className="font-bold text-[#59654b]">Vị trí</dt>
+              <dt className="font-bold text-[#59654b]">{ch(lang, "Vị trí", "Location")}</dt>
               <dd className="mt-2">
                 <MiniRouteMap
                   points={[
                     {
                       id: destination.id,
-                      label: destination.name.vi,
+                      label: destination.name[lang],
                       coordinates: [latitude, longitude],
                     },
                   ]}
@@ -182,7 +189,7 @@ export function LandingDestinationPage({
                   rel="noopener noreferrer"
                   className="mt-2 inline-block text-xs font-semibold text-[#356957] underline underline-offset-4"
                 >
-                  Mở trên Google Maps
+                  {ch(lang, "Mở trên Google Maps", "Open in Google Maps")}
                 </a>
               </dd>
             </div>
@@ -196,13 +203,13 @@ export function LandingDestinationPage({
               })}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
-              Lập hành trình
+              {ch(lang, "Lập hành trình", "Plan my day")}
             </Link>
             <Link
               href={packageCatalogHref(navigationContext)}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
             >
-              Xem các gói đi sẵn
+              {ch(lang, "Xem các gói đi sẵn", "See ready-made packages")}
             </Link>
           </div>
         </aside>
@@ -215,7 +222,7 @@ export function LandingDestinationPage({
         >
           <div className="mx-auto max-w-7xl">
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
-              Đi cùng một chuyến
+              {ch(lang, "Đi cùng một chuyến", "Pair it with")}
             </p>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {pairs.map((item) => (
@@ -227,8 +234,8 @@ export function LandingDestinationPage({
                   )}
                   className="rounded-2xl border border-white/15 bg-white/8 p-5 transition hover:bg-white/12"
                 >
-                  <p className="font-display text-2xl">{item.name.vi}</p>
-                  <p className="mt-2 text-sm leading-6 text-white/65">{item.tagline.vi}</p>
+                  <p className="font-display text-2xl">{item.name[lang]}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/65">{item.tagline[lang]}</p>
                 </Link>
               ))}
             </div>

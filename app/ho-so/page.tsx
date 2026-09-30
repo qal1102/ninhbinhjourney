@@ -7,6 +7,9 @@ import { CUSTOMER_ANONYMOUS_COOKIE } from "@/domain/customer-identity";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { hoSoTheoPhien } from "@/lib/customer-data/ho-so-khach-repository";
+import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ch } from "@/lib/ngon-ngu";
+import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
 export const metadata: Metadata = {
   title: "Hộ chiếu Ninh Bình · Ninh Bình Journey",
@@ -18,7 +21,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{1
 
 // Máy đã từng đặt chỗ thì mở thẳng hồ sơ bằng cookie phiên; máy khác thì
 // khách gõ mã đặt chỗ cùng số điện thoại.
-export default async function TrangHoSo() {
+export default async function TrangHoSo({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const lang = await docNgonNgu(await searchParams);
   const bat = isCustomerBookingEnabled();
   let hoSo: HoSoKhach | null = null;
   if (bat) {
@@ -32,18 +40,21 @@ export default async function TrangHoSo() {
     }
   }
   return (
-    <main className="min-h-screen bg-[#f4f0e7] px-4 py-8 sm:px-8 lg:py-14">
+    <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-4 py-8 sm:px-8 lg:py-14">
       <div className="mx-auto max-w-3xl">
-        <Link href="/" className="text-sm font-bold text-[#356957] underline underline-offset-4">
-          Về trang chủ
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/" className="text-sm font-bold text-[#356957] underline underline-offset-4">
+            {ch(lang, "Về trang chủ", "Home")}
+          </Link>
+          <NutNgonNgu lang={lang} />
+        </div>
         <div className="mt-5">
           {!bat ? (
-            <p className="rounded-3xl bg-white p-6 text-[#59654b]">Hồ sơ khách chưa mở ở bản này ạ.</p>
+            <p className="rounded-3xl bg-white p-6 text-[#59654b]">{ch(lang, "Hồ sơ khách chưa mở ở bản này ạ.", "Passports are not open in this version.")}</p>
           ) : hoSo ? (
-            <HoSoKhachView hoSo={hoSo} />
+            <HoSoKhachView hoSo={hoSo} lang={lang} />
           ) : (
-            <MoHoSo />
+            <MoHoSo lang={lang} />
           )}
         </div>
       </div>

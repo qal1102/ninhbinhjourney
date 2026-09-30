@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { isMidAutumnSeasonOpen } from "@/lib/seasonal/mid-autumn-season";
 
 // T2 removed "/demo/ops": it is the console of the abandoned stack and now
 // answers 404 in production. Auditing the accessibility of a page nobody can
@@ -187,10 +188,11 @@ test("top experience portal keeps tourism closed by default and preserves langua
     "href",
     "/collaborations?lang=en&source=editorial-invite",
   );
-  await expect(portals.filter({ hasText: "Seasonal occasions · Mid-Autumn" }).first()).toHaveAttribute(
-    "href",
-    "/seasonal/mid-autumn?lang=en&source=editorial-invite",
-  );
+  // Nhãn cổng đổi theo mùa (lib/seasonal/mid-autumn-season.ts): sau
+  // 27/09/2026 trang chủ tự ghi "Season closed", đường dẫn giữ nguyên.
+  await expect(
+    portals.filter({ hasText: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Season closed" }).first(),
+  ).toHaveAttribute("href", "/seasonal/mid-autumn?lang=en&source=editorial-invite");
   await expect(portals.filter({ hasText: "Reserve" }).first()).toHaveAttribute(
     "href",
     "/packages?lang=en&source=editorial-invite",
@@ -222,7 +224,10 @@ test("top experience portal keeps tourism closed by default and preserves langua
 
   await page.goto("/?lang=en&source=editorial-invite", { waitUntil: "domcontentloaded" });
   await waitForHomeLayout(page);
-  await page.getByRole("link", { name: "Seasonal occasions · Mid-Autumn" }).first().click();
+  await page
+    .getByRole("link", { name: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Season closed" })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/seasonal\/mid-autumn\?lang=en&source=editorial-invite/);
   await expect(page.locator("#mid-autumn")).toBeVisible();
 });
@@ -367,10 +372,15 @@ test("Mid-Autumn campaign is a dedicated seasonal route with its own service lay
   await campaign.getByRole("button", { name: "Open details: Moon Table by the Ngo Dong" }).click();
   const bookingDialog = page.getByRole("dialog");
   await expect(bookingDialog.getByRole("heading", { name: "Moon Table by the Ngo Dong" })).toBeVisible();
-  await expect(bookingDialog.getByRole("link", { name: "View dates and hold a table" })).toHaveAttribute(
-    "href",
-    "/packages/ban-trang-tam-coc-2026?lang=en&source=mid-autumn-2026",
-  );
+  if (isMidAutumnSeasonOpen()) {
+    await expect(bookingDialog.getByRole("link", { name: "View dates and hold a table" })).toHaveAttribute(
+      "href",
+      "/packages/ban-trang-tam-coc-2026?lang=en&source=mid-autumn-2026",
+    );
+  } else {
+    // Hết mùa: hộp nói thẳng Bàn Trăng đã khép và dẫn sang các gói đang bán.
+    await expect(bookingDialog.locator('[data-seasonal-booking-closed="moon-table-ngo-dong"]')).toBeVisible();
+  }
   await page.keyboard.press("Escape");
   await expect(bookingDialog).toHaveCount(0);
 
@@ -673,7 +683,7 @@ test("NBJ-I06 public surfaces match the experience mode they declare", async ({
   // kiện `load` có khi mãi không tới (cùng lý do đã ghi ở bài axe phía trên).
   await page.goto("/plan", { waitUntil: "domcontentloaded" });
   const plan = await readSurfaceConfig(page);
-  const demoCommand = page.getByRole("button", { name: "Run demo command" });
+  const demoCommand = page.getByRole("button", { name: "Chạy câu nói mẫu" });
   if (plan.mode === "production") {
     await expect(demoCommand).toHaveCount(0);
   } else {

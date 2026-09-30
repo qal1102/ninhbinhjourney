@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { ChiDiem } from "@/components/shared/chi-diem";
+import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { goiDaHetMua, goiHienThi } from "@/content/packages-en";
+import { ch } from "@/lib/ngon-ngu";
+import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { readPublicEnvironment } from "@/config/experience";
 import { getPackageBySlug } from "@/content/packages";
 import { CustomerBookingCheckout } from "@/components/commerce/customer-booking-checkout";
@@ -42,13 +46,14 @@ export default async function CheckoutPage({
     );
   }
   const params = await searchParams;
+  const lang = await docNgonNgu(params);
   const packageSlug =
     typeof params.package === "string" ? params.package : "slow-ninh-binh";
   const packageItem = getPackageBySlug(packageSlug);
   if (!packageItem) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#f4f0e7] p-5">
-        <p>Gói demo không tồn tại.</p>
+        <p>{ch(lang, "Không tìm thấy gói này.", "We could not find this package.")}</p>
       </main>
     );
   }
@@ -57,29 +62,60 @@ export default async function CheckoutPage({
   // luôn bật. Tắt đặt chỗ thì trang nói thẳng là tạm đóng, ở khối phía trên.
 
   return (
-    <main className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
+    <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href={`/packages/${packageItem.slug}`}
-          className="text-sm font-bold text-[#356957]"
-        >
-          ← Chi tiết gói
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link
+            href={`/packages/${packageItem.slug}`}
+            className="text-sm font-bold text-[#356957]"
+          >
+            ← {ch(lang, "Chi tiết gói", "Package details")}
+          </Link>
+          <NutNgonNgu lang={lang} />
+        </div>
         <p className="mt-9 text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
           {/* "Gói A · giữ chỗ trên lõi ERP" là chữ trong phòng làm việc, không
               phải chữ của khách: "Gói A" là tên một giai đoạn thi công, "lõi
               ERP" là tên một hệ thống nội bộ. Nó lại nằm ở dòng đầu tiên của
               trang thanh toán — chỗ đắt nhất trên cả luồng. Xem luật cấm chữ
               kỹ thuật lọt ra mặt khách ở docs/reference/UI_UX_RULES.md. */}
-          Đặt vé vào cổng · chỗ giữ 15 phút
+          {ch(lang, "Đặt vé vào cổng · chỗ giữ 15 phút", "Gate tickets · seats held for 15 minutes")}
         </p>
         <h1 className="font-display mt-4 text-5xl leading-[0.96] text-[#183f34] sm:text-7xl">
-          Một chỗ đã giữ,
+          {ch(lang, "Một chỗ đã giữ,", "A seat held,")}
           <br />
-          không có khoản tiền bị thu.
+          {ch(lang, "không có khoản tiền bị thu.", "and no money taken.")}
         </h1>
         <div className="mt-10">
-          <CustomerBookingCheckout packageItem={packageItem} batDauHomNay={params.ngay === "hom-nay"} />
+          {goiDaHetMua(packageItem) ? (
+            // Gói có hạn bán đã qua ngày cuối: ô ngày chẳng còn ngày nào chọn
+            // được, nên nói thẳng thay vì bày một biểu mẫu không dùng được.
+            <section data-testid="goi-het-mua" className="max-w-2xl rounded-3xl border border-[#d7d5cd] bg-white p-7">
+              <h2 className="font-display text-3xl text-[#183f34]">
+                {ch(lang, "Mùa này đã khép", "This season has closed")}
+              </h2>
+              <p className="mt-3 leading-7 text-[#59654b]">
+                {ch(
+                  lang,
+                  `${goiHienThi(packageItem, lang).name} chỉ nhận đặt tới ${packageItem.bookingEndDate?.split("-").reverse().join("/")}. Mời bạn chọn một gói đi quanh năm.`,
+                  `${goiHienThi(packageItem, lang).name} took bookings until ${packageItem.bookingEndDate?.split("-").reverse().join("/")}. Please choose a year-round package.`,
+                )}
+              </p>
+              <Link
+                href="/packages"
+                className="mt-6 inline-flex min-h-11 items-center rounded-full bg-[#183f34] px-5 font-bold text-white"
+              >
+                {ch(lang, "Xem các gói", "See the packages")}
+              </Link>
+            </section>
+          ) : (
+            <CustomerBookingCheckout
+              packageItem={packageItem}
+              batDauHomNay={params.ngay === "hom-nay"}
+              lang={lang}
+              chuGoi={goiHienThi(packageItem, lang)}
+            />
+          )}
         </div>
       </div>
       {/* Bước 1 của màn Hướng dẫn trong ERP mở trang này kèm `?chi=`. */}

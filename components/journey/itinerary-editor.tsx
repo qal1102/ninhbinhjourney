@@ -8,17 +8,36 @@ import { rebuildItineraryWithSites } from "@/domain/journey";
 import { matchPackagesToIntent } from "@/domain/package-match";
 import type { Itinerary, JourneyIntent } from "@/domain/models";
 import { JourneyContactVault } from "./journey-contact-vault";
+import { goiHienThi } from "@/content/packages-en";
+import type { NgonNgu } from "@/lib/ngon-ngu";
 
-const walkingLabel: Record<JourneyIntent["walkingTolerance"], string> = {
-  low: "ít",
-  moderate: "vừa",
-  high: "nhiều",
+const walkingLabel: Record<JourneyIntent["walkingTolerance"], { vi: string; en: string }> = {
+  low: { vi: "ít", en: "little" },
+  moderate: { vi: "vừa", en: "moderate" },
+  high: { vi: "nhiều", en: "plenty" },
 };
 
-const paceLabel: Record<JourneyIntent["pace"], string> = {
-  relaxed: "thư thả",
-  balanced: "cân bằng",
-  active: "năng động",
+const paceLabel: Record<JourneyIntent["pace"], { vi: string; en: string }> = {
+  relaxed: { vi: "thư thả", en: "relaxed" },
+  balanced: { vi: "cân bằng", en: "balanced" },
+  active: { vi: "năng động", en: "active" },
+};
+
+/*
+ * Lý do từng chặng, lời giải thích và các cảnh báo được `domain/journey.ts`
+ * viết bằng tiếng Việt (bài kiểm và API dùng đúng các câu ấy). Khách chọn EN
+ * thì dựng lại câu tiếng Anh ngay tại đây từ cùng dữ kiện.
+ */
+const MOBILITY_EN = { low: "is easy on the legs", moderate: "needs some walking", high: "needs a lot of walking" } as const;
+const ISSUE_EN: Record<string, string> = {
+  UNKNOWN_SITE: "The plan has a stop that is not on our list.",
+  SITE_UNAVAILABLE: "A stop is closed at the chosen time.",
+  MOBILITY_CONFLICT: "A stop needs more walking than you chose.",
+  INVALID_TIME: "A stop has a wrong start or end time.",
+  OVERLAP: "A stop overlaps the one before it.",
+  OUTSIDE_DEMO_WINDOW: "A stop falls outside its opening hours.",
+  NO_FEASIBLE_STOPS: "No stop fits the time and walking you chose.",
+  DURATION_EXCEEDED: "The plan is longer than the time you have.",
 };
 
 const ItineraryRouteMap = dynamic(() => import("./itinerary-route-map"), {
@@ -31,6 +50,7 @@ const ItineraryRouteMap = dynamic(() => import("./itinerary-route-map"), {
 });
 
 function timeLabel(value: string) {
+  // Giờ 24h như "08:00" đọc được bằng cả hai thứ tiếng.
   return new Intl.DateTimeFormat("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -43,12 +63,15 @@ export function ItineraryEditor({
   intent,
   savedAnonymously = false,
   identityCollectionEnabled = false,
+  lang = "vi",
 }: {
   initialItinerary: Itinerary;
   intent: JourneyIntent;
   savedAnonymously?: boolean;
   identityCollectionEnabled?: boolean;
+  lang?: NgonNgu;
 }) {
+  const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const [itinerary, setItinerary] = useState(initialItinerary);
   const [message, setMessage] = useState("");
 
@@ -69,7 +92,7 @@ export function ItineraryEditor({
 
   function saveSites(nextSiteIds: string[]) {
     if (nextSiteIds.length === 0) {
-      setMessage("Hành trình cần ít nhất một điểm đến.");
+      setMessage(t("Hành trình cần ít nhất một điểm đến.", "The day needs at least one stop."));
       return;
     }
 
@@ -84,8 +107,8 @@ export function ItineraryEditor({
     setItinerary(rebuilt);
     setMessage(
       rebuilt.validation.valid
-        ? "Đã tính lại lịch trình theo chỉnh sửa của bạn."
-        : "Đã tính lại; hãy xử lý xung đột trước khi tiếp tục.",
+        ? t("Đã tính lại lịch trình theo chỉnh sửa của bạn.", "Recalculated with your changes.")
+        : t("Đã tính lại; hãy xử lý xung đột trước khi tiếp tục.", "Recalculated; please resolve the conflicts before continuing."),
     );
   }
 
@@ -102,7 +125,7 @@ export function ItineraryEditor({
       (destination) => !siteIds.includes(destination.id),
     );
     if (!replacement) {
-      setMessage("Không còn điểm cấu hình nào để thay thế.");
+      setMessage(t("Không còn điểm cấu hình nào để thay thế.", "There are no other stops to swap in."));
       return;
     }
     const next = [...siteIds];
@@ -123,6 +146,7 @@ export function ItineraryEditor({
   }).matches[0] ?? null;
   const thamSoGoi = new URLSearchParams();
   if (goiGanNhat) thamSoGoi.set("goi", goiGanNhat.slug);
+  if (lang === "en") thamSoGoi.set("lang", "en");
   const huongDiGoi = thamSoGoi.size > 0 ? `/packages?${thamSoGoi.toString()}` : "/packages";
 
   return (
@@ -132,15 +156,15 @@ export function ItineraryEditor({
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
               {savedAnonymously
-                  ? "Bản gốc đã lưu ẩn danh · chỉnh sửa tiếp lưu trên máy bạn"
-                  : "Lịch trình đã xác nhận · lưu trên máy bạn"}
+                  ? t("Bản gốc đã lưu ẩn danh · chỉnh sửa tiếp lưu trên máy bạn", "Original saved anonymously · edits stay on your device")
+                  : t("Lịch trình đã xác nhận · lưu trên máy bạn", "Plan confirmed · saved on your device")}
             </p>
             <h2 className="font-display mt-3 text-4xl text-[#183f34] sm:text-5xl">
-              Một ngày đi nhẹ nhàng
+              {t("Một ngày đi nhẹ nhàng", "An easy-going day")}
             </h2>
           </div>
           <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
-            <p className="text-xs text-[#59654b]">Ước tính demo</p>
+            <p className="text-xs text-[#59654b]">{t("Ước tính minh hoạ", "Sample estimate")}</p>
             <p className="font-display text-xl text-[#183f34]">
               {itinerary.estimatedPriceVnd.toLocaleString("vi-VN")} VND
             </p>
@@ -163,14 +187,18 @@ export function ItineraryEditor({
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#557568]">
                   {timeLabel(item.startAt)}–{timeLabel(item.endAt)}
                   {item.travelMinutesFromPrevious > 0
-                    ? ` · ${item.travelMinutesFromPrevious} phút di chuyển`
+                    ? t(` · ${item.travelMinutesFromPrevious} phút di chuyển`, ` · ${item.travelMinutesFromPrevious} min travel`)
                     : ""}
                 </p>
                 <h3 className="font-display mt-2 text-2xl text-[#183f34]">
-                  {destination?.name.vi ?? "Điểm không còn trong catalog"}
+                  {destination?.name[lang] ?? t("Điểm không còn trong danh sách", "No longer on our list")}
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-[#59654b]">
-                  {item.reason}
+                  {lang === "en" && destination
+                    ? intent.walkingTolerance === "low"
+                      ? `${destination.name.en} ${MOBILITY_EN[destination.mobilityLevel]}, which suits the walking you asked for, and it is still open in time.`
+                      : `${destination.name.en} fits your ${paceLabel[intent.pace].en} pace and is within its opening hours.`
+                    : item.reason}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
@@ -179,7 +207,7 @@ export function ItineraryEditor({
                     onClick={() => move(index, -1)}
                     className="min-h-10 rounded-full border border-[#b9c4bd] px-3 text-xs font-bold disabled:opacity-35"
                   >
-                    Lên
+                    {t("Lên", "Up")}
                   </button>
                   <button
                     type="button"
@@ -187,14 +215,14 @@ export function ItineraryEditor({
                     onClick={() => move(index, 1)}
                     className="min-h-10 rounded-full border border-[#b9c4bd] px-3 text-xs font-bold disabled:opacity-35"
                   >
-                    Xuống
+                    {t("Xuống", "Down")}
                   </button>
                   <button
                     type="button"
                     onClick={() => replace(index)}
                     className="min-h-10 rounded-full border border-[#b9c4bd] px-3 text-xs font-bold"
                   >
-                    Thay điểm
+                    {t("Thay điểm", "Swap")}
                   </button>
                   <button
                     type="button"
@@ -206,7 +234,7 @@ export function ItineraryEditor({
                     }
                     className="min-h-10 rounded-full px-3 text-xs font-bold text-[#8f2f2c] disabled:opacity-35"
                   >
-                    Xóa
+                    {t("Xóa", "Remove")}
                   </button>
                 </div>
               </li>
@@ -217,9 +245,9 @@ export function ItineraryEditor({
 
       <div className="space-y-5">
         <section className="rounded-3xl bg-[#183f34] p-5 text-white sm:p-7">
-          <ItineraryRouteMap stops={routeStops} />
+          <ItineraryRouteMap stops={routeStops} lang={lang} />
           <p className="mt-3 text-xs font-bold text-white/55">
-            Thứ tự điểm dừng theo lịch trình đã xác nhận.
+            {t("Thứ tự điểm dừng theo lịch trình đã xác nhận.", "Stops in the order of your confirmed plan.")}
           </p>
         </section>
 
@@ -232,23 +260,27 @@ export function ItineraryEditor({
         >
           <h3 className="font-display text-2xl text-[#183f34]">
             {itinerary.validation.valid
-              ? "Lịch trình hợp lệ"
-              : "Cần xử lý xung đột"}
+              ? t("Lịch trình hợp lệ", "The plan works")
+              : t("Cần xử lý xung đột", "Conflicts to resolve")}
           </h3>
           <p className="mt-2 text-sm leading-6 text-[#4d5b55]">
-            {itinerary.explanation}
+            {t(
+              itinerary.explanation,
+              "The plan follows opening hours, total time, walking and distance first, then budget and interests.",
+            )}
           </p>
           {itinerary.validation.issues.length > 0 ? (
             <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-[#8f2f2c]">
               {itinerary.validation.issues.map((issue, index) => (
-                <li key={`${issue.code}-${index}`}>{issue.message}</li>
+                <li key={`${issue.code}-${index}`}>{lang === "en" ? (ISSUE_EN[issue.code] ?? issue.message) : issue.message}</li>
               ))}
             </ul>
           ) : null}
           <p className="mt-4 text-xs text-[#59654b]">
-            Tổng {itinerary.totalMinutes} / {intent.durationMinutes} phút · đi
-            bộ {walkingLabel[intent.walkingTolerance]} · nhịp{" "}
-            {paceLabel[intent.pace]}
+            {t(
+              `Tổng ${itinerary.totalMinutes} / ${intent.durationMinutes} phút · đi bộ ${walkingLabel[intent.walkingTolerance].vi} · nhịp ${paceLabel[intent.pace].vi}`,
+              `Total ${itinerary.totalMinutes} / ${intent.durationMinutes} min · ${walkingLabel[intent.walkingTolerance].en} walking · ${paceLabel[intent.pace].en} pace`,
+            )}
           </p>
         </section>
 
@@ -264,11 +296,12 @@ export function ItineraryEditor({
               href={huongDiGoi}
               className="inline-flex min-h-13 w-full items-center justify-center rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17]"
             >
-              Dùng hành trình này
+              {t("Dùng hành trình này", "Use this plan")}
             </Link>
             {goiGanNhat ? (
               <p className="text-center text-sm text-[#4d5b55]">
-                Gói gần nhất với hành trình này: <strong className="text-[#183f34]">{goiGanNhat.name}</strong>.
+                {t("Gói gần nhất với hành trình này:", "Closest package to this plan:")}{" "}
+                <strong className="text-[#183f34]">{goiHienThi(goiGanNhat.item, lang).name}</strong>.
               </p>
             ) : null}
           </>
@@ -278,12 +311,12 @@ export function ItineraryEditor({
             disabled
             className="min-h-13 w-full rounded-full bg-[#b8b8b0] px-6 font-extrabold text-white"
           >
-            Xử lý xung đột để tiếp tục
+            {t("Xử lý xung đột để tiếp tục", "Resolve conflicts to continue")}
           </button>
         )}
 
         {savedAnonymously && identityCollectionEnabled ? (
-          <JourneyContactVault journeyId={itinerary.id} />
+          <JourneyContactVault journeyId={itinerary.id} lang={lang} />
         ) : null}
       </div>
     </div>

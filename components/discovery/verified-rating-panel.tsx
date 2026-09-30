@@ -58,7 +58,7 @@ export function VerifiedRatingPanel({
       className="mt-10 rounded-2xl border border-[#d8cfbc] bg-[#f6f1e7] p-6"
     >
       <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#9a6328]">
-        Người đã tới đây nói gì
+        {lang === "en" ? "What visitors say" : "Người đã tới đây nói gì"}
       </p>
 
       {duDeChamDiem ? (
@@ -73,7 +73,7 @@ export function VerifiedRatingPanel({
         <ul className="mt-4 space-y-3">
           {summary.recentVoices.slice(0, 3).map((voice, index) => (
             <li key={index} className="border-t border-[#dcd9d1] pt-3">
-              <span aria-label={`${voice.rating} sao`} className="text-sm text-[#c58a2b]">
+              <span aria-label={lang === "en" ? `${voice.rating} stars` : `${voice.rating} sao`} className="text-sm text-[#c58a2b]">
                 <span aria-hidden>{"★".repeat(voice.rating)}</span>
               </span>
               <p className="mt-1 leading-7 text-[#4d5b55]">{voice.comment}</p>

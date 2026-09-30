@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import {
   getExperienceSurfaceAttributes,
   readPublicEnvironment,
@@ -8,6 +7,9 @@ import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository
 import { PlanExperience } from "@/components/journey/plan-experience";
 import { SetupState } from "@/components/shared/setup-state";
 import { DESTINATIONS } from "@/content/destinations";
+import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ch } from "@/lib/ngon-ngu";
+import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
 export const metadata = {
   title: "Lập hành trình | Ninh Bình Journey",
@@ -35,13 +37,7 @@ export default async function PlanPage({
   // ngôn ngữ ngoài trang chủ đặt xuống. Mọi liên kết dẫn vào đây đều mang
   // sẵn `lang`, trước nay trang này bỏ qua nó.
   const params = (await searchParams) ?? {};
-  const cookieStore = await cookies();
-  const requestedLang = firstParam(params.lang);
-  const savedLang = cookieStore.get("ninh-binh-lang")?.value;
-  const lang: "vi" | "en" =
-    requestedLang === "en" || (!requestedLang && savedLang === "en")
-      ? "en"
-      : "vi";
+  const lang = await docNgonNgu(params);
 
   // "Thêm vào hành trình" ở trang điểm đến và trang Khám phá dẫn tới đây kèm
   // `?add=<mã điểm>`. Trước 27/09/2026 trang này không đọc tham số ấy: khách
@@ -54,7 +50,7 @@ export default async function PlanPage({
   });
 
   return (
-    <main
+    <main lang={lang}
       {...surfaceAttributes}
       className="min-h-screen bg-[#f4f0e7] text-[#151a17]"
     >
@@ -66,25 +62,30 @@ export default async function PlanPage({
           >
             NINH BÌNH
           </Link>
-          <Link
-            href="/explore"
-            className="rounded-full px-4 py-2 text-sm font-bold"
-          >
-            Khám phá
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/explore"
+              className="rounded-full px-4 py-2 text-sm font-bold"
+            >
+              {ch(lang, "Khám phá", "Explore")}
+            </Link>
+            <NutNgonNgu lang={lang} />
+          </div>
         </div>
       </header>
       <section data-customer-section="planner-builder" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-          Lập hành trình
+          {ch(lang, "Lập hành trình", "Plan my day")}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-5xl leading-[0.96] text-[#183f34] sm:text-7xl">
-          Một lịch trình biết giới hạn của nó.
+          {ch(lang, "Một lịch trình biết giới hạn của nó.", "A plan that knows its limits.")}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
-          Kể về ngày bạn muốn — đi với ai, thích gì, đi bộ được bao nhiêu.
-          Lịch trình dựng ra sẽ tôn trọng giờ mở cửa và sức chân của bạn,
-          và không có gì được lưu khi bạn chưa gật đầu.
+          {ch(
+            lang,
+            "Kể về ngày bạn muốn — đi với ai, thích gì, đi bộ được bao nhiêu. Lịch trình dựng ra sẽ tôn trọng giờ mở cửa và sức chân của bạn, và không có gì được lưu khi bạn chưa gật đầu.",
+            "Tell us about the day you want — who comes along, what you like, how far you can walk. The plan respects opening hours and your legs, and nothing is saved until you say yes.",
+          )}
         </p>
         <div className="mt-10">
           <PlanExperience

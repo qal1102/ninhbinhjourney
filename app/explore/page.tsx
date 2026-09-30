@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { ExploreExperience } from "@/components/discovery/explore-experience";
+import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
 import { readPublicEnvironment } from "@/config/experience";
+import { ch } from "@/lib/ngon-ngu";
+import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import {
   readContinuityContext,
   withContinuityContext,
@@ -18,13 +21,15 @@ export default async function ExplorePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const navigationContext = readContinuityContext(await searchParams);
+  const params = await searchParams;
+  const navigationContext = readContinuityContext(params);
+  const lang = await docNgonNgu(params);
   const environment = readPublicEnvironment();
   const clientDemo =
     environment.status === "ready" &&
     environment.config.mode === "client-demo";
   return (
-    <main className="min-h-screen bg-[#f4f0e7] text-[#151a17]">
+    <main lang={lang} className="min-h-screen bg-[#f4f0e7] text-[#151a17]">
       <header className="border-b border-[#d7d5cd] bg-[#fbfaf6]">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <Link
@@ -46,34 +51,37 @@ export default async function ExplorePage({
               })}
               className="rounded-full px-4 py-2"
             >
-              Lập hành trình
+              {ch(lang, "Lập hành trình", "Plan my day")}
             </Link>
             {clientDemo ? (
               <span className="hidden rounded-full bg-[#e8dfcf] px-3 py-1 text-xs text-[#5f593f] sm:inline-flex">
-                Client demonstration
+                {ch(lang, "Bản trình diễn", "Demo")}
               </span>
             ) : null}
+            <NutNgonNgu lang={lang} />
           </nav>
         </div>
       </header>
       <section data-customer-section="explore-discovery" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
-          Khám phá Ninh Bình
+          {ch(lang, "Khám phá Ninh Bình", "Explore Ninh Binh")}
         </p>
         <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_0.7fr] lg:items-end">
           <h1 className="font-display text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">
-            Chọn cách đi trước,
+            {ch(lang, "Chọn cách đi trước,", "Choose how you travel,")}
             <br />
-            rồi mới chọn điểm.
+            {ch(lang, "rồi mới chọn điểm.", "then where to go.")}
           </h1>
           <p className="max-w-xl text-lg leading-8 text-[#59654b]">
-            Có người muốn đi thật chậm, có người muốn thấy thật nhiều. Lọc theo
-            thời gian bạn có, mức đi bộ chịu được và người đi cùng, bản đồ
-            chỉ giữ lại những nơi hợp với bạn.
+            {ch(
+              lang,
+              "Có người muốn đi thật chậm, có người muốn thấy thật nhiều. Lọc theo thời gian bạn có, mức đi bộ chịu được và người đi cùng, bản đồ chỉ giữ lại những nơi hợp với bạn.",
+              "Some want to go slowly, some want to see a lot. Filter by the time you have, how much you can walk and who comes along; the map keeps only the places that suit you.",
+            )}
           </p>
         </div>
         <div className="mt-10">
-          <ExploreExperience navigationContext={navigationContext} />
+          <ExploreExperience navigationContext={navigationContext} lang={lang} />
         </div>
       </section>
     </main>

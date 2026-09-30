@@ -12,8 +12,10 @@ export type DestinationTimelineEntry = {
 
 export function DestinationTimeline({
   entries,
+  lang = "vi",
 }: {
   entries: readonly DestinationTimelineEntry[];
+  lang?: "vi" | "en";
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   if (!entries.length) return null;
@@ -21,10 +23,10 @@ export function DestinationTimeline({
 
   return (
     <section className="mt-12 border-t border-[#dcd9d1] pt-8">
-      <h2 className="font-display text-3xl text-[#183f34]">Dòng thời gian</h2>
+      <h2 className="font-display text-3xl text-[#183f34]">{lang === "en" ? "Timeline" : "Dòng thời gian"}</h2>
       <div
         role="tablist"
-        aria-label="Các mốc thời gian"
+        aria-label={lang === "en" ? "Key dates" : "Các mốc thời gian"}
         className="mt-6 flex gap-2 overflow-x-auto pb-1"
       >
         {entries.map((entry, index) => {
@@ -42,14 +44,14 @@ export function DestinationTimeline({
                   : "border-[#d7d5cd] bg-white text-[#59654b] hover:border-[#183f34]"
               }`}
             >
-              {entry.year.vi}
+              {entry.year[lang]}
             </button>
           );
         })}
       </div>
       <div key={activeIndex} className="fade-up mt-6 max-w-2xl">
-        <h3 className="font-display text-2xl text-[#183f34]">{active.label.vi}</h3>
-        <p className="mt-3 text-lg leading-8 text-[#4d5b55]">{active.detail.vi}</p>
+        <h3 className="font-display text-2xl text-[#183f34]">{active.label[lang]}</h3>
+        <p className="mt-3 text-lg leading-8 text-[#4d5b55]">{active.detail[lang]}</p>
       </div>
     </section>
   );

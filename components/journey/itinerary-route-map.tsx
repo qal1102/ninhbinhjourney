@@ -30,7 +30,8 @@ type ResolvedStop = RouteStop & {
   name: string;
 };
 
-export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
+export default function ItineraryRouteMap({ stops, lang = "vi" }: { stops: RouteStop[]; lang?: "vi" | "en" }) {
+  const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const [dangChon, setDangChon] = useState<string | null>(null);
 
   const resolved = useMemo<ResolvedStop[]>(
@@ -45,11 +46,11 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
             ...stop,
             order: index + 1,
             position: destination.coordinates,
-            name: destination.name.vi,
+            name: destination.name[lang],
           },
         ];
       }),
-    [stops],
+    [stops, lang],
   );
 
   const ghim = useMemo<GhimBanDo[]>(
@@ -57,12 +58,12 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
       resolved.map((stop) => ({
         id: stop.id,
         toaDo: stop.position,
-        nhan: `Điểm ${stop.order}: ${stop.name}`,
+        nhan: `${lang === "en" ? "Stop" : "Điểm"} ${stop.order}: ${stop.name}`,
         thuTu: stop.order,
         goc: "nb-route-pin",
         lop: stop.id === dangChon ? "is-open" : undefined,
       })),
-    [resolved, dangChon],
+    [resolved, dangChon, lang],
   );
 
   const duongNoi = useMemo<DuongNoi | null>(() => {
@@ -85,7 +86,7 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
   if (resolved.length === 0) {
     return (
       <div className="grid min-h-[24rem] place-items-center rounded-2xl bg-[#12211c] p-6 text-center text-sm leading-6 text-white/70">
-        Chưa có điểm nào trong hành trình để hiển thị trên bản đồ.
+        {t("Chưa có điểm nào trong hành trình để hiển thị trên bản đồ.", "No stops in the plan to show on the map yet.")}
       </div>
     );
   }
@@ -97,7 +98,7 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
         duongNoi={duongNoi}
         dangChon={dangChon}
         onChonGhim={chon}
-        nhanVung={`Bản đồ hành trình, ${resolved.length} điểm`}
+        nhanVung={t(`Bản đồ hành trình, ${resolved.length} điểm`, `Route map, ${resolved.length} stops`)}
         className="min-h-[24rem] w-full rounded-2xl"
         le={{ top: 48, bottom: 96, left: 48, right: 48 }}
         zoomToiDa={12.5}
@@ -109,7 +110,7 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
         <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[3] sm:inset-x-auto sm:left-4 sm:max-w-xs">
           <div className="pointer-events-auto rounded-2xl border border-[#d9e4de] bg-[#fbfaf6] p-4 shadow-[0_18px_40px_rgba(24,63,52,0.24)]">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3f7568]">
-              Điểm {dangXem.order}
+              {t("Điểm", "Stop")} {dangXem.order}
             </p>
             <h3 className="font-display mt-1 text-xl text-[#183f34]">{dangXem.name}</h3>
             <p className="mt-1 text-sm leading-6 text-[#6d756f]">{dangXem.label}</p>
@@ -118,7 +119,7 @@ export default function ItineraryRouteMap({ stops }: { stops: RouteStop[] }) {
               onClick={() => setDangChon(null)}
               className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-[#3f7568] underline underline-offset-4"
             >
-              Đóng
+              {t("Đóng", "Close")}
             </button>
           </div>
         </div>

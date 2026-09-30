@@ -1,6 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PACE_LABEL, PACKAGES, type PackageCatalogItem } from "@/content/packages";
+import { PACKAGES, type PackageCatalogItem } from "@/content/packages";
+import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
+import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ch, type NgonNgu } from "@/lib/ngon-ngu";
+import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { getPackageHeroImage } from "@/content/package-images";
 import {
   getExperiencePresentationFlags,
@@ -31,6 +35,7 @@ function PackageCard({
   featured,
   reversed,
   suggested,
+  lang,
 }: {
   item: PackageCatalogItem;
   navigationContext: ContinuityContext;
@@ -38,8 +43,11 @@ function PackageCard({
   featured?: boolean;
   reversed?: boolean;
   suggested?: boolean;
+  lang: NgonNgu;
 }) {
-  const image = getPackageHeroImage(item);
+  const image = getPackageHeroImage(item, lang);
+  const chu = goiHienThi(item, lang);
+  const hetMua = goiDaHetMua(item);
   const detailHref = packageDetailHref(item.slug, navigationContext, "catalog");
 
   return (
@@ -67,34 +75,43 @@ function PackageCard({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1 basis-[16rem]">
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">
-              {item.durationLabel} · {PACE_LABEL[item.pace]}
+              {chu.durationLabel} · {chu.nhip}
             </p>
             <h2 className={`font-display mt-2 break-words leading-tight text-[#183f34] ${featured ? "text-4xl" : "text-3xl"}`}>
-              {item.name}
+              {chu.name}
             </h2>
-            <p className="mt-2 text-sm text-[#59654b]">{item.audience}</p>
+            <p className="mt-2 text-sm text-[#59654b]">{chu.audience}</p>
+            {hetMua ? (
+              <p data-testid="goi-het-mua" className="mt-3 inline-flex rounded-full bg-[#efe6d6] px-3 py-1 text-xs font-extrabold text-[#6b5326]">
+                {ch(lang, "Mùa 2026 đã khép · hẹn mùa trăng năm sau", "The 2026 season has closed · see you next moon season")}
+              </p>
+            ) : null}
           </div>
           <div className="max-w-full rounded-2xl bg-[#f4f0e7] px-4 py-3 text-left min-[280px]:text-right">
             <p className="break-words font-display text-xl leading-tight">
-              {item.priceLabel ?? `${item.demoPriceVnd.toLocaleString("vi-VN")} VND`}
+              {giaGoi(item, lang)}
             </p>
             {/* QA-P2-09: gói tính theo bàn thì ghi đúng giá bàn, không ghi giá mỗi người lớn. */}
-            <p className="text-xs text-[#645c4b]">{item.priceLabel ? "giá giới thiệu mùa 2026" : "mỗi người lớn · demo"}</p>
+            <p className="text-xs text-[#645c4b]">
+              {item.priceLabel
+                ? ch(lang, "giá giới thiệu mùa 2026", "2026 introductory price")
+                : ch(lang, "mỗi người lớn · giá minh hoạ", "per adult · sample price")}
+            </p>
           </div>
         </div>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <div>
-            <h3 className="text-sm font-bold">Bao gồm</h3>
+            <h3 className="text-sm font-bold">{ch(lang, "Bao gồm", "Included")}</h3>
             <ul className="mt-2 space-y-2 text-sm leading-6 text-[#59654b]">
-              {item.inclusions.map((value) => (
+              {chu.inclusions.map((value) => (
                 <li key={value}>✓ {value}</li>
               ))}
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-bold">Không bao gồm</h3>
+            <h3 className="text-sm font-bold">{ch(lang, "Không bao gồm", "Not included")}</h3>
             <ul className="mt-2 space-y-2 text-sm leading-6 text-[#59654b]">
-              {item.exclusions.map((value) => (
+              {chu.exclusions.map((value) => (
                 <li key={value}>— {value}</li>
               ))}
             </ul>
@@ -109,14 +126,14 @@ function PackageCard({
             transitionTypes={["nav-forward"]}
             className="inline-flex min-h-11 items-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
           >
-            Xem chi tiết
+            {ch(lang, "Xem chi tiết", "Details")}
           </Link>
-          {checkoutAvailable ? (
+          {checkoutAvailable && !hetMua ? (
             <Link
               href={checkoutHref(item.slug, navigationContext)}
               className="inline-flex min-h-11 items-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
-              Chọn gói
+              {ch(lang, "Chọn gói", "Choose")}
             </Link>
           ) : null}
         </div>
@@ -132,6 +149,7 @@ export default async function PackagesPage({
 }) {
   const params = await searchParams;
   const navigationContext = readContinuityContext(params);
+  const lang = await docNgonNgu(params);
   // QA-P2-09: gói gần nhất với hành trình khách vừa dựng ở /plan.
   const goiValue = params.goi;
   const goiGoiY = typeof goiValue === "string" ? PACKAGES.find((item) => item.slug === goiValue) : undefined;
@@ -150,24 +168,28 @@ export default async function PackagesPage({
   const [featured, ...rest] = PACKAGES;
 
   return (
-    <main
+    <main lang={lang}
       {...surfaceAttributes}
       data-customer-section="packages-catalog"
       className="min-h-screen bg-[#f4f0e7] px-4 py-10 text-[#151a17] min-[280px]:px-5 sm:px-8 lg:py-16"
     >
       <div className="mx-auto max-w-7xl">
-        <Link
-          href={packageCatalogBackHref(navigationContext)}
-          transitionTypes={["nav-back"]}
-          className="text-sm font-bold text-[#356957]"
-        >
-          ← Quay lại hành trình
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link
+            href={packageCatalogBackHref(navigationContext)}
+            transitionTypes={["nav-back"]}
+            className="text-sm font-bold text-[#356957]"
+          >
+            ← {ch(lang, "Quay lại hành trình", "Back to your journey")}
+          </Link>
+          <NutNgonNgu lang={lang} />
+        </div>
         {goiGoiY ? (
           <p className="mt-6 max-w-2xl rounded-2xl border border-[#d58c35]/40 bg-[#fbf3e6] px-5 py-4 text-sm leading-6 text-[#4d4636]">
-            Gói gần nhất với hành trình bạn vừa dựng là <strong className="text-[#183f34]">{goiGoiY.name}</strong>.{" "}
+            {ch(lang, "Gói gần nhất với hành trình bạn vừa dựng là", "The package closest to the day you just planned is")}{" "}
+            <strong className="text-[#183f34]">{goiHienThi(goiGoiY, lang).name}</strong>.{" "}
             <a href={`#goi-${goiGoiY.slug}`} className="font-bold text-[#356957] underline underline-offset-2">
-              Xem gói này
+              {ch(lang, "Xem gói này", "See it")}
             </a>
           </p>
         ) : null}
@@ -179,20 +201,20 @@ export default async function PackagesPage({
             // giết trang thanh toán hồi trước. Nói cái CÓ trước; phần chưa đấu
             // nối ngân hàng vẫn nói đủ ở /checkout, còn giá minh hoạ vẫn nói
             // thẳng trong đoạn ngay dưới đây.
-            ? "Giữ chỗ 15 phút · trả tiền khi tới nơi"
+            ? ch(lang, "Giữ chỗ 15 phút · quét mã QR là xong", "15-minute hold · pay by QR code")
             : flags.sandboxCheckout
-              ? "Dữ liệu minh họa · giữ chỗ mô phỏng, chưa thu tiền thật"
-            : "Bảng giá tham khảo · chưa mở đặt online"}
+              ? ch(lang, "Dữ liệu minh họa · giữ chỗ mô phỏng, chưa thu tiền thật", "Sample data · simulated hold, no real payment")
+            : ch(lang, "Bảng giá tham khảo · chưa mở đặt online", "Reference prices · online booking not open")}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-[clamp(2.6rem,7vw,4.5rem)] leading-[0.95] text-[#183f34] [text-wrap:balance]">
-          Bốn cách đi Ninh Bình, và một bàn tiệc dưới trăng.
+          {ch(lang, "Bốn cách đi Ninh Bình, và một bàn tiệc dưới trăng.", "Four ways through Ninh Binh, and a table under the moon.")}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
-          Chọn theo thời gian bạn có và kiểu đi bạn thích: cả ngày xem di
-          sản, một ngày thong thả, buổi sáng cho cả nhà, hay một buổi chiều
-          săn ảnh hoàng hôn. Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông
-          Ngô Đồng, tính theo bàn hai khách. Giá của bốn gói còn lại là giá
-          minh hoạ tính theo người lớn, chưa phải giá bán thật.
+          {ch(
+            lang,
+            "Chọn theo thời gian bạn có và kiểu đi bạn thích: cả ngày xem di sản, một ngày thong thả, buổi sáng cho cả nhà, hay một buổi chiều săn ảnh hoàng hôn. Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách. Giá của bốn gói còn lại là giá minh hoạ tính theo người lớn, chưa phải giá bán thật.",
+            "Choose by the time you have and the way you like to travel: a full heritage day, a slow day, a morning for the whole family, or an afternoon chasing sunset light. At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two. The other four prices are samples per adult, not real selling prices.",
+          )}
         </p>
         <div className="mt-10 flex flex-col gap-6 lg:gap-8">
           <PackageCard
@@ -201,6 +223,7 @@ export default async function PackagesPage({
             checkoutAvailable={checkoutAvailable}
             featured
             suggested={goiGoiY?.slug === featured.slug}
+            lang={lang}
           />
           {rest.map((item, index) => (
             <PackageCard
@@ -210,6 +233,7 @@ export default async function PackagesPage({
               checkoutAvailable={checkoutAvailable}
               reversed={index % 2 === 1}
               suggested={goiGoiY?.slug === item.slug}
+              lang={lang}
             />
           ))}
         </div>

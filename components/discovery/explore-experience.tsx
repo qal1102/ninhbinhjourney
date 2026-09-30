@@ -19,6 +19,8 @@ import {
   planDestinationHref,
   type ContinuityContext,
 } from "@/lib/page-continuity";
+import { ch, type NgonNgu } from "@/lib/ngon-ngu";
+import { NHAN_SO_THICH, nhanThoiLuong } from "@/content/destination-labels";
 
 type ViewMode = "map" | "list";
 type FamilyFilter = "all" | "children" | "seniors";
@@ -26,14 +28,7 @@ type FamilyFilter = "all" | "children" | "seniors";
 const FOCUSABLE =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-const interestLabels: Record<DestinationInterest, string> = {
-  heritage: "Di sản",
-  nature: "Thiên nhiên",
-  spirituality: "Tâm linh",
-  photography: "Nhiếp ảnh",
-  food: "Ẩm thực",
-  family: "Gia đình",
-};
+const interestLabels = NHAN_SO_THICH;
 
 const mobilityRank: Record<MobilityLevel, number> = {
   low: 1,
@@ -41,11 +36,7 @@ const mobilityRank: Record<MobilityLevel, number> = {
   high: 3,
 };
 
-const mobilityLabel: Record<MobilityLevel, string> = {
-  low: "đi bộ ít",
-  moderate: "đi bộ vừa",
-  high: "đi bộ nhiều",
-};
+
 
 const ExploreMap = dynamic(() => import("./explore-map"), {
   loading: () => (
@@ -60,10 +51,12 @@ function DestinationSheet({
   destination,
   onClose,
   navigationContext,
+  lang,
 }: {
   destination: DestinationCatalogItem;
   onClose: () => void;
   navigationContext: ContinuityContext;
+  lang: NgonNgu;
 }) {
   const closeButton = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLElement>(null);
@@ -129,7 +122,7 @@ function DestinationSheet({
         >
           <Image
             src={destination.image}
-            alt={destination.imageAlt.vi}
+            alt={destination.imageAlt[lang]}
             fill
             sizes="(max-width: 1024px) 100vw, 448px"
             className="rounded-t-3xl object-cover"
@@ -139,24 +132,23 @@ function DestinationSheet({
             type="button"
             onClick={onClose}
             className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-[#151a17]/85 text-xl text-white backdrop-blur focus-visible:outline focus-visible:outline-4 focus-visible:outline-white"
-            aria-label="Đóng chi tiết điểm đến"
+            aria-label={ch(lang, "Đóng chi tiết điểm đến", "Close destination details")}
           >
             ×
           </button>
         </SharedImageTransition>
         <div className="p-6">
           <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#356957]">
-            {destination.suggestedMinutes} phút ·{" "}
-            {mobilityLabel[destination.mobilityLevel]}
+            {nhanThoiLuong(destination.suggestedMinutes, destination.mobilityLevel, lang)}
           </p>
           <h2
             id="destination-sheet-title"
             className="font-display mt-3 text-4xl text-[#183f34]"
           >
-            {destination.name.vi}
+            {destination.name[lang]}
           </h2>
           <p className="mt-4 leading-7 text-[#4d5b55]">
-            {destination.description.vi}
+            {destination.description[lang]}
           </p>
           <div className="mt-6 flex gap-3">
             <Link
@@ -167,7 +159,7 @@ function DestinationSheet({
               transitionTypes={["nav-forward"]}
               className="inline-flex min-h-12 items-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
-              Đọc thêm
+              {ch(lang, "Đọc thêm", "Read more")}
             </Link>
             <Link
               href={planDestinationHref(
@@ -177,7 +169,7 @@ function DestinationSheet({
               )}
               className="inline-flex min-h-12 items-center rounded-full border border-[#183f34] px-5 font-bold text-[#183f34]"
             >
-              Thêm vào hành trình
+              {ch(lang, "Thêm vào hành trình", "Add to my day")}
             </Link>
           </div>
         </div>
@@ -188,8 +180,10 @@ function DestinationSheet({
 
 export function ExploreExperience({
   navigationContext,
+  lang = "vi",
 }: {
   navigationContext: ContinuityContext;
+  lang?: NgonNgu;
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("map");
   const [interest, setInterest] = useState<DestinationInterest | "all">("all");
@@ -443,7 +437,7 @@ export function ExploreExperience({
     <div data-testid="explore-experience">
       <div className="grid gap-3 rounded-3xl border border-[#d7d5cd] bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-6">
         <label className="text-sm font-bold text-[#26342e]">
-          Sở thích
+          {ch(lang, "Sở thích", "Interest")}
           <select
             value={interest}
             data-explore-filter="interest"
@@ -453,16 +447,16 @@ export function ExploreExperience({
             }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
-            <option value="all">Tất cả</option>
+            <option value="all">{ch(lang, "Tất cả", "All")}</option>
             {destinationInterests.map((item) => (
               <option key={item} value={item}>
-                {interestLabels[item]}
+                {interestLabels[item][lang]}
               </option>
             ))}
           </select>
         </label>
         <label className="text-sm font-bold text-[#26342e]">
-          Thời gian
+          {ch(lang, "Thời gian", "Time")}
           <select
             value={maxMinutes}
             onChange={(event) => {
@@ -471,13 +465,13 @@ export function ExploreExperience({
             }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
-            <option value={90}>Tối đa 90 phút</option>
-            <option value={150}>Tối đa 2,5 giờ</option>
-            <option value={240}>Tối đa 4 giờ</option>
+            <option value={90}>{ch(lang, "Tối đa 90 phút", "Up to 90 min")}</option>
+            <option value={150}>{ch(lang, "Tối đa 2,5 giờ", "Up to 2.5 hours")}</option>
+            <option value={240}>{ch(lang, "Tối đa 4 giờ", "Up to 4 hours")}</option>
           </select>
         </label>
         <label className="text-sm font-bold text-[#26342e]">
-          Nhịp đi
+          {ch(lang, "Nhịp đi", "Pace")}
           <select
             value={pace}
             onChange={(event) => {
@@ -486,13 +480,13 @@ export function ExploreExperience({
             }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
-            <option value="relaxed">Thư thả</option>
-            <option value="balanced">Cân bằng</option>
-            <option value="active">Năng động</option>
+            <option value="relaxed">{ch(lang, "Thư thả", "Relaxed")}</option>
+            <option value="balanced">{ch(lang, "Cân bằng", "Balanced")}</option>
+            <option value="active">{ch(lang, "Năng động", "Active")}</option>
           </select>
         </label>
         <label className="text-sm font-bold text-[#26342e]">
-          Mức đi bộ
+          {ch(lang, "Mức đi bộ", "Walking")}
           <select
             value={walking}
             onChange={(event) => {
@@ -501,13 +495,13 @@ export function ExploreExperience({
             }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
-            <option value="low">Thấp</option>
-            <option value="moderate">Vừa</option>
-            <option value="high">Cao</option>
+            <option value="low">{ch(lang, "Thấp", "Low")}</option>
+            <option value="moderate">{ch(lang, "Vừa", "Moderate")}</option>
+            <option value="high">{ch(lang, "Cao", "High")}</option>
           </select>
         </label>
         <label className="text-sm font-bold text-[#26342e]">
-          Phù hợp
+          {ch(lang, "Phù hợp", "Suits")}
           <select
             value={family}
             onChange={(event) => {
@@ -516,9 +510,9 @@ export function ExploreExperience({
             }}
             className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
           >
-            <option value="all">Mọi nhóm</option>
-            <option value="seniors">Người lớn tuổi</option>
-            <option value="children">Trẻ em</option>
+            <option value="all">{ch(lang, "Mọi nhóm", "Everyone")}</option>
+            <option value="seniors">{ch(lang, "Người lớn tuổi", "Older travellers")}</option>
+            <option value="children">{ch(lang, "Trẻ em", "Children")}</option>
           </select>
         </label>
         <label className="flex min-h-11 items-center gap-3 self-end rounded-xl bg-[#edf3f0] px-3 text-sm font-bold">
@@ -531,7 +525,7 @@ export function ExploreExperience({
             }}
             className="h-5 w-5 accent-[#183f34]"
           />
-          Còn khung giờ
+          {ch(lang, "Còn khung giờ", "Open today")}
         </label>
       </div>
 
@@ -543,12 +537,12 @@ export function ExploreExperience({
           className="text-sm text-[#59654b] focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#356957]"
           aria-live="polite"
         >
-          <strong className="text-[#183f34]">{filtered.length}</strong> điểm hợp
-          với bộ lọc của bạn
+          <strong className="text-[#183f34]">{filtered.length}</strong>{" "}
+          {ch(lang, "điểm hợp với bộ lọc của bạn", filtered.length === 1 ? "place matches your filters" : "places match your filters")}
         </p>
         <div
           className="flex rounded-full border border-[#b9c4bd] bg-white p-1"
-          aria-label="Chọn chế độ khám phá"
+          aria-label={ch(lang, "Chọn chế độ khám phá", "Choose how to explore")}
         >
           {(["map", "list"] as const).map((mode) => (
             <button
@@ -563,7 +557,7 @@ export function ExploreExperience({
                   : "text-[#365247]"
               }`}
             >
-              {mode === "map" ? "Bản đồ" : "Danh sách"}
+              {mode === "map" ? ch(lang, "Bản đồ", "Map") : ch(lang, "Danh sách", "List")}
             </button>
           ))}
         </div>
@@ -573,7 +567,7 @@ export function ExploreExperience({
         <div
           ref={mapPanelRef}
           role="region"
-          aria-label="Bản đồ và điểm đến đang xem"
+          aria-label={ch(lang, "Bản đồ và điểm đến đang xem", "Map and the place in view")}
           tabIndex={-1}
           data-explore-map-focus
           data-explore-view-panel="map"
@@ -583,6 +577,7 @@ export function ExploreExperience({
             destinations={filtered}
             selectedSlug={activeDestination?.slug ?? null}
             onSelect={selectDestinationFromMap}
+            lang={lang}
           />
           {activeDestination ? (
             <div
@@ -592,10 +587,10 @@ export function ExploreExperience({
             >
               <div className="min-w-0">
                 <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.2em] text-[#e7b96a]">
-                  Đang xem trên bản đồ
+                  {ch(lang, "Đang xem trên bản đồ", "On the map")}
                 </p>
                 <p className="font-display mt-1 truncate text-xl">
-                  {activeDestination.name.vi}
+                  {activeDestination.name[lang]}
                 </p>
               </div>
               <button
@@ -605,7 +600,7 @@ export function ExploreExperience({
                 }
                 className="min-h-11 rounded-full border border-white/40 px-4 text-xs font-bold transition hover:border-[#e7b96a] hover:text-[#f4d49b]"
               >
-                Xem chi tiết
+                {ch(lang, "Xem chi tiết", "Details")}
               </button>
             </div>
           ) : null}
@@ -613,7 +608,7 @@ export function ExploreExperience({
         <div
           ref={listRef}
           role="region"
-          aria-label="Danh sách điểm đến phù hợp"
+          aria-label={ch(lang, "Danh sách điểm đến phù hợp", "Matching places")}
           tabIndex={0}
           data-explore-list
           data-explore-view-panel="list"
@@ -625,7 +620,7 @@ export function ExploreExperience({
           {filtered.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-[#aabbb2] bg-white p-8 text-center">
               <p className="font-display text-2xl text-[#183f34]">
-                Chưa có điểm phù hợp
+                {ch(lang, "Chưa có điểm phù hợp", "Nothing matches yet")}
               </p>
               <button
                 type="button"
@@ -640,7 +635,7 @@ export function ExploreExperience({
                 }}
                 className="mt-4 min-h-11 rounded-full border border-[#183f34] px-5 font-bold"
               >
-                Xóa bộ lọc
+                {ch(lang, "Xóa bộ lọc", "Clear filters")}
               </button>
             </div>
           ) : (
@@ -663,7 +658,7 @@ export function ExploreExperience({
                 <div className="relative min-h-28 overflow-hidden rounded-xl">
                   <Image
                     src={destination.image}
-                    alt={destination.imageAlt.vi}
+                    alt={destination.imageAlt[lang]}
                     fill
                     sizes="112px"
                     className="object-cover"
@@ -671,14 +666,13 @@ export function ExploreExperience({
                 </div>
                 <div className="py-1">
                   <p className="text-xs font-extrabold text-[#557568]">
-                    {index + 1} · {destination.suggestedMinutes} phút ·{" "}
-                    {mobilityLabel[destination.mobilityLevel]}
+                    {index + 1} · {nhanThoiLuong(destination.suggestedMinutes, destination.mobilityLevel, lang)}
                   </p>
                   <h2 className="font-display mt-1 text-xl text-[#183f34]">
-                    {destination.name.vi}
+                    {destination.name[lang]}
                   </h2>
                   <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59654b]">
-                    {destination.editorialLine.vi}
+                    {destination.editorialLine[lang]}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
@@ -691,7 +685,7 @@ export function ExploreExperience({
                           : "border border-[#8aa398] text-[#183f34] hover:bg-[#edf3f0]"
                       }`}
                     >
-                      Xem trên bản đồ
+                      {ch(lang, "Xem trên bản đồ", "Show on map")}
                     </button>
                     <button
                       type="button"
@@ -701,7 +695,7 @@ export function ExploreExperience({
                       }
                       className="inline-flex min-h-11 items-center rounded-full px-3 text-xs font-bold text-[#356957] underline decoration-[#8aa398] underline-offset-4"
                     >
-                      Xem chi tiết
+                      {ch(lang, "Xem chi tiết", "Details")}
                     </button>
                   </div>
                 </div>
@@ -716,6 +710,7 @@ export function ExploreExperience({
           destination={detailDestination}
           onClose={closeSheet}
           navigationContext={navigationContext}
+          lang={lang}
         />
       ) : null}
     </div>

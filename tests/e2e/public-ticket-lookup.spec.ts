@@ -14,7 +14,7 @@ const HEADING = "Mở lại vé đã đặt";
 const ORDER_CODE_LABEL = "Mã đặt chỗ";
 const CONTACT_LABEL = "Số điện thoại hoặc email đã dùng lúc đặt";
 const SUBMIT_BUTTON = "Mở vé của tôi";
-const NO_MESSAGING_DISCLOSURE = "Hệ thống chưa gửi tin nhắn hay email xác nhận";
+const NO_MESSAGING_DISCLOSURE = "Bản này chưa gửi tin nhắn hay email xác nhận";
 const LOOKUP_API_ROUTE = "**/api/customer-ticket-lookup";
 
 const MALFORMED_CODE_MESSAGE =

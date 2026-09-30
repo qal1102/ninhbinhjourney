@@ -2,6 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProtectedMailLink } from "@/components/discovery/protected-mail-link";
 import { CONTACT } from "@/content/contact";
+import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ch } from "@/lib/ngon-ngu";
+import { docNgonNgu } from "@/lib/ngon-ngu-server";
+
+/*
+ * Bản tiếng Anh chỉ là tóm tắt. Thông báo này đã đối chiếu từng điều luật
+ * (xem chú thích bên dưới); dịch cả văn bản pháp lý dễ lệch nghĩa, nên bản
+ * tiếng Việt là bản có hiệu lực và trang nói thẳng điều đó.
+ */
+const TOM_TAT_EN = [
+  "Planning and booking work without any tracking. We only record how pages are used after you press “Allow” in the privacy bar.",
+  "Marketing messages are off by default and stay separate from the service you asked for. Turning them off never affects your trip.",
+  "Email and phone numbers are protected before they are stored and kept apart from browsing data.",
+  "Data is stored outside Vietnam: the database in Tokyo, Japan (Supabase) and the web servers on Vercel.",
+  "You can ask to see, correct, restrict or delete your data at any time using the contact below.",
+] as const;
 
 export const metadata: Metadata = {
   title: "Quyền riêng tư | Ninh Bình Journey",
@@ -83,17 +99,42 @@ const legalBasis = [
   },
 ] as const;
 
-export default function PrivacyPage() {
+export default async function PrivacyPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const lang = await docNgonNgu(await searchParams);
   return (
     <main className="min-h-screen bg-[#f4f0e7] text-[#17251f]">
       <header className="border-b border-[#d7d5cd] bg-[#fbfaf6]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
           <Link href="/" className="font-display text-lg tracking-[0.12em] text-[#183f34]">NINH BÌNH</Link>
-          <Link href="/plan" className="rounded-full px-4 py-2 text-sm font-bold">Lập hành trình</Link>
+          <div className="flex items-center gap-2">
+            <Link href="/plan" className="rounded-full px-4 py-2 text-sm font-bold">{ch(lang, "Lập hành trình", "Plan my day")}</Link>
+            <NutNgonNgu lang={lang} />
+          </div>
         </div>
       </header>
 
       <article className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
+        {lang === "en" ? (
+          <section lang="en" data-testid="privacy-summary-en" className="mb-12 rounded-3xl border border-[#b8cfbf] bg-[#edf3f0] p-6 sm:p-8">
+            <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">Privacy in brief</p>
+            <h2 className="font-display mt-3 text-3xl text-[#183f34]">You decide how your data is used.</h2>
+            <ul className="mt-5 space-y-3 text-sm leading-7 text-[#365247]">
+              {TOM_TAT_EN.map((dong) => (
+                <li key={dong} className="flex gap-3">
+                  <span aria-hidden="true" className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[#356957]" />
+                  <span>{dong}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-sm leading-6 text-[#596b63]">
+              The full notice below is in Vietnamese, the language that governs it, and follows Vietnam&apos;s Personal Data Protection Law 91/2025/QH15.
+            </p>
+          </section>
+        ) : null}
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#56766a]">Thông báo xử lý dữ liệu · phiên bản 17.09.2026</p>
         <h1 className="font-display mt-4 max-w-4xl text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">Bạn quyết định dữ liệu của mình được dùng thế nào.</h1>
         <p className="mt-6 max-w-3xl text-lg leading-8 text-[#596b63]">

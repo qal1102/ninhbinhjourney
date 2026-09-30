@@ -50,6 +50,10 @@
   - Giữ chỗ 15 phút, QR là lối chính: mã QR trỏ tới `/thanh-toan/[phiếu]` (phiếu mã hoá AES-GCM), trả tiền là **giả lập**, đơn ghi `qr-transfer`. Trả tại điểm là lối phụ.
   - **Lượt giữ quá 15 phút chưa trả thì bị XOÁ HẲN** (090, `pg_cron` mỗi phút). Khách đặt lại được ngay bằng cùng số điện thoại; bỏ dở 3 lần trong 7 ngày thì mời tới quầy.
   - Khoá "chỉ thêm" của bảng lịch sử chỉ nhả lệnh xoá trong khe giao dịch `nbj.cho_phep_xoa` (`giu-qua-han` | `lich-su-mau`).
+- **Song ngữ web khách (30/09):** mọi trang khách đọc ngôn ngữ theo `?lang=` rồi cookie `ninh-binh-lang` (`lib/ngon-ngu.ts`, `lib/ngon-ngu-server.ts`), có nút VI/EN chung (`components/shared/nut-ngon-ngu.tsx`) giữ nguyên `source` và các tham số khác. Đã phủ: Khám phá, Gói, chi tiết gói, 15 trang điểm đến, Lập hành trình (kể cả câu mẫu tiếng Anh cho bộ phân tích), đặt vé, trang quét QR thanh toán (mã QR mang `?lang=en`), tra cứu vé, hộ chiếu, ảnh vé lưu về máy. Chữ tiếng Anh của gói ở `content/packages-en.ts`. Trang Quyền riêng tư chỉ có **tóm tắt** tiếng Anh, bản tiếng Việt là bản có hiệu lực.
+  - **Luật:** trang dựng `lang` trên thẻ `<main>` từ máy chủ; **không đổi `<html lang>` sau khi trang hiện** (phông dàn lại glyph tiếng Việt, cuộn bị xô). Dải quyền riêng tư đọc `<main lang>`.
+  - Chữ lý do từng chặng, lời giải thích và cảnh báo của lịch trình vẫn do `domain/journey.ts` viết tiếng Việt; bản tiếng Anh dựng lại ở `components/journey/itinerary-editor.tsx`. Thông báo lỗi từ API vẫn tiếng Việt.
+- **Hết mùa Bàn Trăng (30/09):** `goiDaHetMua` (`content/packages-en.ts`) theo `bookingEndDate`: trang Gói, chi tiết gói và trang đặt vé tắt nút giữ chỗ, nói "Mùa 2026 đã khép". Trang chủ và trang mùa vốn đã tự khép theo `lib/seasonal/mid-autumn-season.ts`; bài e2e mùa Trung thu nay rẽ nhánh theo đúng hàm ấy.
 - **Khách:**
   - `/plan` đọc `?add=<mã điểm>` từ nút "Thêm vào hành trình" (trang điểm đến, Khám phá): điểm ấy đứng đầu lịch nếu vừa sức đi bộ và giờ mở cửa, không thì trang nói lý do. Lịch trình sống trong trình duyệt (bản gốc có thể lưu ẩn danh).
   - "Phòng trình diễn" cũ (cookie `nbj-active-run`, trang `/journey/[id]`, `/demo/qr`, `PATCH /api/journeys/[id]`, tham số `journey`) đã gỡ 27/09: không còn chỗ nào đặt cookie ấy. Bảng `itineraries` và hai hàm `save_generated_journey`/`update_saved_journey` còn trong kho, không mã nào gọi.
@@ -134,6 +138,8 @@
 - **Tệp CRLF:** sửa bằng script xong, soát `git ls-files --eol`.
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
+
+- 30/09 `2az`: soát web khách trên production (35 trang × 2 khổ × 2 ngôn ngữ, 114 liên kết nội bộ không hỏng, không tràn ngang, không lỗi console) và thấy bật EN thì chỉ trang chủ, Hợp tác, Sự kiện theo mùa đổi tiếng. Làm song ngữ cho toàn bộ web khách; sửa trang điểm đến in mã sở thích thô ("heritage") cả ở bản tiếng Việt; Bàn Trăng hết mùa không còn mời giữ chỗ; bỏ chữ lai "QR Pass chung cho booking" và lời hứa "đang đấu nối Zalo". Kiểm: `tsc`, lint, build, Vitest 1.697, Playwright 191/195 bài công khai (4 hỏng đã sửa bài; còn chập chờn quen `page-continuity:182`), bài mới `public-ngon-ngu`, ảnh 390px/1440px tiếng Anh.
 
 - 29/09 `2ay`: chủ dự án thấy vòng dẫn "ngáo", muốn kiểu Trợ lý dịch chuyển tới chỗ cần. Thay bằng màn Hướng dẫn `/erp/huong-dan`: 7 bước vòng khách + 19 việc tra cứu, "Đưa tôi tới" khoanh viền cam đúng phần tử `data-chi` và thẻ chỉ dẫn "Bây giờ… / Sang bước tiếp". Gỡ vòng dẫn cũ (panel, action, repository, bài kiểm), dời Bản đồ chức năng vào màn mới, Trợ lý có "Mở hướng dẫn" và bỏ lệnh nhanh trỏ tới hai module đã gỡ. Sửa lỗi đã trả tiền mà đồng hồ giữ chỗ vẫn đếm (trang đặt vé và trang quét QR). Kiểm: `tsc`, lint, build, Vitest 1.696, Playwright 32 bài ở máy (Hướng dẫn 8, đặt vé 12, việc đầu tiên 4, bài canh duyệt ngoại lệ 8/8), ảnh 390px/1440px. Áp `096` (chuyến chiều Nhịp chậm).
 

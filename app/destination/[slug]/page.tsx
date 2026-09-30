@@ -15,6 +15,10 @@ import {
   getLandingDestinationBySlug,
 } from "@/content/landing-destinations";
 import { absoluteUrl } from "@/lib/site-url";
+import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { NHAN_SO_THICH, nhanThoiLuong } from "@/content/destination-labels";
+import { ch } from "@/lib/ngon-ngu";
+import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import {
   destinationBackHref,
@@ -79,6 +83,7 @@ export default async function DestinationPage({
   const slug = (await params).slug;
   const query = await searchParams;
   const navigationContext = readContinuityContext(query);
+  const lang = await docNgonNgu(query);
   const destination = getDestinationBySlug(slug);
   if (!destination) {
     const landing = getLandingDestinationBySlug(slug);
@@ -88,6 +93,7 @@ export default async function DestinationPage({
         destination={landing.destination}
         facts={landing.facts}
         navigationContext={navigationContext}
+        lang={lang}
       />
     );
   }
@@ -97,7 +103,7 @@ export default async function DestinationPage({
     .filter((item) => item !== undefined);
 
   return (
-    <main className="min-h-screen bg-[#fbfaf6] text-[#151a17]">
+    <main lang={lang} className="min-h-screen bg-[#fbfaf6] text-[#151a17]">
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 text-white sm:px-8">
           <Link
@@ -105,11 +111,14 @@ export default async function DestinationPage({
             transitionTypes={["nav-back"]}
             className="rounded-full bg-black/25 px-4 py-2 text-sm font-bold backdrop-blur"
           >
-            ← Khám phá
+            ← {ch(lang, "Khám phá", "Explore")}
           </Link>
-          <span className="rounded-full bg-black/25 px-3 py-1 text-xs font-bold backdrop-blur">
-            Thông tin tham khảo
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="hidden rounded-full bg-black/25 px-3 py-1 text-xs font-bold backdrop-blur sm:inline">
+              {ch(lang, "Thông tin tham khảo", "For reference")}
+            </span>
+            <NutNgonNgu lang={lang} tone="dark" />
+          </div>
         </div>
       </header>
       <section data-customer-section="destination-hero" className="relative min-h-[68vh] overflow-hidden bg-[#183f34]">
@@ -119,7 +128,7 @@ export default async function DestinationPage({
         >
           <Image
             src={destination.image}
-            alt={destination.imageAlt.vi}
+            alt={destination.imageAlt[lang]}
             fill
             priority
             sizes="100vw"
@@ -129,18 +138,13 @@ export default async function DestinationPage({
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,28,23,.12),rgba(12,28,23,.84))]" />
         <div className="relative z-10 mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-end px-5 pb-12 text-white sm:px-8 sm:pb-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#e7c78d]">
-            {destination.suggestedMinutes} phút ·{" "}
-            {destination.mobilityLevel === "low"
-              ? "đi bộ ít"
-              : destination.mobilityLevel === "moderate"
-                ? "đi bộ vừa"
-                : "đi bộ nhiều"}
+            {nhanThoiLuong(destination.suggestedMinutes, destination.mobilityLevel, lang)}
           </p>
           <h1 className="font-display mt-4 max-w-5xl text-6xl leading-[0.9] sm:text-8xl">
-            {destination.name.vi}
+            {destination.name[lang]}
           </h1>
           <p className="mt-6 max-w-2xl text-xl leading-8 text-white/82">
-            {destination.editorialLine.vi}
+            {destination.editorialLine[lang]}
           </p>
         </div>
       </section>
@@ -150,41 +154,41 @@ export default async function DestinationPage({
           {fit ? (
             <div className="mb-8 rounded-2xl border border-[#b8cfbf] bg-[#edf3f0] p-5">
               <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#356957]">
-                Vì sao phù hợp
+                {ch(lang, "Vì sao phù hợp", "Why it suits you")}
               </p>
               <p className="mt-2 leading-7 text-[#365247]">{fit}</p>
             </div>
           ) : null}
           <h2 className="font-display text-4xl text-[#183f34]">
-            Câu chuyện của điểm đến
+            {ch(lang, "Câu chuyện của điểm đến", "The story of this place")}
           </h2>
           <p className="mt-5 text-lg leading-8 text-[#4d5b55]">
-            {destination.description.vi}
+            {destination.description[lang]}
           </p>
           <p className="mt-5 text-lg leading-8 text-[#4d5b55]">
-            {destination.story.vi}
+            {destination.story[lang]}
           </p>
           {/* TC-12 — lời của người đã qua cổng nơi này. Chưa ai kể thì khối tự ẩn. */}
-          <VerifiedRatingPanel siteId={destination.id} />
+          <VerifiedRatingPanel siteId={destination.id} lang={lang} />
           <div className="mt-8 flex flex-wrap gap-2">
             {destination.interests.map((interest) => (
               <span
                 key={interest}
                 className="rounded-full bg-[#e9ede8] px-3 py-1 text-sm font-bold text-[#365247]"
               >
-                {interest}
+                {NHAN_SO_THICH[interest][lang]}
               </span>
             ))}
           </div>
 
           {destination.timeline?.length ? (
-            <DestinationTimeline entries={destination.timeline} />
+            <DestinationTimeline entries={destination.timeline} lang={lang} />
           ) : null}
 
           {destination.press?.length ? (
             <section className="mt-12 border-t border-[#dcd9d1] pt-8">
               <h2 className="font-display text-3xl text-[#183f34]">
-                Người ta đã viết gì về nơi này
+                {ch(lang, "Người ta đã viết gì về nơi này", "What has been written about it")}
               </h2>
               <div className="mt-7 space-y-8">
                 {destination.press.map((entry, index) =>
@@ -200,7 +204,7 @@ export default async function DestinationPage({
                         &ldquo;
                       </span>
                       <blockquote className="font-display -mt-3 max-w-2xl text-2xl leading-snug text-[#183f34] sm:text-3xl">
-                        {entry.text.vi}
+                        {entry.text[lang]}
                       </blockquote>
                       <figcaption className="mt-6 text-sm">
                         <a
@@ -214,7 +218,7 @@ export default async function DestinationPage({
                         <span className="text-[#56645e]">, {entry.year}</span>
                         {entry.via ? (
                           <span className="text-[#56645e]">
-                            {" · dẫn lại theo "}
+                            {ch(lang, " · dẫn lại theo ", " · cited via ")}
                             <a
                               href={entry.via.url}
                               target="_blank"
@@ -230,7 +234,7 @@ export default async function DestinationPage({
                   ) : (
                     <figure key={entry.url + entry.year + index}>
                       <blockquote className="border-l-2 border-[#b8cfbf] pl-5 text-base leading-7 text-[#3f4f48]">
-                        {entry.text.vi}
+                        {entry.text[lang]}
                       </blockquote>
                       <figcaption className="mt-3 pl-5 text-xs text-[#56645e]">
                         <a
@@ -244,7 +248,7 @@ export default async function DestinationPage({
                         <span>, {entry.year}</span>
                         {entry.via ? (
                           <span>
-                            {" · dẫn lại theo "}
+                            {ch(lang, " · dẫn lại theo ", " · cited via ")}
                             <a
                               href={entry.via.url}
                               target="_blank"
@@ -265,49 +269,49 @@ export default async function DestinationPage({
         </article>
         <aside className="h-fit rounded-3xl border border-[#d7d5cd] bg-white p-6 shadow-sm">
           <h2 className="font-display text-2xl text-[#183f34]">
-            Thông tin vận hành
+            {ch(lang, "Thông tin vận hành", "Practical details")}
           </h2>
           {destination.realLimit ? (
             <div className="mt-4 rounded-2xl border border-[#c68f48]/35 bg-[#fff7e9] p-4">
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#8a6b38]">
-                Giới hạn thật
+                {ch(lang, "Giới hạn thật", "Real limits")}
               </p>
               <p className="mt-2 text-sm leading-6 text-[#6b5326]">
-                {destination.realLimit.vi}
+                {destination.realLimit[lang]}
               </p>
             </div>
           ) : null}
           <dl className="mt-5 space-y-5 text-sm">
             <div>
-              <dt className="font-bold text-[#59654b]">Thời lượng đề xuất</dt>
-              <dd className="mt-1 text-lg">{destination.suggestedMinutes} phút</dd>
+              <dt className="font-bold text-[#59654b]">{ch(lang, "Thời lượng đề xuất", "Suggested time")}</dt>
+              <dd className="mt-1 text-lg">{destination.suggestedMinutes} {ch(lang, "phút", "min")}</dd>
             </div>
             <div>
               <dt className="font-bold text-[#59654b]">
-                Khung giờ minh họa
+                {ch(lang, "Khung giờ minh họa", "Sample opening hours")}
               </dt>
               <dd className="mt-1 text-lg">
                 {destination.demoOpeningWindow}
                 {/* Nằm trong `dd`: `dl > div` chỉ được chứa `dt` và `dd`. */}
                 <span className="mt-1 block text-xs text-[#8a6b38]">
-                  Giờ minh hoạ, chưa phải giờ mở cửa chính thức.
+                  {ch(lang, "Giờ minh hoạ, chưa phải giờ mở cửa chính thức.", "Sample hours, not the official opening times.")}
                 </span>
               </dd>
             </div>
             <div>
-              <dt className="font-bold text-[#59654b]">Di chuyển</dt>
+              <dt className="font-bold text-[#59654b]">{ch(lang, "Di chuyển", "Getting around")}</dt>
               <dd className="mt-1 leading-6">
-                {destination.mobilityNote.vi}
+                {destination.mobilityNote[lang]}
               </dd>
             </div>
             <div>
-              <dt className="font-bold text-[#59654b]">Vị trí</dt>
+              <dt className="font-bold text-[#59654b]">{ch(lang, "Vị trí", "Location")}</dt>
               <dd className="mt-2">
                 <MiniRouteMap
                   points={[
                     {
                       id: destination.id,
-                      label: destination.name.vi,
+                      label: destination.name[lang],
                       coordinates: destination.coordinates,
                     },
                   ]}
@@ -320,12 +324,12 @@ export default async function DestinationPage({
                   rel="noopener noreferrer"
                   className="mt-2 inline-block text-xs font-semibold text-[#356957] underline underline-offset-4"
                 >
-                  Mở trên Google Maps
+                  {ch(lang, "Mở trên Google Maps", "Open in Google Maps")}
                 </a>
               </dd>
             </div>
             <div>
-              <dt className="font-bold text-[#59654b]">Nguồn rà soát</dt>
+              <dt className="font-bold text-[#59654b]">{ch(lang, "Nguồn rà soát", "Checked against")}</dt>
               <dd className="mt-1 leading-6">
                 <a
                   href={destination.source.url}
@@ -352,7 +356,7 @@ export default async function DestinationPage({
               )}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#183f34] px-5 font-bold text-white"
             >
-              Thêm vào hành trình
+              {ch(lang, "Thêm vào hành trình", "Add to my day")}
             </Link>
           </div>
         </aside>
@@ -361,7 +365,7 @@ export default async function DestinationPage({
       <section data-customer-section="destination-related" className="bg-[#183f34] px-5 py-12 text-white sm:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
-            Gần đó & lựa chọn tiếp theo
+            {ch(lang, "Gần đó & lựa chọn tiếp theo", "Nearby & where next")}
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {related.map((item) => (
@@ -370,9 +374,9 @@ export default async function DestinationPage({
                 href={destinationRelatedHref(item.slug, navigationContext)}
                 className="rounded-2xl border border-white/15 bg-white/8 p-5 transition hover:bg-white/12"
               >
-                <p className="font-display text-2xl">{item.name.vi}</p>
+                <p className="font-display text-2xl">{item.name[lang]}</p>
                 <p className="mt-2 text-sm leading-6 text-white/65">
-                  {item.editorialLine.vi}
+                  {item.editorialLine[lang]}
                 </p>
               </Link>
             ))}

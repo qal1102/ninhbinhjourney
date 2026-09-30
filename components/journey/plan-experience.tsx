@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { goiHienThi } from "@/content/packages-en";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CONTACT } from "@/content/contact";
 import {
@@ -79,20 +80,23 @@ type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
  * lại câu đó với `parseJourneyIntent` trước.
  */
 /** Chữ cho dòng tóm tắt — nói bằng lời người, không phải bằng khoá dữ liệu. */
-const PACE_SUMMARY: Record<NonNullable<JourneyIntent["pace"]>, string> = {
-  relaxed: "Đi thong thả",
-  balanced: "Đi vừa phải",
-  active: "Đi được nhiều",
+const PACE_SUMMARY: Record<NonNullable<JourneyIntent["pace"]>, { vi: string; en: string }> = {
+  relaxed: { vi: "Đi thong thả", en: "Relaxed pace" },
+  balanced: { vi: "Đi vừa phải", en: "Moderate pace" },
+  active: { vi: "Đi được nhiều", en: "Active pace" },
 };
 
 const WALKING_SUMMARY: Record<
   NonNullable<JourneyIntent["walkingTolerance"]>,
-  string
+  { vi: string; en: string }
 > = {
-  low: "ít đi bộ",
-  moderate: "đi bộ vừa phải",
-  high: "đi bộ nhiều được",
+  low: { vi: "ít đi bộ", en: "little walking" },
+  moderate: { vi: "đi bộ vừa phải", en: "some walking" },
+  high: { vi: "đi bộ nhiều được", en: "plenty of walking" },
 };
+
+/** Câu mẫu tiếng Anh; bộ phân tích đọc được "one day", "parents", "6 hours"… */
+const REQUIRED_ENGLISH_SAMPLE = "One day with my parents, relaxed, low walking.";
 
 /**
  * Đúng những mức thời lượng ô chọn đang có. Khách gõ "7 tiếng" thì máy đọc ra
@@ -114,36 +118,42 @@ const PRESETS = [
     title: { vi: "Lần đầu tới, có một ngày", en: "First time, one day" },
     hint: { vi: "Đi vừa phải, xem được nhiều", en: "Steady pace, see a lot" },
     text: "Tôi có một ngày ở Ninh Bình, lần đầu tới đây, muốn đi vừa phải.",
+    textEn: "One day in Ninh Binh, first time here, moderate pace.",
   },
   {
     id: "bo-me",
     title: { vi: "Đi cùng bố mẹ", en: "With my parents" },
     hint: { vi: "Nhẹ nhàng, ít đi bộ", en: "Gentle, little walking" },
     text: REQUIRED_VIETNAMESE_SAMPLE,
+    textEn: REQUIRED_ENGLISH_SAMPLE,
   },
   {
     id: "gia-dinh",
     title: { vi: "Cả nhà có trẻ nhỏ", en: "Family with children" },
     hint: { vi: "Hai lớn hai nhỏ, một ngày", en: "Two adults, two children" },
     text: "Gia đình tôi có 2 người lớn và 2 trẻ em, muốn một ngày cân bằng ở Ninh Bình.",
+    textEn: "One day for 2 adults and 2 children, moderate pace.",
   },
   {
     id: "chup-anh",
     title: { vi: "Đi chụp ảnh", en: "Here for the photographs" },
     hint: { vi: "Sáu tiếng, thiên nhiên", en: "Six hours, landscapes" },
     text: "Tôi có 6 giờ, thích thiên nhiên và nhiếp ảnh, muốn đi bộ vừa phải.",
+    textEn: "I have 6 hours, I love nature and photography.",
   },
   {
     id: "hai-vo-chong",
     title: { vi: "Hai vợ chồng", en: "Just the two of us" },
     hint: { vi: "Một ngày cho hai người", en: "One day for two" },
     text: "Hai vợ chồng tôi có một ngày, muốn nhẹ nhàng và ít đi bộ.",
+    textEn: "One day for a couple, relaxed, low walking.",
   },
   {
     id: "mot-minh",
     title: { vi: "Đi một mình", en: "Travelling alone" },
     hint: { vi: "Trọn ngày, đi bộ nhiều", en: "A full day, plenty of walking" },
     text: "Tôi đi một mình, có một ngày, muốn đi bộ nhiều và thích thiên nhiên.",
+    textEn: "Travelling alone, one day, active walking, nature.",
   },
 ] as const;
 
@@ -237,7 +247,7 @@ function PackageMatchPanel({
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="font-display text-xl text-[#183f34]">
-                  {match.name}
+                  {goiHienThi(match.item, lang).name}
                 </p>
                 <span className="rounded-full bg-[#eef3ef] px-3 py-1 text-xs font-bold text-[#356957]">
                   {match.strength === "strong" ? copy.strong : copy.partial}
@@ -315,6 +325,7 @@ export function PlanExperience({
   lang?: Language;
   diemMuonGhe?: DiemMuonGhe;
 }) {
+  const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const [giuDiem, setGiuDiem] = useState(Boolean(diemMuonGhe));
   const diemChon = giuDiem ? diemMuonGhe : undefined;
   const [text, setText] = useState("");
@@ -431,7 +442,7 @@ export function PlanExperience({
     setWalking(parsed.walkingTolerance ?? "moderate");
     setBudget(parsed.budgetVnd?.target ?? 2_000_000);
     setMessage(
-      "Đây là những gì chúng tôi hiểu được. Bạn xem giúp có đúng không, chưa có gì được lưu lại cả.",
+      t("Đây là những gì chúng tôi hiểu được. Bạn xem giúp có đúng không, chưa có gì được lưu lại cả.", "Here is what we understood. Please check it; nothing has been saved yet."),
     );
   }
 
@@ -460,7 +471,7 @@ export function PlanExperience({
     if (!Recognition) {
       setVoiceState("unsupported");
       setMessage(
-        "Trình duyệt này chưa nghe được giọng nói. Bạn gõ vào ô bên dưới là được.",
+        t("Trình duyệt này chưa nghe được giọng nói. Bạn gõ vào ô bên dưới là được.", "This browser cannot listen to speech. Just type in the box below."),
       );
       return;
     }
@@ -468,9 +479,7 @@ export function PlanExperience({
     // Trang này chưa có công tắc chọn ngôn ngữ hiển thị, nên lấy đúng ngôn ngữ
     // trình duyệt của khách thay vì ghim cứng vi-VN — trước đây khách nói tiếng
     // Anh vẫn bị nhận dạng bằng mô hình tiếng Việt nên ra chữ sai lung tung.
-    recognition.lang = navigator.language?.toLowerCase().startsWith("en")
-      ? "en-US"
-      : "vi-VN";
+    recognition.lang = lang === "en" ? "en-US" : "vi-VN";
     recognition.interimResults = true;
     // continuous=true giữ mic mở qua những chỗ ngừng tự nhiên giữa câu; để
     // false thì trình duyệt đóng cả phiên ngay khi gặp một quãng lặng, đúng
@@ -490,8 +499,8 @@ export function PlanExperience({
       setVoiceState(event.error === "not-allowed" ? "denied" : "error");
       setMessage(
         event.error === "not-allowed"
-          ? "Micro chưa được cho phép. Bạn gõ vào ô bên dưới là được."
-          : "Chưa nghe rõ. Bạn gõ vào ô bên dưới giúp nhé.",
+          ? t("Micro chưa được cho phép. Bạn gõ vào ô bên dưới là được.", "The microphone is not allowed. Just type in the box below.")
+          : t("Chưa nghe rõ. Bạn gõ vào ô bên dưới giúp nhé.", "We did not catch that. Please type in the box below."),
       );
     };
     recognition.onend = () => {
@@ -544,7 +553,7 @@ export function PlanExperience({
       };
       if (!response.ok || !payload.intent || !payload.itinerary) {
         throw new Error(
-          payload.error?.message ?? "Chưa lập được lịch trình, mời bạn thử lại.",
+          payload.error?.message ?? t("Chưa lập được lịch trình, mời bạn thử lại.", "Could not build the day. Please try again."),
         );
       }
       // Điểm khách chọn vẫn phải qua luật đi bộ và giờ mở cửa. Không xếp được
@@ -552,8 +561,14 @@ export function PlanExperience({
       const diemChuaXep =
         diemChon && !payload.itinerary.items.some((item) => item.siteId === diemChon.id)
           ? BAC_DI_BO[diemChon.mucDiBo] > BAC_DI_BO[walking]
-            ? `${diemChon.ten} cần đi bộ nhiều hơn mức bạn chọn nên em chưa xếp vào. Nếu bạn vẫn muốn ghé, mời bạn chỉnh mức đi bộ lên rồi dựng lại ạ.`
-            : `${diemChon.ten} chưa vừa với giờ mở cửa và ${Math.round(durationMinutes / 60)} tiếng bạn có. Mời bạn chọn thêm thời gian rồi dựng lại ạ.`
+            ? t(
+                `${diemChon.ten} cần đi bộ nhiều hơn mức bạn chọn nên em chưa xếp vào. Nếu bạn vẫn muốn ghé, mời bạn chỉnh mức đi bộ lên rồi dựng lại ạ.`,
+                `${diemChon.ten} needs more walking than you chose, so it is not in the plan. To include it, raise the walking level and build again.`,
+              )
+            : t(
+                `${diemChon.ten} chưa vừa với giờ mở cửa và ${Math.round(durationMinutes / 60)} tiếng bạn có. Mời bạn chọn thêm thời gian rồi dựng lại ạ.`,
+                `${diemChon.ten} does not fit the opening hours and the ${Math.round(durationMinutes / 60)} hours you have. Add more time and build again.`,
+              )
           : undefined;
       setResult({
         intent: payload.intent,
@@ -566,7 +581,7 @@ export function PlanExperience({
       setMessage(
         error instanceof Error
           ? error.message
-          : "Chưa lập được lịch trình, mời bạn thử lại.",
+          : t("Chưa lập được lịch trình, mời bạn thử lại.", "Could not build the day. Please try again."),
       );
     } finally {
       setPending(false);
@@ -584,7 +599,7 @@ export function PlanExperience({
           onClick={() => setResult(null)}
           className="mb-6 min-h-11 rounded-full border border-[#183f34] px-4 text-sm font-bold"
         >
-          ← Chỉnh yêu cầu
+          ← {t("Chỉnh yêu cầu", "Edit my request")}
         </button>
         {result.diemChuaXep ? (
           <p data-plan-diem-chua-xep className="mb-6 rounded-xl bg-[#f1ede2] px-4 py-3 text-sm leading-6 text-[#59654b]">
@@ -596,6 +611,7 @@ export function PlanExperience({
           intent={result.intent}
           savedAnonymously={result.persistence === "anonymous"}
           identityCollectionEnabled={identityCollectionEnabled}
+          lang={lang}
         />
       </div>
     );
@@ -606,24 +622,25 @@ export function PlanExperience({
     {diemChon ? (
       <div data-plan-diem-chon className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-[#cfe0d6] bg-[#eef3ef] py-2 pl-5 pr-2">
         <p className="min-w-0 text-sm leading-6 text-[#183f34]">
-          Bạn muốn ghé <strong>{diemChon.ten}</strong>. Em xếp nơi này lên đầu lịch, miễn là vừa sức đi bộ và giờ mở cửa ạ.
+          {t("Bạn muốn ghé", "You want to visit")} <strong>{diemChon.ten}</strong>.{" "}
+          {t("Em xếp nơi này lên đầu lịch, miễn là vừa sức đi bộ và giờ mở cửa ạ.", "It goes first in the plan, as long as it fits your walking and the opening hours.")}
         </p>
         <button
           type="button"
           onClick={() => setGiuDiem(false)}
           className="min-h-11 shrink-0 rounded-full px-3 text-sm font-bold text-[#356957] underline underline-offset-2"
         >
-          Bỏ chọn
+          {t("Bỏ chọn", "Remove")}
         </button>
       </div>
     ) : null}
     <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
       <section className="rounded-3xl bg-[#183f34] p-6 text-white sm:p-8">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
-          Nói hoặc gõ · đều dùng được
+          {t("Nói hoặc gõ · đều dùng được", "Speak or type · either works")}
         </p>
         <h2 className="font-display mt-4 text-4xl leading-tight sm:text-5xl">
-          Bạn muốn đi một ngày thế nào?
+          {t("Bạn muốn đi một ngày thế nào?", "What kind of day would you like?")}
         </h2>
         <button
           type="button"
@@ -640,8 +657,8 @@ export function PlanExperience({
             </span>
             <span className="mt-2 block text-sm">
               {voiceState === "listening"
-                ? "Đang nghe, bấm lại để dừng"
-                : "Dùng microphone"}
+                ? t("Đang nghe, bấm lại để dừng", "Listening, tap again to stop")
+                : t("Dùng microphone", "Use the microphone")}
             </span>
           </span>
         </button>
@@ -649,33 +666,29 @@ export function PlanExperience({
           {/* Trạng thái máy (`idle`/`listening`) là chữ dành cho lập trình
               viên. Khách chỉ cần biết hai điều: giọng nói không bị lưu lại, và
               micro chỉ bật khi họ chủ động bấm. */}
-          Giọng nói của bạn không được lưu lại. Micro chỉ bật sau khi bạn bấm
-          nút.
+          {t("Giọng nói của bạn không được lưu lại. Micro chỉ bật sau khi bạn bấm nút.", "Your voice is never stored. The microphone only turns on after you tap the button.")}
         </p>
         {showDemoCommand ? (
           <button
           type="button"
           onClick={() => {
-            setText(REQUIRED_VIETNAMESE_SAMPLE);
+            setText(lang === "en" ? REQUIRED_ENGLISH_SAMPLE : REQUIRED_VIETNAMESE_SAMPLE);
             setVoiceState("demo");
-            setMessage(
-              "Đây là câu nói mẫu, micro không bật.",
-            );
+            setMessage(t("Đây là câu nói mẫu, micro không bật.", "This is a sample sentence; the microphone stays off."));
           }}
           className="mt-5 min-h-11 w-full rounded-full border border-white/25 px-4 text-sm font-bold"
           >
-            Run demo command
+            {t("Chạy câu nói mẫu", "Run a sample sentence")}
           </button>
         ) : null}
       </section>
 
       <section className="rounded-3xl border border-[#d7d5cd] bg-white p-6 shadow-sm sm:p-8">
         <h2 className="font-display text-2xl text-[#183f34]">
-          Bạn định đi kiểu gì?
+          {t("Bạn định đi kiểu gì?", "How do you like to travel?")}
         </h2>
         <p className="mt-2 text-sm leading-6 text-[#59654b]">
-          Chọn một tình huống gần với bạn nhất, chúng tôi xếp thử một ngày rồi
-          bạn chỉnh sau. Hoặc bạn cứ kể bằng lời của mình ở ô bên dưới.
+          {t("Chọn một tình huống gần với bạn nhất, chúng tôi xếp thử một ngày rồi bạn chỉnh sau. Hoặc bạn cứ kể bằng lời của mình ở ô bên dưới.", "Pick the situation closest to yours and we sketch a day you can adjust. Or describe it in your own words below.")}
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {PRESETS.map((preset) => (
@@ -684,8 +697,9 @@ export function PlanExperience({
               type="button"
               data-plan-preset={preset.id}
               onClick={() => {
-                setText(preset.text);
-                parseText(preset.text);
+                const cau = lang === "en" ? preset.textEn : preset.text;
+                setText(cau);
+                parseText(cau);
               }}
               className="rounded-2xl border border-[#dedbd2] bg-[#fbfaf6] p-4 text-left transition-colors hover:border-[#356957]"
             >
@@ -703,7 +717,7 @@ export function PlanExperience({
           htmlFor="journey-text"
           className="mt-7 block border-t border-[#dedbd2] pt-6 text-sm font-bold text-[#43564d]"
         >
-          Hoặc kể bằng lời của bạn
+          {t("Hoặc kể bằng lời của bạn", "Or tell us in your own words")}
         </label>
         <textarea
           id="journey-text"
@@ -714,7 +728,7 @@ export function PlanExperience({
           }}
           rows={5}
           maxLength={4000}
-          placeholder={REQUIRED_VIETNAMESE_SAMPLE}
+          placeholder={lang === "en" ? REQUIRED_ENGLISH_SAMPLE : REQUIRED_VIETNAMESE_SAMPLE}
           className="mt-4 w-full rounded-2xl border border-[#c9ccc5] p-4 leading-7 outline-none focus:border-[#183f34]"
         />
         <button
@@ -723,13 +737,13 @@ export function PlanExperience({
           disabled={text.trim().length < 2}
           className="mt-5 min-h-12 rounded-full bg-[#183f34] px-6 font-bold text-white disabled:opacity-40"
         >
-          Xem thử một ngày cho tôi
+          {t("Xem thử một ngày cho tôi", "Show me a day")}
         </button>
 
         {draft ? (
           <div className="mt-7 border-t border-[#dedbd2] pt-7">
             <h3 className="font-display text-2xl text-[#183f34]">
-              Chúng tôi hiểu thế này
+              {t("Chúng tôi hiểu thế này", "Here is what we understood")}
             </h3>
             {/* Một dòng tóm tắt thay cho chín ô. Chín ô vẫn còn nguyên, chỉ
                 gập lại -- giấu đi thì khách không biết mình đang bị đoán hộ
@@ -738,11 +752,11 @@ export function PlanExperience({
               data-plan-summary
               className="mt-3 text-sm leading-6 text-[#59654b]"
             >
-              {PACE_SUMMARY[pace]} · {WALKING_SUMMARY[walking]} ·{" "}
-              {Math.round(durationMinutes / 60)} tiếng · {adults} người lớn
-              {children > 0 ? `, ${children} trẻ em` : ""}
-              {seniors > 0 ? `, ${seniors} người cao tuổi` : ""}
-              {visitDate ? ` · đi ngày ${visitDate.split("-").reverse().join("/")}` : ""}
+              {PACE_SUMMARY[pace][lang]} · {WALKING_SUMMARY[walking][lang]} ·{" "}
+              {Math.round(durationMinutes / 60)} {t("tiếng", "hours")} · {adults} {t("người lớn", adults === 1 ? "adult" : "adults")}
+              {children > 0 ? t(`, ${children} trẻ em`, `, ${children} children`) : ""}
+              {seniors > 0 ? t(`, ${seniors} người cao tuổi`, `, ${seniors} older travellers`) : ""}
+              {visitDate ? t(` · đi ngày ${visitDate.split("-").reverse().join("/")}`, ` · on ${visitDate.split("-").reverse().join("/")}`) : ""}
             </p>
             {/* Khách nói "hai ngày" thì phải trả lời cho đúng chuyện ấy. Máy
                 mới xếp được một ngày, nên nói thẳng ra là mình xếp ngày đầu.
@@ -753,9 +767,10 @@ export function PlanExperience({
                 data-plan-multiday
                 className="mt-3 rounded-xl bg-[#f1ede2] px-4 py-3 text-sm leading-6 text-[#59654b]"
               >
-                Bạn nói chuyến này đi {draft.tripDays} ngày ạ. Em xếp ngày đầu
-                trước để bạn xem thử; những ngày sau bạn đổi ngày đi rồi bấm
-                lại là có tiếp.
+                {t(
+                  `Bạn nói chuyến này đi ${draft.tripDays} ngày ạ. Em xếp ngày đầu trước để bạn xem thử; những ngày sau bạn đổi ngày đi rồi bấm lại là có tiếp.`,
+                  `You mentioned ${draft.tripDays} days. We plan the first day for you to try; for the next days, change the date and press again.`,
+                )}
               </p>
             ) : null}
             <button
@@ -763,14 +778,14 @@ export function PlanExperience({
               onClick={() => setShowDetails((current) => !current)}
               className="mt-3 min-h-10 text-sm font-bold text-[#356957] underline underline-offset-2"
             >
-              {showDetails ? "Thu gọn" : "Chỉnh lại cho đúng"}
+              {showDetails ? t("Thu gọn", "Collapse") : t("Chỉnh lại cho đúng", "Adjust the details")}
             </button>
             <div
               hidden={!showDetails}
               className="mt-5 grid gap-4 sm:grid-cols-2"
             >
               <label className="text-sm font-bold">
-                Ngày đi
+                {t("Ngày đi", "Date")}
                 <input
                   type="date"
                   value={visitDate}
@@ -779,11 +794,15 @@ export function PlanExperience({
                   className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
                 />
                 {visitDate ? (
-                  <span className="mt-1 block text-xs font-normal text-[#59654b]">{formatVietnameseDate(visitDate)}</span>
+                  <span className="mt-1 block text-xs font-normal text-[#59654b]">
+                    {lang === "en"
+                      ? new Date(`${visitDate}T00:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+                      : formatVietnameseDate(visitDate)}
+                  </span>
                 ) : null}
               </label>
               <label className="text-sm font-bold">
-                Thời lượng
+                {t("Thời lượng", "Length")}
                 <select
                   value={durationMinutes}
                   onChange={(event) =>
@@ -797,14 +816,14 @@ export function PlanExperience({
                       ngày: mốc tám giờ sáng, giờ mở cửa từng nơi, nhiều nhất
                       ba chặng. Để mục ấy lại là mời khách chọn một thứ mình
                       không làm, rồi im lặng đưa họ thứ khác. */}
-                  <option value={300}>Nửa ngày · 5 giờ</option>
-                  <option value={360}>6 giờ</option>
-                  <option value={480}>8 giờ</option>
-                  <option value={600}>Trọn ngày · 10 giờ</option>
+                  <option value={300}>{t("Nửa ngày · 5 giờ", "Half day · 5 hours")}</option>
+                  <option value={360}>{t("6 giờ", "6 hours")}</option>
+                  <option value={480}>{t("8 giờ", "8 hours")}</option>
+                  <option value={600}>{t("Trọn ngày · 10 giờ", "Full day · 10 hours")}</option>
                 </select>
               </label>
               <label className="text-sm font-bold">
-                Nhịp đi
+                {t("Nhịp đi", "Pace")}
                 <select
                   value={pace}
                   onChange={(event) =>
@@ -812,13 +831,13 @@ export function PlanExperience({
                   }
                   className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
                 >
-                  <option value="relaxed">Thư thả</option>
-                  <option value="balanced">Cân bằng</option>
-                  <option value="active">Năng động</option>
+                  <option value="relaxed">{t("Thư thả", "Relaxed")}</option>
+                  <option value="balanced">{t("Cân bằng", "Balanced")}</option>
+                  <option value="active">{t("Năng động", "Active")}</option>
                 </select>
               </label>
               <label className="text-sm font-bold">
-                Mức đi bộ
+                {t("Mức đi bộ", "Walking")}
                 <select
                   value={walking}
                   onChange={(event) =>
@@ -828,13 +847,13 @@ export function PlanExperience({
                   }
                   className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
                 >
-                  <option value="low">Thấp</option>
-                  <option value="moderate">Vừa</option>
-                  <option value="high">Cao</option>
+                  <option value="low">{t("Thấp", "Low")}</option>
+                  <option value="moderate">{t("Vừa", "Moderate")}</option>
+                  <option value="high">{t("Cao", "High")}</option>
                 </select>
               </label>
               <label className="text-sm font-bold">
-                Ngân sách VND
+                {t("Ngân sách VND", "Budget (VND)")}
                 <input
                   type="number"
                   min={0}
@@ -845,9 +864,9 @@ export function PlanExperience({
                 />
               </label>
               {[
-                ["Người lớn", adults, setAdults],
-                ["Trẻ em", children, setChildren],
-                ["Người cao tuổi", seniors, setSeniors],
+                [t("Người lớn", "Adults"), adults, setAdults],
+                [t("Trẻ em", "Children"), children, setChildren],
+                [t("Người cao tuổi", "Older travellers"), seniors, setSeniors],
               ].map(([label, value, setter]) => (
                 <label key={label as string} className="text-sm font-bold">
                   {label as string}
@@ -868,8 +887,7 @@ export function PlanExperience({
             </div>
             {draft.partyContext?.includes("travelling-with-parents") ? (
               <p className="mt-4 rounded-xl bg-[#edf3f0] p-3 text-sm">
-                Đi cùng bố mẹ. Chúng tôi không tự đoán sức khoẻ của ai từ
-                thông tin này.
+                {t("Đi cùng bố mẹ. Chúng tôi không tự đoán sức khoẻ của ai từ thông tin này.", "Travelling with parents. We never guess anyone's health from this.")}
               </p>
             ) : null}
             <button
@@ -882,8 +900,8 @@ export function PlanExperience({
               className="mt-6 min-h-12 w-full rounded-full bg-[#d58c35] px-6 font-extrabold text-[#151a17] disabled:opacity-50"
             >
               {pending
-                ? "Đang kiểm tra và lưu…"
-                : "Xác nhận và tạo hành trình"}
+                ? t("Đang kiểm tra và lưu…", "Checking and saving…")
+                : t("Xác nhận và tạo hành trình", "Confirm and build my day")}
             </button>
             {packageMatch ? (
               <PackageMatchPanel lang={lang} result={packageMatch} />

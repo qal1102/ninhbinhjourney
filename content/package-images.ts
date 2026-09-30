@@ -38,25 +38,23 @@ export type PackageImage = { src: string; alt: string };
  * của gói này. Bảng `PACKAGE_IMAGE_SITE_ID` ở trên vẫn giữ Tam Cốc cho gói
  * này vì nó còn dùng để chọn điểm đến hiển thị trong lịch trình.
  */
-const BAN_TRANG_HERO_IMAGE: PackageImage = {
+const BAN_TRANG_HERO_IMAGE = {
   src: "/images/campaigns/mid-autumn-2026/experiences/moonlit-river-table.webp",
-  alt: "Bàn tối riêng được bày bên sông Ngô Đồng dưới ánh trăng.",
-};
-
-const FALLBACK_IMAGE: PackageImage = {
-  src: "/images/destinations/trang-an.jpg",
-  alt: DESTINATIONS[0].imageAlt.vi,
+  alt: {
+    vi: "Bàn tối riêng được bày bên sông Ngô Đồng dưới ánh trăng.",
+    en: "A private dinner table set by the Ngo Dong river under the moon.",
+  },
 };
 
 /** Ảnh đại diện của một gói, dùng cho danh sách gói và ảnh mở đầu trang chi tiết. */
 export function getPackageHeroImage(
   item: Pick<PackageCatalogItem, "slug">,
+  lang: "vi" | "en" = "vi",
 ): PackageImage {
-  if (item.slug === "ban-trang-tam-coc-2026") return BAN_TRANG_HERO_IMAGE;
-  const destination = DESTINATIONS.find(
-    (candidate) => candidate.id === PACKAGE_IMAGE_SITE_ID[item.slug],
-  );
-  return destination
-    ? { src: destination.image, alt: destination.imageAlt.vi }
-    : FALLBACK_IMAGE;
+  if (item.slug === "ban-trang-tam-coc-2026") {
+    return { src: BAN_TRANG_HERO_IMAGE.src, alt: BAN_TRANG_HERO_IMAGE.alt[lang] };
+  }
+  const destination =
+    DESTINATIONS.find((candidate) => candidate.id === PACKAGE_IMAGE_SITE_ID[item.slug]) ?? DESTINATIONS[0];
+  return { src: destination.image, alt: destination.imageAlt[lang] };
 }

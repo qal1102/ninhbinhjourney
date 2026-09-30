@@ -1,7 +1,13 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
-import PrivacyPage from "@/app/quyen-rieng-tu/page";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
+// Nút VI/EN cần bộ định tuyến của Next; dựng tĩnh ở đây thì thay bằng rỗng.
+vi.mock("@/components/shared/nut-ngon-ngu", () => ({ NutNgonNgu: () => null }));
+
+const { default: PrivacyPage } = await import("@/app/quyen-rieng-tu/page");
 import { CONTACT } from "@/content/contact";
 
 /*
@@ -13,7 +19,8 @@ import { CONTACT } from "@/content/contact";
  * Bài này KHÔNG chứng minh bố cục đẹp hay không tràn ở 390px; phần đó thuộc
  * bài Playwright trong `tests/e2e/customer-progressive-identity.spec.ts`.
  */
-const html = renderToStaticMarkup(createElement(PrivacyPage));
+const html = renderToStaticMarkup(await PrivacyPage({ searchParams: Promise.resolve({}) }));
+void createElement;
 const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 
 describe("public privacy notice (A15-PHAP-LY-01)", () => {
@@ -46,5 +53,12 @@ describe("public privacy notice (A15-PHAP-LY-01)", () => {
 
   it("shows the bumped notice date", () => {
     expect(text).toContain("phiên bản 17.09.2026");
+  });
+
+  it("gives English readers a summary and says the Vietnamese notice governs", async () => {
+    const en = renderToStaticMarkup(await PrivacyPage({ searchParams: Promise.resolve({ lang: "en" }) }));
+    expect(en).toContain('data-testid="privacy-summary-en"');
+    expect(en).toContain("the language that governs it");
+    expect(html).not.toContain("privacy-summary-en");
   });
 });

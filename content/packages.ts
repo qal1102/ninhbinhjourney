@@ -119,7 +119,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     inclusions: [
       "Hai quyền vào điểm",
       "Khung giờ hợp với trẻ nhỏ",
-      "QR Pass chung cho booking",
+      "Một mã QR chung cho cả đơn",
     ],
     exclusions: ["Lưu trú", "Bữa ăn", "Dịch vụ trông trẻ"],
     schedule: ["08:00 · Tràng An", "13:30 · Bái Đính", "Kết thúc trước 17:00"],
@@ -143,7 +143,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     inclusions: [
       "Hai quyền vào điểm",
       "Khung giờ có nắng đẹp",
-      "QR Pass chung cho booking",
+      "Một mã QR chung cho cả đơn",
     ],
     exclusions: ["Thiết bị nhiếp ảnh", "Người chụp ảnh", "Lưu trú"],
     schedule: ["14:00 · Tam Cốc – Bích Động", "18:00 · Phố cổ Hoa Lư"],

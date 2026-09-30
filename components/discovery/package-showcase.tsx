@@ -6,6 +6,7 @@ import { SharedImageTransition } from "@/components/shared/shared-image-transiti
 import { PACE_LABEL, PACKAGES, type PackageCatalogItem } from "@/content/packages";
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGE_IMAGE_SITE_ID } from "@/content/package-images";
+import { goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { CONTACT } from "@/content/contact";
 import { ProtectedMailLink } from "@/components/discovery/protected-mail-link";
 import {
@@ -31,44 +32,10 @@ export type PackageShowcaseCopy = {
 };
 
 /*
- * `content/packages.ts` chi co chu tieng Viet (khong co truong Localized
- * nhu `destinations.ts`) -- dung nhu chinh /packages va /packages/[slug]
- * dang lam. Trang chu thi can ca hai ngon ngu nhu moi khoi khac, nen bang
- * duoi day DICH LAI dung nam ten/doi tuong/nhip da co trong PACKAGES,
- * khong bia them goi nao, khong doi gia hay lich. Thieu slug nao trong
- * bang thi component tu rot ve chu tieng Viet goc, khong bao gio trang.
+ * Chữ tiếng Anh của gói đọc từ `content/packages-en.ts`, cùng nguồn với
+ * /packages. Trước 01/10 khối này giữ một bảng dịch riêng, nên gói mới (Tam
+ * Chúc) hiện tiếng Việt giữa trang chủ tiếng Anh.
  */
-const PACKAGE_EN: Partial<
-  Record<string, { name: string; audience: string; durationLabel: string; priceLabel?: string }>
-> = {
-  "heritage-day": {
-    name: "Heritage in a Day",
-    audience: "First visit to Ninh Bình",
-    durationLabel: "1 day",
-  },
-  "slow-ninh-binh": {
-    name: "Slow Ninh Bình",
-    audience: "Parents and older travelers, light walking",
-    durationLabel: "1 day",
-  },
-  "family-discovery": {
-    name: "Family Discovery",
-    audience: "Families with children",
-    durationLabel: "1 day",
-  },
-  "cinematic-sunset": {
-    name: "Cinematic Ninh Bình",
-    audience: "Photographers and couples",
-    durationLabel: "Half day and evening",
-  },
-  "ban-trang-tam-coc-2026": {
-    name: "Moon Table by the Ngô Đồng",
-    audience: "Two people closing a Tam Cốc day with a private dinner table",
-    durationLabel: "19:00–21:30 · 2026 moon season",
-    priceLabel: "2,480,000 VND · table for two",
-  },
-};
-
 const PACE_LABEL_EN: Record<PackageCatalogItem["pace"], string> = {
   relaxed: "relaxed pace",
   balanced: "balanced pace",
@@ -76,17 +43,10 @@ const PACE_LABEL_EN: Record<PackageCatalogItem["pace"], string> = {
 };
 
 function packageDisplay(item: PackageCatalogItem, lang: Language) {
-  const translation = PACKAGE_EN[item.slug];
-  const name = lang === "en" && translation ? translation.name : item.name;
-  const audience = lang === "en" && translation ? translation.audience : item.audience;
-  const durationLabel =
-    lang === "en" && translation ? translation.durationLabel : item.durationLabel;
+  const hienThi = goiHienThi(item, lang);
+  const { name, audience, durationLabel } = hienThi;
   const paceLabel = lang === "en" ? PACE_LABEL_EN[item.pace] : PACE_LABEL[item.pace];
-  const priceText = item.priceLabel
-    ? lang === "en" && translation?.priceLabel
-      ? translation.priceLabel
-      : item.priceLabel
-    : `${item.demoPriceVnd.toLocaleString("vi-VN")} VND`;
+  const priceText = hienThi.priceLabel ?? `${item.demoPriceVnd.toLocaleString("vi-VN")} VND`;
   const destination = DESTINATIONS.find(
     (candidate) => candidate.id === PACKAGE_IMAGE_SITE_ID[item.slug],
   );
@@ -121,7 +81,9 @@ export function PackageShowcase({
   source: string;
   copy: PackageShowcaseCopy;
 }) {
-  const [featured, ...rest] = PACKAGES;
+  // Gói theo mùa đã hết cửa đặt (Bàn Trăng sau 27/09) không mời ở trang chủ nữa;
+  // trang /packages vẫn giữ nó kèm nhãn "đã khép".
+  const [featured, ...rest] = PACKAGES.filter((item) => !goiDaHetMua(item));
   const navigationContext: ContinuityContext = {
     lang,
     ...(source ? { source } : {}),
@@ -226,18 +188,21 @@ export function PackageShowcase({
             const row = Math.floor(index / 2);
             const position = index % 2;
             const bigPosition = row % 2 === 0 ? 0 : 1;
+            // Số gói lẻ thì thẻ cuối đứng một mình một hàng: trải hết 12 cột
+            // thay vì để hở một ô trống bên cạnh.
+            const leCuoi = rest.length % 2 === 1 && index === rest.length - 1;
             const big = position === bigPosition;
             return (
               <Reveal
                 key={item.slug}
                 delayMs={Math.min(index, 3) * 60}
                 className={`overflow-hidden rounded-[10px] border border-[#A8CEC1]/50 bg-white shadow-lg shadow-[#183F34]/8 ${
-                  big ? "xl:col-span-7" : "xl:col-span-5"
+                  leCuoi ? "md:col-span-2 xl:col-span-12" : big ? "xl:col-span-7" : "xl:col-span-5"
                 }`}
               >
                 <SharedImageTransition
                   name={packageImageTransitionName(item.slug)}
-                  className={`relative w-full aspect-[16/10] ${big ? "xl:aspect-[7/6]" : "xl:aspect-[4/5]"}`}
+                  className={`relative w-full aspect-[16/10] ${leCuoi ? "xl:aspect-[21/8]" : big ? "xl:aspect-[7/6]" : "xl:aspect-[4/5]"}`}
                 >
                   <Image
                     src={display.image}

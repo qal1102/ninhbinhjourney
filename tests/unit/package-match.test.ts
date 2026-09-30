@@ -74,9 +74,13 @@ describe("ghép gói trải nghiệm theo điều khách kể", () => {
     // Một `JourneyIntent` đầy đủ phải dùng thẳng được, không cần bọc lại.
     const result = matchPackagesToIntent(confirmed);
 
+    // Gói Tam Chúc (01/10) cũng hợp người lớn tuổi, nhịp chậm, nhưng Nhịp chậm
+    // vẫn phải đứng đầu: khớp cả thời lượng một ngày.
     expect(result.matches.map((match) => match.slug)).toEqual([
       "slow-ninh-binh",
+      "tam-chuc-chua-tren-ho",
     ]);
+    expect(result.matches[0].score).toBeGreaterThan(result.matches[1].score);
     expect(result.matches[0].strength).toBe("strong");
     expect(result.matches[0].reasons).toContain("companions-seniors");
     expect(
@@ -94,22 +98,25 @@ describe("ghép gói trải nghiệm theo điều khách kể", () => {
       }),
     );
 
+    // Tam Chúc khớp thêm nhóm khách người lớn nên đứng đầu.
     expect(result.matches.map((match) => match.slug)).toEqual([
+      "tam-chuc-chua-tren-ho",
       "slow-ninh-binh",
       "heritage-day",
     ]);
     // Bằng điểm nhau, nên gói đúng nhịp phải đứng trên gói chỉ gần nhịp.
-    expect(result.matches[0].score).toBe(result.matches[1].score);
-    expect(result.matches[0].reasons).toContain("pace-exact");
-    expect(result.matches[1].reasons).toContain("pace-near");
+    expect(result.matches[1].score).toBe(result.matches[2].score);
+    expect(result.matches[1].reasons).toContain("pace-exact");
+    expect(result.matches[2].reasons).toContain("pace-near");
     expect(result.matches.every((match) => match.strength === "partial")).toBe(
       true,
     );
   });
 
-  it("NBJ-PM04 không khớp gì cả: sáu tiếng thì không gói nào đủ ngắn, và hàm nói thẳng như vậy", () => {
+  it("NBJ-PM04 không khớp gì cả: ba tiếng thì không gói nào đủ ngắn, và hàm nói thẳng như vậy", () => {
+    // Sáu tiếng từng không vừa gói nào; gói Tam Chúc bốn tiếng (01/10) thì vừa.
     const result = matchPackagesToIntent(
-      intent({ durationMinutes: 360, visitDate: "2026-10-01" }),
+      intent({ durationMinutes: 180, visitDate: "2026-10-01" }),
     );
 
     expect(result.matches).toEqual([]);
@@ -130,6 +137,7 @@ describe("ghép gói trải nghiệm theo điều khách kể", () => {
     );
 
     expect(inSeason.matches.map((match) => match.slug)).toEqual([
+      "tam-chuc-chua-tren-ho",
       "slow-ninh-binh",
       "ban-trang-tam-coc-2026",
       "heritage-day",

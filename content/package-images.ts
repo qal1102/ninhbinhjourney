@@ -24,6 +24,7 @@ export const PACKAGE_IMAGE_SITE_ID: Record<string, string> = {
   "slow-ninh-binh": "10000000-0000-4000-8000-000000000004",
   "family-discovery": "10000000-0000-4000-8000-000000000003",
   "cinematic-sunset": "10000000-0000-4000-8000-000000000005",
+  "tam-chuc-chua-tren-ho": "10000000-0000-4000-8000-000000000009",
   "ban-trang-tam-coc-2026": "10000000-0000-4000-8000-000000000005",
 };
 

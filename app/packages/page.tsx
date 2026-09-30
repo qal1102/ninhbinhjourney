@@ -207,13 +207,13 @@ export default async function PackagesPage({
             : ch(lang, "Bảng giá tham khảo · chưa mở đặt online", "Reference prices · online booking not open")}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-[clamp(2.6rem,7vw,4.5rem)] leading-[0.95] text-[#183f34] [text-wrap:balance]">
-          {ch(lang, "Bốn cách đi Ninh Bình, và một bàn tiệc dưới trăng.", "Four ways through Ninh Binh, and a table under the moon.")}
+          {ch(lang, "Năm cách đi Ninh Bình, và một bàn tiệc dưới trăng.", "Five ways through Ninh Binh, and a table under the moon.")}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
           {ch(
             lang,
-            "Chọn theo thời gian bạn có và kiểu đi bạn thích: cả ngày xem di sản, một ngày thong thả, buổi sáng cho cả nhà, hay một buổi chiều săn ảnh hoàng hôn. Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách. Giá của bốn gói còn lại là giá minh hoạ tính theo người lớn, chưa phải giá bán thật.",
-            "Choose by the time you have and the way you like to travel: a full heritage day, a slow day, a morning for the whole family, or an afternoon chasing sunset light. At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two. The other four prices are samples per adult, not real selling prices.",
+            "Chọn theo thời gian bạn có và kiểu đi bạn thích: cả ngày xem di sản, một ngày thong thả, buổi sáng cho cả nhà, một buổi chiều săn ảnh hoàng hôn, hay nửa ngày qua hồ lên chùa Tam Chúc. Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách. Giá của năm gói còn lại là giá minh hoạ tính theo người lớn, chưa phải giá bán thật.",
+            "Choose by the time you have and the way you like to travel: a full heritage day, a slow day, a morning for the whole family, an afternoon chasing sunset light, or half a day crossing the lake to Tam Chuc's temples. At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two. The other five prices are samples per adult, not real selling prices.",
           )}
         </p>
         <div className="mt-10 flex flex-col gap-6 lg:gap-8">

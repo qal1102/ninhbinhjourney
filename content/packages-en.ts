@@ -46,6 +46,14 @@ const TIENG_ANH: Record<string, ChuGoi> = {
     exclusions: ["Camera equipment", "Photographer", "Accommodation"],
     schedule: ["14:00 · Tam Coc – Bich Dong", "18:00 · Hoa Lu Old Town"],
   },
+  "tam-chuc-chua-tren-ho": {
+    name: "Tam Chuc: temples on the lake",
+    audience: "Travellers after a calm, spiritual half day",
+    durationLabel: "Half day",
+    inclusions: ["Boat across Tam Chuc lake to Khanh Dien pier", "Walk up the three halls on That Tinh mountain", "One QR code for the whole booking"],
+    exclusions: ["Electric cart inside the site", "Meals", "Offerings and donations"],
+    schedule: ["Pick a boat at 07:30 · 09:00 · 10:30 · 13:30 · 15:00", "Cross the lake, climb to Khanh Dien", "Back at the pier after about four hours"],
+  },
   "ban-trang-tam-coc-2026": {
     name: "Moon Table by the Ngo Dong",
     audience: "Two people who want a private dinner after Tam Coc",

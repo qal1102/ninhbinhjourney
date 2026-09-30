@@ -80,8 +80,9 @@ test("không có kiosk ở nơi không bán vé tại đây", async ({ page }) =
   await expect(page.getByTestId("kiosk")).toHaveCount(0);
 });
 
-test("kiosk nơi chưa có gói bán trên web thì nói thẳng, mời ra quầy", async ({ page }) => {
+test("kiosk Tam Chúc mời gói Tam Chúc (trước 01/10 Tam Chúc không có gói web nào)", async ({ page }) => {
   await page.goto("/kiosk/tam-chuc?lang=vi");
   await page.getByRole("button", { name: /Đặt vé/ }).click();
-  await expect(page.getByTestId("kiosk-khong-goi")).toContainText("mua vé ngay tại quầy");
+  await expect(page.getByTestId("kiosk-goi-tam-chuc-chua-tren-ho")).toContainText("Tam Chúc: chùa trên hồ");
+  await expect(page.getByTestId("kiosk-khong-goi")).toHaveCount(0);
 });

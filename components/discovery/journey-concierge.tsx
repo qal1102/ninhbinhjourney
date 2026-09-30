@@ -87,7 +87,7 @@ const COPY: Record<Language, ConciergeCopy> = {
         id: "packages",
         label: "Chọn gói có sẵn",
         shortLabel: "Gói hành trình",
-        description: "Xem lịch trình, mức giá và cách giữ chỗ của năm gói.",
+        description: "Xem lịch trình, mức giá và cách giữ chỗ của từng gói.",
       },
       {
         id: "ai",
@@ -149,7 +149,7 @@ const COPY: Record<Language, ConciergeCopy> = {
         id: "packages",
         label: "Choose a ready-made package",
         shortLabel: "Packages",
-        description: "Compare the itinerary, price and reservation path of five packages.",
+        description: "Compare the itinerary, price and reservation path of each package.",
       },
       {
         id: "ai",

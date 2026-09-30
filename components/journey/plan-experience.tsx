@@ -187,14 +187,14 @@ const MATCH_COPY: Record<
     title: "Gói hợp với bạn",
     emptyTitle: "Lần này chưa có gói nào hợp",
     method:
-      "Chúng tôi đọc câu bạn viết rồi so với năm gói có sẵn: đi chậm hay đi nhiều, mấy tiếng, đi với ai. Chưa tính tới giá, vì giá trên trang gói mới là giá minh hoạ.",
+      "Chúng tôi đọc câu bạn viết rồi so với các gói có sẵn: đi chậm hay đi nhiều, mấy tiếng, đi với ai. Chưa tính tới giá, vì giá trên trang gói mới là giá minh hoạ.",
     strong: "Hợp rõ",
     partial: "Hợp một phần",
     detail: "Xem gói này",
-    viewAll: "Xem cả năm gói",
+    viewAll: "Xem tất cả các gói",
     call: `Gọi ${CONTACT.phoneLabel}`,
     emptyGuide:
-      "Mời bạn xem hết năm gói, hoặc gọi cho chúng tôi một tiếng để xếp riêng một ngày theo đúng ý bạn.",
+      "Mời bạn xem hết các gói, hoặc gọi cho chúng tôi một tiếng để xếp riêng một ngày theo đúng ý bạn.",
     emptyGeneric: "Chưa gói nào hợp với điều bạn vừa kể.",
   },
   en: {
@@ -202,14 +202,14 @@ const MATCH_COPY: Record<
     title: "Packages that fit",
     emptyTitle: "Nothing fits this time",
     method:
-      "We look for keywords in your sentence, then hold them against the pace, the length and the intended guests of the five packages we run. Price stays out of it: the figures on the package pages are illustrative.",
+      "We look for keywords in your sentence, then hold them against the pace, the length and the intended guests of the packages we run. Price stays out of it: the figures on the package pages are illustrative.",
     strong: "Close fit",
     partial: "Partial fit",
     detail: "See this package",
-    viewAll: "See all five packages",
+    viewAll: "See all packages",
     call: `Call ${CONTACT.phoneLabel}`,
     emptyGuide:
-      "Do look through all five packages, or give us a ring and we will lay out a day around what you described.",
+      "Do look through all the packages, or give us a ring and we will lay out a day around what you described.",
     emptyGeneric: "Nothing here fits what you just described.",
   },
 };

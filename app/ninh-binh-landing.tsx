@@ -167,7 +167,7 @@ const copy = {
     packagesBookingNote: "Choose a date to continue your reservation. No payment will be collected.",
     packagesBookingNotePlain: "The routes and prices are ready to browse; online reservation is not yet open.",
     packagesCta: "View this package",
-    packagesViewAll: "See all five packages",
+    packagesViewAll: "See all packages",
     packagesPricePerGuest: "per adult",
     // WEB-STRUCT-02: loi dat cho qua dien thoai, ngoai nut vao tung goi.
     // So/email that lay tu `content/contact.ts`, khong dat trong bang chu.
@@ -328,7 +328,7 @@ const copy = {
     packagesBookingNote: "Chọn ngày để tiếp tục giữ chỗ. Website không thu tiền.",
     packagesBookingNotePlain: "Bạn xem được tuyến đi và giá; đặt trên mạng thì chưa mở.",
     packagesCta: "Xem gói này",
-    packagesViewAll: "Xem cả năm gói",
+    packagesViewAll: "Xem tất cả các gói",
     packagesPricePerGuest: "mỗi người lớn",
     packagesCallCta: "Gọi đặt chỗ trực tiếp",
     packagesEmailCta: "Gửi email đặt chỗ",

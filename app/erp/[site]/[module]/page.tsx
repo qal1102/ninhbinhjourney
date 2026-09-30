@@ -29,6 +29,11 @@ import {
 } from "@/lib/erp/workday-view";
 import { listOnSiteDueOrders } from "@/lib/erp/on-site-due-repository";
 import { readShiftCareBrief } from "@/lib/erp/shift-care-repository";
+import QRCode from "qrcode";
+import { HangChoPanel } from "@/components/erp/hang-cho-panel";
+import { BEN_CO_HANG_CHO, benCuaCoSo } from "@/domain/hang-cho";
+import { docHangChoErp } from "@/lib/hang-cho-repository";
+import { absoluteUrl } from "@/lib/site-url";
 
 type Props = {
   params: Promise<{ site: string; module: string }>;
@@ -105,6 +110,11 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
     moduleDefinition.id === "check-in-khach"
       ? readShiftCareBrief({ siteId: site.id, visitDate: ngayVanHanh() })
       : Promise.resolve([]);
+
+  // Hàng chờ ảo bến đò (097): chỉ cơ sở có bến, chỉ màn Sức chứa. Kho tự trả
+  // trạng thái lỗi thay vì ném, nên màn Sức chứa không chết theo.
+  const ben = moduleDefinition.id === "suc-chua" ? benCuaCoSo(site.id) : null;
+  const hangChoDangDoc = ben ? docHangChoErp(site.id) : Promise.resolve(null);
 
   const baoCaoDangDoc = moduleDefinition.id === "bao-cao" ? docBaoCaoCoSo(site.id) : Promise.resolve(null);
   // Lỗi của nó vẫn nổi lên ở chỗ chờ phía dưới; dòng này chỉ để nó không bị
@@ -195,12 +205,17 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         })
       : null;
 
-  const [counterSale, onSiteDue, shiftCare, baoCao] = await Promise.all([
+  const [counterSale, onSiteDue, shiftCare, baoCao, hangCho] = await Promise.all([
     counterSaleDangDoc,
     onSiteDueDangDoc,
     shiftCareDangDoc,
     baoCaoDangDoc,
+    hangChoDangDoc,
   ]);
+  const duongKhachHangCho = ben ? `/xep-hang/${ben}` : null;
+  const maQrHangCho = duongKhachHangCho
+    ? await QRCode.toString(absoluteUrl(duongKhachHangCho), { type: "svg", margin: 1, color: { dark: "#183f34", light: "#ffffff" } }).catch(() => null)
+    : null;
 
   return (
     <ErpShell user={user} site={site} activeModuleId={moduleDefinition.id}>
@@ -233,6 +248,23 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         <h1 className="font-display mt-1 text-4xl leading-tight text-[#183f34] sm:text-6xl">{moduleDefinition.name}</h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-[#68776f]">{moduleDefinition.description}</p>
       </div>
+      {ben && duongKhachHangCho ? (
+        hangCho?.trangThai === "co" ? (
+          <HangChoPanel
+            siteId={site.id}
+            tenBen={BEN_CO_HANG_CHO[ben].ten}
+            duongKhach={duongKhachHangCho}
+            maQrSvg={maQrHangCho}
+            tongQuan={hangCho.tongQuan}
+            luot={hangCho.luot}
+            quanLyDuoc={user.role === "director" || user.role === "manager"}
+          />
+        ) : (
+          <p role="status" data-testid="hang-cho-erp-chua-co" className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">
+            Hàng chờ ảo {BEN_CO_HANG_CHO[ben].ten}: {hangCho?.trangThai === "loi" ? hangCho.loiNhan : "chưa nối kho dữ liệu ở bản chạy này."}
+          </p>
+        )
+      ) : null}
       <ModuleWorkspace
         site={site}
         module={moduleDefinition}

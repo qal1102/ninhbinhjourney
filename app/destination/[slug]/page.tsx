@@ -11,6 +11,7 @@ import { LandingDestinationPage } from "@/components/discovery/landing-destinati
 import { MiniRouteMap } from "@/components/discovery/mini-route-map";
 import { VerifiedRatingPanel } from "@/components/discovery/verified-rating-panel";
 import { ThuyetMinh } from "@/components/discovery/thuyet-minh";
+import { benCuaDiemDen } from "@/domain/hang-cho";
 import {
   DESTINATION_PAGE_SLUGS,
   getLandingDestinationBySlug,
@@ -169,6 +170,25 @@ export default async function DestinationPage({
           <p className="mt-5 text-lg leading-8 text-[#4d5b55]">
             {destination.story[lang]}
           </p>
+          {benCuaDiemDen(destination.slug) ? (
+            <Link
+              href={`/xep-hang/${benCuaDiemDen(destination.slug)}`}
+              data-testid="loi-vao-hang-cho"
+              className="mt-8 flex items-center justify-between gap-4 rounded-2xl bg-[#183f34] p-4 text-white sm:p-5"
+            >
+              <span>
+                <span className="block font-bold">{ch(lang, "Hàng chờ ảo ở bến đò", "Virtual queue at the boat pier")}</span>
+                <span className="mt-1 block text-sm text-white/75">
+                  {ch(
+                    lang,
+                    "Lấy số trên điện thoại, đi dạo quanh bến, tới lượt trang tự báo.",
+                    "Take a number on your phone, wander around, and the page tells you when it's your turn.",
+                  )}
+                </span>
+              </span>
+              <span aria-hidden="true" className="text-2xl">→</span>
+            </Link>
+          ) : null}
           <ThuyetMinh
             ten={destination.name[lang]}
             lang={lang}

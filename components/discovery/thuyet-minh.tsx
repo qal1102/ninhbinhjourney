@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 
 /**
  * "Nghe thuyết minh" trên trang điểm đến: đọc to lời giới thiệu, câu chuyện
@@ -42,11 +42,17 @@ export function ThuyetMinh({
   doan,
   lang,
   tone = "light",
+  tuDong = false,
+  loiNghe = true,
 }: {
   ten: string;
   doan: readonly string[];
   lang: "vi" | "en";
   tone?: "light" | "dark";
+  /** Tự đọc ngay khi hiện (trang `/nghe`, khi khách vừa tới một nơi mới). */
+  tuDong?: boolean;
+  /** Hiện lối sang `/nghe` ("tự đọc khi tới nơi"). */
+  loiNghe?: boolean;
 }) {
   const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const hoTro = useSyncExternalStore(khongDoi, coGiongDoc, () => false);
@@ -97,6 +103,16 @@ export function ThuyetMinh({
     docTu(0, maPhien, giong);
   }
 
+  // Tự đọc: hẹn sang lượt sau để không đổi trạng thái ngay trong effect. Trình
+  // duyệt chỉ cho đọc khi trang đã có một cú bấm của khách; trang `/nghe` chỉ
+  // bật tự đọc sau cú bấm "Bật định vị".
+  const batDauTuDong = useEffectEvent(() => batDau());
+  useEffect(() => {
+    if (!tuDong || !coGiongDoc()) return;
+    const hen = window.setTimeout(batDauTuDong, 0);
+    return () => window.clearTimeout(hen);
+  }, [tuDong]);
+
   function tamDung() {
     window.speechSynthesis.pause();
     setTrangThai("tam-dung");
@@ -127,6 +143,7 @@ export function ThuyetMinh({
 
   return (
     <section
+      id="thuyet-minh"
       data-testid="thuyet-minh"
       data-trang-thai={trangThai}
       aria-label={t("Nghe thuyết minh", "Audio guide")}
@@ -185,6 +202,14 @@ export function ThuyetMinh({
           </select>
         </label>
       </div>
+      {loiNghe ? (
+        <a
+          href="/nghe"
+          className={`mt-3 inline-flex min-h-11 items-center text-sm font-bold underline underline-offset-4 ${toi ? "text-white/85" : "text-[#245b45]"}`}
+        >
+          {t("Đang đi tham quan? Để máy tự đọc khi bạn tới từng nơi →", "Touring? Let your phone read each place as you arrive →")}
+        </a>
+      ) : null}
       {thieuGiong ? (
         <p className={`mt-3 text-xs leading-5 ${toi ? "text-white/70" : "text-[#8a6b38]"}`}>
           {t(

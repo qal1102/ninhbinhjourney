@@ -66,3 +66,29 @@ test("bản tiếng Anh đọc chữ tiếng Anh, cả ở trang điểm đến 
   const daDoc = await page.evaluate(() => (window as unknown as { __daDoc: string[] }).__daDoc);
   expect(daDoc[0]).toMatch(/Cuc Phuong/);
 });
+
+test("trang Nghe theo vị trí: tới Tràng An thì tự đọc Tràng An, sang Bái Đính thì đổi sang Bái Đính", async ({ page, context }) => {
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({ latitude: 20.2525, longitude: 105.8975 });
+  await page.goto("/nghe?lang=vi");
+  await page.getByRole("button", { name: "Bật định vị" }).click();
+  await expect(page.getByTestId("dang-o")).toContainText("Bạn đang ở Tràng An");
+  const nghe = page.getByTestId("dang-nghe");
+  await expect(nghe).toHaveAttribute("data-diem", "trang_an");
+  await expect(nghe.getByTestId("thuyet-minh")).toHaveAttribute("data-trang-thai", "dang-doc");
+  expect((await page.evaluate(() => (window as unknown as { __daDoc: string[] }).__daDoc))[0]).toBe("Tràng An");
+
+  await context.setGeolocation({ latitude: 20.2768, longitude: 105.8656 });
+  await expect(nghe).toHaveAttribute("data-diem", "bai_dinh");
+  await expect(page.getByTestId("dang-o")).toContainText("Bái Đính");
+  await expect
+    .poll(async () => (await page.evaluate(() => (window as unknown as { __daDoc: string[] }).__daDoc)).includes("Bái Đính"))
+    .toBe(true);
+});
+
+test("trang Nghe chưa bật định vị vẫn chọn tay được nơi đang đứng", async ({ page }) => {
+  await page.goto("/nghe?lang=en");
+  await page.getByRole("button", { name: "Tam Coc", exact: true }).click();
+  await expect(page.getByTestId("dang-nghe")).toHaveAttribute("data-diem", "tam_coc");
+  await expect(page.getByTestId("dang-nghe").getByRole("button", { name: "▶ Listen" })).toBeVisible();
+});

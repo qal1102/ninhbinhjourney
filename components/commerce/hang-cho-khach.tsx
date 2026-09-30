@@ -145,6 +145,19 @@ export function HangChoKhach({
   }, [ben, taiLuot, taiTongQuan]);
 
   useEffect(() => {
+    // Số lấy trên kiosk tại bến: kiosk cho khách quét mã `/xep-hang/<bến>?luot=…`
+    // để điện thoại nhận lượt. Ghi vào bộ nhớ máy khách rồi xoá khỏi đường dẫn,
+    // để lỡ chia sẻ đường dẫn cũng không lộ chuỗi bí mật.
+    const url = new URL(window.location.href);
+    const luot = url.searchParams.get("luot");
+    if (luot && /^[A-Za-z0-9_-]{32}$/.test(luot)) {
+      ghiBoNho(khoaLuot(ben), luot);
+      url.searchParams.delete("luot");
+      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    }
+  }, [ben]);
+
+  useEffect(() => {
     // Lần đầu và mỗi 15 giây; khép lượt rồi thì chỉ còn hỏi hàng chung.
     let dung = false;
     const chay = () => {

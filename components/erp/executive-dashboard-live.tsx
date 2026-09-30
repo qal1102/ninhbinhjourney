@@ -437,6 +437,26 @@ export function ExecutiveDashboard({
             <p className="mt-2 text-xs text-[#8b968f]">
               Cơ sở nào cũng có hai màn hình này.
             </p>
+            <p className="mt-3 text-xs font-bold text-[#7a8781]">Màn khách tự dùng tại điểm</p>
+            <div className="mt-2 flex flex-wrap gap-2" data-testid="loi-man-khach-tai-diem">
+              {sites.map((site) => (
+                <Link
+                  key={site.id}
+                  href={`/kiosk/${site.id}`}
+                  target="_blank"
+                  className="inline-flex min-h-11 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+                >
+                  Kiosk {site.shortName} ↗
+                </Link>
+              ))}
+              <Link
+                href="/xep-hang/tam-coc"
+                target="_blank"
+                className="inline-flex min-h-11 items-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6]"
+              >
+                Hàng chờ bến đò Tam Cốc ↗
+              </Link>
+            </div>
           </div>
         ) : null}
       </section>

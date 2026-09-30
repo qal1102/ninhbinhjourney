@@ -142,7 +142,12 @@ export async function goiTiep(siteId: ErpSiteId, soNhom: number, nguoi: string) 
   return Number(data ?? 0);
 }
 
-export async function danhDauLuot(siteId: ErpSiteId, id: string, trangThai: "da-len" | "bo-luot" | "da-goi", nguoi: string) {
+export async function danhDauLuot(
+  siteId: ErpSiteId,
+  id: string,
+  trangThai: "da-len" | "bo-luot" | "da-goi" | "khach-huy",
+  nguoi: string,
+) {
   const { data, error } = await canKho().rpc("erp_hang_cho_danh_dau", {
     p_tenant_id: TENANT_ID,
     p_site_id: uuidCoSo(siteId),

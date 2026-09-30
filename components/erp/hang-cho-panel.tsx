@@ -163,9 +163,9 @@ export function HangChoPanel({
               </DongLuot>
             ))}
           </ul>
-          <LoiBao state={danhDauState} />
         </div>
       ) : null}
+      <LoiBao state={danhDauState} />
 
       {choDs.length > 0 ? (
         <div className="mt-5">
@@ -182,8 +182,10 @@ export function HangChoPanel({
       ) : null}
 
       {boLuotDs.length > 0 ? (
-        <details className="mt-5">
-          <summary className="cursor-pointer text-sm font-bold text-[#42554c]">Đã bỏ lượt ({boLuotDs.length}): khách quay lại thì gọi lại</summary>
+        <details className="mt-5" open>
+          <summary className="cursor-pointer text-sm font-bold text-[#42554c]">
+            Đã bỏ lượt ({boLuotDs.length}): khách quay lại thì gọi lại, không đi nữa thì huỷ hẳn
+          </summary>
           <ul className="mt-2 divide-y divide-[#eef1ef] rounded-2xl border border-[#e3e8e5]">
             {boLuotDs.map((l) => (
               <DongLuot key={l.id} luot={l} siteId={siteId} action={danhDauAction} dangGui={dangDanhDau} goiLai />
@@ -269,7 +271,7 @@ function DongLuot({
         {children}
       </span>
       <span className="flex gap-2">
-        {(goiLai ? [["da-goi", "Gọi lại"]] : [["da-len", "Đã lên đò"], ["bo-luot", "Bỏ lượt"]]).map(([trangThai, nhan]) => (
+        {(goiLai ? [["da-goi", "Gọi lại"], ["khach-huy", "Huỷ hẳn"]] : [["da-len", "Đã lên đò"], ["bo-luot", "Bỏ lượt"]]).map(([trangThai, nhan]) => (
           <form key={trangThai} action={action}>
             <input type="hidden" name="siteId" value={siteId} />
             <input type="hidden" name="id" value={luot.id} />

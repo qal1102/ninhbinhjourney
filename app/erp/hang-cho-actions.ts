@@ -50,13 +50,20 @@ export async function danhDauLuotAction(_truoc: HangChoActionState, formData: Fo
   try {
     const { user, siteId } = await nguoiCoQuyen(formData.get("siteId"));
     const id = z.uuid().parse(formData.get("id"));
-    const trangThai = z.enum(["da-len", "bo-luot", "da-goi"]).parse(formData.get("trangThai"));
+    const trangThai = z.enum(["da-len", "bo-luot", "da-goi", "khach-huy"]).parse(formData.get("trangThai"));
     const xong = await danhDauLuot(siteId, id, trangThai, user.id);
     revalidatePath(`/erp/${siteId}/suc-chua`);
     if (!xong) return { status: "error", message: "Lượt này đã được người khác xử lý. Màn hình vừa tải lại." };
     return {
       status: "success",
-      message: trangThai === "da-len" ? "Đã ghi lên đò." : trangThai === "bo-luot" ? "Đã bỏ lượt, nhường nhóm sau." : "Đã gọi lại lượt này.",
+      message:
+        trangThai === "da-len"
+          ? "Đã ghi lên đò."
+          : trangThai === "bo-luot"
+            ? "Đã bỏ lượt, nhường nhóm sau."
+            : trangThai === "khach-huy"
+              ? "Đã huỷ hẳn lượt này."
+              : "Đã gọi lại lượt này.",
     };
   } catch (error) {
     return loi(error);

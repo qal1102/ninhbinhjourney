@@ -46,7 +46,7 @@ test.describe("hàng chờ bến đò trên production", () => {
       await expect(bang).toContainText(`${so} · 1 khách`);
 
       if (dauHang) {
-        await bang.getByRole("radio", { name: "1" }).click();
+        await bang.getByRole("radio", { name: "1", exact: true }).click();
         await bang.getByRole("button", { name: "Gọi 1 nhóm tiếp" }).click();
         await expect(bang).toContainText("Đã gọi 1 nhóm");
         await khach.getByRole("button", { name: "Làm mới" }).click();
@@ -62,6 +62,19 @@ test.describe("hàng chờ bến đò trên production", () => {
       await erp.reload();
       await expect(erp.getByTestId("hang-cho-erp")).not.toContainText(`${so} · 1 khách`);
     } finally {
+      // Hỏng giữa chừng thì vẫn huỷ lượt của bài bằng chính chuỗi bí mật máy
+      // khách đang giữ, để không bỏ lại một số "đang chờ" trên production.
+      await khach
+        .evaluate(async () => {
+          const biMat = window.localStorage.getItem("nbj-hang-cho:tam-coc");
+          if (!biMat) return;
+          await fetch("/api/hang-cho", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hanh_dong: "huy", bi_mat: biMat }),
+          });
+        })
+        .catch(() => undefined);
       await khachCtx.close();
       await erpCtx.close();
     }

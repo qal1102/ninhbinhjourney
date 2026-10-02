@@ -8,7 +8,7 @@ import { absoluteUrl } from "@/lib/site-url";
  * Sơ đồ trang cho máy tìm kiếm.
  *
  * Trước ngày 13/09/2026 `/sitemap.xml` trả 404. Chỉ liệt kê những trang khách
- * tự tìm tới: trang chủ, khám phá, lập hành trình, các gói và mười lăm điểm
+ * tự tìm tới: trang chủ, khám phá, lập hành trình, nghe thuyết minh, các gói và mười lăm điểm
  * đến. Không liệt kê trang thanh toán, tra cứu vé, trang vé hay phiếu đoàn —
  * đó là trang của từng khách, không phải trang để người lạ tìm thấy.
  *
@@ -27,6 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/explore"), changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/packages"), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/plan"), changeFrequency: "monthly", priority: 0.7 },
+    { url: absoluteUrl("/nghe"), changeFrequency: "monthly", priority: 0.5 },
     ...[...destinationSlugs].map((slug) => ({
       url: absoluteUrl(`/destination/${slug}`),
       changeFrequency: "monthly" as const,

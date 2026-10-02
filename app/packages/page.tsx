@@ -13,6 +13,7 @@ import {
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
+import { ConTroNhan } from "@/components/shared/con-tro-nhan";
 import {
   checkoutHref,
   packageCatalogBackHref,
@@ -69,6 +70,15 @@ function PackageCard({
           fill
           sizes={featured ? "(min-width: 1280px) 55vw, 100vw" : "(min-width: 1280px) 40vw, 100vw"}
           className="object-cover"
+        />
+        {/* Cả tấm ảnh dẫn sang trang gói. Bàn phím và trình đọc màn hình đi bằng nút "Xem chi tiết" bên dưới, nên lối này không nhận tab. */}
+        <Link
+          href={detailHref}
+          transitionTypes={["nav-forward"]}
+          tabIndex={-1}
+          aria-hidden="true"
+          data-con-tro={ch(lang, "Xem", "View")}
+          className="absolute inset-0"
         />
       </SharedImageTransition>
       <div className={featured ? "min-w-0 p-5 min-[280px]:p-6 sm:p-8 xl:p-10" : "min-w-0 p-5 min-[280px]:p-6 sm:p-8 xl:flex-1"}>
@@ -173,6 +183,7 @@ export default async function PackagesPage({
       data-customer-section="packages-catalog"
       className="min-h-screen bg-[#f4f0e7] px-4 py-10 text-[#151a17] min-[280px]:px-5 sm:px-8 lg:py-16"
     >
+      <ConTroNhan />
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between gap-4">
           <Link

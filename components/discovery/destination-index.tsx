@@ -20,6 +20,8 @@ export type IndexCopy = {
   sectionIntro: string;
   hint: string;
   openLabel: string;
+  /** Nhãn con trỏ theo ngữ cảnh khi rê chuột lên ảnh xem trước ("Mở"). */
+  nhanConTro?: string;
 };
 
 /**
@@ -122,6 +124,7 @@ export function DestinationIndex({
             <button
               type="button"
               onClick={() => onSelect(active.id)}
+              data-con-tro={copy.nhanConTro}
               aria-label={`${copy.openLabel}: ${active.name}`}
               className="group sticky top-20 hidden h-[min(72vh,680px)] w-full overflow-hidden rounded-[12px] bg-[#183F34] text-left shadow-2xl shadow-[#183F34]/20 lg:block"
             >

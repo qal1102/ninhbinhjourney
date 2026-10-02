@@ -26,6 +26,8 @@ import { useMidAutumnSeasonOpen } from "@/lib/seasonal/use-mid-autumn-season";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
+import { ConTroNhan } from "@/components/shared/con-tro-nhan";
+import { SuongTroi } from "@/components/shared/suong-troi";
 import type { ExperienceSurfaceAttributes } from "@/config/experience";
 import {
   DESTINATION_PAGE_SLUGS,
@@ -1279,6 +1281,7 @@ export default function NinhBinhLanding({
       {...surfaceAttributes}
       className="min-h-screen bg-[#FBFAF6] text-[#1D2925]"
     >
+      <ConTroNhan />
       {/*
         INTRO -- KHONG CO DUONG BO QUA. Co y, theo yeu cau chu du an 05/08.
         Truoc day co ca nut "Bo qua intro" LAN bam-cho-nao-cung-tat.
@@ -1396,6 +1399,8 @@ export default function NinhBinhLanding({
         {ninhBinhHour ? (
           <div className={`pointer-events-none absolute inset-0 hero-tod hero-tod-${ninhBinhHour.band}`} />
         ) : null}
+        {/* A15-CON-LAI: sương trôi qua chân núi, màu theo giờ thật (components/shared/suong-troi.tsx). */}
+        <SuongTroi band={ninhBinhHour?.band ?? null} />
         <div className="absolute inset-x-0 top-0 z-20 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
           <a href="#top" className="flex items-center gap-2" aria-label="Ninh Bình Journey">
             <Image
@@ -1638,6 +1643,7 @@ export default function NinhBinhLanding({
                   data-customer-content-id={place.id}
                   data-customer-content-type="destination"
                   onClick={() => openDetail(place.id)}
+                  data-con-tro={lang === "en" ? "View" : "Xem"}
                   className="group relative w-64 shrink-0 overflow-hidden rounded-[10px] text-left shadow-lg shadow-[#183F34]/12 sm:w-72"
                 >
                   <div className="relative aspect-[4/5] w-full">
@@ -1727,6 +1733,7 @@ export default function NinhBinhLanding({
           sectionIntro: t.indexIntro as string,
           hint: t.indexHint as string,
           openLabel: t.indexOpen as string,
+          nhanConTro: lang === "en" ? "Open" : "Mở",
         }}
         onSelect={(id) => openDetail(id as DestinationId)}
       />
@@ -1761,6 +1768,7 @@ export default function NinhBinhLanding({
 
         <div
           ref={railRef}
+          data-con-tro={lang === "en" ? "Drag" : "Kéo"}
           className="route-rail mt-12 flex items-stretch snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-5 sm:gap-6 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]"
           onPointerDown={handleRailPointerDown}
           onPointerMove={handleRailPointerMove}

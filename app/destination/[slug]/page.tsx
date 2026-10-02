@@ -374,14 +374,18 @@ export default async function DestinationPage({
             <div>
               <dt className="font-bold text-[#59654b]">{ch(lang, "Nguồn rà soát", "Checked against")}</dt>
               <dd className="mt-1 leading-6">
-                <a
-                  href={destination.source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-[#356957] underline underline-offset-4"
-                >
-                  {destination.source.label}
-                </a>
+                {"url" in destination.source ? (
+                  <a
+                    href={destination.source.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-[#356957] underline underline-offset-4"
+                  >
+                    {destination.source.label}
+                  </a>
+                ) : (
+                  ch(lang, "Ninh Bình Journey tự biên tập", "Written by Ninh Binh Journey")
+                )}
                 <br />
                 {destination.source.reviewedAt}
               </dd>

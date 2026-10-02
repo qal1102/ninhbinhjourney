@@ -73,6 +73,9 @@ test("robots.txt và sitemap.xml trả về nội dung thật", async ({ request
 test("trang điểm đến có cổng mời đặt gói có chặng ở đó; Hoa Lư thì không", async ({ page }) => {
   await page.goto("/destination/tam-chuc", { waitUntil: "domcontentloaded" });
   await expect(page.locator("main[aria-busy='true']")).toHaveCount(0);
+  // Trang chưa đối chiếu được nguồn chính thức nói thẳng là tự biên tập.
+  await expect(page.getByText("Ninh Bình Journey tự biên tập")).toBeVisible();
+  await expect(page.getByText(/demonstration information/i)).toHaveCount(0);
   const khoi = page.getByTestId("goi-co-noi-nay");
   await expect(khoi.getByRole("heading", { name: "Đặt vé nơi này" })).toBeVisible();
   const goi = khoi.getByRole("link", { name: /Tam Chúc: chùa trên hồ/ });

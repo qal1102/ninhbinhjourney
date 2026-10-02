@@ -152,7 +152,7 @@
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
 
-- 03/10 `2bc`: trang điểm đến của bốn cơ sở có cổng thêm khối "Đặt vé nơi này" liệt kê gói còn bán có chặng ở đó, dẫn sang trang gói (trước đây trang Tam Chúc không có lối nào tới gói mới); hai trang Hoa Lư không có khối này. Kiểm: `tsc`, lint, Playwright `destination-pages` 20 + bốn spec trang điểm đến 38.
+- 03/10 `2bc`: trang điểm đến của bốn cơ sở có cổng thêm khối "Đặt vé nơi này" liệt kê gói còn bán có chặng ở đó, dẫn sang trang gói (trước đây trang Tam Chúc không có lối nào tới gói mới); hai trang Hoa Lư không có khối này. Ba trang (Phố cổ Hoa Lư, Thung Nham, Tam Chúc) ghi nguồn rà soát là nhãn dựng tạm "DestinationOS editorial review — demonstration information" kèm đường dẫn Cục Du lịch không đối chiếu được; nay ghi "Ninh Bình Journey tự biên tập" (`source.tuBienTap`), bài đơn vị cấm nhãn tạm. Sitemap thêm `/nghe`. Kiểm: `tsc`, lint, Vitest 1.712, Playwright `destination-pages` 20 + bốn spec trang điểm đến 38; production 390/1440 không tràn.
 
 - 01/10 `2bb`: chủ dự án cho phép; `100` đổi lịch sử mẫu sang làm mới mỗi giờ và bù ngay phần hụt từ 26/09 (production sau áp: 7 ngày +8,2%, 30 ngày +10%, tám tuần đều). Ô "Hôm nay" trang đầu nay so với **cùng giờ hôm qua** (trước so phần đã qua của hôm nay với trọn ngày hôm qua, sáng nào cũng tụt). Thêm gói Tam Chúc (`101`); bốn ca ghép gói (`package-match`) sửa theo danh mục mới, không bẻ dữ liệu gói. Kiểm: `tsc`, lint, Vitest 1.712, Playwright 76 bài (gói, đặt vé, ngôn ngữ, kiosk, trang công khai); production: kho trả đủ năm chuyến Tam Chúc đặt được, trang chủ 390/1440 có gói mới, không tràn ngang.
 

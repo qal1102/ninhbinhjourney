@@ -56,11 +56,14 @@ export type DestinationCatalogItem = {
   image: string;
   imageAlt: Localized;
   relatedSlugs: readonly string[];
-  source: {
-    label: string;
-    url: string;
-    reviewedAt: string;
-  };
+  /**
+   * Trang chính thức đã đối chiếu. Không có `url` nghĩa là chữ do Ninh Bình
+   * Journey tự biên tập, chưa đối chiếu được với một trang chính thức nào:
+   * trang điểm đến nói thẳng như vậy chứ không dựng nhãn nguồn.
+   */
+  source:
+    | { label: string; url: string; reviewedAt: string }
+    | { tuBienTap: true; reviewedAt: string };
   /**
    * Báo chí và tổ chức đã viết về điểm đến này.
    *
@@ -413,11 +416,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "Lanterns reflected on the water at Hoa Lu Old Town",
     },
     relatedSlugs: ["hoa-lu-ancient-capital", "trang-an", "hang-mua"],
-    source: {
-      label: "DestinationOS editorial review — demonstration information",
-      url: "https://vietnamtourism.gov.vn/en/post/20581",
-      reviewedAt: "2026-07-24",
-    },
+    source: { tuBienTap: true, reviewedAt: "2026-07-24" },
   },
   {
     id: "10000000-0000-4000-8000-000000000005",
@@ -550,11 +549,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "Water and limestone landscape in the Thung Nham ecological area",
     },
     relatedSlugs: ["tam-coc-bich-dong", "hang-mua", "trang-an"],
-    source: {
-      label: "DestinationOS editorial review — demonstration information",
-      url: nationalTourismGuide,
-      reviewedAt: "2026-07-24",
-    },
+    source: { tuBienTap: true, reviewedAt: "2026-07-24" },
     press: [
       {
         text: {
@@ -676,11 +671,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       en: "The Tam Chuc pagoda complex beside its lake",
     },
     relatedSlugs: ["bai-dinh", "trang-an", "hoa-lu-ancient-capital"],
-    source: {
-      label: "DestinationOS editorial review — demonstration information",
-      url: nationalTourismGuide,
-      reviewedAt: "2026-08-02",
-    },
+    source: { tuBienTap: true, reviewedAt: "2026-08-02" },
     press: [
       {
         // Không ngoặc kép: tổng hợp từ nhiều câu trong bài, không phải một câu nguyên văn.

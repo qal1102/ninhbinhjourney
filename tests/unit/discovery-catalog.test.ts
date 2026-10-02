@@ -68,7 +68,13 @@ describe("Ninh Bình discovery catalog and local map", () => {
       expect(destination.demoOpeningWindow).toMatch(/\d{2}:\d{2}/);
       expect(destination.image).toMatch(/^\/images\//);
       expect(destination.imageAlt.vi.length).toBeGreaterThan(20);
-      expect(destination.source.url).toMatch(/^https:\/\//);
+      if ("url" in destination.source) {
+        expect(destination.source.url).toMatch(/^https:\/\//);
+        // Nhãn nguồn phải là tên trang thật, không phải nhãn dựng tạm.
+        expect(destination.source.label).not.toMatch(/demonstration|DestinationOS/i);
+      } else {
+        expect(destination.source.tuBienTap).toBe(true);
+      }
       expect(destination.source.reviewedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(destination.relatedSlugs.length).toBeGreaterThanOrEqual(3);
     }

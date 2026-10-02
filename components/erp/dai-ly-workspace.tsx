@@ -90,6 +90,11 @@ export function DaiLyWorkspace({
   );
 }
 
+/** Lý do gõ tay thường đã có dấu chấm cuối; câu ghép thêm ". Bổ sung…" thì thành "..". */
+function boDauCham(x: string): string {
+  return x.trim().replace(/[.。!]+$/, "");
+}
+
 function TheDaiLy({
   d,
   thang,
@@ -145,6 +150,11 @@ function TheDaiLy({
         ))}
       </dl>
 
+      {d.daChi === null && d.trangThaiChi === "bi-tra-lai" ? (
+        <p data-testid={`chi-tra-lai-${d.ma}`} className="mt-4 rounded-xl bg-[#fff4e5] px-3 py-2 text-sm text-[#7a4a12]">
+          Kế toán trưởng đã trả lại lần chi trước: {boDauCham(d.lyDoTra ?? "")}. Bổ sung rồi ghi chi lại.
+        </p>
+      ) : null}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {d.daChi !== null ? (
           <div data-testid={`chi-${d.ma}`} data-trang-thai={d.trangThaiChi ?? ""} className="text-sm">
@@ -164,16 +174,10 @@ function TheDaiLy({
           </div>
         ) : daKhep && !duocGhiChi ? (
           <p className="text-sm text-[#59654b]">
-            {d.trangThaiChi === "bi-tra-lai" ? `Lần chi trước đã bị trả lại: ${d.lyDoTra ?? ""}. ` : ""}
             Giám đốc hoặc kế toán tổng hợp ghi chi; kế toán trưởng kiểm tra bút toán ở màn Tài chính.
           </p>
         ) : daKhep ? (
           <form action={chiAction} className="flex flex-wrap items-center gap-2">
-            {d.trangThaiChi === "bi-tra-lai" ? (
-              <p data-testid={`chi-tra-lai-${d.ma}`} className="w-full rounded-xl bg-[#fff4e5] px-3 py-2 text-sm text-[#7a4a12]">
-                Kế toán trưởng đã trả lại lần chi trước: {d.lyDoTra}. Bổ sung rồi ghi chi lại.
-              </p>
-            ) : null}
             <input type="hidden" name="id" value={d.id} />
             <input type="hidden" name="thang" value={thang} />
             <input

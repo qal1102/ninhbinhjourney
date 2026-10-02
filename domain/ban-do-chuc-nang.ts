@@ -301,6 +301,7 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
           "Chọn một tháng đã khép ở hàng nút trên cùng.",
           "Mỗi đại lý một thẻ: đơn đã trả, khách đã tới, hoa hồng (chỉ tính khách đã qua cổng).",
           "Bấm \"Xem cổng như đại lý thấy\"; chuyển khoản xong thì \"Ghi đã chi\".",
+          "Ghi đã chi xong, bút toán Nợ 6418 / Có 1121 chờ kế toán trưởng kiểm tra ở màn Tài chính (đổi vai Kế toán trưởng để duyệt).",
         ],
       },
       {

@@ -69,3 +69,24 @@ test("robots.txt và sitemap.xml trả về nội dung thật", async ({ request
   for (const { slug } of SAU_DIEM_MOI) expect(chuSitemap).toContain(`/destination/${slug}</loc>`);
   expect(chuSitemap).not.toContain("/erp");
 });
+
+test("trang điểm đến có cổng mời đặt gói có chặng ở đó; Hoa Lư thì không", async ({ page }) => {
+  await page.goto("/destination/tam-chuc", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("main[aria-busy='true']")).toHaveCount(0);
+  const khoi = page.getByTestId("goi-co-noi-nay");
+  await expect(khoi.getByRole("heading", { name: "Đặt vé nơi này" })).toBeVisible();
+  const goi = khoi.getByRole("link", { name: /Tam Chúc: chùa trên hồ/ });
+  await expect(goi).toHaveAttribute("href", /^\/packages\/tam-chuc-chua-tren-ho/);
+  await goi.click();
+  await expect(page).toHaveURL(/\/packages\/tam-chuc-chua-tren-ho/);
+  await expect(page.getByRole("heading", { level: 1, name: "Tam Chúc: chùa trên hồ" })).toBeVisible();
+
+  // Gói hết mùa (Bàn Trăng) không được mời ở Tam Cốc nữa.
+  await page.goto("/destination/tam-coc-bich-dong", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("goi-co-noi-nay").getByRole("link", { name: /Cinematic/ })).toBeVisible();
+  await expect(page.getByTestId("goi-co-noi-nay").getByRole("link", { name: /Bàn Trăng/ })).toHaveCount(0);
+
+  await page.goto("/destination/hoa-lu-ancient-capital", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByTestId("goi-co-noi-nay")).toHaveCount(0);
+});

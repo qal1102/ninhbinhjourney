@@ -12,6 +12,9 @@ import { MiniRouteMap } from "@/components/discovery/mini-route-map";
 import { VerifiedRatingPanel } from "@/components/discovery/verified-rating-panel";
 import { ThuyetMinh } from "@/components/discovery/thuyet-minh";
 import { benCuaDiemDen } from "@/domain/hang-cho";
+import { PACKAGES } from "@/content/packages";
+import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
+import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 import {
   DESTINATION_PAGE_SLUGS,
   getLandingDestinationBySlug,
@@ -26,6 +29,7 @@ import {
   destinationBackHref,
   destinationImageTransitionName,
   destinationRelatedHref,
+  packageDetailHref,
   planDestinationHref,
   readContinuityContext,
 } from "@/lib/page-continuity";
@@ -103,6 +107,13 @@ export default async function DestinationPage({
   const related = destination.relatedSlugs
     .map(getDestinationBySlug)
     .filter((item) => item !== undefined);
+  // Chỉ bốn cơ sở có cổng mới mời đặt gói. Hoa Lư có trong lịch vài gói
+  // nhưng không bán vé tại đây, nên trang Hoa Lư không có khối này.
+  const banVeTaiDay = Object.values(ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG).includes(destination.id);
+  const bayGio = new Date();
+  const goiCoNoiNay = banVeTaiDay
+    ? PACKAGES.filter((item) => item.siteIds.includes(destination.id) && !goiDaHetMua(item, bayGio))
+    : [];
 
   return (
     <main lang={lang} className="min-h-screen bg-[#fbfaf6] text-[#151a17]">
@@ -391,6 +402,34 @@ export default async function DestinationPage({
               {ch(lang, "Thêm vào hành trình", "Add to my day")}
             </Link>
           </div>
+          {goiCoNoiNay.length ? (
+            <div data-testid="goi-co-noi-nay" className="mt-7 border-t border-[#e4e1d8] pt-6">
+              <h3 className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#8a6b38]">
+                {ch(lang, "Đặt vé nơi này", "Book a visit here")}
+              </h3>
+              <ul className="mt-3 grid gap-2">
+                {goiCoNoiNay.map((item) => (
+                  <li key={item.slug}>
+                    <Link
+                      data-customer-track="destination-package"
+                      data-customer-content-id={item.id}
+                      data-customer-content-type="package"
+                      href={packageDetailHref(item.slug, navigationContext, "catalog")}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-[#d7d5cd] px-4 py-3 transition hover:border-[#183f34]"
+                    >
+                      <span>
+                        <span className="block font-bold text-[#183f34]">{goiHienThi(item, lang).name}</span>
+                        <span className="mt-0.5 block text-xs text-[#59654b]">
+                          {goiHienThi(item, lang).durationLabel} · {giaGoi(item, lang)}
+                        </span>
+                      </span>
+                      <span aria-hidden="true" className="text-lg text-[#183f34]">→</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </aside>
       </section>
 

@@ -104,15 +104,23 @@ export async function ghiDaChiAction(_truoc: DaiLyActionState, formData: FormDat
   try {
     const user = await getCurrentErpUser();
     if (!user) throw new Error("Phiên đăng nhập đã hết hạn.");
-    if (user.role !== "director" && user.role !== "chief-accountant" && user.role !== "accountant") {
-      throw new Error("Chỉ giám đốc hoặc kế toán được ghi đã chi hoa hồng.");
+    // Kế toán trưởng là người kiểm tra bút toán chi này, nên không được tự lập.
+    if (user.role !== "director" && user.role !== "accountant") {
+      throw new Error("Giám đốc hoặc kế toán tổng hợp ghi chi; kế toán trưởng kiểm tra bút toán ở màn Tài chính.");
     }
     const id = z.uuid().parse(formData.get("id"));
     const thang = chonThang(formData.get("thang"));
     const ghiChu = z.string().trim().max(200).parse(formData.get("ghiChu") ?? "");
     const soTien = await ghiDaChi(id, thang, ghiChu, user.id);
     revalidatePath("/erp/dai-ly");
-    return { status: "success", message: `Đã ghi chi ${tien(soTien)}, đúng số hoa hồng kho tính ra.` };
+    revalidatePath("/erp/finance");
+    return {
+      status: "success",
+      message:
+        soTien > 0
+          ? `Đã ghi chi ${tien(soTien)}, đúng số hoa hồng kho tính ra. Bút toán Nợ 6418 / Có 1121 đang chờ kế toán trưởng kiểm tra ở màn Tài chính.`
+          : "Tháng này không có hoa hồng phải chi; đã ghi nhận, không cần bút toán.",
+    };
   } catch (error) {
     return loi(error);
   }

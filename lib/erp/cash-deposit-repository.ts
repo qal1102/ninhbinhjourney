@@ -325,6 +325,9 @@ export async function matchCashDeposit(
   input: MatchCashDepositInput,
 ): Promise<CashDeposit> {
   requireSupabaseMode();
+  // Kỳ kế toán của tháng này có thể chưa mở (xem moKyKeToanDenNay).
+  const { moKyKeToanDenNay } = await import("@/lib/erp/accounting-repository");
+  await moKyKeToanDenNay();
   const client = createAdminClient();
   const result = await client.rpc("erp_cash_match_deposit", {
     p_tenant_id: TENANT_ID,
@@ -354,6 +357,9 @@ export async function decideCashException(
   input: DecideCashExceptionInput,
 ): Promise<CashDeposit> {
   requireSupabaseMode();
+  // Kỳ kế toán của tháng này có thể chưa mở (xem moKyKeToanDenNay).
+  const { moKyKeToanDenNay } = await import("@/lib/erp/accounting-repository");
+  await moKyKeToanDenNay();
   const client = createAdminClient();
   const result = await client.rpc("erp_cash_decide_exception", {
     p_tenant_id: TENANT_ID,

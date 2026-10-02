@@ -1515,6 +1515,9 @@ export async function prepareSupplierInvoiceJournal(
   context: CommandContext,
 ) {
   if (readMode() === "supabase") {
+    // Kỳ kế toán của tháng này có thể chưa mở (xem moKyKeToanDenNay).
+    const { moKyKeToanDenNay } = await import("@/lib/erp/accounting-repository");
+    await moKyKeToanDenNay();
     return rpcMutation(
       "erp_accounting_prepare_supplier_invoice",
       {

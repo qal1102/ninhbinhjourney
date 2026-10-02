@@ -531,6 +531,9 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   DAI_LY_DA_CHI: "Tháng này đã ghi chi cho đại lý này rồi.",
   DAI_LY_THANG_CHUA_KHEP: "Tháng chưa khép, chưa ghi chi được.",
   DAI_LY_KHONG_CO: "Không tìm thấy đại lý này.",
+  DAI_LY_BUT_TOAN_PHAI_QUA_LUONG_DAI_LY: "Bút toán hoa hồng đại lý chỉ được kiểm tra qua màn Tài chính, không sửa trực tiếp.",
+  DAI_LY_KHONG_CHIA_DUOC_CO_SO: "Không tìm thấy cổng nào khách của đại lý đã qua, nên chưa chia được bút toán theo cơ sở.",
+  DAI_LY_CHIA_LECH: "Chia hoa hồng theo cơ sở bị lệch số, chưa ghi chi. Báo bộ phận kỹ thuật.",
   PAYMENT_COLLECT_INPUT_INVALID:
     "Thời điểm thu tiền gửi lên chưa hợp lệ.",
   PAYMENT_COLLECT_ACTOR_REQUIRED:

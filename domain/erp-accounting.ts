@@ -13,7 +13,9 @@ export type AccountingPeriodAction = "lock" | "reopen";
 // mo source_type nay tu truoc nhung type domain quen cap nhat theo, dung
 // bay "hai nguon su that lech nhau" ma HANDOFF.md tu canh bao (o day la
 // schema DB vs. type TypeScript, khong phai hai bang runtime).
-export type AccountingSourceType = "shift-close" | "supplier-invoice" | "cash-deposit";
+// "agent-commission" (102): tiền chi hoa hồng đại lý, nguồn là một lần chi
+// trong `dai_ly_chi_tra`, duyệt bằng `erp_dai_ly_duyet_but_toan`.
+export type AccountingSourceType = "shift-close" | "supplier-invoice" | "cash-deposit" | "agent-commission";
 
 export type AccountingJournalLine = {
   id: string;
@@ -54,6 +56,8 @@ export type AccountingJournal = {
   sourceType: AccountingSourceType;
   sourceWorkflowId: string | null;
   sourceSupplierInvoiceId: string | null;
+  /** Lần chi hoa hồng đại lý (chỉ có ở nguồn `agent-commission`). */
+  sourceDaiLyChiTraId?: string | null;
   sourceVersion: number;
   businessDate: string;
   periodKey: string;
@@ -346,7 +350,14 @@ export function accountingJournalSourceLabel(
   journal: Pick<AccountingJournal, "reversalOfJournalId" | "sourceType">,
 ): string {
   if (journal.reversalOfJournalId) return "Đảo bút toán";
-  return journal.sourceType === "supplier-invoice"
-    ? "Hóa đơn nhà cung cấp"
-    : "Doanh thu ca";
+  switch (journal.sourceType) {
+    case "supplier-invoice":
+      return "Hóa đơn nhà cung cấp";
+    case "cash-deposit":
+      return "Nộp quỹ vào ngân hàng";
+    case "agent-commission":
+      return "Hoa hồng đại lý";
+    default:
+      return "Doanh thu ca";
+  }
 }

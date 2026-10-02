@@ -453,7 +453,9 @@ function JournalCard({
   const sourceReference =
     journal.sourceType === "supplier-invoice"
       ? journal.sourceSupplierInvoiceId
-      : journal.sourceWorkflowId;
+      : journal.sourceType === "agent-commission"
+        ? journal.sourceDaiLyChiTraId
+        : journal.sourceWorkflowId;
   return (
     <details
       open={defaultOpen}
@@ -562,7 +564,7 @@ function JournalCard({
               </div>
             </dl>
             {user.role === "chief-accountant" &&
-            journal.sourceType === "shift-close" &&
+            (journal.sourceType === "shift-close" || journal.sourceType === "agent-commission") &&
             journal.status === "pending-checker" ? (
               <ReviewJournalForm journal={journal} />
             ) : null}

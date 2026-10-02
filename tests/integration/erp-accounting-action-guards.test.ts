@@ -13,6 +13,7 @@ const doubles = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   reverseAccountingJournal: vi.fn(),
   reviewAccountingJournal: vi.fn(),
+  reviewAgentCommissionJournal: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -44,6 +45,7 @@ vi.mock("@/lib/erp/accounting-repository", () => ({
     doubles.prepareShiftCloseAccountingJournal,
   reverseAccountingJournal: doubles.reverseAccountingJournal,
   reviewAccountingJournal: doubles.reviewAccountingJournal,
+  reviewAgentCommissionJournal: doubles.reviewAgentCommissionJournal,
 }));
 
 vi.mock("@/lib/erp/shift-close-repository", () => ({
@@ -281,6 +283,48 @@ describe("ERP accounting server-action guards", () => {
         requestHash: expect.stringMatching(/^[0-9a-f]{64}$/),
       }),
     );
+  });
+
+  it("routes an agent-commission journal to its own review, never the shift-close one", async () => {
+    // 102: bút toán chi hoa hồng đại lý có hàm duyệt riêng (`erp_dai_ly_duyet_but_toan`)
+    // vì nguồn là một lần chi, không phải hồ sơ chốt ca.
+    doubles.getCurrentErpUser.mockResolvedValue(chiefAccountant);
+    doubles.getAccountingJournal.mockResolvedValue({
+      ...journal,
+      sourceType: "agent-commission",
+      sourceWorkflowId: null,
+      sourceDaiLyChiTraId: "chi-001",
+      makerAccountId: director.id,
+    });
+    doubles.reviewAgentCommissionJournal.mockResolvedValue({ ...journal, status: "posted" });
+
+    const result = await reviewAccountingJournalAction(previous, reviewForm("approve"));
+
+    expect(result.status).toBe("success");
+    expect(doubles.reviewAgentCommissionJournal).toHaveBeenCalledWith(
+      JOURNAL_ID,
+      1,
+      "approve",
+      expect.objectContaining({ actorAccountId: chiefAccountant.id, idempotencyKey: expect.stringMatching(/^acct:/) }),
+    );
+    expect(doubles.reviewAccountingJournal).not.toHaveBeenCalled();
+    expect(doubles.revalidatePath).toHaveBeenCalledWith("/erp/dai-ly");
+  });
+
+  it("keeps maker and checker apart for agent-commission journals too", async () => {
+    doubles.getCurrentErpUser.mockResolvedValue(chiefAccountant);
+    doubles.getAccountingJournal.mockResolvedValue({
+      ...journal,
+      sourceType: "agent-commission",
+      sourceWorkflowId: null,
+      makerAccountId: chiefAccountant.id,
+    });
+
+    const result = await reviewAccountingJournalAction(previous, reviewForm("approve"));
+
+    expect(result.status).toBe("error");
+    expect(result.message).toMatch(/Người lập không được tự kiểm tra/);
+    expect(doubles.reviewAgentCommissionJournal).not.toHaveBeenCalled();
   });
 
   it("denies director access to checker duties", async () => {

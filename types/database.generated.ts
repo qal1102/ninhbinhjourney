@@ -788,6 +788,7 @@ export type ErpAccountingJournalRow = {
   source_type: string;
   source_workflow_id: string | null;
   source_supplier_invoice_id: string | null;
+  source_dai_ly_chi_tra_id?: string | null;
   source_version: number;
   business_date: string;
   period_key: string;
@@ -1284,6 +1285,22 @@ export interface Database {
           p_note: string;
           p_idempotency_key: string;
           p_request_hash: string;
+        };
+        Returns: ErpAccountingJournalRow;
+      };
+      erp_accounting_mo_ky_den_nay: {
+        Args: { p_tenant_id: string };
+        Returns: number;
+      };
+      erp_dai_ly_duyet_but_toan: {
+        Args: {
+          p_tenant_id: string;
+          p_journal_id: string;
+          p_expected_version: number;
+          p_actor_account_id: string;
+          p_decision: string;
+          p_note: string;
+          p_idempotency_key: string;
         };
         Returns: ErpAccountingJournalRow;
       };

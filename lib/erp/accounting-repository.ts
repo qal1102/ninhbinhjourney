@@ -341,7 +341,8 @@ function journalFromRows(
   if (
     row.source_type !== "shift-close" &&
     row.source_type !== "supplier-invoice" &&
-    row.source_type !== "cash-deposit"
+    row.source_type !== "cash-deposit" &&
+    row.source_type !== "agent-commission"
   ) {
     throw new AccountingRepositoryError(
       "Nguồn bút toán chưa được hệ thống hỗ trợ.",
@@ -361,7 +362,7 @@ function journalFromRows(
       (!sourceWorkflowId || sourceSupplierInvoiceId)) ||
     (row.source_type === "supplier-invoice" &&
       (sourceWorkflowId || !sourceSupplierInvoiceId)) ||
-    (row.source_type === "cash-deposit" &&
+    ((row.source_type === "cash-deposit" || row.source_type === "agent-commission") &&
       (sourceWorkflowId || sourceSupplierInvoiceId))
   ) {
     throw new AccountingRepositoryError(
@@ -388,6 +389,7 @@ function journalFromRows(
     sourceType: row.source_type,
     sourceWorkflowId,
     sourceSupplierInvoiceId,
+    sourceDaiLyChiTraId: asNullableString(row.source_dai_ly_chi_tra_id),
     sourceVersion: asInteger(row.source_version, "journal.source_version"),
     businessDate: asString(row.business_date, "journal.business_date"),
     periodKey: asString(row.period_key, "journal.period_key"),
@@ -618,12 +620,26 @@ function rpcRow(data: unknown, field: string) {
   return raw as DatabaseRow;
 }
 
+/**
+ * Mở các kỳ kế toán còn thiếu tới tháng hiện tại (migration 102). Trước 102
+ * kho chỉ có kỳ 2026-07 và 2026-08, nên từ tháng 9 mọi lần lập bút toán rơi
+ * vào "chưa có kỳ". Gọi trước mỗi lần lập bút toán; kỳ đã có, kỳ đã khoá giữ
+ * nguyên.
+ */
+export async function moKyKeToanDenNay(client: SupabaseClient<Database> = createAdminClient()) {
+  const result = await client.rpc("erp_accounting_mo_ky_den_nay", { p_tenant_id: TENANT_ID });
+  if (result.error) {
+    throw repositoryError("mở kỳ kế toán", result.error);
+  }
+}
+
 async function prepareInSupabase(
   workflowId: string,
   expectedSourceVersion: number,
   command: PrepareShiftCloseAccountingCommand,
 ) {
   const client = createAdminClient();
+  await moKyKeToanDenNay(client);
   const result = await client.rpc("erp_accounting_prepare_shift_close", {
     p_workflow_id: workflowId,
     p_expected_source_version: expectedSourceVersion,
@@ -1465,6 +1481,44 @@ export async function reviewAccountingJournal(
     return reviewInSupabase(id, version, decision, command);
   }
   return reviewInDemo(id, version, decision, command);
+}
+
+/**
+ * Kế toán trưởng kiểm tra bút toán chi hoa hồng đại lý (102). Trả lại là trả
+ * cả lần chi: mọi bút toán còn chờ của lần ấy cùng về "trả lại", và tháng ấy
+ * ghi chi lại được ở màn Đại lý.
+ */
+export async function reviewAgentCommissionJournal(
+  journalId: string,
+  expectedVersion: number,
+  decision: AccountingReviewDecision,
+  value: { actorAccountId: string; note: string; idempotencyKey: string },
+) {
+  const id = validateRecordId(journalId, "Mã bút toán");
+  const version = validateExpectedVersion(expectedVersion, "bút toán");
+  if (readMode() !== "supabase") {
+    throw new AccountingRepositoryError(
+      "Bút toán hoa hồng đại lý chỉ có khi chạy với kho dữ liệu thật.",
+    );
+  }
+  const client = createAdminClient();
+  const result = await client.rpc("erp_dai_ly_duyet_but_toan", {
+    p_tenant_id: TENANT_ID,
+    p_journal_id: id,
+    p_expected_version: version,
+    p_actor_account_id: value.actorAccountId,
+    p_decision: decision,
+    p_note: value.note.trim().slice(0, 2_000),
+    p_idempotency_key: value.idempotencyKey,
+  });
+  if (result.error) {
+    throw repositoryError("kiểm tra bút toán hoa hồng đại lý", result.error);
+  }
+  const journal = await getJournalFromSupabase(id);
+  if (!journal) {
+    throw new AccountingRepositoryError("Không tải lại được bút toán vừa kiểm tra.");
+  }
+  return journal;
 }
 
 export async function reverseAccountingJournal(

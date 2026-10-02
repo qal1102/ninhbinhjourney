@@ -4,6 +4,10 @@
  *
  * Luật hoa hồng nằm trong kho (`erp_dai_ly_thang`): chỉ tính đơn đã trả mà
  * khách đã qua cổng, theo tháng của ngày đi, tiền đơn × tỷ lệ.
+ *
+ * Từ 102, "Ghi đã chi" dựng bút toán Nợ 6418 / Có 1121 chờ kế toán trưởng
+ * kiểm tra (chia theo cơ sở khách qua cổng). Lần chi đi qua ba trạng thái:
+ * chờ duyệt → đã ghi sổ, hoặc bị trả lại (tháng ấy ghi chi lại được).
  */
 
 export const COOKIE_DAI_LY = "nbj-dai-ly";
@@ -28,7 +32,25 @@ export type DongDaiLy = {
   hoaHong: number;
   daChi: number | null;
   chiLuc: string | null;
+  trangThaiChi: TrangThaiChi | null;
+  lyDoTra: string | null;
+  butToan: { ma: string; trangThai: string }[];
 };
+
+export type TrangThaiChi = "cho-duyet" | "da-ghi-so" | "bi-tra-lai";
+
+function docTrangThaiChi(x: unknown): TrangThaiChi | null {
+  return x === "cho-duyet" || x === "da-ghi-so" || x === "bi-tra-lai" ? x : null;
+}
+
+function docButToan(x: unknown): { ma: string; trangThai: string }[] {
+  if (!Array.isArray(x)) return [];
+  return x.flatMap((b) =>
+    b && typeof b === "object" && typeof (b as Record<string, unknown>).ma === "string"
+      ? [{ ma: (b as Record<string, string>).ma, trangThai: String((b as Record<string, unknown>).trang_thai ?? "") }]
+      : [],
+  );
+}
 
 export type DonDaiLy = {
   maDon: string;
@@ -90,6 +112,9 @@ export function docBangThang(raw: unknown): DongDaiLy[] {
       hoaHong: so(r.hoa_hong),
       daChi: r.da_chi === null || r.da_chi === undefined ? null : so(r.da_chi),
       chiLuc: chuoi(r.chi_luc),
+      trangThaiChi: docTrangThaiChi(r.trang_thai_chi),
+      lyDoTra: chuoi(r.ly_do_tra),
+      butToan: docButToan(r.but_toan),
     }];
   });
 }

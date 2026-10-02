@@ -58,6 +58,7 @@ export default async function ErpDaiLyPage({
           maQr={maQr}
           duongGoc={absoluteUrl("/")}
           laGiamDoc={user.role === "director"}
+          duocGhiChi={user.role === "director" || user.role === "accountant"}
         />
       ) : (
         <p role="status" data-testid="dai-ly-chua-co" className="rounded-2xl border border-[#e3e8e5] bg-white p-5 text-sm text-[#59654b]">

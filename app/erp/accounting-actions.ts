@@ -27,6 +27,7 @@ import {
   prepareShiftCloseAccountingJournal,
   reverseAccountingJournal,
   reviewAccountingJournal,
+  reviewAgentCommissionJournal,
 } from "@/lib/erp/accounting-repository";
 import {
   ShiftCloseRepositoryConfigurationError,
@@ -307,7 +308,7 @@ export async function reviewAccountingJournalAction(
       requireChecker(user, "accounting.journal.post");
     }
     const journal = await loadJournalForUser(user, input.journalId);
-    if (journal.sourceType !== "shift-close") {
+    if (journal.sourceType !== "shift-close" && journal.sourceType !== "agent-commission") {
       throw new Error(
         "Bút toán hóa đơn nhà cung cấp phải được kiểm tra tại hàng công nợ cùng hồ sơ nguồn.",
       );
@@ -324,17 +325,26 @@ export async function reviewAccountingJournalAction(
     }
 
     const envelope = canonicalRequest("review-journal", user.id, input);
-    const persisted = await reviewAccountingJournal(
-      journal.id,
-      input.expectedVersion,
-      input.decision as AccountingReviewDecision,
-      {
-        actorAccountId: user.id,
-        note: input.note,
-        ...envelope,
-      },
-    );
+    const persisted =
+      journal.sourceType === "agent-commission"
+        ? await reviewAgentCommissionJournal(
+            journal.id,
+            input.expectedVersion,
+            input.decision as AccountingReviewDecision,
+            { actorAccountId: user.id, note: input.note, idempotencyKey: envelope.idempotencyKey },
+          )
+        : await reviewAccountingJournal(
+            journal.id,
+            input.expectedVersion,
+            input.decision as AccountingReviewDecision,
+            {
+              actorAccountId: user.id,
+              note: input.note,
+              ...envelope,
+            },
+          );
     revalidateAccountingViews();
+    if (journal.sourceType === "agent-commission") revalidatePath("/erp/dai-ly");
     return {
       status: "success",
       message:

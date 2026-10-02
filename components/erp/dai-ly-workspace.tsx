@@ -35,6 +35,7 @@ export function DaiLyWorkspace({
   maQr,
   duongGoc,
   laGiamDoc,
+  duocGhiChi,
 }: {
   dong: DongDaiLy[];
   thang: string;
@@ -43,6 +44,7 @@ export function DaiLyWorkspace({
   maQr: Record<string, string>;
   duongGoc: string;
   laGiamDoc: boolean;
+  duocGhiChi: boolean;
 }) {
   const daKhep = thang < thangHienTai;
   const tongHoaHong = dong.reduce((s, d) => s + d.hoaHong, 0);
@@ -79,7 +81,7 @@ export function DaiLyWorkspace({
 
       <ul className="space-y-4">
         {dong.map((d) => (
-          <TheDaiLy key={d.id} d={d} thang={thang} daKhep={daKhep} maQr={maQr[d.id] ?? ""} duongGoc={duongGoc} laGiamDoc={laGiamDoc} />
+          <TheDaiLy key={d.id} d={d} thang={thang} daKhep={daKhep} maQr={maQr[d.id] ?? ""} duongGoc={duongGoc} laGiamDoc={laGiamDoc} duocGhiChi={duocGhiChi} />
         ))}
       </ul>
 
@@ -95,6 +97,7 @@ function TheDaiLy({
   maQr,
   duongGoc,
   laGiamDoc,
+  duocGhiChi,
 }: {
   d: DongDaiLy;
   thang: string;
@@ -102,6 +105,7 @@ function TheDaiLy({
   maQr: string;
   duongGoc: string;
   laGiamDoc: boolean;
+  duocGhiChi: boolean;
 }) {
   const [chiState, chiAction, dangChi] = useActionState(ghiDaChiAction, RONG);
   const [khoaState, khoaAction, dangKhoa] = useActionState(capKhoaCongAction, RONG);
@@ -143,11 +147,33 @@ function TheDaiLy({
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {d.daChi !== null ? (
-          <p className="text-sm font-bold text-[#245b45]">
-            Đã chi {tien(d.daChi)} cho {tenThang(thang)}
+          <div data-testid={`chi-${d.ma}`} data-trang-thai={d.trangThaiChi ?? ""} className="text-sm">
+            <p className="font-bold text-[#245b45]">
+              {d.trangThaiChi === "da-ghi-so"
+                ? `Đã chi ${tien(d.daChi)} cho ${tenThang(thang)} · đã ghi sổ`
+                : `Đã ghi chi ${tien(d.daChi)} cho ${tenThang(thang)} · chờ kế toán trưởng kiểm tra bút toán`}
+            </p>
+            {d.butToan.length ? (
+              <p className="mt-1 text-xs text-[#59654b]">
+                Bút toán Nợ 6418 / Có 1121, chia theo cơ sở khách qua cổng:{" "}
+                <Link href="/erp/finance" className="font-bold text-[#183f34] underline underline-offset-2">
+                  {d.butToan.filter((b) => b.trangThai !== "checker-returned").map((b) => b.ma).join(", ")}
+                </Link>
+              </p>
+            ) : null}
+          </div>
+        ) : daKhep && !duocGhiChi ? (
+          <p className="text-sm text-[#59654b]">
+            {d.trangThaiChi === "bi-tra-lai" ? `Lần chi trước đã bị trả lại: ${d.lyDoTra ?? ""}. ` : ""}
+            Giám đốc hoặc kế toán tổng hợp ghi chi; kế toán trưởng kiểm tra bút toán ở màn Tài chính.
           </p>
         ) : daKhep ? (
           <form action={chiAction} className="flex flex-wrap items-center gap-2">
+            {d.trangThaiChi === "bi-tra-lai" ? (
+              <p data-testid={`chi-tra-lai-${d.ma}`} className="w-full rounded-xl bg-[#fff4e5] px-3 py-2 text-sm text-[#7a4a12]">
+                Kế toán trưởng đã trả lại lần chi trước: {d.lyDoTra}. Bổ sung rồi ghi chi lại.
+              </p>
+            ) : null}
             <input type="hidden" name="id" value={d.id} />
             <input type="hidden" name="thang" value={thang} />
             <input

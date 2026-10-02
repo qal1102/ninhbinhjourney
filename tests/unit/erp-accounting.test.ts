@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  accountingJournalSourceLabel,
   accountingJournalTotals,
   assertBalancedAccountingJournal,
   createAccountingReversal,
@@ -134,5 +135,17 @@ describe("ERP accounting control plane", () => {
     ).toThrow(/đang chờ kiểm tra/);
     expect(nextAccountingPeriodStatus("open", "lock")).toBe("locked");
     expect(nextAccountingPeriodStatus("locked", "reopen")).toBe("open");
+  });
+});
+
+describe("nhãn nguồn bút toán", () => {
+  it("mỗi nguồn một tên riêng; nộp quỹ không còn bị gọi nhầm là doanh thu ca", () => {
+    const nhan = (sourceType: AccountingJournal["sourceType"]) =>
+      accountingJournalSourceLabel({ sourceType, reversalOfJournalId: null });
+    expect(nhan("shift-close")).toBe("Doanh thu ca");
+    expect(nhan("supplier-invoice")).toBe("Hóa đơn nhà cung cấp");
+    expect(nhan("cash-deposit")).toBe("Nộp quỹ vào ngân hàng");
+    expect(nhan("agent-commission")).toBe("Hoa hồng đại lý");
+    expect(accountingJournalSourceLabel({ sourceType: "agent-commission", reversalOfJournalId: "x" })).toBe("Đảo bút toán");
   });
 });

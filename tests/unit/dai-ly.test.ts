@@ -40,7 +40,25 @@ describe("đại lý & hoa hồng", () => {
     expect(d.tyLe).toBe(8);
     expect(d.hoaHong).toBe(240000);
     expect(d.daChi).toBeNull();
+    expect(d.trangThaiChi).toBeNull();
+    expect(d.butToan).toEqual([]);
     expect(docBangThang(null)).toEqual([]);
+  });
+
+  it("đọc lần chi đang ở đâu: chờ duyệt, đã ghi sổ hay bị trả lại kèm lý do", () => {
+    const [choDuyet, biTra] = docBangThang([
+      {
+        id: "a", ma: "HONGHA", ten: "Hồng Hà", da_chi: "9548800", trang_thai_chi: "cho-duyet",
+        but_toan: [{ ma: "HH-HONGHA-202609-AF760D-1", trang_thai: "pending-checker" }, { ma: 7 }],
+      },
+      { id: "b", ma: "VANLONG", ten: "Vân Long", da_chi: null, trang_thai_chi: "bi-tra-lai", ly_do_tra: "Thiếu chứng từ" },
+    ]);
+    expect(choDuyet.daChi).toBe(9548800);
+    expect(choDuyet.trangThaiChi).toBe("cho-duyet");
+    expect(choDuyet.butToan).toEqual([{ ma: "HH-HONGHA-202609-AF760D-1", trangThai: "pending-checker" }]);
+    expect(biTra.trangThaiChi).toBe("bi-tra-lai");
+    expect(biTra.lyDoTra).toBe("Thiếu chứng từ");
+    expect(docBangThang([{ id: "c", ma: "ABCD", ten: "X", trang_thai_chi: "la" }])[0].trangThaiChi).toBeNull();
   });
 
   it("cổng đại lý che mã đơn và gọi tên tình trạng", () => {

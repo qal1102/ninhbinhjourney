@@ -7,6 +7,7 @@ import {
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGES } from "@/content/packages";
+import { goiDaHetMua } from "@/content/packages-en";
 
 export const metadata = {
   // Trang chủ đổi ngôn ngữ bằng `?lang=`; các biến thể ấy cùng một nội dung.
@@ -63,7 +64,9 @@ export default async function Home({ searchParams }: PageProps) {
         // dữ liệu ấy nằm ngay trong component chứ chưa tách ra kho riêng;
         // tách được thì thay bằng `.length`.
         soHoSo: 5,
-        soGoi: PACKAGES.length,
+        // Chỉ đếm gói còn bán: Bàn Trăng hết mùa vẫn trưng ở /packages nhưng
+        // không đặt được, nên cổng "Đặt chỗ" không tính nó.
+        soGoi: PACKAGES.filter((goi) => !goiDaHetMua(goi)).length,
       }}
     />
   );

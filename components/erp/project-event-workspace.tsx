@@ -114,7 +114,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
             <p className="mt-3 text-sm text-white/65">{event.nextMilestone}</p>
           </div>
           <div className="flex gap-2">
-            <span className="rounded-xl bg-[#c85b45] px-4 py-3 text-sm font-black">{urgentCount} việc cần theo dõi</span>
+            <span className={`rounded-xl px-4 py-3 text-sm font-black ${urgentCount > 0 ? "bg-[#c85b45]" : "bg-white/12"}`}>{urgentCount > 0 ? `${urgentCount} việc sắp tới hạn hoặc trễ` : "Chưa có việc nào trễ hạn"}</span>
           </div>
         </div>
         <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/12">
@@ -150,7 +150,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
       <section className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
         <article className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm">
           <div className="border-b border-[#e3e9e5] p-5 sm:p-6">
-            <p className="text-xs font-black uppercase tracking-[0.17em] text-[#9a5f32]">WBS theo nhóm việc</p>
+            <p className="text-xs font-black uppercase tracking-[0.17em] text-[#9a5f32]">Chia theo nhóm việc</p>
             <h2 className="mt-2 text-2xl font-black text-[#20342c]">Gói việc</h2>
           </div>
           <div className="divide-y divide-[#e7ece9]">

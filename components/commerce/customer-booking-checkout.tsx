@@ -10,6 +10,7 @@ import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import { getOrCreateCustomerAnonymousId } from "@/lib/customer-data/browser-tracking";
 import { formatVietnameseDate } from "@/lib/vietnamese-date";
 import { maVung, type NgonNgu } from "@/lib/ngon-ngu";
+import { BenDoTienTrinh } from "./ben-do-tien-trinh";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 
 type VisitorGroupApiResponse =
@@ -650,6 +651,9 @@ export function CustomerBookingCheckout({
 
   return (
     <div className="grid gap-7 lg:grid-cols-[1.05fr_0.78fr]">
+      <div className="lg:col-span-2">
+        <BenDoTienTrinh buoc={buocChi} lang={lang} />
+      </div>
       <section className="overflow-hidden rounded-[2rem] border border-[#d4d1c7] bg-white shadow-[0_24px_70px_rgba(24,63,52,0.08)]">
         <div className="border-b border-[#e5e1d8] bg-[#fbfaf6] p-6 sm:p-8">
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#9a6328]">

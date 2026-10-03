@@ -15,6 +15,7 @@ import {
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import { ConTroNhan } from "@/components/shared/con-tro-nhan";
+import { AnhNhu } from "@/components/shared/anh-nhu";
 import {
   checkoutHref,
   packageCatalogBackHref,
@@ -55,7 +56,8 @@ function PackageCard({
   return (
     <article
       id={`goi-${item.slug}`}
-      className={`scroll-mt-6 overflow-hidden rounded-3xl border bg-white shadow-sm ${suggested ? "border-[#d58c35] ring-2 ring-[#d58c35]/50" : "border-[#d7d5cd]"} ${
+      data-anh-nhu
+      className={`ve-giay relative scroll-mt-6 overflow-hidden rounded-3xl border bg-white shadow-sm ${suggested ? "border-[#d58c35] ring-2 ring-[#d58c35]/50" : "border-[#d7d5cd]"} ${
         featured ? "xl:grid xl:grid-cols-[1.1fr_1fr]" : `xl:flex xl:items-stretch ${reversed ? "xl:flex-row-reverse" : ""}`
       }`}
     >
@@ -98,7 +100,7 @@ function PackageCard({
               </p>
             ) : null}
           </div>
-          <div className="max-w-full rounded-2xl bg-[#f4f0e7] px-4 py-3 text-left min-[280px]:text-right">
+          <div className="cuong-ve max-w-full rounded-2xl bg-[#f4f0e7] px-4 py-3 text-left min-[280px]:text-right">
             <p className="break-words font-display text-xl leading-tight">
               {giaGoi(item, lang)}
             </p>
@@ -185,6 +187,7 @@ export default async function PackagesPage({
       className="min-h-screen bg-[#f4f0e7] px-4 py-10 text-[#151a17] min-[280px]:px-5 sm:px-8 lg:py-16"
     >
       <ConTroNhan />
+      <AnhNhu />
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between gap-4">
           <Link

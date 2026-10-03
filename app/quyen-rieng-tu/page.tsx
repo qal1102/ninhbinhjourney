@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ProtectedMailLink } from "@/components/discovery/protected-mail-link";
 import { CONTACT } from "@/content/contact";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { NuiSuong } from "@/components/shared/nui-suong";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
@@ -116,6 +117,7 @@ export default async function PrivacyPage({
           </div>
         </div>
       </header>
+      <NuiSuong hat="quyen-rieng-tu" co="gon" />
 
       <article className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
         {lang === "en" ? (

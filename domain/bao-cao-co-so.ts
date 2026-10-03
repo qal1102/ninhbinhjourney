@@ -18,6 +18,8 @@ export type NgayBaoCao = {
   khachWebDaVao: number;
   tienQuay: number;
   phieuQuay: number;
+  /** Phần của cơ sở này trong tiền đơn web, theo ngày đặt (migration 103). */
+  tienWeb: number;
 };
 
 export type SoLieuBaoCao = {
@@ -85,6 +87,7 @@ export function docSoLieuBaoCao(value: unknown): SoLieuBaoCao {
         khachWebDaVao: soAm(hang.khach_web_da_vao),
         tienQuay: soAm(hang.tien_quay),
         phieuQuay: soAm(hang.phieu_quay),
+        tienWeb: soAm(hang.tien_web),
       }];
     }),
     gio: mang("gio").flatMap((item) => {

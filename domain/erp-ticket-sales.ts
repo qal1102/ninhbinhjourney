@@ -38,7 +38,13 @@ export type TicketSalesPeriodStat = {
    * dòng phiếu lúc bán. `null` khi chưa đọc được từ kho (đường đếm cũ).
    */
   counterRevenueVnd?: number | null;
-  /** Số tấm vé trong kỳ không có giá trên vé (vé web theo gói, vé gieo mẫu). */
+  /**
+   * Tiền vé web phần của cơ sở này (migration 103): mỗi đơn web chia về từng
+   * tấm vé theo số lượt × giá vé quầy người lớn của cơ sở tại ngày đi.
+   */
+  webRevenueVnd?: number | null;
+  webTicketCount?: number | null;
+  /** Số tấm vé trong kỳ không có giá nào: không bán ở quầy, không thuộc đơn web (vé gieo mẫu cũ). */
   unpricedTicketCount?: number | null;
 };
 
@@ -172,6 +178,8 @@ export function parseTicketSalesRpc(value: unknown): {
       entryCount,
       changePercent: phanTramThayDoi(entryCount, so(found?.previous_entry_count)),
       counterRevenueVnd: found ? so(found.counter_revenue_vnd) : null,
+      webRevenueVnd: found && found.web_revenue_vnd !== undefined ? so(found.web_revenue_vnd) : null,
+      webTicketCount: found && found.web_ticket_count !== undefined ? so(found.web_ticket_count) : null,
       unpricedTicketCount: found ? so(found.unpriced_ticket_count) : null,
     };
   });

@@ -71,6 +71,7 @@ export function BaoCaoWorkspace({ site, baoCao }: { site: ErpSite; baoCao: BaoCa
   const tongKhach28 = soLieu.ngay.slice(-28).reduce((t, d) => t + d.khachVao, 0);
   const tongKhachTruoc = soLieu.ngay.slice(-56, -28).reduce((t, d) => t + d.khachVao, 0);
   const tienQuay28 = soLieu.ngay.slice(-28).reduce((t, d) => t + d.tienQuay, 0);
+  const tienWeb28 = soLieu.ngay.slice(-28).reduce((t, d) => t + d.tienWeb, 0);
   const tongGio = soLieu.gio.reduce((t, g) => t + g.khach, 0);
   const gioDong = [...soLieu.gio].sort((a, b) => b.khach - a.khach).slice(0, 2).map((g) => g.gio).sort((a, b) => a - b);
   const maxTuan = Math.max(1, ...tuan.map((t) => t.khach));
@@ -94,7 +95,7 @@ export function BaoCaoWorkspace({ site, baoCao }: { site: ErpSite; baoCao: BaoCa
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           ["Khách qua cổng · 28 ngày", soVi(tongKhach28), bienDong === null ? "Chưa có kỳ trước để so" : `${bienDong > 0 ? "+" : ""}${bienDong}% so với 28 ngày trước`],
-          ["Tiền bán tại quầy · 28 ngày", tien(tienQuay28), `${soVi(soLieu.ngay.slice(-28).reduce((t, d) => t + d.phieuQuay, 0))} phiếu`],
+          ["Tiền vé · 28 ngày", tien(tienQuay28 + tienWeb28), `Quầy ${tien(tienQuay28)} (${soVi(soLieu.ngay.slice(-28).reduce((t, d) => t + d.phieuQuay, 0))} phiếu) · web ${tien(tienWeb28)}`],
           ["Giờ đông nhất", gioDong.map((g) => `${g}h`).join(" và ") || "—", tongGio ? `${Math.round(((soLieu.gio.find((g) => g.gio === gioDong[0])?.khach ?? 0) / tongGio) * 100)}% khách vào trong giờ ${gioDong[0]}h` : ""],
           ["Khách đặt web không tới", khongDen === null ? "—" : `${khongDen.toLocaleString("vi-VN")}%`, "Tính trên các ngày đã qua"],
         ].map(([nhan, gia, ghiChu]) => (

@@ -18,7 +18,7 @@ function chuoi(heSoGan = 1): NgayBaoCao[] {
     const thu = new Date(`${ngay}T00:00:00Z`).getUTCDay();
     const goc = thu === 0 || thu === 6 ? 200 : 100;
     const khach = Math.round(goc * (i >= 28 ? heSoGan : 1));
-    return { ngay, khachVao: khach, khachCoVe: khach, khachWeb: 10, khachWebDaVao: 9, tienQuay: khach * 1000, phieuQuay: 1 };
+    return { ngay, khachVao: khach, khachCoVe: khach, khachWeb: 10, khachWebDaVao: 9, tienQuay: khach * 1000, phieuQuay: 1, tienWeb: 0 };
   });
 }
 
@@ -74,7 +74,7 @@ describe("Báo cáo & dự báo một cơ sở", () => {
       da_dat: "khong",
       suc_chua_gio: null,
     });
-    expect(doc.ngay).toEqual([{ ngay: "2026-09-01", khachVao: 12, khachCoVe: 0, khachWeb: 0, khachWebDaVao: 0, tienQuay: 0, phieuQuay: 0 }]);
+    expect(doc.ngay).toEqual([{ ngay: "2026-09-01", khachVao: 12, khachCoVe: 0, khachWeb: 0, khachWebDaVao: 0, tienQuay: 0, phieuQuay: 0, tienWeb: 0 }]);
     expect(doc.gio).toEqual([{ gio: 8, khach: 0 }]);
     expect(doc.daDat).toEqual([]);
     expect(doc.sucChuaGio).toBeNull();

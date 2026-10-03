@@ -119,6 +119,21 @@ describe("QA-ERP-TICKET-05 — đọc kết quả đếm trong kho", () => {
     expect(ketQua?.recent[0].priceVnd).toBe(500000);
   });
 
+  it("mang phần tiền web của cơ sở (103); kho cũ không trả thì là chưa đọc được, không phải 0 đồng", () => {
+    const moi = parseTicketSalesRpc({
+      periods: [{ period: "day", ticket_count: 3, entry_count: 5, previous_entry_count: 0, counter_revenue_vnd: 250000, web_revenue_vnd: 879032, web_ticket_count: 1, unpriced_ticket_count: 0 }],
+      product_shares: [],
+      recent: [],
+    });
+    expect(moi?.periods[0]).toMatchObject({ counterRevenueVnd: 250000, webRevenueVnd: 879032, webTicketCount: 1 });
+    const cu = parseTicketSalesRpc({
+      periods: [{ period: "day", ticket_count: 1, entry_count: 1, previous_entry_count: 0, counter_revenue_vnd: 0, unpriced_ticket_count: 1 }],
+      product_shares: [],
+      recent: [],
+    });
+    expect(cu?.periods[0].webRevenueVnd).toBeNull();
+  });
+
   it("dữ liệu hỏng thì trả null để kho lùi về đường đếm cũ", () => {
     expect(parseTicketSalesRpc(null)).toBeNull();
     expect(parseTicketSalesRpc({ periods: "khong" })).toBeNull();

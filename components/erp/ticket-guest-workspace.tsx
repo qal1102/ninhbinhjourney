@@ -682,20 +682,25 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           </p>
         ) : null}
         {typeof selected.counterRevenueVnd === "number" ? (
-          <div className="mt-3 rounded-xl border border-[#d8e0db] p-4">
-            <p className="text-xs text-[#718078]">Tiền bán vé tại quầy</p>
-            <p className="mt-1 text-2xl font-black tabular-nums">{selected.counterRevenueVnd.toLocaleString("vi-VN")} đ</p>
-            <p className="mt-1 text-xs leading-4 text-[#8a958f]">
-              cộng từ thành tiền chép trên phiếu lúc bán; phiếu đã huỷ tính 0 đ
+          <div className="mt-3 rounded-xl border border-[#d8e0db] p-4" data-testid="tien-ve-co-so">
+            <p className="text-xs text-[#718078]">Tiền vé của cơ sở</p>
+            <p className="mt-1 text-2xl font-black tabular-nums">
+              {(selected.counterRevenueVnd + (selected.webRevenueVnd ?? 0)).toLocaleString("vi-VN")} đ
+            </p>
+            <p className="mt-1 text-xs leading-5 text-[#8a958f]">
+              Quầy {selected.counterRevenueVnd.toLocaleString("vi-VN")} đ (thành tiền chép trên phiếu lúc bán; phiếu đã huỷ tính 0 đ)
+              {typeof selected.webRevenueVnd === "number"
+                ? ` · Web ${selected.webRevenueVnd.toLocaleString("vi-VN")} đ từ ${(selected.webTicketCount ?? 0).toLocaleString("vi-VN")} tấm vé, phần của cơ sở này trong đơn gói: chia theo số lượt × giá vé quầy người lớn từng cơ sở`
+                : ""}
               {selected.unpricedTicketCount
-                ? ` · ${selected.unpricedTicketCount.toLocaleString("vi-VN")} tấm vé khác chưa có giá trên vé (vé web theo gói, vé mẫu)`
+                ? ` · ${selected.unpricedTicketCount.toLocaleString("vi-VN")} tấm vé mẫu cũ không có giá`
                 : ""}
             </p>
           </div>
         ) : null}
         <p className="mt-4 text-xs text-[#8a958f]">
           {typeof selected.counterRevenueVnd === "number"
-            ? "Lượt khách và số tấm vé đếm trong kho từ mọi vé còn hiệu lực. Vé web mua theo gói gồm nhiều điểm nên chưa chia được giá cho từng cơ sở, không cộng vào ô tiền."
+            ? "Lượt khách và số tấm vé đếm trong kho từ mọi vé còn hiệu lực. Đơn web gồm nhiều điểm được chia tiền về từng cơ sở theo giá vé quầy, nên cộng tiền bốn cơ sở đúng bằng tiền các đơn."
             : "Đếm trực tiếp từ vé đã phát hành, không phải doanh thu quy đổi — hệ thống chưa lưu giá bán trên từng vé."}
         </p>
       </section>

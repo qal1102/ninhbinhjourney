@@ -2191,3 +2191,51 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     transition: opacity 0.15s linear;
   }
 }
+
+/*
+ * KY_NANG_GIAO_DIEN D1 — dấu mộc trên hộ chiếu Ninh Bình
+ * (components/commerce/ho-so-khach-view.tsx). Con dấu son nằm nghiêng trên góc
+ * ảnh nơi đã đến, nền kem như giấy để đọc được trên ảnh tối. Mở hộ chiếu thì
+ * dấu dập xuống từng chiếc: phóng to, rơi, nảy nhẹ rồi nằm yên.
+ */
+.dau-moc {
+  animation: dau-moc-dap 0.55s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+  background: rgba(251, 247, 238, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(21, 26, 23, 0.25);
+  color: #b23a24;
+  height: 4.6rem;
+  position: absolute;
+  right: 0.45rem;
+  top: 0.45rem;
+  transform: rotate(-11deg);
+  width: 4.6rem;
+}
+
+.dau-moc svg {
+  display: block;
+  height: 100%;
+  mix-blend-mode: multiply;
+  width: 100%;
+}
+
+@keyframes dau-moc-dap {
+  0% {
+    opacity: 0;
+    transform: rotate(-24deg) scale(1.9);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-9deg) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-11deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dau-moc {
+    animation: none;
+  }
+}

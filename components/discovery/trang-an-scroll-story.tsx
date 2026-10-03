@@ -57,6 +57,8 @@ export function TrangAnScrollStory({
         const progressCurrent = root.querySelector<HTMLElement>("[data-story-current]");
         const progressTotal = root.querySelector<HTMLElement>("[data-story-total]");
         const stops = Array.from(root.querySelectorAll<HTMLElement>("[data-story-stop]"));
+        const route = root.querySelector<HTMLElement>("[data-story-route]");
+        const boat = root.querySelector<HTMLElement>("[data-story-boat]");
 
         if (!scene || beatNodes.length < 2) return;
 
@@ -173,7 +175,29 @@ export function TrangAnScrollStory({
           }
         });
 
+        // Thuyền đứng ở đầu nét tuyến đã vẽ: đọc đúng độ dài đang hiện của nét
+        // ở mỗi khung hình (kể cả lúc scrub còn trễ), nên không bao giờ chạy
+        // trước hay tụt sau đường vẽ.
+        const datThuyen = () => {
+          if (!routeProgress || !route || !boat) return;
+          const offset = Number(gsap.getProperty(routeProgress, "strokeDashoffset")) || 0;
+          const daVe = Math.max(0, Math.min(routeLength, routeLength - offset));
+          const sx = route.clientWidth / 88;
+          const sy = route.clientHeight / 356;
+          const diem = routeProgress.getPointAtLength(daVe);
+          const truoc = routeProgress.getPointAtLength(Math.max(0, daVe - 2));
+          const sau = routeProgress.getPointAtLength(Math.min(routeLength, daVe + 2));
+          const goc = (Math.atan2((sau.y - truoc.y) * sy, (sau.x - truoc.x) * sx) * 180) / Math.PI + 90;
+          boat.style.transform = `translate(${diem.x * sx}px, ${diem.y * sy}px) rotate(${goc.toFixed(1)}deg)`;
+          boat.dataset.ready = "true";
+        };
+        timeline.eventCallback("onUpdate", datThuyen);
+        ScrollTrigger.addEventListener("refresh", datThuyen);
+        datThuyen();
+
         return () => {
+          ScrollTrigger.removeEventListener("refresh", datThuyen);
+          if (boat) delete boat.dataset.ready;
           root.style.removeProperty("--trang-an-accent");
         };
       });
@@ -201,11 +225,24 @@ export function TrangAnScrollStory({
           <h2 className={styles.title}>{title}</h2>
         </header>
 
-        <div className={styles.route} aria-hidden="true">
+        <div className={styles.route} data-story-route aria-hidden="true">
           <svg viewBox="0 0 88 356" preserveAspectRatio="none" focusable="false">
             <path className={styles.routeBase} d="M42 4C17 40 75 70 43 110S17 182 45 220 71 286 42 352" />
             <path className={styles.routeProgress} data-story-route-progress d="M42 4C17 40 75 70 43 110S17 182 45 220 71 286 42 352" />
           </svg>
+          {/*
+            KY_NANG_GIAO_DIEN A2: thuyền nan nhìn từ trên xuống (thân hình lá,
+            chấm tròn là chiếc nón lá của người chèo), trôi ở đầu nét tuyến
+            đang vẽ và xoay mũi theo khúc quanh. Vẽ bằng HTML chứ không trong
+            SVG: SVG giãn `preserveAspectRatio="none"` sẽ bóp méo con thuyền.
+          */}
+          <span className={styles.boat} data-story-boat>
+            <svg viewBox="0 0 10 26" focusable="false">
+              <path d="M5 0.5C8.6 5 8.8 20 5 25.5 1.2 20 1.4 5 5 0.5Z" fill="currentColor" />
+              <circle cx="5" cy="15" r="2.3" fill="#E7B96A" />
+              <path d="M5 15 L9.6 21.5" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" />
+            </svg>
+          </span>
         </div>
 
         <ol className={styles.stopRail} aria-label={progressLabel}>

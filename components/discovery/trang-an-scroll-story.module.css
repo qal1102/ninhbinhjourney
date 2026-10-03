@@ -105,7 +105,8 @@
 
 .route,
 .stopRail,
-.counter {
+.counter,
+.boat {
   display: none;
 }
 
@@ -159,10 +160,37 @@
     pointer-events: none;
   }
 
-  .route svg {
+  .route > svg {
     display: block;
     width: 100%;
     height: 100%;
+  }
+
+  /* A2: thuyền nan trôi ở đầu nét tuyến. Vị trí và góc do JS đặt qua transform. */
+  .boat {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 0.82rem;
+    height: 2.1rem;
+    margin: -1.05rem 0 0 -0.41rem;
+    color: rgb(255 253 247 / 94%);
+    filter: drop-shadow(0 0 0.35rem rgb(0 0 0 / 55%));
+    opacity: 0;
+    transition: opacity 500ms ease;
+    will-change: transform;
+  }
+
+  .boat svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .boat[data-ready="true"] {
+    opacity: 1;
   }
 
   .routeBase,

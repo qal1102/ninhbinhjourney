@@ -23,6 +23,36 @@ const CACH_TRA_EN: Record<string, string> = {
   "Đã huỷ vì khách không đến": "Cancelled, guest did not come",
   "Chờ thu tại điểm": "To pay on site",
 };
+/**
+ * Dấu mộc (KY_NANG_GIAO_DIEN D1): con dấu tròn màu son như dấu nhập cảnh trên
+ * hộ chiếu, ghi đúng ngày khách qua cổng lần đầu. Mở hộ chiếu thì các dấu lần
+ * lượt dập xuống (`.dau-moc` trong globals.css); giảm chuyển động thì dấu nằm
+ * yên sẵn. Chữ "Đã đến" vẫn đọc được bằng trình đọc màn hình.
+ */
+function DauMoc({ id, ngay, vung, thuTu, nhan }: { id: string; ngay: string; vung: string; thuTu: number; nhan: string }) {
+  const d = new Date(ngay);
+  const ngayThang = d.toLocaleDateString(vung, { day: "2-digit", month: "2-digit", timeZone: "Asia/Ho_Chi_Minh" });
+  const nam = d.toLocaleDateString(vung, { year: "numeric", timeZone: "Asia/Ho_Chi_Minh" });
+  const vong = `dau-moc-${id}`;
+  return (
+    <span className="dau-moc" style={{ animationDelay: `${0.25 + thuTu * 0.22}s` }}>
+      <span className="sr-only">{nhan}</span>
+      <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+          <path id={vong} d="M50 50 m-33 0 a33 33 0 1 1 66 0 a33 33 0 1 1 -66 0" />
+        </defs>
+        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="3.2" />
+        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="1.1" />
+        <text fontSize="8.6" fontWeight="800" letterSpacing="1.6" fill="currentColor">
+          <textPath href={`#${vong}`}>NINH BÌNH JOURNEY · {nhan.toUpperCase()} ·</textPath>
+        </text>
+        <text x="50" y="53" textAnchor="middle" fontSize="15" fontWeight="800" fill="currentColor">{ngayThang}</text>
+        <text x="50" y="66" textAnchor="middle" fontSize="9" fontWeight="700" letterSpacing="1.5" fill="currentColor">{nam}</text>
+      </svg>
+    </span>
+  );
+}
+
 function tenGoi(ten: string, lang: "vi" | "en") {
   if (lang === "vi") return ten;
   const goi = PACKAGES.find((item) => item.name === ten);
@@ -78,7 +108,7 @@ export function HoSoKhachView({
       <section className="mt-6">
         <h3 className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">{t("Những nơi đã sáng", "Places lit up")}</h3>
         <ul className={`mt-3 grid grid-cols-2 gap-3 ${xemThu ? "" : "sm:grid-cols-4"}`}>
-          {noi.map((diem) => {
+          {noi.map((diem, viTri) => {
             const den = daDen.get(diem.id);
             return (
               <li
@@ -95,7 +125,7 @@ export function HoSoKhachView({
                     className={`object-cover ${den ? "" : "grayscale opacity-45"}`}
                   />
                   {den ? (
-                    <span className="absolute right-2 top-2 rounded-full bg-[#d58c35] px-2 py-0.5 text-xs font-extrabold text-[#151a17]">{t("Đã đến", "Visited")}</span>
+                    <DauMoc id={diem.id} ngay={den.lanDau} vung={vung} thuTu={viTri} nhan={t("Đã đến", "Visited")} />
                   ) : null}
                 </div>
                 <div className="p-3">

@@ -26,8 +26,8 @@ export default async function ErpThuyenPage() {
         <p className="text-xs font-black uppercase tracking-[0.16em] text-[#668078]">Thuyền trên sông</p>
         <h1 className="font-display mt-1 text-4xl leading-tight text-[#183f34] sm:text-6xl">Đang chèo</h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[#68776f]">
-          Nhận khách xong thì bấm bắt đầu chuyến. Quản lý cơ sở thấy thuyền của bạn trên bản đồ, biết bạn đang ở đoạn nào và còn bao
-          lâu về bến. Vị trí chỉ gửi trong lúc chuyến đang mở; bấm &quot;Về bến&quot; là dừng hẳn.
+          Nhận khách xong thì bấm bắt đầu chuyến. Quản lý cơ sở thấy thuyền của bạn trên bản đồ, biết bạn đang ở đoạn
+          nào của tuyến. Vị trí chỉ gửi trong lúc chuyến đang mở; bấm &quot;Về bến&quot; là dừng hẳn.
         </p>
       </div>
       {!thuyenCoKho() ? (

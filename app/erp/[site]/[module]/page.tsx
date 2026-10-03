@@ -31,6 +31,8 @@ import { listOnSiteDueOrders } from "@/lib/erp/on-site-due-repository";
 import { readShiftCareBrief } from "@/lib/erp/shift-care-repository";
 import QRCode from "qrcode";
 import { HangChoPanel } from "@/components/erp/hang-cho-panel";
+import { BanDoThuyenTre } from "@/components/erp/ban-do-thuyen-tre";
+import { laCoSoThuyen, TUYEN_THUYEN } from "@/domain/thuyen-song";
 import { BEN_CO_HANG_CHO, benCuaCoSo } from "@/domain/hang-cho";
 import { docHangChoErp } from "@/lib/hang-cho-repository";
 import { absoluteUrl } from "@/lib/site-url";
@@ -262,6 +264,25 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         ) : (
           <p role="status" data-testid="hang-cho-erp-chua-co" className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">
             Hàng chờ ảo {BEN_CO_HANG_CHO[ben].ten}: {hangCho?.trangThai === "loi" ? hangCho.loiNhan : "chưa nối kho dữ liệu ở bản chạy này."}
+          </p>
+        )
+      ) : null}
+      {moduleDefinition.id === "suc-chua" && laCoSoThuyen(site.id) ? (
+        user.role === "director" || user.role === "manager" ? (
+          <section
+            className="mb-8 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-6"
+            data-chi="ban-do-thuyen"
+            data-chi-loi="Bản đồ sống: thuyền thật theo điện thoại người chèo, thuyền mô phỏng để xem thử. Thuyền trượt liên tục dọc tuyến sông thật."
+          >
+            <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Thuyền trên sông · bản đồ sống</p>
+            <h2 className="mt-2 text-xl font-black text-[#20342c]">{TUYEN_THUYEN[site.id].ten}</h2>
+            <div className="mt-4">
+              <BanDoThuyenTre coSo={site.id} xemThuyenThat />
+            </div>
+          </section>
+        ) : (
+          <p className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">
+            Đang chèo đò? Mở <Link href="/erp/thuyen" className="font-bold text-[#183f34] underline underline-offset-4">trang người chèo</Link> để quản lý thấy thuyền của bạn trên bản đồ.
           </p>
         )
       ) : null}

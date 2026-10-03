@@ -251,6 +251,13 @@ export function resolveErpNavigationCommand(rawCommand: string, role: ErpRole, s
   if (asksToOpen && /(trang chu|tong quan|dashboard|man hinh chinh)/.test(command)) return "/erp";
   if (role === "director" && /(huong dan|chi dan|tro giup|trinh dien)/.test(command)) return "/erp/huong-dan";
   if ((role === "director" || role === "accountant" || role === "chief-accountant") && /(dai ly|hoa hong)/.test(command)) return "/erp/dai-ly";
+  if (/(ban do thuyen|thuyen tren song|vi tri thuyen|cheo do|dang cheo)/.test(command)) {
+    if (role === "director" || role === "manager") {
+      const noi = siteIds.includes("trang-an") ? "trang-an" : siteIds.includes("tam-coc") ? "tam-coc" : null;
+      if (noi) return `/erp/${noi}/suc-chua`;
+    }
+    if (siteIds.includes("trang-an") || siteIds.includes("tam-coc")) return "/erp/thuyen";
+  }
   if (/(hang cho|lay so|goi luot|ben do)/.test(command) && siteIds.includes("tam-coc")) return "/erp/tam-coc/suc-chua";
   if (asksToOpen && isSupplierApCommand(command)) {
     if (role === "employee") return null;

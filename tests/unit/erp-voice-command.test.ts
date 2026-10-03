@@ -66,6 +66,9 @@ const cases: Case[] = [
   ["Hôm nay có bao nhiêu khách?", "director", undefined, null],
   ["Có gì cần xử lý gấp?", "director", undefined, null],
   ["Chi phí phải trả hôm nay bao nhiêu?", "director", undefined, null],
+  // Thuyền trên sông (104). "Bến thuyền" trong tên camera không được kéo sang bản đồ thuyền.
+  ["Mở bản đồ thuyền", "director", undefined, "/erp/trang-an/suc-chua"],
+  ["Tôi bắt đầu chèo đò", "employee", undefined, "/erp/thuyen"],
 ];
 
 describe("ERP voice navigation", () => {

@@ -151,6 +151,19 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "thuyen-tren-song",
+        ten: "Thuyền trên sông, bản đồ sống",
+        moTa: "Từng thuyền đang ở đoạn nào của tuyến, theo điện thoại người chèo đò.",
+        vai: "director",
+        duongDan: "/erp/trang-an/suc-chua",
+        diem: "ban-do-thuyen",
+        cacViec: [
+          "Bản đồ vẽ tuyến Tràng An qua Đền Trình, Đền Trần, Phủ Khống; thuyền trượt liên tục, vệt trắng sau thuyền là đường vừa đi.",
+          "Bấm \"Xem nhanh ×30\" để thấy cả đội thuyền mô phỏng chạy; bấm lại là về giờ thật.",
+          "Mở /erp/thuyen trên điện thoại, bấm \"Bắt đầu chuyến\": thuyền thật màu vàng hiện trên bản đồ, kèm vệt cam 20 phút vừa đi.",
+        ],
+      },
+      {
         id: "sop",
         ten: "SOP và diễn tập",
         moTa: "Quy trình mẫu, lịch diễn tập, điều kiện mở cửa.",

@@ -534,6 +534,9 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   DAI_LY_BUT_TOAN_PHAI_QUA_LUONG_DAI_LY: "Bút toán hoa hồng đại lý chỉ được kiểm tra qua màn Tài chính, không sửa trực tiếp.",
   DAI_LY_KHONG_CHIA_DUOC_CO_SO: "Không tìm thấy cổng nào khách của đại lý đã qua, nên chưa chia được bút toán theo cơ sở.",
   DAI_LY_CHIA_LECH: "Chia hoa hồng theo cơ sở bị lệch số, chưa ghi chi. Báo bộ phận kỹ thuật.",
+  THUYEN_KHONG_CO_CHUYEN: "Không thấy chuyến thuyền này của bạn.",
+  THUYEN_CHUYEN_DA_DONG: "Chuyến thuyền đã về bến. Bắt đầu chuyến mới nhé.",
+  THUYEN_VI_TRI_SAI: "Vị trí gửi lên không hợp lệ.",
   PAYMENT_COLLECT_INPUT_INVALID:
     "Thời điểm thu tiền gửi lên chưa hợp lệ.",
   PAYMENT_COLLECT_ACTOR_REQUIRED:

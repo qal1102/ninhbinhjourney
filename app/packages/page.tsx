@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PACKAGES, type PackageCatalogItem } from "@/content/packages";
 import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { NuiSuong } from "@/components/shared/nui-suong";
 import { ch, type NgonNgu } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { getPackageHeroImage } from "@/content/package-images";
@@ -194,6 +195,9 @@ export default async function PackagesPage({
             ← {ch(lang, "Quay lại hành trình", "Back to your journey")}
           </Link>
           <NutNgonNgu lang={lang} />
+        </div>
+        <div className="mt-6 overflow-hidden rounded-3xl">
+          <NuiSuong hat="goi" />
         </div>
         {goiGoiY ? (
           <p className="mt-6 max-w-2xl rounded-2xl border border-[#d58c35]/40 bg-[#fbf3e6] px-5 py-4 text-sm leading-6 text-[#4d4636]">

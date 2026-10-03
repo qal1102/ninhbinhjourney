@@ -27,7 +27,7 @@ import { useReducedMotion } from "@/components/shared/use-reduced-motion";
  * khách chọn giảm chuyển động; máy không có WebGL thì không có gì, ảnh vẫn nguyên.
  */
 
-const MAU_THEO_GIO: Record<DayBand, readonly [number, number, number]> = {
+export const MAU_THEO_GIO: Record<DayBand, readonly [number, number, number]> = {
   dawn: [1, 0.9, 0.86],
   morning: [0.96, 0.98, 1],
   midday: [1, 1, 0.98],

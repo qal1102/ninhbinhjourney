@@ -8,6 +8,7 @@ import {
   type Destination,
   type DestinationFacts,
 } from "@/content/landing-destinations";
+import { SuongVen } from "@/components/shared/suong-ven";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import {
   destinationBackHref,
@@ -76,7 +77,7 @@ export function LandingDestinationPage({
 
       <section
         data-customer-section="destination-hero"
-        className="relative min-h-[68vh] overflow-hidden bg-[#183f34]"
+        className="suong-canh relative min-h-[68vh] overflow-hidden bg-[#183f34]"
       >
         <SharedImageTransition
           name={destinationImageTransitionName(
@@ -95,7 +96,8 @@ export function LandingDestinationPage({
           />
         </SharedImageTransition>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,28,23,.12),rgba(12,28,23,.84))]" />
-        <div className="relative z-10 mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-end px-5 pb-12 text-white sm:px-8 sm:pb-16">
+        <SuongVen />
+        <div className="suong-hien relative z-10 mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-end px-5 pb-12 text-white sm:px-8 sm:pb-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#e7c78d]">
             {destination.category[lang]} · {destination.duration[lang]}
           </p>

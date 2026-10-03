@@ -8,6 +8,7 @@ import { PlanExperience } from "@/components/journey/plan-experience";
 import { SetupState } from "@/components/shared/setup-state";
 import { DESTINATIONS } from "@/content/destinations";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { NuiSuong } from "@/components/shared/nui-suong";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
@@ -73,6 +74,7 @@ export default async function PlanPage({
           </div>
         </div>
       </header>
+      <NuiSuong hat="lap-hanh-trinh" />
       <section data-customer-section="planner-builder" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
           {ch(lang, "Lập hành trình", "Plan my day")}

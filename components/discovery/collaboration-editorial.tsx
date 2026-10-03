@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { WorldSwitcher } from "@/components/discovery/world-switcher";
+import { NuiSuong } from "@/components/shared/nui-suong";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -187,8 +188,9 @@ export function CollaborationEditorial({ lang, source }: { lang: Language; sourc
   return (
     <main ref={rootRef} data-collaboration-dossier data-dossier-active={activeId} className="min-h-screen bg-[#e9e4d9] text-[#1a2922]">
       <WorldSwitcher hienTai="collaboration" lang={lang} source={source} tone="sang" />
+      <NuiSuong hat="hop-tac" />
 
-      <section className="border-b border-[#1a2922]/15 px-5 pb-16 pt-16 sm:px-8 sm:pb-24 sm:pt-28">
+      <section className="border-b border-[#1a2922]/15 px-5 pb-16 pt-8 sm:px-8 sm:pb-24 sm:pt-12">
         <div className="mx-auto grid max-w-[90rem] gap-10 lg:grid-cols-[1.18fr_.82fr] lg:items-end">
           <div><p className="text-[0.62rem] font-extrabold uppercase tracking-[0.31em] text-[#6d5034]">{t.eyebrow}</p><h1 className="font-display mt-6 max-w-5xl text-5xl leading-[0.87] text-[#183f34] sm:text-7xl lg:text-[6.2rem]">{t.title}</h1></div>
           <div className="border-l border-[#a66b3d] pl-5"><p className="text-base leading-8 text-[#516158] sm:text-lg">{t.intro}</p><p data-collaboration-disclaimer className="mt-7 text-[0.63rem] font-extrabold uppercase leading-6 tracking-[0.15em] text-[#765536]">{t.legal}</p></div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { NgheTheoViTri } from "@/components/discovery/nghe-theo-vi-tri";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { NuiSuong } from "@/components/shared/nui-suong";
 import { DESTINATION_PAGE_SLUGS, destinationFacts, destinations } from "@/content/landing-destinations";
 import type { DiemNghe } from "@/domain/thuyet-minh-vi-tri";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
@@ -25,6 +26,9 @@ export default async function NghePage({
   }));
   return (
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-4 py-8 text-[#151a17] sm:px-8 lg:py-14">
+      <div className="mx-auto mb-6 max-w-3xl overflow-hidden rounded-3xl">
+        <NuiSuong hat="nghe" co="gon" />
+      </div>
       <NgheTheoViTri diem={diem} lang={lang}>
         <NutNgonNgu lang={lang} />
       </NgheTheoViTri>

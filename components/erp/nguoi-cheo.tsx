@@ -171,7 +171,12 @@ export function NguoiCheo({
     const giay = tinhTrang.lanGui ? Math.round((bayGio - tinhTrang.lanGui) / 1000) : null;
     const phut = Math.max(0, Math.floor((bayGio - Date.parse(chuyen.batDau)) / 60000));
     return (
-      <section className="rounded-3xl bg-[#183f34] p-6 text-white sm:p-8" data-testid="chuyen-dang-mo">
+      <section
+        className="rounded-3xl bg-[#183f34] p-6 text-white sm:p-8"
+        data-testid="chuyen-dang-mo"
+        data-chi="bat-dau-chuyen"
+        data-chi-loi="Chuyến đang mở: máy gửi vị trí 5 giây một lần. Mở bản đồ ở máy khác để thấy thuyền; xong thì bấm Về bến."
+      >
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#e7c78d]">Đang chèo · {coSo.find((c) => c.id === chuyen.coSo)?.ten}</p>
         <p className="font-display mt-2 text-4xl">Thuyền {chuyen.soThuyen}</p>
         <p className="mt-2 text-white/80">{chuyen.soKhach} khách · đã đi {phut} phút</p>
@@ -205,7 +210,13 @@ export function NguoiCheo({
   }
 
   return (
-    <form onSubmit={batDau} className="rounded-3xl border border-[#d8e0db] bg-white p-6 sm:p-8" data-testid="bat-dau-chuyen">
+    <form
+      onSubmit={batDau}
+      className="rounded-3xl border border-[#d8e0db] bg-white p-6 sm:p-8"
+      data-testid="bat-dau-chuyen"
+      data-chi="bat-dau-chuyen"
+      data-chi-loi="Gõ số thuyền, số khách rồi bấm Bắt đầu chuyến; máy sẽ hỏi quyền đọc vị trí."
+    >
       {coSo.length > 1 ? (
         <fieldset>
           <legend className="text-sm font-bold text-[#27362f]">Bến</legend>

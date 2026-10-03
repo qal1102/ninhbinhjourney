@@ -207,7 +207,7 @@ export function ChiDiem({ dangChuyenVai = false }: { dangChuyenVai?: boolean }) 
               </form>
             ) : (
               <Link href="/erp/huong-dan" className={nutPhu}>
-                ← Hướng dẫn
+                ← Danh sách thử
               </Link>
             )}
             {ke ? (

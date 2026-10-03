@@ -682,7 +682,12 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           </p>
         ) : null}
         {typeof selected.counterRevenueVnd === "number" ? (
-          <div className="mt-3 rounded-xl border border-[#d8e0db] p-4" data-testid="tien-ve-co-so">
+          <div
+            className="mt-3 rounded-xl border border-[#d8e0db] p-4"
+            data-testid="tien-ve-co-so"
+            data-chi="tien-ve-co-so"
+            data-chi-loi="Tiền vé của cơ sở = tiền quầy + phần đơn web chia về cơ sở này. Dòng nhỏ ngay dưới tách từng phần."
+          >
             <p className="text-xs text-[#718078]">Tiền vé của cơ sở</p>
             <p className="mt-1 text-2xl font-black tabular-nums">
               {(selected.counterRevenueVnd + (selected.webRevenueVnd ?? 0)).toLocaleString("vi-VN")} đ

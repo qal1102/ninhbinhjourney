@@ -215,6 +215,7 @@ export function TrangAnScrollStory({
   return (
     <section
       ref={rootRef}
+      id="cau-chuyen-trang-an"
       className={styles.root}
       data-testid="trang-an-scroll-story"
       data-motion={reducedMotion ? "reduced" : "full"}

@@ -5,6 +5,8 @@ import { ExecutiveDashboard } from "@/components/erp/executive-dashboard";
 import { RoleHomeDashboard } from "@/components/erp/role-home-dashboard";
 import { ViecDauTienPanel } from "@/components/erp/viec-dau-tien-panel";
 import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
+import { CHUC_NANG_MOI } from "@/domain/ban-do-chuc-nang";
+import { duongDenMucMoi } from "@/domain/huong-dan";
 import Link from "next/link";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { listStaffDirectory } from "@/lib/erp/staff-directory";
@@ -132,20 +134,56 @@ export default async function ErpHomePage({ searchParams }: Props) {
         />
       ) : null}
 
-      {/* Lối vào màn Hướng dẫn: một dòng, không đẩy bảng số liệu xuống. */}
+      {/* 03/10: chủ dự án vào tài khoản giám đốc mà không tìm ra các phần vừa
+          làm (bản đồ thuyền nằm sâu trong màn Sức chứa). Dòng chữ mời mở
+          Hướng dẫn cũ quá khiêm tốn, nên thay bằng khung liệt kê phần mới,
+          bấm là tới đúng chỗ, kèm lối sang danh sách đầy đủ. */}
       {isDirector ? (
-        <p
+        <section
           data-testid="loi-vao-huong-dan"
-          className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#5f7068]"
+          aria-labelledby="thu-chuc-nang"
+          className="mb-6 rounded-3xl border-2 border-[#e0b979] bg-[#fffaf0] p-5 sm:p-6"
         >
-          <span>Mới dùng, hay cần trình diễn cho khách?</span>
-          <Link
-            href="/erp/huong-dan"
-            className="inline-flex min-h-11 items-center font-black text-[#1f604c] underline underline-offset-4"
-          >
-            Mở Hướng dẫn: bấm một việc là tới đúng chỗ cần bấm →
-          </Link>
-        </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.17em] text-[#9a6328]">
+                Thử chức năng · {CHUC_NANG_MOI.length} phần mới
+              </p>
+              <h2 id="thu-chuc-nang" className="mt-1 text-xl font-black text-[#3f3524] sm:text-2xl">
+                Phần mới làm, bấm là tới đúng chỗ để thử
+              </h2>
+            </div>
+            <Link
+              href="/erp/huong-dan"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-[#183f34] px-5 text-sm font-black text-white transition hover:bg-[#12332a]"
+            >
+              Mở danh sách đầy đủ →
+            </Link>
+          </div>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {CHUC_NANG_MOI.slice(0, 6).map((muc) => (
+              <li key={muc.cn.id}>
+                <Link
+                  href={duongDenMucMoi(muc)}
+                  {...(muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp")
+                    ? { target: "_blank", rel: "noopener" }
+                    : {})}
+                  className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-[#ecdcbc] bg-white px-4 py-2 transition hover:border-[#d58c35]"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-black text-[#20342c]">{muc.cn.ten}</span>
+                    <span className="block text-xs text-[#718078]">
+                      {muc.loai === "web" ? "Web khách" : "ERP"} · {muc.cn.moi}
+                    </span>
+                  </span>
+                  <span aria-hidden="true" className="text-[#9a6328]">
+                    {muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp") ? "↗" : "→"}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
 

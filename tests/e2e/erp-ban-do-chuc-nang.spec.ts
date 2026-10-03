@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { CHUC_NANG_MOI, CHUC_NANG_WEB } from "@/domain/ban-do-chuc-nang";
 import { TONG_VIEC_TRA_CUU, VONG_KHACH } from "@/domain/huong-dan";
 import { loginAsDirector } from "./support/erp-login";
 import { endRoleSwitch } from "./support/erp-role-switch";
@@ -13,10 +14,12 @@ test.describe("ERP: màn Hướng dẫn", () => {
   test("đủ bảy bước và mọi việc tra cứu; trang đầu có lối vào", async ({ page }) => {
     await loginAsDirector(page);
     await expect(page.getByTestId("loi-vao-huong-dan")).toBeVisible();
-    await page.getByTestId("loi-vao-huong-dan").getByRole("link").click();
+    await page.getByTestId("loi-vao-huong-dan").getByRole("link", { name: "Mở danh sách đầy đủ →" }).click();
     await expect(page).toHaveURL(/\/erp\/huong-dan$/);
     await expect(page.locator("[data-buoc]")).toHaveCount(VONG_KHACH.length);
     await expect(page.locator("[data-chuc-nang]")).toHaveCount(TONG_VIEC_TRA_CUU);
+    await expect(page.locator("[data-moi]")).toHaveCount(CHUC_NANG_MOI.length);
+    await expect(page.locator("[data-chuc-nang-web]")).toHaveCount(CHUC_NANG_WEB.length);
     const tranNgang = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     expect(tranNgang).toBe(false);
   });

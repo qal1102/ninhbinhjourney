@@ -20,6 +20,7 @@ import { RoleSwitchControl } from "./role-switch-control";
 import { VoiceCommandCenter } from "./voice-command-center";
 import { ErpMobileMenu } from "./erp-mobile-menu";
 import { ChiDiem } from "@/components/shared/chi-diem";
+import { CHUC_NANG_MOI } from "@/domain/ban-do-chuc-nang";
 
 type Props = {
   user: CurrentErpUser;
@@ -58,6 +59,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           { href: "/erp/khach-hang", label: "Khách hàng", hint: "Hành trình, đơn đặt và gợi ý chăm sóc khách" },
           { href: "/erp/marketing", label: "Kênh khách", hint: "Mã QR và nguồn khách theo từng kênh" },
           { href: "/erp/dai-ly", label: "Đại lý & hoa hồng", hint: "Đường dẫn giới thiệu, đơn và hoa hồng từng đại lý" },
+          { href: "/erp/thuyen", label: "Thuyền trên sông", hint: "Bản đồ sống từng thuyền Tràng An, Tam Cốc" },
           { href: "/erp/bang-gia-quay", label: "Giá vé quầy", hint: "Đặt giá bán tại quầy của bốn cơ sở" },
         ]
       : []),
@@ -123,9 +125,13 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             {user.role === "director" || user.actingAs ? (
               <Link
                 href="/erp/huong-dan"
-                className="hidden min-h-10 items-center whitespace-nowrap rounded-xl border border-[#e0b979] bg-[#fff8eb] px-4 text-sm font-bold text-[#7a5520] transition hover:border-[#d58c35] lg:inline-flex"
+                data-testid="nut-thu-chuc-nang"
+                className="hidden min-h-10 items-center gap-2 whitespace-nowrap rounded-xl border border-[#e0b979] bg-[#fff8eb] px-4 text-sm font-bold text-[#7a5520] transition hover:border-[#d58c35] lg:inline-flex"
               >
-                Hướng dẫn
+                Thử chức năng
+                <span className="hidden rounded-full bg-[#d58c35] px-2 py-0.5 text-xs font-black text-white xl:inline">
+                  {CHUC_NANG_MOI.length} mới
+                </span>
               </Link>
             ) : null}
             <Link
@@ -185,7 +191,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             <form action={logoutErpAction} className="hidden lg:block">
               <button
                 type="submit"
-                className="min-h-10 rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7]"
+                className="min-h-10 whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7]"
               >
                 Đăng xuất
               </button>

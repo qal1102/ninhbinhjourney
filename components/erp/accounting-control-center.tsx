@@ -867,7 +867,11 @@ export function AccountingControlCenter({
       ) : null}
 
       {user.role === "chief-accountant" && periods.length ? (
-        <section className="grid gap-3 xl:grid-cols-2">
+        <section
+          className="grid gap-3 xl:grid-cols-2"
+          data-chi="ky-ke-toan"
+          data-chi-loi="Hai kỳ gần nhất. Kỳ tháng này máy tự mở; soát xong thì khoá kỳ ở đây."
+        >
           {periods.slice(0, 2).map((period) => (
             <PeriodControl key={period.id} period={period} />
           ))}

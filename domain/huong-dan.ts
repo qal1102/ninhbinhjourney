@@ -1,4 +1,4 @@
-import { BAN_DO_CHUC_NANG, duongDanChucNang, type ChucNang } from "@/domain/ban-do-chuc-nang";
+import { BAN_DO_CHUC_NANG, duongDanChucNang, type ChucNang, type MucMoi } from "@/domain/ban-do-chuc-nang";
 import type { ErpRole } from "@/domain/erp";
 
 /**
@@ -196,3 +196,8 @@ export function duongDenChucNang(cn: ChucNang): string {
 }
 
 export const TONG_VIEC_TRA_CUU = BAN_DO_CHUC_NANG.reduce((n, nhom) => n + nhom.chucNang.length, 0);
+
+/** Đường dẫn của một mục mới: việc ERP kèm `?chi=`, phần web giữ nguyên. */
+export function duongDenMucMoi(muc: MucMoi): string {
+  return muc.loai === "erp" ? duongDenChucNang(muc.cn) : muc.cn.duongDan;
+}

@@ -29,6 +29,8 @@ export type ChucNang = {
   diem: string;
   /** Các bước, mỗi dòng một việc, viết như người đứng cạnh chỉ tay. */
   cacViec: readonly string[];
+  /** Ngày làm xong (dd/mm) nếu là phần mới: hiện dấu "Mới" và lên đầu màn Thử chức năng. */
+  moi?: string;
 };
 
 export type NhomChucNang = { id: string; ten: string; chucNang: readonly ChucNang[] };
@@ -144,6 +146,7 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         giamDocLamDuoc: true,
         duongDan: "/erp/tam-coc/suc-chua",
         diem: "goi-luot",
+        moi: "30/09",
         cacViec: [
           "Bấm \"Mở trang khách ↗\" (hay quét mã dán ở bến) và lấy thử một số.",
           "Quay lại đây, chọn số đò đang trống rồi bấm \"Gọi … nhóm tiếp\": máy khách tự báo tới lượt.",
@@ -153,14 +156,30 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
       {
         id: "thuyen-tren-song",
         ten: "Thuyền trên sông, bản đồ sống",
-        moTa: "Từng thuyền đang ở đoạn nào của tuyến, theo điện thoại người chèo đò.",
+        moTa: "Từng thuyền đang ở đoạn nào của tuyến Tràng An, Tam Cốc, theo điện thoại người chèo đò.",
         vai: "director",
-        duongDan: "/erp/trang-an/suc-chua",
+        duongDan: "/erp/thuyen",
         diem: "ban-do-thuyen",
+        moi: "03/10",
         cacViec: [
-          "Bản đồ vẽ tuyến Tràng An qua Đền Trình, Đền Trần, Phủ Khống; thuyền trượt liên tục, vệt trắng sau thuyền là đường vừa đi.",
+          "Bản đồ vẽ tuyến sông thật; thuyền trượt liên tục, vệt trắng sau thuyền là đường vừa đi. Đổi Tràng An / Tam Cốc ở hai nút ngay trên bản đồ.",
           "Bấm \"Xem nhanh ×30\" để thấy cả đội thuyền mô phỏng chạy; bấm lại là về giờ thật.",
-          "Mở /erp/thuyen trên điện thoại, bấm \"Bắt đầu chuyến\": thuyền thật màu vàng hiện trên bản đồ, kèm vệt cam 20 phút vừa đi.",
+          "Bấm vào một thuyền để xem người chèo, số khách, đã đi bao lâu.",
+        ],
+      },
+      {
+        id: "nguoi-cheo",
+        ten: "Người chèo gửi vị trí từ điện thoại",
+        moTa: "Nhận khách xong bấm \"Bắt đầu chuyến\"; máy gửi vị trí 5 giây một lần tới khi về bến.",
+        vai: "employee",
+        giamDocLamDuoc: true,
+        duongDan: "/erp/thuyen",
+        diem: "bat-dau-chuyen",
+        moi: "03/10",
+        cacViec: [
+          "Mở trang này trên điện thoại (đăng nhập giám đốc cũng được), gõ số thuyền, số khách, bấm \"Bắt đầu chuyến\" và cho phép đọc vị trí.",
+          "Trên máy tính mở bản đồ cùng trang: thuyền thật màu vàng hiện ra, kèm vệt cam 20 phút vừa đi.",
+          "Xong thì bấm \"Về bến, dừng gửi vị trí\": thuyền rời bản đồ.",
         ],
       },
       {
@@ -250,6 +269,46 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "duyet-hoa-hong",
+        ten: "Duyệt bút toán hoa hồng đại lý",
+        moTa: "Giám đốc ghi đã chi hoa hồng, máy lập Nợ 6418 / Có 1121 chia theo cơ sở; kế toán trưởng ghi sổ hoặc trả lại.",
+        vai: "chief-accountant",
+        duongDan: "/erp/finance",
+        diem: "so-nhat-ky",
+        moi: "03/10",
+        cacViec: [
+          "Trước đó, ở tài khoản giám đốc: Quản trị → Đại lý & hoa hồng, chọn tháng, bấm \"Ghi đã chi\" ở một thẻ đại lý.",
+          "Ở \"Sổ nhật ký\", mở bút toán nhãn \"Hoa hồng đại lý\": thấy Nợ 6418, Có 1121, phần của từng cơ sở.",
+          "Ghi sổ, hoặc trả lại kèm lý do: thẻ đại lý ấy hiện \"bị trả lại\" và giám đốc ghi chi lại được.",
+        ],
+      },
+      {
+        id: "ky-ke-toan",
+        ten: "Kỳ kế toán tự mở mỗi tháng",
+        moTa: "Sang tháng mới là có kỳ để lập bút toán, không còn kẹt vì chưa ai mở kỳ.",
+        vai: "chief-accountant",
+        duongDan: "/erp/finance",
+        diem: "ky-ke-toan",
+        moi: "03/10",
+        cacViec: [
+          "Hai thẻ kỳ gần nhất nằm ở khối được khoanh: kỳ tháng này đang mở.",
+          "Khoá kỳ khi đã soát xong; kỳ đã khoá thì không lập thêm bút toán vào được.",
+        ],
+      },
+      {
+        id: "tien-ve-co-so",
+        ten: "Tiền vé của từng cơ sở, gồm phần đơn web",
+        moTa: "Đơn gói web chia về từng cơ sở theo số lượt × giá vé quầy người lớn, cộng với tiền quầy.",
+        vai: "director",
+        duongDan: "/erp/{site}/ve-dat-cho",
+        diem: "tien-ve-co-so",
+        moi: "03/10",
+        cacViec: [
+          "Ô \"Tiền vé của cơ sở\" = tiền quầy + phần web của cơ sở này; dòng nhỏ ghi rõ từng phần.",
+          "Màn Báo cáo của cơ sở có thêm ô \"Tiền vé · 28 ngày\" tách quầy và web.",
+        ],
+      },
+      {
         id: "duyet-ngoai-le",
         ten: "Duyệt ngoại lệ tiền",
         moTa: "Lệch quỹ, công nợ vượt mức: giám đốc quyết.",
@@ -310,6 +369,7 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         vai: "director",
         duongDan: "/erp/dai-ly",
         diem: "dai-ly",
+        moi: "03/10",
         cacViec: [
           "Chọn một tháng đã khép ở hàng nút trên cùng.",
           "Mỗi đại lý một thẻ: đơn đã trả, khách đã tới, hoa hồng (chỉ tính khách đã qua cổng).",
@@ -335,6 +395,109 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         diem: "nhat-ky",
         cacViec: ["Gõ tên người, chọn khu vực rồi bấm \"Lọc\". Mỗi dòng ghi ai làm gì, lúc nào."],
       },
+    ],
+  },
+];
+
+/**
+ * Phần khách thấy trên web. Không có thẻ khoanh như trong ERP (trang công khai
+ * không gắn `ChiDiem`), nên mỗi mục ghi đủ bước để người thử tự làm theo.
+ */
+export type ChucNangWeb = {
+  id: string;
+  ten: string;
+  moTa: string;
+  duongDan: string;
+  cacViec: readonly string[];
+  moi?: string;
+  /** Chỉ thấy trên máy có chuột (con trỏ theo ngữ cảnh). */
+  chiMayTinh?: true;
+};
+
+export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
+  {
+    id: "web-suong",
+    ten: "Sương trôi trên ảnh đầu trang chủ",
+    moTa: "Sương phủ núi đá, rê chuột thì sương tách theo, cuộn xuống thì các điểm đến hiện dần ra.",
+    duongDan: "/",
+    moi: "03/10",
+    cacViec: [
+      "Mở trang chủ, đứng yên vài giây nhìn sương trôi ngang qua núi.",
+      "Rê chuột qua ảnh: sương rẽ ra quanh con trỏ.",
+      "Cuộn xuống chậm: sương dày lên rồi nhường chỗ cho các điểm đến.",
+    ],
+  },
+  {
+    id: "web-thuyen-cuon",
+    ten: "Câu chuyện Tràng An, thuyền đi theo cuộn",
+    moTa: "Cuộn tới đâu, con thuyền trên đường tiến độ đi tới đó, qua từng chặng hang và đền.",
+    duongDan: "/#cau-chuyen-trang-an",
+    moi: "03/10",
+    cacViec: ["Cuộn chậm qua khối Tràng An: thuyền nhỏ ở đường tiến độ chạy theo, mỗi chặng đổi ảnh và lời kể."],
+  },
+  {
+    id: "web-con-tro",
+    ten: "Con trỏ theo ngữ cảnh",
+    moTa: "Đưa chuột vào dải tuyến, thẻ điểm đến, ảnh gói: con trỏ hiện chữ Kéo, Xem, Mở.",
+    duongDan: "/packages",
+    moi: "03/10",
+    chiMayTinh: true,
+    cacViec: ["Rê chuột lên ảnh một gói: nhãn \"Xem\" đi theo con trỏ; rời ảnh là tắt. Trên điện thoại không có."],
+  },
+  {
+    id: "web-dat-ve-noi-nay",
+    ten: "Trang điểm đến có khối \"Đặt vé nơi này\"",
+    moTa: "Bốn cơ sở có cổng vé liệt kê gói còn bán đi qua nơi ấy, bấm là sang trang gói.",
+    duongDan: "/destination/tam-chuc",
+    moi: "03/10",
+    cacViec: ["Kéo xuống khối \"Đặt vé nơi này\", bấm một gói. Hai điểm Hoa Lư không có khối này: không bán vé tại đây."],
+  },
+  {
+    id: "web-dau-moc",
+    ten: "Hộ chiếu khách có dấu mộc",
+    moTa: "Khách qua cổng là hộ chiếu đóng dấu mộc ghi ngày, như dấu xuất nhập cảnh.",
+    duongDan: "/erp/khach-hang#khach-thay-gi",
+    moi: "03/10",
+    cacViec: [
+      "Ở màn Khách hàng, bấm \"Xem như khách\" ở một đơn đã qua cổng.",
+      "Khối \"Khách thấy gì\" hiện hộ chiếu của khách ấy, chặng đã đi có dấu mộc.",
+    ],
+  },
+  {
+    id: "web-hang-cho",
+    ten: "Lấy số hàng chờ bến đò Tam Cốc",
+    moTa: "Khách quét mã ở bến, lấy số trên điện thoại, máy báo khi tới lượt.",
+    duongDan: "/xep-hang/tam-coc",
+    moi: "30/09",
+    cacViec: [
+      "Lấy một số; trang khách tự cập nhật còn bao nhiêu nhóm phía trước.",
+      "Gọi lượt ở ERP (Tam Cốc → Sức chứa): trang khách đổi sang \"Tới lượt bạn\".",
+    ],
+  },
+  {
+    id: "web-nghe",
+    ten: "Nghe thuyết minh theo vị trí",
+    moTa: "Đi tới đâu, điện thoại đọc thuyết minh của điểm gần nhất.",
+    duongDan: "/nghe",
+    moi: "30/09",
+    cacViec: ["Cho phép đọc vị trí; ở xa Ninh Bình thì chọn một điểm trong danh sách để nghe thử."],
+  },
+  {
+    id: "web-kiosk",
+    ten: "Kiosk tại cơ sở",
+    moTa: "Màn hình đứng ở cổng: xem gói, lấy số hàng chờ, tự về màn chào sau một phút không ai chạm.",
+    duongDan: "/kiosk/tam-coc",
+    moi: "30/09",
+    cacViec: ["Chạm thử từng nút như khách đứng trước kiosk."],
+  },
+  {
+    id: "web-dat-goi",
+    ten: "Đặt gói và trả bằng QR giả lập",
+    moTa: "Chọn gói, ngày, khung giờ, trả bằng QR giả lập, nhận vé và hộ chiếu.",
+    duongDan: "/packages",
+    cacViec: [
+      "Chọn một gói, ngày, số khách, bấm giữ chỗ.",
+      "Trang thanh toán hiện QR giả lập; bấm xác nhận đã trả là có vé, lưu được ảnh vé.",
     ],
   },
 ];
@@ -375,3 +538,24 @@ export function chonTaiKhoanMau<T extends TaiKhoanChon>(
   };
   return targets.find((t) => hop(t) && t.siteIds.includes(CO_SO_MAU)) ?? targets.find(hop) ?? null;
 }
+
+export type MucMoi = { loai: "erp"; cn: ChucNang } | { loai: "web"; cn: ChucNangWeb };
+
+function soNgay(moi: string) {
+  const [ngay, thang] = moi.split("/").map(Number);
+  return thang * 100 + ngay;
+}
+
+/**
+ * Phần mới làm, cả ERP lẫn web, ngày gần nhất trước; cùng ngày thì giữ thứ tự
+ * trong danh mục. Đứng đầu màn Thử chức năng và trên trang đầu giám đốc.
+ */
+export const CHUC_NANG_MOI: readonly MucMoi[] = [
+  ...BAN_DO_CHUC_NANG.flatMap((nhom) => nhom.chucNang)
+    .filter((cn) => cn.moi)
+    .map((cn) => ({ loai: "erp" as const, cn })),
+  ...CHUC_NANG_WEB.filter((cn) => cn.moi).map((cn) => ({ loai: "web" as const, cn })),
+]
+  .map((muc, i) => ({ muc, i }))
+  .sort((a, b) => soNgay(b.muc.cn.moi!) - soNgay(a.muc.cn.moi!) || a.i - b.i)
+  .map(({ muc }) => muc);

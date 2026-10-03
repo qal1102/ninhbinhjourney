@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BAN_DO_CHUC_NANG, laDuongDanErpAnToan } from "@/domain/ban-do-chuc-nang";
+import { BAN_DO_CHUC_NANG, CHUC_NANG_MOI, CHUC_NANG_WEB, laDuongDanErpAnToan } from "@/domain/ban-do-chuc-nang";
 import {
   DIEM_SAU_KHI_BAM,
   duongDenBuoc,
@@ -73,6 +73,27 @@ describe("màn Hướng dẫn", () => {
 
   it("bước 1 mở trang đặt vé gói Nhịp chậm cho hôm nay", () => {
     expect(duongDenBuoc(VONG_KHACH[0])).toBe("/checkout?package=slow-ninh-binh&ngay=hom-nay&chi=vong-dat-ve");
+  });
+
+  it("phần mới: ngày gần nhất đứng đầu, ngày hợp lệ, trang web có thật", () => {
+    expect(CHUC_NANG_MOI.length).toBeGreaterThan(5);
+    const so = CHUC_NANG_MOI.map(({ cn }) => {
+      expect(cn.moi, cn.id).toMatch(/^\d{2}\/\d{2}$/);
+      const [ngay, thang] = cn.moi!.split("/").map(Number);
+      return thang * 100 + ngay;
+    });
+    expect(so).toEqual([...so].sort((a, b) => b - a));
+    // Bản đồ thuyền phải nằm ngay đầu danh sách: đó là thứ chủ dự án tìm không ra.
+    expect(CHUC_NANG_MOI.slice(0, 2).map(({ cn }) => cn.id)).toContain("thuyen-tren-song");
+    for (const cn of CHUC_NANG_WEB) {
+      const duong = cn.duongDan.split(/[?#]/)[0];
+      if (duong === "/" || duong.startsWith("/erp")) continue;
+      // Kiểm thô theo thư mục đầu: đổi tên route mà quên danh sách là bài này đỏ.
+      const thuMuc = join("app", duong.split("/").filter(Boolean)[0]);
+      expect(statSync(thuMuc, { throwIfNoEntry: false })?.isDirectory() ?? false, `${cn.id}: ${thuMuc}`).toBe(true);
+    }
+    const ids = CHUC_NANG_WEB.map((cn) => cn.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it("lệnh chuyển vai nhận đường dẫn kèm chi của mọi việc tra cứu, không nhận thứ khác", () => {

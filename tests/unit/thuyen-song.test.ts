@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   diemTaiQuang,
   docChuyenTrenSong,
+  docChuyenTuApi,
   doDaiTuyen,
   khoangCachMet,
   thuyenMoPhong,
@@ -104,5 +105,15 @@ describe("thuyền thật", () => {
     ]);
     expect(c.nguoiCheo).toBe("Đỗ Thị Lan");
     expect(docChuyenTrenSong(null)).toEqual([]);
+  });
+
+  it("bản đồ đọc lại được đúng thứ API trả (đã chuẩn hoá), không đọc nhầm theo tên cột kho", () => {
+    // Lượt thử production đầu tiên: API trả camelCase, bản đồ đọc theo so_thuyen nên mất sạch thuyền thật.
+    const tuKho = docChuyenTrenSong([
+      { id: "c1", so_thuyen: "THU-02", so_khach: 2, bat_dau: "2026-10-03T07:00:00Z", nguoi_cheo: "A", vet: [{ lat: 20.2533, lng: 105.918, luc: "2026-10-03T07:00:05Z" }] },
+    ]);
+    const quaApi = docChuyenTuApi(JSON.parse(JSON.stringify(tuKho)));
+    expect(quaApi).toEqual(tuKho);
+    expect(quaApi).toHaveLength(1);
   });
 });

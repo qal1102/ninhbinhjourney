@@ -274,6 +274,40 @@ export function docChuyenTrenSong(raw: unknown): ChuyenThuyenThat[] {
 }
 
 /**
+ * Đọc danh sách chuyến API `/api/erp/thuyen` trả về. Máy chủ đã chuẩn hoá
+ * (camelCase) bằng `docChuyenTrenSong`; đọc lại bằng hàm ấy thì mất sạch vì
+ * nó chờ tên cột của kho (`so_thuyen`). Đã sập đúng như thế ở lượt thử
+ * production đầu tiên 03/10/2026, cùng kiểu lỗi từng gặp ở hàng chờ ảo.
+ */
+export function docChuyenTuApi(raw: unknown): ChuyenThuyenThat[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((x): ChuyenThuyenThat[] => {
+    if (!x || typeof x !== "object") return [];
+    const r = x as Record<string, unknown>;
+    if (typeof r.id !== "string" || typeof r.soThuyen !== "string" || !Array.isArray(r.vet)) return [];
+    const vet = r.vet.flatMap((p): DiemThuyenThat[] => {
+      if (!p || typeof p !== "object") return [];
+      const d = p as Record<string, unknown>;
+      const ll = d.lonLat;
+      if (!Array.isArray(ll) || ll.length !== 2) return [];
+      const lon = so(ll[0]);
+      const lat = so(ll[1]);
+      const luc = so(d.luc);
+      if (lon === null || lat === null || luc === null) return [];
+      return [{ lonLat: [lon, lat] as const, luc, doChinhXac: so(d.doChinhXac) }];
+    });
+    return [{
+      id: r.id,
+      soThuyen: r.soThuyen,
+      nguoiCheo: typeof r.nguoiCheo === "string" ? r.nguoiCheo : "",
+      soKhach: so(r.soKhach) ?? 0,
+      batDau: so(r.batDau) ?? 0,
+      vet: vet.sort((a, b) => a.luc - b.luc),
+    }];
+  });
+}
+
+/**
  * Vị trí hiển thị của một thuyền thật ở thời điểm `hienThiMs`. Bản đồ vẽ trễ
  * vài giây so với hiện tại rồi nội suy giữa hai lần điện thoại gửi vị trí, nên
  * thuyền trượt đều thay vì nhảy mỗi lần có điểm mới. Quá điểm cuối thì đứng ở

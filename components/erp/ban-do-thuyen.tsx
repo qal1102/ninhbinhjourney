@@ -4,7 +4,7 @@ import maplibregl, { type GeoJSONSource } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
-  docChuyenTrenSong,
+  docChuyenTuApi,
   phutChu,
   thuyenMoPhong,
   TUYEN_THUYEN,
@@ -113,7 +113,7 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         }
         setLoiHoi("");
         if (data.bayGio) lechDongHo.current = Date.parse(data.bayGio) - Date.now();
-        chuyenThat.current = docChuyenTrenSong(data.chuyen);
+        chuyenThat.current = docChuyenTuApi(data.chuyen);
       } catch {
         if (!huy) setLoiHoi("Mạng chập chờn, đang thử lại.");
       }

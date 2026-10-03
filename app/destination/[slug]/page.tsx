@@ -25,6 +25,7 @@ import { NHAN_SO_THICH, nhanThoiLuong } from "@/content/destination-labels";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { SuongVen } from "@/components/shared/suong-ven";
+import { AnhNhu } from "@/components/shared/anh-nhu";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import {
   destinationBackHref,
@@ -118,6 +119,7 @@ export default async function DestinationPage({
 
   return (
     <main lang={lang} className="min-h-screen bg-[#fbfaf6] text-[#151a17]">
+      <AnhNhu />
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 text-white sm:px-8">
           <Link
@@ -421,7 +423,8 @@ export default async function DestinationPage({
                       data-customer-content-id={item.id}
                       data-customer-content-type="package"
                       href={packageDetailHref(item.slug, navigationContext, "catalog")}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-[#d7d5cd] px-4 py-3 transition hover:border-[#183f34]"
+                      data-anh-nhu
+                      className="ve-giay relative flex items-center justify-between gap-3 overflow-hidden rounded-2xl border border-[#d7d5cd] px-4 py-3 transition hover:border-[#183f34]"
                     >
                       <span>
                         <span className="block font-bold text-[#183f34]">{goiHienThi(item, lang).name}</span>
@@ -449,7 +452,8 @@ export default async function DestinationPage({
               <Link
                 key={item.id}
                 href={destinationRelatedHref(item.slug, navigationContext)}
-                className="rounded-2xl border border-white/15 bg-white/8 p-5 transition hover:bg-white/12"
+                data-anh-nhu
+                className="ve-giay relative overflow-hidden rounded-2xl border border-white/15 bg-white/8 p-5 transition hover:bg-white/12"
               >
                 <p className="font-display text-2xl">{item.name[lang]}</p>
                 <p className="mt-2 text-sm leading-6 text-white/65">

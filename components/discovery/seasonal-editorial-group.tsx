@@ -85,7 +85,7 @@ function CatalogLayout({ group, copy, onOpen }: Omit<GroupProps, "groupIndex">) 
             className="group grid h-full w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#E7B96A] sm:grid-cols-[1.08fr_.92fr] lg:grid-cols-1"
           >
             <div data-seasonal-card-media className="relative aspect-[4/5] overflow-hidden bg-[#2a4037] sm:aspect-[5/4] lg:aspect-[7/8]">
-              <Image src={featured.image} alt={featured.title} fill sizes="(min-width: 1024px) 58vw, 100vw" className="object-cover transition duration-1000 group-hover:scale-[1.018]" />
+              <Image src={featured.image} alt={featured.title} fill sizes="(min-width: 1024px) 58vw, 100vw" className="hien-tu-suong object-cover transition duration-1000 group-hover:scale-[1.018]" />
               <ConceptMark item={featured} copy={copy} />
               <span aria-hidden="true" className="absolute bottom-5 right-5 font-display text-7xl leading-none text-white/76">03</span>
             </div>
@@ -109,7 +109,7 @@ function CatalogLayout({ group, copy, onOpen }: Omit<GroupProps, "groupIndex">) 
               className="group grid h-full w-full grid-cols-[0.84fr_1.16fr] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#E7B96A] sm:grid-cols-[0.72fr_1.28fr] lg:grid-cols-1 xl:grid-cols-[0.82fr_1.18fr]"
             >
               <div data-seasonal-card-media className="relative min-h-[255px] overflow-hidden bg-[#2a4037] lg:aspect-[16/9] lg:min-h-0 xl:aspect-auto xl:min-h-[330px]">
-                <Image src={item.image} alt={item.title} fill sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 42vw, 42vw" className="object-cover transition duration-1000 group-hover:scale-[1.025]" />
+                <Image src={item.image} alt={item.title} fill sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 42vw, 42vw" className="hien-tu-suong object-cover transition duration-1000 group-hover:scale-[1.025]" />
                 <span aria-hidden="true" className="absolute bottom-4 right-4 font-display text-5xl leading-none text-white/78">0{index + 1}</span>
               </div>
               <div data-seasonal-card-copy className="flex min-h-[255px] flex-col p-5 sm:p-7 xl:min-h-[330px]">
@@ -140,7 +140,7 @@ function FeatureLayout({ group, copy, onOpen, seasonOpen }: Omit<GroupProps, "gr
           className="group grid w-full gap-7 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E7B96A] lg:grid-cols-12 lg:items-center"
         >
           <div data-seasonal-card-media className="relative aspect-[16/10] overflow-hidden bg-[#263b33] lg:col-span-8">
-            <Image src={featured.image} alt={featured.title} fill sizes="(min-width: 1024px) 68vw, 100vw" className="object-cover transition duration-[1200ms] group-hover:scale-[1.018]" />
+            <Image src={featured.image} alt={featured.title} fill sizes="(min-width: 1024px) 68vw, 100vw" className="hien-tu-suong object-cover transition duration-[1200ms] group-hover:scale-[1.018]" />
             <SeasonClosedMark item={featured} seasonOpen={seasonOpen} copy={copy} />
             <span className="absolute bottom-5 left-5 border-l border-white/60 pl-3 text-[0.58rem] font-extrabold uppercase tracking-[0.2em] text-white sm:bottom-7 sm:left-7">{featured.kicker}</span>
           </div>
@@ -163,7 +163,7 @@ function FeatureLayout({ group, copy, onOpen, seasonOpen }: Omit<GroupProps, "gr
               className="group flex h-full w-full flex-col p-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#E7B96A] sm:p-6"
             >
               <div data-seasonal-card-media className="relative aspect-[16/10] w-full overflow-hidden bg-[#263b33]">
-                <Image src={item.image} alt={item.title} fill sizes="(min-width: 640px) 33vw, 100vw" className="object-cover transition duration-1000 group-hover:scale-[1.025]" />
+                <Image src={item.image} alt={item.title} fill sizes="(min-width: 640px) 33vw, 100vw" className="hien-tu-suong object-cover transition duration-1000 group-hover:scale-[1.025]" />
                 <ConceptMark item={item} copy={copy} />
               </div>
               <div data-seasonal-card-copy className="flex min-h-[240px] flex-1 flex-col pt-5">
@@ -192,7 +192,7 @@ function StoriesLayout({ group, copy, onOpen }: Omit<GroupProps, "groupIndex">) 
             className="group grid w-full gap-6 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E7B96A] lg:grid-cols-12 lg:items-end"
           >
             <div data-seasonal-card-media className={`relative aspect-[16/9] overflow-hidden bg-[#263b33] lg:col-span-8 ${index % 2 ? "lg:col-start-5 lg:row-start-1" : "lg:col-start-1"}`}>
-              <Image src={item.image} alt={item.title} fill sizes="(min-width: 1024px) 68vw, 100vw" className="object-cover saturate-[.92] transition duration-[1200ms] group-hover:scale-[1.02] group-hover:saturate-100" />
+              <Image src={item.image} alt={item.title} fill sizes="(min-width: 1024px) 68vw, 100vw" className="hien-tu-suong object-cover saturate-[.92] transition duration-[1200ms] group-hover:scale-[1.02] group-hover:saturate-100" />
               <ConceptMark item={item} copy={copy} />
               <span aria-hidden="true" className="absolute bottom-4 right-5 font-display text-[5rem] leading-none text-white/75 sm:text-[7rem]">{String(index + 1).padStart(2, "0")}</span>
             </div>

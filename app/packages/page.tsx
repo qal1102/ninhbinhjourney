@@ -72,7 +72,7 @@ function PackageCard({
           alt={image.alt}
           fill
           sizes={featured ? "(min-width: 1280px) 55vw, 100vw" : "(min-width: 1280px) 40vw, 100vw"}
-          className="object-cover"
+          className="object-cover hien-tu-suong"
         />
         {/* Cả tấm ảnh dẫn sang trang gói. Bàn phím và trình đọc màn hình đi bằng nút "Xem chi tiết" bên dưới, nên lối này không nhận tab. */}
         <Link

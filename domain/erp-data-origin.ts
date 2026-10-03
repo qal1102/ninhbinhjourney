@@ -44,7 +44,7 @@ export function isRealErpData(record: { dataOrigin: ErpDataOrigin }): boolean {
 /** Nhãn ngắn dán lên từng dòng ở màn hình nghiệp vụ. Hàng thật không đeo nhãn. */
 export function erpDataOriginLabel(origin: ErpDataOrigin): string | null {
   if (origin === "demo-seed") return "hồ sơ mẫu";
-  if (origin === "test-residue") return "cặn chạy thử";
+  if (origin === "test-residue") return "dữ liệu chạy thử";
   return null;
 }
 

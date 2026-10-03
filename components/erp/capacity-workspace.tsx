@@ -47,9 +47,9 @@ const LEVEL_STYLE: Record<
 };
 
 const SOURCE_LABEL: Record<CapacitySourceKind, string> = {
-  estimate: "ước-lượng",
-  customer: "khách-cung-cấp",
-  measured: "đo-thực-tế",
+  estimate: "ước lượng",
+  customer: "khách hàng cung cấp",
+  measured: "đo thực tế",
 };
 
 const OWNER_LABEL: Record<CapacityOwnerRole, string> = {
@@ -191,14 +191,14 @@ export function CapacityWorkspace({
         </div>
         <div className="border-t border-white/10 bg-black/10 px-5 py-3 text-xs leading-5 text-[#d6e4de] sm:px-8">
           Khung {formatTime(data.windowStartedAt)}–{formatTime(data.windowEndsAt)} ·
-          lần nhận gần nhất {data.lastAcceptedScanAt ? formatDateTime(data.lastAcceptedScanAt) : "chưa có"}
+          lượt quét gần nhất {data.lastAcceptedScanAt ? formatDateTime(data.lastAcceptedScanAt) : "chưa có"}
         </div>
       </header>
 
       <aside className="rounded-2xl border border-[#d9c98f] bg-[#fff9df] p-4 text-sm leading-6 text-[#66551d] sm:px-5">
-        <strong>Con số dưới đây mới là số thay thế:</strong> lượt khách được cổng
-        cho vào trong giờ. Đây chưa phải số người đang có mặt. Khi bến và cổng lắp
-        máy đếm người thì số này sẽ thay bằng số đếm thật.
+        <strong>Số trên màn này là lượt khách qua cổng trong giờ,</strong> chưa phải
+        số người đang có mặt ở bến. Khi bến và cổng lắp máy đếm người, số đếm thật
+        sẽ thay vào đây.
       </aside>
 
       {user.role === "director" ? (
@@ -256,7 +256,7 @@ export function CapacityWorkspace({
 
                 <div className="border-y border-[#e4eae7] bg-[#fbfcfb] px-5 py-5 sm:px-6">
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-[#718078]">
-                    Công thức vật lý · theo giờ
+                    Cách tính · theo giờ
                   </p>
                   {/* TC-01: hiện đúng công thức của mô hình đang chọn. Ngưỡng
                       tĩnh vẫn mang ba ô vòng quay vì cột dưới cơ sở dữ liệu là
@@ -365,7 +365,7 @@ export function CapacityWorkspace({
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
         <h3 className="text-lg font-black text-[#203a30]">Lịch sử cấu hình</h3>
         <p className="mt-1 text-sm text-[#6a7871]">
-          Nhật ký chỉ thêm mới; không cho sửa hoặc xoá sự kiện cũ.
+          Mỗi lần sửa ghi thêm một dòng; dòng cũ giữ nguyên, không ai xoá được.
         </p>
         <div className="mt-4 divide-y divide-[#e6ebe8]">
           {data.auditEvents.map((event) => (

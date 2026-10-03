@@ -173,7 +173,7 @@ export function KioskDiem({
             ) : null}
             <button type="button" onClick={() => setMan("tra-cuu")} className={`${oLon} border-2 border-[#183f34] bg-white text-[#183f34]`}>
               <span className="text-3xl font-extrabold">{t("Mở lại vé đã đặt", "Find my booking")}</span>
-              <span className="text-lg text-[#4d5b55]">{t("Mất màn hình vé? Mở lại trên điện thoại", "Lost your ticket screen? Reopen it on your phone")}</span>
+              <span className="text-lg text-[#4d5b55]">{t("Lỡ đóng trang vé? Mở lại trên điện thoại", "Lost your ticket screen? Reopen it on your phone")}</span>
             </button>
             <button type="button" onClick={() => setMan("nghe")} className={`${oLon} border-2 border-[#183f34] bg-white text-[#183f34]`}>
               <span className="text-3xl font-extrabold">{t("Nghe thuyết minh", "Audio guide")}</span>

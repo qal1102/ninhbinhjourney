@@ -10,8 +10,8 @@ export type ErpModuleGroup = {
 export const ERP_MODULE_GROUPS: readonly ErpModuleGroup[] = [
   {
     id: "booking-checkin",
-    name: "Booking & Check-in",
-    shortName: "Booking",
+    name: "Vé & soát vé",
+    shortName: "Vé & cổng",
     moduleIds: ["ve-dat-cho", "check-in-khach"],
   },
   {

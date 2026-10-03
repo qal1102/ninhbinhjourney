@@ -57,7 +57,7 @@ export const VONG_KHACH: readonly BuocVong[] = [
   {
     id: "vong-don",
     thuTu: 2,
-    ten: "Đơn vừa đặt nằm trong ERP",
+    ten: "Đơn vừa đặt hiện ngay trong hệ thống",
     duongDan: "/erp/khach-hang",
     diem: "don-moi",
     cacViec: ["Thẻ đơn được khoanh là đơn bạn vừa đặt: tên gói, cách trả, mã vé."],

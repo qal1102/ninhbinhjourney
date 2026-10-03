@@ -20,8 +20,15 @@ const SOURCE_LABELS = {
   measured: "đo thực tế",
 } as const;
 
+/** "14:00 · 02/10/2026". */
+function gioNgay(value: string) {
+  const phan = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric", hour12: false, timeZone: "Asia/Ho_Chi_Minh" }).formatToParts(new Date(value));
+  const lay = (loai: Intl.DateTimeFormatPartTypes) => phan.find((p) => p.type === loai)?.value ?? "";
+  return `${lay("hour")}:${lay("minute")} · ${lay("day")}/${lay("month")}/${lay("year")}`;
+}
+
 function percent(value: number, total: number) {
-  return total === 0 ? "—" : `${Math.round((value / total) * 1000) / 10}%`;
+  return total === 0 ? "—" : `${(Math.round((value / total) * 1000) / 10).toLocaleString("vi-VN")}%`;
 }
 
 /**
@@ -30,10 +37,10 @@ function percent(value: number, total: number) {
  * nói được gì; thay bằng bình quân lượt vào mỗi lần trả tiền.
  */
 function tyLe(index: number, value: number, truoc: number) {
-  if (index === 0) return "mốc đầu";
+  if (index === 0) return "bước đầu tiên";
   // Có lượt vào thẳng bước này mà không qua bước trước (đặt từ đường dẫn
   // chia sẻ, lịch sử mẫu chỉ sinh đơn). Phần trăm quá 100% là vô nghĩa.
-  if (index < 4 && value > truoc) return "nhiều hơn bước trước: có lượt vào thẳng";
+  if (index < 4 && value > truoc) return "nhiều hơn bước trước, vì có khách vào thẳng bước này";
   if (index === 4) {
     return truoc === 0 ? "—" : `bình quân ${(value / truoc).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} lượt vào mỗi lần trả tiền`;
   }
@@ -133,7 +140,7 @@ export function CustomerFunnelDashboard({
           <p className="mt-1 text-sm text-[#66756e]">Đang hiện {report.slots.length} khung gần nhất trong {report.slotCount.toLocaleString("vi-VN")} khung của khoảng này.</p>
         ) : null}
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          {report.slots.length ? report.slots.map((slot) => <article key={slot.slotId} className="rounded-2xl border border-[#dfe6e2] p-4 text-sm"><div className="flex flex-wrap justify-between gap-2"><strong>{new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(slot.startsAt))}</strong><span className="rounded-full bg-[#edf3ef] px-2 py-1 text-xs font-bold">{SOURCE_LABELS[slot.capacitySourceKind]} · bản {slot.thresholdVersion}</span></div><div className="mt-3 grid grid-cols-4 gap-2 text-center"><div><span className="text-xs text-[#718078]">Công suất</span><strong className="block">{slot.capacitySnapshot}</strong></div><div><span className="text-xs text-[#718078]">Đang giữ</span><strong className="block">{slot.reservedEntries}</strong></div><div><span className="text-xs text-[#718078]">Đã bán</span><strong className="block">{slot.soldEntries}</strong></div><div><span className="text-xs text-[#718078]">Đã tới</span><strong className="block">{slot.checkedInEntries}</strong></div></div></article>) : <p className="rounded-2xl border border-dashed border-[#c7d2cc] p-6 text-sm text-[#7a8881]">Khoảng này chưa có khung giờ nào mở bán.</p>}
+          {report.slots.length ? report.slots.map((slot) => <article key={slot.slotId} className="rounded-2xl border border-[#dfe6e2] p-4 text-sm"><div className="flex flex-wrap justify-between gap-2"><strong>{gioNgay(slot.startsAt)}</strong><span className="rounded-full bg-[#edf3ef] px-2 py-1 text-xs font-bold">sức chứa {SOURCE_LABELS[slot.capacitySourceKind]}</span></div><div className="mt-3 grid grid-cols-4 gap-2 text-center"><div><span className="text-xs text-[#718078]">Công suất</span><strong className="block">{slot.capacitySnapshot}</strong></div><div><span className="text-xs text-[#718078]">Đang giữ</span><strong className="block">{slot.reservedEntries}</strong></div><div><span className="text-xs text-[#718078]">Đã bán</span><strong className="block">{slot.soldEntries}</strong></div><div><span className="text-xs text-[#718078]">Đã tới</span><strong className="block">{slot.checkedInEntries}</strong></div></div></article>) : <p className="rounded-2xl border border-dashed border-[#c7d2cc] p-6 text-sm text-[#7a8881]">Khoảng này chưa có khung giờ nào mở bán.</p>}
         </div>
       </div>
     </section>

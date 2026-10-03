@@ -150,7 +150,7 @@ export function SopOpeningSubmissionForm({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <SubmitButton
           label={assessment ? "Gửi lại sau khắc phục" : "Gửi giám đốc quyết định"}
-          pendingLabel="Đang gửi checklist…"
+          pendingLabel="Đang gửi bảng kiểm…"
         />
         <ActionMessage state={state} />
       </div>

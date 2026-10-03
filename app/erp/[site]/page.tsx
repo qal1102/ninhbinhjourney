@@ -13,6 +13,8 @@ import {
 } from "@/lib/erp/demo-session";
 import { countGateScansToday } from "@/lib/erp/gate-scan-repository";
 import { getIncidentCases } from "@/lib/erp/incident-repository";
+import { docBaoCaoCoSo } from "@/lib/erp/bao-cao-repository";
+import { duBao7Ngay } from "@/domain/bao-cao-co-so";
 
 type Props = {
   params: Promise<{ site: string }>;
@@ -27,19 +29,41 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
   if (!user) redirect("/erp/login");
   if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
   if (!accountCanAccessSite(user, site.id)) redirect("/erp?denied=site");
-  const [employeesOnShift, gateScansToday, openIncidents] = await Promise.all([
+  const [employeesOnShift, gateScansToday, openIncidents, baoCao] = await Promise.all([
     countEmployeesOnShift(site.id),
     countGateScansToday(site.id),
     getIncidentCases(site.id).then(
       (cases) => cases.filter((item) => item.status !== "closed").length,
     ),
+    docBaoCaoCoSo(site.id).catch(() => null),
   ]);
-  const kpis: { label: string; value: string; noSource?: boolean }[] = [
-    { label: "Khách dự kiến", value: "—", noSource: true },
-    { label: "Đã check-in hôm nay", value: gateScansToday.toLocaleString("vi-VN") },
+  // Hai ô "dự kiến" lấy đúng phép tính của màn Báo cáo & dự báo (trung bình
+  // cùng thứ bốn tuần, nhân xu hướng), để trang này và màn ấy không bao giờ
+  // nói hai con số khác nhau. Trước 04/10 hai ô này ghi "Chưa có nguồn dữ
+  // liệu" trong khi nguồn đã nằm sẵn ở màn bên cạnh.
+  const homNay =
+    baoCao?.trangThai === "co-so-lieu" ? duBao7Ngay(baoCao.soLieu, baoCao.homNay)[0] : null;
+  const kpis: { label: string; value: string; note?: string; noSource?: boolean }[] = [
+    homNay
+      ? {
+          label: "Khách dự kiến hôm nay",
+          value: `${homNay.thap.toLocaleString("vi-VN")}–${homNay.cao.toLocaleString("vi-VN")}`,
+          note: "theo cùng thứ bốn tuần qua",
+        }
+      : { label: "Khách dự kiến hôm nay", value: "—", noSource: true },
+    { label: "Lượt qua cổng hôm nay", value: gateScansToday.toLocaleString("vi-VN") },
     { label: "Nhân sự trong ca", value: employeesOnShift.toLocaleString("vi-VN") },
-    { label: "Tải hiện tại", value: "—", noSource: true },
-    { label: "Sự cố mở", value: openIncidents.toLocaleString("vi-VN") },
+    homNay?.gioCaoDiem != null
+      ? {
+          label: "Giờ đông dự kiến",
+          value: `${homNay.gioCaoDiem}h`,
+          note:
+            homNay.phanTramSucChua != null
+              ? `khoảng ${homNay.khachGioCaoDiem.toLocaleString("vi-VN")} khách, ${homNay.phanTramSucChua}% sức chứa giờ`
+              : `khoảng ${homNay.khachGioCaoDiem.toLocaleString("vi-VN")} khách`,
+        }
+      : { label: "Giờ đông dự kiến", value: "—", noSource: true },
+    { label: "Sự cố đang mở", value: openIncidents.toLocaleString("vi-VN") },
   ];
   const query = (await searchParams) ?? {};
   const denied = Array.isArray(query.denied) ? query.denied[0] : query.denied;
@@ -78,7 +102,9 @@ export default async function ErpSitePage({ params, searchParams }: Props) {
                 <p className={kpi.noSource ? "text-xs text-white/35" : "text-xs text-white/60"}>{kpi.label}</p>
                 <p className={kpi.noSource ? "mt-1 text-base font-bold text-white/45" : "mt-1 text-2xl font-black"}>{kpi.value}</p>
                 {kpi.noSource ? (
-                  <p className="mt-1 text-xs leading-4 text-white/35">Chưa có nguồn dữ liệu</p>
+                  <p className="mt-1 text-xs leading-4 text-white/35">Chưa đọc được số liệu báo cáo</p>
+                ) : kpi.note ? (
+                  <p className="mt-1 text-xs leading-4 text-white/55">{kpi.note}</p>
                 ) : null}
               </div>
             ))}

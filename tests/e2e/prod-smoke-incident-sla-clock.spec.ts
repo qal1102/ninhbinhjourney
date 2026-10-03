@@ -30,12 +30,12 @@ test("open sự cố is shown genuinely overdue, đã đóng sự cố shows a f
 
   const openCard = page.locator("details").filter({ hasText: "INC-TA-069" });
   await openCard.locator("summary").click();
-  await expect(openCard.getByText(/^Quá SLA \d+ phút$/)).toBeVisible();
+  await expect(openCard.getByText(/^Quá hạn \d+ (phút|giờ|ngày)/)).toBeVisible();
 
   const closedCard = page.locator("details").filter({ hasText: "INC-TA-064" });
   await closedCard.locator("summary").click();
   const resolvedText = await closedCard
-    .getByText(/^Hoàn tất trong \d+ phút$/)
+    .getByText(/^Xong trong \d+ phút$/)
     .innerText();
   const resolvedMinutes = Number(resolvedText.match(/\d+/)?.[0] ?? "-1");
   // Reported 08:21, closed at insert time -- 6 minutes in the original

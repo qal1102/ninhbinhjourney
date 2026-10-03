@@ -286,7 +286,7 @@ describe("Mạch việc: nói cho người đọc", () => {
 
   it("bước đã khép thì nói thẳng là không chờ ai", () => {
     const cuoi = buocChinh(dongCa).at(-1)!;
-    expect(dangChoAi(cuoi, nhan)).toContain("Không ai");
+    expect(dangChoAi(cuoi, nhan)).toContain("không còn ai");
   });
 
   it("biết có phải tới lượt vai này chưa", () => {

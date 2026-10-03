@@ -145,7 +145,7 @@ export function MachViecPanel({
         className="flex w-full min-h-11 items-center gap-3 text-left"
       >
         <span className="min-w-0 flex-1 text-sm font-black text-[#1f2f2a]">
-          <span className="text-[#2f6f8f]">Mạch việc · </span>
+          <span className="text-[#2f6f8f]">Quy trình · </span>
           {mach.ten}
           <span className="font-bold text-[#5f7068]"> · {chinh.length} bước</span>
         </span>
@@ -164,7 +164,7 @@ export function MachViecPanel({
             <path d="M3 6l5 5 5-5" />
           </svg>
         </span>
-        <span className="sr-only">{moRong ? "Thu mạch lại" : "Xem cả mạch"}</span>
+        <span className="sr-only">{moRong ? "Thu gọn quy trình" : "Xem cả quy trình"}</span>
       </button>
 
       <p
@@ -195,7 +195,7 @@ export function MachViecPanel({
           mở, vì ba hàng số xếp chồng đẩy phần làm việc đi quá xa. */}
       {gon && !moRong ? null : (
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5">
-          <span className="text-sm text-[#78857f]">Hồ sơ đang ở bước:</span>
+          <span className="text-sm text-[#78857f]">Số hồ sơ ở từng bước:</span>
           {chinh.map((buoc) => (
             <ChipBuoc
               key={buoc.id}

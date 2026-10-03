@@ -274,7 +274,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
           </div>
           {user.role === "director" ? (
             <p className="text-xs font-bold text-[#7a8781]">
-              {visibleEvents.length}/{CAMERA_SCRIPT_MAX_EVENTS} sự kiện · dừng sau khi đủ
+              Đã hiện {visibleEvents.length}/{CAMERA_SCRIPT_MAX_EVENTS} sự kiện của kịch bản
             </p>
           ) : null}
         </div>
@@ -288,8 +288,8 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
           </p>
         ) : visibleEvents.length === 0 ? (
           <p className="mt-4 rounded-xl bg-[#f4f7f5] p-4 text-sm leading-6 text-[#5f7068]">
-            Đang chờ kịch bản. Sự kiện đầu tiên xuất hiện sau khoảng{" "}
-            {Math.round((script[0]?.revealAfterMs ?? 0) / 1000)} giây kể từ khi mở màn hình.
+            Chưa có sự kiện nào. Khoảng{" "}
+            {Math.round((script[0]?.revealAfterMs ?? 0) / 1000)} giây sau khi mở màn hình, sự kiện đầu tiên sẽ hiện ra.
           </p>
         ) : (
           <div className="mt-4 divide-y divide-[#e6ebe8]">

@@ -693,9 +693,9 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
               {(selected.counterRevenueVnd + (selected.webRevenueVnd ?? 0)).toLocaleString("vi-VN")} đ
             </p>
             <p className="mt-1 text-xs leading-5 text-[#8a958f]">
-              Quầy {selected.counterRevenueVnd.toLocaleString("vi-VN")} đ (thành tiền chép trên phiếu lúc bán; phiếu đã huỷ tính 0 đ)
+              Quầy {selected.counterRevenueVnd.toLocaleString("vi-VN")} đ
               {typeof selected.webRevenueVnd === "number"
-                ? ` · Web ${selected.webRevenueVnd.toLocaleString("vi-VN")} đ từ ${(selected.webTicketCount ?? 0).toLocaleString("vi-VN")} tấm vé, phần của cơ sở này trong đơn gói: chia theo số lượt × giá vé quầy người lớn từng cơ sở`
+                ? ` · Web ${selected.webRevenueVnd.toLocaleString("vi-VN")} đ (${(selected.webTicketCount ?? 0).toLocaleString("vi-VN")} tấm vé)`
                 : ""}
               {selected.unpricedTicketCount
                 ? ` · ${selected.unpricedTicketCount.toLocaleString("vi-VN")} tấm vé mẫu cũ không có giá`
@@ -705,7 +705,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
         ) : null}
         <p className="mt-4 text-xs text-[#8a958f]">
           {typeof selected.counterRevenueVnd === "number"
-            ? "Lượt khách và số tấm vé đếm trong kho từ mọi vé còn hiệu lực. Đơn web gồm nhiều điểm được chia tiền về từng cơ sở theo giá vé quầy, nên cộng tiền bốn cơ sở đúng bằng tiền các đơn."
+            ? "Đếm từ mọi vé còn hiệu lực. Tiền quầy lấy đúng số ghi trên phiếu lúc bán, phiếu đã huỷ không tính. Một đơn gói web đi nhiều nơi thì tiền được chia về từng cơ sở theo giá vé quầy người lớn, nên cộng bốn cơ sở lại vừa bằng tiền các đơn."
             : "Đếm trực tiếp từ vé đã phát hành, không phải doanh thu quy đổi — hệ thống chưa lưu giá bán trên từng vé."}
         </p>
       </section>
@@ -723,7 +723,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                   <div className="flex justify-between gap-3">
                     <p className="font-black text-[#30443b]">{item.productLabel}</p>
                     <strong className="text-right">
-                      {item.entryCount.toLocaleString("vi-VN")} lượt · {item.sharePercent}%
+                      {item.entryCount.toLocaleString("vi-VN")} lượt · {item.sharePercent.toLocaleString("vi-VN")}%
                       <span className="block text-xs font-bold text-[#7b8881]">
                         {item.ticketCount.toLocaleString("vi-VN")} tấm vé
                       </span>
@@ -740,7 +740,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
 
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
           <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Vé phát hành gần nhất</p>
-          <h2 className="mt-2 text-xl font-black text-[#20342c]">Từ mã QR đến đối soát</h2>
+          <h2 className="mt-2 text-xl font-black text-[#20342c]">Vé vừa bán, đã dùng hay chưa</h2>
           {sales.recentSales.length === 0 ? (
             <p className="mt-5 text-sm text-[#7b8881]">Chưa có vé nào được phát hành.</p>
           ) : (

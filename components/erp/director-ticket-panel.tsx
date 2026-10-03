@@ -293,9 +293,8 @@ export function DirectorTicketPanel({
               <strong>
                 {overview.demoSeedTickets30d.toLocaleString("vi-VN")} tấm vé mẫu
               </strong>{" "}
-              gieo sẵn từ lúc dựng hệ thống. Chúng không được tính vào bất kỳ con
-              số nào ở trên, kể cả biểu đồ khách đến từ đâu. Nhân viên vẫn dùng
-              chúng để tập quét ở cổng.
+              làm sẵn từ lúc dựng hệ thống để nhân viên tập quét ở cổng. Chúng không
+              được cộng vào con số nào ở trên, kể cả bảng khách đến từ đâu.
             </p>
           ) : null}
         </div>

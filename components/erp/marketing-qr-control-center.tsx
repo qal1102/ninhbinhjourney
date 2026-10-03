@@ -174,7 +174,7 @@ export function MarketingQrControlCenter({
           <label className="mt-4 grid gap-1 text-xs font-bold text-[#5d6f66]">Tên chiến dịch<input key={goiYTenChienDich} name="name" required minLength={2} maxLength={160} defaultValue={goiYTenChienDich} placeholder="QR bến Tam Cốc tháng 8" className="min-h-11 rounded-lg border border-[#cbd7d1] px-3 text-sm" /></label>
           <label className="mt-3 grid gap-1 text-xs font-bold text-[#5d6f66]">Thuộc dịp<ODip key={dipChon} dip={dip} macDinh={dipChon} /></label>
           <label className="mt-3 grid gap-1 text-xs font-bold text-[#5d6f66]">Trạng thái<select name="status" defaultValue="draft" className="min-h-11 rounded-lg border border-[#cbd7d1] bg-white px-3 text-sm"><option value="draft">Nháp</option><option value="active">Đang chạy</option><option value="paused">Tạm dừng</option></select></label>
-          <p className="mt-2 text-xs text-[#7c8b83]">Mã chiến dịch do máy đặt theo tên bạn vừa nhập. Tạo xong là có mã ngay, khỏi nghĩ.</p>
+          <p className="mt-2 text-xs text-[#7c8b83]">Mã chiến dịch tự đặt theo tên bạn vừa gõ, bấm tạo là có ngay.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3"><SubmitButton>Tạo chiến dịch</SubmitButton><ActionMessage state={campaignState} /></div>
         </form>
 

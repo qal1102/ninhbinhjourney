@@ -44,7 +44,7 @@ describe("nguồn gốc dữ liệu ERP", () => {
   it("hàng thật không đeo nhãn, hai loại còn lại gọi đúng tên", () => {
     expect(erpDataOriginLabel("real")).toBeNull();
     expect(erpDataOriginLabel("demo-seed")).toBe("hồ sơ mẫu");
-    expect(erpDataOriginLabel("test-residue")).toBe("cặn chạy thử");
+    expect(erpDataOriginLabel("test-residue")).toBe("dữ liệu chạy thử");
   });
 
   it("tách danh sách thành phần thật và phần mẫu, giữ nguyên thứ tự", () => {

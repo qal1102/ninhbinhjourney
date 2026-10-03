@@ -353,10 +353,9 @@ export function ExecutiveDashboard({
             cho lý do. Cùng lối diễn đạt với bảng vé ngay bên dưới. */}
         {sampleNote ? (
           <p className="mt-4 rounded-xl border border-white/15 bg-white/[0.06] p-4 text-xs leading-5 text-[#d3e5dd]">
-            Sổ còn <strong className="text-white">{sampleNote}</strong> gieo sẵn
-            từ lúc dựng hệ thống. Chúng không được tính vào con số nào ở trên,
-            cũng không lọt vào khối cần bạn quyết định. Nhân viên vẫn mở được để
-            tập.
+            Sổ còn <strong className="text-white">{sampleNote}</strong> làm sẵn
+            từ lúc dựng hệ thống để nhân viên tập. Chúng không được cộng vào con
+            số nào ở trên, cũng không nằm trong khối cần bạn quyết định.
           </p>
         ) : null}
       </section>
@@ -511,7 +510,7 @@ export function ExecutiveDashboard({
                 <dt className="inline text-[#3f3524]">
                   {pendingSopDecisions.length}
                 </dt>{" "}
-                <dd className="inline">cổng Go/No-Go</dd>
+                <dd className="inline">quyết định mở cửa</dd>
               </div>
             </dl>
           </div>
@@ -629,7 +628,7 @@ export function ExecutiveDashboard({
                         }`}
                       >
                         {incident.elapsedMinutes >= incident.slaMinutes
-                          ? "Quá SLA"
+                          ? "Quá hạn"
                           : `Còn ${incident.slaMinutes - incident.elapsedMinutes} phút`}
                       </span>
                       <span className="whitespace-nowrap text-xs font-black text-[#76551f]">

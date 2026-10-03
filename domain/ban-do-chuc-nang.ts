@@ -471,7 +471,7 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     moi: "30/09",
     cacViec: [
       "Lấy một số; trang khách tự cập nhật còn bao nhiêu nhóm phía trước.",
-      "Gọi lượt ở ERP (Tam Cốc → Sức chứa): trang khách đổi sang \"Tới lượt bạn\".",
+      "Gọi lượt ở màn Tam Cốc → Sức chứa: trang khách đổi sang \"Tới lượt bạn\".",
     ],
   },
   {

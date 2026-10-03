@@ -7,6 +7,7 @@ import {
   transitionIncidentAction,
 } from "@/app/erp/actions";
 import type { ErpSite } from "@/domain/erp";
+import { lyDoChuyenCapChu, thoiLuongChu } from "@/domain/incident";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import type {
   IncidentCase,
@@ -54,19 +55,19 @@ function managerActionLabel(status: IncidentStatus): string | null {
 function slaCopy(item: IncidentCase) {
   if (item.status === "closed") {
     return {
-      text: `Hoàn tất trong ${item.elapsedMinutes} phút`,
+      text: `Xong trong ${thoiLuongChu(item.elapsedMinutes)}`,
       tone: "text-[#2b7359]",
     };
   }
   const remaining = item.slaMinutes - item.elapsedMinutes;
   if (remaining <= 0) {
     return {
-      text: `Quá SLA ${Math.abs(remaining)} phút`,
+      text: `Quá hạn ${thoiLuongChu(Math.abs(remaining))}`,
       tone: "text-[#a34637]",
     };
   }
   return {
-    text: `Còn ${remaining} phút để phản hồi`,
+    text: `Còn ${thoiLuongChu(remaining)} để phản hồi`,
     tone: remaining <= 2 ? "text-[#a34637]" : "text-[#8a642a]",
   };
 }
@@ -108,10 +109,10 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
         : "Việc sự cố của tôi";
   const description =
     user.role === "director"
-      ? "Chỉ hiển thị hồ sơ vượt thẩm quyền cơ sở hoặc cần quyết định điều hành."
+      ? "Giám đốc chỉ thấy những hồ sơ cơ sở không tự quyết được, hoặc đã quá hạn mà chưa ai xử lý."
       : user.role === "manager"
         ? "Tiếp nhận, giao đúng người, kiểm tra bằng chứng và đóng hồ sơ tại một nơi."
-        : "Cập nhật đúng việc được giao; quản lý sẽ xác minh trước khi đóng hồ sơ.";
+        : "Bạn cập nhật việc mình được giao; quản lý kiểm lại rồi mới đóng hồ sơ.";
 
   async function handleManagerAction(incident: IncidentCase) {
     setPendingId(incident.id);
@@ -171,9 +172,9 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
         {activeCount > 1 ? (
           <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
-              ["Đang xử lý", String(activeCount), "Theo đúng phạm vi của bạn"],
+              ["Đang xử lý", String(activeCount), "Hồ sơ bạn được xem"],
               ["Mức P1 / P2", String(urgentCount), "Ưu tiên an toàn trước"],
-              ["Sát hoặc quá SLA", String(slaRiskCount), "Cần phản hồi ngay"],
+              ["Sắp hoặc đã quá hạn", String(slaRiskCount), "Cần phản hồi ngay"],
               [
                 user.role === "director" ? "Cần quyết định" : "Đã đóng gần nhất",
                 user.role === "director"
@@ -198,7 +199,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
           <p className="mt-5 rounded-xl bg-[#f3f6f4] p-4 text-sm leading-6 text-[#4f625a]">
             {activeCount === 0
               ? "Không có hồ sơ nào đang mở trong phạm vi của bạn."
-              : `Đang có đúng một hồ sơ mở${urgentCount > 0 ? ", ở mức P1 hoặc P2" : ""}${slaRiskCount > 0 ? ", đã sát hoặc quá SLA" : ""}. Chi tiết ngay bên dưới.`}
+              : `Đang có đúng một hồ sơ mở${urgentCount > 0 ? ", ở mức P1 hoặc P2" : ""}${slaRiskCount > 0 ? ", sắp hoặc đã quá hạn phản hồi" : ""}. Chi tiết ngay bên dưới.`}
           </p>
         )}
       </section>
@@ -257,7 +258,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                         <span className="rounded-full bg-[#fdf0dd] px-2 py-0.5 text-xs font-black text-[#8a5e30]">
                           {incident.dataOrigin === "demo-seed"
                             ? "hồ sơ mẫu"
-                            : "cặn chạy thử"}
+                            : "dữ liệu chạy thử"}
                         </span>
                       ) : null}
                     </div>
@@ -323,7 +324,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                               Lý do chuyển cấp
                             </p>
                             <p className="mt-1 text-sm leading-6 text-[#74483f]">
-                              {incident.escalationReason}
+                              {lyDoChuyenCapChu(incident.escalationReason)}
                             </p>
                           </div>
                         ) : null}

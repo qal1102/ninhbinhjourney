@@ -87,7 +87,7 @@ export function HuongDanWorkspace(props: Props) {
     { href: "#moi-cap-nhat", nhan: `Mới cập nhật · ${MUC_MOI.length}` },
     { href: "#tren-web", nhan: `Trên web khách · ${CHUC_NANG_WEB.length}` },
     { href: "#vong-khach", nhan: `Vòng khách · ${VONG_KHACH.length} bước` },
-    { href: "#tra-viec", nhan: `Mọi việc trong ERP · ${TONG_VIEC_TRA_CUU}` },
+    { href: "#tra-viec", nhan: `Mọi việc điều hành · ${TONG_VIEC_TRA_CUU}` },
   ];
   return (
     <div className="space-y-6" data-testid="huong-dan">
@@ -137,9 +137,9 @@ export function HuongDanWorkspace(props: Props) {
                 <span className="text-xs font-black uppercase tracking-[0.12em] text-[#718078]">
                   {loai === "web"
                     ? cn.duongDan.startsWith("/erp")
-                      ? "Web khách · xem trong ERP"
+                      ? "Web khách · xem trong hệ thống"
                       : "Web khách"
-                    : `ERP · ${ERP_ROLE_LABELS[cn.vai]}`}
+                    : `Điều hành · ${ERP_ROLE_LABELS[cn.vai]}`}
                 </span>
                 {loai === "web" && cn.chiMayTinh ? (
                   <span className="text-xs font-bold text-[#718078]">· máy tính</span>
@@ -276,7 +276,7 @@ export function HuongDanWorkspace(props: Props) {
           Tra một việc · {TONG_VIEC_TRA_CUU} việc
         </p>
         <h2 id="tieu-de-tra-viec" className="mt-2 text-2xl font-black text-[#20342c]">
-          Mọi việc trong ERP, việc nào của ai
+          Mọi việc điều hành, việc nào của ai
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7068]">
           Việc của giám đốc thì bấm là tới. Việc của vai khác thì bấm &ldquo;Làm thử&rdquo;: hệ thống chuyển sang một tài

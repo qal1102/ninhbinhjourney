@@ -49,7 +49,7 @@ function createAdminClient(): SupabaseClient {
   const secret = process.env.SUPABASE_SECRET_KEY?.trim();
   if (!url || !secret) {
     throw new SopRepositoryError(
-      "Kho SOP và Go/No-Go chưa được cấu hình đủ ở phía máy chủ.",
+      "Máy chủ chưa nối kho dữ liệu SOP.",
     );
   }
   return createClient(url, secret, {
@@ -346,7 +346,7 @@ export async function submitSopOpeningAssessment(input: {
 }): Promise<void> {
   if (readMode() !== "supabase") {
     throw new SopRepositoryError(
-      "Chế độ demo cục bộ không ghi cổng Go/No-Go. Bật ERP_PERSISTENCE_MODE=supabase.",
+      "Bản chạy thử trên máy không ghi bảng kiểm mở cửa.",
     );
   }
   const request = {
@@ -389,7 +389,7 @@ export async function decideSopOpeningAssessment(input: {
 }): Promise<void> {
   if (readMode() !== "supabase") {
     throw new SopRepositoryError(
-      "Chế độ demo cục bộ không ghi quyết định Go/No-Go. Bật ERP_PERSISTENCE_MODE=supabase.",
+      "Bản chạy thử trên máy không ghi quyết định mở cửa.",
     );
   }
   const request = {

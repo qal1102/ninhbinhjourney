@@ -13,7 +13,7 @@ import {
   type CoSoThuyen,
   type ThuyenTrenBanDo,
 } from "@/domain/thuyen-song";
-import { GHI_CONG_BAN_DO, kieuBanDoThuongHieu } from "@/lib/map/brand-style";
+import { CHU_MAPLIBRE, GHI_CONG_BAN_DO, kieuBanDoThuongHieu } from "@/lib/map/brand-style";
 
 /**
  * Bản đồ sống thuyền trên sông (màn Sức chứa của Tràng An, Tam Cốc).
@@ -138,6 +138,7 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
       attributionControl: false,
       scrollZoom: false,
       cooperativeGestures: camUng,
+      locale: CHU_MAPLIBRE,
     });
     banDo.current = map;
     map.addControl(

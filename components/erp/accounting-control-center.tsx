@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, type ReactNode } from "react";
+import { useTenNguoi } from "./ten-nguoi";
 import { useFormStatus } from "react-dom";
 import {
   changeAccountingPeriodAction,
@@ -449,6 +450,7 @@ function JournalCard({
 }) {
   const status = journalStatus(journal.status);
   const totals = journalTotal(journal.lines);
+  const tenNguoi = useTenNguoi();
   const sourceLabel = accountingJournalSourceLabel(journal);
   const sourceReference =
     journal.sourceType === "supplier-invoice"
@@ -476,9 +478,6 @@ function JournalCard({
         <div>
           <p className="font-black text-[#293f35]">
             {sourceLabel} · {formatDate(journal.businessDate)}
-          </p>
-          <p className="mt-1 break-all text-xs text-[#74827b]">
-            Nguồn {sourceReference ?? "—"}
           </p>
         </div>
         <div>
@@ -538,7 +537,7 @@ function JournalCard({
             <dl className="grid gap-2 rounded-xl border border-[#dfe6e2] bg-white p-4 text-xs">
               <div>
                 <dt className="text-[#7a8781]">Kế toán lập</dt>
-                <dd className="mt-1 font-black">{journal.makerAccountId}</dd>
+                <dd className="mt-1 font-black">{tenNguoi(journal.makerAccountId)}</dd>
                 <dd className="mt-1 leading-5 text-[#67766f]">
                   {journal.makerNote}
                 </dd>
@@ -546,7 +545,7 @@ function JournalCard({
               <div className="border-t border-[#e7ece9] pt-3">
                 <dt className="text-[#7a8781]">Kế toán trưởng kiểm tra</dt>
                 <dd className="mt-1 font-black">
-                  {journal.checkerAccountId ?? "Chưa kiểm tra"}
+                  {tenNguoi(journal.checkerAccountId) ?? "Chưa kiểm tra"}
                 </dd>
                 {journal.checkerNote ? (
                   <dd className="mt-1 leading-5 text-[#67766f]">
@@ -554,6 +553,12 @@ function JournalCard({
                   </dd>
                 ) : null}
               </div>
+              {sourceReference ? (
+                <div className="border-t border-[#e7ece9] pt-3">
+                  <dt className="text-[#7a8781]">Mã hồ sơ gốc, để tra lại</dt>
+                  <dd className="mt-1 break-all text-[#67766f]">{sourceReference}</dd>
+                </div>
+              ) : null}
               <div className="border-t border-[#e7ece9] pt-3">
                 <dt className="text-[#7a8781]">Mốc xử lý</dt>
                 <dd className="mt-1 leading-5 text-[#53645c]">
@@ -668,6 +673,10 @@ export function AccountingControlCenter({
       .map((journal) => journal.reversalOfJournalId)
       .filter((value): value is string => Boolean(value)),
   );
+  // Bút toán do lượt chạy thử để lại (ghi chú "QA-T10B-RT-…") không xoá được
+  // vì sổ đã ghi thì bất biến; gập chúng xuống cuối thay vì để lẫn với sổ thật.
+  const soThat = journals.filter((journal) => journal.dataOrigin !== "test-residue");
+  const soChayThu = journals.filter((journal) => journal.dataOrigin === "test-residue");
   const postedSiteCount = new Set(posted.map((journal) => journal.siteId)).size;
   const reversalCount = posted.filter((journal) =>
     Boolean(journal.reversalOfJournalId),
@@ -896,14 +905,14 @@ export function AccountingControlCenter({
               Sổ nhật ký
             </p>
             <h2 className="mt-2 text-2xl font-black text-[#20342c]">
-              {journals.length} bút toán có nguồn
+              {soThat.length} bút toán
             </h2>
           </div>
           <p className="text-xs font-bold text-[#718078]">
             Mới cập nhật trước · mở từng dòng để kiểm tra
           </p>
         </div>
-        {journals.map((journal) => (
+        {soThat.map((journal) => (
           <JournalCard
             key={journal.id}
             journal={journal}
@@ -916,6 +925,28 @@ export function AccountingControlCenter({
             }
           />
         ))}
+        {soChayThu.length > 0 ? (
+          <details className="rounded-2xl border border-dashed border-[#c9d3cd] bg-[#f8faf8] p-4">
+            <summary className="cursor-pointer text-sm font-bold text-[#5f7068]">
+              {soChayThu.length} bút toán do các lượt chạy thử tạo ra, không phải nghiệp vụ thật. Sổ không cho xoá nên vẫn giữ ở đây.
+            </summary>
+            <div className="mt-3 space-y-3">
+          {soChayThu.map((journal) => (
+            <JournalCard
+              key={journal.id}
+              journal={journal}
+              user={user}
+              hasReversal={reversalTargets.has(journal.id)}
+              defaultOpen={
+                journal.status === "pending-checker" ||
+                (journal.sourceType === "shift-close" &&
+                  journal.sourceWorkflowId === initialSourceId)
+              }
+            />
+          ))}
+            </div>
+          </details>
+        ) : null}
         {journals.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-[#b8c6bf] bg-white px-5 py-12 text-center text-sm text-[#75817b]">
             Chưa có bút toán. Kế toán bắt đầu từ một ca đã được quản lý duyệt.

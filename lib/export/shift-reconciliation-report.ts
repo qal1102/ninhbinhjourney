@@ -59,7 +59,7 @@ export function buildShiftReconciliationReport(input: {
       ["Trạng thái", input.statusLabel],
       ...(windowText ? [["Khung giờ đối soát", windowText]] : []),
       ...(originLabel
-        ? [["Loại hồ sơ", `${originLabel}: ca này là hồ sơ gieo sẵn lúc dựng hệ thống, không phải ca thật`]]
+        ? [["Loại hồ sơ", `${originLabel}: ca này là hồ sơ mẫu làm sẵn lúc dựng hệ thống, không phải ca thật`]]
         : []),
     ],
   });

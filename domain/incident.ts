@@ -1,4 +1,7 @@
 import type { IncidentDraft } from "@/domain/models";
+import { thoiLuongChu } from "@/domain/thoi-luong";
+
+export { thoiLuongChu };
 
 export const REQUIRED_INCIDENT_SAMPLE =
   "Bến thuyền Tràng An đang đông, thời gian chờ khoảng 20 phút, cần thêm 3 nhân sự hỗ trợ phân luồng.";
@@ -109,3 +112,16 @@ export const INCIDENT_STATUSES = [
 ] as const;
 
 export type IncidentStatus = (typeof INCIDENT_STATUSES)[number];
+
+const LY_DO_TU_CHUYEN = /^Quá hạn SLA (\d+) phút \(trễ (\d+) phút\)\. Hệ thống tự chuyển cấp, không chờ thao tác của người trực\.$/;
+
+/**
+ * Lý do chuyển cấp do kho tự ghi (migration 024) viết theo lối máy: "Quá hạn
+ * SLA 10 phút (trễ 1527 phút)…". Câu đã lưu thì giữ nguyên trong kho; chỉ đọc
+ * lại cho người xem.
+ */
+export function lyDoChuyenCapChu(lyDo: string): string {
+  const khop = LY_DO_TU_CHUYEN.exec(lyDo.trim());
+  if (!khop) return lyDo;
+  return `Hạn phản hồi là ${thoiLuongChu(Number(khop[1]))}, đã trễ ${thoiLuongChu(Number(khop[2]))}. Hệ thống tự chuyển lên cấp trên, không chờ người trực bấm.`;
+}

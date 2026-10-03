@@ -64,7 +64,7 @@ export function ViecDauTienPanel({
           </Link>
           {conLai > 0 ? (
             <span className="text-sm text-[#5f7068]">
-              Xong việc này thì còn {conLai} việc khác đang chờ anh.
+              Xong việc này thì còn {conLai} việc khác đang chờ bạn.
             </span>
           ) : null}
         </p>

@@ -1,4 +1,5 @@
 import type { Customer360Journey } from "@/lib/customer-data/journey-repository";
+import { ngayVietNam, thoiLuongChu } from "@/domain/thoi-luong";
 import type { Customer360BookingOrder } from "@/lib/customer-data/booking-repository";
 import type { Customer360OutboundAction } from "@/lib/customer-data/recommendation-repository";
 import { nhanCachTra } from "@/domain/customer-booking";
@@ -23,11 +24,18 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
-    dateStyle: "medium",
-    timeStyle: "short",
+  // "19:14 12/10/2026": kiểu người Việt viết, không phải "19:14 12 thg 10, 2026".
+  const phan = new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour12: false,
     timeZone: "Asia/Ho_Chi_Minh",
-  }).format(new Date(value));
+  }).formatToParts(new Date(value));
+  const lay = (loai: Intl.DateTimeFormatPartTypes) => phan.find((p) => p.type === loai)?.value ?? "";
+  return `${lay("hour")}:${lay("minute")} ${lay("day")}/${lay("month")}/${lay("year")}`;
 }
 
 function sourceLabel(source: Customer360Journey["source"]) {
@@ -90,8 +98,9 @@ const SUPPRESSION_REASON_LABELS: Record<string, string> = {
   "opted-out": "khách đã từ chối nhận tin",
 };
 
+/** Hồ sơ của lịch sử mẫu mang tiền tố de000000-: gọi là khách mẫu, không in mã. */
 function shortCustomerId(profileId: string) {
-  return profileId.slice(0, 8).toUpperCase();
+  return profileId.startsWith("de000000") ? "mẫu" : profileId.slice(0, 8).toUpperCase();
 }
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
@@ -150,7 +159,7 @@ export function Customer360Dashboard({
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
           <p className="text-xs text-[#6e7b75]">Gợi ý dịch vụ</p>
           <p className="mt-2 text-3xl font-black text-[#203a30]">{recommendations.length}</p>
-          <p className="mt-2 text-xs text-[#849089]">mỗi gợi ý kèm lý do và luật đã dùng, không phải máy tự đoán</p>
+          <p className="mt-2 text-xs text-[#849089]">mỗi gợi ý ghi rõ vì sao, dựa trên điều khách đã tự chọn</p>
         </article>
         <article className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm">
           <p className="text-xs text-[#6e7b75]">Tin chờ gửi cho khách</p>
@@ -169,7 +178,7 @@ export function Customer360Dashboard({
               <article key={recommendation.recommendationId} className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]">
                 <strong>{recommendation.productName}</strong>
                 <p className="mt-2">{RECOMMENDATION_REASON_LABELS[recommendation.reasonCode] ?? recommendation.reasonCode}</p>
-                <p className="mt-2 text-xs">Khách {shortCustomerId(recommendation.profileId)} · luật {recommendation.ruleVersion} · hết hạn {formatDate(recommendation.expiresAt)}</p>
+                <p className="mt-2 text-xs">Khách {shortCustomerId(recommendation.profileId)} · gợi ý còn hạn tới {formatDate(recommendation.expiresAt)}</p>
               </article>
             ))}
             {outboundActions.map((action) => (
@@ -240,7 +249,7 @@ export function Customer360Dashboard({
                       {order.orderCode} · khách {shortCustomerId(order.profileId)} ·{" "}
                       <a href={`?xem=${order.profileId}#khach-thay-gi`} className="font-bold text-[#35594b] underline underline-offset-2">Xem như khách</a>
                     </p>
-                    <p className="mt-1 text-xs">{order.visitDate} · {order.partySize} khách · {formatDate(order.createdAt)}</p>
+                    <p className="mt-1 text-xs">Ngày đi {ngayVietNam(order.visitDate)} · {order.partySize} khách · đặt lúc {formatDate(order.createdAt)}</p>
                   </div>
                   <span className="rounded-full bg-[#e7efe9] px-2.5 py-1 text-xs font-bold text-[#35594b]">{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>
                 </div>
@@ -303,8 +312,8 @@ export function Customer360Dashboard({
                   </h2>
                   <p className="mt-1 text-sm text-[#66756e]">
                     {journey.intent.pace === "relaxed" ? "Đi thong thả" : journey.intent.pace === "active" ? "Đi được nhiều" : "Đi vừa phải"}
-                    {" · "}{journey.intent.duration_minutes} phút
-                    {" · "}{journey.intent.visit_date}
+                    {" · "}{thoiLuongChu(journey.intent.duration_minutes)}
+                    {" · "}ngày đi {ngayVietNam(journey.intent.visit_date)}
                   </p>
                 </div>
                 <div className="rounded-xl bg-[#f2f6f3] px-3 py-2 text-sm font-bold text-[#36584b]">

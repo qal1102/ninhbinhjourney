@@ -50,14 +50,14 @@ function actionError(error: unknown): SopActionState {
     return {
       status: "error",
       message:
-        error.issues[0]?.message ?? "Dữ liệu Go/No-Go chưa đúng định dạng.",
+        error.issues[0]?.message ?? "Thông tin bảng kiểm chưa đúng định dạng.",
     };
   }
   if (error instanceof SopRepositoryError) {
     return { status: "error", message: error.message };
   }
   if (error instanceof Error) return { status: "error", message: error.message };
-  return { status: "error", message: "Chưa thể hoàn tất thao tác Go/No-Go." };
+  return { status: "error", message: "Chưa ghi được quyết định mở cửa. Xin thử lại." };
 }
 
 export async function submitSopOpeningAssessmentAction(
@@ -87,7 +87,7 @@ export async function submitSopOpeningAssessmentAction(
       !accountCanAccessSite(user, input.siteId) ||
       !accountCanAccessModule(user, input.siteId, "sop-dien-tap")
     ) {
-      throw new Error("Chỉ quản lý cơ sở được gửi checklist mở cửa.");
+      throw new Error("Chỉ quản lý cơ sở được gửi bảng kiểm mở cửa.");
     }
     await submitSopOpeningAssessment({
       siteId: input.siteId,
@@ -102,7 +102,7 @@ export async function submitSopOpeningAssessmentAction(
     revalidatePath("/erp");
     return {
       status: "success",
-      message: "Đã gửi checklist. Cổng mở cửa đang chờ giám đốc quyết định.",
+      message: "Đã gửi bảng kiểm. Giám đốc sẽ quyết định có mở cửa hay chưa.",
     };
   } catch (error) {
     return actionError(error);
@@ -132,7 +132,7 @@ export async function decideSopOpeningAssessmentAction(
       !accountCanAccessSite(user, input.siteId) ||
       !accountCanAccessModule(user, input.siteId, "sop-dien-tap")
     ) {
-      throw new Error("Chỉ giám đốc được ra quyết định Go/No-Go.");
+      throw new Error("Chỉ giám đốc được quyết định mở cửa.");
     }
     await decideSopOpeningAssessment({
       assessmentId: input.assessmentId,
@@ -148,7 +148,7 @@ export async function decideSopOpeningAssessmentAction(
     revalidatePath("/erp");
     return {
       status: "success",
-      message: "Đã ghi quyết định và lịch sử Go/No-Go.",
+      message: "Đã ghi quyết định mở cửa vào lịch sử.",
     };
   } catch (error) {
     return actionError(error);

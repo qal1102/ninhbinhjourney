@@ -63,7 +63,7 @@ export type DemViecChoGiamDoc = {
 
 export const VIEC_DAU_TIEN_COPY = {
   nhan: "Việc nên làm trước",
-  ranh: "Hôm nay không có việc nào chờ anh quyết.",
+  ranh: "Hôm nay không có việc nào chờ bạn quyết.",
   ranhViSao:
     "Mọi hồ sơ đang nằm đúng bàn của người phụ trách. Anh chỉ cần mở lại khi có ai chuyển lên.",
 } as const;
@@ -82,7 +82,7 @@ export function viecDauTien(
   if (dem.quyetDinhSop > 0) {
     return {
       id: "sop",
-      cauNoi: `${dem.quyetDinhSop} cơ sở đang chờ anh quyết định cho mở cửa.`,
+      cauNoi: `${dem.quyetDinhSop} cơ sở đang chờ bạn quyết định cho mở cửa.`,
       viSao: "Anh chưa quyết thì cơ sở chưa mở cửa được, nên việc này cần làm trước tiên.",
       href: `/erp/${siteId}/sop-dien-tap`,
       nhanNut: "Xem hồ sơ mở cửa",
@@ -106,8 +106,8 @@ export function viecDauTien(
   if (dem.suCoLeoThang > 0) {
     return {
       id: "su-co",
-      cauNoi: `${dem.suCoLeoThang} sự cố đã leo thang lên anh.`,
-      viSao: "Nên xem trước các việc tiền bạc, vì ngoài hiện trường có thể đang có người chờ anh quyết.",
+      cauNoi: `${dem.suCoLeoThang} sự cố đã chuyển lên tới bạn.`,
+      viSao: "Nên xem trước các việc tiền bạc, vì ngoài hiện trường có thể đang có người chờ bạn quyết.",
       href: `/erp/${siteId}/su-co`,
       nhanNut: "Mở hàng sự cố",
       so: dem.suCoLeoThang,
@@ -118,7 +118,7 @@ export function viecDauTien(
   if (dem.caLechChoQuyet > 0) {
     return {
       id: "ca-lech",
-      cauNoi: `${dem.caLechChoQuyet} ca bán vé lệch quá ngưỡng, đang chờ anh quyết.`,
+      cauNoi: `${dem.caLechChoQuyet} ca bán vé lệch quá ngưỡng, đang chờ bạn quyết.`,
       viSao: "Tiền mặt đã ra khỏi két mà chưa ai chốt được. Để qua ngày thì người trực ca đã về, rất khó tìm lại chỗ lệch.",
       // Neo trong chính trang chủ, KHÔNG phải màn Vé của cơ sở.
       //
@@ -140,7 +140,7 @@ export function viecDauTien(
   if (dem.hoaDonChoQuyet > 0) {
     return {
       id: "hoa-don",
-      cauNoi: `${dem.hoaDonChoQuyet} hoá đơn đối tác đang chờ anh quyết.`,
+      cauNoi: `${dem.hoaDonChoQuyet} hoá đơn đối tác đang chờ bạn quyết.`,
       viSao: "Tiền này chưa chi ra nên hoãn một ngày cũng không sao, nhưng để lâu thì mất uy tín với đối tác.",
       href: `/erp/${siteId}/doi-tac-nha-cung-ung`,
       nhanNut: "Mở hàng hoá đơn",
@@ -152,7 +152,7 @@ export function viecDauTien(
   if (dem.deNghiDoiDuAn > 0) {
     return {
       id: "doi-du-an",
-      cauNoi: `${dem.deNghiDoiDuAn} đề nghị đổi dự án đang chờ anh duyệt.`,
+      cauNoi: `${dem.deNghiDoiDuAn} đề nghị đổi dự án đang chờ bạn duyệt.`,
       viSao: "Có ảnh hưởng ngân sách nhưng vẫn sửa lại được, nên để sau các việc liên quan tiền mặt.",
       href: `/erp/${siteId}/du-an-su-kien`,
       nhanNut: "Xem đề nghị",

@@ -173,7 +173,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
                   <span className="min-w-0">
                     <span className="block text-sm font-black text-[#20342c]">{muc.cn.ten}</span>
                     <span className="block text-xs text-[#718078]">
-                      {muc.loai === "web" ? "Web khách" : "ERP"} · {muc.cn.moi}
+                      {muc.loai === "web" ? "Web khách" : "Điều hành"} · {muc.cn.moi}
                     </span>
                   </span>
                   <span aria-hidden="true" className="text-[#9a6328]">

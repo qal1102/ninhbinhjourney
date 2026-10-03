@@ -41,7 +41,7 @@ function formatTime(value: string) {
 }
 
 function presenceNote(row: ShiftPresenceRow) {
-  if (!row.latestAt) return "Hôm nay chưa chấm công tại cơ sở này";
+  if (!row.latestAt) return "Hôm nay chưa vào ca";
   const time = formatTime(row.latestAt);
   const suffix = row.demoLocation ? " · vị trí mô phỏng" : "";
   return row.state === "on-shift"
@@ -66,7 +66,7 @@ export function StaffPerformanceWorkspace({ site, directory, attendance }: Props
         Ca làm tại {site.shortName}
       </h2>
       <p className="mt-2 text-sm text-[#65756e]">
-        Đọc từ phân công tài khoản và lượt chấm công hôm nay tại cơ sở này.
+        Ai thuộc cơ sở này, hôm nay ai đã vào ca, ai đã về.
       </p>
 
       {summary.assigned === 0 ? (
@@ -135,9 +135,9 @@ export function StaffPerformanceWorkspace({ site, directory, attendance }: Props
       )}
 
       <p className="mt-5 border-t border-[#e6ebe8] pt-4 text-xs leading-5 text-[#7b8881]">
-        Năng suất theo đầu người, doanh thu từng nhân viên và tỉ lệ đúng hạn
-        chưa có nguồn dữ liệu, nên chưa hiển thị ở đây. Tiến độ từng việc xem
-        tại Chấm công &amp; phiếu việc.
+        Việc đã giao cho từng người và tiến độ của nó nằm ở màn Chấm công. Năng
+        suất hay doanh thu theo từng người thì hệ thống chưa đo, nên màn này
+        không đưa ra con số đoán.
       </p>
     </section>
   );

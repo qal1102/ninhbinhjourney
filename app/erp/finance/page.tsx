@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { AccountingControlCenter } from "@/components/erp/accounting-control-center";
+import { TenNguoiProvider } from "@/components/erp/ten-nguoi";
+import { listStaffDirectory } from "@/lib/erp/staff-directory";
 import { MachViecPanel } from "@/components/erp/mach-viec-panel";
 import { machViecTheoId } from "@/domain/erp-mach-viec";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
@@ -83,6 +85,11 @@ export default async function ErpFinancePage({ searchParams }: Props) {
     ? sourceValue[0]
     : sourceValue;
 
+  // Sổ lưu mã tài khoản; người đọc cần họ tên (components/erp/ten-nguoi.tsx).
+  const tenNguoi = Object.fromEntries(
+    (await listStaffDirectory().catch(() => [])).map((nguoi) => [nguoi.accountId, nguoi.displayName]),
+  );
+
   return (
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
@@ -103,6 +110,7 @@ export default async function ErpFinancePage({ searchParams }: Props) {
           gon
         />
       ))}
+      <TenNguoiProvider ten={tenNguoi}>
       <AccountingControlCenter
         user={user}
         shiftClosures={shiftClosures}
@@ -116,6 +124,7 @@ export default async function ErpFinancePage({ searchParams }: Props) {
         cashEligibleShiftsBySite={eligibleShiftsBySite}
         initialSourceId={initialSourceId}
       />
+      </TenNguoiProvider>
     </ErpShell>
   );
 }

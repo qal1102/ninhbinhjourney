@@ -30,7 +30,7 @@ export type { IncidentStatus };
 
 export type IncidentEvidence = {
   id: string;
-  kind: "Ảnh hiện trường" | "Checklist" | "Biên bản";
+  kind: "Ảnh hiện trường" | "Bảng kiểm" | "Biên bản";
   label: string;
   addedBy: string;
   addedAt: string;
@@ -269,7 +269,7 @@ function createSeedCases(siteId: ErpSiteId): IncidentCase[] {
       nextAction: "Quản lý tiếp nhận và giao tổ y tế",
       evidence: [
         { id: "EV-071-01", kind: "Ảnh hiện trường", label: "Vị trí khách đang được hỗ trợ", addedBy: employee.name, addedAt: "09:17" },
-        { id: "EV-071-02", kind: "Checklist", label: "Đã mở lối tiếp cận tạm thời", addedBy: employee.name, addedAt: "09:18" },
+        { id: "EV-071-02", kind: "Bảng kiểm", label: "Đã mở lối tiếp cận tạm thời", addedBy: employee.name, addedAt: "09:18" },
       ],
       timeline: [
         { id: "TL-071-02", at: "09:18", actor: "Hệ thống", action: "Chuyển cấp P2", note: "Đã gửi quản lý cơ sở và giám đốc vì cần điều chỉnh luồng khách." },
@@ -300,7 +300,7 @@ function createSeedCases(siteId: ErpSiteId): IncidentCase[] {
       nextAction: "Hoàn tất ảnh sau xử lý và chuyển quản lý xác minh",
       evidence: [
         { id: "EV-069-01", kind: "Ảnh hiện trường", label: "Hàng chờ trước khi mở làn phụ", addedBy: "Camera AI · CAM 02", addedAt: "09:02" },
-        { id: "EV-069-02", kind: "Checklist", label: "Đã đặt biển hướng dẫn và mở hàng chờ phụ", addedBy: employee.name, addedAt: "09:06" },
+        { id: "EV-069-02", kind: "Bảng kiểm", label: "Đã đặt biển hướng dẫn và mở hàng chờ phụ", addedBy: employee.name, addedAt: "09:06" },
       ],
       timeline: [
         { id: "TL-069-03", at: "09:06", actor: employee.name, action: "Cập nhật xử lý", note: "Đã mở hàng chờ phụ; thời gian chờ giảm còn 9 phút." },
@@ -488,7 +488,7 @@ async function employeeProgressInCookie(input: IncidentActionInput): Promise<Inc
     nextAction: "Chờ quản lý kiểm tra hiện trường và bằng chứng",
     updatedAtIso: new Date().toISOString(),
     timeline: [
-      { id: crypto.randomUUID(), at: displayTime(), actor: input.actorName, action: "Báo đã xử lý", note: "Đã hoàn thành checklist và chuyển quản lý xác minh kết quả." },
+      { id: crypto.randomUUID(), at: displayTime(), actor: input.actorName, action: "Báo đã xử lý", note: "Đã làm xong các bước kiểm, chuyển quản lý xác minh." },
       ...incident.timeline,
     ],
   };

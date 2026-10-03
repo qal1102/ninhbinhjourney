@@ -10,6 +10,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useReducedMotion } from "@/components/shared/use-reduced-motion";
 import {
   GHI_CONG_BAN_DO,
+  CHU_MAPLIBRE,
   kieuBanDoThuongHieu,
   TAM_NINH_BINH,
   type ToneBanDo,
@@ -123,24 +124,6 @@ export const LOI_NHAN_HONG_TUONG_TAC =
   "Bản đồ chưa về kịp. Các điểm vẫn ghim đúng chỗ, mời bạn chọn thử một nơi.";
 export const LOI_NHAN_HONG_TINH =
   "Bản đồ chưa về kịp. Vị trí các điểm vẫn ghim đúng chỗ.";
-
-/**
- * Chữ của chính MapLibre, dịch sang tiếng Việt.
- *
- * Bỏ qua chỗ này là trên một trang tiếng Việt bỗng hiện "Use ctrl + scroll to
- * zoom the map" và nút điều khiển đọc lên thành "Zoom in" trong trình đọc màn
- * hình. Không ai để ý cho tới khi nó nằm giữa màn hình.
- */
-const CHU_MAPLIBRE = {
-  "AttributionControl.ToggleAttribution": "Nguồn dữ liệu bản đồ",
-  "AttributionControl.MapFeedback": "Góp ý về bản đồ",
-  "NavigationControl.ZoomIn": "Phóng to",
-  "NavigationControl.ZoomOut": "Thu nhỏ",
-  "NavigationControl.ResetBearing": "Xoay lại hướng bắc",
-  "CooperativeGesturesHandler.WindowsHelpText": "Giữ Ctrl rồi cuộn để phóng to bản đồ",
-  "CooperativeGesturesHandler.MacHelpText": "Giữ ⌘ rồi cuộn để phóng to bản đồ",
-  "CooperativeGesturesHandler.MobileHelpText": "Dùng hai ngón để di chuyển bản đồ",
-};
 
 function camUng() {
   return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;

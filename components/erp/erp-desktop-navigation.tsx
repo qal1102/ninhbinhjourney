@@ -54,7 +54,7 @@ export function ErpDesktopNavigation({ site, modules, activeModuleId }: Props) {
   return (
     <nav
       ref={navigationRef}
-      aria-label={`Module ${site.shortName}`}
+      aria-label={`Nghiệp vụ ${site.shortName}`}
       className="relative hidden border-b border-[#dce2dd] bg-white lg:block"
     >
       <div className="mx-auto flex max-w-[1600px] flex-nowrap items-center gap-1 px-4 py-2 sm:px-6">

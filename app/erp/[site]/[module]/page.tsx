@@ -32,6 +32,7 @@ import { readShiftCareBrief } from "@/lib/erp/shift-care-repository";
 import QRCode from "qrcode";
 import { HangChoPanel } from "@/components/erp/hang-cho-panel";
 import { BanDoThuyenTre } from "@/components/erp/ban-do-thuyen-tre";
+import { TenNguoiProvider } from "@/components/erp/ten-nguoi";
 import { laCoSoThuyen, TUYEN_THUYEN } from "@/domain/thuyen-song";
 import { BEN_CO_HANG_CHO, benCuaCoSo } from "@/domain/hang-cho";
 import { docHangChoErp } from "@/lib/hang-cho-repository";
@@ -165,7 +166,11 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
           })
         : Promise.resolve([]),
       // Danh bạ cho màn Nhân sự, và cho ô chọn người khi quản lý giao việc.
-      moduleDefinition.id === "nhan-su" || user.role === "manager"
+      // Màn Đối tác và Tài chính cần thêm họ tên người lập, người duyệt.
+      moduleDefinition.id === "nhan-su" ||
+      moduleDefinition.id === "doi-tac-nha-cung-ung" ||
+      moduleDefinition.id === "tai-chinh-doi-soat" ||
+      user.role === "manager"
         ? listStaffDirectory()
         : Promise.resolve([]),
       moduleDefinition.id === "suc-chua"
@@ -286,6 +291,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
           </p>
         )
       ) : null}
+      <TenNguoiProvider ten={Object.fromEntries(staffDirectory.map((nguoi) => [nguoi.accountId, nguoi.displayName]))}>
       <ModuleWorkspace
         site={site}
         module={moduleDefinition}
@@ -318,6 +324,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         initialCameraId={requestedCamera}
         baoCao={baoCao}
       />
+      </TenNguoiProvider>
       </div>
     </ErpShell>
   );

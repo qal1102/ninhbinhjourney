@@ -23,6 +23,14 @@ type Props = {
   emptyMessage: string;
 };
 
+/**
+ * Ghi chú do kho tự viết in số tiền trần ("nhận 250000 đ"). Câu đã lưu giữ
+ * nguyên; chỉ tách nghìn lúc hiện cho người đọc.
+ */
+function tachNghinTrongGhiChu(note: string) {
+  return note.replace(/\b(\d{4,})(?= ?đ)/g, (so) => Number(so).toLocaleString("vi-VN"));
+}
+
 function siteName(siteId: ErpSiteId) {
   return ERP_SITES.find((site) => site.id === siteId)?.shortName ?? siteId;
 }
@@ -121,10 +129,12 @@ export function AuditTimelineView({
                 </p>
                 {entry.action === ERP_ROLE_SWITCH_SESSION_ACTION && entry.endedAt ? (
                   <p className="mt-1 text-xs leading-5 text-[#7a8781]">
-                    Từ {formatTime(entry.occurredAt)} tới {formatTime(entry.endedAt)}
+                    {formatTime(entry.occurredAt) === formatTime(entry.endedAt)
+                      ? `Lúc ${formatTime(entry.occurredAt)}`
+                      : `Từ ${formatTime(entry.occurredAt)} đến ${formatTime(entry.endedAt)}`}
                   </p>
                 ) : entry.note && !isErpRoleSwitchAction(entry.action) ? (
-                  <p className="mt-1 text-xs leading-5 text-[#7a8781]">{entry.note}</p>
+                  <p className="mt-1 text-xs leading-5 text-[#7a8781]">{tachNghinTrongGhiChu(entry.note)}</p>
                 ) : null}
               </div>
               <div className="shrink-0 text-xs text-[#87938d] sm:text-right">
@@ -227,7 +237,7 @@ export function AuditTimelineView({
         {backfilledCount > 0 ? (
           <p className="mt-3 rounded-xl border border-[#efd4a8] bg-[#fff9ed] px-4 py-3 text-xs leading-5 text-[#7a5a1d]">
             <span className="font-black">{backfilledCount} dòng</span> được ghi từ
-            trước khi hệ thống bắt đầu chụp danh tính tại thời điểm thao tác. Tên và
+            trước khi hệ thống lưu kèm tên người ngay lúc thao tác. Tên và
             chức danh trên các dòng đó là{" "}
             <span className="font-bold">thông tin hiện tại</span> của người đó, không
             phải thông tin lúc thao tác xảy ra.

@@ -524,7 +524,7 @@ const SU_CO: MachViec = {
     {
       id: "su-co-2-tiep-nhan",
       thuTu: 2,
-      ten: "Quản lý tiếp nhận và giữ mốc SLA",
+      ten: "Quản lý tiếp nhận, giữ đúng hạn phản hồi",
       vai: ["manager"],
       noiLam: { kieu: "module", moduleId: "su-co" },
       nguonVao: "Hồ sơ vừa mở, kèm mức độ và thời gian đã trôi.",
@@ -548,7 +548,7 @@ const SU_CO: MachViec = {
       vai: ["employee"],
       noiLam: { kieu: "module", moduleId: "su-co" },
       nguonVao:
-        "Các bước checklist của SOP, cộng ảnh và biên bản chụp tại hiện trường.",
+        "Các bước kiểm theo SOP, kèm ảnh và biên bản tại hiện trường.",
       ketQua:
         "Hồ sơ sang chờ xác minh. Chỉ đúng người được giao mới báo xong được, không ai báo hộ.",
       dangCho: ["in-progress"],
@@ -670,12 +670,12 @@ export function demTheoBuoc(
   return dem;
 }
 
-/** "Kế toán trưởng" / "Quản lý cơ sở hoặc Kế toán" / "Không ai — đã xong". */
+/** "Kế toán trưởng" / "Quản lý cơ sở hoặc Kế toán" / "Xong, không còn ai phải làm". */
 export function dangChoAi(
   buoc: MachViecBuoc,
   nhanVai: (role: ErpRole) => string,
 ): string {
-  if (buoc.vai.length === 0) return "Không ai, bước này đã xong";
+  if (buoc.vai.length === 0) return "Xong, không còn ai phải làm";
   return buoc.vai.map(nhanVai).join(" hoặc ");
 }
 

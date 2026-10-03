@@ -62,15 +62,15 @@ test("kịch bản sự kiện chỉ chạy cho giám đốc", async ({ page }) 
   await expect(
     page.getByText(/Kịch bản mô phỏng chỉ chạy trên tài khoản giám đốc/),
   ).toBeVisible();
-  await expect(page.getByText(/sự kiện · dừng sau khi đủ/)).toHaveCount(0);
+  await expect(page.getByText(/sự kiện của kịch bản/)).toHaveCount(0);
 
   await page.context().clearCookies();
 
   // Giám đốc: đúng một sự kiện xuất hiện sau ~12 giây, và bộ đếm dừng ở 2.
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an/camera-ai");
-  await expect(page.getByText("0/2 sự kiện · dừng sau khi đủ")).toBeVisible();
-  await expect(page.getByText("1/2 sự kiện · dừng sau khi đủ")).toBeVisible({
+  await expect(page.getByText("Đã hiện 0/2 sự kiện của kịch bản")).toBeVisible();
+  await expect(page.getByText("Đã hiện 1/2 sự kiện của kịch bản")).toBeVisible({
     timeout: 25_000,
   });
   await expect(

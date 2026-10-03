@@ -69,7 +69,7 @@ test("số 'Sự cố mở' trên trang tổng quan cơ sở khớp đúng với
       await page.goto(`/erp/${siteId}`);
       const overviewCard = page
         .locator("div")
-        .filter({ hasText: "Sự cố mở" })
+        .filter({ hasText: "Sự cố đang mở" })
         .last();
       await expect(overviewCard).toBeVisible();
       overviewCount = Number((await overviewCard.innerText()).match(/\d+/)?.[0]);
@@ -114,15 +114,19 @@ test("quản lý Tam Chúc không vào được dữ liệu Tràng An và ngư�
   await expect(page).toHaveURL(/\/erp\?denied=site/);
 });
 
-test("hai KPI chưa có nguồn dữ liệu thật nói thẳng thay vì bịa số", async ({
+// 04/10/2026: hai ô từng ghi "Chưa có nguồn dữ liệu" nay đọc đúng phép dự báo
+// của màn Báo cáo & dự báo, nên phải ra khoảng khách và một giờ cụ thể.
+test("khách dự kiến và giờ đông lấy từ dự báo của cơ sở, không để ô trống", async ({
   page,
 }) => {
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/trang-an");
 
-  await expect(page.getByText("Khách dự kiến")).toBeVisible();
-  await expect(page.getByText("Tải hiện tại")).toBeVisible();
-  await expect(page.getByText("Chưa có nguồn dữ liệu")).toHaveCount(2);
+  const duKien = page.locator("div").filter({ hasText: "Khách dự kiến hôm nay" }).last();
+  await expect(duKien).toContainText(/\d+–\d+/);
+  const gioDong = page.locator("div").filter({ hasText: "Giờ đông dự kiến" }).last();
+  await expect(gioDong).toContainText(/\d+h/);
+  await expect(page.getByText("Chưa đọc được số liệu báo cáo")).toHaveCount(0);
 });
 
 test("nhân sự trong ca và lượt check-in hôm nay là số đếm thật, không phải hằng số cố định", async ({

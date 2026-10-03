@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, type ReactNode } from "react";
+import { useTenNguoi } from "./ten-nguoi";
 import { useFormStatus } from "react-dom";
 import {
   decideCashExceptionAction,
@@ -456,6 +457,7 @@ function DepositCard({
   unmatchedLines: readonly BankStatementLine[];
 }) {
   const meta = statusMeta(deposit.status);
+  const tenNguoi = useTenNguoi();
   const overdue = isCashDepositOverdue(deposit);
   const candidateLines = unmatchedLines.filter(
     (line) => line.bankAccountRef === deposit.bankAccountRef,
@@ -495,8 +497,8 @@ function DepositCard({
         ) : null}
         {deposit.status === "posted" ? (
           <p className="text-xs font-medium text-[#5f7068]">
-            Đã ghi sổ {formatDate(deposit.reconciledAt, true)} bởi{" "}
-            {deposit.reconciledByAccountId}.
+            Đã ghi sổ {formatDate(deposit.reconciledAt, true)}, người ghi:{" "}
+            {tenNguoi(deposit.reconciledByAccountId)}.
           </p>
         ) : null}
       </div>

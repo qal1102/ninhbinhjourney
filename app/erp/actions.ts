@@ -283,7 +283,7 @@ export async function updateEmployeeAccessAction(formData: FormData) {
   if (!employee) throw new Error("Không tìm thấy nhân viên.");
   if (employee.role !== "employee") {
     throw new Error(
-      "Chỉ giao việc từng module cho nhân viên. Quản lý cơ sở có mọi việc ở cơ sở mình; đổi người phụ trách ở màn Tài khoản & phân quyền.",
+      "Chỉ giao việc riêng cho nhân viên. Quản lý cơ sở có mọi việc ở cơ sở mình rồi; muốn đổi người phụ trách thì vào màn Tài khoản & phân quyền.",
     );
   }
   // Ai thuộc cơ sở nào do giám đốc cấp ở màn Tài khoản & phân quyền, không

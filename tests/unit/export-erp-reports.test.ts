@@ -433,7 +433,7 @@ describe("báo cáo công nợ nhà cung cấp", () => {
     ]);
     expect(table.rows.map((row) => [row[1], row[10], row[11]])).toEqual([
       ["Tam Chúc", "Giá trị hóa đơn vượt PO; Thiếu biên bản nhận hàng/nghiệm thu", null],
-      ["Tam Chúc", null, "cặn chạy thử"],
+      ["Tam Chúc", null, "dữ liệu chạy thử"],
     ]);
   });
 });

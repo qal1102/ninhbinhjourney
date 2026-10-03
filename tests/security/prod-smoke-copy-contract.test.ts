@@ -70,7 +70,7 @@ const MIEN_TRU: ReadonlyMap<string, string> = new Map([
     "Ghép lúc chạy: `Đội ngũ {site.shortName}` trong staff-access-manager.",
   ],
   [
-    "nguồn: ước-lượng",
+    "nguồn: ước lượng",
     "Ghép lúc chạy từ nhãn nguồn sức chứa trong capacity-workspace.",
   ],
   [

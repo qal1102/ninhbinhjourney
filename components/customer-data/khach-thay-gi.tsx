@@ -47,7 +47,7 @@ export function KhachThayGi({ hoSo, maKhach }: { hoSo: HoSoKhach | null; maKhach
         </ol>
         <div>
           <p className="text-sm font-bold text-[#20342c]">
-            Hộ chiếu của khách {maKhach ? maKhach.slice(0, 8) : ""} trên điện thoại
+            {maKhach?.startsWith("de000000") ? "Hộ chiếu của một khách mẫu, đúng như trên điện thoại khách" : "Hộ chiếu của khách này, đúng như trên điện thoại khách"}
           </p>
           <div
             data-chi="khach-thay-gi"

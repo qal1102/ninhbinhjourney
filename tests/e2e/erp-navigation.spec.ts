@@ -23,7 +23,7 @@ test("desktop ERP navigation fits, opens one group and supports the keyboard", a
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/erp/trang-an");
 
-    const navigation = page.getByRole("navigation", { name: "Module Tràng An" });
+    const navigation = page.getByRole("navigation", { name: "Nghiệp vụ Tràng An" });
     await expect(navigation).toBeVisible();
     const row = navigation.locator(":scope > div");
     const geometry = await row.evaluate((element) => {
@@ -63,9 +63,9 @@ test("desktop ERP navigation fits, opens one group and supports the keyboard", a
     });
   }
 
-  const navigation = page.getByRole("navigation", { name: "Module Tràng An" });
+  const navigation = page.getByRole("navigation", { name: "Nghiệp vụ Tràng An" });
   const overview = navigation.getByRole("link", { name: "Tổng quan" });
-  const booking = navigation.locator("summary").filter({ hasText: "Booking" });
+  const booking = navigation.locator("summary").filter({ hasText: "Vé & cổng" });
   await overview.focus();
   await page.keyboard.press("Tab");
   await expect(booking).toBeFocused();

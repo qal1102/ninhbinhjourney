@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  lyDoChuyenCapChu,
   parseIncidentDraft,
+  thoiLuongChu,
   REQUIRED_INCIDENT_SAMPLE,
 } from "@/domain/incident";
 
@@ -40,5 +42,21 @@ describe("incident draft parser", () => {
     expect(draft.category).toBeUndefined();
     expect(draft.suggestedSeverity).toBeUndefined();
     expect(draft.resourceRequest).toBeUndefined();
+  });
+});
+
+describe("thời lượng và lý do chuyển cấp đọc như người nói", () => {
+  it("đổi phút ra phút, giờ, ngày", () => {
+    expect(thoiLuongChu(45)).toBe("45 phút");
+    expect(thoiLuongChu(200)).toBe("3 giờ 20 phút");
+    expect(thoiLuongChu(120)).toBe("2 giờ");
+    expect(thoiLuongChu(92149)).toBe("63 ngày");
+  });
+
+  it("viết lại câu tự chuyển cấp của kho, câu khác giữ nguyên", () => {
+    expect(
+      lyDoChuyenCapChu("Quá hạn SLA 10 phút (trễ 1527 phút). Hệ thống tự chuyển cấp, không chờ thao tác của người trực."),
+    ).toBe("Hạn phản hồi là 10 phút, đã trễ 1 ngày. Hệ thống tự chuyển lên cấp trên, không chờ người trực bấm.");
+    expect(lyDoChuyenCapChu("Cần thêm người ở bến.")).toBe("Cần thêm người ở bến.");
   });
 });

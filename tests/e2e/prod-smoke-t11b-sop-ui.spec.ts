@@ -16,7 +16,7 @@ async function login(page: Page, username: string, password: string) {
 
 async function expectUnapprovedSopLibrary(page: Page) {
   await expect(
-    page.getByRole("heading", { name: "An toàn chưa đạt thì chưa gọi là GO" }),
+    page.getByRole("heading", { name: "An toàn chưa đạt thì chưa mở cửa" }),
   ).toBeVisible({ timeout: 25_000 });
   await expect(
     page.getByText(
@@ -45,6 +45,6 @@ test("giám đốc đọc cổng và inbox mà smoke không ghi dữ liệu", as
     page.getByRole("button", { name: "Gửi giám đốc quyết định" }),
   ).toHaveCount(0);
   await page.goto("/erp");
-  await expect(page.getByText("cổng Go/No-Go")).toBeVisible();
+  await expect(page.getByText("quyết định mở cửa", { exact: true })).toBeVisible();
   expect(errors, `unexpected runtime errors: ${errors.join(" | ")}`).toEqual([]);
 });

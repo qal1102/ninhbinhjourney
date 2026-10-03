@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, type ReactNode } from "react";
+import { useTenNguoi } from "./ten-nguoi";
 import { useFormStatus } from "react-dom";
 import {
   decideSupplierExceptionAction,
@@ -386,12 +387,13 @@ function PaymentSettleForm({ invoice }: { invoice: SupplierApInvoice }) {
     settleSupplierPaymentAction,
     INITIAL_ACTION_STATE,
   );
+  const tenNguoi = useTenNguoi();
   return (
     <form action={action} className="mt-4 border-t border-[#e0e7e3] pt-4">
       <input type="hidden" name="invoiceId" value={invoice.id} />
       <input type="hidden" name="expectedVersion" value={invoice.version} />
       <p className="text-xs font-black uppercase tracking-[0.14em] text-[#477565]">
-        Duyệt chi · đề nghị bởi {invoice.paymentRequestedByAccountId ?? "—"}
+        Duyệt chi · người đề nghị: {tenNguoi(invoice.paymentRequestedByAccountId) ?? "—"}
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <MoneyField
@@ -645,6 +647,7 @@ function InvoiceCard({
   user: CurrentErpUser;
 }) {
   const meta = statusMeta(invoice.status);
+  const tenNguoi = useTenNguoi();
   const totals = invoice.journalLines.reduce(
     (sum, line) => ({
       debit: sum.debit + line.debitVnd,
@@ -821,7 +824,7 @@ function InvoiceCard({
               <div>
                 <dt className="text-[#7a8781]">Kế toán lập</dt>
                 <dd className="mt-1 font-bold">
-                  {invoice.accountantAccountId ?? "Chưa lập"}
+                  {tenNguoi(invoice.accountantAccountId) ?? "Chưa lập"}
                 </dd>
                 {invoice.accountantNote ? (
                   <dd className="mt-1 leading-5 text-[#65756d]">
@@ -832,7 +835,7 @@ function InvoiceCard({
               <div className="border-t border-[#e8ece9] pt-3">
                 <dt className="text-[#7a8781]">Kế toán trưởng</dt>
                 <dd className="mt-1 font-bold">
-                  {invoice.checkerAccountId ?? "Chưa kiểm tra"}
+                  {tenNguoi(invoice.checkerAccountId) ?? "Chưa kiểm tra"}
                 </dd>
                 {invoice.checkerNote ? (
                   <dd className="mt-1 leading-5 text-[#65756d]">
@@ -968,12 +971,12 @@ export function SupplierApControlCenter({
           [
             "Ngoại lệ cần quyết định",
             String(actionCount),
-            "hồ sơ đã được kế toán xác minh",
+            "kế toán đã soát, chờ bạn quyết",
           ],
           [
             "Giá trị cần quyết định",
             formatVnd(directorExceptionTotal),
-            "phần phát sinh ngoài hồ sơ nguồn",
+            "phần vượt so với PO và nghiệm thu",
           ],
           [
             "Công nợ đã ghi nhận",
@@ -983,11 +986,11 @@ export function SupplierApControlCenter({
           [
             "Cơ sở có công nợ",
             String(postedSiteCount),
-            "theo dữ liệu đã ghi nhận",
+            "có hoá đơn đã ghi sổ",
           ],
         ]
       : [
-          ["Việc thuộc tài khoản", String(actionCount), "hồ sơ cần xử lý"],
+          ["Việc của bạn", String(actionCount), "hồ sơ đang chờ bạn"],
           [
             "Chờ kế toán trưởng",
             String(pendingChecker),
@@ -1030,8 +1033,9 @@ export function SupplierApControlCenter({
             PO, nghiệm thu, hóa đơn và công nợ
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-[#d4e4de]">
-            Mỗi hồ sơ giữ cùng một mã từ bộ phận nguồn đến bút toán; phần thiếu
-            được trả đúng người chịu trách nhiệm.
+            Một hồ sơ đi từ đề nghị mua, hợp đồng, nghiệm thu tới hoá đơn và bút
+            toán, giữ nguyên một mã. Thiếu giấy tờ ở bước nào thì trả về đúng
+            người lo bước ấy.
           </p>
         </header>
       ) : (
@@ -1068,10 +1072,10 @@ export function SupplierApControlCenter({
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
-              Hàng xử lý theo vai trò
+              Hồ sơ nhà cung cấp
             </p>
             <h2 className="mt-2 text-2xl font-black text-[#20342c]">
-              {visible.length} hồ sơ có dữ liệu nguồn
+              {visible.length} hồ sơ
             </h2>
           </div>
           <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -1086,7 +1090,7 @@ export function SupplierApControlCenter({
         ))}
         {!visible.length ? (
           <p className="rounded-2xl border border-dashed border-[#b8c6bf] bg-white px-5 py-10 text-center text-sm text-[#75817b]">
-            Hiện không có hồ sơ nào thuộc phạm vi cần xử lý của tài khoản này.
+            Hiện chưa có hồ sơ nhà cung cấp nào chờ bạn.
           </p>
         ) : null}
       </section>

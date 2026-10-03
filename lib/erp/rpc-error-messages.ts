@@ -112,24 +112,24 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   SOP_ASSESSMENT_INPUT_INVALID:
     "Thông tin đánh giá mở cửa chưa hợp lệ hoặc không thuộc ngày vận hành hiện tại.",
   SOP_MANAGER_ROLE_REQUIRED:
-    "Chỉ quản lý cơ sở được gửi checklist mở cửa.",
+    "Chỉ quản lý cơ sở được gửi bảng kiểm mở cửa.",
   SOP_SITE_TENANT_MISMATCH: "Cơ sở không thuộc đơn vị này.",
   SOP_CHECKLIST_NOT_CONFIGURED:
-    "Cơ sở chưa có checklist mở cửa được cấu hình.",
+    "Cơ sở chưa có bảng kiểm mở cửa.",
   SOP_CHECKLIST_RESULT_INVALID:
-    "Checklist phải trả lời đủ từng mục; mục không đạt hoặc không áp dụng phải có ghi chú.",
+    "Mời bạn trả lời đủ từng mục; mục không đạt hoặc không áp dụng thì ghi rõ lý do.",
   SOP_ASSESSMENT_ALREADY_SUBMITTED:
-    "Checklist đã được gửi và đang chờ giám đốc quyết định.",
+    "Bảng kiểm đã gửi và đang chờ giám đốc quyết định.",
   SOP_ASSESSMENT_ALREADY_FINAL:
-    "Cổng mở cửa hôm nay đã có quyết định cuối cùng.",
-  SOP_DECISION_INPUT_INVALID: "Thông tin quyết định Go/No-Go chưa hợp lệ.",
-  SOP_ASSESSMENT_NOT_FOUND: "Không tìm thấy hồ sơ Go/No-Go này.",
+    "Hôm nay giám đốc đã quyết định mở cửa hay chưa rồi.",
+  SOP_DECISION_INPUT_INVALID: "Thông tin quyết định mở cửa chưa hợp lệ.",
+  SOP_ASSESSMENT_NOT_FOUND: "Không tìm thấy bảng kiểm mở cửa này.",
   SOP_DIRECTOR_ROLE_REQUIRED:
-    "Chỉ giám đốc được ra quyết định Go/No-Go.",
+    "Chỉ giám đốc được quyết định mở cửa.",
   SOP_MAKER_CHECKER_SEPARATION_REQUIRED:
-    "Người gửi checklist và người quyết định phải là hai người khác nhau.",
+    "Người gửi bảng kiểm và người quyết định phải là hai người khác nhau.",
   SOP_ASSESSMENT_ALREADY_DECIDED:
-    "Hồ sơ Go/No-Go đã được quyết định trước đó.",
+    "Bảng kiểm này đã có quyết định trước đó.",
   SOP_CRITICAL_ITEM_BLOCKS_GO:
     "Không thể chọn GO khi còn hạng mục an toàn trọng yếu chưa đạt. Chọn NO-GO hoặc chấp nhận rủi ro bằng văn bản.",
   SOP_RISK_ACCEPTANCE_INVALID:
@@ -169,7 +169,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CAPACITY_AUDIT_IMMUTABLE:
     "Lịch sử cấu hình sức chứa chỉ ghi thêm, không sửa và không xoá.",
   SOP_AUDIT_IMMUTABLE:
-    "Lịch sử Go/No-Go chỉ ghi thêm, không sửa và không xoá.",
+    "Lịch sử quyết định mở cửa chỉ ghi thêm, không sửa và không xoá.",
   ACCOUNTING_PERIOD_DELETE_NOT_ALLOWED: "Không được xóa kỳ kế toán.",
   ACCOUNTING_PERIOD_IDENTITY_IMMUTABLE:
     "Không được đổi định danh của kỳ kế toán.",
@@ -337,9 +337,9 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   ACCOUNTING_IDEMPOTENCY_CONFLICT:
     "Thao tác này đã được gửi với nội dung khác. Xin tải lại và thử lại.",
   SOP_IDEMPOTENCY_CONFLICT:
-    "Thao tác Go/No-Go này đã được gửi với nội dung khác. Xin tải lại trước khi thử lại.",
+    "Quyết định mở cửa này đã được gửi với nội dung khác. Xin tải lại trang rồi thử lại.",
   SOP_ASSESSMENT_VERSION_CONFLICT:
-    "Hồ sơ Go/No-Go vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
+    "Bảng kiểm vừa được người khác cập nhật. Xin tải lại trang rồi làm tiếp.",
   ACCOUNTING_JOURNAL_VERSION_CONFLICT:
     "Bút toán vừa được người khác cập nhật. Xin tải lại trước khi tiếp tục.",
   ACCOUNTING_JOURNAL_VERSION_MUST_INCREMENT: "Phiên bản bút toán phải tăng.",

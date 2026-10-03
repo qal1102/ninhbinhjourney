@@ -83,9 +83,9 @@ export function RoleSwitchControl({ currentUserId, targets, variant = "dropdown"
           </select>
         )}
         <p className="mt-2 text-xs leading-5 text-[#7c8882]">
-          Đổi thẳng phiên đăng nhập sang tài khoản này — thấy đúng những gì họ
-          thấy, kể cả bị chặn. Ghi vào nhật ký. Đổi tiếp sang vai trò khác được
-          ngay, không cần quay về giám đốc.
+          Bạn sẽ thấy hệ thống đúng như người ấy thấy, kể cả những chỗ họ không
+          được mở. Mỗi lần đổi đều ghi vào nhật ký; muốn sang người khác cứ chọn
+          tiếp, không cần quay về giám đốc.
         </p>
         <button
           type="submit"

@@ -67,7 +67,7 @@ export function StaffAccessManager({
           <ul className="mt-2 space-y-1 text-sm text-[#43574e]">
             {siteManagers.map((manager) => (
               <li key={manager.accountId}>
-                <strong>{manager.displayName}</strong> · {manager.jobTitle} · có mọi việc ở {site.shortName}
+                <strong>{manager.displayName}</strong> · {manager.jobTitle} · phụ trách mọi việc ở {site.shortName}
               </li>
             ))}
           </ul>
@@ -81,7 +81,7 @@ export function StaffAccessManager({
             <h2 className="mt-2 text-2xl font-black text-[#20342c]">Đội ngũ {site.shortName}</h2>
           </div>
           <span className="w-fit rounded-full bg-[#e8f1ec] px-3 py-1 text-xs font-black text-[#32614f]">
-            {employees.length} người thuộc cơ sở
+            {employees.length} nhân viên
           </span>
         </div>
         <p className="mt-2 text-sm text-[#6b7a72]">
@@ -177,7 +177,7 @@ export function StaffAccessManager({
             const targetName = nameByAccountId.get(event.targetId);
             return (
               <li key={event.id} className="flex items-center justify-between gap-4 py-3 text-sm">
-                <p><strong>{targetName ?? event.targetId}</strong> · {event.action === "employee.site.revoked" ? "thu hồi quyền cơ sở" : "cập nhật module"}</p>
+                <p><strong>{targetName ?? event.targetId}</strong> · {event.action === "employee.site.revoked" ? "thu hồi quyền ở cơ sở" : "đổi việc được giao"}</p>
                 <time className="shrink-0 text-xs text-[#7d8983]">{new Date(event.createdAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</time>
               </li>
             );

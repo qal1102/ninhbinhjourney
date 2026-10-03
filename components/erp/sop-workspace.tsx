@@ -14,8 +14,8 @@ import {
 
 const STATUS_LABEL: Record<SopOpeningStatus, string> = {
   submitted: "Chờ quyết định",
-  go: "GO · Được mở cửa",
-  "no-go": "NO-GO · Chưa mở cửa",
+  go: "Được mở cửa",
+  "no-go": "Chưa mở cửa",
   "risk-accepted": "Mở cửa có chấp nhận rủi ro",
 };
 
@@ -58,7 +58,7 @@ function MissingSopStore({ site }: { site: ErpSite }) {
         Kho SOP chưa sẵn sàng · {site.shortName}
       </p>
       <h2 className="mt-2 text-2xl font-black text-[#493c28] sm:text-3xl">
-        Chưa thể đọc cổng Go/No-Go
+        Chưa đọc được quyết định mở cửa
       </h2>
       {/* Xem chú thích cùng loại ở `capacity-workspace.tsx`: câu cũ nhắc "kho
           ERP" và dừng lại ở đó, không cho người đọc một việc nào bấm được. */}
@@ -105,10 +105,10 @@ export function SopWorkspace({
         <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#dccbbf]">
-              Cổng mở cửa hằng ngày · {site.shortName}
+              Quyết định mở cửa hằng ngày · {site.shortName}
             </p>
             <h2 className="mt-2 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">
-              An toàn chưa đạt thì chưa gọi là GO
+              An toàn chưa đạt thì chưa mở cửa
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-6 text-[#e5d9d1]">
               Quản lý cơ sở xác nhận từng mục. Giám đốc là người quyết định cuối;
@@ -127,7 +127,7 @@ export function SopWorkspace({
                   : "border-white/20 bg-white/10 text-white"
               }`}
             >
-              {assessment ? STATUS_LABEL[assessment.status] : "Chưa nộp checklist"}
+              {assessment ? STATUS_LABEL[assessment.status] : "Chưa nộp bảng kiểm"}
             </span>
           </div>
         </div>
@@ -144,7 +144,7 @@ export function SopWorkspace({
 
       {data.items.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-[#b8c6bf] bg-white px-5 py-10 text-center text-sm text-[#75817b]">
-          Cơ sở chưa có checklist mở cửa được cấu hình.
+          Cơ sở chưa có bảng kiểm mở cửa.
         </section>
       ) : null}
 
@@ -155,7 +155,7 @@ export function SopWorkspace({
             ? {}
             : {
                 "data-chi": "sop",
-                "data-chi-loi": "Checklist hôm nay đã nộp. Đọc kết quả từng mục; giám đốc là người quyết định cuối.",
+                "data-chi-loi": "Bảng kiểm hôm nay đã nộp. Đọc kết quả từng mục; giám đốc là người quyết định cuối.",
               })}
         >
           <div className="grid gap-4 border-b border-[#e4eae7] p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-start">
@@ -169,7 +169,7 @@ export function SopWorkspace({
                 </span>
               </div>
               <h3 className="mt-3 text-2xl font-black text-[#203a30]">
-                Checklist của {assessment.submittedByDisplayName}
+                Bảng kiểm của {assessment.submittedByDisplayName}
               </h3>
               <p className="mt-1 text-sm text-[#68776f]">
                 Gửi lúc {formatDateTime(assessment.submittedAt)} · phiên bản {assessment.version}
@@ -251,7 +251,7 @@ export function SopWorkspace({
                 />
               ) : (
                 <p className="rounded-xl border border-[#e0d2af] bg-[#fffaf0] px-4 py-3 text-sm leading-6 text-[#74633f]">
-                  Đã chuyển giám đốc quyết định. Checklist không thể sửa trong lúc
+                  Đã chuyển giám đốc quyết định. Bảng kiểm không sửa được trong lúc
                   đang chờ để giữ nguyên hồ sơ mà giám đốc đang xem.
                 </p>
               )}
@@ -278,10 +278,10 @@ export function SopWorkspace({
       ) : (
         <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
           <h3 className="text-xl font-black text-[#203a30]">
-            Chưa có checklist ngày {formatDate(data.businessDate)}
+            Chưa có bảng kiểm ngày {formatDate(data.businessDate)}
           </h3>
           <p className="mt-2 text-sm leading-6 text-[#65736c]">
-            Cổng mở cửa chưa có trạng thái. Không được hiểu “chưa nộp” là GO.
+            Hôm nay chưa ai nộp bảng kiểm, nên cơ sở chưa được coi là đủ điều kiện mở cửa.
           </p>
         </section>
       )}
@@ -310,7 +310,7 @@ export function SopWorkspace({
       ) : null}
 
       <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
-        <h3 className="text-lg font-black text-[#203a30]">Thư viện checklist có nguồn</h3>
+        <h3 className="text-lg font-black text-[#203a30]">Các mục kiểm tra và nguồn trích</h3>
         <div className="mt-4 space-y-2">
           {data.items.map((item) => (
             <details key={item.id} className="rounded-xl border border-[#e0e6e3] p-4">

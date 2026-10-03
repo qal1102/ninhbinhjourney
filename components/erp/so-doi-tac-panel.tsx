@@ -409,8 +409,8 @@ export function SoDoiTacPanel({
             : "Không mối nào đang bị bỏ quên"}
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-[#6b6250]">
-        Sổ đếm số ngày kể từ lần gần nhất anh trao đổi với từng nhãn hàng. Mối nào
-        lâu không liên lạc thì tự lên đầu để anh gọi lại. Mỗi dòng gắn được vào
+        Sổ đếm số ngày kể từ lần gần nhất bạn trao đổi với từng nhãn hàng. Mối nào
+        lâu không liên lạc thì tự lên đầu để bạn gọi lại. Mỗi dòng gắn được vào
         một dịp trong lịch mùa vụ ở trên.
       </p>
 

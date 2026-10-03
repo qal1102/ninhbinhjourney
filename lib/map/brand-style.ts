@@ -297,3 +297,22 @@ export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay"): StyleSpecificatio
     ],
   };
 }
+
+/**
+ * Chữ của chính MapLibre, dịch sang tiếng Việt.
+ *
+ * Bỏ qua chỗ này là trên một trang tiếng Việt bỗng hiện "Use ctrl + scroll to
+ * zoom the map" và nút điều khiển đọc lên thành "Zoom in" trong trình đọc màn
+ * hình. Không ai để ý cho tới khi nó nằm giữa màn hình.
+ */
+export const CHU_MAPLIBRE = {
+  "Map.Title": "Bản đồ",
+  "AttributionControl.ToggleAttribution": "Nguồn dữ liệu bản đồ",
+  "AttributionControl.MapFeedback": "Góp ý về bản đồ",
+  "NavigationControl.ZoomIn": "Phóng to",
+  "NavigationControl.ZoomOut": "Thu nhỏ",
+  "NavigationControl.ResetBearing": "Xoay lại hướng bắc",
+  "CooperativeGesturesHandler.WindowsHelpText": "Giữ Ctrl rồi cuộn để phóng to bản đồ",
+  "CooperativeGesturesHandler.MacHelpText": "Giữ ⌘ rồi cuộn để phóng to bản đồ",
+  "CooperativeGesturesHandler.MobileHelpText": "Dùng hai ngón để di chuyển bản đồ",
+};

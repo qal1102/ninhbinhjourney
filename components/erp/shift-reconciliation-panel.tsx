@@ -218,7 +218,7 @@ export function ShiftReconciliationPanel({
         </p>
         {erpDataOriginLabel(shift.dataOrigin) ? (
           <p className="mt-1 text-xs font-medium text-[#5f7068]">
-            Ca này là hồ sơ gieo sẵn lúc dựng hệ thống, không phải ca thật. Chênh lệch
+            Ca này là hồ sơ mẫu làm sẵn lúc dựng hệ thống, không phải ca thật. Chênh lệch
             bên dưới chỉ cho thấy cổng chưa có lượt quét nào trong khung giờ ấy.
           </p>
         ) : null}

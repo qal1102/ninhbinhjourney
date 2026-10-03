@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ngayVietNam } from "@/domain/thoi-luong";
 import {
   useActionState,
   useCallback,
@@ -244,7 +245,7 @@ function ShiftCloseDetails({
         <RecordFacts record={record} />
         <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_0.9fr]">
           <div className="rounded-xl border border-[#dfe6e2] bg-white p-4 text-sm leading-6 text-[#5f6f67]">
-            <p><strong>Ngày nghiệp vụ:</strong> {record.businessDate}</p>
+            <p><strong>Ngày làm việc:</strong> {ngayVietNam(record.businessDate)}</p>
             <p><strong>Mã hạch toán:</strong> {record.financeCode}</p>
             <p><strong>Bàn giao:</strong> {record.note}</p>
           </div>

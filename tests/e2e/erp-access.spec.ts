@@ -47,8 +47,8 @@ test("director sees each operating site as a separate branch", async ({ page }, 
   await expect(page).toHaveURL(/\/erp\/bai-dinh$/);
   await expect(page.getByRole("heading", { level: 1, name: "Bái Đính" })).toBeVisible();
   if (!testInfo.project.name.startsWith("mobile")) {
-    const moduleNavigation = page.getByRole("navigation", { name: "Module Bái Đính" });
-    await expect(moduleNavigation.locator("summary").filter({ hasText: "Booking" })).toBeVisible();
+    const moduleNavigation = page.getByRole("navigation", { name: "Nghiệp vụ Bái Đính" });
+    await expect(moduleNavigation.locator("summary").filter({ hasText: "Vé & cổng" })).toBeVisible();
     await expect(moduleNavigation.locator("summary").filter({ hasText: "Hiện trường" })).toBeVisible();
     await expect(moduleNavigation.locator("summary").filter({ hasText: "An toàn" })).toBeVisible();
     await expect(moduleNavigation.getByRole("link", { name: "Dự án" })).toBeVisible();
@@ -60,7 +60,7 @@ test("director sees each operating site as a separate branch", async ({ page }, 
 
   await page.goto("/erp/trang-an/ve-dat-cho");
   await expect(page.getByRole("heading", { name: "Hôm nay" })).toBeVisible();
-  await expect(page.getByText("Từ mã QR đến đối soát")).toBeVisible();
+  await expect(page.getByText("Vé vừa bán, đã dùng hay chưa")).toBeVisible();
   await expect(page.getByText("Chờ phê duyệt", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Việc sắp đến hạn", { exact: true })).toHaveCount(0);
 });
@@ -323,7 +323,7 @@ test("mobile site menu groups work by operating function", async ({ page }, test
   await page.getByRole("button", { name: "Mở menu" }).click();
 
   const menu = page.getByRole("dialog", { name: "Menu điều hành" });
-  await expect(menu.getByRole("heading", { name: "Booking & Check-in" })).toBeVisible();
+  await expect(menu.getByRole("heading", { name: "Vé & soát vé" })).toBeVisible();
   await expect(menu.getByRole("heading", { name: "Điều hành hiện trường" })).toBeVisible();
   await expect(menu.getByRole("heading", { name: "Tài chính & báo cáo" })).toBeVisible();
   await menu.getByRole("link", { name: "Camera AI & hiện trường" }).click();
@@ -999,7 +999,7 @@ test("director reads real staff presence and the screen admits what it has no da
   await page.goto("/erp/trang-an/nhan-su");
 
   const shiftSection = page.locator("section").filter({
-    hasText: "Đọc từ phân công tài khoản và lượt chấm công hôm nay",
+    hasText: "Ai thuộc cơ sở này, hôm nay ai đã vào ca, ai đã về.",
   });
   await expect(
     shiftSection.getByRole("heading", { name: "Ca làm tại Tràng An" }),
@@ -1042,9 +1042,7 @@ test("director reads real staff presence and the screen admits what it has no da
   // Lời tự khai phải còn nguyên. Gỡ nó đi mà không có nguồn dữ liệu thật thì
   // màn hình lại im lặng về chỗ nó không biết — đúng thứ ERP-FAKE-01 đã sửa.
   await page.goBack();
-  await expect(shiftSection).toContainText(
-    "chưa có nguồn dữ liệu, nên chưa hiển thị ở đây",
-  );
+  await expect(shiftSection).toContainText("hệ thống chưa đo");
 
   // Ba con số bịa cũ không được quay lại bằng bất cứ đường nào.
   await expect(page.getByText("462 vé · 79,4 triệu")).toHaveCount(0);

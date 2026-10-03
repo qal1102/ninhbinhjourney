@@ -30,7 +30,8 @@ export type { IncidentStatus };
 
 export type IncidentEvidence = {
   id: string;
-  kind: "Ảnh hiện trường" | "Bảng kiểm" | "Biên bản";
+  /** "Checklist" là nhãn cũ còn lưu trong kho; màn hình đọc thành "Bảng kiểm". */
+  kind: "Ảnh hiện trường" | "Bảng kiểm" | "Checklist" | "Biên bản";
   label: string;
   addedBy: string;
   addedAt: string;

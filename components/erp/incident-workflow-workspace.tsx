@@ -413,7 +413,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                             >
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <span className="text-xs font-black text-[#477565]">
-                                  {evidence.kind}
+                                  {evidence.kind === "Checklist" ? "Bảng kiểm" : evidence.kind}
                                 </span>
                                 <span className="text-xs text-[#839089]">
                                   {evidence.addedAt}
@@ -459,7 +459,7 @@ export function IncidentWorkflowWorkspace({ site, user, cases }: Props) {
                                   {item.actor}
                                 </p>
                                 <p className="mt-1 text-xs leading-5 text-[#74817b]">
-                                  {item.note}
+                                  {lyDoChuyenCapChu(item.note)}
                                 </p>
                               </div>
                             </li>

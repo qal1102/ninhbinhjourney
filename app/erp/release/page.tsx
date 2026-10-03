@@ -25,7 +25,7 @@ export default async function ErpReleaseReadinessPage() {
           <div className={`mt-5 inline-flex rounded-full px-4 py-2 text-sm font-black ${report.safeForCanary ? "bg-[#27664f] text-white" : "bg-[#8b5428] text-white"}`} data-testid="release-verdict">
             {report.safeForCanary ? "ĐỦ ĐIỀU KIỆN ĐỂ MỞ THỬ" : "CHƯA BẬT CHO KHÁCH THẬT"}
           </div>
-          <p className="mt-3 text-xs text-[#718078]">Đối chiếu lúc {new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "medium", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(report.generatedAt))}</p>
+          <p className="mt-3 text-xs text-[#718078]">Đối chiếu lúc {new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric", hour12: false, timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(report.generatedAt))}</p>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
@@ -37,7 +37,7 @@ export default async function ErpReleaseReadinessPage() {
           </article>
 
           <article className="rounded-3xl border border-[#dbe3de] bg-white p-5 sm:p-6">
-            <h2 className="text-2xl font-black text-[#263c33]">Migration data contract</h2>
+            <h2 className="text-2xl font-black text-[#263c33]">Các bản thay đổi kho dữ liệu</h2>
             <div className="mt-4 space-y-2">
               {report.phases.map((phase) => <div key={phase.id} data-testid={`release-phase-${phase.id}`} className="rounded-xl bg-[#f5f7f5] px-4 py-3 text-sm"><div className="flex items-start justify-between gap-4"><span><strong>{phase.id}</strong> · {phase.label}</span><strong className={phase.status === "ready" ? "text-[#27664f]" : "text-[#9a4938]"}>{phase.status === "ready" ? "Kho dữ liệu sẵn sàng" : phase.status === "unchecked" ? "Chưa probe" : "Kho dữ liệu còn thiếu"}</strong></div>{phase.missingContracts.length ? <p className="mt-2 break-words text-xs text-[#8a5a43]">Cần kiểm: {phase.missingContracts.join(", ")}</p> : null}<p className="mt-1 text-xs text-[#718078]">{phase.migration}</p></div>)}
             </div>

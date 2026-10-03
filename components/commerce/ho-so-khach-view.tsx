@@ -29,10 +29,13 @@ const CACH_TRA_EN: Record<string, string> = {
  * lượt dập xuống (`.dau-moc` trong globals.css); giảm chuyển động thì dấu nằm
  * yên sẵn. Chữ "Đã đến" vẫn đọc được bằng trình đọc màn hình.
  */
-function DauMoc({ id, ngay, vung, thuTu, nhan }: { id: string; ngay: string; vung: string; thuTu: number; nhan: string }) {
-  const d = new Date(ngay);
-  const ngayThang = d.toLocaleDateString(vung, { day: "2-digit", month: "2-digit", timeZone: "Asia/Ho_Chi_Minh" });
-  const nam = d.toLocaleDateString(vung, { year: "numeric", timeZone: "Asia/Ho_Chi_Minh" });
+function DauMoc({ id, ngay, thuTu, nhan }: { id: string; ngay: string; thuTu: number; nhan: string }) {
+  // Ghép tay "29.09": định dạng theo vùng trả "29-09" hay "29/09" tuỳ trình duyệt.
+  const phan = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Ho_Chi_Minh" })
+    .formatToParts(new Date(ngay));
+  const lay = (loai: string) => phan.find((p) => p.type === loai)?.value ?? "";
+  const ngayThang = `${lay("day")}.${lay("month")}`;
+  const nam = lay("year");
   const vong = `dau-moc-${id}`;
   return (
     <span className="dau-moc" style={{ animationDelay: `${0.25 + thuTu * 0.22}s` }}>
@@ -44,7 +47,7 @@ function DauMoc({ id, ngay, vung, thuTu, nhan }: { id: string; ngay: string; vun
         <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="3.2" />
         <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="1.1" />
         <text fontSize="8.6" fontWeight="800" letterSpacing="1.6" fill="currentColor">
-          <textPath href={`#${vong}`}>NINH BÌNH JOURNEY · {nhan.toUpperCase()} ·</textPath>
+          <textPath href={`#${vong}`} textLength="205" lengthAdjust="spacing">NINH BÌNH JOURNEY · {nhan.toUpperCase()} ·</textPath>
         </text>
         <text x="50" y="53" textAnchor="middle" fontSize="15" fontWeight="800" fill="currentColor">{ngayThang}</text>
         <text x="50" y="66" textAnchor="middle" fontSize="9" fontWeight="700" letterSpacing="1.5" fill="currentColor">{nam}</text>
@@ -125,7 +128,7 @@ export function HoSoKhachView({
                     className={`object-cover ${den ? "" : "grayscale opacity-45"}`}
                   />
                   {den ? (
-                    <DauMoc id={diem.id} ngay={den.lanDau} vung={vung} thuTu={viTri} nhan={t("Đã đến", "Visited")} />
+                    <DauMoc id={diem.id} ngay={den.lanDau} thuTu={viTri} nhan={t("Đã đến", "Visited")} />
                   ) : null}
                 </div>
                 <div className="p-3">

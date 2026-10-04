@@ -170,13 +170,16 @@ const CARE_NEED_OPTIONS: Array<{ value: CareNeedValue; label: string; labelEn: s
   { value: "mobility", label: "Khó đi lại", labelEn: "Limited mobility" },
 ];
 
+const NGAY_VIET_NAM = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" });
+
+/**
+ * Ngày theo giờ Việt Nam, dạng `YYYY-MM-DD`. Trước 05/10/2026 hàm lấy múi giờ
+ * của máy đang chạy: máy chủ (UTC) dựng ô ngày lùi một ngày so với trình duyệt
+ * khách từ 0 tới 7 giờ sáng, React báo lệch (#418) và ô ngày cho chọn cả hôm
+ * qua. Việt Nam không đổi giờ theo mùa nên cộng ngày bằng mili giây là đúng.
+ */
 function localIsoDate(daysFromToday: number) {
-  const date = new Date();
-  date.setDate(date.getDate() + daysFromToday);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return NGAY_VIET_NAM.format(new Date(Date.now() + daysFromToday * 86_400_000));
 }
 
 function formatCountdown(seconds: number) {

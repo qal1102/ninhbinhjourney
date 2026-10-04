@@ -1,5 +1,6 @@
 /**
- * Schema snapshot for migrations `202607240001` through `202607300008`.
+ * Schema snapshot for migrations `202607240001` through `202607300008`, minus
+ * the saved-itinerary tables and functions dropped in `202610040107`.
  *
  * This file follows Supabase CLI's generated Database shape. It is kept beside
  * the versioned migration so a linked-project `supabase gen types typescript`
@@ -151,19 +152,6 @@ export type JourneyIntentRow = RunRow & {
   raw_text: string;
   structured_intent: Json;
   confirmed_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type ItineraryRow = RunRow & {
-  region_id: string;
-  intent_id: string;
-  created_by: string;
-  total_minutes: number;
-  estimated_price_vnd: number;
-  validation: Json;
-  explanation: string;
-  version: number;
   created_at: string;
   updated_at: string;
 };
@@ -904,17 +892,6 @@ export interface Database {
       }>;
       capacity_slots: Table<CapacitySlotRow>;
       journey_intents: Table<JourneyIntentRow>;
-      itineraries: Table<ItineraryRow>;
-      itinerary_items: Table<RunRow & {
-        itinerary_id: string;
-        site_id: string;
-        created_by: string;
-        item_order: number;
-        start_at: string;
-        end_at: string;
-        travel_minutes_from_previous: number;
-        reason: string;
-      }>;
       quotes: Table<QuoteRow>;
       bookings: Table<BookingRow>;
       booking_contacts: Table<{
@@ -1052,26 +1029,6 @@ export interface Database {
       };
       reset_demo_run: {
         Args: { p_demo_run_id: string };
-        Returns: undefined;
-      };
-      save_generated_journey: {
-        Args: {
-          p_demo_run_id: string;
-          p_locale: string;
-          p_raw_text: string;
-          p_structured_intent: Json;
-          p_itinerary: Json;
-        };
-        Returns: Array<{ intent_id: string; itinerary_id: string }>;
-      };
-      update_saved_journey: {
-        Args: {
-          p_itinerary_id: string;
-          p_items: Json;
-          p_total_minutes: number;
-          p_validation: Json;
-          p_explanation: string;
-        };
         Returns: undefined;
       };
       create_server_quote: {

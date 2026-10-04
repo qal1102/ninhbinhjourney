@@ -185,6 +185,79 @@ function quangTheoPhut(
   return { quang: Math.min(tongDuong, quang + conLai * metMoiPhut), nghiTai: null };
 }
 
+/**
+ * Phút theo lịch để tới quãng `quangDi` (0 tới tổng đường, tuyến khứ hồi
+ * tính cả lượt về), cộng thời gian nghỉ ở các mốc đã qua. Nghịch đảo của
+ * `quangTheoPhut` với hệ số tốc độ 1.
+ */
+function phutTheoQuang(tuyen: TuyenThuyen, quangDi: number, phutMotVong = tuyen.phutTronChuyen): number {
+  const dai = doDaiTuyen(tuyen);
+  const tongDuong = tuyen.khuHoi ? dai * 2 : dai;
+  const nghi = nghiCua(tuyen);
+  const tongNghi = nghi.reduce((t, n) => t + n.phut, 0);
+  const metMoiPhut = tongDuong / Math.max(10, phutMotVong - tongNghi);
+  let phut = 0;
+  let quang = 0;
+  for (const n of nghi) {
+    if (quangDi <= n.quang) return phut + (quangDi - quang) / metMoiPhut;
+    phut += (n.quang - quang) / metMoiPhut + n.phut;
+    quang = n.quang;
+  }
+  return phut + (Math.min(quangDi, tongDuong) - quang) / metMoiPhut;
+}
+
+/** Quá xa tuyến thì không ước: có thể người chèo bật định vị khi chưa xuống thuyền. */
+const LECH_TUYEN_TOI_DA_MET = 300;
+
+/**
+ * Ước còn bao nhiêu phút nữa thuyền có định vị về tới bến.
+ *
+ * Chiếu vị trí lên tuyến. Một điểm có thể ứng với nhiều quãng: tuyến khứ hồi
+ * (Tam Cốc) đi và về cùng đường, tuyến vòng (Tràng An) bắt đầu và kết thúc ở
+ * cùng bến. Chọn quãng mà lịch tuyến khớp nhất với thời gian thuyền đã đi, rồi
+ * lấy phần lịch còn lại (đường còn lại cộng chỗ nghỉ chưa tới). Thuyền đi
+ * chậm hơn lịch thì giờ về lùi theo, vì tính từ chỗ thuyền đang thật sự ở.
+ */
+export function uocPhutVeBen(
+  coSo: CoSoThuyen,
+  lonLat: DiemLonLat,
+  phutDaDi: number,
+  phutMotVong?: number,
+): { phutConLai: number; lechTuyenMet: number } | null {
+  const tuyen = TUYEN_THUYEN[coSo];
+  const vong = phutMotVong ?? tuyen.phutTronChuyen;
+  const q = quangCua(tuyen);
+  const d = tuyen.duong;
+  const kx = Math.cos(lonLat[1] * RAD) * RAD * R;
+  const ky = RAD * R;
+  const ung: { quang: number; lech: number }[] = [];
+  for (let i = 1; i < d.length; i++) {
+    const ax = (d[i - 1][0] - lonLat[0]) * kx;
+    const ay = (d[i - 1][1] - lonLat[1]) * ky;
+    const bx = (d[i][0] - lonLat[0]) * kx;
+    const by = (d[i][1] - lonLat[1]) * ky;
+    const dx = bx - ax;
+    const dy = by - ay;
+    const dai2 = dx * dx + dy * dy || 1;
+    const t = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / dai2));
+    const lech = Math.hypot(ax + dx * t, ay + dy * t);
+    ung.push({ quang: q[i - 1] + (q[i] - q[i - 1]) * t, lech });
+  }
+  const gan = Math.min(...ung.map((u) => u.lech));
+  if (gan > LECH_TUYEN_TOI_DA_MET) return null;
+  const dai = q[q.length - 1];
+  const cacQuang = ung
+    .filter((u) => u.lech <= gan + 40)
+    .flatMap((u) => (tuyen.khuHoi ? [u.quang, 2 * dai - u.quang] : [u.quang]));
+  let tot = cacQuang[0];
+  for (const c of cacQuang) {
+    if (Math.abs(phutTheoQuang(tuyen, c, vong) - phutDaDi) < Math.abs(phutTheoQuang(tuyen, tot, vong) - phutDaDi)) tot = c;
+  }
+  const tongDuong = tuyen.khuHoi ? dai * 2 : dai;
+  const phutConLai = Math.max(0, phutTheoQuang(tuyen, tongDuong, vong) - phutTheoQuang(tuyen, tot, vong));
+  return { phutConLai, lechTuyenMet: Math.round(gan) };
+}
+
 export type ThuyenTrenBanDo = {
   id: string;
   nhan: string;
@@ -394,6 +467,8 @@ export function bangBen(input: {
   chuyen: readonly ChuyenUocTinh[];
   luotVao: readonly number[];
   soThuyenCoDinhVi: number;
+  /** Thuyền có định vị ước về bến trong 30 phút tới (`uocPhutVeBen`). */
+  veBen30PhutCoDinhVi?: number;
   bayGioMs: number;
 }): BangBen {
   const { doi, bayGioMs: t } = input;
@@ -409,7 +484,7 @@ export function bangBen(input: {
     coDinhVi: input.soThuyenCoDinhVi,
     oBen: Math.max(0, doi.soThuyen - trenSong),
     roiBen30Phut: daRoi.filter((c) => t - c.roiBenLuc <= nuaGio).length,
-    veBen30Phut: dangDi.filter((c) => c.veBenLuc - t <= nuaGio).length,
+    veBen30Phut: dangDi.filter((c) => c.veBenLuc - t <= nuaGio).length + (input.veBen30PhutCoDinhVi ?? 0),
     khachXuongBen: Math.max(0, khachQuaCong - khachDaLen),
     daRoiBen: daRoi.length,
     khachQuaCong,

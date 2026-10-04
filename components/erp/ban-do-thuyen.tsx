@@ -16,6 +16,7 @@ import {
   phutChu,
   thuyenLucNay,
   trongGioChay,
+  uocPhutVeBen,
   TUYEN_THUYEN,
   viTriNoiSuy,
   type BangBen,
@@ -75,7 +76,13 @@ const MAU = {
   nonThat: "#183f34",
 } as const;
 
-type ThuyenThatHienThi = ThuyenTrenBanDo & { nguoiCheo: string; soKhach: number; giayTruoc: number };
+type ThuyenThatHienThi = ThuyenTrenBanDo & {
+  nguoiCheo: string;
+  soKhach: number;
+  giayTruoc: number;
+  /** Giờ ước về bến (ms), `null` khi thuyền lệch xa tuyến. */
+  veBenLuc: number | null;
+};
 
 type CheDo =
   | { kieu: "truc-tiep" }
@@ -422,6 +429,9 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
                 const vt = viTriNoiSuy(c.vet, bayGio - TRE_HIEN_THI_MS);
                 if (!vt) return [];
                 const cuoi = c.vet[c.vet.length - 1];
+                const phutDaDi = (bayGio - c.batDau) / PHUT;
+                const ve = uocPhutVeBen(coSo, vt.lonLat, phutDaDi, vong);
+                const veBenLuc = ve ? bayGio + ve.phutConLai * PHUT : null;
                 return [{
                   id: c.id,
                   nhan: c.soThuyen,
@@ -429,10 +439,11 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
                   lonLat: vt.lonLat,
                   huong: vt.huong,
                   phutDaDi: (bayGio - c.batDau) / PHUT,
-                  ghiChu: `${c.nguoiCheo} · ${c.soKhach} khách · đã đi ${phutChu((bayGio - c.batDau) / PHUT)}`,
+                  ghiChu: `${c.nguoiCheo} · ${c.soKhach} khách · đã đi ${phutChu(phutDaDi)}${veBenLuc ? ` · về bến khoảng ${gioVietNam(veBenLuc)}` : ""}`,
                   nguoiCheo: c.nguoiCheo,
                   soKhach: c.soKhach,
                   giayTruoc: Math.max(0, Math.round((bayGio - cuoi.luc) / 1000)),
+                  veBenLuc,
                 }];
               });
 
@@ -489,7 +500,14 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         if (khungGio - lanTomTat > 1000 || lanTomTat === 0) {
           lanTomTat = khungGio;
           const bang = b.doi
-            ? bangBen({ doi: b.doi, chuyen, luotVao: b.luotVao, soThuyenCoDinhVi: that.length, bayGioMs: t })
+            ? bangBen({
+                doi: b.doi,
+                chuyen,
+                luotVao: b.luotVao,
+                soThuyenCoDinhVi: that.length,
+                veBen30PhutCoDinhVi: that.filter((x) => x.veBenLuc !== null && x.veBenLuc - bayGio <= 30 * PHUT).length,
+                bayGioMs: t,
+              })
             : null;
           if (nhanBen.current) {
             nhanBen.current.textContent = bang ? `${bang.oBen.toLocaleString("vi-VN")} thuyền chờ khách` : "";
@@ -665,7 +683,8 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
             <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
               <span className="font-bold text-[#183f34]">{t.nhan} · {t.nguoiCheo}</span>
               <span className="text-[#5f6d66]">
-                {t.soKhach} khách · đã đi {phutChu(t.phutDaDi)} · vị trí {t.giayTruoc <= 15 ? `${t.giayTruoc} giây trước` : `${phutChu(t.giayTruoc / 60)} trước, có thể máy đã tắt màn hình`}
+                {t.soKhach} khách · đã đi {phutChu(t.phutDaDi)}
+                {t.veBenLuc ? <> · <strong className="text-[#183f34]">về bến khoảng {gioVietNam(t.veBenLuc)}</strong></> : " · lệch xa tuyến, chưa ước được giờ về"} · vị trí {t.giayTruoc <= 15 ? `${t.giayTruoc} giây trước` : `${phutChu(t.giayTruoc / 60)} trước, có thể máy đã tắt màn hình`}
               </span>
             </li>
           ))}

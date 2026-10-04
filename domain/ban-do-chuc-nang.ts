@@ -214,10 +214,10 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         giamDocLamDuoc: true,
         duongDan: "/erp/thuyen",
         diem: "bat-dau-chuyen",
-        moi: "03/10",
+        moi: "04/10",
         cacViec: [
           "Mở trang này trên điện thoại (đăng nhập giám đốc cũng được), gõ số thuyền, số khách, bấm \"Bắt đầu chuyến\" và cho phép đọc vị trí.",
-          "Trên máy tính mở bản đồ cùng trang: thuyền thật màu vàng hiện ra, kèm vệt cam 20 phút vừa đi.",
+          "Trên máy tính mở bản đồ cùng trang: thuyền thật màu cam hiện ra, kèm vệt 20 phút vừa đi và giờ ước về bến (tính từ chỗ thuyền đang ở trên tuyến, kể cả chặng nghỉ ở đền).",
           "Xong thì bấm \"Về bến, dừng gửi vị trí\": thuyền rời bản đồ.",
         ],
       },

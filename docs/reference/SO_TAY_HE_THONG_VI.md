@@ -279,7 +279,7 @@ Chi tiết trạng thái từng mục: `docs/HANDOFF.md`.
 
 ## 12. Căn cước hành trình — giải thích không dùng chữ kỹ thuật
 
-> Ghi lại buổi trao đổi ngày **29/08/2026** giữa chủ dự án và phiên làm việc. Viết cho người không rành kỹ thuật đọc. Phần việc chia nhỏ nằm ở `docs/plans/PHAN_GIAO_VIEC_TAM_COC.md` mục 3b.
+> Ghi lại buổi trao đổi ngày **29/08/2026** giữa chủ dự án và phiên làm việc. Viết cho người không rành kỹ thuật đọc. Phần việc chia nhỏ nằm ở `docs/archive/PHAN_GIAO_VIEC_TAM_COC.md` mục 3b (đã xong).
 >
 > ⚠️ **Toàn bộ mục này là dự định, chưa có dòng nào chạy thật.** Trừ những chỗ ghi rõ "đã có".
 

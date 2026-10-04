@@ -265,8 +265,8 @@ function TheVong() {
             Một vị khách, từ lúc đặt vé tới trang đầu giám đốc
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7068]">
-            Bảy bước, chừng mười phút. Vé trình diễn là gói &ldquo;Nhịp chậm Ninh Bình&rdquo;, chuyến Tràng An cuối lúc 13:00,
-            nên đi trọn vòng được tới khoảng 12:55. Muộn hơn thì đặt cho ngày mai; tới bước 3 máy sẽ báo vé không dùng cho hôm
+            Bảy bước, chừng mười phút. Vé trình diễn là gói &ldquo;Nhịp chậm Ninh Bình&rdquo;, chuyến Tràng An cuối lúc 16:00,
+            nên đi trọn vòng được tới khoảng 15:55. Muộn hơn thì đặt cho ngày mai; tới bước 3 máy sẽ báo vé không dùng cho hôm
             nay.
           </p>
         </div>

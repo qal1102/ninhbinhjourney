@@ -674,7 +674,7 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     id: "web-goi",
     nhom: "dat-ve",
     ten: "Các gói đi sẵn",
-    moTa: "Năm gói đi trong ngày và Bàn Trăng theo mùa, giá minh hoạ, bấm là vào đặt.",
+    moTa: "Các gói đi trong ngày qua bốn cơ sở có cổng, cùng Bàn Trăng theo mùa (mùa 2026 đã khép); giá minh hoạ, bấm là vào đặt.",
     duongDan: "/packages",
     cacViec: ["So các gói: thời lượng, nhịp đi, bao gồm và không bao gồm.", "Bấm \"Xem chi tiết\" hoặc \"Chọn gói\" để vào đặt."],
   },

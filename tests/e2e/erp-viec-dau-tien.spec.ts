@@ -58,6 +58,10 @@ test("có việc thì có nút mở thẳng tới nơi làm; hết việc thì k
 
   const viec = page.getByTestId("viec-dau-tien");
   const nut = page.getByTestId("viec-dau-tien-mo");
+  // `/erp` có loading.tsx nên trang đổ dần: đếm ngay sau khi URL đổi có lúc
+  // ra 0 rồi khối mới hiện (đỏ oan khi chạy bốn luồng, 04/10/2026). Chờ khối
+  // luôn có của trang đầu giám đốc đã dựng xong rồi mới đếm.
+  await expect(page.getByTestId("loi-vao-huong-dan")).toBeVisible();
 
   if ((await viec.count()) === 0) {
     await expect(nut).toHaveCount(0);

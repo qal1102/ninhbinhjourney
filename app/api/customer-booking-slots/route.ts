@@ -1,3 +1,5 @@
+import { PACKAGES } from "@/content/packages";
+import { ngayTrongMuaBan } from "@/content/packages-en";
 import { mergeProductSlotRows, CustomerBookingSlotsQuerySchema } from "@/domain/customer-booking";
 import {
   CustomerBookingRepositoryError,
@@ -25,6 +27,16 @@ export async function GET(request: Request) {
     return Response.json(
       { accepted: false, error: { code: "CUSTOMER_BOOKING_SLOTS_INPUT_INVALID", message: "Ngày hoặc sản phẩm chưa hợp lệ." } },
       { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  // Gói theo mùa: ngày ngoài mùa không có khung nào, khớp với API giữ chỗ
+  // (trả 409 NGOAI_MUA_BAN cho đúng ngày ấy).
+  const goi = PACKAGES.find((item) => item.id === parsedInput.data.product_id);
+  if (goi && !ngayTrongMuaBan(goi, parsedInput.data.visit_date)) {
+    return Response.json(
+      { accepted: true, slots: [], ngoaiMuaBan: true },
+      { status: 200, headers: { "Cache-Control": "no-store" } },
     );
   }
 

@@ -99,6 +99,21 @@ describe("CUS-06 booking routes", () => {
     ]);
   });
 
+  it("gói mùa hoa súng: ngày ngoài mùa không có khung giờ, giữ chỗ bị từ chối mà không chạm kho", async () => {
+    const goiMua = "40000000-0000-4000-8000-000000000007";
+    const slots = await listSlots(getRequest(`/api/customer-booking-slots?product_id=${goiMua}&visit_date=2026-10-10`));
+    expect(await slots.json()).toEqual({ accepted: true, slots: [], ngoaiMuaBan: true });
+    expect(mocks.listSlots).not.toHaveBeenCalled();
+
+    const hold = await createHold(request("/api/customer-booking-holds", { ...holdBody, product_id: goiMua, visit_date: "2026-10-10" }));
+    expect(hold.status).toBe(409);
+    expect((await hold.json()).error.code).toBe("NGOAI_MUA_BAN");
+    expect(mocks.createHold).not.toHaveBeenCalled();
+
+    const trongMua = await listSlots(getRequest(`/api/customer-booking-slots?product_id=${goiMua}&visit_date=2026-11-21`));
+    expect((await trongMua.json()).slots).toHaveLength(1);
+  });
+
   it("fails closed and rejects cross-origin writes", async () => {
     mocks.enabled.mockReturnValue(false);
     expect((await createHold(request("/api/customer-booking-holds", holdBody))).status).toBe(503);

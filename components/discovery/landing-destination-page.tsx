@@ -9,6 +9,9 @@ import {
   type DestinationFacts,
 } from "@/content/landing-destinations";
 import { SuongVen } from "@/components/shared/suong-ven";
+import { JsonLd } from "@/components/shared/json-ld";
+import { jsonLdDiemDen } from "@/domain/du-lieu-cau-truc";
+import { absoluteUrl } from "@/lib/site-url";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import {
   destinationBackHref,
@@ -57,6 +60,15 @@ export function LandingDestinationPage({
 
   return (
     <main lang={lang} className="min-h-screen bg-[#fbfaf6] text-[#151a17]">
+      <JsonLd
+        du={jsonLdDiemDen({
+          ten: destination.name[lang],
+          moTa: destination.description[lang],
+          url: absoluteUrl(`/destination/${DESTINATION_PAGE_SLUGS[destination.id]}`),
+          anh: absoluteUrl(`/images/og/destination-${DESTINATION_PAGE_SLUGS[destination.id]}.jpg`),
+          toaDo: [latitude, longitude],
+        })}
+      />
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 text-white sm:px-8">
           <Link

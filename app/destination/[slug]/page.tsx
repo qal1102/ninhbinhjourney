@@ -25,6 +25,8 @@ import { NHAN_SO_THICH, nhanThoiLuong } from "@/content/destination-labels";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { SuongVen } from "@/components/shared/suong-ven";
+import { JsonLd } from "@/components/shared/json-ld";
+import { jsonLdDiemDen } from "@/domain/du-lieu-cau-truc";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import {
   destinationBackHref,
@@ -118,6 +120,15 @@ export default async function DestinationPage({
 
   return (
     <main lang={lang} className="min-h-screen bg-[#fbfaf6] text-[#151a17]">
+      <JsonLd
+        du={jsonLdDiemDen({
+          ten: destination.name[lang],
+          moTa: destination.description[lang],
+          url: absoluteUrl(`/destination/${slug}`),
+          anh: absoluteUrl(`/images/og/destination-${slug}.jpg`),
+          toaDo: destination.coordinates,
+        })}
+      />
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 text-white sm:px-8">
           <Link

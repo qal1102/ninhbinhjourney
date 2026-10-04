@@ -8,6 +8,10 @@ import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGES } from "@/content/packages";
 import { goiDaHetMua } from "@/content/packages-en";
+import { CONTACT } from "@/content/contact";
+import { JsonLd } from "@/components/shared/json-ld";
+import { jsonLdDoanhNghiep } from "@/domain/du-lieu-cau-truc";
+import { absoluteUrl } from "@/lib/site-url";
 
 export const metadata = {
   // Trang chủ đổi ngôn ngữ bằng `?lang=`; các biến thể ấy cùng một nội dung.
@@ -50,6 +54,16 @@ export default async function Home({ searchParams }: PageProps) {
   );
 
   return (
+    <>
+    <JsonLd
+      du={jsonLdDoanhNghiep({
+        ten: "Ninh Bình Journey",
+        url: absoluteUrl("/"),
+        anh: absoluteUrl("/images/og/ninh-binh-journey.jpg"),
+        dienThoai: CONTACT.phoneLabel,
+        moTa: "Núi đá vôi, sông nước và cố đô Hoa Lư: điểm đến, lịch trình và gói tham quan Ninh Bình.",
+      })}
+    />
     <NinhBinhLanding
       initialLang={lang}
       key={`${lang}-${source}-${presentationMode ? "presentation" : "standard"}`}
@@ -69,5 +83,6 @@ export default async function Home({ searchParams }: PageProps) {
         soGoi: PACKAGES.filter((goi) => !goiDaHetMua(goi)).length,
       }}
     />
+    </>
   );
 }

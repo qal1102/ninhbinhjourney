@@ -1,6 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/shared/json-ld";
+import { jsonLdGoi } from "@/domain/du-lieu-cau-truc";
+import { absoluteUrl } from "@/lib/site-url";
 import { getPackageBySlug, PACKAGES } from "@/content/packages";
 import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
@@ -28,6 +32,16 @@ export function generateStaticParams() {
   return PACKAGES.map((item) => ({ slug: item.slug }));
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const item = getPackageBySlug((await params).slug);
+  if (!item) return {};
+  const chu = goiHienThi(item, "vi");
+  const title = `${chu.name} | Ninh Bình Journey`;
+  const description = chu.editorialDescription ?? `${chu.durationLabel} · ${chu.audience}`;
+  const canonical = absoluteUrl(`/packages/${item.slug}`);
+  return { title, description, alternates: { canonical }, openGraph: { title, description, url: canonical } };
+}
+
 export default async function PackageDetailPage({
   params,
   searchParams,
@@ -52,6 +66,17 @@ export default async function PackageDetailPage({
 
   return (
     <main lang={lang} data-customer-section="package-detail" className="min-h-screen bg-[#183f34] px-5 py-10 text-white sm:px-8 lg:py-16">
+      <JsonLd
+        du={jsonLdGoi({
+          ten: chu.name,
+          moTa: chu.editorialDescription ?? `${chu.durationLabel} · ${chu.audience}`,
+          url: absoluteUrl(`/packages/${item.slug}`),
+          anh: absoluteUrl(hero.src),
+          thoiLuongPhut: item.durationMinutes,
+          cacDiem: sites.map((site) => site.name[lang]),
+          nhaToChuc: { ten: "Ninh Bình Journey", url: absoluteUrl("/") },
+        })}
+      />
       <div className="mx-auto max-w-6xl">
         <div className="flex items-center justify-between gap-4">
           <Link

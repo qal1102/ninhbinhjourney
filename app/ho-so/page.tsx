@@ -44,10 +44,12 @@ export default async function TrangHoSo({
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="text-sm font-bold text-[#356957] underline underline-offset-4">
-            {ch(lang, "Về trang chủ", "Home")}
+            ← {ch(lang, "Về trang chủ", "Home")}
           </Link>
           <NutNgonNgu lang={lang} />
         </div>
+        {/* Tiêu đề trang cho trình đọc màn hình; phần thấy được nằm trong thẻ hộ chiếu. */}
+        <h1 className="sr-only">{ch(lang, "Hộ chiếu Ninh Bình", "Ninh Binh passport")}</h1>
         <div className="mt-5">
           {!bat ? (
             <p className="rounded-3xl bg-white p-6 text-[#59654b]">{ch(lang, "Hồ sơ khách chưa mở ở bản này ạ.", "Passports are not open in this version.")}</p>

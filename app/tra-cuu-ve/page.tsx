@@ -20,8 +20,6 @@ export default async function TicketLookupPage({
   const lang = await docNgonNgu(await searchParams);
   return (
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
-      <div className="mx-auto mb-6 max-w-3xl overflow-hidden rounded-3xl">
-      </div>
       {isCustomerBookingEnabled() ? (
         <TicketLookup lang={lang}>
           <NutNgonNgu lang={lang} />

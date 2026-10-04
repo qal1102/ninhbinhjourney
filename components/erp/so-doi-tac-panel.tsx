@@ -393,6 +393,7 @@ export function SoDoiTacPanel({
 
   return (
     <section
+      id="so-doi-tac"
       data-testid="so-doi-tac"
       data-so-dong={so.length}
       data-phai-lam={phaiLam}

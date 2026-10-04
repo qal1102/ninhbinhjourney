@@ -10,6 +10,7 @@ export const CONTINUITY_FROM_VALUES = [
   "catalog",
   "explore",
   "package",
+  "plan",
 ] as const;
 export const CONTINUITY_PARENT_VALUES = ["home", "catalog"] as const;
 
@@ -150,19 +151,27 @@ export function packageCatalogHref(
   });
 }
 
-export function packageCatalogBackHref(context: ContinuityContext) {
+/**
+ * Nút quay lại của danh mục gói, theo đúng nơi khách vừa rời: trang chủ thì
+ * về khu gói trên trang chủ, Lập hành trình thì về lịch trình, còn lại (vào
+ * thẳng, lối đại lý, kiosk) thì về trang chủ. Trước 04/10/2026 mọi trường hợp
+ * không phải trang chủ đều ghi "Quay lại hành trình", kể cả khi khách chưa
+ * từng lập hành trình.
+ */
+export function packageCatalogBack(
+  context: ContinuityContext,
+  tuLapHanhTrinh: boolean,
+): { href: string; kieu: "trang-chu" | "hanh-trinh" } {
   if (context.from === "home") {
-    return withContinuityContext(
-      "/",
-      context,
-      { from: undefined, package: undefined, parent: undefined },
-      "packages",
-    );
+    return {
+      href: withContinuityContext("/", context, { from: undefined, package: undefined, parent: undefined }, "packages"),
+      kieu: "trang-chu",
+    };
   }
-  return withContinuityContext("/plan", {
-    lang: context.lang,
-    source: context.source,
-  });
+  const goc = { lang: context.lang, source: context.source };
+  return tuLapHanhTrinh || context.from === "plan"
+    ? { href: withContinuityContext("/plan", goc), kieu: "hanh-trinh" }
+    : { href: withContinuityContext("/", goc), kieu: "trang-chu" };
 }
 
 export function packageDetailBackHref(context: ContinuityContext) {

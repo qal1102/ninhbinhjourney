@@ -144,10 +144,11 @@ export function ItineraryEditor({
     partyContext: intent.partyContext,
     visitDate: intent.visitDate,
   }).matches[0] ?? null;
-  const thamSoGoi = new URLSearchParams();
+  // `from=plan`: danh mục gói biết khách đi từ lịch trình sang, nút quay lại về đúng đây.
+  const thamSoGoi = new URLSearchParams({ from: "plan" });
   if (goiGanNhat) thamSoGoi.set("goi", goiGanNhat.slug);
   if (lang === "en") thamSoGoi.set("lang", "en");
-  const huongDiGoi = thamSoGoi.size > 0 ? `/packages?${thamSoGoi.toString()}` : "/packages";
+  const huongDiGoi = `/packages?${thamSoGoi.toString()}`;
 
   return (
     <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">

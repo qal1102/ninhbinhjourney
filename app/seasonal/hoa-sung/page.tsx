@@ -92,15 +92,15 @@ export default async function HoaSungPage({
     <main lang={lang} className="min-h-screen bg-[#f7f2ee] text-[#183f34]" data-testid="trang-hoa-sung" data-giai-doan={giaiDoan}>
       <WorldSwitcher hienTai="seasonal" lang={lang} source={source} tone="sang" />
 
-      <section className="relative overflow-hidden px-5 pb-14 pt-24 sm:px-8 sm:pb-20 sm:pt-28">
+      <section className="relative overflow-hidden px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-14">
         <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
           <div>
-            <div className="mb-6 flex justify-end lg:justify-start">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-[0.66rem] font-extrabold uppercase tracking-[0.3em] text-[#9a5f8f]">
+                {t(`Sự kiện theo mùa · Tam Cốc · ${mua.nam}`, `Seasonal · Tam Coc · ${mua.nam}`)}
+              </p>
               <NutNgonNgu lang={lang} />
             </div>
-            <p className="text-[0.66rem] font-extrabold uppercase tracking-[0.3em] text-[#9a5f8f]">
-              {t(`Sự kiện theo mùa · Tam Cốc · ${mua.nam}`, `Seasonal · Tam Coc · ${mua.nam}`)}
-            </p>
             <h1 className="font-display mt-5 max-w-3xl text-5xl leading-[0.92] sm:text-7xl">
               {t("Hoa súng nở trên sông Ngô Đồng", "Water lilies on the Ngo Dong River")}
             </h1>

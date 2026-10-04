@@ -19,7 +19,7 @@ test("EN theo khách từ Khám phá sang Gói và trang điểm đến, giữ n
 
   // Cookie nhớ lựa chọn: trang sau không cần tham số vẫn là tiếng Anh.
   await page.goto("/packages");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Five ways through Ninh Binh");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Pick your pace through Ninh Binh");
   await page.goto("/destination/trang-an");
   await expect(page.getByRole("heading", { name: "The story of this place" })).toBeVisible();
   await page.goto("/destination/cuc-phuong");

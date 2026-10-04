@@ -93,25 +93,30 @@ export default async function ErpFinancePage({ searchParams }: Props) {
   return (
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
-      {/*
-        Trang này là nơi ba luồng tiền gặp nhau: bước 3–4 của đóng ca, bước 3
-        và 5 của công nợ, và cả ba bước của nộp quỹ đều làm ở đây. Vì thế dựng
-        cả ba dải, mỗi dải đếm đúng những hồ sơ mà chính trang này đang cầm.
-        Ba dải đều gập sẵn nên phần làm việc bên dưới không bị đẩy xa.
-      */}
-      {machViecCuaTrangNay.map(({ mach, trangThai }) => (
-        <MachViecPanel
-          key={mach.id}
-          mach={mach}
-          siteId={coSoChoDuongDan}
-          viewerRole={user.role}
-          trangThai={trangThai}
-          dangODay="/erp/finance"
-          gon
-        />
-      ))}
       <TenNguoiProvider ten={tenNguoi}>
       <AccountingControlCenter
+        /*
+          Trang này là nơi ba luồng tiền gặp nhau: bước 3–4 của đóng ca, bước 3
+          và 5 của công nợ, và cả ba bước của nộp quỹ đều làm ở đây. Vì thế dựng
+          cả ba dải, mỗi dải đếm đúng những hồ sơ mà chính trang này đang cầm.
+          Ba dải gập sẵn và đứng ngay dưới tiêu đề (trước 04/10/2026 chúng đứng
+          trên tiêu đề, mở màn ra không biết mình đang ở đâu).
+        */
+        sauTieuDe={
+          <div className="space-y-3">
+            {machViecCuaTrangNay.map(({ mach, trangThai }) => (
+              <MachViecPanel
+                key={mach.id}
+                mach={mach}
+                siteId={coSoChoDuongDan}
+                viewerRole={user.role}
+                trangThai={trangThai}
+                dangODay="/erp/finance"
+                gon
+              />
+            ))}
+          </div>
+        }
         user={user}
         shiftClosures={shiftClosures}
         journals={journals}

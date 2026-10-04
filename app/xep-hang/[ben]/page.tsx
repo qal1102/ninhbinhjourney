@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HangChoKhach } from "@/components/commerce/hang-cho-khach";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
@@ -23,8 +24,11 @@ export default async function XepHangPage({
   const noi = BEN_CO_HANG_CHO[ben];
   return (
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-4 py-8 text-[#151a17] sm:px-8 lg:py-14">
-      <div className="mx-auto mb-6 max-w-3xl overflow-hidden rounded-3xl">
-      </div>
+      <nav aria-label={lang === "en" ? "Page navigation" : "Điều hướng trang"} className="mx-auto mb-4 max-w-3xl text-sm font-bold">
+        <Link href={`/?lang=${lang}`} className="text-[#183f34]">
+          ← {lang === "en" ? "Home" : "Về trang chủ"}
+        </Link>
+      </nav>
       <HangChoKhach ben={ben} ten={lang === "en" ? noi.tenEn : noi.ten} lang={lang}>
         <NutNgonNgu lang={lang} />
       </HangChoKhach>

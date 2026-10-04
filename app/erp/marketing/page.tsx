@@ -64,6 +64,25 @@ export default async function ErpMarketingPage({
   return (
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
+      <header className="mb-6">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-[#668078]">Marketing · toàn vùng</p>
+        <h1 className="font-display mt-1 text-4xl leading-tight text-[#183f34] sm:text-6xl">Kênh khách</h1>
+        <p className="mt-3 max-w-2xl text-base leading-7 text-[#68776f]">
+          Dịp nào sắp tới thì chuẩn bị chiến dịch, đối tác nào cần gọi lại, mã QR dẫn khách về đâu, và khách đi tới bước nào trước khi đặt vé.
+        </p>
+        <nav aria-label="Các phần" className="mt-4 flex flex-wrap gap-2">
+          {[
+            ["#lich-mua-vu", "Lịch mùa vụ"],
+            ["#so-doi-tac", "Sổ đối tác"],
+            ["#ma-qr", "Mã QR & chiến dịch"],
+            ["#phieu-khach", "Phễu khách"],
+          ].map(([href, nhan]) => (
+            <a key={href} href={href} className="inline-flex min-h-10 items-center rounded-full border border-[#cbd7d1] bg-white px-4 text-sm font-bold text-[#183f34] hover:border-[#183f34]">
+              {nhan}
+            </a>
+          ))}
+        </nav>
+      </header>
       <div className="space-y-6">
         <LichMuaVuPanel lich={lich} />
         <SoDoiTacPanel
@@ -82,7 +101,7 @@ export default async function ErpMarketingPage({
         ) : (
         <section className="rounded-3xl border border-[#e0d6c4] bg-[#fdf8ef] p-6 sm:p-8">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8a6b27]">Kênh khách · mã QR đổi được đích</p>
-          <h1 className="font-display mt-3 text-4xl text-[#3d3325] sm:text-5xl">Kho QR chưa sẵn sàng ở môi trường này</h1>
+          <h2 className="font-display mt-3 text-4xl text-[#3d3325] sm:text-5xl">Kho QR chưa sẵn sàng ở môi trường này</h2>
           {/* Câu cũ bảo giám đốc "kiểm tra migration CUS-04 và cấu hình
               server" — mã việc nội bộ, và là việc của bộ phận kỹ thuật chứ
               không phải của người mở màn hình này. */}

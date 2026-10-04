@@ -17,7 +17,7 @@ import { ConTroNhan } from "@/components/shared/con-tro-nhan";
 import { AnhNhu } from "@/components/shared/anh-nhu";
 import {
   checkoutHref,
-  packageCatalogBackHref,
+  packageCatalogBack,
   packageDetailHref,
   packageImageTransitionName,
   readContinuityContext,
@@ -178,6 +178,9 @@ export default async function PackagesPage({
   const checkoutAvailable =
     surfaceAttributes["data-checkout-available"] === "true";
   const [featured, ...rest] = PACKAGES;
+  const quayLai = packageCatalogBack(navigationContext, Boolean(goiGoiY));
+  const banTrang = PACKAGES.find((item) => item.slug === "ban-trang-tam-coc-2026");
+  const banTrangDaKhep = banTrang ? goiDaHetMua(banTrang) : true;
 
   return (
     <main lang={lang}
@@ -190,11 +193,11 @@ export default async function PackagesPage({
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between gap-4">
           <Link
-            href={packageCatalogBackHref(navigationContext)}
+            href={quayLai.href}
             transitionTypes={["nav-back"]}
             className="text-sm font-bold text-[#356957]"
           >
-            ← {ch(lang, "Quay lại hành trình", "Back to your journey")}
+            ← {quayLai.kieu === "hanh-trinh" ? ch(lang, "Quay lại hành trình", "Back to your journey") : ch(lang, "Về trang chủ", "Home")}
           </Link>
           <NutNgonNgu lang={lang} />
         </div>
@@ -221,13 +224,13 @@ export default async function PackagesPage({
             : ch(lang, "Bảng giá tham khảo · chưa mở đặt online", "Reference prices · online booking not open")}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-[clamp(2.6rem,7vw,4.5rem)] leading-[0.95] text-[#183f34] [text-wrap:balance]">
-          {ch(lang, "Năm cách đi Ninh Bình, và một bàn tiệc dưới trăng.", "Five ways through Ninh Binh, and a table under the moon.")}
+          {ch(lang, "Chọn một nhịp đi, phần còn lại để chúng tôi sắp.", "Pick your pace through Ninh Binh; we arrange the rest.")}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
           {ch(
             lang,
-            "Chọn theo thời gian bạn có và kiểu đi bạn thích: cả ngày xem di sản, một ngày thong thả, buổi sáng cho cả nhà, một buổi chiều săn ảnh hoàng hôn, hay nửa ngày qua hồ lên chùa Tam Chúc. Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách. Giá của năm gói còn lại là giá minh hoạ tính theo người lớn, chưa phải giá bán thật.",
-            "Choose by the time you have and the way you like to travel: a full heritage day, a slow day, a morning for the whole family, an afternoon chasing sunset light, or half a day crossing the lake to Tam Chuc's temples. At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two. The other five prices are samples per adult, not real selling prices.",
+            `Chọn theo thời gian bạn có và kiểu đi bạn thích: cả ngày xem di sản, một ngày thong thả, buổi sáng cho cả nhà, buổi chiều săn ảnh hoàng hôn, nửa ngày qua hồ lên chùa Tam Chúc, hay chuyến đò sớm giữa mùa hoa súng Tam Cốc. Giá là giá minh hoạ tính theo người lớn, chưa phải giá bán thật.${banTrangDaKhep ? " Bàn Trăng, bữa tối Trung thu bên sông Ngô Đồng, đã khép mùa 2026; trang vẫn giữ để bạn xem lại." : " Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách."}`,
+            `Choose by the time you have and the way you like to travel: a full heritage day, a slow day, a morning for the whole family, an afternoon chasing sunset light, half a day crossing the lake to Tam Chuc's temples, or an early boat through Tam Coc's water-lily season. Prices are samples per adult, not real selling prices.${banTrangDaKhep ? " The Moon Table, a Mid-Autumn dinner by the Ngo Dong, has closed for 2026; it stays here for you to look back on." : " At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two."}`,
           )}
         </p>
         <div className="mt-10 flex flex-col gap-6 lg:gap-8">

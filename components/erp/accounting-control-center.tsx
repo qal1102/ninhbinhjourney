@@ -603,6 +603,7 @@ export function AccountingControlCenter({
   cashUnmatchedStatementLines,
   cashEligibleShiftsBySite,
   initialSourceId,
+  sauTieuDe,
 }: {
   user: CurrentErpUser;
   shiftClosures: readonly ShiftCloseRecord[];
@@ -615,6 +616,8 @@ export function AccountingControlCenter({
   cashUnmatchedStatementLines: readonly BankStatementLine[];
   cashEligibleShiftsBySite: Readonly<Record<string, readonly CashDepositEligibleShift[]>>;
   initialSourceId?: string;
+  /** Dải quy trình của trang, đặt ngay dưới tiêu đề để mở màn ra là biết mình đang ở đâu. */
+  sauTieuDe?: ReactNode;
 }) {
   const journalBySource = new Map<string, AccountingJournal>();
   for (const journal of [...journals]
@@ -750,6 +753,7 @@ export function AccountingControlCenter({
           </div>
         </div>
       </header>
+      {sauTieuDe}
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {overviewMetrics.map(([label, value, note, mobileValue]) => (

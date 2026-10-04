@@ -185,7 +185,7 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
               biết chúng tôi đánh số công việc thế nào. */}
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#4b7566]">Cổng ngoại tuyến · {siteName}</p>
           <h2 className="mt-2 text-2xl font-black text-[#183f34]">Quét tiếp khi mất mạng</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5c6f67]">Bộ vé nạp sẵn chỉ mang mã vé, không mang tên hay số điện thoại của khách. Lúc mất mạng, mỗi lượt cho vào là quyết định tạm; có mạng trở lại thì hệ thống đối chiếu lại từng lượt và một vé vẫn chỉ vào được một lần.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5c6f67]">Nạp sẵn mã vé của ca trước khi mất mạng. Có mạng lại, từng lượt được đối chiếu và mỗi vé vẫn chỉ vào được một lần.</p>
         </div>
         <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-black ${online ? "bg-[#dcefe7] text-[#226046]" : "bg-[#fff0cf] text-[#775217]"}`}>
           {online ? "Có mạng" : "Đang offline"}

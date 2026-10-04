@@ -135,9 +135,8 @@ export function StaffPerformanceWorkspace({ site, directory, attendance }: Props
       )}
 
       <p className="mt-5 border-t border-[#e6ebe8] pt-4 text-xs leading-5 text-[#7b8881]">
-        Việc đã giao cho từng người và tiến độ của nó nằm ở màn Chấm công. Năng
-        suất hay doanh thu theo từng người thì hệ thống chưa đo, nên màn này
-        không đưa ra con số đoán.
+        Việc đã giao và tiến độ nằm ở màn Chấm công; năng suất từng người thì
+        hệ thống chưa đo.
       </p>
     </section>
   );

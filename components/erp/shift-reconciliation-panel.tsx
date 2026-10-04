@@ -141,8 +141,8 @@ export function ShiftReconciliationPanel({
         Đối soát cuối ca
       </h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7068]">
-        Lượt quét ở cổng và khoản thu tại điểm được cộng lại theo đúng khung giờ của
-        ca. Bảng này chỉ đọc, không ghi thêm gì vào hồ sơ ca.
+        Tiền khai lúc chốt ca đặt cạnh phiếu thu và lượt quét ở cổng trong đúng khung
+        giờ của ca.
       </p>
     </header>
   );
@@ -218,8 +218,7 @@ export function ShiftReconciliationPanel({
         </p>
         {erpDataOriginLabel(shift.dataOrigin) ? (
           <p className="mt-1 text-xs font-medium text-[#5f7068]">
-            Ca này là hồ sơ mẫu làm sẵn lúc dựng hệ thống, không phải ca thật. Chênh lệch
-            bên dưới chỉ cho thấy cổng chưa có lượt quét nào trong khung giờ ấy.
+            Ca mẫu để tập: cổng chưa có lượt quét nào trong khung giờ ấy nên chênh lệch lớn.
           </p>
         ) : null}
         <p className="mt-1 text-xs font-medium text-[#5f7068]">

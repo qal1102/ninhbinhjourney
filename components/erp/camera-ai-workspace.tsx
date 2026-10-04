@@ -140,10 +140,9 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
           </p>
         </div>
         <p className="mt-2 text-sm leading-6 text-[#7a5a1d]">
-          Số người hiển thị được tính bằng{" "}
-          <span className="font-bold">sức chứa thiết kế × hệ số tải mô phỏng</span>, dựng
-          lại {bucketMinutes} phút một lần và giống nhau trên mọi máy đang xem cùng lúc.
-          Không có số nào ở đây được ghi vào nhật ký sự cố, chấm công hay sổ sách.
+          Số người ={" "}
+          <span className="font-bold">sức chứa thiết kế × hệ số tải mô phỏng</span>, tính
+          lại {bucketMinutes} phút một lần; không số nào ở đây đi vào sổ sách.
         </p>
       </section>
 

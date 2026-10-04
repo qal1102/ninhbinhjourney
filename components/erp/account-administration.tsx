@@ -288,8 +288,8 @@ function LoginPanel({ account, tenDangNhap }: { account: ErpRegistryAccount; ten
         <LoginResult state={unlinkState} />
         {tenDangNhap ? (
           <p className="text-sm text-[#5f7068]">
-            Đang đăng nhập bằng tài khoản mẫu <span className="font-mono font-bold">{tenDangNhap}</span>.
-            Cấp đăng nhập riêng để người này có mật khẩu của mình.
+            Đăng nhập bằng tài khoản mẫu <span className="font-mono font-bold">{tenDangNhap}</span>; cấp
+            đăng nhập riêng để người này có mật khẩu của mình.
           </p>
         ) : null}
         <form action={grantAction} className="grid gap-2 sm:grid-cols-[1fr_auto]">
@@ -471,10 +471,8 @@ export function AccountAdministration({ accounts, audit, quyen, tenTheoMa }: Pro
         </p>
         <h1 className="mt-2 text-3xl font-black sm:text-5xl">Tài khoản & phân quyền</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-[#d4e4de]">
-          Đây là nơi duy nhất quyết ai giữ vai gì, ở cơ sở nào. Cấp hay thu hồi ở
-          đây là có hiệu lực ngay lần tải trang kế tiếp của người đó. Quản lý có
-          mọi việc ở cơ sở mình; việc của từng nhân viên do quản lý giao ở màn
-          Nhân sự.
+          Ai giữ vai gì, ở cơ sở nào. Cấp hay thu hồi có hiệu lực ngay lần người đó
+          tải trang kế tiếp; việc của từng nhân viên do quản lý giao ở màn Nhân sự.
         </p>
       </header>
 

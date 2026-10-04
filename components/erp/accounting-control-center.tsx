@@ -932,7 +932,7 @@ export function AccountingControlCenter({
         {soChayThu.length > 0 ? (
           <details className="rounded-2xl border border-dashed border-[#c9d3cd] bg-[#f8faf8] p-4">
             <summary className="cursor-pointer text-sm font-bold text-[#5f7068]">
-              {soChayThu.length} bút toán do các lượt chạy thử tạo ra, không phải nghiệp vụ thật. Sổ không cho xoá nên vẫn giữ ở đây.
+              {soChayThu.length} bút toán chạy thử (sổ không cho xoá)
             </summary>
             <div className="mt-3 space-y-3">
           {soChayThu.map((journal) => (

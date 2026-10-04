@@ -229,18 +229,13 @@ export function AuditTimelineView({
         ) : null}
 
         <p className="mt-4 text-xs leading-5 text-[#7c8882]">
-          Tìm được cả <span className="font-bold">tên trong nhật ký cũ</span> lẫn tên
-          hiện tại — người đổi tên vẫn tra ra việc đã làm dưới tên cũ. Phạm vi nhìn
-          do máy chủ quyết định theo vai trò của bạn, không phải do bộ lọc này.
+          Tìm theo tên cũ hay tên hiện tại đều ra.
         </p>
 
         {backfilledCount > 0 ? (
           <p className="mt-3 rounded-xl border border-[#efd4a8] bg-[#fff9ed] px-4 py-3 text-xs leading-5 text-[#7a5a1d]">
-            <span className="font-black">{backfilledCount} dòng</span> được ghi từ
-            trước khi hệ thống lưu kèm tên người ngay lúc thao tác. Tên và
-            chức danh trên các dòng đó là{" "}
-            <span className="font-bold">thông tin hiện tại</span> của người đó, không
-            phải thông tin lúc thao tác xảy ra.
+            <span className="font-black">{backfilledCount} dòng</span> cũ ghi tên và chức
+            danh hiện tại của người làm, không phải lúc thao tác.
           </p>
         ) : null}
 

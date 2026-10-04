@@ -1154,7 +1154,7 @@ test("hàng chốt ca rỗng nói vì sao rỗng và chỉ chỗ đi tiếp", as
   const queue = page.getByRole("region", { name: "Quy trình chốt ca vé" });
   await expect(queue).toContainText("Hàng chốt ca của bạn");
   await expect(queue).toContainText("Không có ca nào chờ bạn xử lý");
-  await expect(queue).toContainText("chỉ hiện hồ sơ đang chờ chính tài khoản của bạn");
+  await expect(queue).toContainText("chỉ hiện ca đang chờ chính bạn");
   const wayOut = queue.getByRole("link", { name: /Mở đối soát cuối ca/ });
   await expect(wayOut).toBeVisible();
   await wayOut.click();

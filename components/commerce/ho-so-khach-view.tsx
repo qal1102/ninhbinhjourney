@@ -180,7 +180,7 @@ export function HoSoKhachView({
           ))}
         </ul>
         <p className="mt-3 text-xs leading-5 text-[#6b786f]">
-          {t("Quà là ưu đãi minh hoạ của bản trình diễn. Mã giữ nguyên dù bạn mở hồ sơ bao nhiêu lần.", "Gifts are sample offers in this demo. Your code stays the same however often you open the passport.")}
+          {t("Quà là ưu đãi minh hoạ.", "Gifts are sample offers.")}
         </p>
       </section>
 

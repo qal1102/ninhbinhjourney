@@ -705,8 +705,8 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
         ) : null}
         <p className="mt-4 text-xs text-[#8a958f]">
           {typeof selected.counterRevenueVnd === "number"
-            ? "Đếm từ mọi vé còn hiệu lực. Tiền quầy lấy đúng số ghi trên phiếu lúc bán, phiếu đã huỷ không tính. Một đơn gói web đi nhiều nơi thì tiền được chia về từng cơ sở theo giá vé quầy người lớn, nên cộng bốn cơ sở lại vừa bằng tiền các đơn."
-            : "Đếm trực tiếp từ vé đã phát hành, không phải doanh thu quy đổi — hệ thống chưa lưu giá bán trên từng vé."}
+            ? "Tiền quầy theo phiếu lúc bán, phiếu huỷ không tính. Đơn web đi nhiều nơi được chia về từng cơ sở theo giá vé quầy người lớn."
+            : "Đếm theo vé đã phát; giá bán trên từng vé chưa được lưu."}
         </p>
       </section>
 

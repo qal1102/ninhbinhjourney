@@ -623,7 +623,7 @@ export function ShiftCloseSiteWorkflow({ site, user, records }: SiteWorkflowProp
             <p className="mt-2 leading-6">
               {user.role === "employee"
                 ? "Hồ sơ bạn gửi lúc cuối ca sẽ hiện ngay tại đây, kèm trạng thái duyệt của quản lý."
-                : `Hàng này chỉ hiện hồ sơ đang chờ chính tài khoản của bạn. Ca đã gửi, đã duyệt hoặc đang chờ người khác tại ${site.shortName} xem ở màn hình đối soát.`}
+                : `Hàng này chỉ hiện ca đang chờ chính bạn; mọi ca khác của ${site.shortName} xem ở màn đối soát.`}
             </p>
             {user.role === "employee" ? null : (
               <Link

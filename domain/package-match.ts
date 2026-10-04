@@ -3,6 +3,7 @@ import {
   type PackageCatalogItem,
   type PackageCompanionGroup,
 } from "@/content/packages";
+import { ngayTrongMuaBan } from "@/content/packages-en";
 import type { JourneyIntent } from "@/domain/models";
 
 /**
@@ -271,12 +272,10 @@ function withinBookingWindow(
   intent: PackageMatchIntent,
   item: PackageCatalogItem,
 ) {
-  if (!item.bookingStartDate && !item.bookingEndDate) return true;
+  if (!item.bookingStartDate && !item.bookingEndDate && !item.muaBan) return true;
   const visitDate = intent.visitDate;
   if (!visitDate) return false;
-  if (item.bookingStartDate && visitDate < item.bookingStartDate) return false;
-  if (item.bookingEndDate && visitDate > item.bookingEndDate) return false;
-  return true;
+  return ngayTrongMuaBan(item, visitDate);
 }
 
 export function matchPackagesToIntent(

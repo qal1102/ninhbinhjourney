@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ExploreExperience } from "@/components/discovery/explore-experience";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
-import { NuiSuong } from "@/components/shared/nui-suong";
 import { readPublicEnvironment } from "@/config/experience";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
@@ -63,7 +62,6 @@ export default async function ExplorePage({
           </nav>
         </div>
       </header>
-      <NuiSuong hat="kham-pha" />
       <section data-customer-section="explore-discovery" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
           {ch(lang, "Khám phá Ninh Bình", "Explore Ninh Binh")}

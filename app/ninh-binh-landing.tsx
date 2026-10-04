@@ -23,6 +23,7 @@ import { DestinationIndex } from "@/components/discovery/destination-index";
 import { JourneyCta } from "@/components/discovery/journey-cta";
 import { JOURNEY_CONCIERGE_OPEN_EVENT, JourneyConcierge } from "@/components/discovery/journey-concierge";
 import { useMidAutumnSeasonOpen } from "@/lib/seasonal/use-mid-autumn-season";
+import { DUONG_DAN_MUA, NHAN_MUA_NGAN } from "@/lib/seasonal/trang-mua";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
@@ -109,7 +110,7 @@ const copy = {
     // Table booking window closes (27/09/2026), see
     // lib/seasonal/mid-autumn-season.ts. Same "Seasonal occasions ·" prefix
     // so the portal keeps reading as one family of four doors.
-    portalSeasonalClosed: "Seasonal occasions · Season closed",
+    portalSeasonalClosed: "Seasonal occasions · Water-lily season",
     portalBooking: "Reserve",
     portalEyebrow: "Choose a way into Ninh Binh",
     introTop: "Ninh Binh",
@@ -296,7 +297,7 @@ const copy = {
     // A15-TRUNG-THU-01: thay cho `portalSeasonal` từ khi Bàn Trăng hết bán
     // (27/09/2026), xem lib/seasonal/mid-autumn-season.ts. Giữ nguyên tiền
     // tố "Sự kiện theo mùa ·" để cổng vẫn đọc như một trong bốn lối cũ.
-    portalSeasonalClosed: "Sự kiện theo mùa · Mùa đã khép",
+    portalSeasonalClosed: "Sự kiện theo mùa · Mùa hoa súng",
     portalBooking: "Đặt chỗ",
     portalEyebrow: "Bốn cách đi Ninh Bình",
     introTop: "Ninh Bình",
@@ -796,6 +797,7 @@ function experiencePortalHref(
   destination: "travel" | "collaboration" | "seasonal" | "booking",
   lang: Language,
   source: string,
+  trangMua: keyof typeof DUONG_DAN_MUA = "mid-autumn",
 ) {
   if (destination === "travel") return "#destinations-highlights";
   const params = new URLSearchParams({ lang });
@@ -804,7 +806,7 @@ function experiencePortalHref(
     destination === "collaboration"
       ? "/collaborations"
       : destination === "seasonal"
-        ? "/seasonal/mid-autumn"
+        ? DUONG_DAN_MUA[trangMua]
         : "/packages";
   return `${pathname}?${params.toString()}`;
 }
@@ -922,6 +924,8 @@ export default function NinhBinhLanding({
   const portalSeasonalLabel = midAutumnSeasonOpen
     ? (t.portalSeasonal as string)
     : (t.portalSeasonalClosed as string);
+  // Hết mùa Trung thu thì lối "Sự kiện theo mùa" dẫn sang mùa hoa súng.
+  const trangMua = midAutumnSeasonOpen ? "mid-autumn" : "hoa-sung";
 
   // Bốn cổng, dựng sau khi đã biết nhãn của cổng Trung thu (nhãn ấy đổi theo
   // mùa còn mở hay đã khép).
@@ -929,10 +933,10 @@ export default function NinhBinhLanding({
     () => [
       { id: "travel", nhan: t.portalTravel as string, nhanNgan: t.portalTravelShort as string, duongDan: experiencePortalHref("travel", lang, source) },
       { id: "collaboration", nhan: t.portalCollaboration as string, nhanNgan: t.portalCollaborationShort as string, duongDan: experiencePortalHref("collaboration", lang, source) },
-      { id: "seasonal", nhan: portalSeasonalLabel, nhanNgan: t.portalSeasonalShort as string, duongDan: experiencePortalHref("seasonal", lang, source) },
+      { id: "seasonal", nhan: portalSeasonalLabel, nhanNgan: NHAN_MUA_NGAN[trangMua][lang], duongDan: experiencePortalHref("seasonal", lang, source, trangMua) },
       { id: "booking", nhan: t.portalBooking as string, nhanNgan: t.portalBookingShort as string, duongDan: experiencePortalHref("booking", lang, source) },
     ],
-    [lang, portalSeasonalLabel, source, t],
+    [lang, portalSeasonalLabel, source, t, trangMua],
   );
 
   /* HERO-CONTINUITY-11: local transform/opacity-only scroll state. */

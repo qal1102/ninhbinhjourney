@@ -3,7 +3,6 @@ import Link from "next/link";
 import { TicketLookup } from "@/components/commerce/ticket-lookup";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
-import { NuiSuong } from "@/components/shared/nui-suong";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
@@ -22,7 +21,6 @@ export default async function TicketLookupPage({
   return (
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
       <div className="mx-auto mb-6 max-w-3xl overflow-hidden rounded-3xl">
-        <NuiSuong hat="tra-cuu-ve" co="gon" />
       </div>
       {isCustomerBookingEnabled() ? (
         <TicketLookup lang={lang}>

@@ -14,7 +14,6 @@ import {
   readPublicEnvironment,
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
-import { SuongVen } from "@/components/shared/suong-ven";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
 import {
   checkoutHref,
@@ -66,7 +65,7 @@ export default async function PackageDetailPage({
         </div>
         <SharedImageTransition
           name={packageImageTransitionName(item.slug)}
-          className="suong-canh relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-3xl sm:aspect-[21/9]"
+          className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-3xl sm:aspect-[21/9]"
         >
           <Image
             src={hero.src}
@@ -76,10 +75,9 @@ export default async function PackageDetailPage({
             sizes="(min-width: 1024px) 1152px, 100vw"
             className="object-cover"
           />
-          <SuongVen doDay={0.42} />
         </SharedImageTransition>
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_0.72fr]">
-          <section className="suong-hien">
+          <section>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
               {customerBookingEnabled
                 ? `${ch(lang, "Giữ chỗ theo số chỗ còn trống", "Hold seats that are still free")} · ${chu.durationLabel}`

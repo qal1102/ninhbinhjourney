@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { CAC_DIP } from "@/domain/lich-mua-vu";
 import { ERP_DIRECTOR_PASSWORD } from "./support/erp-credentials";
 
 /**
@@ -32,7 +33,7 @@ test.describe("Marketing: lịch mùa vụ", () => {
 
     // Đủ bộ dịp đã khai, không thiếu dịp nào.
     const dip = lich.locator("[data-dip]");
-    await expect(dip).toHaveCount(12);
+    await expect(dip).toHaveCount(CAC_DIP.length);
 
     // Mỗi dịp phải in ra một ngày dương lịch thật, dạng dd.MM.yyyy.
     //
@@ -42,7 +43,10 @@ test.describe("Marketing: lịch mùa vụ", () => {
     const ngay = await dip.evaluateAll((els) =>
       els.map((e) => (e.textContent ?? "").match(/\b\d{2}\.\d{2}\.\d{4}/)?.[0] ?? ""),
     );
-    expect(ngay.filter(Boolean)).toHaveLength(12);
+    expect(ngay.filter(Boolean)).toHaveLength(CAC_DIP.length);
+
+    // Lễ chưa công bố ngày (Sắc Hồng các năm sau 2025) phải ghi là dự kiến.
+    await expect(lich.locator('[data-dip="sac-hong-tam-coc"]')).toContainText(/dự kiến/i);
 
     // Và các dịp phải xếp tăng dần theo ngày — một cuốn lịch xếp lộn xộn thì
     // không ai dùng được.

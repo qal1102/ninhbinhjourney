@@ -3,7 +3,6 @@ import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { MidAutumnSeasonBanner } from "@/components/discovery/mid-autumn-season-banner";
 import { MoonDial } from "@/components/discovery/moon-dial";
 import { WorldSwitcher } from "@/components/discovery/world-switcher";
-import { SuongVen } from "@/components/shared/suong-ven";
 
 export const metadata = {
   title: "Trung thu | Ninh Bình Journey",
@@ -33,8 +32,7 @@ export default async function MidAutumnPage({
       <WorldSwitcher hienTai="seasonal" lang={lang} source={source} tone="toi" />
       <MidAutumnSeasonBanner lang={lang} source={source} />
       <section className="relative overflow-hidden border-b border-white/12 bg-[#0d1915] px-5 py-14 text-[#fbf7ee] sm:px-8 sm:py-20">
-        <SuongVen tong="trang" doDay={0.34} />
-        <div className="suong-hien relative z-10 mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-[#e7b96a]">{lang === "vi" ? "Lịch trăng · 2026" : "Moon calendar · 2026"}</p>
             <h1 className="font-display mt-5 max-w-3xl text-5xl leading-[.9] sm:text-7xl">{lang === "vi" ? "Ba đêm trăng trên sông Ngô Đồng" : "Three nights, one Ngo Dong River."}</h1>

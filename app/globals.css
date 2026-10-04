@@ -2388,31 +2388,6 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   }
 }
 
-/* Ảnh trong thân trang hiện từ sương khi cuộn tới: mờ, nhạt màu như sau màn
-   sương, rõ dần khi ảnh vào khung nhìn. CSS cuộn thuần, không JS; trình duyệt
-   chưa hỗ trợ thì ảnh đứng yên như cũ. Không đụng transform để khỏi giành với
-   hiệu ứng phóng ảnh khi rê chuột. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .hien-tu-suong {
-      animation: hien-tu-suong linear both;
-      animation-range: entry 0% cover 38%;
-      animation-timeline: view();
-    }
-  }
-}
-
-@keyframes hien-tu-suong {
-  from {
-    filter: blur(12px) saturate(0.5) brightness(1.16);
-    opacity: 0.45;
-  }
-  to {
-    filter: none;
-    opacity: 1;
-  }
-}
-
 /* Dải núi đá vôi và sương (components/shared/nui-suong.tsx). */
 .nui-suong {
   height: clamp(170px, 25vw, 330px);
@@ -2434,8 +2409,12 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   width: 100%;
 }
 
-.nui-suong .suong-ven {
-  pointer-events: auto;
+/* Sương giữa núi xa và núi gần: một dải màu tĩnh, không WebGL (04/10/2026:
+   mỗi chỗ một hiệu ứng, sương WebGL chỉ còn ở trang chủ và trang điểm đến). */
+.nui-suong-man {
+  background: linear-gradient(to bottom, transparent 18%, rgb(244 239 227 / 0.55) 52%, rgb(244 239 227 / 0.9) 82%);
+  inset: 0;
+  position: absolute;
 }
 
 .nui-suong-do {

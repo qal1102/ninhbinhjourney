@@ -1,4 +1,3 @@
-import { SuongVen } from "@/components/shared/suong-ven";
 
 /**
  * Dải núi đá vôi và sương, kiểu tranh thuỷ mặc, cho các trang nền giấy sáng
@@ -9,7 +8,7 @@ import { SuongVen } from "@/components/shared/suong-ven";
  *   dựng đứng, đỉnh bo tròn lệch. Mỗi lớp đậm ở đỉnh, nhạt dần và tan vào
  *   sương ở chân, như nét mực loang trên giấy dó. Mỗi trang một dãy núi riêng
  *   (`hat`), vẽ y hệt ở máy chủ và máy khách nên không lệch hydrate.
- * - Sương (`SuongVen`, màu giấy) nằm giữa núi xa và núi gần, nên núi gần đứng
+ * - Sương (dải màu CSS `.nui-suong-man`, màu giấy) nằm giữa núi xa và núi gần, nên núi gần đứng
  *   trước sương: chiều sâu đến từ lớp, không từ nét kẻ. Mở trang là sương phủ
  *   kín rồi kéo xuống, dãy núi hiện ra.
  * - Một con đò nhỏ trôi chậm qua mặt nước. Cuộn xuống thì các lớp núi trôi
@@ -105,7 +104,7 @@ export function NuiSuong({ hat, co = "vua" }: Props) {
     <div aria-hidden="true" data-nui-suong className={`nui-suong ${co === "gon" ? "nui-suong-gon" : ""}`}>
       {lopSvg(0)}
       {lopSvg(1)}
-      <SuongVen tong="giay" doDay={0.7} />
+      <div className="nui-suong-man" />
       {lopSvg(2)}
       {lopSvg(3)}
       <div className="nui-suong-do">

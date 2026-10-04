@@ -8,7 +8,6 @@ import type { HoSoKhach } from "@/domain/ho-so-khach";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { hoSoTheoPhien } from "@/lib/customer-data/ho-so-khach-repository";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
-import { NuiSuong } from "@/components/shared/nui-suong";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
@@ -48,9 +47,6 @@ export default async function TrangHoSo({
             {ch(lang, "Về trang chủ", "Home")}
           </Link>
           <NutNgonNgu lang={lang} />
-        </div>
-        <div className="mt-5 overflow-hidden rounded-3xl">
-          <NuiSuong hat="ho-so" co="gon" />
         </div>
         <div className="mt-5">
           {!bat ? (

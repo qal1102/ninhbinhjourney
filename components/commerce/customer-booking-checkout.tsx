@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import QRCode from "qrcode";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PackageCatalogItem } from "@/content/packages";
+import { khungBanGoi } from "@/content/packages-en";
 import type { CustomerProductTimeSlot } from "@/domain/customer-booking";
 import { WEB_BOOKING_MAX_PARTY_SIZE } from "@/domain/customer-booking";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
@@ -226,8 +227,10 @@ export function CustomerBookingCheckout({
   const [adults, setAdults] = useState(() => (packageItem.fixedPartySize ? Math.max(1, packageItem.fixedPartySize) : 2));
   const [children, setChildren] = useState(0);
   const partySize = adults + children;
+  // Gói theo mùa (Bàn Trăng, mùa hoa súng) chỉ nhận đặt trong khung bán của nó.
+  const khungBan = useMemo(() => khungBanGoi(packageItem), [packageItem]);
   const [visitDate, setVisitDate] = useState(
-    () => packageItem.bookingStartDate ?? localIsoDate(batDauHomNay ? 0 : 1),
+    () => khungBan.tu ?? localIsoDate(batDauHomNay ? 0 : 1),
   );
   const [slots, setSlots] = useState<CustomerProductTimeSlot[] | null>(null);
   const [slotsLoading, setSlotsLoading] = useState(true);
@@ -679,8 +682,8 @@ export function CustomerBookingCheckout({
               value={visitDate}
               // Nhận đặt cho chính hôm nay: máy chủ vốn cho phép, chỉ ô ngày
               // từng tự chặn. Khung giờ đã qua bị khoá ở danh sách khung giờ.
-              min={packageItem.bookingStartDate ?? localIsoDate(0)}
-              max={packageItem.bookingEndDate ?? localIsoDate(90)}
+              min={khungBan.tu ?? localIsoDate(0)}
+              max={khungBan.den ?? localIsoDate(90)}
               onChange={(event) => {
                 setVisitDate(event.target.value);
                 invalidateHold();

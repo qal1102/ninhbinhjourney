@@ -28,9 +28,30 @@ import { amSangDuong, soNgayJulius } from "@/domain/am-lich";
  *
  * Ngày của các lễ hội đều tra từ nguồn công khai và ghi nguồn ngay tại chỗ.
  * Không suy đoán: dịp nào không tra chắc được ngày thì không đưa vào.
+ *
+ * ## Dịp không theo âm hay dương lịch cố định (04/10/2026)
+ *
+ * Có lễ đổi ngày mỗi năm mà không theo âm lịch, như Sắc Hồng Tam Cốc (2025
+ * tổ chức cuối tuần 22–23/11). Dịp ấy khai `cuoiTuanGan`: năm nào ban tổ chức
+ * đã công bố thì ghi vào `daCongBo` và dùng đúng ngày ấy; năm chưa công bố
+ * thì lịch tính cuối tuần gần mốc nhất và **ghi rõ là dự kiến**. Mùa hoa,
+ * mùa lúa có ngày ước lượng thì khai `uocLuong`. Nhờ vậy Future planning
+ * nhìn được nhiều năm tới mà không giả vờ chắc chắn.
  */
 
 export type KieuLich = "am" | "duong";
+
+/** Lễ hội, một mùa kéo dài (hoa, lúa), hay chỉ là dịp làm chiến dịch. */
+export type LoaiDip = "le" | "mua" | "chien-dich";
+
+/** Ngày đã chắc tới đâu: theo lịch cố định, ban tổ chức đã công bố, hay dự kiến. */
+export type ChacChan = "theo-lich" | "da-cong-bo" | "du-kien";
+
+export const NHAN_CHAC_CHAN: Record<ChacChan, string> = {
+  "theo-lich": "Ngày cố định theo lịch",
+  "da-cong-bo": "Ban tổ chức đã công bố",
+  "du-kien": "Dự kiến, chờ công bố",
+};
 
 export type DipMuaVu = {
   id: string;
@@ -48,6 +69,14 @@ export type DipMuaVu = {
   yNghia: string;
   /** Nguồn tra được cho ngày tổ chức. */
   nguon?: string;
+  /** Mặc định là lễ hội ("le"). */
+  loai?: LoaiDip;
+  /** Ngày trong lịch chỉ là khoảng ước (mùa hoa, mùa lúa). */
+  uocLuong?: true;
+  /** Đổi ngày mỗi năm: lấy cuối tuần (thứ Bảy) gần ngày dương `ngay/thang` nhất. */
+  cuoiTuanGan?: true;
+  /** Ngày ban tổ chức đã công bố, theo năm dương lịch. */
+  daCongBo?: Readonly<Record<number, { batDau: string; ketThuc: string; nguon: string }>>;
 };
 
 /**
@@ -185,6 +214,55 @@ export const CAC_DIP: readonly DipMuaVu[] = Object.freeze([
     yNghia:
       "Khoảng cuối tháng Năm sang đầu tháng Sáu, tuỳ vụ gặt từng năm. Đây là hình ảnh được nhắc tới nhiều nhất của Ninh Bình trên báo nước ngoài.",
     nguon: "Ngày trong lịch chỉ là khoảng ước, vụ gặt thật đổi theo thời tiết từng năm",
+    loai: "mua",
+    uocLuong: true,
+  },
+  {
+    id: "mua-hoa-sung-tam-coc",
+    ten: "Mùa hoa súng Tam Cốc",
+    noi: "Sông Ngô Đồng, Tam Cốc",
+    lich: "duong",
+    ngay: 25,
+    thang: 10,
+    soNgay: 52,
+    chuanBiTruoc: 45,
+    yNghia:
+      "Hoa súng tím hồng nở dọc sông Ngô Đồng, mỗi ngày chỉ khoảng 7–10 giờ sáng rồi cụp lại. Bán đò sớm, dồn khách vào buổi sáng, chuẩn bị hàng chờ ảo ở bến Văn Lâm.",
+    nguon: "Tuổi Trẻ 26/10/2025: mùa hoa từ cuối tháng 10 tới tháng 12, hoa nở 7–10 giờ sáng. Khoảng ngày trong lịch là ước lượng",
+    loai: "mua",
+    uocLuong: true,
+  },
+  {
+    id: "sac-hong-tam-coc",
+    ten: "Lễ hội Sắc Hồng Tam Cốc",
+    noi: "Sông Ngô Đồng, Tam Cốc",
+    lich: "duong",
+    ngay: 22,
+    thang: 11,
+    soNgay: 2,
+    cuoiTuanGan: true,
+    daCongBo: {
+      2025: {
+        batDau: "2025-11-22",
+        ketThuc: "2025-11-23",
+        nguon: "Khu du lịch Tam Cốc – Bích Động: \"Sắc Hồng Tam Cốc 2025 – Bản tình ca mùa thu\", 22–23/11/2025",
+      },
+    },
+    chuanBiTruoc: 50,
+    yNghia:
+      "Hàng trăm thuyền kết hình hoa súng diễu qua Hang Cả, Hang Hai, Hang Ba, có nhạc và ánh sáng, dâng hương ở đền Thái Vi. Năm chưa công bố ngày thì lịch tính cuối tuần gần 22/11 theo lần tổ chức 2025.",
+    nguon: "dulichninhbinh.com.vn và vntravel.org.vn, lần tổ chức 2025",
+  },
+  {
+    id: "cuoi-tuan-halloween",
+    ten: "Cuối tuần Halloween",
+    lich: "duong",
+    ngay: 31,
+    thang: 10,
+    chuanBiTruoc: 30,
+    yNghia:
+      "Không phải lễ của Ninh Bình, chỉ nên là một chiến dịch cuối tuần cho khách trẻ từ Hà Nội và khách nước ngoài ở phố Tam Cốc: đò chiều, hoàng hôn, dạo phố đêm. Không dựng không khí ma quỷ quanh đền chùa.",
+    loai: "chien-dich",
   },
 ]);
 
@@ -202,6 +280,7 @@ export type DipSapToi = {
   /** Số ngày từ hôm nay tới ngày bắt đầu; âm nghĩa là đang diễn ra. */
   conBaoNhieuNgay: number;
   trangThai: TrangThaiDip;
+  chacChan: ChacChan;
 };
 
 const MUI_GIO_VN_MS = 7 * 60 * 60 * 1000;
@@ -215,11 +294,29 @@ function iso(ngay: number, thang: number, nam: number) {
   return `${nam}-${String(thang).padStart(2, "0")}-${String(ngay).padStart(2, "0")}`;
 }
 
+/** Thứ Bảy gần ngày dương `ngay/thang/nam` nhất (cách đều thì lấy thứ Bảy trước). */
+function thuBayGan(ngay: number, thang: number, nam: number): string {
+  // Julius ngày + 1 chia 7 dư 0 là Chủ nhật; thứ Bảy dư 6.
+  const thu = (soNgayJulius(ngay, thang, nam) + 1) % 7;
+  const lui = (thu - 6 + 7) % 7;
+  const toi = (6 - thu + 7) % 7;
+  return cong(iso(ngay, thang, nam), toi < lui ? toi : -lui);
+}
+
 /** Ngày dương của một dịp trong một năm dương lịch, hoặc `null`. */
 function ngayCuaDip(dip: DipMuaVu, nam: number): string | null {
+  if (dip.daCongBo?.[nam]) return dip.daCongBo[nam].batDau;
+  if (dip.cuoiTuanGan) return thuBayGan(dip.ngay, dip.thang, nam);
   if (dip.lich === "duong") return iso(dip.ngay, dip.thang, nam);
   const d = amSangDuong(dip.ngay, dip.thang, nam);
   return d ? iso(d.ngay, d.thang, d.nam) : null;
+}
+
+/** Ngày của dịp trong năm `nam` đã chắc tới đâu. */
+export function doChacChan(dip: DipMuaVu, nam: number): ChacChan {
+  if (dip.daCongBo?.[nam]) return "da-cong-bo";
+  if (dip.cuoiTuanGan || dip.uocLuong) return "du-kien";
+  return "theo-lich";
 }
 
 function cong(isoNgay: string, soNgay: number): string {
@@ -250,8 +347,20 @@ function khoangNgay(tu: string, den: string): number {
  * Dịp âm lịch thì `nam` là năm âm lịch. Không tra được ngày thì `null`.
  */
 export function ngayCuaDipTrongNam(dip: DipMuaVu, nam: number): { batDau: string; ketThuc: string } | null {
+  const congBo = dip.daCongBo?.[nam];
+  if (congBo) return { batDau: congBo.batDau, ketThuc: congBo.ketThuc };
   const batDau = ngayCuaDip(dip, nam);
   return batDau ? { batDau, ketThuc: cong(batDau, (dip.soNgay ?? 1) - 1) } : null;
+}
+
+/** Cộng (hay trừ) số ngày vào một ngày `YYYY-MM-DD`. */
+export function congNgay(isoNgay: string, soNgay: number): string {
+  return cong(isoNgay, soNgay);
+}
+
+/** Số ngày từ `tu` tới `den` (âm nếu `den` trước `tu`). */
+export function soNgayGiua(tu: string, den: string): number {
+  return khoangNgay(tu, den);
 }
 
 /** Hôm nay theo giờ Việt Nam, dạng `YYYY-MM-DD`. */
@@ -275,9 +384,9 @@ export function lichMuaVu(bayGio: Date, soThang = 12): DipSapToi[] {
   const ra: DipSapToi[] = [];
   for (const dip of CAC_DIP) {
     for (const nam of [h.nam, h.nam + 1]) {
-      const batDau = ngayCuaDip(dip, nam);
-      if (!batDau) continue;
-      const ketThuc = cong(batDau, (dip.soNgay ?? 1) - 1);
+      const ngay = ngayCuaDipTrongNam(dip, nam);
+      if (!ngay) continue;
+      const { batDau, ketThuc } = ngay;
       // Đang diễn ra thì vẫn giữ lại, dù ngày bắt đầu đã qua.
       if (khoangNgay(homNay, ketThuc) < 0) continue;
       if (khoangNgay(homNay, batDau) > khoangNgay(homNay, hetHan)) continue;
@@ -289,6 +398,7 @@ export function lichMuaVu(bayGio: Date, soThang = 12): DipSapToi[] {
         conBaoNhieuNgay: con,
         trangThai:
           con <= 0 ? "dang-dien-ra" : con <= dip.chuanBiTruoc ? "toi-luc-chuan-bi" : "con-xa",
+        chacChan: doChacChan(dip, nam),
       });
       break;
     }

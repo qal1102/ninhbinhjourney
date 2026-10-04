@@ -1,4 +1,5 @@
 import type { PackageCatalogItem } from "@/content/packages";
+import { khungBanHoaSung, muaHoaSungNam } from "@/domain/mua-hoa-sung";
 import type { NgonNgu } from "@/lib/ngon-ngu";
 
 /**
@@ -54,6 +55,20 @@ const TIENG_ANH: Record<string, ChuGoi> = {
     exclusions: ["Electric cart inside the site", "Meals", "Offerings and donations"],
     schedule: ["Pick a boat at 07:30 · 09:00 · 10:30 · 13:30 · 15:00", "Cross the lake, climb to Khanh Dien", "Back at the pier after about four hours"],
   },
+  "do-som-mua-hoa-sung": {
+    name: "Early boat in water-lily season",
+    audience: "Travellers who want to see the water lilies open on the Ngo Dong River",
+    durationLabel: "Morning · water-lily season",
+    inclusions: [
+      "Tam Coc boat from Van Lam pier through Hang Ca, Hang Hai and Hang Ba",
+      "An early departure, while the lilies are open (about 7–10 am)",
+      "One QR code for the whole booking",
+    ],
+    exclusions: ["Breakfast", "Transport to Tam Coc", "Real payment (this trial takes no money)"],
+    schedule: ["Pick a boat at 06:30 · 07:00 · 07:30 · 08:00 · 08:30", "Board at Van Lam pier, through the three caves", "Back at the pier after about two hours"],
+    editorialDescription:
+      "Water lilies on the Ngo Dong only open in the morning. The early boat reaches them in full bloom; the finest stretch lies between Hang Ca and Hang Hai.",
+  },
   "ban-trang-tam-coc-2026": {
     name: "Moon Table by the Ngo Dong",
     audience: "Two people who want a private dinner after Tam Coc",
@@ -101,9 +116,31 @@ export function goiHienThi(item: PackageCatalogItem, lang: NgonNgu): GoiHienThi 
  * trang đặt vé của gói ấy chẳng còn ngày nào chọn được.
  */
 export function goiDaHetMua(item: PackageCatalogItem, bayGio: Date = new Date()): boolean {
-  if (!item.bookingEndDate) return false;
+  const den = khungBanGoi(item, bayGio).den;
+  if (!den) return false;
   const homNay = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(bayGio);
-  return homNay > item.bookingEndDate;
+  return homNay > den;
+}
+
+/**
+ * Khung ngày nhận đặt của một gói, dạng `YYYY-MM-DD`. Gói theo mùa lặp lại
+ * hằng năm (`muaBan`) tính theo năm từ Lịch mùa vụ; gói một lần (Bàn Trăng
+ * 2026) dùng hai ngày ghi trong danh mục; gói thường không giới hạn.
+ */
+export function khungBanGoi(item: PackageCatalogItem, bayGio: Date = new Date()): { tu?: string; den?: string } {
+  if (item.muaBan === "hoa-sung") return khungBanHoaSung(bayGio);
+  return { tu: item.bookingStartDate, den: item.bookingEndDate };
+}
+
+/** Ngày đi `YYYY-MM-DD` có nằm trong mùa bán của gói không (gói thường luôn đúng). */
+export function ngayTrongMuaBan(item: PackageCatalogItem, ngayDi: string): boolean {
+  if (item.muaBan === "hoa-sung") {
+    const mua = muaHoaSungNam(Number(ngayDi.slice(0, 4)));
+    return ngayDi >= mua.tu && ngayDi <= mua.den;
+  }
+  if (item.bookingStartDate && ngayDi < item.bookingStartDate) return false;
+  if (item.bookingEndDate && ngayDi > item.bookingEndDate) return false;
+  return true;
 }
 
 export function giaGoi(item: PackageCatalogItem, lang: NgonNgu): string {

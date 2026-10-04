@@ -84,6 +84,11 @@ export function LichMuaVuPanel({ lich }: { lich: readonly DipSapToi[] }) {
                     {d.dip.ngay}/{d.dip.thang} âm lịch
                   </span>
                 ) : null}
+                {d.chacChan === "du-kien" ? (
+                  <span className="rounded-full bg-[#fbe9d6] px-2 py-0.5 text-xs font-bold text-[#9a5a1f]">
+                    {d.dip.uocLuong ? "Ngày ước lượng" : "Dự kiến, chờ công bố"}
+                  </span>
+                ) : null}
                 <span
                   className={`text-xs font-bold ${
                     d.trangThai === "dang-dien-ra" ? "text-[#28654d]" : "text-[#9a5a1f]"
@@ -144,6 +149,11 @@ export function LichMuaVuPanel({ lich }: { lich: readonly DipSapToi[] }) {
                     {d.dip.lich === "am" ? (
                       <span className="ml-2 text-xs font-medium text-[#8a8171]">
                         {d.dip.ngay}/{d.dip.thang} âm lịch
+                      </span>
+                    ) : null}
+                    {d.chacChan === "du-kien" ? (
+                      <span className="ml-2 text-xs font-medium text-[#9a5a1f]">
+                        {d.dip.uocLuong ? "ước lượng" : "dự kiến"}
                       </span>
                     ) : null}
                   </span>

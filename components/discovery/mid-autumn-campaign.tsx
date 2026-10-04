@@ -402,7 +402,7 @@ export function MidAutumnCampaign({ lang, source }: { lang: Language; source: st
               nhất hai màn hình đầu. Đặt priority ở đây tranh băng thông
               tải trang với đúng những ảnh/video thật sự cần tải ngay.
             */}
-            <Image src="/images/campaigns/mid-autumn-2026/experiences/mooncake-editorial-hero.webp" alt={t.collectionTitle} fill sizes="(min-width: 1024px) 62vw, 100vw" className="hien-tu-suong object-cover object-[center_42%]" />
+            <Image src="/images/campaigns/mid-autumn-2026/experiences/mooncake-editorial-hero.webp" alt={t.collectionTitle} fill sizes="(min-width: 1024px) 62vw, 100vw" className="object-cover object-[center_42%]" />
             <span aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-white/10" />
             <span aria-hidden="true" className="absolute right-5 top-5 font-display text-7xl leading-none text-white/78 mix-blend-difference sm:right-8 sm:top-7 sm:text-8xl">2026</span>
           </div>

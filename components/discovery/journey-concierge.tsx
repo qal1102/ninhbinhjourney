@@ -34,7 +34,7 @@ type WorldLink = {
   id: "collaboration" | "seasonal" | "booking";
   label: string;
   description: string;
-  pathname: "/collaborations" | "/seasonal/mid-autumn" | "/packages";
+  pathname: "/collaborations" | "/seasonal/mid-autumn" | "/seasonal/hoa-sung" | "/packages";
 };
 
 type ConciergeCopy = {
@@ -116,9 +116,9 @@ const COPY: Record<Language, ConciergeCopy> = {
         pathname: "/packages",
       },
     ],
-    seasonalWorldClosedLabel: "Mùa Trăng 2026 · đã khép",
+    seasonalWorldClosedLabel: "Mùa hoa súng Tam Cốc",
     seasonalWorldClosedDescription:
-      "Rằm 25/09 đã qua, Bàn Trăng đóng ngày 27/09. Bạn vẫn xem lại được, hẹn Trung thu 2027.",
+      "Trung thu 2026 đã khép. Hoa súng nở trên sông Ngô Đồng từ cuối tháng 10, có lễ Sắc Hồng; xem lịch và đặt đò sớm.",
   },
   en: {
     inlineLabel: "Journey index",
@@ -178,9 +178,9 @@ const COPY: Record<Language, ConciergeCopy> = {
         pathname: "/packages",
       },
     ],
-    seasonalWorldClosedLabel: "Moon Season 2026 · closed",
+    seasonalWorldClosedLabel: "Water-lily season, Tam Coc",
     seasonalWorldClosedDescription:
-      "The 25 Sep full moon has passed and the Moon Table closed on 27 Sep — browse this season's archive, see you in 2027.",
+      "Mid-Autumn 2026 has closed. Water lilies open on the Ngo Dong from late October, with the Sac Hong festival; see the dates and book an early boat.",
   },
 };
 
@@ -516,9 +516,8 @@ export function JourneyConcierge({
                   <div className="mt-3 grid gap-2">
                     {copy.worlds.map((world, index) => {
                       // A15-TRUNG-THU-01: world "seasonal" sau khi Bàn Trăng
-                      // hết bán (27/09/2026) đổi sang nhãn/mô tả đã khép,
-                      // không còn mời như một dịp sắp tới. Đường dẫn giữ
-                      // nguyên -- trang mùa vẫn mở được, chỉ đổi lời mời.
+                      // hết bán (27/09/2026) không mời tới mùa đã khép nữa mà
+                      // dẫn sang mùa đang tới: hoa súng Tam Cốc (04/10/2026).
                       const seasonalClosed = world.id === "seasonal" && !midAutumnSeasonOpen;
                       const label = seasonalClosed ? copy.seasonalWorldClosedLabel : world.label;
                       const description = seasonalClosed
@@ -527,7 +526,7 @@ export function JourneyConcierge({
                       return (
                         <Link
                           key={world.id}
-                          href={worldHref(world.pathname, lang, source)}
+                          href={worldHref(seasonalClosed ? "/seasonal/hoa-sung" : world.pathname, lang, source)}
                           transitionTypes={["portal-enter"]}
                           onClick={() => {
                             if (open) closeDialog();

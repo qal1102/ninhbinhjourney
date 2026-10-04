@@ -11,6 +11,8 @@ import {
   isCustomerBookingEnabled,
 } from "@/lib/customer-data/booking-repository";
 import { COOKIE_DAI_LY } from "@/domain/dai-ly";
+import { PACKAGES } from "@/content/packages";
+import { ngayTrongMuaBan } from "@/content/packages-en";
 import { ganDonChoDaiLy } from "@/lib/dai-ly-repository";
 
 const MAX_BODY_BYTES = 8 * 1024;
@@ -38,6 +40,15 @@ export async function POST(request: Request) {
       );
     }
     const input = CustomerBookingHoldRequestSchema.parse(JSON.parse(rawBody));
+    // Gói theo mùa (mùa hoa súng, Bàn Trăng) chỉ nhận ngày đi trong mùa bán,
+    // kể cả khi yêu cầu không đi qua ô chọn ngày của trang đặt vé.
+    const goi = PACKAGES.find((item) => item.id === input.product_id);
+    if (goi && !ngayTrongMuaBan(goi, input.visit_date)) {
+      return Response.json(
+        { accepted: false, error: { code: "NGOAI_MUA_BAN", message: "Gói này chỉ nhận đặt trong mùa của nó. Xin chọn một ngày trong mùa." } },
+        { status: 409, headers: { "Cache-Control": "no-store" } },
+      );
+    }
     const existingAnonymousId = (await cookies()).get(CUSTOMER_ANONYMOUS_COOKIE)?.value;
     const anonymousId = existingAnonymousId && UUID_PATTERN.test(existingAnonymousId)
       ? existingAnonymousId

@@ -60,6 +60,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           { href: "/erp/marketing", label: "Kênh khách", hint: "Mã QR và nguồn khách theo từng kênh" },
           { href: "/erp/dai-ly", label: "Đại lý & hoa hồng", hint: "Đường dẫn giới thiệu, đơn và hoa hồng từng đại lý" },
           { href: "/erp/thuyen", label: "Thuyền trên sông", hint: "Bản đồ sống từng thuyền Tràng An, Tam Cốc" },
+          { href: "/erp/future-planning", label: "Future planning", hint: "Lịch lễ hội ba năm tới, công nghệ nên áp dụng" },
           { href: "/erp/bang-gia-quay", label: "Giá vé quầy", hint: "Đặt giá bán tại quầy của bốn cơ sở" },
         ]
       : []),

@@ -535,6 +535,19 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
     ten: "Công cụ của giám đốc",
     chucNang: [
       {
+        id: "future-planning",
+        ten: "Future planning: kế hoạch các năm tới",
+        moTa: "Lễ hội, mùa vụ, chiến dịch ba năm tới; công nghệ ERP đang chạy và nên áp dụng tiếp.",
+        vai: "director",
+        duongDan: "/erp/future-planning",
+        diem: "future-planning",
+        moi: "04/10",
+        cacViec: [
+          "Đổi năm ở ba nút: mỗi dịp ghi ngày cố định, đã công bố hay dự kiến, và ngày nên bắt đầu chuẩn bị.",
+          "Kéo xuống phần công nghệ: thứ đang chạy, thứ nên làm tiếp và ERP còn thiếu gì.",
+        ],
+      },
+      {
         id: "de-xuat",
         ten: "Đề xuất chờ duyệt",
         moTa: "Mọi việc đang đợi giám đốc gật đầu.",
@@ -772,6 +785,18 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     cacViec: ["Cuộn qua từng hồ sơ: trang ảnh lật ra như tập hồ sơ giấy, có bóng gáy sách; phím ← → cũng lật được."],
   },
   {
+    id: "web-hoa-sung",
+    nhom: "doi-tac",
+    ten: "Trang mùa hoa súng Tam Cốc",
+    moTa: "Sự kiện theo mùa sau Trung thu: mùa hoa súng, lễ Sắc Hồng, các mùa tới, gói đò sớm. Tự tính cho mọi năm.",
+    duongDan: "/seasonal/hoa-sung",
+    moi: "04/10",
+    cacViec: [
+      "Xem mùa đang tới: ngày hoa nở, ngày lễ Sắc Hồng (đã công bố hay dự kiến), bảng ba mùa tới.",
+      "Nhìn đoàn thuyền hoa súng chạy trên đúng đường đò Tam Cốc, rồi bấm \"Đặt đò sớm mùa hoa\".",
+    ],
+  },
+  {
     id: "web-trung-thu",
     nhom: "doi-tac",
     ten: "Trang mùa Trung thu",
@@ -804,8 +829,8 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     id: "web-nui-suong",
     nhom: "hieu-ung",
     ten: "Dải núi thuỷ mặc",
-    moTa: "Các trang nền giấy có bốn lớp núi đá vôi tan chân vào sương, một con đò trôi chậm.",
-    duongDan: "/explore",
+    moTa: "Trang Lập hành trình mở đầu bằng bốn lớp núi đá vôi vẽ như tranh mực, một con đò trôi chậm.",
+    duongDan: "/plan",
     moi: "03/10",
     cacViec: ["Đứng yên nhìn đò trôi qua giữa các lớp núi.", "Cuộn xuống: các lớp núi trôi lệch tầng, gần nhanh xa chậm."],
   },
@@ -842,10 +867,10 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     nhom: "hieu-ung",
     ten: "Con trỏ theo ngữ cảnh",
     moTa: "Đưa chuột vào dải tuyến, thẻ điểm đến, ảnh gói: con trỏ hiện chữ Kéo, Xem, Mở.",
-    duongDan: "/packages",
+    duongDan: "/#destinations-highlights",
     moi: "03/10",
     chiMayTinh: true,
-    cacViec: ["Rê chuột lên ảnh một gói: nhãn \"Xem\" đi theo con trỏ; rời ảnh là tắt."],
+    cacViec: ["Rê chuột lên dải tuyến hay ảnh điểm đến ở trang chủ: nhãn \"Kéo\", \"Xem\" đi theo con trỏ; rời ra là tắt."],
   },
   {
     id: "web-ben-do",
@@ -857,13 +882,13 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     cacViec: ["Chọn khung giờ rồi giữ chỗ: đò trôi sang bến kế tiếp."],
   },
   {
-    id: "web-anh-suong",
+    id: "web-hoa-no-theo-gio",
     nhom: "hieu-ung",
-    ten: "Ảnh hiện từ sương khi cuộn tới",
-    moTa: "Ảnh trong thân trang mờ như sau màn sương, rõ dần khi vào khung nhìn.",
-    duongDan: "/packages",
-    moi: "03/10",
-    cacViec: ["Cuộn chậm xuống các thẻ gói, nhìn ảnh vừa lọt vào màn hình."],
+    ten: "Hoa súng nở theo giờ thật",
+    moTa: "Mặt sông Ngô Đồng vẽ bằng SVG: hoa mở trọn khoảng 7–10 giờ sáng theo đồng hồ Ninh Bình, ngoài giờ ấy thì cụp.",
+    duongDan: "/seasonal/hoa-sung",
+    moi: "04/10",
+    cacViec: ["Mở trang: hoa nở hay cụp đúng theo giờ lúc này ở Ninh Bình.", "Kéo thanh giờ từ 05:00 tới 12:00 để xem hoa xoè rồi khép."],
   },
 ];
 

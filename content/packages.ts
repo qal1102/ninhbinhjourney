@@ -38,6 +38,11 @@ export type PackageCatalogItem = {
   priceLabel?: string;
   bookingStartDate?: string;
   bookingEndDate?: string;
+  /**
+   * Gói theo mùa lặp lại hằng năm: khung bán tính theo năm từ Lịch mùa vụ
+   * (`domain/mua-hoa-sung.ts`), thay cho hai ngày ghi cứng ở trên.
+   */
+  muaBan?: "hoa-sung";
   fixedPartySize?: number;
 };
 
@@ -168,6 +173,34 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     ],
     exclusions: ["Xe điện trong khu", "Bữa ăn", "Lễ vật, công đức"],
     schedule: ["Chọn chuyến 07:30 · 09:00 · 10:30 · 13:30 · 15:00", "Thuyền qua hồ, lên Khánh Điện", "Về bến sau khoảng bốn giờ"],
+  },
+  {
+    id: "40000000-0000-4000-8000-000000000007",
+    regionId: CORE_IDS.regionId,
+    slug: "do-som-mua-hoa-sung",
+    name: "Đò sớm mùa hoa súng",
+    audience: "Người muốn ngắm hoa súng nở trên sông Ngô Đồng buổi sáng",
+    companionFit: ["solo", "couple", "adults", "children", "seniors"],
+    durationLabel: "Buổi sáng · mùa hoa súng",
+    durationMinutes: 120,
+    pace: "relaxed",
+    demoPriceVnd: 390_000,
+    ledgerType: "service-commerce",
+    siteIds: ["10000000-0000-4000-8000-000000000005"],
+    inclusions: [
+      "Đò Tam Cốc từ bến Văn Lâm qua Hang Cả, Hang Hai, Hang Ba",
+      "Chuyến sớm, đúng lúc hoa nở (khoảng 7–10 giờ sáng)",
+      "Một mã QR chung cho cả đơn",
+    ],
+    exclusions: ["Bữa sáng", "Di chuyển tới Tam Cốc", "Thanh toán thật (bản thử chưa thu tiền)"],
+    schedule: [
+      "Chọn chuyến 06:30 · 07:00 · 07:30 · 08:00 · 08:30",
+      "Lên đò ở bến Văn Lâm, qua ba hang",
+      "Về bến sau khoảng hai giờ",
+    ],
+    editorialDescription:
+      "Hoa súng trên sông Ngô Đồng chỉ nở buổi sáng. Đò đi sớm để kịp lúc hoa mở trọn, đoạn đẹp nhất nằm giữa Hang Cả và Hang Hai.",
+    muaBan: "hoa-sung",
   },
   {
     id: "40000000-0000-4000-8000-000000000005",

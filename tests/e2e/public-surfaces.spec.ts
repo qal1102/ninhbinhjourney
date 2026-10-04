@@ -1,6 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { PACKAGES } from "@/content/packages";
+import { goiDaHetMua } from "@/content/packages-en";
 import { isMidAutumnSeasonOpen } from "@/lib/seasonal/mid-autumn-season";
+import { DUONG_DAN_MUA, trangMuaHienTai } from "@/lib/seasonal/trang-mua";
 
 // T2 removed "/demo/ops": it is the console of the abandoned stack and now
 // answers 404 in production. Auditing the accessibility of a page nobody can
@@ -188,11 +191,11 @@ test("top experience portal keeps tourism closed by default and preserves langua
     "href",
     "/collaborations?lang=en&source=editorial-invite",
   );
-  // Nhãn cổng đổi theo mùa (lib/seasonal/mid-autumn-season.ts): sau
-  // 27/09/2026 trang chủ tự ghi "Season closed", đường dẫn giữ nguyên.
+  // Cổng mùa đổi theo mùa (lib/seasonal/trang-mua.ts): hết Trung thu
+  // (27/09/2026) thì cổng dẫn sang mùa hoa súng Tam Cốc.
   await expect(
-    portals.filter({ hasText: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Season closed" }).first(),
-  ).toHaveAttribute("href", "/seasonal/mid-autumn?lang=en&source=editorial-invite");
+    portals.filter({ hasText: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Water-lily season" }).first(),
+  ).toHaveAttribute("href", `${DUONG_DAN_MUA[trangMuaHienTai()]}?lang=en&source=editorial-invite`);
   await expect(portals.filter({ hasText: "Reserve" }).first()).toHaveAttribute(
     "href",
     "/packages?lang=en&source=editorial-invite",
@@ -225,11 +228,16 @@ test("top experience portal keeps tourism closed by default and preserves langua
   await page.goto("/?lang=en&source=editorial-invite", { waitUntil: "domcontentloaded" });
   await waitForHomeLayout(page);
   await page
-    .getByRole("link", { name: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Season closed" })
+    .getByRole("link", { name: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Water-lily season" })
     .first()
     .click();
-  await expect(page).toHaveURL(/\/seasonal\/mid-autumn\?lang=en&source=editorial-invite/);
-  await expect(page.locator("#mid-autumn")).toBeVisible();
+  if (isMidAutumnSeasonOpen()) {
+    await expect(page).toHaveURL(/\/seasonal\/mid-autumn\?lang=en&source=editorial-invite/);
+    await expect(page.locator("#mid-autumn")).toBeVisible();
+  } else {
+    await expect(page).toHaveURL(/\/seasonal\/hoa-sung\?lang=en&source=editorial-invite/);
+    await expect(page.getByTestId("trang-hoa-sung")).toBeVisible();
+  }
 });
 
 test("journey concierge leads to real tourism chapters", async ({
@@ -260,10 +268,9 @@ test("journey concierge leads to real tourism chapters", async ({
     "href",
     "/collaborations?lang=en",
   );
-  await expect(dialog.getByRole("link", { name: /Moon Season 2026/ })).toHaveAttribute(
-    "href",
-    "/seasonal/mid-autumn?lang=en",
-  );
+  await expect(
+    dialog.getByRole("link", { name: isMidAutumnSeasonOpen() ? /Moon Season 2026/ : /Water-lily season/ }),
+  ).toHaveAttribute("href", `${DUONG_DAN_MUA[trangMuaHienTai()]}?lang=en`);
   await expect(dialog.getByRole("link", { name: /Reservations/ })).toHaveAttribute(
     "href",
     "/packages?lang=en",
@@ -304,7 +311,8 @@ test("home typography, package actions and animated chapters stay inside exact v
       const actions = page.locator(
         '#packages a[data-customer-content-type="package"]',
       );
-      await expect(actions).toHaveCount(5);
+      // Trang chủ chỉ trưng gói còn bán (gói hết mùa như Bàn Trăng bị lọc).
+      await expect(actions).toHaveCount(PACKAGES.filter((goi) => !goiDaHetMua(goi)).length);
       const withinCards = await actions.evaluateAll((links) =>
         links.every((link) => {
           const card = link.closest(".reveal-on-scroll");

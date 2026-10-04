@@ -65,11 +65,11 @@ test.describe("A15-TRUNG-THU-01: cờ mùa Trung thu tính theo đồng hồ th�
     await prepareReadOnly(page);
     await page.clock.setFixedTime(CLOSED_INSTANT);
 
-    // --- Trang chủ: nhãn cổng đổi, đường dẫn tới trang mùa vẫn còn ---
+    // --- Trang chủ: hết Trung thu thì cổng mùa dẫn sang mùa hoa súng (04/10/2026) ---
     await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("opening-intro")).toHaveCount(0, { timeout: 12000 });
-    const closedPortal = page.getByRole("link", { name: "Sự kiện theo mùa · Mùa đã khép" }).first();
-    await expect(closedPortal).toHaveAttribute("href", "/seasonal/mid-autumn?lang=vi");
+    const closedPortal = page.getByRole("link", { name: "Sự kiện theo mùa · Mùa hoa súng" }).first();
+    await expect(closedPortal).toHaveAttribute("href", "/seasonal/hoa-sung?lang=vi");
     await expect(page.getByRole("link", { name: "Sự kiện theo mùa · Trung thu" })).toHaveCount(0);
 
     // Hộp trợ lý hành trình: world "seasonal" không còn mời như dịp sắp tới.
@@ -78,10 +78,10 @@ test.describe("A15-TRUNG-THU-01: cờ mùa Trung thu tính theo đồng hồ th�
     await trigger.click();
     const conciergeDialog = page.getByRole("dialog", { name: "Bạn muốn xem phần nào?" });
     await expect(conciergeDialog).toBeVisible();
-    const seasonalWorldLink = conciergeDialog.getByRole("link", { name: /Mùa Trăng 2026/ });
-    await expect(seasonalWorldLink).toContainText("đã khép");
+    const seasonalWorldLink = conciergeDialog.getByRole("link", { name: /Mùa hoa súng Tam Cốc/ });
+    await expect(seasonalWorldLink).toContainText("Trung thu 2026 đã khép");
     await expect(seasonalWorldLink).not.toContainText("Xem hộp bánh, bàn tối và lịch sự kiện Trung thu");
-    await expect(seasonalWorldLink).toHaveAttribute("href", "/seasonal/mid-autumn?lang=vi");
+    await expect(seasonalWorldLink).toHaveAttribute("href", "/seasonal/hoa-sung?lang=vi");
     await page.keyboard.press("Escape");
 
     // --- /seasonal/mid-autumn: mở đầu bằng thông báo mùa đã khép ---

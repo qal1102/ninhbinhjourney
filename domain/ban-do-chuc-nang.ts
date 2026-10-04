@@ -193,6 +193,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "thoi-tiet-ben",
+        ten: "Thời tiết bến trong giờ thuyền chạy",
+        moTa: "Dự báo từng giờ ở bến Tràng An và Văn Lâm; giờ có dông, mưa to, gió giật mạnh thì báo cân nhắc tạm dừng.",
+        vai: "director",
+        duongDan: "/erp/thuyen",
+        diem: "thoi-tiet-ben",
+        moi: "04/10",
+        cacViec: [
+          "Nhìn nhãn mức ở góc phải: Bình thường, Lưu ý, hay Cân nhắc tạm dừng; dòng màu bên dưới ghi khoảng giờ và mưa, gió tới đâu.",
+          "Kéo ngang dải giờ để xem từng giờ thuyền chạy: trời, nhiệt độ, lượng mưa, gió giật. Đổi Tràng An / Tam Cốc ở hai nút trên bản đồ.",
+          "Khi có cảnh báo, nút \"Báo sự cố thời tiết\" mở màn Sự cố của cơ sở để cả đội theo SOP thời tiết.",
+        ],
+      },
+      {
         id: "nguoi-cheo",
         ten: "Người chèo gửi vị trí từ điện thoại",
         moTa: "Nhận khách xong bấm \"Bắt đầu chuyến\"; máy gửi vị trí 5 giây một lần tới khi về bến.",

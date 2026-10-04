@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { BanDoThuyenTre } from "@/components/erp/ban-do-thuyen-tre";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { NguoiCheo } from "@/components/erp/nguoi-cheo";
+import { ThoiTietBen } from "@/components/erp/thoi-tiet-ben";
 import { laCoSoThuyen, TUYEN_THUYEN, type CoSoThuyen } from "@/domain/thuyen-song";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
@@ -50,6 +52,12 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
             : "Nhận khách xong thì bấm bắt đầu chuyến. Quản lý cơ sở thấy thuyền của bạn trên bản đồ, biết bạn đang ở đoạn nào của tuyến. Vị trí chỉ gửi trong lúc chuyến đang mở; bấm \"Về bến\" là dừng hẳn."}
         </p>
       </div>
+
+      {banDo ? (
+        <Suspense key={banDo} fallback={<p className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">Đang lấy dự báo thời tiết ở bến…</p>}>
+          <ThoiTietBen coSo={banDo} siteHref={`/erp/${banDo}`} />
+        </Suspense>
+      ) : null}
 
       {banDo ? (
         <section

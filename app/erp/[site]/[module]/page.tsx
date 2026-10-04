@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { docBaoCaoCoSo } from "@/lib/erp/bao-cao-repository";
 import { notFound, redirect } from "next/navigation";
@@ -32,6 +33,7 @@ import { readShiftCareBrief } from "@/lib/erp/shift-care-repository";
 import QRCode from "qrcode";
 import { HangChoPanel } from "@/components/erp/hang-cho-panel";
 import { BanDoThuyenTre } from "@/components/erp/ban-do-thuyen-tre";
+import { ThoiTietBen } from "@/components/erp/thoi-tiet-ben";
 import { TenNguoiProvider } from "@/components/erp/ten-nguoi";
 import { laCoSoThuyen, TUYEN_THUYEN } from "@/domain/thuyen-song";
 import { BEN_CO_HANG_CHO, benCuaCoSo } from "@/domain/hang-cho";
@@ -274,6 +276,10 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
       ) : null}
       {moduleDefinition.id === "suc-chua" && laCoSoThuyen(site.id) ? (
         user.role === "director" || user.role === "manager" ? (
+          <>
+          <Suspense fallback={<p className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">Đang lấy dự báo thời tiết ở bến…</p>}>
+            <ThoiTietBen coSo={site.id} siteHref={`/erp/${site.id}`} />
+          </Suspense>
           <section
             className="mb-8 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-6"
             data-chi="ban-do-thuyen"
@@ -285,6 +291,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
               <BanDoThuyenTre coSo={site.id} xemThuyenThat />
             </div>
           </section>
+          </>
         ) : (
           <p className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">
             Đang chèo đò? Mở <Link href="/erp/thuyen" className="font-bold text-[#183f34] underline underline-offset-4">trang người chèo</Link> để quản lý thấy thuyền của bạn trên bản đồ.

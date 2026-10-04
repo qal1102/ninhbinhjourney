@@ -121,6 +121,13 @@ export const CONG_NGHE_DANG_DUNG: readonly CongNgheDangDung[] = [
     oDau: "Đặt vé web, mọi màn số liệu",
   },
   {
+    id: "thoi-tiet",
+    ten: "Cảnh báo thời tiết ở bến",
+    lamGi: "Dự báo từng giờ của Open-Meteo ở bến Tràng An và Văn Lâm; giờ có dông, mưa to, gió giật mạnh thì báo cân nhắc tạm dừng, kèm lối báo sự cố thời tiết.",
+    oDau: "Thuyền trên sông, Sức chứa Tràng An và Tam Cốc",
+    duongDan: "/erp/thuyen",
+  },
+  {
     id: "may-in",
     ten: "In phiếu thu qua Bluetooth",
     lamGi: "Quầy in phiếu bằng máy in nhiệt khổ 58 hoặc 80 mm, nhớ khổ giấy của từng máy.",
@@ -150,14 +157,6 @@ export type CongNgheDeXuat = {
  * (chủ dự án đã chốt không dùng).
  */
 export const CONG_NGHE_DE_XUAT: readonly CongNgheDeXuat[] = [
-  {
-    id: "thoi-tiet",
-    ten: "Cảnh báo thời tiết cho bến thuyền",
-    giaiQuyet: "Mưa lớn, dông, nắng nóng ảnh hưởng thẳng tới đò và khách; quản lý biết trước vài giờ để tạm dừng bến hay đổi giờ.",
-    hienCo: "Sự cố có loại \"thời tiết\" nhưng phải nhập tay.",
-    canGi: "Nối một nguồn dự báo miễn phí (như Open-Meteo), đặt ngưỡng cảnh báo theo bến. Chỉ cần viết mã.",
-    uuTien: "lam-ngay",
-  },
   {
     id: "tro-ly-ai",
     ten: "Trợ lý AI đọc số liệu điều hành",

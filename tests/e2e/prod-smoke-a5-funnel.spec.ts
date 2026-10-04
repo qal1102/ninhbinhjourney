@@ -50,7 +50,7 @@ test.describe("A5 production funnel dashboard smoke", () => {
     const dashboard = page.getByTestId("customer-funnel-dashboard");
     await expect(dashboard).toBeVisible({ timeout: 25_000 });
     await expect(
-      page.getByRole("heading", { name: "Từ QR marketing tới cổng soát vé" }),
+      page.getByRole("heading", { name: "Phễu khách: từ quét mã tới qua cổng" }),
     ).toBeVisible();
 
     // Trung thực theo nguồn: hoặc có dòng nguồn thật, hoặc nói thẳng là chưa

@@ -82,9 +82,7 @@ export default async function CheckoutPage({
           {ch(lang, "Đặt vé vào cổng · chỗ giữ 15 phút", "Gate tickets · seats held for 15 minutes")}
         </p>
         <h1 className="font-display mt-4 text-5xl leading-[0.96] text-[#183f34] sm:text-7xl">
-          {ch(lang, "Một chỗ đã giữ,", "A seat held,")}
-          <br />
-          {ch(lang, "không có khoản tiền bị thu.", "and no money taken.")}
+          {ch(lang, "Đặt vé và giữ chỗ", "Book and hold your seats")}
         </h1>
         <div className="mt-10">
           {goiDaHetMua(packageItem) ? (

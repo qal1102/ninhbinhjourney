@@ -23,4 +23,4 @@ export function resolveDemoTicketsEnabled(raw: string | undefined): boolean {
 
 /** Câu nói khi ai đó gọi thẳng lệnh kéo vé mẫu trong lúc cờ đang tắt. */
 export const DEMO_TICKETS_DISABLED_MESSAGE =
-  "Hệ thống đang chạy ở chế độ vận hành thật nên không dùng vé mẫu ạ.";
+  "Hệ thống đang chạy ở chế độ vận hành thật nên không dùng vé mẫu.";

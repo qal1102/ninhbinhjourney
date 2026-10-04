@@ -183,15 +183,21 @@ test("trang Tài chính mang đủ ba mạch tiền, ở bản gọn, không đ�
 
   const do_ = await page.evaluate(() => {
     const ds = Array.from(document.querySelectorAll('[data-testid="mach-viec"]'));
+    const tieuDe = document.querySelector("main h1")?.closest("header");
+    const dinh = Math.min(...ds.map((d) => d.getBoundingClientRect().top));
+    const day = Math.max(...ds.map((d) => d.getBoundingClientRect().bottom));
     return {
-      duoiCung: Math.max(...ds.map((d) => d.getBoundingClientRect().bottom + window.scrollY)),
+      caoBaDai: day - dinh,
+      cachTieuDe: tieuDe ? dinh - tieuDe.getBoundingClientRect().bottom : Number.POSITIVE_INFINITY,
       tranNgang: document.documentElement.scrollWidth > window.innerWidth + 1,
     };
   });
   expect(do_.tranNgang).toBe(false);
-  // Đo thật ở khổ 390px sau khi chuyển sang bản gọn: 611px. Bản đầy đủ là
-  // 889px — gần một màn hình rưỡi cuộn trước khi chạm phần kế toán.
-  expect(do_.duoiCung).toBeLessThan(700);
+  // Từ 04/10/2026 ba dải đứng ngay dưới tiêu đề trang (trước đó đứng trên,
+  // mở màn ra không biết mình đang ở đâu). Bản gọn ba dải cao chừng 460px ở
+  // 390px; bản đầy đủ gần 750px, đẩy phần kế toán xuống quá một màn hình.
+  expect(do_.cachTieuDe).toBeLessThan(40);
+  expect(do_.caoBaDai).toBeLessThan(500);
 
   // Mở một dải ra thì hàng số đếm quay lại đầy đủ.
   await dai.nth(2).getByTestId("mach-viec-toggle").click();

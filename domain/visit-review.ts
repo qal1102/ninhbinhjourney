@@ -189,7 +189,7 @@ export const VISIT_REVIEW_COPY = {
     commentHint: `Tối đa ${VISIT_REVIEW_COMMENT_MAX} chữ. Bạn đừng ghi số điện thoại hay địa chỉ ở đây nhé.`,
     submit: "Gửi lời này",
     submitting: "Đang gửi…",
-    saved: "Cảm ơn bạn đã kể lại ạ.",
+    saved: "Cảm ơn bạn đã kể lại.",
     edit: "Sửa lại lời đã gửi",
     note: "Chỉ người đã qua cổng nơi này mới nói được một câu ở đây, nên bảng điểm nặng ký hơn hẳn.",
     summary: (average: string, count: number) => `${average}/5 · ${count} người đã tới đây chấm`,
@@ -198,7 +198,7 @@ export const VISIT_REVIEW_COPY = {
         ? "Mới một người tới đây kể lại, chưa đủ để dựng thành điểm số."
         : `Mới ${count} người kể lại, chưa đủ để dựng thành điểm số.`,
     empty: "Chưa ai kể lại về nơi này.",
-    failed: "Lời của bạn chưa gửi đi được. Bạn thử lại giúp em một lượt nhé.",
+    failed: "Lời của bạn chưa gửi đi được. Bạn thử lại nhé.",
   },
   en: {
     heading: "Say a word about this place",

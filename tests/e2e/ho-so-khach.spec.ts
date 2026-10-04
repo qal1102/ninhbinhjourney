@@ -63,7 +63,7 @@ test.describe("Hộ chiếu Ninh Bình", () => {
       route.fulfill({
         status: 404,
         contentType: "application/json",
-        body: JSON.stringify({ accepted: false, error: { message: "Chưa tìm thấy hồ sơ khớp mã đặt chỗ và số này. Bạn xem lại giúp em ạ." } }),
+        body: JSON.stringify({ accepted: false, error: { message: "Chưa tìm thấy hồ sơ khớp mã đặt chỗ và số này. Bạn xem lại." } }),
       }),
     );
     await page.goto("/ho-so");
@@ -80,7 +80,7 @@ test.describe("ERP: Khách thấy gì", () => {
     await loginAsDirector(page);
     await page.goto("/erp/khach-hang");
     const khoi = page.getByTestId("khach-thay-gi");
-    await expect(khoi.getByRole("heading", { name: "Đứng ở chỗ khách mà xem" })).toBeVisible();
+    await expect(khoi.getByRole("heading", { name: "Khách thấy gì" })).toBeVisible();
     for (const [ten, href] of [
       ["Trang chủ", "/"],
       ["Chọn gói và giữ chỗ", "/packages"],

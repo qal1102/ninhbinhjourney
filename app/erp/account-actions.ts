@@ -192,7 +192,7 @@ export async function upsertAccountAction(
     // nằm ở phần bị cắt trông như còn trống. Dừng và nói ra, đừng đoán.
     if (existingAccounts.length >= 1000) {
       throw new Error(
-        "Danh sách tài khoản đã chạm mức đọc tối đa nên chưa chắc đủ. Em chưa dám tự đặt mã lúc này, xin báo lại để đội kỹ thuật nới chỗ đọc.",
+        "Danh sách tài khoản đã chạm mức đọc tối đa nên chưa chắc đủ. Chưa tự đặt mã được lúc này, xin báo đội kỹ thuật.",
       );
     }
     accountId = GeneratedAccountIdSchema.parse(

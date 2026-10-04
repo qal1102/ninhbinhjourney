@@ -105,8 +105,8 @@ export function DieuHanhHoaSung({ lang }: { lang: "vi" | "en" }) {
       </svg>
       <figcaption className="border-t border-[#e3d6e6] px-5 py-3 text-xs leading-5 text-[#6b5f70]">
         {t(
-          "Đường đò thật dựng từ OpenStreetMap. Hình chỉ tượng trưng cho đoàn diễu hành, không phải số thuyền thật.",
-          "The real boat route, traced from OpenStreetMap. The procession is illustrative, not the real number of boats.",
+          "Đường đò Tam Cốc từ bến Văn Lâm tới Hang Ba, vẽ theo bản đồ OpenStreetMap.",
+          "The Tam Coc boat route from Van Lam pier to Hang Ba, traced from OpenStreetMap.",
         )}
       </figcaption>
     </figure>

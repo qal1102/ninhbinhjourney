@@ -12,7 +12,7 @@ async function login(page: Page, username: string, password: string) {
 test("A6 fails closed and exposes no secret values when release inputs are absent", async ({ page }) => {
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/release");
-  await expect(page.getByRole("heading", { name: "Sẵn sàng phát hành dữ liệu khách hàng" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tình trạng kỹ thuật phần dữ liệu khách" })).toBeVisible();
   await expect(page.getByTestId("release-verdict")).toHaveText("CHƯA BẬT CHO KHÁCH THẬT");
   await expect(page.getByTestId("release-phase-CUS-08")).toContainText("Chưa probe");
   await expect(page.getByTestId("release-flag-ERP_OFFLINE_GATE_ENABLED")).toContainText("OFF");

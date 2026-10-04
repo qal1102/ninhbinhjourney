@@ -33,7 +33,7 @@ export default async function TrangThanhToanQr({
     ketQuaBanDau: KetQuaDaTra | null;
   } | null = null;
   if (!isCustomerBookingEnabled()) {
-    loi = ch(lang, "Đặt chỗ trên web đang tạm đóng, nên mã QR này chưa dùng được ạ.", "Web booking is closed for now, so this QR code cannot be used.");
+    loi = ch(lang, "Đặt chỗ trên web đang tạm đóng, nên mã QR này chưa dùng được.", "Web booking is closed for now, so this QR code cannot be used.");
   } else {
     try {
       // Mở cả phiếu đã quá hạn, vì chỉ để hỏi "trả chưa?". Khách quét lại mã

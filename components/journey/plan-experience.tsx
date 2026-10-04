@@ -562,11 +562,11 @@ export function PlanExperience({
         diemChon && !payload.itinerary.items.some((item) => item.siteId === diemChon.id)
           ? BAC_DI_BO[diemChon.mucDiBo] > BAC_DI_BO[walking]
             ? t(
-                `${diemChon.ten} cần đi bộ nhiều hơn mức bạn chọn nên em chưa xếp vào. Nếu bạn vẫn muốn ghé, mời bạn chỉnh mức đi bộ lên rồi dựng lại ạ.`,
+                `${diemChon.ten} cần đi bộ nhiều hơn mức bạn chọn nên chưa xếp vào. Nếu bạn vẫn muốn ghé, mời bạn chỉnh mức đi bộ lên rồi dựng lại.`,
                 `${diemChon.ten} needs more walking than you chose, so it is not in the plan. To include it, raise the walking level and build again.`,
               )
             : t(
-                `${diemChon.ten} chưa vừa với giờ mở cửa và ${Math.round(durationMinutes / 60)} tiếng bạn có. Mời bạn chọn thêm thời gian rồi dựng lại ạ.`,
+                `${diemChon.ten} chưa vừa với giờ mở cửa và ${Math.round(durationMinutes / 60)} tiếng bạn có. Mời bạn chọn thêm thời gian rồi dựng lại.`,
                 `${diemChon.ten} does not fit the opening hours and the ${Math.round(durationMinutes / 60)} hours you have. Add more time and build again.`,
               )
           : undefined;
@@ -623,7 +623,7 @@ export function PlanExperience({
       <div data-plan-diem-chon className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-[#cfe0d6] bg-[#eef3ef] py-2 pl-5 pr-2">
         <p className="min-w-0 text-sm leading-6 text-[#183f34]">
           {t("Bạn muốn ghé", "You want to visit")} <strong>{diemChon.ten}</strong>.{" "}
-          {t("Em xếp nơi này lên đầu lịch, miễn là vừa sức đi bộ và giờ mở cửa ạ.", "It goes first in the plan, as long as it fits your walking and the opening hours.")}
+          {t("Nơi này đứng đầu lịch, miễn là vừa sức đi bộ và giờ mở cửa.", "It goes first in the plan, as long as it fits your walking and the opening hours.")}
         </p>
         <button
           type="button"
@@ -768,7 +768,7 @@ export function PlanExperience({
                 className="mt-3 rounded-xl bg-[#f1ede2] px-4 py-3 text-sm leading-6 text-[#59654b]"
               >
                 {t(
-                  `Bạn nói chuyến này đi ${draft.tripDays} ngày ạ. Em xếp ngày đầu trước để bạn xem thử; những ngày sau bạn đổi ngày đi rồi bấm lại là có tiếp.`,
+                  `Bạn nói chuyến này đi ${draft.tripDays} ngày. Đây là ngày đầu để bạn xem thử; những ngày sau bạn đổi ngày đi rồi bấm lại là có tiếp.`,
                   `You mentioned ${draft.tripDays} days. We plan the first day for you to try; for the next days, change the date and press again.`,
                 )}
               </p>

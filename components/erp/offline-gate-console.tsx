@@ -219,7 +219,7 @@ export function OfflineGateConsole({ siteId, siteName }: { siteId: string; siteN
       {camera.open ? (
         <div className="mt-3 overflow-hidden rounded-xl bg-black">
           <video ref={videoRef} muted playsInline className="aspect-video w-full object-cover" />
-          <p className="bg-black/60 px-3 py-2 text-xs text-white/80">Mời bạn đưa mã QR vào giữa khung hình, máy tự đọc ạ.</p>
+          <p className="bg-black/60 px-3 py-2 text-xs text-white/80">Mời bạn đưa mã QR vào giữa khung hình, máy tự đọc.</p>
         </div>
       ) : null}
       {camera.message ? <p role="status" className="mt-2 text-xs leading-5 text-[#5c6f67]">{camera.message}</p> : null}

@@ -91,7 +91,7 @@ test.describe("TC-12: đánh giá có dấu chân", () => {
     await page.getByTestId("visit-review-row").nth(1).getByTestId("visit-review-star-4").click();
     await expect(
       page.getByTestId("visit-review-row").nth(1).getByTestId("visit-review-status"),
-    ).toHaveText("Cảm ơn bạn đã kể lại ạ.");
+    ).toHaveText("Cảm ơn bạn đã kể lại.");
     expect(daGui).toHaveLength(1);
     expect(daGui[0]).toMatchObject({ member_code: MA, site_id: BAI_DINH, rating: 4 });
   });

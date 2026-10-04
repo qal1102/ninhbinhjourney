@@ -145,13 +145,13 @@ export function Customer360Dashboard({
     <div className="space-y-6" data-testid="customer-360-dashboard">
       <section className="rounded-3xl bg-[#173f34] p-6 text-white sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b9d5ca]">
-          Khách hàng · biết thêm dần qua điều khách tự chia sẻ
+          Khách hàng
         </p>
         <h1 className="font-display mt-3 text-4xl leading-tight sm:text-5xl">
-          Hành trình khách đã chủ động tạo
+          Khách và đơn của họ
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-6 text-[#d4e4de]">
-          Khách đến từ đâu, thích gì, lên lịch ra sao, đồng ý cho dùng dữ liệu tới đâu, tất cả xếp trên một dòng thời gian. Gợi ý chỉ dựa vào điều khách đã tự chọn, và luôn ghi rõ vì sao. Màn hình này không mở được email hay số điện thoại của khách, và mỗi lần mở đều được ghi vào nhật ký.
+          Khách đến từ đâu, thích gì, đã đặt gì, đồng ý cho dùng dữ liệu tới đâu. Email và số điện thoại được che; mỗi lần mở màn này đều ghi vào nhật ký.
         </p>
       </section>
 
@@ -171,8 +171,8 @@ export function Customer360Dashboard({
       {recommendations.length > 0 || outboundActions.length > 0 ? (
         <section className="rounded-3xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Gợi ý và tin giới thiệu</p>
-          <h2 className="mt-2 text-2xl font-black text-[#203a30]">Lý do trước, gửi ra ngoài sau</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#66756e]">Ở đây không có email, số điện thoại hay nội dung tin. Tin tự bị chặn nếu khách chưa đồng ý nhận thông tin giới thiệu, đã từ chối, hoặc đã nhận quá 2 lần trong 7 ngày trên cùng một kênh.</p>
+          <h2 className="mt-2 text-2xl font-black text-[#203a30]">Gợi ý cho từng khách</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#66756e]">Khách chưa đồng ý nhận tin, đã từ chối, hoặc đã nhận 2 tin trong 7 ngày thì không gửi thêm.</p>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {recommendations.map((recommendation) => (
               <article key={recommendation.recommendationId} className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]">

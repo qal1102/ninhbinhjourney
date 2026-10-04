@@ -87,11 +87,11 @@ export function CustomerFunnelDashboard({
         {khoang.nhan}
         {report.hasDemoData ? " · gồm số liệu mẫu" : ""}
       </p>
-      <h2 className="mt-2 text-3xl font-black text-[#203a30]">Từ QR marketing tới cổng soát vé</h2>
+      <h2 className="mt-2 text-3xl font-black text-[#203a30]">Phễu khách: từ quét mã tới qua cổng</h2>
       <p className="mt-2 text-sm text-[#66756e]">{khoang.moTa}</p>
 
       <ChonKhoang khoang={khoang} luaChon={luaChon} />
-      <p className="mt-3 max-w-4xl text-sm leading-6 text-[#66756e]">Mỗi con số ghi rõ đếm từ đâu ngay bên dưới. Đây là số lượt, không phải số người: một khách vào ba lần thì tính ba lượt. Khách chưa rõ đến từ đâu được để riêng một ô, không chia bừa vào chiến dịch nào.</p>
+      <p className="mt-3 max-w-4xl text-sm leading-6 text-[#66756e]">Đếm theo lượt: một khách vào ba lần tính ba lượt. Khách chưa rõ nguồn nằm riêng một ô.</p>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {stages.map(([label, value, source], index) => (

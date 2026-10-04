@@ -82,7 +82,7 @@ export function NgheTheoViTri({ diem, lang, children }: { diem: DiemNghe[]; lang
         {children}
       </div>
       <h1 className="font-display mt-3 text-4xl leading-tight text-[#183f34] sm:text-5xl">
-        {t("Tới nơi nào, nghe chuyện nơi ấy", "Hear each place as you arrive")}
+        {t("Thuyết minh theo vị trí", "Audio guide by location")}
       </h1>
       <p className="mt-3 leading-7 text-[#4d5b55]">
         {t(

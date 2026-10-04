@@ -45,6 +45,10 @@ for (const moduleId of ERP_OPERATIONAL_MODULE_IDS) {
       const goc = document.querySelector("main:not([aria-busy])")!;
       const la = Array.from(goc.querySelectorAll("*"));
       const duoi14 = la
+        // Dòng ghi nguồn bản đồ (OpenStreetMap, OpenFreeMap) do MapLibre vẽ là
+        // ghi công nguồn dữ liệu, không phải chữ vận hành; nó chỉ lọt vào phép
+        // đo khi bản đồ kịp tải, nên bài từng đỏ lúc có lúc không.
+        .filter((el) => !el.closest(".maplibregl-ctrl-attrib"))
         .filter((el) => el.children.length === 0 && (el.textContent ?? "").trim())
         .map((el) => ({
           px: parseFloat(getComputedStyle(el).fontSize),

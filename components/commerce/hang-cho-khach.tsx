@@ -211,7 +211,7 @@ export function HangChoKhach({
             ? t("Bến vừa tạm dừng nhận số. Mời bạn xem lời nhắn bên trên.", "The pier has just paused the queue. See the note above.")
             : body?.ma === "DAY"
               ? t("Hàng chờ hôm nay đã đầy. Mời bạn tới quầy bến hỏi nhân viên.", "Today's queue is full. Please ask staff at the pier.")
-              : t("Chưa lấy được số. Bạn thử lại giúp em ạ.", "Couldn't get a number. Please try again."),
+              : t("Chưa lấy được số. Bạn thử lại.", "Couldn't get a number. Please try again."),
         );
         if (body?.ma === "TAM_DUNG") void taiTongQuan();
         return;

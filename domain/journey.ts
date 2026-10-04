@@ -239,7 +239,7 @@ export function parseJourneyIntent(input: {
   // "1/2 ngày" cũng là nửa ngày, và nó còn tệ hơn nếu để lọt: phép đếm bên
   // dưới đọc số DÍNH LIỀN chữ "ngày", tức đọc trúng số 2 của mẫu số, rồi trả
   // về HAI ngày. Khách viết nửa ngày mà trang đáp "Bạn nói chuyến này đi 2
-  // ngày ạ" — đúng kiểu trang không nghe mình nói.
+  // ngày" — đúng kiểu trang không nghe mình nói.
   if (
     /\bnua ngay\b/.test(text) ||
     /\b1\s*\/\s*2\s*ngay\b/.test(text) ||

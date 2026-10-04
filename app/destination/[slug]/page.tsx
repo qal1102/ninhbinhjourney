@@ -319,7 +319,7 @@ export default async function DestinationPage({
           {destination.realLimit ? (
             <div className="mt-4 rounded-2xl border border-[#c68f48]/35 bg-[#fff7e9] p-4">
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#8a6b38]">
-                {ch(lang, "Giới hạn thật", "Real limits")}
+                {ch(lang, "Cần biết trước", "Good to know")}
               </p>
               <p className="mt-2 text-sm leading-6 text-[#6b5326]">
                 {destination.realLimit[lang]}
@@ -374,7 +374,7 @@ export default async function DestinationPage({
               </dd>
             </div>
             <div>
-              <dt className="font-bold text-[#59654b]">{ch(lang, "Nguồn rà soát", "Checked against")}</dt>
+              <dt className="font-bold text-[#59654b]">{ch(lang, "Nguồn", "Source")}</dt>
               <dd className="mt-1 leading-6">
                 {"url" in destination.source ? (
                   <a

@@ -52,7 +52,7 @@ export default async function TrangHoSo({
         <h1 className="sr-only">{ch(lang, "Hộ chiếu Ninh Bình", "Ninh Binh passport")}</h1>
         <div className="mt-5">
           {!bat ? (
-            <p className="rounded-3xl bg-white p-6 text-[#59654b]">{ch(lang, "Hồ sơ khách chưa mở ở bản này ạ.", "Passports are not open in this version.")}</p>
+            <p className="rounded-3xl bg-white p-6 text-[#59654b]">{ch(lang, "Hồ sơ khách chưa mở ở bản này.", "Passports are not open in this version.")}</p>
           ) : hoSo ? (
             <HoSoKhachView hoSo={hoSo} lang={lang} />
           ) : (

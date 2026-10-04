@@ -368,7 +368,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           {camera.open ? (
             <div className="mt-3 overflow-hidden rounded-xl bg-black">
               <video ref={videoRef} muted playsInline className="aspect-video w-full object-cover" />
-              <p className="bg-black/60 px-3 py-2 text-xs text-white/80">Mời bạn đưa mã QR vào giữa khung hình, máy tự đọc ạ.</p>
+              <p className="bg-black/60 px-3 py-2 text-xs text-white/80">Mời bạn đưa mã QR vào giữa khung hình, máy tự đọc.</p>
             </div>
           ) : null}
           {camera.message ? <p role="status" className="mt-2 text-xs leading-5 text-white/80">{camera.message}</p> : null}
@@ -420,7 +420,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                 {collectPending ? "Đang ghi nhận…" : "Đã thu tiền"}
               </button>
               <p className="mt-3 text-xs leading-5 text-white/65">
-                Ghi nhận xong, mã quay lại ô quét. Bạn quét thêm một lượt nữa là khách vào được ạ.
+                Ghi nhận xong, mã quay lại ô quét. Bạn quét thêm một lượt nữa là khách vào được.
               </p>
             </div>
           ) : null}

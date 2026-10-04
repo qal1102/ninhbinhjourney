@@ -198,7 +198,7 @@ test("số ngày đi không bị đọc nhầm thành ngày tháng", async ({ pa
   // "1/2 ngày" là NỬA NGÀY. Nó sai được theo hai đường cùng lúc, và trước
   // ngày 10/09/2026 nó sai đúng một đường: phép đếm ngày đọc trúng số 2 của
   // mẫu số rồi trả về HAI ngày, nên trang đáp lại "Bạn nói chuyến này đi 2
-  // ngày ạ" cho một người vừa bảo mình chỉ có nửa buổi.
+  // ngày" cho một người vừa bảo mình chỉ có nửa buổi.
   await page.getByLabel(TEXT_BOX).fill("Tôi chỉ có 1/2 ngày thôi.");
   await page.getByRole("button", { name: RUN_BUTTON }).click();
   // Chín ô vẫn đang mở từ lần bấm trên, nên KHÔNG bấm "Chỉnh lại cho đúng"

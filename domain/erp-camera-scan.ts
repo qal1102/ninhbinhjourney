@@ -40,30 +40,30 @@ export type CameraReadiness =
 
 const BLOCKED_MESSAGES: Readonly<Record<CameraBlockedReason, string>> = Object.freeze({
   insecure:
-    "Trình duyệt chỉ mở camera khi trang chạy trên đường truyền an toàn. Mời bạn mở lại địa chỉ bắt đầu bằng https, hoặc gõ mã vào ô bên dưới ạ.",
+    "Trình duyệt chỉ mở camera khi trang chạy trên đường truyền an toàn. Mời bạn mở lại địa chỉ bắt đầu bằng https, hoặc gõ mã vào ô bên dưới.",
   "no-camera-api":
-    "Trình duyệt trên máy này không mở được camera. Mời bạn gõ mã vào ô bên dưới ạ.",
+    "Trình duyệt trên máy này không mở được camera. Mời bạn gõ mã vào ô bên dưới.",
   "no-code-reader":
-    "Trình duyệt trên máy này chưa đọc được mã QR — iPhone và Safari đều chưa làm được. Mời bạn quét bằng máy Android dùng Chrome, hoặc gõ mã vào ô bên dưới ạ.",
+    "Trình duyệt trên máy này chưa đọc được mã QR — iPhone và Safari đều chưa làm được. Mời bạn quét bằng máy Android dùng Chrome, hoặc gõ mã vào ô bên dưới.",
 });
 
 /** Camera mở được nhưng phần đọc mã dựng không xong — hiếm, vẫn phải có câu trả lời. */
 export const CAMERA_READER_BROKEN_MESSAGE =
-  "Máy mở được camera nhưng chưa đọc được mã QR. Mời bạn gõ mã vào ô bên dưới ạ.";
+  "Máy mở được camera nhưng chưa đọc được mã QR. Mời bạn gõ mã vào ô bên dưới.";
 
 /** Đưa mã vào khung mãi mà không ra gì: mách nước rồi vẫn để camera chạy tiếp. */
 export const CAMERA_SCAN_HINT_MESSAGE =
-  "Vẫn chưa đọc ra mã. Bạn đưa mã gần hơn, giữ máy yên một nhịp cho nét, hoặc gõ mã vào ô bên dưới ạ.";
+  "Vẫn chưa đọc ra mã. Bạn đưa mã gần hơn, giữ máy yên một nhịp cho nét, hoặc gõ mã vào ô bên dưới.";
 
 const FAILURE_MESSAGES = Object.freeze({
   denied:
-    "Máy chưa cho trang này dùng camera. Bạn vào cài đặt trình duyệt bật lại quyền camera, hoặc gõ mã vào ô bên dưới ạ.",
+    "Máy chưa cho trang này dùng camera. Bạn vào cài đặt trình duyệt bật lại quyền camera, hoặc gõ mã vào ô bên dưới.",
   missing:
-    "Máy này không có camera nào dùng được. Mời bạn gõ mã vào ô bên dưới ạ.",
+    "Máy này không có camera nào dùng được. Mời bạn gõ mã vào ô bên dưới.",
   busy:
-    "Camera đang bận ở một ứng dụng khác. Bạn đóng ứng dụng đó rồi mở lại, hoặc gõ mã vào ô bên dưới ạ.",
+    "Camera đang bận ở một ứng dụng khác. Bạn đóng ứng dụng đó rồi mở lại, hoặc gõ mã vào ô bên dưới.",
   unknown:
-    "Chưa mở được camera. Mời bạn gõ mã vào ô bên dưới ạ.",
+    "Chưa mở được camera. Mời bạn gõ mã vào ô bên dưới.",
 });
 
 /**

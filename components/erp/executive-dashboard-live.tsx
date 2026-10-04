@@ -354,9 +354,8 @@ export function ExecutiveDashboard({
             cho lý do. Cùng lối diễn đạt với bảng vé ngay bên dưới. */}
         {sampleNote ? (
           <p className="mt-4 rounded-xl border border-white/15 bg-white/[0.06] p-4 text-xs leading-5 text-[#d3e5dd]">
-            Sổ còn <strong className="text-white">{sampleNote}</strong> làm sẵn
-            từ lúc dựng hệ thống để nhân viên tập. Chúng không được cộng vào con
-            số nào ở trên, cũng không nằm trong khối cần bạn quyết định.
+            Có <strong className="text-white">{sampleNote}</strong> mẫu để nhân
+            viên tập; các số trên không tính chúng.
           </p>
         ) : null}
       </section>
@@ -418,7 +417,7 @@ export function ExecutiveDashboard({
         {sites[0] ? (
           <div className="mt-4">
             <p className="text-xs font-bold text-[#7a8781]">
-              Thử tận tay tại {sites[0].shortName}
+              Làm thử ở {sites[0].shortName}
             </p>
             <div className="mt-2 grid gap-2 sm:flex sm:flex-wrap">
             <Link
@@ -681,7 +680,7 @@ export function ExecutiveDashboard({
         <div className="flex flex-col justify-between gap-3 border-b border-[#e4e9e6] p-5 sm:flex-row sm:items-end sm:p-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.17em] text-[#477565]">
-              Ma trận bốn cơ sở
+              Bốn cơ sở hôm nay
             </p>
             <h2 className="mt-2 text-2xl font-black text-[#20342c]">
               Ca bán vé, công việc và sổ kế toán

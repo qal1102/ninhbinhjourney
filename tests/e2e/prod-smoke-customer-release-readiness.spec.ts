@@ -20,7 +20,7 @@ test.describe("A6 production readiness smoke", () => {
   test("director reads the real release verdict without mutating production", async ({ page }) => {
     await loginAsDirector(page);
     await page.goto("/erp/release");
-    await expect(page.getByRole("heading", { name: "Sẵn sàng phát hành dữ liệu khách hàng" })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("heading", { name: "Tình trạng kỹ thuật phần dữ liệu khách" })).toBeVisible({ timeout: 20_000 });
 
     if (expectation === "canary-ready") {
       await expect(page.getByTestId("release-verdict")).toHaveText("ĐỦ ĐIỀU KIỆN ĐỂ MỞ THỬ");

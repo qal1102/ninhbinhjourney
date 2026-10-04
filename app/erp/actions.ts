@@ -955,7 +955,7 @@ export async function collectOnSitePaymentAction(input: {
     }
     return {
       ok: false,
-      message: "Chưa ghi nhận được khoản thu. Bạn thử lại giúp em, nếu vẫn vậy thì báo đội kỹ thuật.",
+      message: "Chưa ghi nhận được khoản thu. Bạn thử lại, nếu vẫn vậy thì báo đội kỹ thuật.",
     };
   }
 }
@@ -1014,7 +1014,7 @@ export async function createCounterVisitorGroupAction(input: {
   // viên không nhìn thấy bao giờ. Chặn ngay ở đây, bằng lời của người dùng.
   const idempotencyKey = input.idempotencyKey.trim();
   if (idempotencyKey.length < 1 || idempotencyKey.length > 128) {
-    return { ok: false, message: "Chưa lập được phiếu đoàn tại quầy. Mời bạn tải lại trang rồi thử lại ạ." };
+    return { ok: false, message: "Chưa lập được phiếu đoàn tại quầy. Mời bạn tải lại trang rồi thử lại." };
   }
 
   try {
@@ -1199,8 +1199,8 @@ export async function moderateVisitReviewAction(
     ok: true,
     message:
       action === "unhide"
-        ? "Đã hiện lại lời này ạ."
-        : `Đã ẩn lời này ạ. ${MODERATION_COPY.conLai(
+        ? "Đã hiện lại lời này."
+        : `Đã ẩn lời này. ${MODERATION_COPY.conLai(
             ket_qua.quotaLimit === null ? null : Math.max(0, ket_qua.quotaLimit - (ket_qua.quotaUsed ?? 0)),
           )}`,
   };

@@ -224,7 +224,7 @@ export default async function PackagesPage({
             : ch(lang, "Bảng giá tham khảo · chưa mở đặt online", "Reference prices · online booking not open")}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-[clamp(2.6rem,7vw,4.5rem)] leading-[0.95] text-[#183f34] [text-wrap:balance]">
-          {ch(lang, "Chọn một nhịp đi, phần còn lại để chúng tôi sắp.", "Pick your pace through Ninh Binh; we arrange the rest.")}
+          {ch(lang, "Các gói tham quan Ninh Bình", "Ninh Binh packages")}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
           {ch(

@@ -18,16 +18,16 @@ const NO_MESSAGING_DISCLOSURE = "Bản này chưa gửi tin nhắn hay email xá
 const LOOKUP_API_ROUTE = "**/api/customer-ticket-lookup";
 
 const MALFORMED_CODE_MESSAGE =
-  "Mã đặt chỗ có dạng NBJ- rồi mười hai ký tự, bạn xem lại giúp em ạ.";
+  "Mã đặt chỗ có dạng NBJ- và mười hai ký tự. Mời bạn xem lại.";
 const NOT_FOUND_MESSAGE =
-  "Em chưa tìm ra chuyến nào khớp mã đặt chỗ và liên hệ này ạ. Bạn xem lại giúp em mã đã ghi và số điện thoại hoặc email đã dùng lúc đặt.";
+  "Chưa tìm thấy chuyến nào khớp mã đặt chỗ và liên hệ này. Mời bạn xem lại mã đã ghi và số điện thoại hoặc email đã dùng lúc đặt.";
 // Máy chủ gửi về MÃ LỖI; câu chữ là của trang. Cùng một mã
-// `CUSTOMER_LOOKUP_INPUT_INVALID` mà máy chủ có lúc kèm "Bạn nhập giúp em mã
+// `CUSTOMER_LOOKUP_INPUT_INVALID` mà máy chủ có lúc kèm "Bạn nhập mã
 // đặt chỗ…", có lúc kèm "Hãy nhập một email hoặc số điện thoại Việt Nam hợp
 // lệ." — hai giọng khác hẳn nhau cho cùng một chuyện. Trang tự viết một câu và
 // giữ nguyên câu ấy.
 const INVALID_INPUT_PAGE_MESSAGE =
-  "Em chưa đọc được mã đặt chỗ hoặc liên hệ bạn vừa nhập ạ. Mời bạn nhập lại mã bắt đầu bằng NBJ, cùng số điện thoại hoặc email đã dùng lúc đặt.";
+  "Chưa đọc được mã đặt chỗ hoặc liên hệ bạn vừa nhập. Mời bạn nhập lại mã bắt đầu bằng NBJ, cùng số điện thoại hoặc email đã dùng lúc đặt.";
 const SERVER_INVALID_INPUT_MESSAGE =
   "Mời bạn nhập email hoặc số điện thoại Việt Nam.";
 

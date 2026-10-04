@@ -131,14 +131,14 @@ export function VisitorGroupLeaderExperience({ groupCode }: { groupCode: string 
         </p>
 
         {state.kind === "loading" ? (
-          <p className="mt-6 text-base leading-6 text-[#4a534d]">Đang lấy thông tin đoàn, mời bạn chờ em một chút…</p>
+          <p className="mt-6 text-base leading-6 text-[#4a534d]">Đang lấy thông tin đoàn, mời bạn chờ một chút…</p>
         ) : null}
 
         {state.kind === "not-found" ? (
           <div className="mt-6 rounded-2xl border border-[#e0b9a8] bg-[#fdf0ea] p-5" role="alert">
             <p className="font-bold text-[#8a3b22]">Em không tìm thấy đoàn nào mang mã này</p>
             <p className="mt-2 text-sm leading-6 text-[#6c4b1f]">
-              Mời bạn kiểm tra lại đường dẫn hoặc mã đoàn, hay hỏi lại người đã gửi mã cho mình ạ.
+              Mời bạn kiểm tra lại đường dẫn hoặc mã đoàn, hay hỏi lại người đã gửi mã cho mình.
             </p>
           </div>
         ) : null}
@@ -147,7 +147,7 @@ export function VisitorGroupLeaderExperience({ groupCode }: { groupCode: string 
           <div className="mt-6 rounded-2xl border border-[#e0b9a8] bg-[#fdf0ea] p-5" role="alert">
             <p className="font-bold text-[#8a3b22]">Kết nối đang trục trặc</p>
             <p className="mt-2 text-sm leading-6 text-[#6c4b1f]">
-              Em chưa lấy được thông tin đoàn lúc này. Mời bạn thử tải lại trang sau ít phút ạ.
+              Chưa lấy được thông tin đoàn lúc này. Mời bạn thử tải lại trang sau ít phút.
             </p>
           </div>
         ) : null}
@@ -189,7 +189,7 @@ function LeaderGroupView({
       : attendance.status === "complete"
         ? {
             big: 0,
-            caption: `người còn thiếu — cả đoàn đã qua cổng ${siteName(attendance.siteId)} đủ rồi ạ`,
+            caption: `người còn thiếu — cả đoàn đã qua cổng ${siteName(attendance.siteId)} đủ rồi`,
           }
         : {
             big: attendance.pendingCount,
@@ -228,10 +228,10 @@ function LeaderGroupView({
           <p className="font-bold text-[#6c4b1f]">
             Đã hơn {attendance.minutesSinceFirstScan} phút kể từ người đầu tiên qua cổng {siteName(attendance.siteId)}
             {" "}
-            mà đoàn vẫn còn {attendance.pendingCount} người chưa vào ạ.
+            mà đoàn vẫn còn {attendance.pendingCount} người chưa vào.
           </p>
           <p className="mt-2 text-sm leading-6 text-[#6c4b1f]">
-            Mời bạn kiểm tra lại xem có ai đang tới muộn hay đã lạc nhau ở đâu không ạ.
+            Mời bạn kiểm tra lại xem có ai đang tới muộn hay đã lạc nhau ở đâu không.
           </p>
         </div>
       ) : null}
@@ -265,7 +265,7 @@ function LeaderGroupView({
         <p className="mt-2 text-sm leading-6 text-[#27362f]">
           Ai bận không đi được thì cứ đưa mã của mình cho người đi thay, cổng vẫn cho vào bình thường.
           Cả đoàn dùng chung số chỗ đã đặt, nên có đổi người thì tổng số người vào cũng không vượt quá
-          số đã giữ ạ.
+          số đã giữ.
         </p>
       </div>
 

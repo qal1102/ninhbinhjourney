@@ -22,7 +22,7 @@ export function KhachThayGi({ hoSo, maKhach }: { hoSo: HoSoKhach | null; maKhach
   return (
     <section id="khach-thay-gi" data-testid="khach-thay-gi" className="mt-6 rounded-3xl border border-[#dfe4dc] bg-white p-5 sm:p-7">
       <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">Khách thấy gì</p>
-      <h2 className="mt-2 text-2xl font-black text-[#20342c]">Đứng ở chỗ khách mà xem</h2>
+      <h2 className="mt-2 text-2xl font-black text-[#20342c]">Khách thấy gì</h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7068]">
         Năm màn hình một khách gặp từ lúc quét mã tới lúc nhận quà. Bấm để mở đúng trang khách thấy, ở thẻ mới.
       </p>

@@ -103,7 +103,7 @@ export function MoonDial({
       ngay: tt.homNay,
       nhan: { vi: `Tối nay · ${ngay}.${thang}`, en: `Tonight · ${ngay}.${thang}` },
       loi: {
-        vi: "Hình trăng này tính theo đúng đêm nay trên sông Ngô Đồng, không phải ảnh chụp sẵn.",
+        vi: "Hình trăng theo đúng đêm nay trên sông Ngô Đồng.",
         en: "The moon over the Ngo Dong tonight — computed from the sky, not a stock photo.",
       },
     };

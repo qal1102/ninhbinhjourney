@@ -152,7 +152,7 @@ export function MarketingQrControlCenter({
     <div id="ma-qr" className="scroll-mt-24 space-y-6" data-testid="marketing-qr-control-center">
       <section className="rounded-3xl bg-[#173f34] p-6 text-white sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b9d5ca]">Kênh khách · mã QR đổi được đích</p>
-        <h2 className="font-display mt-3 text-4xl leading-tight sm:text-5xl">Một mã in, đổi được điểm đến</h2>
+        <h2 className="font-display mt-3 text-4xl leading-tight sm:text-5xl">Mã QR theo chiến dịch</h2>
         <p className="mt-4 max-w-3xl text-sm leading-6 text-[#d4e4de]">
           Biển đã in thì mã trên biển nằm đó mãi, nhưng nơi nó dẫn khách tới thì
           đổi lúc nào cũng được, không phải in lại. Mã chỉ dẫn về các trang của

@@ -44,9 +44,9 @@ export const TRIP_PASSPORT_COPY = {
     timesOnly: "Giờ ghi theo giờ Việt Nam",
     note: {
       member:
-        "Bản đồ chỉ sáng ở nơi có ghi nhận lượt vào bằng mã của bạn, nên chỗ nào bạn ghé mà không đi qua cổng thì không hiện ở đây. Ai cầm mã này cũng mở được trang này, như cầm một tấm vé ạ.",
+        "Bản đồ chỉ sáng ở nơi có ghi nhận lượt vào bằng mã của bạn, nên chỗ nào bạn ghé mà không đi qua cổng thì không hiện ở đây. Ai cầm mã này cũng mở được trang này, như cầm một tấm vé.",
       group:
-        "Bản đồ gộp lượt vào bằng mã riêng của từng người trong đoàn. Ai vào bằng vé chung của đoàn thì lượt ấy không hiện ở đây ạ.",
+        "Bản đồ gộp lượt vào bằng mã riêng của từng người trong đoàn. Ai vào bằng vé chung của đoàn thì lượt ấy không hiện ở đây.",
     },
     mapLabel: (lit: number, total: number) => `Bản đồ Ninh Bình: ${lit} trong ${total} nơi đã sáng`,
   },

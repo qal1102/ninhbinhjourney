@@ -57,7 +57,7 @@ function isMissingDatabaseFunction(error: unknown): boolean {
 
 function mapRepositoryError(error: unknown): VisitReviewRepositoryError {
   if (isMissingDatabaseFunction(error)) {
-    return new VisitReviewRepositoryError("Phần này sắp mở ạ.", "NOT_READY");
+    return new VisitReviewRepositoryError("Phần này sắp mở.", "NOT_READY");
   }
   const message =
     typeof error === "object" && error && "message" in error ? String(error.message) : "";

@@ -441,7 +441,7 @@ export function CustomerBookingCheckout({
       setQr(null);
       setConfirmation(null);
       paymentRequestId.current = crypto.randomUUID();
-      setMessage(t("Chỗ của bạn đã được giữ. Bạn có 15 phút để hoàn tất ạ.", "Your seats are held. You have 15 minutes to finish."));
+      setMessage(t("Chỗ của bạn đã được giữ. Bạn có 15 phút để hoàn tất.", "Your seats are held. You have 15 minutes to finish."));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t("Lúc này chưa giữ chỗ được, mời bạn thử lại.", "Could not hold seats right now. Please try again."));
     } finally {
@@ -454,7 +454,7 @@ export function CustomerBookingCheckout({
     // TC-22: chọn trả tiền tại điểm thì phải có liên hệ. Chặn ngay ở đây để
     // khách thấy lý do tại chỗ, thay vì bấm xong mới nhận một câu từ chối.
     if (contact.trim().length < 6) {
-      setMessage(t("Bạn để lại giúp em số điện thoại hoặc email trước đã ạ. Lỡ mất trang, bạn dùng chính số này để mở lại vé.", "Please leave a phone number or email first. If you lose this page, you use it to open your ticket again."));
+      setMessage(t("Bạn để lại số điện thoại hoặc email trước đã. Lỡ mất trang, bạn dùng chính số này để mở lại vé.", "Please leave a phone number or email first. If you lose this page, you use it to open your ticket again."));
       return;
     }
     if (!payAtSite) {
@@ -478,7 +478,7 @@ export function CustomerBookingCheckout({
       const payload = await responsePayload(response, lang) as ConfirmationResult;
       setConfirmation(payload);
       setContactSaved(contact.trim().length >= 6);
-      setMessage(t("Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào ạ.", "Seats held. Your ticket and QR code are below; at the gate, show the code, pay and go in."));
+      setMessage(t("Đã giữ chỗ. Vé và mã QR có ngay bên dưới; tới nơi bạn đưa mã cho nhân viên, trả tiền rồi vào.", "Seats held. Your ticket and QR code are below; at the gate, show the code, pay and go in."));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t("Lúc này chưa xác nhận được, mời bạn thử lại.", "Could not confirm right now. Please try again."));
     } finally {
@@ -541,7 +541,7 @@ export function CustomerBookingCheckout({
         setConfirmation(payload);
         setContactSaved(true);
         setQr(null);
-        setMessage(t("Đã nhận thanh toán qua mã QR. Vé của bạn ở ngay bên dưới ạ.", "Payment received by QR code. Your ticket is right below."));
+        setMessage(t("Đã nhận thanh toán qua mã QR. Vé của bạn ở ngay bên dưới.", "Payment received by QR code. Your ticket is right below."));
       } catch {
         // Mạng chập chờn thì lần sau hỏi lại, không làm phiền khách.
       }
@@ -793,14 +793,14 @@ export function CustomerBookingCheckout({
             {packageItem.fixedPartySize ? (
               <span className="mt-2 block text-xs font-normal text-[#6b786f]">
                 {t(
-                  `Bàn đã đặt sẵn cho ${packageItem.fixedPartySize} khách. Trẻ dưới 1m3 không mất vé, và tổng số chỗ vẫn giữ nguyên ạ.`,
+                  `Bàn đã đặt sẵn cho ${packageItem.fixedPartySize} khách. Trẻ dưới 1m3 không mất vé, và tổng số chỗ vẫn giữ nguyên.`,
                   `The table is set for ${packageItem.fixedPartySize} guests. Children under 1.3 m are free, and the total stays the same.`,
                 )}
               </span>
             ) : (
               <span className="mt-2 block text-xs font-normal text-[#6b786f]">
                 {t(
-                  `Trẻ dưới 1m3 không mất vé, nhưng vẫn được giữ một chỗ trên thuyền. Mỗi lượt đặt tối đa ${WEB_BOOKING_MAX_PARTY_SIZE} khách, vừa một xe lớn. Đoàn đông hơn, mời bạn gọi cho bên em để bên em xếp riêng.`,
+                  `Trẻ dưới 1m3 không mất vé, nhưng vẫn được giữ một chỗ trên thuyền. Mỗi lượt đặt tối đa ${WEB_BOOKING_MAX_PARTY_SIZE} khách, vừa một xe lớn. Đoàn đông hơn, mời bạn gọi cho chúng tôi để chúng tôi xếp riêng.`,
                   `Children under 1.3 m travel free but still get a seat on the boat. Up to ${WEB_BOOKING_MAX_PARTY_SIZE} guests per booking, one large coach. For bigger groups, please call us and we will arrange it.`,
                 )}
               </span>
@@ -942,7 +942,7 @@ export function CustomerBookingCheckout({
                   <>
                     {" "}
                     {t(
-                      "Lần này bạn không để lại số nào, nên trang tra cứu chưa có gì để đối chiếu — tấm ảnh chụp màn hình là bản lưu duy nhất của bạn ạ.",
+                      "Lần này bạn không để lại số nào, nên trang tra cứu chưa có gì để đối chiếu — tấm ảnh chụp màn hình là bản lưu duy nhất của bạn.",
                       "You did not leave a number this time, so ticket lookup has nothing to match — a screenshot is your only copy.",
                     )}
                   </>
@@ -951,7 +951,7 @@ export function CustomerBookingCheckout({
             </div>
 
             <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">{t("Vé của bạn", "Your tickets")}</p>
-            <p className="mt-1 text-sm leading-6 text-white/70">{t("Tới cổng, bạn đưa mã cho nhân viên quét là vào được ngay ạ.", "At the gate, show the code to be scanned and walk straight in.")}</p>
+            <p className="mt-1 text-sm leading-6 text-white/70">{t("Tới cổng, bạn đưa mã cho nhân viên quét là vào được ngay.", "At the gate, show the code to be scanned and walk straight in.")}</p>
             <ul className="mt-3 space-y-3">
               {Array.from(
                 confirmation.tickets.reduce((bySite, ticket) => {
@@ -1061,7 +1061,7 @@ export function CustomerBookingCheckout({
                     >
                       {t("trang theo dõi đoàn", "group tracker")}
                     </Link>
-                    {" "}{t("— trang tự đếm lại sau mỗi nửa phút ạ.", "— it recounts every half minute.")}
+                    {" "}{t("— trang tự đếm lại sau mỗi nửa phút.", "— it recounts every half minute.")}
                   </p>
                   <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                     {group.members.map((member) => {

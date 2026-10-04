@@ -84,7 +84,7 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     // Câu này hiện thẳng ra mắt khách trên /checkout, nên không được mang số
     // hiệu phiếu việc nội bộ ("T11a") — xem luật cấm chữ kỹ thuật lọt ra mặt
     // khách ở docs/reference/UI_UX_RULES.md.
-    ["CUSTOMER_CAPACITY_SOURCE_MISSING", "CAPACITY_SOURCE_MISSING", "Gói này chưa khai sức chứa cho khung giờ bán, nên bên em chưa mở giữ chỗ được ạ."],
+    ["CUSTOMER_CAPACITY_SOURCE_MISSING", "CAPACITY_SOURCE_MISSING", "Gói này chưa khai sức chứa cho khung giờ bán, nên chúng tôi chưa mở giữ chỗ được."],
     ["CUSTOMER_CAPACITY_UNAVAILABLE", "CAPACITY_UNAVAILABLE", "Khung giờ vừa hết chỗ cho số khách đã chọn."],
     ["CUSTOMER_BOOKING_SLOT_PAUSED", "SLOT_PAUSED", "Khung giờ đang tạm dừng nhận đặt chỗ."],
     ["CUSTOMER_BOOKING_SLOT_PAST", "SLOT_PAST", "Khung giờ này đã qua hoặc quá gần giờ bắt đầu."],
@@ -92,9 +92,9 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_BOOKING_PARTY_MIX_INVALID", "PARTY_MIX_INVALID", "Số người lớn cộng số trẻ em phải đúng bằng tổng số khách, và phải có ít nhất một người lớn."],
     // Lượt giữ quá 15 phút bị xoá hẳn (migration 090), nên với khách "không tìm
     // thấy lượt giữ" gần như luôn là "đã hết giờ": nói điều khách làm tiếp được.
-    ["CUSTOMER_BOOKING_HOLD_NOT_FOUND", "HOLD_EXPIRED", "Lượt giữ chỗ đã quá 15 phút nên chỗ đã được nhả ra. Mời bạn giữ lại một khung giờ ạ."],
-    ["CUSTOMER_BOOKING_HOLD_EXPIRED", "HOLD_EXPIRED", "Lượt giữ chỗ đã quá 15 phút nên chỗ đã được nhả ra. Mời bạn giữ lại một khung giờ ạ."],
-    ["CUSTOMER_QR_LAPSE_LIMIT", "QR_LAPSE_LIMIT", "Số này đã giữ chỗ ba lần trong tuần mà chưa thanh toán. Để công bằng với khách khác, mời bạn tới quầy vé tại điểm để đặt trực tiếp ạ."],
+    ["CUSTOMER_BOOKING_HOLD_NOT_FOUND", "HOLD_EXPIRED", "Lượt giữ chỗ đã quá 15 phút nên chỗ đã được nhả ra. Mời bạn giữ lại một khung giờ."],
+    ["CUSTOMER_BOOKING_HOLD_EXPIRED", "HOLD_EXPIRED", "Lượt giữ chỗ đã quá 15 phút nên chỗ đã được nhả ra. Mời bạn giữ lại một khung giờ."],
+    ["CUSTOMER_QR_LAPSE_LIMIT", "QR_LAPSE_LIMIT", "Số này đã giữ chỗ ba lần trong tuần mà chưa thanh toán. Để công bằng với khách khác, mời bạn tới quầy vé tại điểm để đặt trực tiếp."],
     ["CUSTOMER_BOOKING_OWNERSHIP_REQUIRED", "OWNERSHIP_REQUIRED", "Lượt giữ chỗ không thuộc phiên khách hiện tại."],
     ["CUSTOMER_BOOKING_ID_COLLISION", "ID_COLLISION", "Mã giữ chỗ đã được dùng cho một yêu cầu khác."],
     ["CUSTOMER_PAYMENT_ID_COLLISION", "ID_COLLISION", "Mã xác nhận đã được dùng cho một thanh toán mô phỏng khác."],
@@ -103,8 +103,8 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_BOOKING_RATE_LIMITED", "RATE_LIMITED", "Đã tạo quá nhiều lượt giữ chỗ trong một giờ."],
     ["CUSTOMER_PAYMENT_MODE_INVALID", "INPUT_INVALID", "Cách trả tiền gửi lên chưa hợp lệ."],
     ["CUSTOMER_PAYMENT_CONTACT_REQUIRED", "CONTACT_REQUIRED", "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc."],
-    ["CUSTOMER_PAYMENT_UNPAID_LIMIT", "UNPAID_LIMIT", "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp giúp em ạ."],
-    ["CUSTOMER_LOOKUP_INPUT_INVALID", "INPUT_INVALID", "Mã đặt chỗ hoặc liên hệ gõ chưa đúng khuôn ạ."],
+    ["CUSTOMER_PAYMENT_UNPAID_LIMIT", "UNPAID_LIMIT", "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp."],
+    ["CUSTOMER_LOOKUP_INPUT_INVALID", "INPUT_INVALID", "Mã đặt chỗ hoặc liên hệ gõ chưa đúng khuôn."],
   ];
   for (const [needle, code, safeMessage] of mappings) {
     if (message.includes(needle)) {
@@ -458,7 +458,7 @@ export async function lookupCustomerOrderTickets(input: {
     throw error instanceof CustomerIdentityRepositoryError
       ? new CustomerBookingRepositoryError(error.message, "CONFIGURATION_MISSING")
       : new CustomerBookingRepositoryError(
-          "Bạn nhập giúp em số điện thoại hoặc email đã dùng lúc đặt ạ.",
+          "Bạn nhập số điện thoại hoặc email đã dùng lúc đặt.",
           "INPUT_INVALID",
         );
   }

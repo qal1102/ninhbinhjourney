@@ -45,15 +45,15 @@ const COPY = {
     loading: "Đang mở bản đồ của bạn…",
     notFound: {
       title: "Em không tìm thấy mã này",
-      body: "Mời bạn kiểm tra lại đường dẫn, hoặc hỏi lại người đã gửi mã cho mình ạ.",
+      body: "Mời bạn kiểm tra lại đường dẫn, hoặc hỏi lại người đã gửi mã cho mình.",
     },
     notReady: {
       title: "Tấm bản đồ này sắp có",
-      body: "Chúng tôi đang mở dần phần này. Xong là những nơi bạn đã đi qua hiện ngay ở đây, còn việc vào cổng của bạn vẫn bình thường ạ.",
+      body: "Chúng tôi đang mở dần phần này. Xong là những nơi bạn đã đi qua hiện ngay ở đây, còn việc vào cổng của bạn vẫn bình thường.",
     },
     unavailable: {
       title: "Bản đồ chưa tải về kịp",
-      body: "Trang tự thử lại sau ít giây, bạn không cần làm gì thêm ạ.",
+      body: "Trang tự thử lại sau ít giây, bạn không cần làm gì thêm.",
     },
     passportHeading: "Những nơi bạn đã đi qua",
     nameHeading: "Ghi tên bạn vào chuyến đi này",
@@ -66,10 +66,10 @@ const COPY = {
     saving: "Đang lưu…",
     clear: "Xoá tên đã ghi",
     saved: (name: string) => `Dạ, đã ghi tên "${name}" vào chuyến đi này.`,
-    cleared: "Đã xoá tên khỏi mã này. Bạn vẫn vào cổng bình thường ạ.",
+    cleared: "Đã xoá tên khỏi mã này. Bạn vẫn vào cổng bình thường.",
     saveFailed: "Chưa lưu được, mời bạn thử lại.",
     codeLabel: "Mã của bạn",
-    transfer: "Bận không đi được thì cứ đưa mã này cho người đi thay bạn, cổng vẫn cho vào bình thường ạ.",
+    transfer: "Bận không đi được thì cứ đưa mã này cho người đi thay bạn, cổng vẫn cho vào bình thường.",
   },
   en: {
     kicker: "Ninh Bình Journey · Group guest",

@@ -165,7 +165,7 @@ export function CapacityWorkspace({
               Nhịp vận hành theo giờ · {site.shortName}
             </p>
             <h2 className="mt-2 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">
-              Biết điểm nghẽn trước khi phải dừng luồng
+              Ngưỡng sức chứa từng điểm
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-6 text-[#d4e5de]">
               Sức chứa được suy ra từ số phương tiện, số chỗ và thời gian một

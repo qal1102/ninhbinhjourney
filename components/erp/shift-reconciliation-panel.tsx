@@ -138,7 +138,7 @@ export function ShiftReconciliationPanel({
         Đối soát cuối ca · {site.shortName}
       </p>
       <h2 className="mt-2 text-2xl font-black text-[#20342c]">
-        Số khai lúc chốt ca so với số hệ thống đếm được
+        Đối soát cuối ca
       </h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7068]">
         Lượt quét ở cổng và khoản thu tại điểm được cộng lại theo đúng khung giờ của

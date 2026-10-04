@@ -404,10 +404,10 @@ export function SoDoiTacPanel({
       </p>
       <h2 className="font-display mt-2 text-3xl text-[#3d3325] sm:text-4xl">
         {so.length === 0
-          ? "Sổ còn trống"
+          ? "Chưa có nhãn hàng nào trong sổ"
           : phaiLam > 0
-            ? `${phaiLam} mối đang chờ mình gọi lại`
-            : "Không mối nào đang bị bỏ quên"}
+            ? `${phaiLam} nhãn hàng cần gọi lại`
+            : "Nhãn hàng nào cũng đã được gọi lại"}
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-[#6b6250]">
         Sổ đếm số ngày kể từ lần gần nhất bạn trao đổi với từng nhãn hàng. Mối nào

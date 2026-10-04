@@ -74,7 +74,7 @@ export function viPhamLuatToanNamSao(input: {
 export const MODERATION_COPY = {
   khongCoQuyen: "Vai của bạn không ẩn được đánh giá của khách.",
   hetHanMuc: (quota: number) =>
-    `Bạn đã dùng hết hạn mức ${quota} lời trong 30 ngày. Việc còn lại xin chuyển giám đốc ạ.`,
+    `Bạn đã dùng hết hạn mức ${quota} lời trong 30 ngày. Việc còn lại xin chuyển giám đốc.`,
   toanNamSao:
     "Ẩn lời này thì nơi ấy chỉ còn toàn 5 sao. Một bảng điểm toàn năm sao trông giả, nên hệ thống giữ lại lời này.",
   thieuLyDo: "Xin ghi rõ lý do ẩn, vì mỗi lượt ẩn đều được lưu lại tên người ẩn.",

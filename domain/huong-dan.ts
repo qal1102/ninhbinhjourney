@@ -52,7 +52,7 @@ export const VONG_KHACH: readonly BuocVong[] = [
       "Quét mã bằng điện thoại, hoặc bấm dòng \"Mở trang thanh toán trên máy này\", rồi bấm \"Xác nhận chuyển khoản\".",
     ],
     seThay:
-      "Trang đặt vé tự chuyển sang tấm vé mã WEB-…, đồng hồ giữ chỗ dừng hẳn. Tiền ở đây là giả lập, không ai mất đồng nào.",
+      "Trang đặt vé tự chuyển sang tấm vé mã WEB-…, đồng hồ giữ chỗ dừng hẳn. Tiền ở đây là giả lập.",
   },
   {
     id: "vong-don",

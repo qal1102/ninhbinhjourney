@@ -108,7 +108,7 @@ export function SopWorkspace({
               Quyết định mở cửa hằng ngày · {site.shortName}
             </p>
             <h2 className="mt-2 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">
-              An toàn chưa đạt thì chưa mở cửa
+              Kiểm tra an toàn trước giờ mở cửa
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-6 text-[#e5d9d1]">
               Quản lý cơ sở xác nhận từng mục. Giám đốc là người quyết định cuối;

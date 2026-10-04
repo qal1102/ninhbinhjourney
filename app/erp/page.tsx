@@ -147,17 +147,17 @@ export default async function ErpHomePage({ searchParams }: Props) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.17em] text-[#9a6328]">
-                Thử chức năng · {TONG_VIEC_TRA_CUU} chức năng điều hành · {CHUC_NANG_WEB.length} trên web khách
+                Dạo một vòng · {TONG_VIEC_TRA_CUU} việc trong điều hành · {CHUC_NANG_WEB.length} trang của khách
               </p>
               <h2 id="thu-chuc-nang" className="mt-1 text-xl font-black text-[#3f3524] sm:text-2xl">
-                Mọi chức năng, bấm vào là tới đúng chỗ để thử
+                Có gì mới, bấm vào là tới đúng chỗ
               </h2>
             </div>
             <Link
               href="/erp/huong-dan"
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-[#183f34] px-5 text-sm font-black text-white transition hover:bg-[#12332a]"
             >
-              Mở danh sách đầy đủ →
+              Xem hết →
             </Link>
           </div>
           {/* Điều hành và web khách để riêng hai cột, theo lời anh Đạt 04/10:
@@ -165,8 +165,8 @@ export default async function ErpHomePage({ searchParams }: Props) {
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             {(
               [
-                { loai: "erp", ten: "Hệ thống điều hành · phần mới", xem: "/erp/huong-dan?xem=erp" },
-                { loai: "web", ten: "Web khách · phần mới", xem: "/erp/huong-dan?xem=web" },
+                { loai: "erp", ten: "Điều hành · mới thêm", xem: "/erp/huong-dan?xem=erp" },
+                { loai: "web", ten: "Trang của khách · mới thêm", xem: "/erp/huong-dan?xem=web" },
               ] as const
             ).map((cot) => (
               <div key={cot.loai}>

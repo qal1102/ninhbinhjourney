@@ -8,10 +8,10 @@ import { expect, test } from "@playwright/test";
 
 test("EN theo khách từ Khám phá sang Gói và trang điểm đến, giữ nguyên source", async ({ page }) => {
   await page.goto("/explore?source=trang_an");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Chọn cách đi trước");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Ninh Bình hợp với cách bạn đi");
 
   await page.getByRole("group", { name: "Ngôn ngữ" }).getByRole("button", { name: "EN" }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Choose how you travel");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Ninh Binh, filtered to how you travel");
   expect(page.url()).toContain("source=trang_an");
   expect(page.url()).toContain("lang=en");
   // Máy chủ dựng `lang` ngay trên <main>, không đổi <html> sau khi trang hiện.
@@ -19,7 +19,7 @@ test("EN theo khách từ Khám phá sang Gói và trang điểm đến, giữ n
 
   // Cookie nhớ lựa chọn: trang sau không cần tham số vẫn là tiếng Anh.
   await page.goto("/packages");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Pick your pace through Ninh Binh");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Ninh Binh packages");
   await page.goto("/destination/trang-an");
   await expect(page.getByRole("heading", { name: "The story of this place" })).toBeVisible();
   await page.goto("/destination/cuc-phuong");
@@ -34,7 +34,7 @@ test("EN theo khách từ Khám phá sang Gói và trang điểm đến, giữ n
 
 test("trang đặt vé và tra cứu vé có bản tiếng Anh", async ({ page }) => {
   await page.goto("/checkout?package=heritage-day&lang=en");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("A seat held");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Book and hold your seats");
   await expect(page.getByText("Pick a day. We hold your seats for 15 minutes.")).toBeVisible();
   await page.goto("/tra-cuu-ve?lang=en");
   await expect(page.getByRole("heading", { name: "Open a ticket you booked" })).toBeVisible();

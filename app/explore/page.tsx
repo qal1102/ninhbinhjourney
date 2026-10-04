@@ -68,9 +68,7 @@ export default async function ExplorePage({
         </p>
         <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_0.7fr] lg:items-end">
           <h1 className="font-display text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">
-            {ch(lang, "Chọn cách đi trước,", "Choose how you travel,")}
-            <br />
-            {ch(lang, "rồi mới chọn điểm.", "then where to go.")}
+            {ch(lang, "Ninh Bình hợp với cách bạn đi", "Ninh Binh, filtered to how you travel")}
           </h1>
           <p className="max-w-xl text-lg leading-8 text-[#59654b]">
             {ch(

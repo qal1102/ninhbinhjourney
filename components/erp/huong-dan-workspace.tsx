@@ -17,7 +17,7 @@ import type { ErpStaffDirectoryEntry } from "@/lib/erp/staff-directory";
 import { DauDaMo, NutXoaDauDaMo } from "./huong-dan-da-mo";
 
 /**
- * Màn Thử chức năng (`/erp/huong-dan`). Ba thẻ tách hẳn nhau, theo lời anh
+ * Màn Dạo một vòng (`/erp/huong-dan`, trước 04/10/2026 tên "Thử chức năng"). Ba thẻ tách hẳn nhau, theo lời anh
  * Đạt 04/10/2026 ("web để riêng, ERP để riêng, không trộn lẫn"):
  *
  * - **Hệ thống điều hành**: mọi việc trong ERP, chia nhóm. Bấm là tới đúng
@@ -159,7 +159,7 @@ function LocMoi({ the, chiMoi, soMoi }: { the: TheThu; chiMoi: boolean; soMoi: n
         chiMoi ? "bg-[#d58c35] text-white" : "border border-[#e0b979] bg-[#fff8eb] text-[#7a5520] hover:border-[#d58c35]"
       }`}
     >
-      {chiMoi ? `Đang xem ${soMoi} phần mới · bỏ lọc` : `Chỉ xem phần mới · ${soMoi}`}
+      {chiMoi ? `Đang xem ${soMoi} mục mới · xem hết` : `Chỉ xem mục mới · ${soMoi}`}
     </Link>
   );
 }
@@ -173,11 +173,11 @@ function TheErp({ chiMoi, ...props }: Pick<Props, "targets" | "quyen" | "chuyenV
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 id="tieu-de-erp" className="text-2xl font-black text-[#20342c]">
-            Hệ thống điều hành · {TONG_VIEC_TRA_CUU} chức năng
+            Điều hành · {TONG_VIEC_TRA_CUU} việc
           </h2>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-[#5f7068]">
-            Việc của giám đốc thì bấm là tới, chỗ cần bấm được khoanh viền cam. Việc của vai khác thì bấm &ldquo;Làm thử
-            như…&rdquo;: hệ thống chuyển sang một tài khoản đúng vai ở Tràng An, thanh trên cùng luôn có nút quay về giám đốc.
+            Việc của nhân viên, quản lý hay kế toán thì bấm &ldquo;Làm thử như…&rdquo; để vào bằng tài khoản vai ấy ở Tràng An.
+            Thanh trên cùng luôn có nút quay về giám đốc.
           </p>
         </div>
         <LocMoi the="erp" chiMoi={chiMoi} soMoi={SO_MOI_ERP} />
@@ -220,11 +220,10 @@ function TheWeb({ chiMoi }: { chiMoi: boolean }) {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 id="tieu-de-web" className="text-2xl font-black text-[#20342c]">
-            Web khách · {TONG_WEB} chức năng
+            Trang của khách · {TONG_WEB}
           </h2>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-[#5f7068]">
-            Trang khách mở ở thẻ mới, danh sách này vẫn nằm nguyên; không cần đăng nhập. Vài mục là phần khách thấy nhưng xem
-            từ trong hệ thống, ví dụ hộ chiếu của một khách đã đặt.
+            Mỗi trang mở ở một thẻ mới, khách không cần đăng nhập.
           </p>
         </div>
         <LocMoi the="web" chiMoi={chiMoi} soMoi={SO_MOI_WEB} />
@@ -265,9 +264,8 @@ function TheVong() {
             Một vị khách, từ lúc đặt vé tới trang đầu giám đốc
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7068]">
-            Bảy bước, chừng mười phút. Vé trình diễn là gói &ldquo;Nhịp chậm Ninh Bình&rdquo;, chuyến Tràng An cuối lúc 16:00,
-            nên đi trọn vòng được tới khoảng 15:55. Muộn hơn thì đặt cho ngày mai; tới bước 3 máy sẽ báo vé không dùng cho hôm
-            nay.
+            Bảy bước, chừng mười phút, dùng gói &ldquo;Nhịp chậm Ninh Bình&rdquo;. Chuyến Tràng An cuối lúc 16:00, nên sau 15:55
+            thì đặt cho ngày mai; tới bước 3 máy sẽ báo vé chưa tới ngày dùng.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -325,22 +323,22 @@ function TheVong() {
 
 export function HuongDanWorkspace({ the, chiMoi, ...props }: Props) {
   const cacThe: { id: TheThu; ten: string; phu: string }[] = [
-    { id: "erp", ten: `Hệ thống điều hành · ${TONG_VIEC_TRA_CUU}`, phu: "Bấm là tới đúng màn, chỗ cần bấm được khoanh" },
-    { id: "web", ten: `Web khách · ${TONG_WEB}`, phu: "Mọi thứ khách thấy, mở ở thẻ mới" },
-    { id: "vong", ten: `Trình diễn · ${VONG_KHACH.length} bước`, phu: "Một vị khách từ đặt vé tới trang đầu" },
+    { id: "erp", ten: `Điều hành · ${TONG_VIEC_TRA_CUU} việc`, phu: "Việc của giám đốc và từng vai" },
+    { id: "web", ten: `Trang của khách · ${TONG_WEB}`, phu: "Khách thấy gì, mở ở thẻ mới" },
+    { id: "vong", ten: `Đi cùng một vị khách · ${VONG_KHACH.length} bước`, phu: "Từ lúc đặt vé tới trang đầu giám đốc" },
   ];
   return (
     <div className="space-y-6" data-testid="huong-dan">
       <header className="rounded-3xl bg-[#173f34] p-6 text-white sm:p-8">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#e7c78d]">Thử chức năng</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#e7c78d]">Dạo một vòng</p>
         <h1 className="mt-2 max-w-3xl text-3xl font-black leading-tight sm:text-4xl">
-          Mọi chức năng, bấm vào là tới đúng chỗ để thử
+          Dạo một vòng hệ thống
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-white/75">
-          Hệ thống điều hành và web khách để riêng hai nơi. Mọi thao tác chạy trên dữ liệu thật như ngày thường: bán thử
-          một vé là có một phiếu thật trong sổ.
+          Bấm vào việc nào là tới đúng màn ấy, chỗ cần bấm có viền cam. Mọi thứ chạy trên dữ liệu thật, nên bán thử một vé là
+          có một phiếu thu thật.
         </p>
-        <nav aria-label="Chọn phần muốn thử" className="mt-6 grid gap-3 sm:grid-cols-3">
+        <nav aria-label="Chọn phần muốn xem" className="mt-6 grid gap-3 sm:grid-cols-3">
           {cacThe.map((t) => {
             const dangChon = t.id === the;
             return (

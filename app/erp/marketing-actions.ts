@@ -134,7 +134,7 @@ export async function createMarketingQrSourceAction(
     const config = await listMarketingQrConfig();
     const campaign = config.campaigns.find((item) => item.id === campaignId);
     if (!campaign) {
-      return { status: "error", message: "Không tìm thấy chiến dịch này. Bạn tải lại trang rồi thử lại giúp em." };
+      return { status: "error", message: "Không tìm thấy chiến dịch này. Bạn tải lại trang rồi thử lại." };
     }
     const placementId = MarketingCodeSchema.parse(
       generateCode(placementLabel, config.sources.map((source) => source.placementId), MARKETING_CODE_SHAPE),

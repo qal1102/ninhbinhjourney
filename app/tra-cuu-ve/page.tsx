@@ -35,7 +35,7 @@ export default async function TicketLookupPage({
           <p className="mt-4 leading-7 text-[#59654b]">
             {ch(
               lang,
-              "Đặt chỗ trực tuyến đang tắt trên bản đang chạy, nên chưa có tấm vé nào để tra cứu ạ. Mời bạn xem các gói hành trình, hoặc gọi tới quầy để đội ngũ mở vé giúp bạn.",
+              "Đặt chỗ trực tuyến đang tắt trên bản đang chạy, nên chưa có tấm vé nào để tra cứu. Mời bạn xem các gói hành trình, hoặc gọi tới quầy để đội ngũ mở vé giúp bạn.",
               "Online booking is off in this version, so there are no tickets to look up. See the packages, or call the desk and the team will open your ticket.",
             )}
           </p>

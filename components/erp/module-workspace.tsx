@@ -194,9 +194,9 @@ function SiteFinanceSource({
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b9d5ca]">
           Nguồn doanh thu · {site.shortName}
         </p>
-        <h1 className="mt-2 text-3xl font-black sm:text-5xl">
+        <h2 className="mt-2 text-3xl font-black sm:text-5xl">
           Số liệu từ các ca đã gửi
-        </h1>
+        </h2>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-[#d4e4de]">
           Mỗi dòng giữ nguyên mã ca, người gửi, trạng thái duyệt và chênh lệch
           bàn giao.

@@ -80,13 +80,13 @@ export default async function PlanPage({
           {ch(lang, "Lập hành trình", "Plan my day")}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-5xl leading-[0.96] text-[#183f34] sm:text-7xl">
-          {ch(lang, "Một lịch trình biết giới hạn của nó.", "A plan that knows its limits.")}
+          {ch(lang, "Lập lịch trình một ngày", "Plan a day in Ninh Binh")}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
           {ch(
             lang,
-            "Kể về ngày bạn muốn — đi với ai, thích gì, đi bộ được bao nhiêu. Lịch trình dựng ra sẽ tôn trọng giờ mở cửa và sức chân của bạn, và không có gì được lưu khi bạn chưa gật đầu.",
-            "Tell us about the day you want — who comes along, what you like, how far you can walk. The plan respects opening hours and your legs, and nothing is saved until you say yes.",
+            "Kể ngày bạn muốn đi: đi với ai, thích gì, đi bộ được bao nhiêu. Lịch xếp theo giờ mở cửa từng nơi và sức chân của cả nhóm.",
+            "Tell us about your day: who comes along, what you like, how far you can walk. The plan follows each place's opening hours and the group's pace.",
           )}
         </p>
         <div className="mt-10">

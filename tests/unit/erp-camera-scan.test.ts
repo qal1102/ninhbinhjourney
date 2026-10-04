@@ -91,7 +91,7 @@ describe("describeCameraFailure", () => {
 
   it("lỗi lạ vẫn có một câu tử tế, không để màn hình im lặng", () => {
     for (const error of [new Error("lạ"), "hỏng", null, undefined, {}]) {
-      expect(describeCameraFailure(error)).toBe("Chưa mở được camera. Mời bạn gõ mã vào ô bên dưới ạ.");
+      expect(describeCameraFailure(error)).toBe("Chưa mở được camera. Mời bạn gõ mã vào ô bên dưới.");
     }
   });
 

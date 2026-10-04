@@ -32,7 +32,7 @@ function createAdminClient(): SupabaseClient | null {
 function cauTuChoi(error: unknown): string {
   return (
     findRpcBusinessMessage(error) ??
-    "Kho đánh giá tạm thời chưa xử lý được yêu cầu. Xin thử lại giúp em một lượt ạ."
+    "Kho đánh giá tạm thời chưa xử lý được yêu cầu. Xin thử lại."
   );
 }
 

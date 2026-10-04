@@ -453,7 +453,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   REVIEW_RATING_INVALID:
     "Số sao phải từ 1 tới 5.",
   REVIEW_COMMENT_TOO_LONG:
-    "Lời kể dài quá mức cho phép, xin rút ngắn lại giúp em.",
+    "Lời kể dài quá mức cho phép, xin rút ngắn lại.",
   REVIEW_MEMBER_NOT_FOUND:
     "Không tìm thấy mã khách này trong đoàn nào.",
   REVIEW_KHONG_CO_DAU_CHAN:
@@ -515,11 +515,11 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CUSTOMER_PAYMENT_CONTACT_REQUIRED:
     "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc.",
   CUSTOMER_PAYMENT_CONTACT_INVALID:
-    "Số điện thoại hoặc email bạn để lại chưa đúng dạng. Bạn xem lại giúp em ạ.",
+    "Số điện thoại hoặc email bạn để lại chưa đúng dạng. Bạn xem lại.",
   CUSTOMER_PAYMENT_UNPAID_LIMIT:
-    "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp giúp em ạ.",
+    "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp.",
   CUSTOMER_QR_LAPSE_LIMIT:
-    "Số này đã giữ chỗ ba lần trong tuần mà chưa thanh toán. Để công bằng với khách khác, mời bạn tới quầy vé tại điểm để đặt trực tiếp ạ.",
+    "Số này đã giữ chỗ ba lần trong tuần mà chưa thanh toán. Để công bằng với khách khác, mời bạn tới quầy vé tại điểm để đặt trực tiếp.",
   ERP_DEMO_HISTORY_DAYS_INVALID:
     "Số ngày lịch sử mẫu phải từ 1 tới 90 ngày.",
   HANG_CHO_KHONG_CO: "Nơi này chưa mở hàng chờ ảo.",

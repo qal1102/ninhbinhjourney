@@ -168,7 +168,7 @@ export function LuuAnhVe({
       a.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch {
-      setLoi(t("Máy chưa lưu được ảnh. Bạn chụp màn hình phần vé giúp em ạ.", "Could not save the image. Please take a screenshot of the ticket."));
+      setLoi(t("Máy chưa lưu được ảnh. Bạn chụp màn hình phần vé.", "Could not save the image. Please take a screenshot of the ticket."));
     } finally {
       setDangLam(false);
     }
@@ -184,7 +184,7 @@ export function LuuAnhVe({
     } catch (error) {
       // Khách tự bấm huỷ bảng chia sẻ thì không phải lỗi.
       if (!(error instanceof DOMException && error.name === "AbortError")) {
-        setLoi(t("Chưa gửi được ảnh. Bạn bấm \"Lưu ảnh vé\" rồi gửi từ thư viện ảnh giúp em ạ.", "Could not share the image. Save it first, then send it from your photos."));
+        setLoi(t("Chưa gửi được ảnh. Bạn bấm \"Lưu ảnh vé\" rồi gửi từ thư viện ảnh.", "Could not share the image. Save it first, then send it from your photos."));
       }
     } finally {
       setDangLam(false);

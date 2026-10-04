@@ -97,7 +97,7 @@ test.describe("Marketing: sổ liên hệ nhãn hàng đối tác", () => {
       const phaiLam = Number((await so.getAttribute("data-phai-lam")) ?? "0");
       expect(phaiLam).toBeGreaterThanOrEqual(1);
       await expect(
-        so.getByRole("heading", { name: /mối đang chờ mình gọi lại/ }),
+        so.getByRole("heading", { name: /nhãn hàng cần gọi lại/ }),
       ).toBeVisible();
     } finally {
       await go(page, ten);

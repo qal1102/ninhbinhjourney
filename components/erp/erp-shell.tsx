@@ -129,7 +129,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 data-testid="nut-thu-chuc-nang"
                 className="hidden min-h-10 items-center gap-2 whitespace-nowrap rounded-xl border border-[#e0b979] bg-[#fff8eb] px-4 text-sm font-bold text-[#7a5520] transition hover:border-[#d58c35] lg:inline-flex"
               >
-                Thử chức năng
+                Dạo một vòng
                 <span className="hidden rounded-full bg-[#d58c35] px-2 py-0.5 text-xs font-black text-white xl:inline">
                   {CHUC_NANG_MOI.length} mới
                 </span>

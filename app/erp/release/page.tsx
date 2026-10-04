@@ -20,7 +20,7 @@ export default async function ErpReleaseReadinessPage() {
       <section className="space-y-6" data-testid="customer-release-readiness">
         <div className={`rounded-3xl border p-6 sm:p-8 ${report.safeForCanary ? "border-[#9fc4b5] bg-[#eef7f2]" : "border-[#e1c49a] bg-[#fff8ea]"}`}>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#6c755f]">Kiểm tra trước khi bật dữ liệu khách · chỉ xem</p>
-          <h1 className="mt-3 text-4xl font-black text-[#263c33] sm:text-5xl">Sẵn sàng phát hành dữ liệu khách hàng</h1>
+          <h1 className="mt-3 text-4xl font-black text-[#263c33] sm:text-5xl">Tình trạng kỹ thuật phần dữ liệu khách</h1>
           <p className="mt-4 max-w-4xl text-sm leading-6 text-[#5f6e67]">Màn hình này chỉ để xem, không thay đổi gì trong hệ thống. Nó kiểm tra cấu hình, kho dữ liệu và thứ tự bật từng phần trước khi mở thử cho một nhóm khách nhỏ.</p>
           <div className={`mt-5 inline-flex rounded-full px-4 py-2 text-sm font-black ${report.safeForCanary ? "bg-[#27664f] text-white" : "bg-[#8b5428] text-white"}`} data-testid="release-verdict">
             {report.safeForCanary ? "ĐỦ ĐIỀU KIỆN ĐỂ MỞ THỬ" : "CHƯA BẬT CHO KHÁCH THẬT"}

@@ -138,7 +138,7 @@ export function ReportExportBar({ report, className = "" }: { report: ErpReport;
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
       setMessage("");
     } catch {
-      setMessage("Chưa tạo được tệp Excel. Mời bạn bấm thử lại ạ.");
+      setMessage("Chưa tạo được tệp Excel. Mời bạn bấm thử lại.");
     }
   }
 
@@ -161,7 +161,7 @@ export function ReportExportBar({ report, className = "" }: { report: ErpReport;
       setMessage("");
     } catch {
       finish();
-      setMessage("Trình duyệt này chưa mở được hộp thoại in. Mời bạn thử lại trên máy tính ạ.");
+      setMessage("Trình duyệt này chưa mở được hộp thoại in. Mời bạn thử lại trên máy tính.");
     }
   }
 

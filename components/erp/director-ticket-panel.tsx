@@ -111,9 +111,8 @@ export function DirectorTicketPanel({
         </div>
         {theoLuot ? (
           <p className="text-xs text-[#7c8882]">
-            Đếm từ vé đã phát, không phải số người trực tự khai lúc chốt ca. Tấm
-            vé cho bao nhiêu người vào thì cộng bấy nhiêu lượt khách, vé đoàn
-            cũng thế. Vé đã huỷ không tính.
+            Đếm theo vé đã phát: vé cho mấy người vào thì cộng mấy lượt, vé đã
+            huỷ không tính.
           </p>
         ) : (
           /* Kho chưa có hàm cộng lượt (migration 202609170075 chưa áp): lệnh
@@ -121,9 +120,8 @@ export function DirectorTicketPanel({
              tấm. Nói thẳng ra để không ai đọc nó thành số khách — lượt kiểm
              tay 12/09/2026 đã đọc nhầm đúng như vậy. */
           <p className="text-xs text-[#7c8882]">
-            Đếm tấm vé đã phát, không phải số người trực tự khai lúc chốt ca. Một
-            vé đoàn tính một tấm dù cho nhiều người vào; số lượt khách xem ở màn
-            hình Vé của từng cơ sở.
+            Đếm theo tấm vé đã phát; vé đoàn tính một tấm. Số lượt khách xem ở
+            màn Vé của từng cơ sở.
           </p>
         )}
       </div>
@@ -278,9 +276,8 @@ export function DirectorTicketPanel({
           {coMau ? (
             <p className="mt-4 rounded-xl border border-[#e6d6b4] bg-[#fdf8ec] p-4 text-xs leading-5 text-[#6c5a34]">
               Trong 30 ngày có{" "}
-              <strong>{overview.demoHistoryEntries30d.toLocaleString("vi-VN")} lượt khách thuộc lịch sử mẫu</strong>{" "}
-              nạp để trình diễn: vé quầy, đơn web trả bằng QR và lượt qua cổng ở bốn cơ sở. Chúng được cộng vào
-              các con số trên. Việc làm thật của nhân viên vẫn ghi như thường và cộng chung vào đây.
+              <strong>{overview.demoHistoryEntries30d.toLocaleString("vi-VN")} lượt khách là dữ liệu mẫu</strong>{" "}
+              (vé quầy, đơn web, lượt qua cổng) để màn hình có số; vé bán thật cộng chung vào đây.
             </p>
           ) : null}
 
@@ -289,12 +286,11 @@ export function DirectorTicketPanel({
               sự vênh ấy làm người ta nghi màn hình hỏng. */}
           {overview.demoSeedTickets30d > 0 ? (
             <p className="mt-4 rounded-xl border border-[#e6d6b4] bg-[#fdf8ec] p-4 text-xs leading-5 text-[#6c5a34]">
-              Kho vé còn{" "}
+              Có{" "}
               <strong>
-                {overview.demoSeedTickets30d.toLocaleString("vi-VN")} tấm vé mẫu
+                {overview.demoSeedTickets30d.toLocaleString("vi-VN")} tấm vé tập
               </strong>{" "}
-              làm sẵn từ lúc dựng hệ thống để nhân viên tập quét ở cổng. Chúng không
-              được cộng vào con số nào ở trên, kể cả bảng khách đến từ đâu.
+              để nhân viên tập quét ở cổng; các số trên không tính chúng.
             </p>
           ) : null}
         </div>

@@ -16,7 +16,7 @@ async function login(page: Page, username: string, password: string) {
 
 async function expectUnapprovedSopLibrary(page: Page) {
   await expect(
-    page.getByRole("heading", { name: "An toàn chưa đạt thì chưa mở cửa" }),
+    page.getByRole("heading", { name: "Kiểm tra an toàn trước giờ mở cửa" }),
   ).toBeVisible({ timeout: 25_000 });
   await expect(
     page.getByText(

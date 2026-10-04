@@ -16,7 +16,7 @@ const TRANG_AN_FORMULA = "600 phương tiện × 4 chỗ × 60 ÷ 180 phút = 80
 async function expectCapacityWorkspace(page: Page, formula: string) {
   await expect(
     page.getByRole("heading", {
-      name: "Biết điểm nghẽn trước khi phải dừng luồng",
+      name: "Ngưỡng sức chứa từng điểm",
     }),
   ).toBeVisible({ timeout: 25_000 });
   await expect(page.getByText("nguồn: ước lượng")).toBeVisible();

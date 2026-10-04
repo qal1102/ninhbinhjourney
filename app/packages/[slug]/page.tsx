@@ -92,8 +92,8 @@ export default async function PackageDetailPage({
               {chu.editorialDescription ??
                 ch(
                   lang,
-                  `Dành cho ${chu.audience.toLocaleLowerCase("vi-VN")}. Giá và lịch là minh hoạ, và được tính lại một lần nữa trước khi bạn xác nhận.`,
-                  `For ${chu.audience.toLowerCase()}. Prices and times are samples, and are worked out again before you confirm.`,
+                  `Hợp với: ${chu.audience}. Giá là giá minh hoạ.`,
+                  `Best for: ${chu.audience}. Prices are samples.`,
                 )}
             </p>
             <div className="mt-9 grid gap-4 sm:grid-cols-2">

@@ -134,8 +134,8 @@ const copy = {
      * xuong khoi #packages ngay tren trang, va noi dung doi theo
      * `bookingEnabled` de khong hua giu cho khi chua bat that.
      */
-    heroPackagesCue: "Explore five ready-made journeys",
-    heroPackagesCuePlain: "Explore five ready-made journeys",
+    heroPackagesCue: "See the ready-made packages",
+    heroPackagesCuePlain: "See the ready-made packages",
     /*
      * Dong gio thuc tai Ninh Binh. Moi khung gio mot chi tiet CHI NINH
      * BINH moi noi duoc -- dat phep thu o UI_UX_RULES.md#voice-rules:
@@ -164,10 +164,10 @@ const copy = {
      * THANG tu content/packages.ts, khong bia them o day.
      */
     packagesLabel: "Ready-made packages",
-    packagesTitle: "Five journeys, with the route and price mapped out.",
+    packagesTitle: "Ready-made packages, with times and prices set out.",
     packagesIntro:
       "Begin at Tràng An before the boats gather, or keep Tam Cốc for the late light. Each journey already has its timing, entry points and a clear way to reserve.",
-    packagesBookingNote: "Choose a date to continue your reservation. No payment will be collected.",
+    packagesBookingNote: "Pick a date to hold your seats, then pay by QR code.",
     packagesBookingNotePlain: "The routes and prices are ready to browse; online reservation is not yet open.",
     packagesCta: "View this package",
     packagesViewAll: "See all packages",
@@ -308,8 +308,8 @@ const copy = {
     footerLookup: "Đã đặt chỗ rồi? Mở lại vé của bạn",
     begin: "Lập hành trình",
     exploreMap: "Khám phá bản đồ",
-    heroPackagesCue: "Xem năm hành trình đã chuẩn bị sẵn",
-    heroPackagesCuePlain: "Xem năm hành trình đã chuẩn bị sẵn",
+    heroPackagesCue: "Xem các gói đi sẵn",
+    heroPackagesCuePlain: "Xem các gói đi sẵn",
     hourLead: "Ở Ninh Bình bây giờ",
     hourPhrases: {
       dawn: "sương chưa tan khỏi mặt sông",
@@ -325,10 +325,10 @@ const copy = {
       "Mỗi tuyến đã xếp sẵn thứ tự trong ngày: sáng đi thuyền, trưa lên chùa, tối về phố đèn lồng. Kéo sang ngang để xem, tuyến nào hợp thì chọn.",
     viewRoute: "Xem tuyến",
     packagesLabel: "Gói tham quan",
-    packagesTitle: "Năm hành trình đã có tuyến đi và mức giá rõ ràng.",
+    packagesTitle: "Các gói đi sẵn, có giờ đi và giá rõ ràng.",
     packagesIntro:
       "Có gói đi Tràng An từ sớm trước khi đông thuyền, có gói để Tam Cốc cho buổi chiều nắng đẹp. Gói nào cũng ghi rõ giờ đi, điểm vào và cách giữ chỗ.",
-    packagesBookingNote: "Chọn ngày để tiếp tục giữ chỗ. Website không thu tiền.",
+    packagesBookingNote: "Chọn ngày là giữ được chỗ, trả bằng mã QR.",
     packagesBookingNotePlain: "Bạn xem được tuyến đi và giá; đặt trên mạng thì chưa mở.",
     packagesCta: "Xem gói này",
     packagesViewAll: "Xem tất cả các gói",
@@ -379,7 +379,7 @@ const copy = {
     zigzagCtaPrimary: "Lập hành trình cùng chúng tôi",
     zigzagCtaSecondary: "Xem các gói có sẵn",
     zigzagCtaOffer:
-      "Chọn ngày rồi giữ chỗ ngay trên trang. Thanh toán ở đây là mô phỏng, không thu tiền thật, nhưng chỗ thì giữ thật.",
+      "Chọn ngày rồi giữ chỗ ngay trên trang, trả bằng mã QR là có vé.",
     zigzagCtaOfferPlain:
       "Bạn cứ nói mình muốn đi kiểu gì; chúng tôi dựng lịch trình từ đó.",
     companionLabel: "Bộ lập tuyến hành trình",
@@ -696,8 +696,8 @@ const routeCollections = [
       vi: "Vườn quốc gia đầu tiên của Việt Nam, và chưa tới ba trăm con voọc còn lại",
     },
     body: {
-      en: "Cúc Phương was declared in 1962, before Vietnam had a second national park to compare it with. Vân Long is the only wetland reserve in the country on the IUCN Green List, and most of the world's remaining Delacour's langurs live on those cliffs. At the bear sanctuary the order reverses: the animals were here first, and visitors keep to their side.",
-      vi: "Cúc Phương được lập năm 1962, khi Việt Nam còn chưa có vườn quốc gia thứ hai để mà so. Vân Long là khu đất ngập nước duy nhất của cả nước có tên trong Danh sách Xanh IUCN, và phần lớn số voọc mông trắng còn lại của thế giới sống trên đúng những vách núi ấy. Tới khu bảo tồn gấu thì thứ tự đảo lại: con vật ở đây trước, khách giữ phần mình.",
+      en: "Cúc Phương, declared in 1962, was Vietnam's first national park. Vân Long is the only wetland reserve in the country on the IUCN Green List, and most of the world's remaining Delacour's langurs live on those cliffs. The bear sanctuary cares for bears rescued from bile farms; visitors keep to the walkways so the bears can rest.",
+      vi: "Cúc Phương lập năm 1962, là vườn quốc gia đầu tiên của Việt Nam. Vân Long là khu đất ngập nước duy nhất của cả nước có tên trong Danh sách Xanh IUCN, và phần lớn số voọc mông trắng còn lại của thế giới sống trên đúng những vách núi ấy. Khu bảo tồn gấu chăm những con gấu được cứu khỏi trại nuôi lấy mật; khách đi theo lối riêng để gấu được yên.",
     },
     stops: ["cuc_phuong", "van_long", "bear_sanctuary"] as DestinationId[],
   },

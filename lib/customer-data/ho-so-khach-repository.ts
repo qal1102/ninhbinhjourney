@@ -161,7 +161,7 @@ export async function hoSoTheoLienHe(input: { contact: string; orderCode: string
     .maybeSingle();
   if (error) throw loiKho();
   const khongThay = new HoSoKhachError(
-    "Chưa tìm thấy hồ sơ khớp mã đặt chỗ và số này. Bạn xem lại giúp em ạ.",
+    "Chưa tìm thấy hồ sơ khớp mã đặt chỗ và số này. Bạn xem lại.",
     "NOT_FOUND",
   );
   if (!data) throw khongThay;

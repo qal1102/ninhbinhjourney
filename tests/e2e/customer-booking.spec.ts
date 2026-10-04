@@ -155,7 +155,7 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     });
 
     await page.goto("/checkout?package=heritage-day");
-    await expect(page.getByRole("heading", { name: /Một chỗ đã giữ/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Đặt vé và giữ chỗ/i })).toBeVisible();
     await expect(page.getByText(/Giữ chỗ 15 phút, quét mã QR là xong/i)).toBeVisible();
     // Lời hứa không đổi và là lời hứa quan trọng nhất trên trang này: không
     // bao giờ hỏi số thẻ hay tài khoản ngân hàng. Ô liên hệ thì có, và cố ý

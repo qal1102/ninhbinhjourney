@@ -159,7 +159,7 @@ export function KioskDiem({
 
       {man === "dau" ? (
         <section className="mt-8 flex-1">
-          <h1 className="font-display text-5xl leading-tight text-[#183f34] sm:text-6xl">{t("Xin chào! Bạn cần gì ạ?", "Hello! How can we help?")}</h1>
+          <h1 className="font-display text-5xl leading-tight text-[#183f34] sm:text-6xl">{t("Xin chào! Bạn cần gì?", "Hello! How can we help?")}</h1>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <button type="button" onClick={() => setMan("dat-ve")} className={`${oLon} bg-[#183f34] text-white`}>
               <span className="text-3xl font-extrabold">{t("Đặt vé", "Book tickets")}</span>

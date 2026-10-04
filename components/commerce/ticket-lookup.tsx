@@ -52,22 +52,22 @@ type LookupResponse =
  */
 const LOOKUP_ERROR_MESSAGE: Record<string, { vi: string; en: string }> = {
   CUSTOMER_LOOKUP_CODE_MALFORMED: {
-    vi: "Mã đặt chỗ có dạng NBJ- rồi mười hai ký tự, bạn xem lại giúp em ạ.",
+    vi: "Mã đặt chỗ có dạng NBJ- và mười hai ký tự. Mời bạn xem lại.",
     en: "A booking code looks like NBJ- followed by twelve characters. Please check it.",
   },
   CUSTOMER_LOOKUP_INPUT_INVALID: {
-    vi: "Em chưa đọc được mã đặt chỗ hoặc liên hệ bạn vừa nhập ạ. Mời bạn nhập lại mã bắt đầu bằng NBJ, cùng số điện thoại hoặc email đã dùng lúc đặt.",
+    vi: "Chưa đọc được mã đặt chỗ hoặc liên hệ bạn vừa nhập. Mời bạn nhập lại mã bắt đầu bằng NBJ, cùng số điện thoại hoặc email đã dùng lúc đặt.",
     en: "We could not read that code or contact. Please enter the code starting with NBJ, with the phone or email you used when booking.",
   },
 };
 
 const LOOKUP_FALLBACK_MESSAGE = {
-  vi: `Lúc này em chưa mở được vé giúp bạn ạ. Mời bạn thử lại sau ít phút, hoặc gọi bên em theo số ${CONTACT.phoneLabel} để đội ngũ mở vé ngay cho bạn.`,
+  vi: `Lúc này chưa mở được vé. Mời bạn thử lại sau ít phút, hoặc gọi ${CONTACT.phoneLabel} để chúng tôi mở vé giúp.`,
   en: `We cannot open your ticket right now. Please try again in a few minutes, or call us on ${CONTACT.phoneLabel} and we will open it for you.`,
 };
 
 const LOOKUP_NETWORK_MESSAGE = {
-  vi: `Đường truyền đang trục trặc ạ. Bạn thử lại giúp em sau ít phút, hoặc gọi số ${CONTACT.phoneLabel} để bên em mở vé giúp bạn.`,
+  vi: `Đường truyền đang trục trặc. Mời bạn thử lại sau ít phút, hoặc gọi ${CONTACT.phoneLabel} để chúng tôi mở vé giúp.`,
   en: `The connection is having trouble. Please try again in a few minutes, or call ${CONTACT.phoneLabel} and we will open your ticket.`,
 };
 
@@ -204,13 +204,13 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
         {t("Mở lại vé đã đặt", "Open a ticket you booked")}
       </h1>
       <p className="mt-4 max-w-xl leading-7 text-[#59654b]">
-        {t("Bạn nhập mã đặt chỗ cùng số điện thoại hoặc email đã dùng lúc đặt, vé và mã QR hiện lại ngay trên trang này ạ. Mời bạn cứ mở trang này ở cổng, nhân viên quét thẳng trên màn hình của bạn.", "Enter your booking code with the phone or email you used, and your tickets and QR codes appear right here. You can open this page at the gate and staff scan it straight from your screen.")}
+        {t("Nhập mã đặt chỗ cùng số điện thoại hoặc email đã dùng lúc đặt, vé và mã QR hiện lại ngay. Tới cổng, nhân viên quét thẳng trên màn hình của bạn.", "Enter your booking code with the phone or email you used, and your tickets and QR codes appear right here. You can open this page at the gate and staff scan it straight from your screen.")}
       </p>
 
       <div className="mt-6 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
         <p className="font-extrabold">{t("Bản này chưa gửi tin nhắn hay email xác nhận", "This version sends no text or email confirmation")}</p>
         <p className="mt-2 text-sm leading-6">
-          {t("Đặt xong bạn không nhận được tin nhắn nào cả. Trang này là đường lấy lại vé, và nó cần đúng hai thứ chỉ bạn có: mã đặt chỗ và liên hệ đã để lại. Chỉ một mình mã đặt chỗ thì em xin phép chưa mở vé được ạ.", "You will not receive any message after booking. This page is how you get your ticket back, and it needs the two things only you have: the booking code and the contact you left. The code alone is not enough to open a ticket.")}
+          {t("Đặt xong bạn sẽ không nhận được tin nhắn nào, nên đây là chỗ lấy lại vé. Cần cả mã đặt chỗ lẫn số điện thoại hoặc email đã để lại.", "You will not receive any message after booking. This page is how you get your ticket back, and it needs the two things only you have: the booking code and the contact you left. The code alone is not enough to open a ticket.")}
         </p>
       </div>
 
@@ -227,7 +227,7 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
             className="min-h-12 rounded-xl border border-white/25 bg-white/10 px-4 font-mono text-base font-medium tracking-[0.08em] text-white placeholder:font-sans placeholder:tracking-normal placeholder:text-white/35"
           />
           <span className="mt-1 font-normal leading-5 text-white/55">
-            {t("Mã hiện ngay sau khi bạn đặt xong, mở đầu bằng NBJ. Gõ thường hay hoa đều được ạ.", "Shown right after booking, starting with NBJ. Upper or lower case both work.")}
+            {t("Mã hiện ngay sau khi đặt xong, bắt đầu bằng NBJ. Gõ chữ thường hay hoa đều được.", "Shown right after booking, starting with NBJ. Upper or lower case both work.")}
           </span>
         </label>
         <label className="grid gap-1 text-xs font-bold text-white/70">
@@ -245,7 +245,7 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
             className="min-h-12 rounded-xl border border-white/25 bg-white/10 px-4 text-base font-medium text-white placeholder:text-white/35"
           />
           <span className="mt-1 font-normal leading-5 text-white/55">
-            {t("Trang này không hiện lại số hay email của ai; nó chỉ đem chuỗi đã mã hoá ra đối chiếu.", "This page never shows anyone's number or email; it only compares encrypted strings.")}
+            {t("Số hay email này chỉ dùng để đối chiếu, không hiện ra ở đâu.", "Used only to match your booking; never shown anywhere.")}
           </span>
         </label>
         <button
@@ -300,14 +300,14 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
             <div className="mt-6 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
               <p className="font-extrabold">{t("Còn trả tại điểm:", "To pay on site:")} {result.payment.amount_due_vnd.toLocaleString("vi-VN")} VND</p>
               <p className="mt-2 text-sm leading-6">
-                {t("Tới nơi, bạn đưa mã bên dưới cho nhân viên quét rồi trả tiền tại quầy. Nhân viên thu đủ thì cổng mở ngay ạ.", "At the site, show the code below, pay at the counter, and the gate opens.")}
+                {t("Tới nơi, đưa mã bên dưới cho nhân viên quét rồi trả tiền tại quầy. Thu đủ là cổng mở.", "At the site, show the code below, pay at the counter, and the gate opens.")}
               </p>
             </div>
           ) : (
             <div className="mt-6 rounded-2xl border border-[#cfe0d4] bg-[#edf3ee] p-5 text-[#274c40]">
               <p className="font-extrabold">{t("Chuyến này không còn khoản nào phải trả", "Nothing left to pay")}</p>
               <p className="mt-2 text-sm leading-6">
-                {t("Bạn chỉ cần đưa mã bên dưới cho nhân viên ở cổng là vào được ngay ạ.", "Just show the code below at the gate and walk in.")}
+                {t("Đưa mã bên dưới cho nhân viên ở cổng là vào được ngay.", "Just show the code below at the gate and walk in.")}
               </p>
             </div>
           )}
@@ -348,7 +348,7 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
             lang={lang}
           />
           <p className="mt-4 text-sm leading-6 text-[#6b786f]">
-            {t("Lưu ảnh vé về máy giúp em, để lúc ở cổng sóng yếu vẫn mở được mã ạ.", "Save the ticket image so you can open the code even with a weak signal at the gate.")}
+            {t("Mời bạn lưu ảnh vé về máy, để lúc ở cổng sóng yếu vẫn mở được mã.", "Save the ticket image so you can open the code even with a weak signal at the gate.")}
           </p>
           <Link href="/ho-so" className="mt-3 inline-block text-sm font-bold text-[#356957] underline underline-offset-4">
             {t("Xem hộ chiếu Ninh Bình: đi đủ các vùng để mở quà", "See your Ninh Binh passport: visit every area to unlock gifts")}

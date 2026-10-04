@@ -28,7 +28,7 @@ const NOT_FOUND_BODY = {
   found: false,
   throttled: false,
   message:
-    "Em chưa tìm ra chuyến nào khớp mã đặt chỗ và liên hệ này ạ. Bạn xem lại giúp em mã đã ghi và số điện thoại hoặc email đã dùng lúc đặt.",
+    "Chưa tìm thấy chuyến nào khớp mã đặt chỗ và liên hệ này. Mời bạn xem lại mã đã ghi và số điện thoại hoặc email đã dùng lúc đặt.",
 } as const;
 
 function jsonResponse(body: unknown, status: number) {
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
           accepted: false,
           error: {
             code: "CUSTOMER_LOOKUP_CODE_MALFORMED",
-            message: "Mã đặt chỗ có dạng NBJ- rồi mười hai ký tự, bạn xem lại giúp em ạ.",
+            message: "Mã đặt chỗ có dạng NBJ- và mười hai ký tự. Mời bạn xem lại.",
           },
         },
         400,
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
               found: false,
               throttled: true,
               message:
-                "Bạn vừa thử khá nhiều lần rồi ạ. Mời bạn nghỉ một lát rồi quay lại, hoặc gọi giúp em tới quầy để được mở vé ngay.",
+                "Bạn vừa thử khá nhiều lần rồi. Mời bạn nghỉ một lát rồi quay lại, hoặc gọi tới quầy để được mở vé ngay.",
             },
             429,
           )
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
         error: {
           code: repositoryError ? `CUSTOMER_LOOKUP_${repositoryError.code}` : "CUSTOMER_LOOKUP_INPUT_INVALID",
           message: repositoryError?.message
-            ?? "Bạn nhập giúp em mã đặt chỗ cùng số điện thoại hoặc email đã dùng lúc đặt ạ.",
+            ?? "Bạn nhập mã đặt chỗ cùng số điện thoại hoặc email đã dùng lúc đặt.",
         },
       },
       status,

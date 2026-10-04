@@ -142,7 +142,7 @@ export function StaffProfileView({ account, canEdit, audit }: Props) {
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b9d5ca]">
           Hồ sơ nhân sự
         </p>
-        <h1 className="mt-2 text-3xl font-black sm:text-5xl">{account.displayName}</h1>
+        <h1 className="mt-2 text-3xl font-black sm:text-5xl" data-chi="ho-so" data-chi-loi="Hồ sơ một người: vai, cơ sở, việc đã làm gần đây. Giám đốc sửa được họ tên, chức danh, số điện thoại.">{account.displayName}</h1>
         <p className="mt-3 text-sm text-[#d4e4de]">
           {account.jobTitle} · <span className="font-mono">{account.accountId}</span>
         </p>

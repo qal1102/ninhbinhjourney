@@ -277,7 +277,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
           <section
             className="mb-8 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-6"
             data-chi="ban-do-thuyen"
-            data-chi-loi="Bản đồ sống: thuyền thật theo điện thoại người chèo, thuyền mô phỏng để xem thử. Thuyền trượt liên tục dọc tuyến sông thật."
+            data-chi-loi="Bảng bến: còn ở bến, đang trên sông, sắp về, ước từ lượt khách qua cổng. Thuyền người chèo bật định vị hiện màu cam."
           >
             <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Thuyền trên sông · bản đồ sống</p>
             <h2 className="mt-2 text-xl font-black text-[#20342c]">{TUYEN_THUYEN[site.id].ten}</h2>

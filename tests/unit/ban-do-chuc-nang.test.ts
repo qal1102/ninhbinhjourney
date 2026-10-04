@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { BAN_DO_CHUC_NANG, duongDanChucNang, laDuongDanErpAnToan } from "@/domain/ban-do-chuc-nang";
 import { ERP_MODULES } from "@/domain/erp";
@@ -14,6 +14,10 @@ describe("bản đồ mọi chức năng", () => {
       const phan = duongDan.split("/").filter(Boolean);
       if (phan.length === 1) {
         expect(existsSync("app/erp/page.tsx")).toBe(true);
+      } else if (phan.length === 3 && existsSync(`app/erp/${phan[1]}`) && !phan[1].startsWith("[")) {
+        // Trang động riêng như /erp/ho-so/<mã người>: thư mục phải có đúng một đoạn động kèm page.tsx.
+        const dong = readdirSync(`app/erp/${phan[1]}`).filter((ten) => ten.startsWith("["));
+        expect(dong.some((ten) => existsSync(`app/erp/${phan[1]}/${ten}/page.tsx`)), `${cn.id}: ${duongDan}`).toBe(true);
       } else if (phan.length === 3) {
         expect(moduleIds.has(phan[2] as never), `${cn.id}: module ${phan[2]}`).toBe(true);
       } else {

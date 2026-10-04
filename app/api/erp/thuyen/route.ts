@@ -2,7 +2,7 @@ import { z } from "zod";
 import { isSameOriginCustomerRequest } from "@/domain/customer-identity";
 import { laCoSoThuyen } from "@/domain/thuyen-song";
 import { getCurrentErpUser, type CurrentErpUser } from "@/lib/erp/demo-session";
-import { batDauChuyen, guiViTri, thuyenTrenSong, ThuyenLoi, veBen } from "@/lib/erp/thuyen-repository";
+import { batDauChuyen, benThuyen, guiViTri, thuyenTrenSong, ThuyenLoi, veBen } from "@/lib/erp/thuyen-repository";
 
 /**
  * Thuyền trên sông (migration 104).
@@ -10,6 +10,9 @@ import { batDauChuyen, guiViTri, thuyenTrenSong, ThuyenLoi, veBen } from "@/lib/
  * - GET `?coSo=trang-an|tam-coc`: các thuyền thật đang trên sông, kèm vệt 20
  *   phút. Vị trí nhân viên là dữ liệu cá nhân nên chỉ quản lý của cơ sở ấy và
  *   giám đốc xem được.
+ * - GET `?coSo=…&phan=ben`: đội thuyền (ngưỡng bến ở màn Sức chứa) và giờ
+ *   các lượt khách qua cổng trong ngày, để bản đồ ước số thuyền trên sông.
+ *   Chỉ có giờ, không có mã vé hay người quét. Cùng luật xem như trên.
  * - POST `bat-dau` / `vi-tri` / `ve-ben`: trang người chèo (`/erp/thuyen`).
  *   Người gửi phải thuộc đúng cơ sở; kho còn kiểm chuyến có đúng của người ấy.
  */
@@ -32,7 +35,11 @@ export async function GET(request: Request) {
   if (!laCoSoThuyen(coSo)) return traVe({ ok: false, ma: "KHONG_CO" }, 404);
   if (!duocXemBanDo(user, coSo)) return traVe({ ok: false, ma: "KHONG_DUOC_XEM" }, 403);
   try {
-    return traVe({ ok: true, bayGio: new Date().toISOString(), chuyen: await thuyenTrenSong(coSo) });
+    const bayGio = Date.now();
+    if (new URL(request.url).searchParams.get("phan") === "ben") {
+      return traVe({ ok: true, bayGio: new Date(bayGio).toISOString(), ...(await benThuyen(coSo, bayGio)) });
+    }
+    return traVe({ ok: true, bayGio: new Date(bayGio).toISOString(), chuyen: await thuyenTrenSong(coSo) });
   } catch (error) {
     const ma = error instanceof ThuyenLoi ? error.ma : "LOI";
     return traVe({ ok: false, ma }, ma === "CHUA_NOI_KHO" ? 503 : 500);

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { chiaCauDoc, giongTuNhien, tenGiongGon, xepGiong, type CauDoc } from "@/domain/thuyet-minh-doc";
 
 /**
  * "Nghe thuyết minh" trên trang điểm đến: đọc to lời giới thiệu, câu chuyện
@@ -10,6 +11,11 @@ import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } fro
  * Máy không có giọng tiếng Việt thì nói thẳng, vì giọng tiếng Anh đọc chữ có
  * dấu nghe như đọc mã. Chia câu ra đọc từng câu: Chrome tự ngắt một câu đọc
  * dài quá chừng mười lăm giây, đọc cả đoạn một lần là bị cắt giữa chừng.
+ *
+ * Cho bớt giọng máy (chủ dự án chê 04/10/2026): chọn giọng tự nhiên nhất máy
+ * có (Edge có HoaiMy Online), cho khách tự đổi giọng, chuẩn hoá chữ trước khi
+ * đọc ("thế kỷ X" → "thế kỷ 10") và nghỉ sau tên, cuối đoạn như người kể
+ * (`domain/thuyet-minh-doc.ts`).
  */
 
 type TrangThai = "nghi" | "dang-doc" | "tam-dung";
@@ -24,17 +30,27 @@ function coGiongDoc() {
   return typeof window !== "undefined" && "speechSynthesis" in window;
 }
 
-function chiaCau(doan: readonly string[]): string[] {
-  return doan
-    .flatMap((d) => d.split(/(?<=[.!?…])\s+/))
-    .map((c) => c.trim())
-    .filter(Boolean);
+/**
+ * Danh sách giọng nạp chậm (Chrome trả rỗng ở lần hỏi đầu rồi báo
+ * `voiceschanged`), nên theo dõi như một nguồn ngoài. Ảnh chụp là chuỗi mã
+ * giọng để React so sánh được.
+ */
+function theoDoiGiong(bao: () => void) {
+  if (!coGiongDoc()) return () => {};
+  window.speechSynthesis.addEventListener("voiceschanged", bao);
+  return () => window.speechSynthesis.removeEventListener("voiceschanged", bao);
 }
 
-function chonGiong(lang: "vi" | "en"): SpeechSynthesisVoice | null {
-  const giong = window.speechSynthesis.getVoices();
-  const tien = lang === "vi" ? "vi" : "en";
-  return giong.find((g) => g.lang.toLowerCase().startsWith(tien)) ?? null;
+function anhGiong() {
+  if (!coGiongDoc()) return "";
+  return window.speechSynthesis
+    .getVoices()
+    .map((g) => `${g.voiceURI}|${g.lang}`)
+    .join("\n");
+}
+
+function maGiong(g: SpeechSynthesisVoice) {
+  return g.voiceURI || g.name;
 }
 
 export function ThuyetMinh({
@@ -60,13 +76,30 @@ export function ThuyetMinh({
   const [cauDangDoc, setCauDangDoc] = useState(0);
   const [tocDo, setTocDo] = useState<(typeof TOC_DO)[number]>(1);
   const [thieuGiong, setThieuGiong] = useState(false);
-  const cau = useRef<string[]>([]);
+  const [giongChon, setGiongChon] = useState<string | null>(null);
+  const cau = useRef<CauDoc[]>([]);
   const phien = useRef(0);
+  // Đang nghỉ giữa hai câu: hẹn giờ đọc câu kế, và câu kế là câu nào.
+  const hen = useRef<number | null>(null);
+  const choCau = useRef<number | null>(null);
+  const khoaGiong = useSyncExternalStore(theoDoiGiong, anhGiong, () => "");
+  const danhSachGiong = useMemo(
+    () => (khoaGiong && coGiongDoc() ? xepGiong(window.speechSynthesis.getVoices(), lang) : []),
+    [khoaGiong, lang],
+  );
+  const giongDung = danhSachGiong.find((g) => maGiong(g) === giongChon) ?? danhSachGiong[0] ?? null;
+
+  function huyHen() {
+    if (hen.current !== null) window.clearTimeout(hen.current);
+    hen.current = null;
+    choCau.current = null;
+  }
 
   // Rời trang (hay đổi ngôn ngữ) thì thôi đọc: giọng máy không tự dừng theo trang.
   useEffect(() => {
     return () => {
       phien.current += 1;
+      if (hen.current !== null) window.clearTimeout(hen.current);
       if (coGiongDoc()) window.speechSynthesis.cancel();
     };
   }, [lang, doan]);
@@ -78,12 +111,21 @@ export function ThuyetMinh({
       setCauDangDoc(0);
       return;
     }
-    const loi = new SpeechSynthesisUtterance(cau.current[viTri]);
-    loi.lang = lang === "vi" ? "vi-VN" : "en-GB";
+    const loi = new SpeechSynthesisUtterance(cau.current[viTri].chu);
+    loi.lang = giong?.lang ?? (lang === "vi" ? "vi-VN" : "en-GB");
     if (giong) loi.voice = giong;
     loi.rate = tocDo;
     loi.onstart = () => setCauDangDoc(viTri);
-    loi.onend = () => docTu(viTri + 1, maPhien, giong);
+    loi.onend = () => {
+      if (maPhien !== phien.current) return;
+      // Nghỉ một nhịp rồi mới đọc câu kế, như người kể lấy hơi.
+      choCau.current = viTri + 1;
+      hen.current = window.setTimeout(() => {
+        hen.current = null;
+        choCau.current = null;
+        docTu(viTri + 1, maPhien, giong);
+      }, cau.current[viTri].nghiSau);
+    };
     loi.onerror = (event) => {
       // "interrupted"/"canceled" là do chính khách bấm dừng, không phải lỗi.
       if (event.error !== "interrupted" && event.error !== "canceled") setTrangThai("nghi");
@@ -94,10 +136,12 @@ export function ThuyetMinh({
   function batDau() {
     const tong = window.speechSynthesis;
     tong.cancel();
+    huyHen();
     phien.current += 1;
     const maPhien = phien.current;
-    cau.current = chiaCau([ten, ...doan]);
-    const giong = chonGiong(lang);
+    cau.current = chiaCauDoc(ten, doan, lang);
+    // Hỏi lại danh sách ngay lúc bấm: có máy chỉ nạp giọng sau cú bấm đầu.
+    const giong = giongDung ?? xepGiong(tong.getVoices(), lang)[0] ?? null;
     setThieuGiong(!giong && lang === "vi");
     setTrangThai("dang-doc");
     docTu(0, maPhien, giong);
@@ -114,17 +158,30 @@ export function ThuyetMinh({
   }, [tuDong]);
 
   function tamDung() {
-    window.speechSynthesis.pause();
+    if (hen.current !== null) {
+      // Đang nghỉ giữa hai câu: giữ lại câu kế, chưa đọc.
+      window.clearTimeout(hen.current);
+      hen.current = null;
+    } else {
+      window.speechSynthesis.pause();
+    }
     setTrangThai("tam-dung");
   }
 
   function tiepTuc() {
-    window.speechSynthesis.resume();
     setTrangThai("dang-doc");
+    const ke = choCau.current;
+    if (ke !== null) {
+      choCau.current = null;
+      docTu(ke, phien.current, giongDung);
+      return;
+    }
+    window.speechSynthesis.resume();
   }
 
   function dung() {
     phien.current += 1;
+    huyHen();
     window.speechSynthesis.cancel();
     setTrangThai("nghi");
     setCauDangDoc(0);
@@ -186,7 +243,25 @@ export function ThuyetMinh({
             ■ {t("Dừng", "Stop")}
           </button>
         ) : null}
-        <label className={`ml-auto inline-flex min-h-11 items-center gap-2 text-sm font-bold ${toi ? "text-white/80" : "text-[#42554c]"}`}>
+        {danhSachGiong.length > 1 ? (
+          <label className={`ml-auto inline-flex min-h-11 items-center gap-2 text-sm font-bold ${toi ? "text-white/80" : "text-[#42554c]"}`}>
+            {t("Giọng", "Voice")}
+            <select
+              value={giongDung ? maGiong(giongDung) : ""}
+              disabled={trangThai !== "nghi"}
+              onChange={(event) => setGiongChon(event.target.value)}
+              data-testid="chon-giong"
+              className={`min-h-11 max-w-[11rem] rounded-lg px-2 font-bold ${toi ? "border border-white/30 bg-transparent text-white" : "border border-[#ccd8d1] bg-white"}`}
+            >
+              {danhSachGiong.map((g) => (
+                <option key={maGiong(g)} value={maGiong(g)}>
+                  {tenGiongGon(g, lang)}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        <label className={`${danhSachGiong.length > 1 ? "" : "ml-auto "}inline-flex min-h-11 items-center gap-2 text-sm font-bold ${toi ? "text-white/80" : "text-[#42554c]"}`}>
           {t("Tốc độ", "Speed")}
           <select
             value={tocDo}
@@ -209,6 +284,14 @@ export function ThuyetMinh({
         >
           {t("Đang đi tham quan? Để máy tự đọc khi bạn tới từng nơi →", "Touring? Let your phone read each place as you arrive →")}
         </a>
+      ) : null}
+      {danhSachGiong.length > 0 && !danhSachGiong.some(giongTuNhien) ? (
+        <p className={`mt-3 text-xs leading-5 ${toi ? "text-white/70" : "text-[#5f6d66]"}`}>
+          {t(
+            "Máy này chỉ có giọng đọc cơ bản. Mở trang bằng Microsoft Edge trên máy tính sẽ có giọng HoaiMy, NamMinh đọc tự nhiên hơn hẳn.",
+            "This device only has a basic voice. Microsoft Edge on a computer offers natural voices that sound far more human.",
+          )}
+        </p>
       ) : null}
       {thieuGiong ? (
         <p className={`mt-3 text-xs leading-5 ${toi ? "text-white/70" : "text-[#8a6b38]"}`}>

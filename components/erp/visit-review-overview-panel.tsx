@@ -60,7 +60,7 @@ export function VisitReviewOverviewPanel({
       <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
         Khách đã tới nói gì · {fromLabel} – {toLabel}
       </p>
-      <h2 className="mt-1 text-lg font-black text-[#1f2f2a]">Bảng điểm từ người đã qua cổng</h2>
+      <h2 className="mt-1 text-lg font-black text-[#1f2f2a]" data-chi="danh-gia-khach" data-chi-loi="Chỉ khách đã qua cổng mới chấm được. Lời nào không phù hợp thì ẩn đi, có ghi lý do.">Bảng điểm từ người đã qua cổng</h2>
       <p className="mt-1 text-xs leading-5 text-[#5f7068]">
         Mỗi lời ở đây gắn với một lượt vào cổng có thật, nên không ai chấm hộ được. Bảng chỉ kết luận
         khi một cơ sở đã có từ {OVERVIEW_MIN_REVIEWS} lời trở lên.

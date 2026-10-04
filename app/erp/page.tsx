@@ -5,8 +5,8 @@ import { ExecutiveDashboard } from "@/components/erp/executive-dashboard";
 import { RoleHomeDashboard } from "@/components/erp/role-home-dashboard";
 import { ViecDauTienPanel } from "@/components/erp/viec-dau-tien-panel";
 import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
-import { CHUC_NANG_MOI } from "@/domain/ban-do-chuc-nang";
-import { duongDenMucMoi } from "@/domain/huong-dan";
+import { CHUC_NANG_MOI, CHUC_NANG_WEB } from "@/domain/ban-do-chuc-nang";
+import { duongDenMucMoi, TONG_VIEC_TRA_CUU } from "@/domain/huong-dan";
 import Link from "next/link";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { listStaffDirectory } from "@/lib/erp/staff-directory";
@@ -147,10 +147,10 @@ export default async function ErpHomePage({ searchParams }: Props) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.17em] text-[#9a6328]">
-                Thử chức năng · {CHUC_NANG_MOI.length} phần mới
+                Thử chức năng · {TONG_VIEC_TRA_CUU} chức năng điều hành · {CHUC_NANG_WEB.length} trên web khách
               </p>
               <h2 id="thu-chuc-nang" className="mt-1 text-xl font-black text-[#3f3524] sm:text-2xl">
-                Phần mới làm, bấm là tới đúng chỗ để thử
+                Mọi chức năng, bấm vào là tới đúng chỗ để thử
               </h2>
             </div>
             <Link
@@ -160,29 +160,48 @@ export default async function ErpHomePage({ searchParams }: Props) {
               Mở danh sách đầy đủ →
             </Link>
           </div>
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {CHUC_NANG_MOI.slice(0, 6).map((muc) => (
-              <li key={muc.cn.id}>
-                <Link
-                  href={duongDenMucMoi(muc)}
-                  {...(muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp")
-                    ? { target: "_blank", rel: "noopener" }
-                    : {})}
-                  className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-[#ecdcbc] bg-white px-4 py-2 transition hover:border-[#d58c35]"
-                >
-                  <span className="min-w-0">
-                    <span className="block text-sm font-black text-[#20342c]">{muc.cn.ten}</span>
-                    <span className="block text-xs text-[#718078]">
-                      {muc.loai === "web" ? "Web khách" : "Điều hành"} · {muc.cn.moi}
-                    </span>
-                  </span>
-                  <span aria-hidden="true" className="text-[#9a6328]">
-                    {muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp") ? "↗" : "→"}
-                  </span>
-                </Link>
-              </li>
+          {/* Điều hành và web khách để riêng hai cột, theo lời anh Đạt 04/10:
+              "web để riêng, ERP để riêng, không trộn lẫn". */}
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            {(
+              [
+                { loai: "erp", ten: "Hệ thống điều hành · phần mới", xem: "/erp/huong-dan?xem=erp" },
+                { loai: "web", ten: "Web khách · phần mới", xem: "/erp/huong-dan?xem=web" },
+              ] as const
+            ).map((cot) => (
+              <div key={cot.loai}>
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 className="text-xs font-black uppercase tracking-[0.14em] text-[#718078]">{cot.ten}</h3>
+                  <Link href={cot.xem} className="shrink-0 whitespace-nowrap text-xs font-black text-[#1f604c] underline underline-offset-4">
+                    Xem tất cả
+                  </Link>
+                </div>
+                <ul className="mt-2 grid gap-2">
+                  {CHUC_NANG_MOI.filter((muc) => muc.loai === cot.loai)
+                    .slice(0, 4)
+                    .map((muc) => (
+                      <li key={muc.cn.id}>
+                        <Link
+                          href={duongDenMucMoi(muc)}
+                          {...(muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp")
+                            ? { target: "_blank", rel: "noopener" }
+                            : {})}
+                          className="flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-[#ecdcbc] bg-white px-4 py-2 transition hover:border-[#d58c35]"
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-sm font-black text-[#20342c]">{muc.cn.ten}</span>
+                            <span className="block text-xs text-[#718078]">Mới · {muc.cn.moi}</span>
+                          </span>
+                          <span aria-hidden="true" className="text-[#9a6328]">
+                            {muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp") ? "↗" : "→"}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
       ) : null}
 

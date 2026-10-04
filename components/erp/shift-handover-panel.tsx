@@ -115,7 +115,7 @@ function HandoverForm({
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
           Bàn giao ca · {site.shortName}
         </p>
-        <h2 className="mt-2 text-xl font-black text-[#20342c]">
+        <h2 className="mt-2 text-xl font-black text-[#20342c]" data-chi="ban-giao-ca" data-chi-loi="Chọn người nhận ca, ghi tiền mặt đếm được, sự cố còn mở và thiết bị cần lưu ý, rồi bấm Gửi bàn giao.">
           Giao ca cho người tiếp theo, có ký nhận
         </h2>
       </summary>

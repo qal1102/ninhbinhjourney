@@ -39,7 +39,7 @@ function siteLabel(entry: ErpStaffDirectoryEntry) {
 export function RoleSwitchControl({ currentUserId, targets, variant = "dropdown" }: Props) {
   const inline = variant === "inline";
   return (
-    <details className={inline ? undefined : "relative"}>
+    <details className={inline ? undefined : "relative"} data-chi="xem-theo-vai" data-chi-loi="Chọn một người để thấy hệ thống đúng như họ thấy. Thanh trên cùng luôn có nút quay về giám đốc.">
       <summary
         className={`flex min-h-11 cursor-pointer list-none items-center whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] ${
           inline ? "justify-between" : ""

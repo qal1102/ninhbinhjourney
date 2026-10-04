@@ -150,7 +150,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
       <section className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
         <article className="overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm">
           <div className="border-b border-[#e3e9e5] p-5 sm:p-6">
-            <p className="text-xs font-black uppercase tracking-[0.17em] text-[#9a5f32]">Chia theo nhóm việc</p>
+            <p className="text-xs font-black uppercase tracking-[0.17em] text-[#9a5f32]" data-chi="goi-viec" data-chi-loi="Gói việc của sự kiện, chia theo nhóm. Mở từng gói xem hạn, người phụ trách, tiến độ.">Chia theo nhóm việc</p>
             <h2 className="mt-2 text-2xl font-black text-[#20342c]">Gói việc</h2>
           </div>
           <div className="divide-y divide-[#e7ece9]">
@@ -368,7 +368,7 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
         <aside className="space-y-5">
           <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
             <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Đổi phạm vi</p>
-            <h2 className="mt-2 text-xl font-black text-[#20342c]">Yêu cầu đổi ngân sách / hạn / phạm vi</h2>
+            <h2 className="mt-2 text-xl font-black text-[#20342c]" data-chi="doi-pham-vi" data-chi-loi="Quản lý gửi đề nghị đổi ngân sách, ngày hay phạm vi; giám đốc duyệt hoặc từ chối ngay tại đây.">Yêu cầu đổi ngân sách / hạn / phạm vi</h2>
 
             {canRequestChange ? (
               <form

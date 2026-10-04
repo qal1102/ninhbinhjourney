@@ -183,7 +183,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
             <p className="text-xs font-bold uppercase tracking-[0.17em] text-[#477565]">
               Hiện trường {site.shortName}
             </p>
-            <h2 className="mt-2 text-2xl font-black text-[#20342c]">Camera theo khu vực</h2>
+            <h2 className="mt-2 text-2xl font-black text-[#20342c]" data-chi="camera" data-chi-loi="Mỗi ô là một khu vực, số người là mô phỏng. Bấm lọc Ổn định / Cần chú ý; kéo xuống xem sự kiện kịch bản hiện dần.">Camera theo khu vực</h2>
             <p className="mt-2 text-xs text-[#7b8881]">
               Khung hình mô phỏng ·{" "}
               {now?.toLocaleTimeString("vi-VN", {

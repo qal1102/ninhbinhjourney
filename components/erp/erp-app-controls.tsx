@@ -146,7 +146,7 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
       ) : null}
 
       <details className="group relative">
-        <summary aria-label="Mở trung tâm thông báo" className="relative grid h-11 w-11 cursor-pointer list-none place-items-center rounded-xl border border-[#ced8d1] bg-white text-[#385047] transition hover:bg-[#f4f7f5]">
+        <summary aria-label="Mở trung tâm thông báo" data-chi="thong-bao" data-chi-loi="Chuông báo việc cần quyết định và sự cố đã chuyển cấp. Bấm để mở danh sách." className="relative grid h-11 w-11 cursor-pointer list-none place-items-center rounded-xl border border-[#ced8d1] bg-white text-[#385047] transition hover:bg-[#f4f7f5]">
           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-none" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
             <path d="M10 21h4" />

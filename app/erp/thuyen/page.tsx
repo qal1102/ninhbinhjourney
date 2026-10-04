@@ -46,7 +46,7 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[#68776f]">
           {banDo
-            ? "Từng thuyền đang ở đoạn nào của tuyến, theo điện thoại người chèo đò. Thuyền màu kem là mô phỏng để xem thử; thuyền thật màu vàng, kèm vệt cam 20 phút vừa đi."
+            ? "Bến còn bao nhiêu thuyền chờ khách, bao nhiêu thuyền đang trên sông và đang ở đoạn nào. Số thuyền ước từ lượt khách qua cổng; thuyền người chèo bật định vị hiện màu cam, kèm vệt 20 phút vừa đi."
             : "Nhận khách xong thì bấm bắt đầu chuyến. Quản lý cơ sở thấy thuyền của bạn trên bản đồ, biết bạn đang ở đoạn nào của tuyến. Vị trí chỉ gửi trong lúc chuyến đang mở; bấm \"Về bến\" là dừng hẳn."}
         </p>
       </div>
@@ -55,7 +55,7 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
         <section
           className="mb-8 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-6"
           data-chi="ban-do-thuyen"
-          data-chi-loi="Bản đồ sống: thuyền trượt liên tục dọc tuyến sông thật. Bấm Xem nhanh ×30 để thấy cả đội thuyền chạy, bấm vào một thuyền để xem chi tiết."
+          data-chi-loi="Bảng bến ở trên cùng: còn ở bến, đang trên sông, sắp về. Ngoài giờ thuyền chạy thì bản đồ tự phát lại cả ngày ×30; kéo thanh giờ để xem lúc khác, chạm một thuyền để xem chi tiết."
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-black text-[#20342c]">{TUYEN_THUYEN[banDo].ten}</h2>

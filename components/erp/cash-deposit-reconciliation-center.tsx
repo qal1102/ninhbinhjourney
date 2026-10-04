@@ -559,7 +559,7 @@ export function CashDepositReconciliationCenter({
   if (embedded) return body;
   return (
     <section className="grid gap-4">
-      <header>
+      <header data-chi="nop-quy" data-chi-loi="Tiền mặt cuối ca nộp vào ngân hàng, rồi đối chiếu với dòng sao kê. Mở một lượt nộp để xem đã khớp chưa.">
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
           Đối soát tiền mặt
         </p>

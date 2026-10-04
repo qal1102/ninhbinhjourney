@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { CHUC_NANG_MOI, CHUC_NANG_WEB } from "@/domain/ban-do-chuc-nang";
+import { BAN_DO_CHUC_NANG, CHUC_NANG_WEB } from "@/domain/ban-do-chuc-nang";
 import { TONG_VIEC_TRA_CUU, VONG_KHACH } from "@/domain/huong-dan";
 import { loginAsDirector } from "./support/erp-login";
 import { endRoleSwitch } from "./support/erp-role-switch";
@@ -16,17 +16,26 @@ test.describe("ERP: màn Hướng dẫn", () => {
     await expect(page.getByTestId("loi-vao-huong-dan")).toBeVisible();
     await page.getByTestId("loi-vao-huong-dan").getByRole("link", { name: "Mở danh sách đầy đủ →" }).click();
     await expect(page).toHaveURL(/\/erp\/huong-dan$/);
-    await expect(page.locator("[data-buoc]")).toHaveCount(VONG_KHACH.length);
+    // Ba thẻ tách riêng: mặc định là điều hành, web và trình diễn ở thẻ khác.
     await expect(page.locator("[data-chuc-nang]")).toHaveCount(TONG_VIEC_TRA_CUU);
-    await expect(page.locator("[data-moi]")).toHaveCount(CHUC_NANG_MOI.length);
+    await expect(page.locator("[data-chuc-nang-web]")).toHaveCount(0);
+    await page.locator("[data-the-thu=web]").click();
+    await expect(page).toHaveURL(/xem=web/);
     await expect(page.locator("[data-chuc-nang-web]")).toHaveCount(CHUC_NANG_WEB.length);
+    await expect(page.locator("[data-chuc-nang]")).toHaveCount(0);
+    await page.locator("[data-the-thu=vong]").click();
+    await expect(page.locator("[data-buoc]")).toHaveCount(VONG_KHACH.length);
+    await page.goto("/erp/huong-dan?xem=erp&moi=1");
+    await expect(page.locator("[data-chuc-nang]")).toHaveCount(
+      BAN_DO_CHUC_NANG.flatMap((nhom) => nhom.chucNang).filter((cn) => cn.moi).length,
+    );
     const tranNgang = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     expect(tranNgang).toBe(false);
   });
 
   test("Đưa tôi tới: khoanh đúng chỗ, thẻ chỉ dẫn dẫn sang bước kế", async ({ page }) => {
     await loginAsDirector(page);
-    await page.goto("/erp/huong-dan");
+    await page.goto("/erp/huong-dan?xem=vong");
     await page.locator('[data-buoc="vong-trang-dau"]').getByRole("link", { name: "Đưa tôi tới →" }).click();
     await expect(page).toHaveURL(/\/erp\?chi=vong-trang-dau$/);
 

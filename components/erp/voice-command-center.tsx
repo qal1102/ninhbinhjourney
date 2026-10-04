@@ -629,6 +629,8 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
               type="button"
               onClick={() => setOpen(true)}
               aria-label="Mở trợ lý điều hành"
+              data-chi="tro-ly"
+              data-chi-loi="Bấm Trợ lý, nói hoặc gõ một việc như mở bản đồ thuyền, bán vé, hàng chờ: trợ lý đưa bạn tới đúng màn."
               aria-hidden={nhuongCho && !open ? true : undefined}
               tabIndex={nhuongCho && !open ? -1 : undefined}
               className={`fixed bottom-5 right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#183f34] px-3 text-sm font-black text-white shadow-lg shadow-[#0d2a22]/25 transition duration-200 hover:bg-[#12332a] motion-reduce:transition-none sm:right-5 sm:px-4 ${

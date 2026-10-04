@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { loiChaoGiamDoc, ngayVietNam } from "@/domain/thoi-luong";
 import type { ErpSite } from "@/domain/erp";
 import type { AccountingJournal } from "@/domain/erp-accounting";
 import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
@@ -255,10 +256,10 @@ export function ExecutiveDashboard({
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#b6d5ca]">
               Toàn vùng · {sites.length} cơ sở
-              {latestBusinessDate ? ` · hồ sơ ca ${latestBusinessDate}` : ""}
+              {latestBusinessDate ? ` · hồ sơ ca ${ngayVietNam(latestBusinessDate)}` : ""}
             </p>
             <h1 className="mt-2 break-words text-3xl font-black leading-tight tracking-[-0.035em] sm:text-5xl">
-              {user.name}
+              {loiChaoGiamDoc(user.id, user.name)}
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/65">
               {user.jobTitle} · {currentShiftRecords.length} ca ·{" "}

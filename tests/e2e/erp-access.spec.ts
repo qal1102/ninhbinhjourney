@@ -1200,7 +1200,7 @@ test("giám đốc dùng điện thoại vẫn mở được tài khoản và h�
 
   await page.goto("/erp");
   await page.getByRole("button", { name: "Mở menu" }).click();
-  await drawer.getByRole("link", { name: /Nguyễn Minh Anh/ }).click();
+  await drawer.getByRole("link", { name: /^Đạt/ }).click();
   await expect(page).toHaveURL(/\/erp\/ho-so\/director-001$/);
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),

@@ -58,6 +58,41 @@ test("đọc tên và câu chuyện của đúng nơi đang xem, dừng được
   await expect(khoi).toHaveAttribute("data-trang-thai", "nghi");
 });
 
+test("máy có giọng tự nhiên thì đọc bằng giọng ấy, và đọc 'thế kỷ X' thành số", async ({ page }) => {
+  // Như Edge trên Windows: giọng "An" đời cũ đứng đầu danh sách, HoaiMy (Natural) đứng sau.
+  await page.addInitScript(() => {
+    const may = window.speechSynthesis as unknown as {
+      getVoices: () => unknown[];
+      speak: (loi: SpeechSynthesisUtterance) => void;
+    };
+    const giongDaDung: string[] = [];
+    (window as unknown as { __giong: string[] }).__giong = giongDaDung;
+    may.getVoices = () => [
+      { lang: "vi-VN", name: "Microsoft An - Vietnamese (Vietnam)", default: true, localService: true, voiceURI: "an" },
+      { lang: "vi-VN", name: "Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)", default: false, localService: false, voiceURI: "hoaimy" },
+    ];
+    const docGoc = may.speak.bind(may);
+    may.speak = (loi) => {
+      giongDaDung.push((loi.voice as { name?: string } | null)?.name ?? "");
+      docGoc(loi);
+    };
+  });
+  await page.goto("/destination/trang-an?lang=vi");
+  const khoi = page.getByTestId("thuyet-minh");
+  await expect(khoi.getByTestId("chon-giong")).toHaveValue("hoaimy");
+  await expect(khoi.getByTestId("chon-giong").locator("option")).toHaveText(["HoaiMy · tự nhiên", "An"]);
+  await khoi.getByRole("button", { name: "▶ Nghe" }).click();
+  await expect
+    .poll(async () => (await page.evaluate(() => (window as unknown as { __daDoc: string[] }).__daDoc)).some((c) => c.startsWith("Thế kỷ 10.")), {
+      timeout: 15_000,
+    })
+    .toBe(true);
+  const daDoc = await page.evaluate(() => (window as unknown as { __daDoc: string[] }).__daDoc);
+  expect(daDoc.some((c) => /thế kỷ [IVX]+\b/i.test(c))).toBe(false);
+  const giong = await page.evaluate(() => (window as unknown as { __giong: string[] }).__giong);
+  expect(new Set(giong)).toEqual(new Set(["Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)"]));
+});
+
 test("bản tiếng Anh đọc chữ tiếng Anh, cả ở trang điểm đến loại thứ hai", async ({ page }) => {
   await page.goto("/destination/cuc-phuong?lang=en");
   const khoi = page.getByTestId("thuyet-minh");

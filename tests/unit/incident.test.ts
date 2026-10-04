@@ -60,3 +60,12 @@ describe("thời lượng và lý do chuyển cấp đọc như người nói", 
     expect(lyDoChuyenCapChu("Cần thêm người ở bến.")).toBe("Cần thêm người ở bến.");
   });
 });
+
+describe("lời chào giám đốc", () => {
+  it("tài khoản giám đốc gốc được chào anh kèm tên gọi, người khác chào tên đầy đủ", async () => {
+    const { loiChaoGiamDoc } = await import("@/domain/thoi-luong");
+    expect(loiChaoGiamDoc("director-001", "Đạt")).toBe("Chào anh Đạt");
+    expect(loiChaoGiamDoc("director-001", "Trần Quốc Đạt")).toBe("Chào anh Đạt");
+    expect(loiChaoGiamDoc("director-002", "Lê Thu Hà")).toBe("Chào Lê Thu Hà");
+  });
+});

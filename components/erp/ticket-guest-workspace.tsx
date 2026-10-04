@@ -574,7 +574,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
       {mode === "sales" ? (
         <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
           <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Đoàn mua tại quầy</p>
-          <h2 className="mt-2 text-2xl font-black text-[#20342c]">Lập phiếu đoàn, đưa QR cho khách</h2>
+          <h2 className="mt-2 text-2xl font-black text-[#20342c]" data-chi="phieu-doan" data-chi-loi="Gõ số người và một nhãn cho đoàn, bấm Lập phiếu đoàn: mỗi người có mã riêng, đoàn trưởng tự điền tên sau.">Lập phiếu đoàn, đưa QR cho khách</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5c6f67]">
             Nhập số người và một nhãn để dễ nhận ra đoàn này — ví dụ nơi xuất phát
             hoặc tên đoàn. Hệ thống tự sinh mã đoàn và mã riêng cho từng người;

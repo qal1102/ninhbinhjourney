@@ -133,7 +133,7 @@ export function ShiftReconciliationPanel({
   view: ShiftReconciliationView;
 }) {
   const header = (
-    <header>
+    <header data-chi="doi-soat-ca" data-chi-loi="Chọn một ca: tiền khai lúc chốt ca đặt cạnh số hệ thống đếm được từ phiếu thu và lượt quét. Lệch là có lời giải thích.">
       <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
         Đối soát cuối ca · {site.shortName}
       </p>

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { endRoleSwitchAction } from "@/app/erp/actions";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
-import { HuongDanWorkspace } from "@/components/erp/huong-dan-workspace";
+import { HuongDanWorkspace, type TheThu } from "@/components/erp/huong-dan-workspace";
 import { ERP_ROLE_LABELS } from "@/domain/erp";
 import { getCurrentErpUser, isRoleSwitchEnabled } from "@/lib/erp/demo-session";
 import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
@@ -14,7 +14,13 @@ import { listRoleSwitchTargets } from "@/lib/erp/staff-directory";
  * `components/shared/chi-diem.tsx`. Chỉ dành cho giám đốc, người duy nhất
  * trình diễn hệ thống.
  */
-export default async function HuongDanPage() {
+type Props = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
+
+function mot(gia: string | string[] | undefined) {
+  return Array.isArray(gia) ? gia[0] : gia;
+}
+
+export default async function HuongDanPage({ searchParams }: Props) {
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
   if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
@@ -45,6 +51,10 @@ export default async function HuongDanPage() {
     );
   }
 
+  const thamSo = (await searchParams) ?? {};
+  const xin = mot(thamSo.xem);
+  const the: TheThu = xin === "web" || xin === "vong" ? xin : "erp";
+  const chiMoi = mot(thamSo.moi) === "1";
   const chuyenVaiDuoc = isRoleSwitchEnabled();
   const [access, targets] = await Promise.all([
     getAccessState(),
@@ -54,7 +64,7 @@ export default async function HuongDanPage() {
   return (
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
-      <HuongDanWorkspace targets={targets} quyen={access.employees} chuyenVaiDuoc={chuyenVaiDuoc} />
+      <HuongDanWorkspace targets={targets} quyen={access.employees} chuyenVaiDuoc={chuyenVaiDuoc} the={the} chiMoi={chiMoi} />
     </ErpShell>
   );
 }

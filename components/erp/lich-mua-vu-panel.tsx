@@ -43,7 +43,7 @@ export function LichMuaVuPanel({ lich }: { lich: readonly DipSapToi[] }) {
       data-testid="lich-mua-vu"
       className="rounded-3xl border border-[#e0d6c4] bg-[#fdf8ef] p-5 sm:p-7"
     >
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8a6b27]">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8a6b27]" data-chi="lich-mua-vu" data-chi-loi="Các dịp lễ mười hai tháng tới, ngày âm lịch tự tính. Bấm Mở chiến dịch ở một dịp là có sẵn chiến dịch nháp.">
         Lịch mùa vụ · mười hai tháng tới
       </p>
       <h2 className="font-display mt-2 text-3xl text-[#3d3325] sm:text-4xl">

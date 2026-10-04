@@ -325,7 +325,7 @@ export function CounterPriceBoardView({ board, today }: { board: CounterPriceBoa
     <div className="space-y-6">
       <header className="rounded-3xl bg-[#173f34] p-5 text-white sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b9d5ca]">Giám đốc</p>
-        <h1 className="mt-2 text-3xl font-black sm:text-5xl">Bảng giá vé quầy</h1>
+        <h1 className="mt-2 text-3xl font-black sm:text-5xl" data-chi="gia-ve-quay" data-chi-loi="Bấm Sửa giá ở một cơ sở, chọn ngày áp dụng và ghi lý do. Phiếu đã bán giữ nguyên giá cũ.">Bảng giá vé quầy</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-[#d4e4de]">
           Giá đặt ở đây là giá nhân viên quầy thấy khi ra đơn. Đổi giá không làm thay đổi phiếu đã bán: mỗi phiếu
           giữ đúng giá lúc bán. Muốn hẹn giá cho mùa lễ, chọn ngày áp dụng về sau; quầy chỉ thấy giá mới từ ngày

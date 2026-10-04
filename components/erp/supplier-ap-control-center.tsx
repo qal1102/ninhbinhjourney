@@ -1068,7 +1068,7 @@ export function SupplierApControlCenter({
         <CreateInvoiceForm site={site} suppliers={siteSuppliers} />
       ) : null}
 
-      <section className="space-y-3" aria-label="Hồ sơ hóa đơn nhà cung cấp">
+      <section className="space-y-3" aria-label="Hồ sơ hóa đơn nhà cung cấp" data-chi="hoa-don-ncc" data-chi-loi="Mỗi hồ sơ đi từ đề nghị mua, hợp đồng, nghiệm thu tới hoá đơn. Mở một hồ sơ để xem đối chiếu ba nguồn và định khoản.">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">

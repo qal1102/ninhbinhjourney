@@ -130,7 +130,7 @@ export const DEMO_ERP_ACCOUNTS: readonly DemoErpAccount[] = [
   {
     id: "director-001",
     username: "giamdoc",
-    name: "Nguyễn Minh Anh",
+    name: "Đạt",
     role: "director",
     jobTitle: "Giám đốc điều hành",
     password: directorPassword,

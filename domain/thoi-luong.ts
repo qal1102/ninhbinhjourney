@@ -18,3 +18,15 @@ export function ngayVietNam(ngayIso: string): string {
   const khop = /^(\d{4})-(\d{2})-(\d{2})/.exec(ngayIso);
   return khop ? `${khop[3]}/${khop[2]}/${khop[1]}` : ngayIso;
 }
+
+/**
+ * Lời chào đầu trang giám đốc. Chủ dự án là anh Đạt và muốn được chào đúng
+ * một câu "Chào anh Đạt" (04/10/2026). Kho không lưu cách xưng hô của từng
+ * người, nên chỉ tài khoản giám đốc gốc mới có chữ "anh"; người khác được
+ * chào bằng tên đầy đủ, không đoán.
+ */
+export function loiChaoGiamDoc(accountId: string, displayName: string): string {
+  const ten = displayName.trim();
+  if (accountId !== "director-001") return `Chào ${ten}`;
+  return `Chào anh ${ten.split(/\s+/).at(-1) ?? ten}`;
+}

@@ -5,7 +5,14 @@ import {
   docChuyenTuApi,
   doDaiTuyen,
   khoangCachMet,
-  thuyenMoPhong,
+  bangBen,
+  chuyenTuLuotVao,
+  docBenTuApi,
+  ngayNenXem,
+  PHUT_TU_CONG_TOI_BEN,
+  thuyenLucNay,
+  thuyenTuLuotVao,
+  trongGioChay,
   TUYEN_THUYEN,
   viTriNoiSuy,
   type CoSoThuyen,
@@ -21,24 +28,29 @@ function cachTuyen(coSo: CoSoThuyen, p: DiemLonLat) {
   return min;
 }
 
-const LUC = Date.parse("2026-10-03T08:30:00+07:00");
+const LUC = Date.parse("2026-10-03T10:30:00+07:00");
+const PHUT = 60_000;
+const DOI = { soThuyen: 600, choMoiThuyen: 4, phutMotVong: 180, nguon: "ước tính", loaiNguon: "estimate" } as const;
 
-describe("thuyền mô phỏng", () => {
+/** n lượt qua cổng dồn trong khoảng phút [tu, den] trước LUC. */
+function luot(n: number, phutTruocTu: number, phutTruocDen = phutTruocTu) {
+  return Array.from({ length: n }, (_, i) => LUC - (phutTruocTu - ((phutTruocTu - phutTruocDen) * i) / Math.max(1, n - 1)) * PHUT);
+}
+
+describe("thuyền ước tính từ lượt qua cổng", () => {
   for (const coSo of ["trang-an", "tam-coc"] as const) {
-    it(`${coSo}: có thuyền trên sông, và thuyền nào cũng nằm đúng trên tuyến sông thật`, () => {
-      const ds = thuyenMoPhong(coSo, LUC);
-      expect(ds.length).toBeGreaterThan(5);
-      for (const t of ds) {
-        expect(t.moPhong).toBe(true);
-        expect(cachTuyen(coSo, t.lonLat)).toBeLessThan(6);
-      }
+    it(`${coSo}: thuyền nào cũng nằm đúng trên tuyến sông thật`, () => {
+      const luotVao = Array.from({ length: 30 }, (_, i) => luot(4, 20 + i * 3)).flat();
+      const { trenSong } = thuyenTuLuotVao(coSo, luotVao, LUC, 4);
+      expect(trenSong.length).toBeGreaterThan(5);
+      for (const t of trenSong) expect(cachTuyen(coSo, t.lonLat)).toBeLessThan(6);
     });
 
-    it(`${coSo}: di chuyển liên tục, một giây chỉ nhích vài mét, không nhảy cóc`, () => {
-      const truoc = new Map(thuyenMoPhong(coSo, LUC).map((t) => [t.id, t]));
-      const sau = thuyenMoPhong(coSo, LUC + 1000);
+    it(`${coSo}: di chuyển liên tục, một giây chỉ nhích vài mét`, () => {
+      const luotVao = Array.from({ length: 20 }, (_, i) => luot(4, 15 + i * 4)).flat();
+      const truoc = new Map(thuyenTuLuotVao(coSo, luotVao, LUC, 4).trenSong.map((t) => [t.id, t]));
       let coDi = 0;
-      for (const t of sau) {
+      for (const t of thuyenTuLuotVao(coSo, luotVao, LUC + 1000, 4).trenSong) {
         const cu = truoc.get(t.id);
         if (!cu) continue;
         const d = khoangCachMet(cu.lonLat, t.lonLat);
@@ -49,20 +61,85 @@ describe("thuyền mô phỏng", () => {
     });
   }
 
-  it("ai mở bản đồ lúc nào cũng thấy cùng một đội thuyền ở cùng chỗ", () => {
-    expect(thuyenMoPhong("trang-an", LUC)).toEqual(thuyenMoPhong("trang-an", LUC));
+  it("đủ chỗ thì sang thuyền mới: 9 khách sát nhau, thuyền 4 chỗ là 3 thuyền", () => {
+    const { trenSong } = thuyenTuLuotVao("trang-an", luot(9, 40, 39), LUC, 4);
+    expect(trenSong.map((t) => t.soKhach)).toEqual([4, 4, 1]);
   });
 
-  it("Tam Cốc là tuyến khứ hồi: có thuyền đang về bến", () => {
-    const ds = thuyenMoPhong("tam-coc", LUC);
-    expect(ds.some((t) => t.ghiChu === "Đang về bến")).toBe(true);
+  it("hai nhóm cách nhau quá 4 phút thì không chung thuyền", () => {
+    const { trenSong } = thuyenTuLuotVao("trang-an", [...luot(1, 50), ...luot(1, 44)], LUC, 4);
+    expect(trenSong).toHaveLength(2);
   });
 
-  it("Tràng An có thuyền đang nghỉ cho khách lên đền", () => {
-    const coNghi = Array.from({ length: 30 }, (_, i) => thuyenMoPhong("trang-an", LUC + i * 60_000)).some((ds) =>
-      ds.some((t) => t.ghiChu.startsWith("Khách đang lên")),
-    );
-    expect(coNghi).toBe(true);
+  it(`khách vừa qua cổng chưa tới ${PHUT_TU_CONG_TOI_BEN} phút thì còn ở bến, chưa trên sông`, () => {
+    const luotVao = luot(3, 2);
+    const kq = thuyenTuLuotVao("trang-an", luotVao, LUC, 4);
+    expect(kq.trenSong).toHaveLength(0);
+    const bang = bangBen({ doi: DOI, chuyen: kq.chuyen, luotVao, soThuyenCoDinhVi: 0, bayGioMs: LUC });
+    expect(bang.khachXuongBen).toBe(3);
+    expect(bang.daRoiBen).toBe(0);
+  });
+
+  it("thuyền đi trọn chuyến rồi thì về bến, không còn trên sông", () => {
+    const luotVao = luot(4, 300);
+    const kq = thuyenTuLuotVao("trang-an", luotVao, LUC, 4);
+    expect(kq.trenSong).toHaveLength(0);
+    const bang = bangBen({ doi: DOI, chuyen: kq.chuyen, luotVao, soThuyenCoDinhVi: 0, bayGioMs: LUC });
+    expect(bang.daRoiBen).toBe(1);
+    expect(bang.trenSong).toBe(0);
+  });
+
+  it("ai mở lúc nào cũng thấy cùng một đội thuyền ở cùng chỗ", () => {
+    const luotVao = luot(12, 60, 20);
+    expect(thuyenTuLuotVao("tam-coc", luotVao, LUC, 4)).toEqual(thuyenTuLuotVao("tam-coc", luotVao, LUC, 4));
+  });
+
+  it("thêm lượt qua cổng mới không làm thuyền đã rời bến đổi chỗ", () => {
+    const cu = luot(20, 90, 30);
+    const truoc = thuyenTuLuotVao("trang-an", cu, LUC, 4).trenSong;
+    const sau = thuyenTuLuotVao("trang-an", [...cu, ...luot(6, 1, 0)], LUC, 4).trenSong;
+    expect(sau).toEqual(truoc);
+  });
+
+  it("thời gian một vòng đọc từ màn Sức chứa: vòng ngắn hơn thì thuyền về bến sớm hơn", () => {
+    // Rời bến 112 phút trước: vòng 180 phút thì còn trên sông, vòng 90 phút thì đã về.
+    const luotVao = luot(4, 120);
+    const dai = chuyenTuLuotVao("trang-an", luotVao, 4, 180);
+    const ngan = chuyenTuLuotVao("trang-an", luotVao, 4, 90);
+    expect(thuyenLucNay("trang-an", dai, LUC, 180)).toHaveLength(1);
+    expect(thuyenLucNay("trang-an", ngan, LUC, 90)).toHaveLength(0);
+  });
+
+  it("bảng bến: còn ở bến là đội thuyền trừ số trên sông, cộng cả thuyền có định vị", () => {
+    const luotVao = Array.from({ length: 10 }, (_, i) => luot(4, 20 + i * 5)).flat();
+    const kq = thuyenTuLuotVao("trang-an", luotVao, LUC, 4);
+    const bang = bangBen({ doi: DOI, chuyen: kq.chuyen, luotVao, soThuyenCoDinhVi: 1, bayGioMs: LUC });
+    expect(bang.trenSong).toBe(kq.trenSong.length + 1);
+    expect(bang.oBen).toBe(600 - bang.trenSong);
+    expect(bang.khachQuaCong).toBe(40);
+    expect(bang.daRoiBen).toBe(10);
+    expect(bang.roiBen30Phut).toBeGreaterThan(0);
+  });
+
+  it("giờ chạy thuyền theo giờ Ninh Bình", () => {
+    expect(trongGioChay(Date.parse("2026-10-03T10:00:00+07:00"))).toBe(true);
+    expect(trongGioChay(Date.parse("2026-10-03T02:00:00+07:00"))).toBe(false);
+    expect(trongGioChay(Date.parse("2026-10-03T18:00:00+07:00"))).toBe(false);
+  });
+
+  it("trước giờ thuyền chạy buổi sáng thì xem lại hôm qua, còn lại xem hôm nay", () => {
+    expect(ngayNenXem(Date.parse("2026-10-04T02:35:00+07:00"))).toBe("2026-10-03");
+    expect(ngayNenXem(Date.parse("2026-10-04T06:30:00+07:00"))).toBe("2026-10-04");
+    expect(ngayNenXem(Date.parse("2026-10-04T23:50:00+07:00"))).toBe("2026-10-04");
+    expect(ngayNenXem(Date.parse("2026-10-01T01:00:00+07:00"))).toBe("2026-09-30");
+  });
+
+  it("đọc phần bến API trả: bỏ số hỏng, đội thuyền thiếu số thì để trống", () => {
+    const ben = docBenTuApi({ ngay: "2026-10-04", doi: { soThuyen: 600, choMoiThuyen: 4, phutMotVong: 180, nguon: "x", loaiNguon: "estimate" }, luotVao: [1, "2", null, 3] });
+    expect(ben?.luotVao).toEqual([1, 3]);
+    expect(ben?.doi?.soThuyen).toBe(600);
+    expect(docBenTuApi({ ngay: "2026-10-04", doi: { soThuyen: 0 }, luotVao: [] })?.doi).toBeNull();
+    expect(docBenTuApi({ ngay: "hom-nay" })).toBeNull();
   });
 });
 

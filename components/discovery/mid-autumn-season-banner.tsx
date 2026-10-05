@@ -5,16 +5,18 @@ import { useMidAutumnSeasonOpen } from "@/lib/seasonal/use-mid-autumn-season";
 
 type Language = "en" | "vi";
 
-const COPY: Record<Language, { eyebrow: string; body: string; cta: string }> = {
+const COPY: Record<Language, { eyebrow: string; body: string; cta: string; muaMoi: string }> = {
   vi: {
     eyebrow: "Mùa trăng 2026 đã khép",
     body: "Rằm tháng Tám đã qua (25/09), Bàn Trăng đóng ngày 27/09. Bạn vẫn xem lại được trang này, hẹn Trung thu 2027.",
     cta: "Xem các gói đang mở",
+    muaMoi: "Sang mùa hoa súng",
   },
   en: {
     eyebrow: "The 2026 moon season has closed",
     body: "The 25 Sep full moon has passed and the Moon Table closed on 27 Sep — this page now holds the season's record, see you in 2027.",
     cta: "Browse open packages",
+    muaMoi: "On to the lily season",
   },
 };
 
@@ -49,13 +51,22 @@ export function MidAutumnSeasonBanner({ lang, source }: { lang: Language; source
           </span>
           <span className="block sm:inline">{copy.body}</span>
         </p>
-        <Link
-          href={`/packages?${params.toString()}`}
-          transitionTypes={["portal-enter"]}
-          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-[#E7B96A]/60 px-5 text-sm font-bold text-[#E7B96A] transition hover:bg-[#E7B96A]/10"
-        >
-          {copy.cta}
-        </Link>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Link
+            href={`/seasonal/hoa-sung?${params.toString()}`}
+            transitionTypes={["portal-enter"]}
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#E7B96A] px-5 text-sm font-bold text-[#0d1915] transition hover:bg-[#f0c98a]"
+          >
+            {copy.muaMoi}
+          </Link>
+          <Link
+            href={`/packages?${params.toString()}`}
+            transitionTypes={["portal-enter"]}
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E7B96A]/60 px-5 text-sm font-bold text-[#E7B96A] transition hover:bg-[#E7B96A]/10"
+          >
+            {copy.cta}
+          </Link>
+        </div>
       </div>
     </div>
   );

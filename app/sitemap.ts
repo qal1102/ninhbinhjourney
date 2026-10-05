@@ -28,7 +28,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/packages"), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/plan"), changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/nghe"), changeFrequency: "monthly", priority: 0.5 },
+    { url: absoluteUrl("/seasonal"), changeFrequency: "weekly", priority: 0.6 },
     { url: absoluteUrl("/seasonal/hoa-sung"), changeFrequency: "weekly", priority: 0.6 },
+    { url: absoluteUrl("/seasonal/mid-autumn"), changeFrequency: "yearly", priority: 0.4 },
     ...[...destinationSlugs].map((slug) => ({
       url: absoluteUrl(`/destination/${slug}`),
       changeFrequency: "monthly" as const,

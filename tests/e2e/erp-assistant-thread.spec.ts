@@ -22,7 +22,7 @@ async function login(page: Page, username: string, password: string) {
 
 async function openAssistant(page: Page) {
   await page.getByRole("button", { name: "Mở trợ lý điều hành" }).click();
-  await expect(page.getByRole("dialog", { name: /Bạn cần mở màn hình nào/ })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: /Bạn cần gì/ })).toBeVisible();
 }
 
 test("lệnh mở màn hình được ghi lại thành hội thoại và còn đó sau khi chuyển trang", async ({
@@ -31,7 +31,7 @@ test("lệnh mở màn hình được ghi lại thành hội thoại và còn đ
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await openAssistant(page);
 
-  await page.getByPlaceholder("Ví dụ: Mở tài chính tổng hợp").fill("Mở camera Tam Chúc");
+  await page.getByPlaceholder("Ví dụ: Ghi chú gọi lại nhà in vé").fill("Mở camera Tam Chúc");
   await page.getByRole("button", { name: "Gửi lệnh" }).click();
 
   // Từ khoá được nhận ra và màn hình mở thẳng ra, không cần bấm thêm.
@@ -66,11 +66,11 @@ test("xoá hội thoại dọn sạch luồng", async ({ page }) => {
   await login(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await openAssistant(page);
 
-  await page.getByPlaceholder("Ví dụ: Mở tài chính tổng hợp").fill("Cơ sở nào đang quá tải?");
+  await page.getByPlaceholder("Ví dụ: Ghi chú gọi lại nhà in vé").fill("Cơ sở nào đang quá tải?");
   await page.getByRole("button", { name: "Gửi lệnh" }).click();
   await expect(page.getByText("Mở màn hình sức chứa để xem theo cơ sở")).toBeVisible();
 
   await page.getByRole("button", { name: "Xoá hội thoại" }).click();
   await expect(page.getByText("Mở màn hình sức chứa để xem theo cơ sở")).toHaveCount(0);
-  await expect(page.getByText(/Giữ micro và nói bình thường/)).toBeVisible();
+  await expect(page.getByText(/Nói tên màn hình để mở, hoặc nói việc cần ghi/)).toBeVisible();
 });

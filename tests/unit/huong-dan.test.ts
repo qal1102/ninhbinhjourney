@@ -83,8 +83,9 @@ describe("màn Hướng dẫn", () => {
       return thang * 100 + ngay;
     });
     expect(so).toEqual([...so].sort((a, b) => b - a));
-    // Bản đồ thuyền phải nằm ngay đầu danh sách: đó là thứ chủ dự án tìm không ra.
-    expect(CHUC_NANG_MOI.slice(0, 2).map(({ cn }) => cn.id)).toContain("thuyen-tren-song");
+    // Bản đồ thuyền (thứ chủ dự án từng tìm không ra, 04/10) phải còn trong
+    // danh sách phần mới; phần làm sau nó đứng trước theo đúng luật ngày.
+    expect(CHUC_NANG_MOI.map(({ cn }) => cn.id)).toContain("thuyen-tren-song");
     for (const cn of CHUC_NANG_WEB) {
       const duong = cn.duongDan.split(/[?#]/)[0];
       if (duong === "/" || duong.startsWith("/erp")) continue;

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { KeMua } from "@/components/discovery/ke-mua";
 import { MidAutumnCampaign } from "@/components/discovery/mid-autumn-campaign";
 import { MidAutumnSeasonBanner } from "@/components/discovery/mid-autumn-season-banner";
 import { MoonDial } from "@/components/discovery/moon-dial";
@@ -29,7 +30,7 @@ export default async function MidAutumnPage({
 
   return (
     <main className="min-h-screen bg-[#17231f]">
-      <WorldSwitcher hienTai="seasonal" lang={lang} source={source} tone="toi" />
+      <WorldSwitcher hienTai="seasonal" lang={lang} source={source} tone="toi" trangMua="mid-autumn" />
       <MidAutumnSeasonBanner lang={lang} source={source} />
       <section className="relative overflow-hidden border-b border-white/12 bg-[#0d1915] px-5 py-14 text-[#fbf7ee] sm:px-8 sm:py-20">
         <div className="relative z-10 mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
@@ -55,6 +56,15 @@ export default async function MidAutumnPage({
         </div>
       </section>
       <MidAutumnCampaign lang={lang} source={source} />
+      <section className="border-t border-white/12 bg-[#0d1915] px-5 py-16 text-[#fbf7ee] sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-[#e7b96a]">{lang === "vi" ? "Sự kiện theo mùa" : "Seasonal occasions"}</p>
+          <h2 className="font-display mt-4 text-4xl leading-tight">{lang === "vi" ? "Mùa khác" : "Other seasons"}</h2>
+          <div className="mt-8">
+            <KeMua lang={lang} source={source} boQua="mid-autumn" />
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

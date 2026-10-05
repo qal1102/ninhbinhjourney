@@ -66,16 +66,20 @@ export function WorldSwitcher({
   lang,
   source = "",
   tone = "toi",
+  trangMua: trangMuaDangXem,
 }: {
   hienTai: TheGioi;
   lang: "vi" | "en";
   source?: string;
   /** `toi` cho nền sẫm (Trung thu, Du lịch); `sang` cho nền giấy (Hợp tác). */
   tone?: "toi" | "sang";
+  /** Đang đứng trên một trang mùa cụ thể thì tab mùa mang đúng tên trang ấy. */
+  trangMua?: TrangMua;
 }) {
   const [daCuon, setDaCuon] = useState(false);
   // Hết mùa Trung thu thì "theo mùa" là mùa hoa súng (lib/seasonal/trang-mua.ts).
-  const trangMua: TrangMua = useMidAutumnSeasonOpen() ? "mid-autumn" : "hoa-sung";
+  const trangMuaHienTai: TrangMua = useMidAutumnSeasonOpen() ? "mid-autumn" : "hoa-sung";
+  const trangMua = trangMuaDangXem ?? trangMuaHienTai;
 
   useEffect(() => {
     const doi = () => setDaCuon(window.scrollY > 120);

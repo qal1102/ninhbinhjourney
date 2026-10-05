@@ -105,8 +105,8 @@ export const CONG_NGHE_DANG_DUNG: readonly CongNgheDangDung[] = [
   {
     id: "giong-noi",
     ten: "Giọng nói trên trình duyệt",
-    lamGi: "Trợ lý điều hành nghe lệnh nói; trang khách đọc thuyết minh bằng giọng tự nhiên của máy.",
-    oDau: "Trợ lý, Nghe thuyết minh",
+    lamGi: "Trợ lý điều hành nghe lệnh nói, nghe câu giao việc, ghi chú, ghi chép ngày rồi viết bản nháp; trang khách đọc thuyết minh bằng giọng tự nhiên của máy.",
+    oDau: "Trợ lý, Việc & ghi chú, Nghe thuyết minh",
   },
   {
     id: "ngoai-tuyen",
@@ -161,7 +161,7 @@ export const CONG_NGHE_DE_XUAT: readonly CongNgheDeXuat[] = [
     id: "tro-ly-ai",
     ten: "Trợ lý AI đọc số liệu điều hành",
     giaiQuyet: "Giám đốc hỏi bằng lời thường (\"tuần này Tam Cốc lệch tiền mấy ca?\") và nhận báo cáo cuối ngày tự viết.",
-    hienCo: "Trợ lý hiểu một bộ lệnh cố định và dẫn tới đúng màn.",
+    hienCo: "Trợ lý dẫn tới đúng màn và hiểu câu giao việc, ghi chú theo mẫu câu; đặt khoá API của Claude là chuyển sang Claude hiểu câu.",
     canGi: "Một mô hình ngôn ngữ lớn (như Claude) chỉ được đọc, không được ghi; ghi nhật ký mọi câu hỏi.",
     uuTien: "nen-lam",
   },

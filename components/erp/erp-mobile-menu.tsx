@@ -332,6 +332,7 @@ export function ErpMobileMenu({
               <p className="px-2 text-xs font-black uppercase tracking-[0.16em] text-[#718078]">Đi nhanh</p>
               <div className="mt-2 space-y-1">
                 <Link href="/erp" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl bg-white px-4 text-sm font-black text-[#294139]">Tổng quan <span>→</span></Link>
+                <Link href="/erp/viec" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl bg-white px-4 text-sm font-black text-[#294139]">Việc &amp; ghi chú <span>→</span></Link>
                 {role === "director" || actingAsUserId ? <Link href="/erp/huong-dan" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl border border-[#e0b979] bg-[#fff8eb] px-4 text-sm font-black text-[#7a5520]">Dạo một vòng <span>→</span></Link> : null}
                 {role === "director" || role === "accountant" || role === "chief-accountant" ? <Link href="/erp/finance" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">{role === "director" ? "Tài chính toàn vùng" : role === "chief-accountant" ? "Kiểm soát & sổ cái" : "Đối soát & lập bút toán"} <span>→</span></Link> : null}
                 {role === "director" ? <Link href="/erp/khach-hang" onClick={closeDrawer} className="flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-[#42574e] hover:bg-white">Khách hàng <span>→</span></Link> : null}

@@ -13,6 +13,9 @@ import {
   type ErpSiteId,
 } from "@/domain/erp";
 import { ERP_ACCOUNTANT_MODULE_IDS } from "@/domain/erp-role-policy";
+import { nhanLoaiCau, type LoaiGhi } from "@/domain/tro-ly-ghi";
+import { hieuCauNoiAction, type KetQuaHieu } from "@/app/erp/tro-ly-ghi-actions";
+import { LoiVaoViec, TheBanNhap, type KetThucNhap } from "@/components/erp/the-ban-nhap";
 
 /** Trạng thái này không đổi sau lượt gắn đầu, nên không cần lắng nghe gì. */
 function subscribeNothing() {
@@ -52,6 +55,16 @@ type ThreadEntry =
       detail: string;
       href?: string;
       hrefLabel?: string;
+      /** Câu chưa hiểu: cho ghi lại thành ghi chú. */
+      ghiLai?: string;
+    }
+  | {
+      kind: "draft";
+      id: string;
+      at: number;
+      nhap: Extract<KetQuaHieu, { ok: true }>;
+      nguon: "giong-noi" | "go-tay";
+      xong?: KetThucNhap;
     };
 
 const THREAD_STORAGE_KEY = "erp-assistant-thread";
@@ -76,6 +89,10 @@ function createReplyEntry(reply: CommandResult): ThreadEntry {
   return { kind: "reply", id: nextEntryId("reply"), at: Date.now(), ...reply };
 }
 
+function createDraftEntry(nhap: Extract<KetQuaHieu, { ok: true }>, nguon: "giong-noi" | "go-tay"): ThreadEntry {
+  return { kind: "draft", id: nextEntryId("draft"), at: Date.now(), nhap, nguon };
+}
+
 type RecognitionConstructor = new () => RecognitionInstance;
 
 type Props = {
@@ -89,6 +106,7 @@ type CommandResult = {
   detail: string;
   href?: string;
   hrefLabel?: string;
+  ghiLai?: string;
 };
 
 type ModuleCommand = {
@@ -121,6 +139,8 @@ const moduleCommands: ModuleCommand[] = [
 
 const suggestionsByRole: Record<ErpRole, string[]> = {
   director: [
+    "Giao cho quản lý Tam Cốc sáng mai kiểm áo phao",
+    "Ghi chú gọi lại nhà in vé chiều nay",
     "Mở hướng dẫn",
     "Hôm nay doanh thu bao nhiêu?",
     "Công nợ nhà cung cấp đã ghi nhận bao nhiêu?",
@@ -136,6 +156,8 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Cơ sở nào đang quá tải?",
   ],
   manager: [
+    "Nhờ nhân viên kiểm két trước 5 giờ chiều",
+    "Nhật ký hôm nay đón 3 đoàn khách",
     "Mở hóa đơn nhà cung cấp",
     "Mở báo cáo hiện trường",
     "Mở camera hiện trường",
@@ -148,6 +170,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở tài chính đối soát",
   ],
   accountant: [
+    "Nhắc tôi 3 giờ chiều đối chiếu sao kê",
     "Mở đối soát toàn vùng",
     "Mở công nợ nhà cung cấp",
     "Hóa đơn nào cần tôi xử lý?",
@@ -158,6 +181,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở dự án sự kiện Bái Đính",
   ],
   "chief-accountant": [
+    "Ghi chú hỏi lại hoá đơn tiền điện tháng 9",
     "Mở bút toán chờ kiểm tra",
     "Mở đối soát toàn vùng",
     "Mở công nợ nhà cung cấp",
@@ -166,6 +190,8 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Mở báo cáo tài chính",
   ],
   employee: [
+    "Nhật ký hôm nay kiểm xong 40 áo phao",
+    "Ghi chú báo quản lý thuyền số 12 hỏng mái chèo",
     "Nộp ảnh hiện trường",
     "Mở chấm công",
     "Mở check-in khách",
@@ -406,6 +432,28 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     }
   }
 
+  async function taoBanNhap(cau: string, nguon: "giong-noi" | "go-tay", loaiEp?: LoaiGhi) {
+    setVoiceMessage("Đang viết bản nháp…");
+    try {
+      const kq = await hieuCauNoiAction(cau, loaiEp);
+      if (!kq.ok) {
+        pushReply({ answer: "Chưa viết được bản nháp", detail: kq.loi });
+        setVoiceMessage("");
+        return;
+      }
+      pushEntry(createDraftEntry(kq, nguon));
+      setVoiceMessage("Xem lại bản nháp rồi bấm lưu.");
+    } catch {
+      pushReply({ answer: "Chưa viết được bản nháp", detail: "Máy chủ chưa phản hồi. Xin thử lại." });
+      setVoiceMessage("");
+    }
+  }
+
+  function ketThucNhap(id: string, kq: KetThucNhap) {
+    setThread((previous) => previous.map((e) => (e.id === id && e.kind === "draft" ? { ...e, xong: kq } : e)));
+    setVoiceMessage(kq.loiNhan);
+  }
+
   async function execute(rawCommand: string, spoken?: { durationMs: number }) {
     const command = normalize(rawCommand);
     const namedSite = findSite(command, siteIds);
@@ -417,6 +465,12 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     pushEntry(
       spoken ? createSpokenEntry(rawCommand, spoken.durationMs) : createTypedEntry(rawCommand),
     );
+
+    // Lời nhờ ghi lại ("Giao cho…", "Ghi chú…", "Nhật ký…") thành bản nháp.
+    if (nhanLoaiCau(rawCommand)) {
+      await taoBanNhap(rawCommand, spoken ? "giong-noi" : "go-tay");
+      return;
+    }
 
     const navigationHref = resolveErpNavigationCommand(rawCommand, role, siteIds, currentSiteId);
     if (navigationHref) {
@@ -505,7 +559,8 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
 
     pushReply({
       answer: "Chưa tìm thấy màn hình phù hợp",
-      detail: "Xin nói “Mở” kèm nghiệp vụ và cơ sở, ví dụ: “Mở camera Tam Chúc” hoặc “Mở nhân sự Tràng An”.",
+      detail: "Muốn mở màn hình thì nói “Mở” kèm nghiệp vụ và cơ sở, ví dụ “Mở camera Tam Chúc”. Hay ghi câu này lại?",
+      ghiLai: rawCommand,
     });
   }
 
@@ -545,7 +600,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
       durationTimerRef.current = window.setInterval(() => {
         setRecordingMs(Date.now() - startedAtRef.current);
       }, 100);
-      setVoiceMessage("Đang nghe. Xin nói tên màn hình và cơ sở.");
+      setVoiceMessage("Đang nghe…");
     };
     recognition.onresult = (event) => {
       let finalText = "";
@@ -651,7 +706,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <Image src="/brand/ninh-binh-mark.png" alt="" width={42} height={42} className="h-10 w-10 shrink-0 rounded-full object-cover" />
-                <div className="min-w-0"><p className="text-xs font-bold text-[#477565]">TRỢ LÝ ĐIỀU HÀNH</p><h2 id="voice-title" className="truncate text-lg font-black text-[#20342c]">Bạn cần mở màn hình nào?</h2></div>
+                <div className="min-w-0"><p className="text-xs font-bold text-[#477565]">TRỢ LÝ ĐIỀU HÀNH</p><h2 id="voice-title" className="truncate text-lg font-black text-[#20342c]">Bạn cần gì?</h2></div>
               </div>
               <button type="button" onClick={closeDialog} aria-label="Đóng" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d4ddd7] bg-white text-xl text-[#42554c]">×</button>
             </div>
@@ -663,13 +718,32 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
             >
               {thread.length === 0 && !interim ? (
                 <p className="rounded-2xl bg-white/70 p-3 text-xs leading-5 text-[#69786f]">
-                  Giữ micro và nói bình thường. Hệ thống chuyển giọng nói thành văn bản
-                  ngay khi bạn đang nói, nghe ra từ khoá rồi mở thẳng màn hình tương ứng.
+                  Nói tên màn hình để mở, hoặc nói việc cần ghi: “Giao cho…”, “Ghi chú…”,
+                  “Nhật ký hôm nay…”. Việc cần ghi thành bản nháp để bạn xem lại rồi lưu.
                 </p>
               ) : null}
 
               {thread.map((entry) =>
-                entry.kind === "reply" ? (
+                entry.kind === "draft" ? (
+                  entry.xong ? (
+                    <article key={entry.id} className="mr-6 rounded-2xl rounded-tl-md bg-[#183f34] p-3.5 text-white" data-testid="nhap-da-xong">
+                      <p className="text-sm font-black leading-5">{entry.xong.loiNhan}</p>
+                      {entry.xong.trangThai === "da-luu" ? <LoiVaoViec toi /> : null}
+                    </article>
+                  ) : (
+                    <div key={entry.id} className="mr-2">
+                      <TheBanNhap
+                        banNhap={entry.nhap.banNhap}
+                        boHieu={entry.nhap.boHieu}
+                        nguoiNhanCo={entry.nhap.nguoiNhanCo}
+                        giaoDuoc={entry.nhap.giaoDuoc}
+                        nguon={entry.nguon}
+                        onKetThuc={(kq) => ketThucNhap(entry.id, kq)}
+                        toi
+                      />
+                    </div>
+                  )
+                ) : entry.kind === "reply" ? (
                   <article
                     key={entry.id}
                     className="mr-6 rounded-2xl rounded-tl-md bg-[#183f34] p-3.5 text-white"
@@ -683,6 +757,15 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
                         className="mt-2.5 min-h-11 w-full rounded-xl bg-white px-4 text-sm font-black text-[#183f34]"
                       >
                         {entry.hrefLabel}
+                      </button>
+                    ) : null}
+                    {entry.ghiLai ? (
+                      <button
+                        type="button"
+                        onClick={() => taoBanNhap(entry.ghiLai!, "go-tay", "ghi-chu")}
+                        className="mt-2.5 min-h-11 w-full rounded-xl border border-white/40 px-4 text-sm font-black text-white"
+                      >
+                        Ghi lại thành ghi chú
                       </button>
                     ) : null}
                   </article>
@@ -736,13 +819,13 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
               <span className={`grid h-10 w-10 place-items-center rounded-full ${listening ? "animate-pulse bg-[#d45f49] text-white motion-reduce:animate-none" : "bg-[#e3eee9]"}`}>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8" /></svg>
               </span>
-              <span className="text-left"><strong className="block text-sm">{listening ? `Đang nghe… ${formatDuration(recordingMs)}` : "Nói để mở nhanh"}</strong><span className="mt-0.5 block text-xs opacity-65">“Mở camera Tam Chúc”</span></span>
+              <span className="text-left"><strong className="block text-sm">{listening ? `Đang nghe… ${formatDuration(recordingMs)}` : "Nói để mở hoặc ghi việc"}</strong><span className="mt-0.5 block text-xs opacity-65">“Giao cho Hùng sáng mai kiểm áo phao”</span></span>
             </button>
 
             {voiceMessage ? <p role="status" className={`mt-3 rounded-xl px-3 py-2 text-xs ${speechSupported ? "bg-[#e6f0eb] text-[#315e4d]" : "bg-[#fff0dc] text-[#76501d]"}`}>{voiceMessage}</p> : null}
 
             <form className="mt-3 flex gap-2" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); const value = String(data.get("command") ?? "").trim(); if (value) execute(value); }}>
-              <input ref={commandInputRef} name="command" enterKeyHint="send" value={transcript} onChange={(event) => setTranscript(event.target.value)} className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#ccd8d1] bg-white px-3 text-sm outline-none focus:border-[#4f806f]" placeholder="Ví dụ: Mở tài chính tổng hợp" />
+              <input ref={commandInputRef} name="command" enterKeyHint="send" value={transcript} onChange={(event) => setTranscript(event.target.value)} className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#ccd8d1] bg-white px-3 text-sm outline-none focus:border-[#4f806f]" placeholder="Ví dụ: Ghi chú gọi lại nhà in vé" />
               <button type="submit" aria-label="Gửi lệnh" className="grid min-h-11 w-11 place-items-center rounded-xl bg-[#183f34] text-white">
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>
               </button>

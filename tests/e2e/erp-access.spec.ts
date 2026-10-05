@@ -285,8 +285,8 @@ test("mobile director can use the hamburger, finance drill-down and voice comman
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
 
   await page.getByRole("button", { name: "Mở trợ lý điều hành" }).click();
-  await expect(page.getByRole("dialog", { name: "Bạn cần mở màn hình nào?" })).toBeVisible();
-  const command = page.getByPlaceholder("Ví dụ: Mở tài chính tổng hợp");
+  await expect(page.getByRole("dialog", { name: "Bạn cần gì?" })).toBeVisible();
+  const command = page.getByPlaceholder("Ví dụ: Ghi chú gọi lại nhà in vé");
   const assistantThread = page.getByTestId("assistant-thread");
   await command.fill("Hôm nay doanh thu bao nhiêu?");
   // "1,84 tỷ đồng" là số hằng T13 đã gỡ. Câu hỏi doanh thu bây giờ đi qua
@@ -311,7 +311,7 @@ test("mobile director can use the hamburger, finance drill-down and voice comman
   await page.getByRole("button", { name: "Đóng", exact: true }).click();
 
   await page.getByRole("button", { name: "Mở trợ lý điều hành" }).click();
-  await page.getByPlaceholder("Ví dụ: Mở tài chính tổng hợp").fill("Mở nhân sự Bái Đính");
+  await page.getByPlaceholder("Ví dụ: Ghi chú gọi lại nhà in vé").fill("Mở nhân sự Bái Đính");
   await page.getByRole("button", { name: "Gửi lệnh" }).click();
   await expect(page).toHaveURL(/\/erp\/bai-dinh\/nhan-su$/);
 });
@@ -374,7 +374,7 @@ test("mobile voice recognition opens the requested event project", async ({ page
     Object.defineProperty(window, "webkitSpeechRecognition", { value: MockRecognition, configurable: true });
   });
   await page.getByRole("button", { name: "Mở trợ lý điều hành" }).click();
-  await page.getByRole("button", { name: /Nói để mở nhanh/ }).click();
+  await page.getByRole("button", { name: /Nói để mở hoặc ghi việc/ }).click();
 
   type SpeechDriver = { say: (transcript: string, isFinal: boolean) => void; finish: () => void };
 

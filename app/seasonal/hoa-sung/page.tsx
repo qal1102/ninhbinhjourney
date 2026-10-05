@@ -1,12 +1,15 @@
+import Image from "next/image";
 import Link from "next/link";
-import { DieuHanhHoaSung } from "@/components/discovery/dieu-hanh-hoa-sung";
-import { SongHoaSung } from "@/components/discovery/song-hoa-sung";
+import { BanDoHoaSungTre } from "@/components/discovery/ban-do-hoa-sung-tre";
+import { DongHoHoaNo } from "@/components/discovery/dong-ho-hoa-no";
+import { KeMua } from "@/components/discovery/ke-mua";
 import { WorldSwitcher } from "@/components/discovery/world-switcher";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
 import { getPackageBySlug } from "@/content/packages";
 import { giaGoi, goiHienThi } from "@/content/packages-en";
 import { NHAN_CHAC_CHAN } from "@/domain/lich-mua-vu";
 import { cacMuaToi, ngayDoc, tinhTrangHoaSung, type MuaHoaSung } from "@/domain/mua-hoa-sung";
+import { doDaiTuyen, TUYEN_THUYEN } from "@/domain/thuyen-song";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
 /**
@@ -30,6 +33,7 @@ const NGUON = [
   { ten: "Tuổi Trẻ, 26/10/2025 · Mùa hoa súng rực rỡ ở Ninh Bình", url: "https://tuoitre.vn/mua-hoa-sung-ruc-ro-o-ninh-binh-khien-du-khach-ngo-ngang-20251026154627142.htm" },
   { ten: "Du lịch Ninh Bình · Giai điệu hoa súng 2025", url: "https://dulichninhbinh.com.vn/item/3405" },
   { ten: "vntravel.org.vn · Sắc Hồng Tam Cốc 2025", url: "https://vntravel.org.vn/du-lich-ninh-binh-mua-thu-trai-nghiem-sac-hong-tam-coc-lang-man-a7642.html" },
+  { ten: "Ảnh đầu trang: minh ha, Wikimedia Commons, CC0", url: "https://commons.wikimedia.org/wiki/File:Water_lily_(26204467139).jpg" },
 ];
 
 function ngayNgan(iso: string) {
@@ -59,6 +63,11 @@ export default async function HoaSungPage({
     return `/checkout?${q.toString()}`;
   })();
   const chacChanLe = NHAN_CHAC_CHAN[mua.le.chacChan];
+  const soKm = (doDaiTuyen(TUYEN_THUYEN["tam-coc"]) / 1000).toLocaleString(lang === "en" ? "en-GB" : "vi-VN", {
+    maximumFractionDigits: 1,
+  });
+  const qMua = new URLSearchParams({ lang });
+  if (source) qMua.set("source", source);
 
   const trangThaiChu =
     giaiDoan === "sap-toi"
@@ -90,53 +99,84 @@ export default async function HoaSungPage({
 
   return (
     <main lang={lang} className="min-h-screen bg-[#f7f2ee] text-[#183f34]" data-testid="trang-hoa-sung" data-giai-doan={giaiDoan}>
-      <WorldSwitcher hienTai="seasonal" lang={lang} source={source} tone="sang" />
+      <WorldSwitcher hienTai="seasonal" lang={lang} source={source} tone="toi" trangMua="hoa-sung" />
 
-      <section className="relative overflow-hidden px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-14">
-        <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
-          <div>
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-[0.66rem] font-extrabold uppercase tracking-[0.3em] text-[#9a5f8f]">
+      <section className="relative -mt-[73px] overflow-hidden bg-[#140f0c] text-[#fbf7ee]" data-testid="dau-trang-hoa-sung">
+        <div className="absolute inset-x-0 top-0 h-[74svh] lg:inset-0 lg:h-auto">
+          <Image
+            src="/images/campaigns/hoa-sung/bong-sung-sang-som.webp"
+            alt={t("Một bông súng hồng nở giữa lá súng lúc sáng sớm", "A pink water lily open among its pads in the early morning")}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[64%_38%] lg:object-[72%_44%]"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,15,12,.55)_0%,rgba(20,15,12,0)_26%,rgba(20,15,12,.15)_55%,#140f0c_100%)] lg:bg-[linear-gradient(90deg,rgba(20,15,12,.94)_0%,rgba(20,15,12,.78)_34%,rgba(20,15,12,.12)_66%,rgba(20,15,12,0)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 hidden h-40 bg-gradient-to-t from-[#140f0c] to-transparent lg:block" />
+        </div>
+        <div className="relative mx-auto flex max-w-7xl flex-col justify-end px-5 pb-10 pt-[52svh] sm:px-8 lg:min-h-[94svh] lg:pb-20 lg:pt-36">
+          <div className="max-w-2xl">
+            <div className="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[0.66rem] font-extrabold uppercase tracking-[0.3em] text-[#f0b8d2]">
                 {t(`Sự kiện theo mùa · Tam Cốc · ${mua.nam}`, `Seasonal · Tam Coc · ${mua.nam}`)}
               </p>
               <NutNgonNgu lang={lang} />
             </div>
-            <h1 className="font-display mt-5 max-w-3xl text-5xl leading-[0.92] sm:text-7xl">
+            <h1 className="font-display mt-5 text-5xl leading-[0.92] sm:text-7xl lg:text-[5.6rem]">
               {t("Hoa súng nở trên sông Ngô Đồng", "Water lilies on the Ngo Dong River")}
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-8 text-[#4d5b55] sm:text-lg">
+            <p className="mt-6 max-w-xl text-base leading-8 text-white/78 sm:text-lg">
               {t(
                 "Từ cuối tháng 10, hai bên dòng Ngô Đồng phủ hoa súng tím hồng. Hoa chỉ nở buổi sáng, khoảng 7 tới 10 giờ, rồi cụp lại. Đi đò sớm là thấy trọn.",
                 "From late October the banks of the Ngo Dong fill with pink and violet water lilies. They open only in the morning, roughly 7 to 10 am, then close. Take an early boat to see them at their fullest.",
               )}
             </p>
-            <p className="mt-6 inline-flex min-h-11 items-center rounded-full bg-[#183f34] px-5 text-sm font-bold text-[#fbf7ee]" data-testid="trang-thai-mua">
+            <p
+              className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-full bg-white/12 px-5 text-sm font-bold text-[#fbf7ee] ring-1 ring-white/25 backdrop-blur-sm"
+              data-testid="trang-thai-mua"
+            >
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#f0b8d2]" />
               {trangThaiChu}
             </p>
-            <ol className="mt-8 grid max-w-xl grid-cols-3 border-y border-[#d9cbd9] text-sm">
-              <li className="border-r border-[#d9cbd9] px-3 py-4 pl-0">
-                <span className="block text-xs font-bold uppercase tracking-[0.14em] text-[#9a5f8f]">{t("Mùa hoa", "Bloom")}</span>
+            <ol className="mt-8 grid max-w-xl grid-cols-3 border-y border-white/18 text-sm text-white/85">
+              <li className="border-r border-white/18 px-3 py-4 pl-0">
+                <span className="block text-[0.68rem] font-bold uppercase tracking-[0.14em] text-[#f0b8d2]">{t("Mùa hoa", "Bloom")}</span>
                 {ngayNgan(mua.tu)} – {ngayNgan(mua.den)}
               </li>
-              <li className="border-r border-[#d9cbd9] px-3 py-4">
-                <span className="block text-xs font-bold uppercase tracking-[0.14em] text-[#9a5f8f]">{t("Giờ nở", "Opens")}</span>
+              <li className="border-r border-white/18 px-3 py-4">
+                <span className="block text-[0.68rem] font-bold uppercase tracking-[0.14em] text-[#f0b8d2]">{t("Giờ nở", "Opens")}</span>
                 {t("7–10 giờ sáng", "7–10 am")}
               </li>
               <li className="px-3 py-4">
-                <span className="block text-xs font-bold uppercase tracking-[0.14em] text-[#9a5f8f]">{t("Lễ Sắc Hồng", "Sac Hong")}</span>
+                <span className="block text-[0.68rem] font-bold uppercase tracking-[0.14em] text-[#f0b8d2]">{t("Lễ Sắc Hồng", "Sac Hong")}</span>
                 {ngayNgan(mua.le.tu)} – {ngayNgan(mua.le.den)}
               </li>
             </ol>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={linkGoi} className="inline-flex min-h-12 items-center rounded-full bg-[#9a5f8f] px-6 text-sm font-extrabold text-white transition hover:bg-[#844e7a]" data-testid="dat-do-som">
+              <Link
+                href={linkGoi}
+                className="inline-flex min-h-12 items-center rounded-full bg-[#e7a6c4] px-6 text-sm font-extrabold text-[#2a1622] transition hover:bg-[#f0bad3]"
+                data-testid="dat-do-som"
+              >
                 {t("Đặt đò sớm mùa hoa", "Book an early lily boat")}
               </Link>
-              <a href="#sac-hong" className="inline-flex min-h-12 items-center rounded-full border border-[#c9b7cb] px-6 text-sm font-bold text-[#5d3f6b] transition hover:border-[#9a5f8f]">
+              <a
+                href="#sac-hong"
+                className="inline-flex min-h-12 items-center rounded-full border border-white/40 px-6 text-sm font-bold text-[#fbf7ee] transition hover:border-white"
+              >
                 {t("Xem lễ Sắc Hồng", "See the Sac Hong festival")}
               </a>
             </div>
           </div>
-          <SongHoaSung lang={lang} bayGio={bayGio.toISOString()} />
+        </div>
+        <p className="relative mx-auto max-w-7xl px-5 pb-5 text-[0.68rem] text-white/45 sm:px-8 lg:absolute lg:inset-x-0 lg:bottom-0 lg:text-right">
+          {t("Bông súng lúc 6:54 sáng, 28/10/2017 · Ảnh: minh ha, CC0", "A lily at 6:54 am, 28 October 2017 · Photo: minh ha, CC0")}
+        </p>
+      </section>
+
+      <section className="px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-7xl">
+          <DongHoHoaNo lang={lang} bayGio={bayGio.toISOString()} />
         </div>
       </section>
 
@@ -173,7 +213,25 @@ export default async function HoaSungPage({
               ) : null}
             </div>
           </div>
-          <DieuHanhHoaSung lang={lang} />
+          <figure className="overflow-hidden rounded-[28px] border border-[#e3d6e6] bg-[#f3eef0]" data-testid="ban-do-hoa-sung">
+            <div className="h-[420px] sm:h-[520px]">
+              <BanDoHoaSungTre lang={lang} />
+            </div>
+            <figcaption className="grid gap-2 border-t border-[#e3d6e6] px-5 py-4 text-xs leading-5 text-[#5f5463] sm:grid-cols-3">
+              <span className="flex items-center gap-2">
+                <span aria-hidden="true" className="w-6 shrink-0 border-t-2 border-dashed border-[#183f34]" />
+                {t(`Đường đò ${soKm} km, bến Văn Lâm tới Hang Ba`, `${soKm} km boat route, Van Lam pier to Hang Ba`)}
+              </span>
+              <span className="flex items-center gap-2">
+                <span aria-hidden="true" className="h-3 w-6 shrink-0 rounded-full bg-[#e48bb4]/60" />
+                {t("Đoạn hoa dày nhất, giữa Hang Cả và Hang Hai", "Thickest lilies, between Hang Ca and Hang Hai")}
+              </span>
+              <span className="flex items-center gap-2">
+                <span aria-hidden="true" className="h-3 w-3 shrink-0 rounded-full border-2 border-white bg-[#c75b8f] shadow" />
+                {t("Thuyền hoa diễu trong lễ (minh hoạ)", "Lily boats in the parade (illustrative)")}
+              </span>
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -251,7 +309,22 @@ export default async function HoaSungPage({
         </section>
       ) : null}
 
-      <footer className="px-5 py-10 sm:px-8">
+      <section className="px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-[0.66rem] font-extrabold uppercase tracking-[0.3em] text-[#9a5f8f]">{t("Sự kiện theo mùa", "Seasonal occasions")}</p>
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+            <h2 className="font-display text-4xl leading-tight">{t("Mùa khác", "Other seasons")}</h2>
+            <Link href={`/seasonal?${qMua.toString()}`} className="inline-flex min-h-11 items-center text-sm font-bold text-[#5d3f6b] underline underline-offset-4">
+              {t("Xem mọi mùa", "All seasons")}
+            </Link>
+          </div>
+          <div className="mt-8">
+            <KeMua lang={lang} source={source} boQua="hoa-sung" bayGio={bayGio} />
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-[#e6dbe6] px-5 py-10 sm:px-8">
         <div className="mx-auto max-w-7xl text-xs leading-6 text-[#6b6f6c]">
           <p className="font-bold text-[#183f34]">{t("Nguồn", "Sources")}</p>
           <ul className="mt-2 space-y-1">

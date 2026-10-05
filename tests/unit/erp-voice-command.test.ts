@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { resolveErpNavigationCommand } from "@/components/erp/voice-command-center";
+
+// Bài này chỉ kiểm hàm điều hướng thuần. Trợ lý còn nạp server action ghi việc
+// (kéo theo `server-only` và kho), thứ không chạy được ngoài Next.
+vi.mock("@/app/erp/tro-ly-ghi-actions", () => ({}));
 import type { ErpRole, ErpSiteId } from "@/domain/erp";
 
 const allSites: ErpSiteId[] = ["trang-an", "tam-chuc", "tam-coc", "bai-dinh"];

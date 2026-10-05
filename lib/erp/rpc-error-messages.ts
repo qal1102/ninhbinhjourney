@@ -537,6 +537,15 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   THUYEN_KHONG_CO_CHUYEN: "Không thấy chuyến thuyền này của bạn.",
   THUYEN_CHUYEN_DA_DONG: "Chuyến thuyền đã về bến. Bắt đầu chuyến mới nhé.",
   THUYEN_VI_TRI_SAI: "Vị trí gửi lên không hợp lệ.",
+  VIEC_GHI_LOAI_SAI: "Loại ghi chép không hợp lệ.",
+  VIEC_GHI_NGUOI_TAO_KHONG_HOP_LE: "Tài khoản của bạn không còn hoạt động.",
+  VIEC_GHI_NGUOI_NHAN_KHONG_HOP_LE: "Người nhận không còn hoạt động trong sổ tài khoản.",
+  VIEC_GHI_HAN_DA_QUA: "Hạn đã qua, chọn hạn muộn hơn.",
+  VIEC_GHI_THIEU_NOI_DUNG: "Chưa có nội dung.",
+  VIEC_GHI_KHONG_CO: "Không thấy việc này trong danh sách của bạn.",
+  VIEC_GHI_TRANG_THAI_SAI: "Trạng thái không hợp lệ.",
+  VIEC_GHI_CHI_NGUOI_GIAO_HUY: "Chỉ người giao mới huỷ được việc.",
+  VIEC_GHI_DA_HUY: "Việc này đã huỷ.",
   PAYMENT_COLLECT_INPUT_INVALID:
     "Thời điểm thu tiền gửi lên chưa hợp lệ.",
   PAYMENT_COLLECT_ACTOR_REQUIRED:

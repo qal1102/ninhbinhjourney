@@ -34,7 +34,7 @@ type WorldLink = {
   id: "collaboration" | "seasonal" | "booking";
   label: string;
   description: string;
-  pathname: "/collaborations" | "/seasonal/mid-autumn" | "/seasonal/hoa-sung" | "/packages";
+  pathname: "/collaborations" | "/seasonal/mid-autumn" | "/seasonal/hoa-sung" | "/seasonal" | "/packages";
 };
 
 type ConciergeCopy = {
@@ -116,9 +116,9 @@ const COPY: Record<Language, ConciergeCopy> = {
         pathname: "/packages",
       },
     ],
-    seasonalWorldClosedLabel: "Mùa hoa súng Tam Cốc",
+    seasonalWorldClosedLabel: "Hoa súng Tam Cốc, Trung thu 2026",
     seasonalWorldClosedDescription:
-      "Trung thu 2026 đã khép. Hoa súng nở trên sông Ngô Đồng từ cuối tháng 10, có lễ Sắc Hồng; xem lịch và đặt đò sớm.",
+      "Hoa súng nở trên sông Ngô Đồng từ cuối tháng 10, có lễ Sắc Hồng và đò sớm. Trung thu 2026 đã khép, vẫn xem lại được.",
   },
   en: {
     inlineLabel: "Journey index",
@@ -178,9 +178,9 @@ const COPY: Record<Language, ConciergeCopy> = {
         pathname: "/packages",
       },
     ],
-    seasonalWorldClosedLabel: "Water-lily season, Tam Coc",
+    seasonalWorldClosedLabel: "Tam Coc lilies, Mid-Autumn 2026",
     seasonalWorldClosedDescription:
-      "Mid-Autumn 2026 has closed. Water lilies open on the Ngo Dong from late October, with the Sac Hong festival; see the dates and book an early boat.",
+      "Water lilies open on the Ngo Dong from late October, with the Sac Hong festival and early boats. Mid-Autumn 2026 has closed and stays here to look back on.",
   },
 };
 
@@ -526,7 +526,7 @@ export function JourneyConcierge({
                       return (
                         <Link
                           key={world.id}
-                          href={worldHref(seasonalClosed ? "/seasonal/hoa-sung" : world.pathname, lang, source)}
+                          href={worldHref(seasonalClosed ? "/seasonal" : world.pathname, lang, source)}
                           transitionTypes={["portal-enter"]}
                           onClick={() => {
                             if (open) closeDialog();

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { DUONG_DAN_MUA, NHAN_MUA_NGAN, type TrangMua } from "@/lib/seasonal/trang-mua";
+import { loiVaoMua, NHAN_MUA_NGAN, type TrangMua } from "@/lib/seasonal/trang-mua";
 import { useMidAutumnSeasonOpen } from "@/lib/seasonal/use-mid-autumn-season";
 
 /**
@@ -47,7 +47,7 @@ const TEN_NGAN: Record<TheGioi, { vi: string; en: string }> = {
 
 const THU_TU: readonly TheGioi[] = ["travel", "collaboration", "seasonal", "booking"];
 
-function duongDan(dich: TheGioi, lang: "vi" | "en", source: string, trangMua: TrangMua) {
+function duongDan(dich: TheGioi, lang: "vi" | "en", source: string, duongDanMua: string) {
   const params = new URLSearchParams({ lang });
   if (source) params.set("source", source);
   const goc =
@@ -56,7 +56,7 @@ function duongDan(dich: TheGioi, lang: "vi" | "en", source: string, trangMua: Tr
       : dich === "collaboration"
         ? "/collaborations"
         : dich === "seasonal"
-          ? DUONG_DAN_MUA[trangMua]
+          ? duongDanMua
           : "/packages";
   return `${goc}?${params.toString()}`;
 }
@@ -78,8 +78,15 @@ export function WorldSwitcher({
 }) {
   const [daCuon, setDaCuon] = useState(false);
   // Hết mùa Trung thu thì "theo mùa" là mùa hoa súng (lib/seasonal/trang-mua.ts).
-  const trangMuaHienTai: TrangMua = useMidAutumnSeasonOpen() ? "mid-autumn" : "hoa-sung";
-  const trangMua = trangMuaDangXem ?? trangMuaHienTai;
+  // Trung thu còn bán thì tab mùa vào thẳng Trung thu; hết mùa thì vào kệ mùa,
+  // nơi Trung thu đã khép vẫn hiện cạnh mùa hoa súng.
+  const trungThuMo = useMidAutumnSeasonOpen();
+  const duongDanMua = loiVaoMua(trungThuMo);
+  const nhanMua = trangMuaDangXem
+    ? NHAN_MUA_NGAN[trangMuaDangXem]
+    : trungThuMo
+      ? NHAN_MUA_NGAN["mid-autumn"]
+      : TEN_NGAN.seasonal;
 
   useEffect(() => {
     const doi = () => setDaCuon(window.scrollY > 120);
@@ -116,7 +123,7 @@ export function WorldSwitcher({
           một cái tên thương hiệu thành "bấm vào đây để quay lại".
         */}
         <Link
-          href={duongDan("travel", lang, source, trangMua)}
+          href={duongDan("travel", lang, source, duongDanMua)}
           // Giữ đúng kiểu chuyển cảnh của từng chiều: lùi về thế giới mặc
           // định là `nav-back`, sang một chương khác là `portal-enter`. Bản
           // đầu của thanh này quên cả hai, và bài page-continuity bắt được
@@ -155,7 +162,7 @@ export function WorldSwitcher({
               return (
                 <Link
                   key={t}
-                  href={duongDan(t, lang, source, trangMua)}
+                  href={duongDan(t, lang, source, duongDanMua)}
                   transitionTypes={["portal-enter"]}
                   aria-current={dangO ? "page" : undefined}
                   className={`inline-flex min-h-11 items-center whitespace-nowrap border-b-2 transition motion-reduce:transition-none ${
@@ -164,7 +171,7 @@ export function WorldSwitcher({
                       : `border-transparent ${chuMo} hover:${chuChinh}`
                   }`}
                 >
-                  <span aria-hidden="true">{t === "seasonal" ? NHAN_MUA_NGAN[trangMua][lang] : TEN_NGAN[t][lang]}</span>
+                  <span aria-hidden="true">{t === "seasonal" ? nhanMua[lang] : TEN_NGAN[t][lang]}</span>
                   <span className="sr-only">{TEN[t][lang]}</span>
                 </Link>
               );

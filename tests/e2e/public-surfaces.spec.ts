@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { PACKAGES } from "@/content/packages";
 import { goiDaHetMua } from "@/content/packages-en";
 import { isMidAutumnSeasonOpen } from "@/lib/seasonal/mid-autumn-season";
-import { DUONG_DAN_MUA, trangMuaHienTai } from "@/lib/seasonal/trang-mua";
+import { loiVaoMua } from "@/lib/seasonal/trang-mua";
 
 // T2 removed "/demo/ops": it is the console of the abandoned stack and now
 // answers 404 in production. Auditing the accessibility of a page nobody can
@@ -192,10 +192,10 @@ test("top experience portal keeps tourism closed by default and preserves langua
     "/collaborations?lang=en&source=editorial-invite",
   );
   // Cổng mùa đổi theo mùa (lib/seasonal/trang-mua.ts): hết Trung thu
-  // (27/09/2026) thì cổng dẫn sang mùa hoa súng Tam Cốc.
+  // (27/09/2026) thì cổng dẫn về kệ mùa, Trung thu đã khép vẫn hiện ở đó.
   await expect(
-    portals.filter({ hasText: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Water-lily season" }).first(),
-  ).toHaveAttribute("href", `${DUONG_DAN_MUA[trangMuaHienTai()]}?lang=en&source=editorial-invite`);
+    portals.filter({ hasText: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Lilies, Mid-Autumn" }).first(),
+  ).toHaveAttribute("href", `${loiVaoMua(isMidAutumnSeasonOpen())}?lang=en&source=editorial-invite`);
   await expect(portals.filter({ hasText: "Reserve" }).first()).toHaveAttribute(
     "href",
     "/packages?lang=en&source=editorial-invite",
@@ -228,15 +228,16 @@ test("top experience portal keeps tourism closed by default and preserves langua
   await page.goto("/?lang=en&source=editorial-invite", { waitUntil: "domcontentloaded" });
   await waitForHomeLayout(page);
   await page
-    .getByRole("link", { name: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Water-lily season" })
+    .getByRole("link", { name: isMidAutumnSeasonOpen() ? "Seasonal occasions · Mid-Autumn" : "Seasonal occasions · Lilies, Mid-Autumn" })
     .first()
     .click();
   if (isMidAutumnSeasonOpen()) {
     await expect(page).toHaveURL(/\/seasonal\/mid-autumn\?lang=en&source=editorial-invite/);
     await expect(page.locator("#mid-autumn")).toBeVisible();
   } else {
-    await expect(page).toHaveURL(/\/seasonal\/hoa-sung\?lang=en&source=editorial-invite/);
-    await expect(page.getByTestId("trang-hoa-sung")).toBeVisible();
+    await expect(page).toHaveURL(/\/seasonal\?lang=en&source=editorial-invite/);
+    await expect(page.getByTestId("trang-cac-mua")).toBeVisible();
+    await expect(page.locator('[data-mua="mid-autumn"]')).toHaveAttribute("data-trang-thai-mua", "da-khep");
   }
 });
 
@@ -269,8 +270,8 @@ test("journey concierge leads to real tourism chapters", async ({
     "/collaborations?lang=en",
   );
   await expect(
-    dialog.getByRole("link", { name: isMidAutumnSeasonOpen() ? /Moon Season 2026/ : /Water-lily season/ }),
-  ).toHaveAttribute("href", `${DUONG_DAN_MUA[trangMuaHienTai()]}?lang=en`);
+    dialog.getByRole("link", { name: isMidAutumnSeasonOpen() ? /Moon Season 2026/ : /Tam Coc lilies, Mid-Autumn 2026/ }),
+  ).toHaveAttribute("href", `${loiVaoMua(isMidAutumnSeasonOpen())}?lang=en`);
   await expect(dialog.getByRole("link", { name: /Reservations/ })).toHaveAttribute(
     "href",
     "/packages?lang=en",

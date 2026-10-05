@@ -5,11 +5,12 @@ import { BanDoThuyenTre } from "@/components/erp/ban-do-thuyen-tre";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { NguoiCheo } from "@/components/erp/nguoi-cheo";
+import { SoNguoiCheo } from "@/components/erp/so-nguoi-cheo";
 import { ThoiTietBen } from "@/components/erp/thoi-tiet-ben";
 import { laCoSoThuyen, TUYEN_THUYEN, type CoSoThuyen } from "@/domain/thuyen-song";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
 import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
-import { chuyenCuaToi, thuyenCoKho } from "@/lib/erp/thuyen-repository";
+import { chuyenCuaToi, soNguoiCheo, thuyenCoKho } from "@/lib/erp/thuyen-repository";
 
 /**
  * Thuyền trên sông (migration 104), một chỗ cho cả hai phía:
@@ -37,6 +38,7 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
   const xin = (await searchParams)?.coSo;
   const xinCoSo = Array.isArray(xin) ? xin[0] : xin;
   const banDo = xemDuoc.find((id) => id === xinCoSo) ?? xemDuoc[0] ?? null;
+  const soCheo = banDo ? await soNguoiCheo(banDo).catch(() => []) : [];
 
   return (
     <ErpShell user={user}>
@@ -63,7 +65,7 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
         <section
           className="mb-8 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-6"
           data-chi="ban-do-thuyen"
-          data-chi-loi="Bảng bến ở trên cùng: còn ở bến, đang trên sông, sắp về. Ngoài giờ thuyền chạy thì bản đồ tự phát lại cả ngày ×30; kéo thanh giờ để xem lúc khác, chạm một thuyền để xem chi tiết."
+          data-chi-loi="Bảng bến ở trên cùng: còn ở bến, đang trên sông, sắp về. Ngoài giờ thuyền chạy thì bản đồ tự phát lại cả ngày ×30; kéo thanh giờ để xem lúc khác, bấm một thuyền để xem ai đang chèo."
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-black text-[#20342c]">{TUYEN_THUYEN[banDo].ten}</h2>
@@ -90,6 +92,8 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
           </div>
         </section>
       ) : null}
+
+      {banDo ? <SoNguoiCheo key={banDo} coSo={banDo} tenBen={TUYEN_THUYEN[banDo].ten.split(" · ")[0]} ds={soCheo} coKho={thuyenCoKho()} /> : null}
 
       {banDo ? (
         <div className="mb-4">

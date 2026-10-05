@@ -189,7 +189,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         cacViec: [
           "Đọc bảng bến: còn ở bến, đang trên sông, khách đang xuống bến, sắp về. Số ước từ lượt khách qua cổng; đội thuyền lấy ở màn Sức chứa.",
           "Ngoài giờ thuyền chạy, bản đồ tự phát lại cả ngày nhanh ×30; kéo thanh giờ để xem lúc đông nhất. Đổi Tràng An / Tam Cốc ở hai nút trên bản đồ.",
-          "Chạm một thuyền để xem giờ rời bến, số khách, đang tới đâu.",
+          "Bấm một thuyền để xem ai đang chèo, số điện thoại, số khách, giờ về bến.",
+        ],
+      },
+      {
+        id: "so-nguoi-cheo",
+        ten: "Sổ người chèo, bấm thuyền biết ai chèo",
+        moTa: "Thuyền số mấy do ai chèo; thuyền trên bản đồ nhận người theo lượt gọi xoay vòng ở bến, một người không chèo hai thuyền cùng lúc.",
+        vai: "director",
+        duongDan: "/erp/thuyen",
+        diem: "so-nguoi-cheo",
+        moi: "06/10",
+        cacViec: [
+          "Kéo xuống \"Sổ người chèo\": người có nhãn \"mẫu\" để thử. Bấm \"Thêm người chèo\" hoặc \"Sửa\" để ghi số thuyền, họ tên, số điện thoại.",
+          "Kéo lên bản đồ, bấm một thuyền: thẻ ghim lại với tên người chèo, nút gọi nếu có số điện thoại, số khách và giờ về bến.",
         ],
       },
       {

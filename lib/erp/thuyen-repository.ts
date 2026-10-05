@@ -8,6 +8,8 @@ import {
   type CoSoThuyen,
   type DoiThuyen,
   type DuLieuBen,
+  type NguoiCheo,
+  xepSoNguoiCheo,
 } from "@/domain/thuyen-song";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
@@ -186,5 +188,69 @@ export async function benThuyen(coSo: CoSoThuyen, bayGioMs: number): Promise<DuL
     }
     if ((data ?? []).length < MOT_TRANG) break;
   }
-  return { ngay, doi, luotVao };
+  return { ngay, doi, luotVao, nguoiCheo: await soNguoiCheo(coSo) };
+}
+
+/** Sổ người chèo của bến (migration 111). Kho chưa có bảng thì trả sổ rỗng. */
+export async function soNguoiCheo(coSo: CoSoThuyen): Promise<NguoiCheo[]> {
+  const kho = khachKho();
+  if (!kho) return [];
+  const { data, error } = await kho
+    .from("erp_nguoi_cheo")
+    .select("id, so_thuyen, ho_ten, so_dien_thoai, la_mau")
+    .eq("tenant_id", TENANT_ID)
+    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[coSo])
+    .limit(2000);
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") return [];
+    loiKho(error);
+  }
+  return xepSoNguoiCheo(
+    (data ?? []).map((row) => {
+      const d = row as Record<string, unknown>;
+      return {
+        id: String(d.id),
+        soThuyen: String(d.so_thuyen),
+        hoTen: String(d.ho_ten),
+        soDienThoai: typeof d.so_dien_thoai === "string" && d.so_dien_thoai ? d.so_dien_thoai : null,
+        laMau: d.la_mau === true,
+      };
+    }),
+  );
+}
+
+export type GhiNguoiCheo = { id?: string; coSo: CoSoThuyen; soThuyen: string; hoTen: string; soDienThoai: string | null };
+
+/** Thêm hay sửa một người trong sổ. Trùng số thuyền trong cùng bến thì báo. */
+export async function ghiNguoiCheo(v: GhiNguoiCheo): Promise<void> {
+  const kho = canKho();
+  const dong = {
+    tenant_id: TENANT_ID,
+    site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[v.coSo],
+    so_thuyen: v.soThuyen.trim(),
+    ho_ten: v.hoTen.trim(),
+    so_dien_thoai: v.soDienThoai?.trim() || null,
+    // Sửa tay là thành người thật trong sổ, thôi nhãn "mẫu".
+    la_mau: false,
+    sua_luc: new Date().toISOString(),
+  };
+  const { error } = v.id
+    ? await kho.from("erp_nguoi_cheo").update(dong).eq("tenant_id", TENANT_ID).eq("id", v.id)
+    : await kho.from("erp_nguoi_cheo").insert(dong);
+  if (error) {
+    if (error.code === "23505") throw new ThuyenLoi("Số thuyền này đã có người trong sổ của bến.", "LOI");
+    if (error.code === "42P01" || error.code === "PGRST205") throw new ThuyenLoi("Kho chưa có sổ người chèo (migration 111 chưa áp).", "CHUA_NOI_KHO");
+    loiKho(error);
+  }
+}
+
+export async function xoaNguoiCheo(coSo: CoSoThuyen, id: string): Promise<void> {
+  const kho = canKho();
+  const { error } = await kho
+    .from("erp_nguoi_cheo")
+    .delete()
+    .eq("tenant_id", TENANT_ID)
+    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[coSo])
+    .eq("id", id);
+  if (error) loiKho(error);
 }

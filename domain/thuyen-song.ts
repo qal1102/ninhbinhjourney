@@ -511,7 +511,61 @@ function so(x: unknown): number | null {
 }
 
 /** Dữ liệu bến API `/api/erp/thuyen?phan=ben` trả về. */
-export type DuLieuBen = { ngay: string; doi: DoiThuyen | null; luotVao: number[] };
+/** Một người trong sổ người chèo của bến (migration 111). */
+export type NguoiCheo = {
+  id: string;
+  soThuyen: string;
+  hoTen: string;
+  soDienThoai: string | null;
+  laMau: boolean;
+};
+
+export type DuLieuBen = { ngay: string; doi: DoiThuyen | null; luotVao: number[]; nguoiCheo: NguoiCheo[] };
+
+/** Xếp sổ theo số thuyền (số trước, chữ sau): thứ tự gọi lượt đầu ngày. */
+export function xepSoNguoiCheo(so: readonly NguoiCheo[]): NguoiCheo[] {
+  return [...so].sort((a, b) => a.soThuyen.localeCompare(b.soThuyen, "vi", { numeric: true }));
+}
+
+/**
+ * Người chèo của từng chuyến ước tính, theo lượt gọi xoay vòng ở bến: thuyền
+ * rời bến thì người đứng đầu hàng chờ nhận khách; về bến xong người ấy quay
+ * lại cuối hàng. Một người không bao giờ chèo hai thuyền cùng lúc; hàng chờ
+ * trống lúc thuyền rời bến thì chuyến ấy không có ai trong sổ (không đoán).
+ * Kết quả chỉ phụ thuộc vào sổ và các chuyến đã rời bến, nên chạy lại cho cùng
+ * một kết quả.
+ */
+export function ganNguoiCheo(chuyen: readonly ChuyenUocTinh[], so: readonly NguoiCheo[]): Map<string, NguoiCheo> {
+  const ket = new Map<string, NguoiCheo>();
+  const hang = xepSoNguoiCheo(so);
+  const dangCheo: { nguoi: NguoiCheo; veLuc: number }[] = [];
+  for (const c of [...chuyen].sort((a, b) => a.roiBenLuc - b.roiBenLuc || a.id.localeCompare(b.id))) {
+    // Ai đã về bến trước lúc thuyền này rời thì vào cuối hàng, theo giờ về.
+    dangCheo.sort((a, b) => a.veLuc - b.veLuc);
+    while (dangCheo.length && dangCheo[0].veLuc <= c.roiBenLuc) hang.push(dangCheo.shift()!.nguoi);
+    const nguoi = hang.shift();
+    if (!nguoi) continue;
+    ket.set(c.id, nguoi);
+    dangCheo.push({ nguoi, veLuc: c.veBenLuc });
+  }
+  return ket;
+}
+
+function docNguoiCheo(raw: unknown): NguoiCheo[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((x): NguoiCheo[] => {
+    if (!x || typeof x !== "object") return [];
+    const r = x as Record<string, unknown>;
+    if (typeof r.id !== "string" || typeof r.soThuyen !== "string" || typeof r.hoTen !== "string") return [];
+    return [{
+      id: r.id,
+      soThuyen: r.soThuyen,
+      hoTen: r.hoTen,
+      soDienThoai: typeof r.soDienThoai === "string" && r.soDienThoai ? r.soDienThoai : null,
+      laMau: r.laMau === true,
+    }];
+  });
+}
 
 /** Đọc phần bến từ API; thiếu hay sai dạng thì trả rỗng, không đoán. */
 export function docBenTuApi(raw: unknown): DuLieuBen | null {
@@ -536,7 +590,7 @@ export function docBenTuApi(raw: unknown): DuLieuBen | null {
       };
     }
   }
-  return { ngay: r.ngay, doi, luotVao };
+  return { ngay: r.ngay, doi, luotVao, nguoiCheo: docNguoiCheo(r.nguoiCheo) };
 }
 
 export function docChuyenTrenSong(raw: unknown): ChuyenThuyenThat[] {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ganNguoiCheo,
   diemTaiQuang,
   docChuyenTrenSong,
   docChuyenTuApi,
@@ -192,5 +193,48 @@ describe("thuyền thật", () => {
     const quaApi = docChuyenTuApi(JSON.parse(JSON.stringify(tuKho)));
     expect(quaApi).toEqual(tuKho);
     expect(quaApi).toHaveLength(1);
+  });
+});
+
+describe("sổ người chèo: gán theo lượt gọi xoay vòng", () => {
+  const nguoi = (so: string) => ({ id: `n-${so}`, soThuyen: so, hoTen: `Người ${so}`, soDienThoai: null, laMau: true });
+  const chuyen = (id: string, roi: number, ve: number) => ({ id, soKhach: 2, roiBenLuc: roi, veBenLuc: ve, heSo: 1 });
+  const PHUT = 60_000;
+
+  it("người đứng đầu hàng nhận thuyền, về bến xong mới quay lại cuối hàng", () => {
+    const so = [nguoi("2"), nguoi("10"), nguoi("1")];
+    const ds = [
+      chuyen("a", 0, 120 * PHUT),
+      chuyen("b", 5 * PHUT, 125 * PHUT),
+      chuyen("c", 10 * PHUT, 130 * PHUT),
+      chuyen("d", 15 * PHUT, 135 * PHUT),
+      chuyen("e", 121 * PHUT, 241 * PHUT),
+    ];
+    const gan = ganNguoiCheo(ds, so);
+    // Sổ xếp theo số thuyền như số (1, 2, 10), không theo chữ.
+    expect(gan.get("a")?.soThuyen).toBe("1");
+    expect(gan.get("b")?.soThuyen).toBe("2");
+    expect(gan.get("c")?.soThuyen).toBe("10");
+    // Cả ba đang trên sông: chuyến thứ tư không có ai rảnh, không đoán.
+    expect(gan.has("d")).toBe(false);
+    // Người 1 về bến lúc 120 phút, nhận chuyến rời lúc 121.
+    expect(gan.get("e")?.soThuyen).toBe("1");
+  });
+
+  it("một người không bao giờ chèo hai thuyền cùng lúc", () => {
+    const so = Array.from({ length: 5 }, (_, i) => nguoi(String(i + 1)));
+    const ds = Array.from({ length: 60 }, (_, i) => chuyen(`c${i}`, i * 7 * PHUT, i * 7 * PHUT + 100 * PHUT));
+    const gan = ganNguoiCheo(ds, so);
+    for (const x of ds) {
+      for (const y of ds) {
+        if (x.id >= y.id) continue;
+        const chong = x.roiBenLuc < y.veBenLuc && y.roiBenLuc < x.veBenLuc;
+        if (chong && gan.has(x.id) && gan.has(y.id)) expect(gan.get(x.id)!.id).not.toBe(gan.get(y.id)!.id);
+      }
+    }
+  });
+
+  it("sổ trống thì không chuyến nào có người chèo", () => {
+    expect(ganNguoiCheo([chuyen("a", 0, PHUT)], []).size).toBe(0);
   });
 });

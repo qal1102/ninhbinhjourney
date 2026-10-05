@@ -10,6 +10,7 @@ import {
   dauNgayVietNam,
   docBenTuApi,
   docChuyenTuApi,
+  ganNguoiCheo,
   GIO_CHAY,
   gioVietNam,
   ngayCuaLuc,
@@ -24,6 +25,7 @@ import {
   type ChuyenUocTinh,
   type CoSoThuyen,
   type DuLieuBen,
+  type NguoiCheo,
   type ThuyenTrenBanDo,
 } from "@/domain/thuyen-song";
 import { ngayVietNam } from "@/domain/thoi-luong";
@@ -83,6 +85,57 @@ type ThuyenThatHienThi = ThuyenTrenBanDo & {
   /** Giờ ước về bến (ms), `null` khi thuyền lệch xa tuyến. */
   veBenLuc: number | null;
 };
+
+/**
+ * Thẻ một thuyền trên bản đồ. Gán chữ thuần, không chèn HTML: tên và số điện
+ * thoại người chèo do người dùng nhập.
+ */
+function dungTheThuyen(p: Record<string, unknown>): HTMLElement {
+  const the = document.createElement("div");
+  the.className = "min-w-[13rem] text-[#20342c]";
+  the.dataset.testid = "the-thuyen";
+  const dong = (chu: string, lop: string) => {
+    const el = document.createElement("p");
+    el.className = lop;
+    el.textContent = chu;
+    the.append(el);
+    return el;
+  };
+  const uocTinh = p.uocTinh === true || p.uocTinh === "true";
+  const soThuyen = String(p.soThuyen ?? "");
+  const nguoi = String(p.nguoiCheo ?? "");
+  dong(soThuyen ? `Thuyền ${soThuyen}` : `Thuyền rời bến ${String(p.roiBen ?? "")}`, "text-xs font-black uppercase tracking-[0.12em] text-[#5f7d70]");
+  if (nguoi) {
+    const ten = dong(nguoi, "mt-1 text-base font-black leading-5");
+    if (p.laMau === true || p.laMau === "true") {
+      const mau = document.createElement("span");
+      mau.className = "ml-2 rounded-full bg-[#fff1d6] px-2 py-0.5 align-middle text-[0.65rem] font-black text-[#7a5520]";
+      mau.textContent = "mẫu";
+      ten.append(mau);
+    }
+    const sdt = String(p.soDienThoai ?? "");
+    if (sdt) {
+      const goi = document.createElement("a");
+      goi.href = `tel:${sdt.replace(/[^0-9+]/g, "")}`;
+      goi.className = "mt-1.5 inline-flex min-h-9 items-center rounded-lg bg-[#183f34] px-3 text-sm font-bold text-white";
+      goi.textContent = `Gọi ${sdt}`;
+      the.append(goi);
+    } else {
+      dong("Chưa có số điện thoại trong sổ", "mt-0.5 text-xs text-[#6e7b75]");
+    }
+  } else {
+    dong(
+      Number(p.coSo ?? 0) > 0 ? "Lượt này chưa có người chèo rảnh trong sổ" : "Bến chưa có sổ người chèo",
+      "mt-1 text-sm font-bold text-[#7a5520]",
+    );
+  }
+  dong(String(p.tinhHinh ?? ""), "mt-2 text-xs leading-5 text-[#42554c]");
+  dong(
+    uocTinh ? "Ước từ lượt khách qua cổng; người chèo theo lượt gọi xoay vòng trong sổ" : "Theo định vị điện thoại người chèo",
+    "mt-1 text-[0.68rem] leading-4 text-[#7d8c84]",
+  );
+  return the;
+}
 
 type CheDo =
   | { kieu: "truc-tiep" }
@@ -156,7 +209,14 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
   const nhanBen = useRef<HTMLElement | null>(null);
   const chuyenThat = useRef<ChuyenThuyenThat[]>([]);
   const lechDongHo = useRef(0);
-  const benRef = useRef<{ ben: DuLieuBen; chuyen: ChuyenUocTinh[] } | null>(null);
+  const benRef = useRef<{
+    ben: DuLieuBen;
+    chuyen: ChuyenUocTinh[];
+    /** Người chèo của từng chuyến ước tính, theo lượt gọi xoay vòng. */
+    gan: Map<string, NguoiCheo>;
+    /** Sổ tra theo số thuyền, cho thuyền có định vị. */
+    theoSo: Map<string, NguoiCheo>;
+  } | null>(null);
   const cheRef = useRef<CheDo | null>(null);
   const [che, setChe] = useState<CheDo | null>(null);
   const [ben, setBen] = useState<DuLieuBen | null>(null);
@@ -225,7 +285,12 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         const chuyen = doc.doi
           ? chuyenTuLuotVao(coSo, doc.luotVao, doc.doi.choMoiThuyen, doc.doi.phutMotVong)
           : chuyenTuLuotVao(coSo, doc.luotVao, 4);
-        benRef.current = { ben: doc, chuyen };
+        benRef.current = {
+          ben: doc,
+          chuyen,
+          gan: ganNguoiCheo(chuyen, doc.nguoiCheo),
+          theoSo: new Map(doc.nguoiCheo.map((n) => [n.soThuyen.trim().toUpperCase(), n])),
+        };
         setBen(doc);
         setLoiBen("");
         // Lần đầu có dữ liệu: trong giờ chạy thì xem trực tiếp, ngoài giờ thì mở sẵn phần xem lại.
@@ -375,28 +440,29 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         paint: { "text-color": "#183f34", "text-halo-color": "#ffffff", "text-halo-width": 2 },
       });
 
-      // Rê chuột (máy tính) hoặc chạm (điện thoại) vào một thuyền để xem chi tiết.
-      const popup = new maplibregl.Popup({ closeButton: false, offset: 16 });
-      const moThe = (e: maplibregl.MapLayerMouseEvent) => {
+      // Rê chuột (máy tính) để xem nhanh; bấm hay chạm (điện thoại) thì thẻ
+      // ghim lại kèm nút đóng, để đọc người chèo và gọi điện.
+      const theNhanh = new maplibregl.Popup({ closeButton: false, offset: 16, className: "the-thuyen" });
+      const theGhim = new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 16, maxWidth: "280px", className: "the-thuyen" });
+      const moThe = (e: maplibregl.MapLayerMouseEvent, ghim: boolean) => {
         const f = e.features?.[0];
         if (!f) return;
-        // Gán chữ thuần, không chèn HTML: tên người chèo do người dùng nhập.
-        const the = document.createElement("div");
-        const ten = document.createElement("strong");
-        ten.textContent = String(f.properties?.ten ?? "");
-        const dong = document.createElement("div");
-        dong.textContent = String(f.properties?.ghiChu ?? "");
-        the.append(ten, dong);
-        popup.setLngLat(e.lngLat).setDOMContent(the).addTo(map);
+        const lng = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        if (ghim) {
+          theNhanh.remove();
+          theGhim.setLngLat(lng).setDOMContent(dungTheThuyen(f.properties ?? {})).addTo(map);
+        } else if (!theGhim.isOpen()) {
+          theNhanh.setLngLat(lng).setDOMContent(dungTheThuyen(f.properties ?? {})).addTo(map);
+        }
       };
       map.on("mouseenter", "thuyen", (e) => {
         map.getCanvas().style.cursor = "pointer";
-        moThe(e);
+        moThe(e, false);
       });
-      map.on("click", "thuyen", moThe);
+      map.on("click", "thuyen", (e) => moThe(e, true));
       map.on("mouseleave", "thuyen", () => {
         map.getCanvas().style.cursor = "";
-        popup.remove();
+        theNhanh.remove();
       });
 
       const ve = (khungGio: number) => {
@@ -408,7 +474,7 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         const duLieu = benRef.current;
         const cheDo = cheRef.current;
         if (!duLieu || !cheDo) return;
-        const { ben: b, chuyen } = duLieu;
+        const { ben: b, chuyen, gan, theoSo } = duLieu;
         const vong = b.doi?.phutMotVong;
         const t = gioXem(cheDo, bayGio, b.ngay);
         const nhanh = cheDo.kieu === "xem-lai" && cheDo.dangChay;
@@ -450,22 +516,44 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         (map.getSource("thuyen") as GeoJSONSource | undefined)?.setData({
           type: "FeatureCollection",
           features: [
-            ...uoc.map((x) => ({
-              type: "Feature" as const,
-              properties: {
-                nhan: x.nhan,
-                ten: `Thuyền rời bến ${x.nhan} · ${x.soKhach} khách`,
-                uocTinh: true,
-                huong: x.huong,
-                ghiChu: `${x.ghiChu} · đã đi ${phutChu(x.phutDaDi)} (ước từ lượt qua cổng)`,
-              },
-              geometry: { type: "Point" as const, coordinates: [x.lonLat[0], x.lonLat[1]] },
-            })),
-            ...that.map((x) => ({
-              type: "Feature" as const,
-              properties: { nhan: x.nhan, ten: `Thuyền ${x.nhan}`, uocTinh: false, huong: x.huong, ghiChu: x.ghiChu },
-              geometry: { type: "Point" as const, coordinates: [x.lonLat[0], x.lonLat[1]] },
-            })),
+            ...uoc.map((x) => {
+              const nguoi = gan.get(x.id);
+              return {
+                type: "Feature" as const,
+                properties: {
+                  nhan: x.nhan,
+                  uocTinh: true,
+                  huong: x.huong,
+                  soThuyen: nguoi?.soThuyen ?? "",
+                  nguoiCheo: nguoi?.hoTen ?? "",
+                  soDienThoai: nguoi?.soDienThoai ?? "",
+                  laMau: nguoi?.laMau ?? false,
+                  coSo: b.nguoiCheo.length,
+                  roiBen: x.nhan,
+                  tinhHinh: `${x.ghiChu} · ${x.soKhach} khách · đã đi ${phutChu(x.phutDaDi)} · về bến khoảng ${gioVietNam(x.veBenLuc)}`,
+                },
+                geometry: { type: "Point" as const, coordinates: [x.lonLat[0], x.lonLat[1]] },
+              };
+            }),
+            ...that.map((x) => {
+              const trongSo = theoSo.get(x.nhan.trim().toUpperCase());
+              return {
+                type: "Feature" as const,
+                properties: {
+                  nhan: x.nhan,
+                  uocTinh: false,
+                  huong: x.huong,
+                  soThuyen: x.nhan,
+                  nguoiCheo: x.nguoiCheo,
+                  soDienThoai: trongSo?.soDienThoai ?? "",
+                  laMau: false,
+                  coSo: b.nguoiCheo.length,
+                  roiBen: "",
+                  tinhHinh: x.ghiChu.replace(`${x.nguoiCheo} · `, ""),
+                },
+                geometry: { type: "Point" as const, coordinates: [x.lonLat[0], x.lonLat[1]] },
+              };
+            }),
           ],
         });
         (map.getSource("vet-uoc") as GeoJSONSource | undefined)?.setData({

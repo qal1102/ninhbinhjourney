@@ -92,7 +92,7 @@ type ThuyenThatHienThi = ThuyenTrenBanDo & {
  */
 function dungTheThuyen(p: Record<string, unknown>): HTMLElement {
   const the = document.createElement("div");
-  the.className = "min-w-[13rem] text-[#20342c]";
+  the.className = "w-[12rem] text-[#20342c]";
   the.dataset.testid = "the-thuyen";
   const dong = (chu: string, lop: string) => {
     const el = document.createElement("p");
@@ -442,8 +442,8 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
 
       // Rê chuột (máy tính) để xem nhanh; bấm hay chạm (điện thoại) thì thẻ
       // ghim lại kèm nút đóng, để đọc người chèo và gọi điện.
-      const theNhanh = new maplibregl.Popup({ closeButton: false, offset: 16, className: "the-thuyen" });
-      const theGhim = new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 16, maxWidth: "280px", className: "the-thuyen" });
+      const theNhanh = new maplibregl.Popup({ closeButton: false, offset: 16, maxWidth: "224px", className: "the-thuyen" });
+      const theGhim = new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 16, maxWidth: "224px", className: "the-thuyen" });
       const moThe = (e: maplibregl.MapLayerMouseEvent, ghim: boolean) => {
         const f = e.features?.[0];
         if (!f) return;

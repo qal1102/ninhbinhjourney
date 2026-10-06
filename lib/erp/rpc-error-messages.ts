@@ -522,6 +522,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Số này đã giữ chỗ ba lần trong tuần mà chưa thanh toán. Để công bằng với khách khác, mời bạn tới quầy vé tại điểm để đặt trực tiếp.",
   ERP_DEMO_HISTORY_DAYS_INVALID:
     "Số ngày lịch sử mẫu phải từ 1 tới 90 ngày.",
+  ERP_DEMO_ACTIVITY_DAYS_INVALID:
+    "Số ngày hoạt động mẫu phải từ 1 tới 60 ngày.",
   HANG_CHO_KHONG_CO: "Nơi này chưa mở hàng chờ ảo.",
   HANG_CHO_TAM_DUNG: "Bến đang tạm dừng nhận số.",
   HANG_CHO_SO_KHACH: "Mỗi số thứ tự dành cho nhóm từ 1 tới 6 khách.",

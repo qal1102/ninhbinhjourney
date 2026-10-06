@@ -291,6 +291,7 @@ export function ShiftHandoverPanel({
                 <div className="min-w-0">
                   <p className="font-black text-[#20342c]">
                     {handover.shiftLabel} · {handover.stationCode}
+                    {handover.id.startsWith("de000000") ? <span className="ml-2 rounded-full bg-[#fff1d6] px-2 py-0.5 align-middle text-[0.65rem] font-black text-[#7a5520]">mẫu</span> : null}
                   </p>
                   <p className="text-sm text-[#6e7b75]">
                     {handover.businessDate} · {handover.outgoingDisplayName} →{" "}

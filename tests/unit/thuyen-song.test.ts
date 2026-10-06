@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   ganNguoiCheo,
+  ngayCuaNguoiCheo,
+  soNamCheo,
   diemTaiQuang,
   docChuyenTrenSong,
   docChuyenTuApi,
@@ -197,7 +199,7 @@ describe("thuyền thật", () => {
 });
 
 describe("sổ người chèo: gán theo lượt gọi xoay vòng", () => {
-  const nguoi = (so: string) => ({ id: `n-${so}`, soThuyen: so, hoTen: `Người ${so}`, soDienThoai: null, laMau: true });
+  const nguoi = (so: string) => ({ id: `n-${so}`, soThuyen: so, hoTen: `Người ${so}`, soDienThoai: null, laMau: true, queQuan: null, namVaoNghe: null, ngonNgu: null, ghiChu: null });
   const chuyen = (id: string, roi: number, ve: number) => ({ id, soKhach: 2, roiBenLuc: roi, veBenLuc: ve, heSo: 1 });
   const PHUT = 60_000;
 
@@ -236,5 +238,28 @@ describe("sổ người chèo: gán theo lượt gọi xoay vòng", () => {
 
   it("sổ trống thì không chuyến nào có người chèo", () => {
     expect(ganNguoiCheo([chuyen("a", 0, PHUT)], []).size).toBe(0);
+  });
+
+  it("hồ sơ hôm nay chỉ tính phần đã diễn ra tới lúc xem", () => {
+    const so = [nguoi("1"), nguoi("2")];
+    const ds = [chuyen("a", 0, 100 * PHUT), chuyen("b", 10 * PHUT, 110 * PHUT), chuyen("c", 105 * PHUT, 205 * PHUT), chuyen("d", 300 * PHUT, 400 * PHUT)];
+    const gan = ganNguoiCheo(ds, so);
+    const ngay = ngayCuaNguoiCheo(ds, gan, 150 * PHUT);
+    const mot = ngay.get("n-1")!;
+    // Người 1: chuyến a đã về, chuyến c đang đi được 45 phút; chuyến d chưa rời bến.
+    expect(mot.soChuyen).toBe(2);
+    expect(mot.soKhach).toBe(4);
+    expect(mot.phutTrenSong).toBe(145);
+    expect(mot.dangCheo?.roiBenLuc).toBe(105 * PHUT);
+    const hai = ngay.get("n-2")!;
+    expect(hai.soChuyen).toBe(1);
+    expect(hai.dangCheo).toBeNull();
+  });
+
+  it("số năm chèo không âm và không đoán khi chưa ghi", () => {
+    expect(soNamCheo(2004, 2026)).toBe(22);
+    expect(soNamCheo(2026, 2026)).toBe(0);
+    expect(soNamCheo(null, 2026)).toBeNull();
+    expect(soNamCheo(2030, 2026)).toBeNull();
   });
 });

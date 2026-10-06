@@ -137,7 +137,7 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
     // màn hình vốn không cần một dòng chấm công nào. Nhân viên đứng ở cổng
     // không được mất máy quét vì một phần họ không dùng.
     moduleDefinition.id === "nhan-su" || moduleDefinition.id === "cham-cong"
-      ? getAttendanceState()
+      ? getAttendanceState({ siteId: site.id })
       : Promise.resolve({ version: 1 as const, events: [] }),
     listShiftClosures({ siteIds: [site.id] }),
     listWorkdaysForUser(user, [site.id]),
@@ -168,8 +168,10 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
           })
         : Promise.resolve([]),
       // Danh bạ cho màn Nhân sự, và cho ô chọn người khi quản lý giao việc.
-      // Màn Đối tác và Tài chính cần thêm họ tên người lập, người duyệt.
+      // Màn Đối tác và Tài chính cần thêm họ tên người lập, người duyệt; màn
+      // Chấm công cần họ tên cho bảng công cơ sở.
       moduleDefinition.id === "nhan-su" ||
+      moduleDefinition.id === "cham-cong" ||
       moduleDefinition.id === "doi-tac-nha-cung-ung" ||
       moduleDefinition.id === "tai-chinh-doi-soat" ||
       user.role === "manager"

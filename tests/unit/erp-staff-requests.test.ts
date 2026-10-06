@@ -37,6 +37,7 @@ function deXuat(ghiDe: Partial<StaffRequest> = {}): StaffRequest {
     createdAt: "2026-09-14T01:00:00Z",
     updatedAt: "2026-09-14T01:00:00Z",
     needsDirector: false,
+    laMau: false,
     events: [],
     ...ghiDe,
   };

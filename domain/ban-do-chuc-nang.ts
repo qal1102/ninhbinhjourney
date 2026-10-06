@@ -194,15 +194,16 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
       },
       {
         id: "so-nguoi-cheo",
-        ten: "Sổ người chèo, bấm thuyền biết ai chèo",
-        moTa: "Thuyền số mấy do ai chèo; thuyền trên bản đồ nhận người theo lượt gọi xoay vòng ở bến, một người không chèo hai thuyền cùng lúc.",
+        ten: "Hồ sơ người chèo, bấm thuyền biết ai chèo",
+        moTa: "Mỗi người chèo có hồ sơ: quê, số năm chèo, tiếng chào khách, hôm nay đã chở mấy chuyến, đang trên sông hay ở bến. Thuyền trên bản đồ nhận người theo lượt gọi xoay vòng.",
         vai: "director",
         duongDan: "/erp/thuyen",
         diem: "so-nguoi-cheo",
         moi: "06/10",
         cacViec: [
-          "Kéo xuống \"Sổ người chèo\": người có nhãn \"mẫu\" để thử. Bấm \"Thêm người chèo\" hoặc \"Sửa\" để ghi số thuyền, họ tên, số điện thoại.",
-          "Kéo lên bản đồ, bấm một thuyền: thẻ ghim lại với tên người chèo, nút gọi nếu có số điện thoại, số khách và giờ về bến.",
+          "Kéo xuống \"Sổ người chèo\": mỗi dòng ghi quê, số năm chèo và đang trên sông hay ở bến. Bấm một người để mở hồ sơ với các chuyến hôm nay.",
+          "Kéo lên bản đồ, bấm một thuyền: thẻ ghim lại với tên người chèo, quê, số năm chèo; bấm \"Xem hồ sơ\" là mở đúng hồ sơ người ấy.",
+          "Trong hồ sơ bấm \"Sửa hồ sơ\" để ghi quê, năm vào nghề, tiếng chào khách, số điện thoại.",
         ],
       },
       {
@@ -316,6 +317,19 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         cacViec: [
           "Bấm \"Cho phép GPS và vào ca\". Máy kiểm bạn đang đứng trong cơ sở.",
           "Hết ca thì ghi bàn giao rồi ra ca ngay trên thẻ này.",
+        ],
+      },
+      {
+        id: "bang-cong-co-so",
+        ten: "Bảng công cơ sở",
+        moTa: "Bảy ngày gần nhất ai vào ca, ra ca lúc mấy giờ, ai đi muộn, hôm nay ai đang trong ca.",
+        vai: "director",
+        duongDan: "/erp/{site}/cham-cong",
+        diem: "bang-cong-co-so",
+        moi: "06/10",
+        cacViec: [
+          "Xem bốn ô đầu: đang trong ca, đã tan ca, chưa vào ca hôm nay, lượt vào muộn 7 ngày.",
+          "Mỗi dòng một người, cột đầu là hôm nay; giờ vào màu cam là vào sau 07:30. Bấm tên để mở hồ sơ người ấy.",
         ],
       },
       {

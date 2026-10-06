@@ -10,6 +10,8 @@ const ATTENDANCE_COOKIE = "nbj-erp-demo-attendance";
 const STATE_SECONDS = 60 * 60 * 24 * 30;
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 const READ_LIMIT = 200;
+/** Một cơ sở: đủ cho bảng công 7 ngày (khoảng 8 người × 2 lượt × 7 ngày). */
+const READ_LIMIT_ONE_SITE = 400;
 
 const SITE_SLUG_BY_UUID = new Map(
   Object.entries(ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG).map(([slug, uuid]) => [
@@ -276,14 +278,18 @@ function eventFromRow(row: Record<string, unknown>): AttendanceEvent | null {
   };
 }
 
-async function readSupabaseState(): Promise<AttendanceState> {
+async function readSupabaseState(siteId?: ErpSiteId): Promise<AttendanceState> {
   const client = createAdminClient();
-  const result = await client
+  let query = client
     .from("erp_staff_attendance_events")
     .select("id, user_account_id, site_id, event_type, created_at, latitude, longitude, accuracy_meters, source")
-    .eq("tenant_id", TENANT_ID)
+    .eq("tenant_id", TENANT_ID);
+  // Đọc cả vùng thì 200 lượt mới nhất chỉ phủ vài ngày; màn của một cơ sở
+  // lọc ngay trong kho để bảng công 7 ngày không bị cắt cụt.
+  if (siteId) query = query.eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId]);
+  const result = await query
     .order("created_at", { ascending: false })
-    .limit(READ_LIMIT);
+    .limit(siteId ? READ_LIMIT_ONE_SITE : READ_LIMIT);
   if (result.error) {
     throw repositoryError("đọc nhật ký chấm công", result.error);
   }
@@ -332,13 +338,16 @@ async function recordInSupabase(
 
 // --- public API -----------------------------------------------------------
 
-export async function getAttendanceState(): Promise<AttendanceState> {
-  if (readMode() === "supabase") return readSupabaseState();
-  return readCookieState();
+export async function getAttendanceState(options: { siteId?: ErpSiteId } = {}): Promise<AttendanceState> {
+  if (readMode() === "supabase") return readSupabaseState(options.siteId);
+  const state = await readCookieState();
+  return options.siteId
+    ? { version: 1, events: state.events.filter((event) => event.siteId === options.siteId) }
+    : state;
 }
 
 export async function countEmployeesOnShift(siteId: ErpSiteId): Promise<number> {
-  const state = await getAttendanceState();
+  const state = await getAttendanceState({ siteId });
   const latestPerUser = new Map<string, AttendanceEvent>();
   for (const event of state.events) {
     if (event.siteId !== siteId) continue;

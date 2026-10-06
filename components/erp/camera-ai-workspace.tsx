@@ -37,6 +37,14 @@ function percent(ratio: number) {
   return `${Math.round(ratio * 100)}%`;
 }
 
+/** Góc nhìn của camera thứ 1, 2, 3, 4: tâm phóng và độ phóng. */
+const GOC_CAMERA = [
+  { tam: "22% 78%", phong: 1.9 },
+  { tam: "62% 94%", phong: 2 },
+  { tam: "50% 32%", phong: 1.5 },
+  { tam: "86% 44%", phong: 2.1 },
+] as const;
+
 export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Props) {
   const [sceneTime, setSceneTime] = useState(sceneAt);
   const [filter, setFilter] = useState<"all" | CameraStatus>("all");
@@ -117,6 +125,12 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
 
   const visibleFeeds =
     filter === "all" ? scene.feeds : scene.feeds.filter((feed) => feed.status === filter);
+  // Mỗi cơ sở chỉ có một tấm ảnh: mỗi camera phóng vào một vùng khác của ảnh,
+  // như ống kính chĩa vào từng chỗ, để bốn khung không trông y hệt nhau.
+  const gocNhin = (feed: CameraFeed) => {
+    const goc = GOC_CAMERA[Math.max(0, scene.feeds.findIndex((f) => f.id === feed.id)) % GOC_CAMERA.length];
+    return { objectPosition: goc.tam, transform: `scale(${goc.phong})`, transformOrigin: goc.tam };
+  };
   // Mã sự kiện có gắn số khung 5 phút, nên sự kiện của khung cũ tự rụng khi
   // sang khung mới -- không cần dọn danh sách bằng setState trong effect.
   const visibleEvents = firedEvents.filter((event) =>
@@ -221,8 +235,8 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                     alt={`Khung hình ${feed.zone}`}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover opacity-80 transition duration-700 group-hover:scale-[1.03]"
-                    style={{ objectPosition: feed.position }}
+                    className="object-cover opacity-80"
+                    style={gocNhin(feed)}
                   />
                 ) : (
                   <div className="absolute inset-0 grid place-items-center bg-[#25342f] text-sm font-bold text-white/45">
@@ -354,7 +368,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                         sizes="100vw"
                         priority
                         className="object-cover opacity-85"
-                        style={{ objectPosition: selected.position }}
+                        style={gocNhin(selected)}
                       />
                     ) : (
                       <div className="absolute inset-0 grid place-items-center text-white/45">

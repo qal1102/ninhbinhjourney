@@ -11,6 +11,8 @@ import {
   docBenTuApi,
   docChuyenTuApi,
   ganNguoiCheo,
+  soNamCheo,
+  SU_KIEN_MO_HO_SO_NGUOI_CHEO,
   GIO_CHAY,
   gioVietNam,
   ngayCuaLuc,
@@ -113,16 +115,30 @@ function dungTheThuyen(p: Record<string, unknown>): HTMLElement {
       mau.textContent = "mẫu";
       ten.append(mau);
     }
+    const nam = soNamCheo(Number(p.namVaoNghe) || null, new Date().getFullYear());
+    const lyLich = [String(p.queQuan ?? ""), nam === null ? "" : nam === 0 ? "mới vào nghề" : `${nam} năm chèo`].filter(Boolean).join(" · ");
+    if (lyLich) dong(lyLich, "mt-0.5 text-xs text-[#5f7068]");
     const sdt = String(p.soDienThoai ?? "");
+    const nutHang = document.createElement("div");
+    nutHang.className = "mt-1.5 flex flex-wrap gap-1.5";
     if (sdt) {
       const goi = document.createElement("a");
       goi.href = `tel:${sdt.replace(/[^0-9+]/g, "")}`;
-      goi.className = "mt-1.5 inline-flex min-h-9 items-center rounded-lg bg-[#183f34] px-3 text-sm font-bold text-white";
+      goi.className = "inline-flex min-h-9 items-center rounded-lg bg-[#183f34] px-3 text-sm font-bold text-white";
       goi.textContent = `Gọi ${sdt}`;
-      the.append(goi);
-    } else {
-      dong("Chưa có số điện thoại trong sổ", "mt-0.5 text-xs text-[#6e7b75]");
+      nutHang.append(goi);
     }
+    const nguoiId = String(p.nguoiId ?? "");
+    if (nguoiId) {
+      const xem = document.createElement("button");
+      xem.type = "button";
+      xem.className = "inline-flex min-h-9 items-center rounded-lg border border-[#b9cbc2] px-3 text-sm font-bold text-[#183f34]";
+      xem.textContent = "Xem hồ sơ";
+      xem.dataset.testid = "the-thuyen-xem-ho-so";
+      xem.addEventListener("click", () => window.dispatchEvent(new CustomEvent(SU_KIEN_MO_HO_SO_NGUOI_CHEO, { detail: { id: nguoiId } })));
+      nutHang.append(xem);
+    }
+    if (nutHang.childElementCount) the.append(nutHang);
   } else {
     dong(
       Number(p.coSo ?? 0) > 0 ? "Lượt này chưa có người chèo rảnh trong sổ" : "Bến chưa có sổ người chèo",
@@ -526,6 +542,9 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
                   huong: x.huong,
                   soThuyen: nguoi?.soThuyen ?? "",
                   nguoiCheo: nguoi?.hoTen ?? "",
+                  nguoiId: nguoi?.id ?? "",
+                  queQuan: nguoi?.queQuan ?? "",
+                  namVaoNghe: nguoi?.namVaoNghe ?? 0,
                   soDienThoai: nguoi?.soDienThoai ?? "",
                   laMau: nguoi?.laMau ?? false,
                   coSo: b.nguoiCheo.length,
@@ -545,6 +564,9 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
                   huong: x.huong,
                   soThuyen: x.nhan,
                   nguoiCheo: x.nguoiCheo,
+                  nguoiId: trongSo?.id ?? "",
+                  queQuan: trongSo?.queQuan ?? "",
+                  namVaoNghe: trongSo?.namVaoNghe ?? 0,
                   soDienThoai: trongSo?.soDienThoai ?? "",
                   laMau: false,
                   coSo: b.nguoiCheo.length,

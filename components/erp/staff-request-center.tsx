@@ -283,6 +283,7 @@ function RequestCard({
     <li className="rounded-2xl border border-[#dde5e0] bg-white p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono text-xs font-bold text-[#42574e]">{request.code}</span>
+        {request.laMau ? <span className="ml-2 rounded-full bg-[#fff1d6] px-2 py-0.5 align-middle text-[0.65rem] font-black text-[#7a5520]">mẫu</span> : null}
         <span className="rounded-full bg-[#183f34] px-2 py-0.5 text-xs font-black text-white">
           {STAFF_REQUEST_TYPE_LABELS[request.type]}
         </span>

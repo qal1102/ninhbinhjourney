@@ -92,9 +92,14 @@ test("director exception decision flows back through accountant to a posted liab
   await directorCard
     .getByRole("button", { name: "Chấp thuận ngoại lệ" })
     .click();
-  await expect(invoiceCard(page, "AP-TC-202607-027")).toHaveCount(0, {
+  // Giám đốc vẫn thấy hồ sơ (xem được mọi hồ sơ của cơ sở), nhưng nó đã sang
+  // bước kế toán và không còn nút quyết của giám đốc.
+  await expect(directorCard).toContainText("Sẵn sàng hạch toán", {
     timeout: REMOTE_ACTION_TIMEOUT,
   });
+  await expect(
+    directorCard.getByRole("button", { name: "Chấp thuận ngoại lệ" }),
+  ).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 
   await logout(page);

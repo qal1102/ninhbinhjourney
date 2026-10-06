@@ -88,6 +88,8 @@ export type StaffRequest = {
   createdAt: string;
   updatedAt: string;
   needsDirector: boolean;
+  /** Đề xuất mẫu do bộ sinh hoạt động mẫu tạo (migration 113). */
+  laMau: boolean;
   events: StaffRequestEvent[];
 };
 
@@ -140,6 +142,7 @@ export function parseStaffRequest(value: unknown, siteSlugByUuid: ReadonlyMap<st
     createdAt: String(row.created_at ?? ""),
     updatedAt: String(row.updated_at ?? ""),
     needsDirector: row.needs_director === true,
+    laMau: details.nguon === "mau",
     events: events.flatMap((entry) => {
       if (!entry || typeof entry !== "object") return [];
       const e = entry as Record<string, unknown>;

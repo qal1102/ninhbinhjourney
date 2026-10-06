@@ -37,6 +37,7 @@ import { ShiftReconciliationPanel } from "./shift-reconciliation-panel";
 import { OnSiteDuePanel } from "./on-site-due-panel";
 import type { OnSiteDueWorkspace } from "@/lib/erp/on-site-due-repository";
 import { AttendancePanel } from "./attendance-panel";
+import { BangCongCoSo } from "./bang-cong-co-so";
 import { ShiftHandoverPanel } from "./shift-handover-panel";
 import { StaffAccessManager } from "./staff-access-manager";
 import { CameraAiWorkspace } from "./camera-ai-workspace";
@@ -419,6 +420,9 @@ export function ModuleWorkspace({
           initialRecords={workdays}
           employees={workdayEmployees}
         />
+        {user.role === "director" || user.role === "manager" ? (
+          <BangCongCoSo site={site} directory={staffDirectory} attendance={attendance} />
+        ) : null}
         <AttendancePanel site={site} user={user} events={attendance} />
       </div>
     );

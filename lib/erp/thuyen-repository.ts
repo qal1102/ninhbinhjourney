@@ -191,35 +191,52 @@ export async function benThuyen(coSo: CoSoThuyen, bayGioMs: number): Promise<DuL
   return { ngay, doi, luotVao, nguoiCheo: await soNguoiCheo(coSo) };
 }
 
-/** Sổ người chèo của bến (migration 111). Kho chưa có bảng thì trả sổ rỗng. */
+/** Sổ người chèo của bến (migration 111, hồ sơ 112). Kho chưa có bảng thì trả sổ rỗng. */
 export async function soNguoiCheo(coSo: CoSoThuyen): Promise<NguoiCheo[]> {
   const kho = khachKho();
   if (!kho) return [];
-  const { data, error } = await kho
-    .from("erp_nguoi_cheo")
-    .select("id, so_thuyen, ho_ten, so_dien_thoai, la_mau")
-    .eq("tenant_id", TENANT_ID)
-    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[coSo])
-    .limit(2000);
+  const doc = (cot: string) =>
+    kho.from("erp_nguoi_cheo").select(cot).eq("tenant_id", TENANT_ID).eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[coSo]).limit(2000);
+  let { data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, que_quan, nam_vao_nghe, ngon_ngu, ghi_chu");
+  // Kho chưa áp 112 thì chưa có cột hồ sơ: vẫn đọc sổ như cũ.
+  if (error?.code === "42703") ({ data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, ghi_chu"));
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") return [];
     loiKho(error);
   }
   return xepSoNguoiCheo(
     (data ?? []).map((row) => {
-      const d = row as Record<string, unknown>;
+      const d = row as unknown as Record<string, unknown>;
       return {
         id: String(d.id),
         soThuyen: String(d.so_thuyen),
         hoTen: String(d.ho_ten),
-        soDienThoai: typeof d.so_dien_thoai === "string" && d.so_dien_thoai ? d.so_dien_thoai : null,
+        soDienThoai: chu(d.so_dien_thoai),
         laMau: d.la_mau === true,
+        queQuan: chu(d.que_quan),
+        namVaoNghe: typeof d.nam_vao_nghe === "number" ? d.nam_vao_nghe : null,
+        ngonNgu: chu(d.ngon_ngu),
+        ghiChu: chu(d.ghi_chu),
       };
     }),
   );
 }
 
-export type GhiNguoiCheo = { id?: string; coSo: CoSoThuyen; soThuyen: string; hoTen: string; soDienThoai: string | null };
+function chu(x: unknown): string | null {
+  return typeof x === "string" && x.trim() ? x.trim() : null;
+}
+
+export type GhiNguoiCheo = {
+  id?: string;
+  coSo: CoSoThuyen;
+  soThuyen: string;
+  hoTen: string;
+  soDienThoai: string | null;
+  queQuan: string | null;
+  namVaoNghe: number | null;
+  ngonNgu: string | null;
+  ghiChu: string | null;
+};
 
 /** Thêm hay sửa một người trong sổ. Trùng số thuyền trong cùng bến thì báo. */
 export async function ghiNguoiCheo(v: GhiNguoiCheo): Promise<void> {
@@ -230,6 +247,10 @@ export async function ghiNguoiCheo(v: GhiNguoiCheo): Promise<void> {
     so_thuyen: v.soThuyen.trim(),
     ho_ten: v.hoTen.trim(),
     so_dien_thoai: v.soDienThoai?.trim() || null,
+    que_quan: v.queQuan?.trim() || null,
+    nam_vao_nghe: v.namVaoNghe,
+    ngon_ngu: v.ngonNgu?.trim() || null,
+    ghi_chu: v.ghiChu?.trim() || null,
     // Sửa tay là thành người thật trong sổ, thôi nhãn "mẫu".
     la_mau: false,
     sua_luc: new Date().toISOString(),
@@ -240,6 +261,7 @@ export async function ghiNguoiCheo(v: GhiNguoiCheo): Promise<void> {
   if (error) {
     if (error.code === "23505") throw new ThuyenLoi("Số thuyền này đã có người trong sổ của bến.", "LOI");
     if (error.code === "42P01" || error.code === "PGRST205") throw new ThuyenLoi("Kho chưa có sổ người chèo (migration 111 chưa áp).", "CHUA_NOI_KHO");
+    if (error.code === "42703") throw new ThuyenLoi("Kho chưa có cột hồ sơ người chèo (migration 112 chưa áp).", "CHUA_NOI_KHO");
     loiKho(error);
   }
 }

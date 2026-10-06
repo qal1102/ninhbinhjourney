@@ -921,12 +921,15 @@ export function SupplierApControlCenter({
   const scoped = site
     ? invoices.filter((invoice) => invoice.siteId === site.id)
     : [...invoices];
+  // Giám đốc xem được mọi hồ sơ của cơ sở (trước chỉ thấy hồ sơ chờ mình hay
+  // đã ghi sổ, nên cơ sở có hồ sơ đang ở bước kế toán vẫn hiện "0 hồ sơ");
+  // hồ sơ chờ giám đốc quyết xếp lên đầu.
   const visible =
     user.role === "director"
-      ? scoped.filter(
-          (invoice) =>
-            invoice.status === "director-exception" ||
-            invoice.status === "posted",
+      ? [...scoped].sort(
+          (a, b) =>
+            Number(b.status === "director-exception") -
+            Number(a.status === "director-exception"),
         )
       : scoped;
   const actionCount = scoped.filter(
@@ -1090,7 +1093,7 @@ export function SupplierApControlCenter({
         ))}
         {!visible.length ? (
           <p className="rounded-2xl border border-dashed border-[#b8c6bf] bg-white px-5 py-10 text-center text-sm text-[#75817b]">
-            Hiện chưa có hồ sơ nhà cung cấp nào chờ bạn.
+            {site ? `${site.shortName} chưa có hồ sơ nhà cung cấp nào.` : "Chưa có hồ sơ nhà cung cấp nào."}
           </p>
         ) : null}
       </section>

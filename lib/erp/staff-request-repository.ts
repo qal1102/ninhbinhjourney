@@ -145,6 +145,7 @@ export async function createStaffRequest(input: {
       createdAt: now,
       updatedAt: now,
       needsDirector: staffRequestNeedsDirector(input.type, input.amountVnd),
+      laMau: false,
       events: [
         { eventType: "staff-request.submitted", fromStatus: null, toStatus: "submitted", actorName: input.actor.name, note: "", occurredAt: now },
       ],

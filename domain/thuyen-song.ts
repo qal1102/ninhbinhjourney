@@ -518,6 +518,12 @@ export type NguoiCheo = {
   hoTen: string;
   soDienThoai: string | null;
   laMau: boolean;
+  /** Xã hay thôn của người chèo (migration 112). */
+  queQuan: string | null;
+  namVaoNghe: number | null;
+  /** Tiếng chào khách được, ghi như người quản lý nhập: "Tiếng Việt, chào hỏi tiếng Anh". */
+  ngonNgu: string | null;
+  ghiChu: string | null;
 };
 
 export type DuLieuBen = { ngay: string; doi: DoiThuyen | null; luotVao: number[]; nguoiCheo: NguoiCheo[] };
@@ -551,6 +557,59 @@ export function ganNguoiCheo(chuyen: readonly ChuyenUocTinh[], so: readonly Nguo
   return ket;
 }
 
+function chuHoacNull(x: unknown): string | null {
+  return typeof x === "string" && x.trim() ? x.trim() : null;
+}
+
+/** Thẻ thuyền trên bản đồ phát sự kiện này (chi tiết `{ id }`) để sổ người chèo mở hồ sơ. */
+export const SU_KIEN_MO_HO_SO_NGUOI_CHEO = "nbj:ho-so-nguoi-cheo";
+
+/** Một chuyến của một người chèo trong ngày, theo lượt gọi xoay vòng. */
+export type ChuyenCuaNguoi = { roiBenLuc: number; veBenLuc: number; soKhach: number };
+
+/** Hôm nay của một người chèo: các chuyến đã nhận, đang ở đâu lúc này. */
+export type NgayCuaNguoiCheo = {
+  chuyen: ChuyenCuaNguoi[];
+  /** Chuyến đang trên sông lúc `bayGioMs`, nếu có. */
+  dangCheo: ChuyenCuaNguoi | null;
+  /** Số chuyến đã rời bến tới lúc `bayGioMs` (chuyến chưa rời không tính). */
+  soChuyen: number;
+  soKhach: number;
+  phutTrenSong: number;
+};
+
+/**
+ * Gom các chuyến đã gán ({@link ganNguoiCheo}) theo từng người, chỉ tính phần
+ * đã diễn ra tới `bayGioMs`: chuyến chưa rời bến không tính, chuyến đang đi
+ * tính số phút đã chèo. Người không nhận chuyến nào thì không có trong kết quả.
+ */
+export function ngayCuaNguoiCheo(
+  chuyen: readonly ChuyenUocTinh[],
+  gan: ReadonlyMap<string, NguoiCheo>,
+  bayGioMs: number,
+): Map<string, NgayCuaNguoiCheo> {
+  const ket = new Map<string, NgayCuaNguoiCheo>();
+  for (const c of [...chuyen].sort((a, b) => a.roiBenLuc - b.roiBenLuc)) {
+    const nguoi = gan.get(c.id);
+    if (!nguoi || c.roiBenLuc > bayGioMs) continue;
+    const ngay = ket.get(nguoi.id) ?? { chuyen: [], dangCheo: null, soChuyen: 0, soKhach: 0, phutTrenSong: 0 };
+    const mot = { roiBenLuc: c.roiBenLuc, veBenLuc: c.veBenLuc, soKhach: c.soKhach };
+    ngay.chuyen.push(mot);
+    ngay.soChuyen += 1;
+    ngay.soKhach += c.soKhach;
+    ngay.phutTrenSong += (Math.min(bayGioMs, c.veBenLuc) - c.roiBenLuc) / 60_000;
+    if (bayGioMs < c.veBenLuc) ngay.dangCheo = mot;
+    ket.set(nguoi.id, ngay);
+  }
+  return ket;
+}
+
+/** Số năm chèo tính tới năm `namNay`; năm vào nghề chưa ghi thì null. */
+export function soNamCheo(namVaoNghe: number | null, namNay: number): number | null {
+  if (namVaoNghe === null || namVaoNghe > namNay) return null;
+  return namNay - namVaoNghe;
+}
+
 function docNguoiCheo(raw: unknown): NguoiCheo[] {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((x): NguoiCheo[] => {
@@ -561,8 +620,12 @@ function docNguoiCheo(raw: unknown): NguoiCheo[] {
       id: r.id,
       soThuyen: r.soThuyen,
       hoTen: r.hoTen,
-      soDienThoai: typeof r.soDienThoai === "string" && r.soDienThoai ? r.soDienThoai : null,
+      soDienThoai: chuHoacNull(r.soDienThoai),
       laMau: r.laMau === true,
+      queQuan: chuHoacNull(r.queQuan),
+      namVaoNghe: typeof r.namVaoNghe === "number" && Number.isInteger(r.namVaoNghe) ? r.namVaoNghe : null,
+      ngonNgu: chuHoacNull(r.ngonNgu),
+      ghiChu: chuHoacNull(r.ghiChu),
     }];
   });
 }

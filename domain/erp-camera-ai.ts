@@ -18,7 +18,6 @@ type ZoneDefinition = {
   /** Khu vực nghẽn của cơ sở: nơi kịch bản luôn nhắm tới. */
   bottleneck: boolean;
   /** Vị trí cắt ảnh, chỉ để khung hình mỗi camera trông khác nhau. */
-  position: string;
 };
 
 /**
@@ -27,28 +26,28 @@ type ZoneDefinition = {
  */
 const SITE_ZONES: Readonly<Record<ErpSiteId, readonly ZoneDefinition[]>> = {
   "trang-an": [
-    { name: "Cổng A", designCapacity: 260, bottleneck: false, position: "center" },
-    { name: "Bến thuyền 01", designCapacity: 180, bottleneck: true, position: "45% 55%" },
-    { name: "Vùng chờ trung tâm", designCapacity: 420, bottleneck: false, position: "65% center" },
-    { name: "Tuyến thuyền số 2", designCapacity: 150, bottleneck: false, position: "35% center" },
+    { name: "Cổng A", designCapacity: 260, bottleneck: false },
+    { name: "Bến thuyền 01", designCapacity: 180, bottleneck: true },
+    { name: "Vùng chờ trung tâm", designCapacity: 420, bottleneck: false },
+    { name: "Tuyến thuyền số 2", designCapacity: 150, bottleneck: false },
   ],
   "tam-chuc": [
-    { name: "Cổng Khách Điện", designCapacity: 300, bottleneck: false, position: "center" },
-    { name: "Bến thuyền", designCapacity: 200, bottleneck: true, position: "45% 55%" },
-    { name: "Điện Tam Thế", designCapacity: 520, bottleneck: false, position: "65% center" },
-    { name: "Dốc Tháp Ngọc", designCapacity: 160, bottleneck: false, position: "35% center" },
+    { name: "Cổng Khách Điện", designCapacity: 300, bottleneck: false },
+    { name: "Bến thuyền", designCapacity: 200, bottleneck: true },
+    { name: "Điện Tam Thế", designCapacity: 520, bottleneck: false },
+    { name: "Dốc Tháp Ngọc", designCapacity: 160, bottleneck: false },
   ],
   "tam-coc": [
-    { name: "Cổng vé", designCapacity: 200, bottleneck: false, position: "center" },
-    { name: "Bến đò", designCapacity: 140, bottleneck: true, position: "45% 55%" },
-    { name: "Vùng chờ", designCapacity: 320, bottleneck: false, position: "65% center" },
-    { name: "Tuyến sông chính", designCapacity: 120, bottleneck: false, position: "35% center" },
+    { name: "Cổng vé", designCapacity: 200, bottleneck: false },
+    { name: "Bến đò", designCapacity: 140, bottleneck: true },
+    { name: "Vùng chờ", designCapacity: 320, bottleneck: false },
+    { name: "Tuyến sông chính", designCapacity: 120, bottleneck: false },
   ],
   "bai-dinh": [
-    { name: "Cổng chính", designCapacity: 340, bottleneck: false, position: "center" },
-    { name: "Bến xe điện", designCapacity: 220, bottleneck: true, position: "45% 55%" },
-    { name: "Hành lang La Hán", designCapacity: 600, bottleneck: false, position: "65% center" },
-    { name: "Khu Bảo Tháp", designCapacity: 260, bottleneck: false, position: "35% center" },
+    { name: "Cổng chính", designCapacity: 340, bottleneck: false },
+    { name: "Bến xe điện", designCapacity: 220, bottleneck: true },
+    { name: "Hành lang La Hán", designCapacity: 600, bottleneck: false },
+    { name: "Khu Bảo Tháp", designCapacity: 260, bottleneck: false },
   ],
 };
 
@@ -63,7 +62,6 @@ export type CameraFeed = {
   /** 0–1. `simulatedPeople / designCapacity`, làm tròn khi hiển thị. */
   loadRatio: number;
   note: string;
-  position: string;
   bottleneck: boolean;
 };
 
@@ -146,7 +144,6 @@ export function buildCameraScene(input: {
         designCapacity: zone.designCapacity,
         loadRatio: 0,
         note: "Đang bảo trì kết nối",
-        position: zone.position,
         bottleneck: zone.bottleneck,
       };
     }
@@ -169,7 +166,6 @@ export function buildCameraScene(input: {
         status === "attention"
           ? `Mật độ mô phỏng ${Math.round(loadRatio * 100)}% sức chứa thiết kế`
           : "Luồng di chuyển trong ngưỡng mô hình",
-      position: zone.position,
       bottleneck: zone.bottleneck,
     };
   });

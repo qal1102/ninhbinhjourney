@@ -176,7 +176,7 @@ export async function submitShiftCloseAction(
       throw new Error("Bạn không được phân công gửi chốt ca vé tại cơ sở này.");
     }
 
-    const attendance = await getAttendanceState();
+    const attendance = await getAttendanceState({ siteId });
     const now = new Date();
     const openAttendance = attendance.events
       .filter(

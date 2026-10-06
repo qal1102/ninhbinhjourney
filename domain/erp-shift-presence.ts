@@ -120,3 +120,120 @@ export function deriveShiftPresence(input: {
     },
   };
 }
+
+/** Một ô của bảng công: một người, một ngày. */
+export type OBangCong = {
+  /** Giờ vào ca đầu tiên trong ngày, "07:12". */
+  vao: string | null;
+  /** Giờ ra ca cuối cùng sau lượt vào, "17:20". */
+  ra: string | null;
+  /** Vào sau mốc {@link GIO_MUON}. */
+  muon: boolean;
+  /** Lượt cuối trong ngày là vào ca (chưa chấm ra). */
+  dangTrongCa: boolean;
+  viTriMoPhong: boolean;
+};
+
+export type DongBangCong = {
+  accountId: string;
+  displayName: string;
+  jobTitle: string;
+  /** Theo khoá ngày `yyyy-mm-dd`; `null` là ngày ấy không chấm công. */
+  theoNgay: Record<string, OBangCong | null>;
+  soNgayLam: number;
+  soLanMuon: number;
+  /** Giờ vào trung bình của các ngày có chấm, "07:18". */
+  gioVaoTrungBinh: string | null;
+};
+
+/** Vào ca sau 07:30 là muộn (cơ sở mở cửa đón khách lúc 07:30). */
+export const GIO_MUON = 7 * 60 + 30;
+
+const GIO_PHUT_VN = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "Asia/Ho_Chi_Minh",
+});
+
+function phutTrongNgay(iso: string): number {
+  const [h, m] = GIO_PHUT_VN.format(new Date(iso)).split(":").map(Number);
+  return h * 60 + m;
+}
+
+function chuGio(phut: number): string {
+  const p = Math.round(phut);
+  return `${String(Math.floor(p / 60)).padStart(2, "0")}:${String(p % 60).padStart(2, "0")}`;
+}
+
+/**
+ * Bảng công của một cơ sở trong `soNgay` ngày tới hết hôm nay (giờ Việt Nam):
+ * mỗi người được phân công một dòng, mỗi ngày một ô giờ vào, giờ ra. Chỉ đọc
+ * lượt chấm công thật trong kho (kể cả lượt mẫu, ô ghi "vị trí mô phỏng");
+ * ngày không chấm để trống, không đoán.
+ */
+export function bangCongCoSo(input: {
+  directory: readonly DirectoryEntry[];
+  events: readonly PresenceEvent[];
+  siteId: ErpSiteId;
+  at: Date;
+  soNgay?: number;
+}): { ngay: string[]; dong: DongBangCong[] } {
+  const soNgay = input.soNgay ?? 7;
+  const ngay: string[] = [];
+  for (let k = soNgay - 1; k >= 0; k -= 1) ngay.push(vietnamDayKey(new Date(input.at.getTime() - k * 86_400_000)));
+  const trongKy = new Set(ngay);
+
+  const theoNguoiNgay = new Map<string, PresenceEvent[]>();
+  for (const event of input.events) {
+    if (event.siteId !== input.siteId) continue;
+    const ngayKey = vietnamDayKey(new Date(event.createdAt));
+    if (!trongKy.has(ngayKey)) continue;
+    const khoa = `${event.userId}|${ngayKey}`;
+    const ds = theoNguoiNgay.get(khoa) ?? [];
+    ds.push(event);
+    theoNguoiNgay.set(khoa, ds);
+  }
+
+  const dong = input.directory
+    .filter((entry) => entry.active && entry.siteIds.includes(input.siteId))
+    .map((entry): DongBangCong => {
+      const theoNgay: Record<string, OBangCong | null> = {};
+      let soNgayLam = 0;
+      let soLanMuon = 0;
+      let tongVao = 0;
+      for (const n of ngay) {
+        const ds = (theoNguoiNgay.get(`${entry.accountId}|${n}`) ?? []).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+        const vao = ds.find((e) => e.type === "check-in");
+        if (!vao) {
+          theoNgay[n] = null;
+          continue;
+        }
+        const ra = [...ds].reverse().find((e) => e.type === "check-out" && e.createdAt > vao.createdAt);
+        const phutVao = phutTrongNgay(vao.createdAt);
+        const muon = phutVao > GIO_MUON;
+        soNgayLam += 1;
+        tongVao += phutVao;
+        if (muon) soLanMuon += 1;
+        theoNgay[n] = {
+          vao: chuGio(phutVao),
+          ra: ra ? chuGio(phutTrongNgay(ra.createdAt)) : null,
+          muon,
+          dangTrongCa: ds[ds.length - 1].type === "check-in",
+          viTriMoPhong: ds.some((e) => e.source === "demo-location"),
+        };
+      }
+      return {
+        accountId: entry.accountId,
+        displayName: entry.displayName,
+        jobTitle: entry.jobTitle,
+        theoNgay,
+        soNgayLam,
+        soLanMuon,
+        gioVaoTrungBinh: soNgayLam ? chuGio(tongVao / soNgayLam) : null,
+      };
+    })
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, "vi"));
+
+  return { ngay, dong };
+}

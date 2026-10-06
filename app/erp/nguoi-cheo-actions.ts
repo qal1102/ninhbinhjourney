@@ -33,6 +33,14 @@ const NguoiCheoSchema = z.object({
     .max(20)
     .refine((v) => v === "" || /^[0-9 +.]{8,20}$/.test(v), "Số điện thoại chỉ gồm chữ số, dấu cách, dấu chấm hay dấu +.")
     .optional(),
+  queQuan: z.string().trim().max(80, "Quê tối đa 80 ký tự.").optional(),
+  namVaoNghe: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || (/^\d{4}$/.test(v) && Number(v) >= 1950 && Number(v) <= new Date().getFullYear()), "Năm vào nghề là năm bốn chữ số, không quá năm nay.")
+    .optional(),
+  ngonNgu: z.string().trim().max(120, "Tiếng chào khách tối đa 120 ký tự.").optional(),
+  ghiChu: z.string().trim().max(300, "Ghi chú tối đa 300 ký tự.").optional(),
 });
 
 export async function luuNguoiCheoAction(duLieu: z.input<typeof NguoiCheoSchema>): Promise<KetQua> {
@@ -47,6 +55,10 @@ export async function luuNguoiCheoAction(duLieu: z.input<typeof NguoiCheoSchema>
       soThuyen: kiem.data.soThuyen,
       hoTen: kiem.data.hoTen,
       soDienThoai: kiem.data.soDienThoai || null,
+      queQuan: kiem.data.queQuan || null,
+      namVaoNghe: kiem.data.namVaoNghe ? Number(kiem.data.namVaoNghe) : null,
+      ngonNgu: kiem.data.ngonNgu || null,
+      ghiChu: kiem.data.ghiChu || null,
     });
     revalidatePath("/erp/thuyen");
     return { ok: true };

@@ -18,6 +18,7 @@ const SITE_SLUG_BY_UUID = new Map(
 export type ShiftHandoverStatus = "submitted" | "accepted" | "disputed";
 
 export type ShiftHandover = {
+  /** Phiếu mẫu của bộ sinh hoạt động mẫu có mã bắt đầu bằng `de000000`. */
   id: string;
   siteId: ErpSiteId;
   businessDate: string;

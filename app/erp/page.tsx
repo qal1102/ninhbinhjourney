@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { doThoiGian } from "@/lib/do-thoi-gian";
 import { ERP_SITES } from "@/domain/erp";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { ExecutiveDashboard } from "@/components/erp/executive-dashboard";
@@ -29,7 +30,7 @@ type Props = {
 };
 
 export default async function ErpHomePage({ searchParams }: Props) {
-  const user = await getCurrentErpUser();
+  const user = await doThoiGian("erp/nguoi-dung", getCurrentErpUser());
   if (!user) redirect("/erp/login");
   if (user.mustChangePassword) redirect("/erp/doi-mat-khau");
   const shouldReadAccounting =
@@ -49,28 +50,28 @@ export default async function ErpHomePage({ searchParams }: Props) {
     pendingSopDecisions,
     ticketOverview,
     danhBa,
-  ] = await Promise.all([
-    getAccessState(),
-    listShiftClosures({ siteIds: user.siteIds }),
+  ] = await doThoiGian("erp/ca-nhom", Promise.all([
+    doThoiGian("erp/phan-quyen", getAccessState()),
+    doThoiGian("erp/chot-ca", listShiftClosures({ siteIds: user.siteIds })),
     user.role === "director"
-      ? listWorkdays({
+      ? doThoiGian("erp/phieu-viec", listWorkdays({
           siteIds: user.siteIds,
           businessDate: vietnamDateKey(),
           limit: 100,
-        })
+        }))
       : listWorkdaysForUser(user),
     shouldReadAccounting
-      ? listAccountingJournals({ siteIds: user.siteIds, limit: 100 })
+      ? doThoiGian("erp/but-toan", listAccountingJournals({ siteIds: user.siteIds, limit: 100 }))
       : Promise.resolve([]),
     shouldReadSupplierAp
-      ? listSupplierAp({ siteIds: user.siteIds })
+      ? doThoiGian("erp/ncc", listSupplierAp({ siteIds: user.siteIds }))
       : Promise.resolve({ suppliers: [], invoices: [] }),
-    isDirector ? listEscalatedIncidents(user.siteIds) : Promise.resolve([]),
+    isDirector ? doThoiGian("erp/su-co", listEscalatedIncidents(user.siteIds)) : Promise.resolve([]),
     isDirector
-      ? listPendingProjectChangeRequests(user.siteIds)
+      ? doThoiGian("erp/doi-du-an", listPendingProjectChangeRequests(user.siteIds))
       : Promise.resolve([]),
     isDirector
-      ? listPendingSopDecisions(user.siteIds).catch((error) => {
+      ? doThoiGian("erp/sop", listPendingSopDecisions(user.siteIds)).catch((error) => {
           console.error("SOP decision queue read failed", error);
           return [];
         })
@@ -79,14 +80,14 @@ export default async function ErpHomePage({ searchParams }: Props) {
     // phải mở được — nên bắt lỗi tại đây và để màn hình nói thật là chưa đọc
     // được, thay vì cả trang chủ giám đốc trắng xoá.
     isDirector
-      ? getDirectorTicketOverview(user.siteIds).catch((error) => {
+      ? doThoiGian("erp/ve", getDirectorTicketOverview(user.siteIds)).catch((error) => {
           console.error("Director ticket overview read failed", error);
           return null;
         })
       : Promise.resolve(null),
     // Ô chọn người khi quản lý giao việc ngay trên trang đầu.
     user.role === "manager" ? listStaffDirectory() : Promise.resolve([]),
-  ]);
+  ]));
   const params = (await searchParams) ?? {};
   const denied = Array.isArray(params.denied)
     ? params.denied[0]

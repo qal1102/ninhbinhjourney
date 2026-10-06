@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { doThoiGian } from "@/lib/do-thoi-gian";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { AccountingControlCenter } from "@/components/erp/accounting-control-center";
@@ -43,18 +44,18 @@ export default async function ErpFinancePage({ searchParams }: Props) {
     eligibleShiftsEntries,
     params,
   ] = await Promise.all([
-    listShiftClosures({ siteIds: user.siteIds }),
-    listAccountingJournals({ siteIds: user.siteIds }),
-    listAccountingPeriods(),
-    listSupplierAp({ siteIds: user.siteIds }),
-    listCashDeposits({ siteIds: user.siteIds }),
-    listUnmatchedStatementLines({ siteIds: user.siteIds }),
-    Promise.all(
+    doThoiGian("tc/chot-ca", listShiftClosures({ siteIds: user.siteIds })),
+    doThoiGian("tc/but-toan", listAccountingJournals({ siteIds: user.siteIds })),
+    doThoiGian("tc/ky", listAccountingPeriods()),
+    doThoiGian("tc/ncc", listSupplierAp({ siteIds: user.siteIds })),
+    doThoiGian("tc/nop-quy", listCashDeposits({ siteIds: user.siteIds })),
+    doThoiGian("tc/sao-ke", listUnmatchedStatementLines({ siteIds: user.siteIds })),
+    doThoiGian("tc/ca-nop", Promise.all(
       cashSites.map(
         async (site) =>
           [site.id, await listEligibleShiftsForDeposit(site.id)] as const,
       ),
-    ),
+    )),
     searchParams ??
       Promise.resolve<Record<string, string | string[] | undefined>>({}),
   ]);

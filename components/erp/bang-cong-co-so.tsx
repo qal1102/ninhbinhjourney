@@ -26,12 +26,12 @@ function nhanNgay(khoa: string) {
 
 function O({ o, homNay }: { o: OBangCong | null; homNay: boolean }) {
   if (!o) {
-    return <span className="text-xs text-[#9aa59f]">{homNay ? "Chưa vào" : "Nghỉ"}</span>;
+    return <span className="text-sm text-[#9aa59f]">{homNay ? "Chưa vào" : "Nghỉ"}</span>;
   }
   return (
     <span className="inline-flex flex-col items-center leading-4">
-      <span className={`text-xs font-black tabular-nums ${o.muon ? "text-[#9a4a12]" : "text-[#20342c]"}`}>{o.vao}</span>
-      <span className="text-[0.7rem] tabular-nums text-[#66756e]">
+      <span className={`text-sm font-black tabular-nums ${o.muon ? "text-[#9a4a12]" : "text-[#20342c]"}`}>{o.vao}</span>
+      <span className="text-sm tabular-nums text-[#66756e]">
         {o.ra ?? (o.dangTrongCa ? <span className="font-bold text-[#246249]">đang ca</span> : "—")}
       </span>
     </span>
@@ -58,7 +58,7 @@ export function BangCongCoSo({ site, directory: danhBa, attendance }: Props) {
       data-chi="bang-cong-co-so"
       data-chi-loi="Bảng công 7 ngày của cơ sở: mỗi người một dòng, ô ghi giờ vào và giờ ra; giờ vào màu cam là đi muộn sau 07:30."
     >
-      <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Bảng công · {site.shortName}</p>
+      <p className="text-sm font-black uppercase tracking-[0.17em] text-[#477565]">Bảng công · {site.shortName}</p>
       <h2 className="mt-2 text-2xl font-black text-[#20342c]">Ai đi làm, vào ra lúc nào</h2>
       <p className="mt-2 text-sm text-[#65756e]">Bảy ngày gần nhất, hôm nay đứng đầu. Giờ vào màu cam là vào sau 07:30.</p>
 
@@ -70,7 +70,7 @@ export function BangCongCoSo({ site, directory: danhBa, attendance }: Props) {
           ["Lượt vào muộn 7 ngày", muon7, "bg-[#f3f6f4] text-[#20342c]"],
         ].map(([nhan, so, lop]) => (
           <div key={String(nhan)} className={`rounded-xl p-4 ${lop}`}>
-            <dt className="text-xs font-bold opacity-80">{nhan}</dt>
+            <dt className="text-sm font-bold opacity-80">{nhan}</dt>
             <dd className="mt-1 text-2xl font-black tabular-nums">{so}</dd>
           </div>
         ))}
@@ -88,7 +88,7 @@ export function BangCongCoSo({ site, directory: danhBa, attendance }: Props) {
         <div className="mt-5 overflow-x-auto rounded-xl border border-[#e0e6e2]">
           <table className="w-full min-w-[44rem] border-collapse text-left">
             <thead>
-              <tr className="bg-[#f6f8f7] text-[0.7rem] font-black uppercase tracking-[0.08em] text-[#5f7068]">
+              <tr className="bg-[#f6f8f7] text-sm font-black uppercase tracking-[0.08em] text-[#5f7068]">
                 <th scope="col" className="sticky left-0 z-10 bg-[#f6f8f7] px-3 py-2.5">
                   Người
                 </th>
@@ -113,14 +113,14 @@ export function BangCongCoSo({ site, directory: danhBa, attendance }: Props) {
                     <Link href={`/erp/ho-so/${d.accountId}`} className="block text-sm font-black text-[#20342c] underline-offset-2 hover:underline">
                       {d.displayName}
                     </Link>
-                    <span className="block max-w-[11rem] truncate text-xs text-[#7b8881]">{d.jobTitle}</span>
+                    <span className="block text-sm text-[#7b8881]">{d.jobTitle}</span>
                   </th>
                   {ngay.map((n) => (
                     <td key={n} className={`px-2 py-2.5 text-center ${n === homNay ? "bg-[#f7fbf9]" : ""}`}>
                       <O o={d.theoNgay[n]} homNay={n === homNay} />
                     </td>
                   ))}
-                  <td className="px-3 py-2.5 text-right text-xs leading-5 text-[#5f7068]">
+                  <td className="px-3 py-2.5 text-right text-sm leading-5 text-[#5f7068]">
                     <span className="block font-black text-[#20342c]">
                       {d.soNgayLam}/{ngay.length} ngày
                     </span>
@@ -135,7 +135,7 @@ export function BangCongCoSo({ site, directory: danhBa, attendance }: Props) {
       )}
 
       {coMoPhong ? (
-        <p className="mt-3 text-xs leading-5 text-[#7b8881]">Lượt chấm công mẫu ghi vị trí mô phỏng; lượt người thật bấm ghi vị trí GPS của máy.</p>
+        <p className="mt-3 text-sm leading-5 text-[#7b8881]">Lượt chấm công mẫu ghi vị trí mô phỏng; lượt người thật bấm ghi vị trí GPS của máy.</p>
       ) : null}
     </section>
   );

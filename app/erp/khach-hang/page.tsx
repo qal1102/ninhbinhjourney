@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { doThoiGian } from "@/lib/do-thoi-gian";
 import { Customer360Dashboard } from "@/components/customer-data/customer-360-dashboard";
 import { VisitReviewOverviewPanel } from "@/components/erp/visit-review-overview-panel";
 import { TRIP_PASSPORT_PLACE_IDS } from "@/domain/trip-passport";
@@ -93,16 +92,16 @@ export default async function Customer360Page({
       // Ghi nhật ký truy cập TRƯỚC khi đọc bất cứ đơn hay gợi ý nào — đọc hành
       // trình tự ghi nhật ký bên trong nó, nên nó phải đi đầu, một mình.
       if (journeyEnabled) {
-        journeys = await doThoiGian("kh/hanh-trinh", listCustomer360Journeys(user.id));
+        journeys = await listCustomer360Journeys(user.id);
       } else {
-        await doThoiGian("kh/nhat-ky", auditCustomer360Access(user.id));
+        await auditCustomer360Access(user.id);
       }
       // Các lượt đọc còn lại không phụ thuộc nhau, nên chạy song song.
       const [orderResult, queue, danhGiaDoc, hoSoDoc] = await Promise.all([
-        bookingEnabled ? doThoiGian("kh/don", listCustomer360BookingOrders()) : Promise.resolve(null),
-        recommendationsEnabled ? doThoiGian("kh/goi-y", listCustomer360Recommendations()) : Promise.resolve(null),
-        doThoiGian("kh/danh-gia", docDanhGia()),
-        doThoiGian("kh/ho-so-url", docHoSoTheoDuongDan()),
+        bookingEnabled ? listCustomer360BookingOrders() : Promise.resolve(null),
+        recommendationsEnabled ? listCustomer360Recommendations() : Promise.resolve(null),
+        docDanhGia(),
+        docHoSoTheoDuongDan(),
       ]);
       danhGia = danhGiaDoc;
       hoSoXem = hoSoDoc;
@@ -128,7 +127,7 @@ export default async function Customer360Page({
   const maXem = xemHopLe ?? orders[0]?.profileId ?? null;
   if (!hoSoXem && bookingEnabled && maXem) {
     try {
-      hoSoXem = await doThoiGian("kh/ho-so", hoSoTheoMaHoSo(maXem));
+      hoSoXem = await hoSoTheoMaHoSo(maXem);
     } catch {
       hoSoXem = null;
     }

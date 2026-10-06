@@ -142,62 +142,60 @@ export default async function ErpHomePage({ searchParams }: Props) {
         <section
           data-testid="loi-vao-huong-dan"
           aria-labelledby="thu-chuc-nang"
-          className="mb-6 rounded-3xl border-2 border-[#e0b979] bg-[#fffaf0] p-5 sm:p-6"
+          className="mb-6 rounded-2xl border border-[#e7d3ad] bg-[#fffaf0] p-4 sm:p-5"
         >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.17em] text-[#9a6328]">
-                Dạo một vòng · {TONG_VIEC_TRA_CUU} việc trong điều hành · {CHUC_NANG_WEB.length} trang của khách
-              </p>
-              <h2 id="thu-chuc-nang" className="mt-1 text-xl font-black text-[#3f3524] sm:text-2xl">
-                Có gì mới, bấm vào là tới đúng chỗ
-              </h2>
-            </div>
+          {/* 06/10: chủ dự án thấy khung cũ rối (dòng đầu dài, ba nút cùng
+              một ý, tám dòng lặp "Mới · ngày"). Nay: một tiêu đề, một nút,
+              mỗi nhóm ba dòng gọn. */}
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="thu-chuc-nang" className="text-lg font-black text-[#3f3524]">
+              Chức năng mới
+            </h2>
             <Link
               href="/erp/huong-dan"
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-[#183f34] px-5 text-sm font-black text-white transition hover:bg-[#12332a]"
+              aria-label="Xem tất cả chức năng"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-[#183f34] px-4 text-sm font-black text-white transition hover:bg-[#12332a]"
             >
-              Xem hết →
+              <span className="sm:hidden">Xem tất cả</span>
+              <span className="hidden sm:inline">Xem tất cả chức năng</span>
             </Link>
           </div>
-          {/* Điều hành và web khách để riêng hai cột, theo lời anh Đạt 04/10:
+          {/* Điều hành và web khách để riêng, theo lời chủ dự án 04/10:
               "web để riêng, ERP để riêng, không trộn lẫn". */}
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
             {(
               [
-                { loai: "erp", ten: "Điều hành · mới thêm", xem: "/erp/huong-dan?xem=erp" },
-                { loai: "web", ten: "Trang của khách · mới thêm", xem: "/erp/huong-dan?xem=web" },
+                { loai: "erp", ten: "Điều hành", tong: TONG_VIEC_TRA_CUU },
+                { loai: "web", ten: "Trang của khách", tong: CHUC_NANG_WEB.length },
               ] as const
             ).map((cot) => (
-              <div key={cot.loai}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="text-xs font-black uppercase tracking-[0.14em] text-[#718078]">{cot.ten}</h3>
-                  <Link href={cot.xem} className="shrink-0 whitespace-nowrap text-xs font-black text-[#1f604c] underline underline-offset-4">
-                    Xem tất cả
-                  </Link>
-                </div>
-                <ul className="mt-2 grid gap-2">
+              <div key={cot.loai} className="rounded-xl border border-[#ecdcbc] bg-white">
+                <h3 className="flex items-baseline justify-between gap-3 border-b border-[#f1e6d0] px-4 py-2.5 text-sm font-black text-[#20342c]">
+                  {cot.ten}
+                  <span className="text-xs font-bold text-[#8a7a5f]">{cot.tong} chức năng</span>
+                </h3>
+                <ul className="divide-y divide-[#f4ecdc]">
                   {CHUC_NANG_MOI.filter((muc) => muc.loai === cot.loai)
-                    .slice(0, 4)
-                    .map((muc) => (
-                      <li key={muc.cn.id}>
-                        <Link
-                          href={duongDenMucMoi(muc)}
-                          {...(muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp")
-                            ? { target: "_blank", rel: "noopener" }
-                            : {})}
-                          className="flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-[#ecdcbc] bg-white px-4 py-2 transition hover:border-[#d58c35]"
-                        >
-                          <span className="min-w-0">
-                            <span className="block text-sm font-black text-[#20342c]">{muc.cn.ten}</span>
-                            <span className="block text-xs text-[#718078]">Mới · {muc.cn.moi}</span>
-                          </span>
-                          <span aria-hidden="true" className="text-[#9a6328]">
-                            {muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp") ? "↗" : "→"}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
+                    .slice(0, 3)
+                    .map((muc, i) => {
+                      const raNgoai = muc.loai === "web" && !muc.cn.duongDan.startsWith("/erp");
+                      return (
+                        // Điện thoại: hai dòng mỗi nhóm cho khung ngắn lại.
+                        <li key={muc.cn.id} className={i === 2 ? "hidden sm:block" : undefined}>
+                          <Link
+                            href={duongDenMucMoi(muc)}
+                            {...(raNgoai ? { target: "_blank", rel: "noopener" } : {})}
+                            className="flex min-h-11 items-center gap-3 px-4 py-2 text-sm transition hover:bg-[#fdf6e8]"
+                          >
+                            <span className="min-w-0 flex-1 font-bold text-[#20342c]">{muc.cn.ten}</span>
+                            <span className="shrink-0 text-xs tabular-nums text-[#8a7a5f]">{muc.cn.moi}</span>
+                            <span aria-hidden="true" className="shrink-0 text-[#9a6328]">
+                              {raNgoai ? "↗" : "→"}
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
                 </ul>
               </div>
             ))}

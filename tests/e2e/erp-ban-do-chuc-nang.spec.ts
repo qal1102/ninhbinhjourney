@@ -14,7 +14,7 @@ test.describe("ERP: màn Hướng dẫn", () => {
   test("đủ bảy bước và mọi việc tra cứu; trang đầu có lối vào", async ({ page }) => {
     await loginAsDirector(page);
     await expect(page.getByTestId("loi-vao-huong-dan")).toBeVisible();
-    await page.getByTestId("loi-vao-huong-dan").getByRole("link", { name: "Xem hết →" }).click();
+    await page.getByTestId("loi-vao-huong-dan").getByRole("link", { name: "Xem tất cả chức năng" }).click();
     await expect(page).toHaveURL(/\/erp\/huong-dan$/);
     // Ba thẻ tách riêng: mặc định là điều hành, web và trình diễn ở thẻ khác.
     await expect(page.locator("[data-chuc-nang]")).toHaveCount(TONG_VIEC_TRA_CUU);

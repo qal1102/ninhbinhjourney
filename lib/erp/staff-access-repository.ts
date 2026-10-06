@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -354,10 +355,15 @@ async function updateInSupabase(input: UpdateEmployeeAccessInput) {
 
 // --- public API -----------------------------------------------------------
 
-export async function getAccessState(): Promise<ErpAccessState> {
+/**
+ * Nhớ trong một lượt tải trang: phiên đăng nhập, trang module và màn Tài khoản
+ * đều hỏi bảng phân quyền; không nhớ thì mỗi lần là một vòng hỏi kho. Server
+ * action chỉ đọc trước khi ghi, nên không đọc phải số cũ.
+ */
+export const getAccessState = cache(async (): Promise<ErpAccessState> => {
   if (readMode() === "supabase") return readSupabaseState();
   return readCookieState();
-}
+});
 
 export async function updateEmployeeAccessGrant(input: UpdateEmployeeAccessInput) {
   if (readMode() === "supabase") return updateInSupabase(input);

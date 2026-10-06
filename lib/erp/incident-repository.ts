@@ -624,6 +624,25 @@ async function readSupabaseCases(siteId: ErpSiteId): Promise<IncidentCase[]> {
     .filter((item): item is IncidentCase => item !== null);
 }
 
+async function readSupabaseEscalated(siteIds: readonly ErpSiteId[]): Promise<IncidentCase[]> {
+  if (siteIds.length === 0) return [];
+  const result = await createAdminClient()
+    .from("erp_incidents")
+    .select("*")
+    .eq("tenant_id", TENANT_ID)
+    .in("site_id", siteIds.map((siteId) => ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId]))
+    .eq("escalated", true)
+    .neq("status", "closed")
+    .order("id", { ascending: true });
+  if (result.error) {
+    throw repositoryError("đọc hồ sơ sự cố chuyển cấp", result.error);
+  }
+  return (result.data ?? [])
+    .map(caseFromRow)
+    .filter((item): item is IncidentCase => item !== null)
+    .map(withLiveElapsed);
+}
+
 async function managerTransitionInSupabase(input: IncidentActionInput): Promise<IncidentCase> {
   const client = createAdminClient();
   const result = await client.rpc("erp_incident_manager_transition", {
@@ -710,9 +729,13 @@ export async function getIncidentCases(siteId: ErpSiteId): Promise<IncidentCase[
 export async function listEscalatedIncidents(
   siteIds: readonly ErpSiteId[],
 ): Promise<IncidentCase[]> {
-  const bySite = await Promise.all(siteIds.map((siteId) => getIncidentCases(siteId)));
-  return bySite
-    .flat()
+  // Supabase: một truy vấn chỉ lấy hồ sơ chuyển cấp chưa đóng của mọi cơ sở,
+  // thay vì đọc hết hồ sơ từng cơ sở (bốn truy vấn) rồi mới lọc.
+  const all =
+    readMode() === "supabase"
+      ? await readSupabaseEscalated(siteIds)
+      : (await Promise.all(siteIds.map((siteId) => getIncidentCases(siteId)))).flat();
+  return all
     .filter(
       (incident) =>
         // Chỉ việc THẬT mới được gọi giám đốc ra quyết định. Trên production

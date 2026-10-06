@@ -842,6 +842,33 @@ export type ProjectChangeRequestWithSite = ProjectChangeRequest & {
 export async function listPendingProjectChangeRequests(
   siteIds: readonly ErpSiteId[],
 ): Promise<ProjectChangeRequestWithSite[]> {
+  if (readMode() === "supabase") {
+    // Một truy vấn thẳng vào đề nghị đang chờ. Trước đây hàm này dựng cả
+    // không gian dự án của từng cơ sở (sự kiện, gói việc, mốc, quyết toán…,
+    // khoảng 30 truy vấn) chỉ để lọc ra vài dòng; đo trên production nó là
+    // lượt đọc chậm nhất của trang đầu giám đốc (1,1–2,3 giây).
+    if (siteIds.length === 0) return [];
+    const slugByUuid = new Map(
+      siteIds.map((siteId) => [ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId], siteId] as const),
+    );
+    const result = await createAdminClient()
+      .from("erp_project_change_requests")
+      .select("*")
+      .eq("tenant_id", TENANT_ID)
+      .eq("status", "pending")
+      .in("site_id", [...slugByUuid.keys()])
+      .order("created_at", { ascending: false })
+      .limit(80);
+    // Như bản cũ: đọc hỏng thì hàng quyết định chỉ thiếu mục này, trang đầu vẫn mở.
+    if (result.error) {
+      console.error("Pending project change requests read failed", result.error);
+      return [];
+    }
+    return (result.data ?? []).flatMap((row) => {
+      const siteId = slugByUuid.get(String(row.site_id));
+      return siteId ? [{ ...changeRequestFromRow(row), siteId }] : [];
+    });
+  }
   const bySite = await Promise.all(
     siteIds.map(async (siteId) => {
       // A site without a project event yet is not an error condition here —

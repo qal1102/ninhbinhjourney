@@ -7,7 +7,7 @@ import { jsonLdGoi } from "@/domain/du-lieu-cau-truc";
 import { absoluteUrl } from "@/lib/site-url";
 import { getPackageBySlug, PACKAGES } from "@/content/packages";
 import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
-import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { DESTINATIONS } from "@/content/destinations";
@@ -65,6 +65,8 @@ export default async function PackageDetailPage({
   const hero = getPackageHeroImage(item, lang);
 
   return (
+    <>
+      <ThanhDauTrang lang={lang} hienTai="goi" tone="dark" />
     <main lang={lang} data-customer-section="package-detail" className="min-h-screen bg-[#183f34] px-5 py-10 text-white sm:px-8 lg:py-16">
       <JsonLd
         du={jsonLdGoi({
@@ -86,7 +88,6 @@ export default async function PackageDetailPage({
           >
             ← {ch(lang, "So sánh gói", "Compare packages")}
           </Link>
-          <NutNgonNgu lang={lang} tone="dark" />
         </div>
         <SharedImageTransition
           name={packageImageTransitionName(item.slug)}
@@ -226,5 +227,6 @@ export default async function PackageDetailPage({
         </div>
       </div>
     </main>
+    </>
   );
 }

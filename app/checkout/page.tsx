@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { ChiDiem } from "@/components/shared/chi-diem";
-import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
@@ -62,6 +62,8 @@ export default async function CheckoutPage({
   // luôn bật. Tắt đặt chỗ thì trang nói thẳng là tạm đóng, ở khối phía trên.
 
   return (
+    <>
+      <ThanhDauTrang lang={lang} hienTai="goi" />
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between gap-4">
@@ -71,7 +73,6 @@ export default async function CheckoutPage({
           >
             ← {ch(lang, "Chi tiết gói", "Package details")}
           </Link>
-          <NutNgonNgu lang={lang} />
         </div>
         <p className="mt-9 text-xs font-extrabold uppercase tracking-[0.22em] text-[#356957]">
           {/* "Gói A · giữ chỗ trên lõi ERP" là chữ trong phòng làm việc, không
@@ -123,5 +124,6 @@ export default async function CheckoutPage({
         </Suspense>
       ) : null}
     </main>
+    </>
   );
 }

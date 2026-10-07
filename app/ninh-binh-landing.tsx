@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Reveal } from "@/components/shared/reveal";
@@ -864,6 +864,19 @@ function createRoute(duration: string, selected: string[]) {
  * cua trinh duyet ngay khi commit -- khong can goi `setState` trong than
  * `useEffect` (luat lint `react-hooks/set-state-in-effect` cam dieu do).
  */
+/*
+ * Ảnh màn mở đầu theo khổ màn hình (07/10/2026). Ảnh mưa chỉ rộng 1672px:
+ * máy tính khung ngang thì đủ nét, nhưng điện thoại khung dọc phải phóng gần
+ * ba lần nên vách đá nhoè thành mảng. Khung dọc dùng `trang-an-doc.jpg`: cắt sẵn
+ * khung dọc 1640×3567 quanh mái đình từ ảnh Tràng An 5670px (ảnh nền đầu trang,
+ * nên màn mở đầu tan ra là liền). Cắt sẵn để điện thoại chỉ tải bản rộng khoảng
+ * 1200px (khoảng 0,3 MB) mà vẫn đủ nét theo chiều cao; để trình duyệt cắt từ
+ * ảnh ngang thì phải tải bản 3840px nặng 1,15 MB.
+ */
+const ANH_MO_DAU_CHUNG = { alt: "", fill: true, sizes: "100vw", loading: "eager", fetchPriority: "high" } as const;
+const ANH_MO_DAU_DOC = getImageProps({ ...ANH_MO_DAU_CHUNG, src: "/images/destinations/trang-an-doc.jpg" }).props;
+const ANH_MO_DAU_NGANG = getImageProps({ ...ANH_MO_DAU_CHUNG, src: "/images/destinations/intro-trang-an-rain.png" }).props;
+
 const INTRO_SESSION_KEY = "nbj-intro-played";
 
 function subscribeIntroPlayedNoop() {
@@ -1176,6 +1189,20 @@ export default function NinhBinhLanding({
     return () => window.clearTimeout(timeout);
   }, [introAlreadyPlayed]);
 
+  // Nút "Bỏ qua" và phím Escape (chủ dự án 07/10/2026). Soát như khách thật
+  // thấy điện thoại 7–8 giây đầu không bấm được gì.
+  useEffect(() => {
+    if (!showIntro) return;
+    const khiBam = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIntroVisible(false);
+        markIntroPlayed();
+      }
+    };
+    window.addEventListener("keydown", khiBam);
+    return () => window.removeEventListener("keydown", khiBam);
+  }, [showIntro]);
+
   useEffect(() => {
     if (!modalOpen) return;
 
@@ -1289,12 +1316,11 @@ export default function NinhBinhLanding({
     >
       <ConTroNhan />
       {/*
-        INTRO -- KHONG CO DUONG BO QUA. Co y, theo yeu cau chu du an 05/08.
-        Truoc day co ca nut "Bo qua intro" LAN bam-cho-nao-cung-tat.
-        Ca hai da go: man intro 6,5 giay nay la khoang thoi gian duy nhat
-        de trinh phat video kip boot xong TRUOC khi khach cuon toi -- cat
-        ngan no la cum nut khoi dong cua YouTube lai dap vao mat khach
-        (xem chu thich trong cinematic-video.tsx).
+        INTRO -- CO NUT "BO QUA" tu 07/10/2026 (chu du an). Truoc do (05/08)
+        co y khong co duong bo qua, de trinh phat YouTube kip boot; tu 31/08
+        trang chu chi con mot MP4 tu-host nen ly do ay het. Bam nut hoac
+        Escape la tat; bam vao giua man hinh van KHONG tat, de khach khong
+        lo tay bo qua.
 
         Chay DUNG MOT LAN cho moi luot vao tham (WEB-PERF-01, 31/08): F5
         va bam "quay lai" deu giu nguyen `sessionStorage` cua tab nen
@@ -1321,14 +1347,11 @@ export default function NinhBinhLanding({
             }
           }}
         >
-          <Image
-            src="/images/destinations/intro-trang-an-rain.png"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="opening-image object-cover"
-          />
+          <picture>
+            <source media="(orientation: portrait)" srcSet={ANH_MO_DAU_DOC.srcSet} sizes="100vw" />
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- thẻ img của getImageProps, ảnh trang trí (alt rỗng) */}
+            <img {...ANH_MO_DAU_NGANG} className="opening-image object-cover" />
+          </picture>
           {/*
             Ba lop mau lay tu chinh phong canh: xanh rong/da voi, vang
             nang muon va dat nung di san. Day la color-grade thuần CSS
@@ -1346,6 +1369,18 @@ export default function NinhBinhLanding({
             <div />
             <span>{trailerWords.slice(1).join(" · ")}</span>
           </div>
+          <button
+            type="button"
+            className="opening-skip"
+            data-testid="opening-skip"
+            onClick={() => {
+              setIntroVisible(false);
+              markIntroPlayed();
+            }}
+          >
+            {lang === "en" ? "Skip" : "Bỏ qua"}
+            <span aria-hidden="true">→</span>
+          </button>
         </div>
       ) : null}
       <section ref={heroSceneRef} data-customer-section="home-hero" data-hero-scene data-motion="static" className="hero-identity-scene relative overflow-hidden bg-[#183F34] text-[#FBFAF6]">

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PACKAGES, type PackageCatalogItem } from "@/content/packages";
 import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
-import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { ch, type NgonNgu } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { getPackageHeroImage } from "@/content/package-images";
@@ -183,6 +183,8 @@ export default async function PackagesPage({
   const banTrangDaKhep = banTrang ? goiDaHetMua(banTrang) : true;
 
   return (
+    <>
+      <ThanhDauTrang lang={lang} hienTai="goi" />
     <main lang={lang}
       {...surfaceAttributes}
       data-customer-section="packages-catalog"
@@ -199,7 +201,6 @@ export default async function PackagesPage({
           >
             ← {quayLai.kieu === "hanh-trinh" ? ch(lang, "Quay lại hành trình", "Back to your journey") : ch(lang, "Về trang chủ", "Home")}
           </Link>
-          <NutNgonNgu lang={lang} />
         </div>
         {goiGoiY ? (
           <p className="mt-6 max-w-2xl rounded-2xl border border-[#d58c35]/40 bg-[#fbf3e6] px-5 py-4 text-sm leading-6 text-[#4d4636]">
@@ -256,5 +257,6 @@ export default async function PackagesPage({
         </div>
       </div>
     </main>
+    </>
   );
 }

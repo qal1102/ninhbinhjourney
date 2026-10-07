@@ -98,6 +98,42 @@ select {
   z-index: 2000;
 }
 
+/* Nút "Bỏ qua" màn mở đầu (07/10/2026): hiện sau 0,6 giây, ngón cái với tới. */
+.opening-skip {
+  align-items: center;
+  animation: opening-skip-in 0.4s ease 0.6s forwards;
+  backdrop-filter: blur(6px);
+  background: rgba(6, 18, 15, 0.38);
+  border: 1px solid rgba(251, 250, 246, 0.38);
+  border-radius: 999px;
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  color: #fbfaf6;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  opacity: 0;
+  padding: 0 1.15rem;
+  position: absolute;
+  right: 1.25rem;
+  z-index: 3;
+}
+
+.opening-skip:hover,
+.opening-skip:focus-visible {
+  background: rgba(251, 250, 246, 0.16);
+  outline: 2px solid #e7b96a;
+  outline-offset: 2px;
+}
+
+@keyframes opening-skip-in {
+  to {
+    opacity: 1;
+  }
+}
+
 .opening-image {
   animation: opening-image 6.5s ease forwards;
   filter: saturate(1.18) contrast(1.06) brightness(0.88);
@@ -1022,6 +1058,11 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
 
   .opening-screen {
     animation-duration: 1400ms !important;
+  }
+
+  .opening-skip {
+    animation: none !important;
+    opacity: 1;
   }
 
   .opening-image {

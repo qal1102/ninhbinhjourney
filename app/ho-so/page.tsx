@@ -7,7 +7,7 @@ import { CUSTOMER_ANONYMOUS_COOKIE } from "@/domain/customer-identity";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { hoSoTheoPhien } from "@/lib/customer-data/ho-so-khach-repository";
-import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
@@ -40,13 +40,14 @@ export default async function TrangHoSo({
     }
   }
   return (
+    <>
+      <ThanhDauTrang lang={lang} hienTai="ve" />
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-4 py-8 sm:px-8 lg:py-14">
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="text-sm font-bold text-[#356957] underline underline-offset-4">
             ← {ch(lang, "Về trang chủ", "Home")}
           </Link>
-          <NutNgonNgu lang={lang} />
         </div>
         {/* Tiêu đề trang cho trình đọc màn hình; phần thấy được nằm trong thẻ hộ chiếu. */}
         <h1 className="sr-only">{ch(lang, "Hộ chiếu Ninh Bình", "Ninh Binh passport")}</h1>
@@ -61,5 +62,6 @@ export default async function TrangHoSo({
         </div>
       </div>
     </main>
+    </>
   );
 }

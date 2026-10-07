@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NgheTheoViTri } from "@/components/discovery/nghe-theo-vi-tri";
-import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { DESTINATION_PAGE_SLUGS, destinationFacts, destinations } from "@/content/landing-destinations";
 import type { DiemNghe } from "@/domain/thuyet-minh-vi-tri";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
@@ -25,15 +25,16 @@ export default async function NghePage({
     doan: [d.description[lang], d.history[lang], destinationFacts[d.id].significance[lang]],
   }));
   return (
+    <>
+      <ThanhDauTrang lang={lang} />
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-4 py-8 text-[#151a17] sm:px-8 lg:py-14">
       <nav aria-label={lang === "en" ? "Page navigation" : "Điều hướng trang"} className="mx-auto mb-4 max-w-3xl text-sm font-bold">
         <Link href={`/?lang=${lang}`} className="text-[#183f34]">
           ← {lang === "en" ? "Home" : "Về trang chủ"}
         </Link>
       </nav>
-      <NgheTheoViTri diem={diem} lang={lang}>
-        <NutNgonNgu lang={lang} />
-      </NgheTheoViTri>
+      <NgheTheoViTri diem={diem} lang={lang} />
     </main>
+    </>
   );
 }

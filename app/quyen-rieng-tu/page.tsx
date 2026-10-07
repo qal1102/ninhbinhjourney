@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ProtectedMailLink } from "@/components/discovery/protected-mail-link";
 import { CONTACT } from "@/content/contact";
-import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
-import { ch } from "@/lib/ngon-ngu";
+import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 
 /*
@@ -107,15 +105,7 @@ export default async function PrivacyPage({
   const lang = await docNgonNgu(await searchParams);
   return (
     <main className="min-h-screen bg-[#f4f0e7] text-[#17251f]">
-      <header className="border-b border-[#d7d5cd] bg-[#fbfaf6]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="font-display text-lg tracking-[0.12em] text-[#183f34]">NINH BÌNH</Link>
-          <div className="flex items-center gap-2">
-            <Link href="/plan" className="rounded-full px-4 py-2 text-sm font-bold">{ch(lang, "Lập hành trình", "Plan my day")}</Link>
-            <NutNgonNgu lang={lang} />
-          </div>
-        </div>
-      </header>
+      <ThanhDauTrang lang={lang} />
 
       <article className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
         {lang === "en" ? (

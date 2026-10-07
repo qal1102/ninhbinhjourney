@@ -67,7 +67,7 @@ async function waitForHomeLayout(page: import("@playwright/test").Page) {
   });
 }
 
-test("home intro keeps all four identity words with separated timing, then auto-dismisses with no skip control", async ({
+test("home intro keeps all four identity words with separated timing, offers a skip button, then auto-dismisses", async ({
   page,
 }) => {
   await clearIntroSession(page);
@@ -88,9 +88,9 @@ test("home intro keeps all four identity words with separated timing, then auto-
    * ba trình phát video từ 06/08) thì tới lượt nó intro đã tự tắt -- bài
    * test đỏ vì đua thời gian chứ không phải vì sản phẩm sai.
    *
-   * Cố ý KHÔNG có nút "Bỏ qua intro", và bấm vào đâu cũng không tắt được:
-   * khung 6,5 giây này là khoảng duy nhất để ba trình phát kịp boot xong
-   * trước khi khách cuộn tới.
+   * Từ 07/10/2026 có nút "Bỏ qua" (chủ dự án): trang chủ chỉ còn một MP4
+   * tự host nên không phải chờ trình phát YouTube nữa. Bấm vào giữa màn
+   * hình thì vẫn không tắt, để khách không lỡ tay bỏ qua.
    */
   await expect(intro).toHaveCount(1);
   await expect(intro.locator(".opening-palette")).toHaveCount(1);
@@ -98,7 +98,7 @@ test("home intro keeps all four identity words with separated timing, then auto-
     .locator(".opening-image")
     .evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity));
   expect(openingImageOpacity).toBeGreaterThan(0.7);
-  await expect(page.getByRole("button", { name: /skip|bỏ qua/i })).toHaveCount(0);
+  await expect(page.getByTestId("opening-skip")).toHaveText(/Bỏ qua/);
   // Bấm bằng chuột vào giữa màn hình thay vì `locator.click()`: đây đúng
   // là thứ khách làm khi muốn bỏ qua, và không vướng phép kiểm "visible"
   // của Playwright trên một lớp phủ đang chạy animation.
@@ -117,6 +117,29 @@ test("home intro keeps all four identity words with separated timing, then auto-
   // Tự tắt đúng lúc animation CSS kết thúc (~6,5s) -- không phải hẹn giờ
   // đoán mò trong bài test.
   await expect(intro).toHaveCount(0, { timeout: 12000 });
+});
+
+test("nút Bỏ qua và phím Escape tắt màn mở đầu ngay", async ({ page }) => {
+  await clearIntroSession(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/?lang=vi", { waitUntil: "domcontentloaded" });
+  const intro = page.getByTestId("opening-intro");
+  await expect(intro).toHaveCount(1);
+  // Bấm lặp tới khi trang đã gắn sự kiện (hydrate xong); hạn 5 giây để chắc
+  // là nút tắt màn chứ không phải màn tự tắt lúc 6,5 giây.
+  await expect(async () => {
+    await page.getByTestId("opening-skip").click({ timeout: 500 });
+    await expect(intro).toHaveCount(0, { timeout: 500 });
+  }).toPass({ timeout: 5000 });
+  await expect(page.getByText("Lập hành trình", { exact: true }).first()).toBeVisible();
+
+  // clearIntroSession xoá cờ ở mọi lần nạp trang, nên lượt sau là lượt ghé mới.
+  await page.goto("/?lang=en", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("opening-skip")).toHaveText(/Skip/);
+  await expect(async () => {
+    await page.keyboard.press("Escape");
+    await expect(intro).toHaveCount(0, { timeout: 500 });
+  }).toPass({ timeout: 5000 });
 });
 
 test("home intro does not replay on reload or back-navigation within the same tab", async ({
@@ -728,11 +751,10 @@ test("discovery list mode works without waiting on the map", async ({
 }) => {
   await page.goto("/explore");
   await expect(page.getByRole("main")).toBeVisible();
-  // Nhãn nav từng là "Lập hành trình / Plan" (song ngữ trộn trên trang không
-  // có nút đổi ngôn ngữ) — đã gọn lại còn tiếng Việt ngày 04/08.
-  await expect(
-    page.getByRole("link", { name: "Lập hành trình" }),
-  ).toBeVisible();
+  // Thanh đầu trang chung (07/10/2026): các lối chính, trang đang ở được đánh dấu.
+  const lienKetChinh = page.getByRole("navigation", { name: "Các phần chính" });
+  await expect(lienKetChinh.getByRole("link", { name: "Lập lịch" })).toBeVisible();
+  await expect(lienKetChinh.getByRole("link", { name: "Khám phá" })).toHaveAttribute("aria-current", "page");
   await page.getByRole("button", { name: "Danh sách" }).click();
   await expect(page.locator("article").first()).toBeVisible();
 });

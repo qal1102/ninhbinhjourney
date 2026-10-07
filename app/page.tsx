@@ -6,6 +6,7 @@ import {
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { DESTINATIONS } from "@/content/destinations";
+import { DESTINATION_PAGE_SLUGS } from "@/content/landing-destinations";
 import { PACKAGES } from "@/content/packages";
 import { goiDaHetMua } from "@/content/packages-en";
 import { CONTACT } from "@/content/contact";
@@ -73,7 +74,9 @@ export default async function Home({ searchParams }: PageProps) {
       surfaceAttributes={surfaceAttributes}
       bayGio={new Date().toISOString()}
       soLieuCong={{
-        soDiemDen: DESTINATIONS.length,
+        // Mọi trang điểm đến (9 nơi trên bản đồ lịch trình + 6 trang hồ sơ),
+        // đúng con số "mười lăm điểm đến" trang chủ in ra bên dưới.
+        soDiemDen: new Set([...DESTINATIONS.map((d) => d.slug), ...Object.values(DESTINATION_PAGE_SLUGS)]).size,
         // Năm chương hồ sơ trong `collaboration-editorial.tsx`. Đếm tay vì
         // dữ liệu ấy nằm ngay trong component chứ chưa tách ra kho riêng;
         // tách được thì thay bằng `.length`.

@@ -48,4 +48,6 @@ export const CreateJourneyRequestSchema = z.object({
   visitDate: z.iso.date().default("2026-08-15"),
   /** Điểm khách bấm "Thêm vào hành trình" ở trang điểm đến hay Khám phá. */
   uuTienSiteId: z.uuid().optional(),
+  /** Phút trong ngày bắt đầu lịch khi khách nói buổi ("buổi chiều" là 13:00). */
+  batDauPhut: z.number().int().min(6 * 60).max(20 * 60).optional(),
 });

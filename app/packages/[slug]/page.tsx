@@ -202,13 +202,7 @@ export default async function PackageDetailPage({
               </p>
             ) : checkoutAvailable ? (
               <>
-                <p className="mt-6 text-xs leading-5 text-[#7a725f]">
-                  {ch(
-                    lang,
-                    "Chuyển khoản ở bản này là giả lập, không thu tiền. Không hỏi số thẻ, tài khoản ngân hàng hay dữ liệu thanh toán thật.",
-                    "Payment in this version is simulated and takes no money. We never ask for a card number, bank account or real payment details.",
-                  )}
-                </p>
+                {/* Câu "chuyển khoản là giả lập" chỉ nói một lần, ở trang đặt vé (soát 07/10/2026: lặp ở cả hai trang). */}
                 <Link
                   data-customer-track="package-checkout"
                   data-customer-content-id={item.id}

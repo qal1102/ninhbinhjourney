@@ -110,3 +110,13 @@ test("kho chưa mở hàng chờ thì nói thẳng, không hiện nút lấy s�
   await expect(page.getByText("Hàng chờ ảo chưa mở ở bến này.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Lấy số" })).toHaveCount(0);
 });
+
+test("ngoài giờ đò chạy thì báo bến đã nghỉ, không cho lấy số", async ({ page }) => {
+  await page.route("**/api/hang-cho**", (route) =>
+    route.fulfill({ json: { ok: true, tong_quan: { ...TONG_QUAN, soNhomCho: 0, soKhachCho: 0, dangGoi: [], goiToiSo: null, ngoaiGio: true } } }),
+  );
+  await page.goto("/xep-hang/tam-coc?lang=vi");
+  await expect(page.getByTestId("hang-cho-ngoai-gio")).toContainText("đã nghỉ");
+  await expect(page.getByRole("button", { name: "Lấy số" })).toHaveCount(0);
+  await expect(page.getByTestId("hang-cho-tinh-hinh")).not.toContainText("Ngay");
+});

@@ -179,13 +179,13 @@ const copy = {
     packagesCallNote: "Prefer to book by phone? Call Xuân Trường directly.",
     exploreRouteStop: "Explore this stop",
     routeStopLabel: "Stop",
-    addRoute: "Add route",
+    addRoute: "Add to my plan",
     youAreHere: "You are here",
     qrSource: "You are viewing",
     welcomePoint: "All of Ninh Binh",
     mapTitle: "Interactive tourism map",
     mapBody:
-      "All four core zones of the Tràng An heritage site fit inside this frame, along with the old capital at Hoa Lư and the stone cathedral at Phát Diệm out toward the coast. Touch a point and let that place tell its own story.",
+      "All four core zones of the Tràng An heritage site fit inside this frame, along with the old capital at Hoa Lư and the stone cathedral at Phát Diệm out toward the coast.",
     nearby: "Explore nearby",
     discover: "Discover",
     add: "Add to journey",
@@ -245,7 +245,7 @@ const copy = {
     create: "Create journey",
     creating: "Composing your route...",
     itinerary: "Your Ninh Binh journey",
-    itineraryNote: "Selected destinations and generated stops appear here.",
+    itineraryNote: "A sample day to start from. Add, swap or remove stops to make it yours.",
     directions: "Directions",
     replace: "Replace",
     remove: "Remove",
@@ -278,7 +278,7 @@ const copy = {
     selected: "Selected",
     welcome: "Welcome location",
     welcomeDescription:
-      "Touch a pin and the place tells its own story. Some can only be reached by boat, others are best early in the day.",
+      "Each numbered pin is a destination from the list below.",
     mapHint: "Touch a pin for its story, the hour to go, then add it to your day.",
     nearMe: "Near me",
     locating: "Finding your position...",
@@ -319,17 +319,17 @@ const copy = {
       dusk: "đàn chim đang về Thung Nham",
       night: "bến thuyền Tràng An đã nghỉ, chín hang trên tuyến 1 khép lại tới sáng",
     },
-    journeysLabel: "Tuyến gợi ý",
-    journeysTitle: "Những tuyến đi đã sắp sẵn",
+    journeysLabel: "Lịch đi gợi ý",
+    journeysTitle: "Một ngày đã xếp sẵn",
     journeysBody:
-      "Mỗi tuyến đã xếp sẵn thứ tự trong ngày: sáng đi thuyền, trưa lên chùa, tối về phố đèn lồng. Kéo sang ngang để xem, tuyến nào hợp thì chọn.",
-    viewRoute: "Xem tuyến",
+      "Mỗi lịch đã xếp sẵn thứ tự trong ngày: sáng đi thuyền, trưa lên chùa, tối về phố đèn lồng. Kéo sang ngang để xem, lịch nào hợp thì chọn.",
+    viewRoute: "Xem lịch này",
     packagesLabel: "Gói tham quan",
     packagesTitle: "Các gói đi sẵn, có giờ đi và giá rõ ràng.",
     packagesIntro:
       "Có gói đi Tràng An từ sớm trước khi đông thuyền, có gói để Tam Cốc cho buổi chiều nắng đẹp. Gói nào cũng ghi rõ giờ đi, điểm vào và cách giữ chỗ.",
     packagesBookingNote: "Chọn ngày là giữ được chỗ, trả bằng mã QR.",
-    packagesBookingNotePlain: "Bạn xem được tuyến đi và giá; đặt trên mạng thì chưa mở.",
+    packagesBookingNotePlain: "Bạn xem được lịch đi và giá; đặt trên mạng thì chưa mở.",
     packagesCta: "Xem gói này",
     packagesViewAll: "Xem tất cả các gói",
     packagesPricePerGuest: "mỗi người lớn",
@@ -338,13 +338,13 @@ const copy = {
     packagesCallNote: "Muốn đặt qua điện thoại? Gọi thẳng cho Xuân Trường.",
     exploreRouteStop: "Khám phá điểm này",
     routeStopLabel: "Chặng",
-    addRoute: "Thêm tuyến",
+    addRoute: "Thêm vào lịch trình",
     youAreHere: "Bạn đang ở đây",
     qrSource: "Bạn đang xem",
     welcomePoint: "Toàn cảnh Ninh Bình",
     mapTitle: "Bản đồ du lịch tương tác",
     mapBody:
-      "Bốn vùng lõi của di sản Tràng An nằm gọn trong khung hình này, cùng cố đô Hoa Lư và nhà thờ đá Phát Diệm ngoài phía biển. Chạm vào một điểm để xem nơi đó có gì.",
+      "Bốn vùng lõi của di sản Tràng An nằm gọn trong khung hình này, cùng cố đô Hoa Lư và nhà thờ đá Phát Diệm ngoài phía biển.",
     nearby: "Khám phá gần đây",
     discover: "Khám phá",
     add: "Thêm vào lịch trình",
@@ -385,12 +385,12 @@ const copy = {
     companionLabel: "Bộ lập tuyến hành trình",
     companionTitle: "Sắp lịch một ngày cho bạn",
     companionBody:
-      "Bạn có mấy giờ, đi cùng ai, thích sông nước hay leo núi? Kể cho chúng tôi là tuyến đi hiện ra ngay. Chưa giữ chỗ gì cho tới khi bạn đồng ý.",
+      "Bạn có mấy giờ, đi cùng ai, thích sông nước hay leo núi? Kể cho chúng tôi là lịch đi hiện ra ngay. Chưa giữ chỗ gì cho tới khi bạn đồng ý.",
     prompt: "Bạn muốn một hành trình như thế nào...",
     create: "Tạo lịch trình",
-    creating: "Đang sắp xếp tuyến...",
+    creating: "Đang xếp lịch...",
     itinerary: "Lịch trình Ninh Bình của bạn",
-    itineraryNote: "Các điểm bạn chọn sẽ hiện ở đây.",
+    itineraryNote: "Đây là lịch mẫu một ngày. Bạn thêm, đổi hay xoá điểm là thành lịch của mình.",
     directions: "Chỉ đường",
     replace: "Đổi điểm",
     remove: "Xóa",
@@ -423,7 +423,7 @@ const copy = {
     selected: "Đã chọn",
     welcome: "Điểm chào đón",
     welcomeDescription:
-      "Chạm vào một ghim để xem nơi đó có gì, nên đi giờ nào.",
+      "Mỗi ghim số là một điểm đến trong danh sách bên dưới.",
     mapHint: "Chạm vào một ghim để xem nơi đó, giờ nên đi, rồi thêm vào lịch trình.",
     nearMe: "Gần tôi",
     locating: "Đang tìm vị trí của bạn...",
@@ -1982,7 +1982,7 @@ export default function NinhBinhLanding({
         </div>
       </section>
 
-      <footer className="border-t border-[#e2ded2] bg-[#FBFAF6] px-5 py-10 text-center sm:px-8">
+      <footer className="border-t border-[#e2ded2] bg-[#FBFAF6] px-5 pb-28 pt-10 text-center sm:px-8 sm:pb-24">
         <p className="font-display text-lg text-[#183F34]">{t.footerNote}</p>
         <a
           href={`/tra-cuu-ve?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}

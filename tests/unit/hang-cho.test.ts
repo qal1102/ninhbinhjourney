@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   benCuaCoSo,
+  trongGioNhanSo,
   benCuaDiemDen,
   daQuaGioGiu,
   docDanhSachErp,
@@ -85,5 +86,17 @@ describe("hàng chờ bến đò", () => {
   it("số hiển thị có ba chữ số", () => {
     expect(soHienThi(7)).toBe("A007");
     expect(soHienThi(1234)).toBe("A1234");
+  });
+});
+
+describe("giờ nhận số ở bến", () => {
+  it("nhận từ 6:30 tới trước 17:00 giờ Việt Nam", () => {
+    // 23:30 UTC hôm trước = 6:30 sáng Việt Nam.
+    expect(trongGioNhanSo(new Date("2026-10-06T23:29:00Z"))).toBe(false);
+    expect(trongGioNhanSo(new Date("2026-10-06T23:30:00Z"))).toBe(true);
+    expect(trongGioNhanSo(new Date("2026-10-07T09:59:00Z"))).toBe(true);
+    expect(trongGioNhanSo(new Date("2026-10-07T10:00:00Z"))).toBe(false);
+    // 21 giờ tối, lúc soát 07/10/2026 vẫn lấy được số.
+    expect(trongGioNhanSo(new Date("2026-10-07T14:00:00Z"))).toBe(false);
   });
 });

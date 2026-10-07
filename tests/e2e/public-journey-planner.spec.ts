@@ -131,7 +131,8 @@ test("khách đếm đoàn kiểu 'nhà tôi 4 người' thì không bị hiểu
   await page.getByLabel(TEXT_BOX).fill("Nhà tôi 4 người có trẻ nhỏ.");
   await page.getByRole("button", { name: RUN_BUTTON }).click();
 
-  await expect(page.locator("[data-plan-summary]")).toContainText("4 người lớn");
+  // "Có trẻ nhỏ" mà không nói mấy cháu: ít nhất một trẻ, nằm trong bốn người.
+  await expect(page.locator("[data-plan-summary]")).toContainText("3 người lớn, 1 trẻ em");
   // Và lý do gợi ý gói không được nói ngược lại điều khách vừa kể.
   await expect(page.getByText("Đi một mình cũng thoải mái")).toHaveCount(0);
 });

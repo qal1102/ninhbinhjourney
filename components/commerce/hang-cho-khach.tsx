@@ -207,13 +207,15 @@ export function HangChoKhach({
         | null;
       if (!res.ok || !body?.ok) {
         setLoiNhan(
-          body?.ma === "TAM_DUNG"
+          body?.ma === "NGOAI_GIO"
+            ? t("Bến đã hết giờ nhận số. Mời bạn quay lại từ 6:30 sáng.", "The pier has stopped taking numbers. Please come back from 6:30.")
+            : body?.ma === "TAM_DUNG"
             ? t("Bến vừa tạm dừng nhận số. Mời bạn xem lời nhắn bên trên.", "The pier has just paused the queue. See the note above.")
             : body?.ma === "DAY"
               ? t("Hàng chờ hôm nay đã đầy. Mời bạn tới quầy bến hỏi nhân viên.", "Today's queue is full. Please ask staff at the pier.")
               : t("Chưa lấy được số. Bạn thử lại.", "Couldn't get a number. Please try again."),
         );
-        if (body?.ma === "TAM_DUNG") void taiTongQuan();
+        if (body?.ma === "TAM_DUNG" || body?.ma === "NGOAI_GIO") void taiTongQuan();
         return;
       }
       if (body.bi_mat) {
@@ -281,7 +283,19 @@ export function HangChoKhach({
 
       {tongQuan ? <TinhHinh tongQuan={tongQuan} lang={lang} /> : null}
 
-      {trang.loai === "chua-lay" ? (
+      {trang.loai === "chua-lay" && trang.tongQuan.ngoaiGio ? (
+        <div role="status" data-testid="hang-cho-ngoai-gio" className="mt-6 rounded-3xl border border-[#d7d5cd] bg-white p-5">
+          <p className="font-extrabold text-[#183f34]">{t(`${ten} đã nghỉ`, `${ten} is closed for the day`)}</p>
+          <p className="mt-2 text-sm leading-6 text-[#59654b]">
+            {t(
+              "Đò chạy từ 6:30 tới 17:30. Mời bạn quay lại lấy số từ 6:30 sáng, trước 17:00.",
+              "Boats run from 6:30 to 17:30. Please come back to take a number from 6:30, before 17:00.",
+            )}
+          </p>
+        </div>
+      ) : null}
+
+      {trang.loai === "chua-lay" && !trang.tongQuan.ngoaiGio ? (
         trang.tongQuan.dangNhan ? (
           <section className="mt-6 rounded-3xl border border-[#d7d5cd] bg-white p-5 sm:p-6" aria-labelledby="lay-so-tieu-de">
             <h2 id="lay-so-tieu-de" className="text-lg font-extrabold text-[#183f34]">
@@ -353,7 +367,7 @@ function TinhHinh({ tongQuan, lang }: { tongQuan: TongQuanHangCho; lang: NgonNgu
       </div>
       <div className="rounded-2xl bg-[#e8efe9] p-3">
         <dt className="text-xs font-bold text-[#42554c]">{t("Người mới tới chờ", "Wait if you join now")}</dt>
-        <dd className="mt-1 text-2xl font-extrabold text-[#183f34]">{phut === 0 ? t("Ngay", "None") : `~${phut}′`}</dd>
+        <dd className="mt-1 text-2xl font-extrabold text-[#183f34]">{tongQuan.ngoaiGio ? "—" : phut === 0 ? t("Ngay", "None") : `~${phut}′`}</dd>
       </div>
     </dl>
   );

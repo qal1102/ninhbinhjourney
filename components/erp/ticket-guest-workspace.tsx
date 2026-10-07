@@ -334,7 +334,8 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
       : "quet";
 
   return (
-    <div className="space-y-5">
+    // flex thay cho space-y để khối "Vé đã bán" đứng lên đầu cho giám đốc.
+    <div className="flex flex-col gap-5">
       {mode === "checkin" && offlineGateEnabled ? <OfflineGateConsole siteId={site.id} siteName={site.shortName} /> : null}
       {mode === "checkin" ? (
         <section id="khoi-quet-ve" className="scroll-mt-24 rounded-3xl bg-[#183f34] p-5 text-white sm:p-7">
@@ -642,7 +643,9 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+      {/* Soát 07/10/2026: giám đốc không bán vé, mà mở màn này là gặp ngay
+          biểu mẫu bán quầy; số vé, doanh thu họ cần nằm dưới cả chục màn hình. */}
+      <section className={`rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6 ${isDirector && mode === "sales" ? "-order-1" : ""}`}>
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Vé đã bán</p>

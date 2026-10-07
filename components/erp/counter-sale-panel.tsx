@@ -1,5 +1,7 @@
 "use client";
 
+import { DanhSachGon } from "@/components/erp/danh-sach-gon";
+
 import Link from "next/link";
 import QRCode from "qrcode";
 import { useRouter } from "next/navigation";
@@ -557,16 +559,28 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
             {workspace.sales.length === 0 ? (
               <p className="mt-2 text-sm text-[#6e7b75]">Chưa có phiếu nào hôm nay.</p>
             ) : (
-              <ul className="mt-3 divide-y divide-[#e6ebe8] rounded-xl border border-[#e0e6e2]">
-                {workspace.sales.map((sale) => {
+              <div className="mt-3">
+              <p className="mb-2 text-xs text-[#5d7268]">
+                {workspace.sales.length} phiếu · {formatVnd(workspace.sales.filter((sale) => sale.status !== "voided").reduce((tong, sale) => tong + sale.totalVnd, 0))}
+              </p>
+              <DanhSachGon
+                tenMuc="phiếu"
+                soDau={5}
+                goiYTim="Tìm theo mã phiếu hay người bán"
+                className="divide-y divide-[#e6ebe8] rounded-xl border border-[#e0e6e2]"
+                tim={workspace.sales.map((sale) => `${sale.saleCode} ${sale.soldByName}`)}
+                muc={workspace.sales.map((sale) => {
                   const daQuaCong = sale.lines.some((line) => line.entriesUsed > 0);
                   const huyDuoc =
                     canVoid && sale.status === "completed" && sale.soldByAccountId !== userId && !daQuaCong;
                   return (
-                    <li key={sale.saleCode} className="p-3 text-sm">
+                    <div key={sale.saleCode} className="p-3 text-sm">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <span className="font-mono font-bold">{sale.saleCode}</span>
+                          {daQuaCong ? (
+                            <span className="ml-2 rounded-full bg-[#e7efe9] px-2 py-0.5 text-xs font-bold text-[#35594b]">Đã qua cổng</span>
+                          ) : null}
                           <span className="text-[#6e7b75]">
                             {" "}
                             · {gioVietNam(sale.soldAt)} · {sale.soldByName} · {sale.adults} người lớn
@@ -599,13 +613,11 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                           ) : null}
                         </div>
                       </div>
-                      {canVoid && sale.status === "completed" && !huyDuoc ? (
+                      {canVoid && sale.status === "completed" && !huyDuoc && sale.soldByAccountId === userId ? (
                         <p className="mt-1 text-xs text-[#7b8881]">
                           {sale.soldByAccountId === userId
                             ? "Phiếu bạn tự bán: cần một quản lý khác huỷ."
-                            : daQuaCong
-                              ? "Khách đã qua cổng, không huỷ được."
-                              : null}
+                            : null}
                         </p>
                       ) : null}
                       {voiding === sale.saleCode ? (
@@ -631,10 +643,11 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                           </button>
                         </div>
                       ) : null}
-                    </li>
+                    </div>
                   );
                 })}
-              </ul>
+              />
+              </div>
             )}
           </div>
         </div>

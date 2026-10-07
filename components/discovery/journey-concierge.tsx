@@ -66,7 +66,7 @@ const COPY: Record<Language, ConciergeCopy> = {
     eyebrow: "Gợi ý nhanh",
     title: "Bạn muốn xem phần nào?",
     introduction:
-      "Đi thẳng tới điểm đến, tuyến đi, gói có sẵn hoặc tự lập hành trình.",
+      "Đi thẳng tới điểm đến, lịch gợi ý, gói có sẵn hoặc tự lập hành trình.",
     current: "Đang xem",
     navigationAria: "Các phần được gợi ý",
     worldsLabel: "Trang khác",
@@ -79,8 +79,8 @@ const COPY: Record<Language, ConciergeCopy> = {
       },
       {
         id: "curated-routes",
-        label: "Xem các tuyến gợi ý",
-        shortLabel: "Tuyến đi",
+        label: "Xem các lịch đi gợi ý",
+        shortLabel: "Lịch gợi ý",
         description: "Các điểm đã xếp sẵn thành một ngày.",
       },
       {
@@ -112,7 +112,7 @@ const COPY: Record<Language, ConciergeCopy> = {
       {
         id: "booking",
         label: "Đặt chỗ",
-        description: "Đi thẳng tới các gói đã có tuyến và mức giá.",
+        description: "Đi thẳng tới các gói đã có lịch đi và mức giá.",
         pathname: "/packages",
       },
     ],

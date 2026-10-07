@@ -423,7 +423,10 @@ export function ModuleWorkspace({
         {user.role === "director" || user.role === "manager" ? (
           <BangCongCoSo site={site} directory={staffDirectory} attendance={attendance} />
         ) : null}
-        <AttendancePanel site={site} user={user} events={attendance} />
+        {/* Giám đốc không vào ca theo cơ sở; khối "Ca của tôi · Xác nhận vào ca
+            bằng GPS" ở cả bốn cơ sở chỉ làm họ tưởng mình phải chấm công (soát
+            07/10/2026). Họ xem công của mọi người ở bảng công phía trên. */}
+        {user.role === "director" ? null : <AttendancePanel site={site} user={user} events={attendance} />}
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { loginAsDirector } from "./support/erp-login";
+import { trongGioNhanSo } from "@/domain/hang-cho";
 
 /**
  * Hàng chờ ảo bến đò Tam Cốc trên production (097), không giả gì: khách lấy số
@@ -16,6 +17,7 @@ const enabled = process.env.NBJ_HANG_CHO_SMOKE === "1";
 
 test.describe("hàng chờ bến đò trên production", () => {
   test.skip(!enabled, "Đặt NBJ_HANG_CHO_SMOKE=1 cùng PLAYWRIGHT_BASE_URL production để chạy.");
+  test.skip(!trongGioNhanSo(), "Ngoài 6:30–17:00 bến không nhận số; chạy trong giờ.");
 
   test.beforeAll(() => {
     const baseUrl = process.env.PLAYWRIGHT_BASE_URL;

@@ -112,7 +112,9 @@ export function KioskDiem({
       const body = (await res.json().catch(() => null)) as { ok?: boolean; ma?: string; bi_mat?: string; so_thu_tu?: number } | null;
       if (!res.ok || !body?.ok || !body.bi_mat) {
         setLoiSo(
-          body?.ma === "TAM_DUNG"
+          body?.ma === "NGOAI_GIO"
+            ? t("Bến đã hết giờ nhận số. Đò chạy từ 6:30 tới 17:30.", "The pier has stopped taking numbers. Boats run 6:30–17:30.")
+            : body?.ma === "TAM_DUNG"
             ? t("Bến đang tạm dừng nhận số. Mời bạn hỏi nhân viên bến.", "The pier has paused the queue. Please ask the staff.")
             : t("Chưa lấy được số. Mời bạn thử lại hoặc hỏi nhân viên.", "Couldn't get a number. Try again or ask the staff."),
         );

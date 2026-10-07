@@ -39,6 +39,13 @@ export type PackageMatchIntent = Pick<
   "pace" | "durationMinutes" | "party" | "visitDate"
 > & {
   partyContext?: readonly string[];
+  /**
+   * Khách có nói nhịp đi không. Không nói thì `pace` chỉ là giá trị tạm của
+   * màn hình: tiêu chí nhịp cho điểm trung bình cho mọi gói và không thành lý
+   * do hiện cho khách (soát 07/10/2026: trang ghi "Đúng kiểu đi bạn muốn" khi
+   * khách chưa hề nói kiểu đi). Bỏ trống là coi như đã nói, giữ hành vi cũ.
+   */
+  paceKnown?: boolean;
 };
 
 export type PackageMatchReasonCode =
@@ -231,6 +238,7 @@ function paceScore(
   intent: PackageMatchIntent,
   item: PackageCatalogItem,
 ): CriterionScore {
+  if (intent.paceKnown === false) return { points: 2 };
   const distance = Math.abs(PACE_ORDER[item.pace] - PACE_ORDER[intent.pace]);
   if (distance === 0) return { points: 3, reason: "pace-exact" };
   if (distance === 1) return { points: 1, reason: "pace-near" };

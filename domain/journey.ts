@@ -219,6 +219,177 @@ function parseVisitDate(text: string, now: Date) {
   return undefined;
 }
 
+const SO_BANG_CHU = Object.keys(VIETNAMESE_NUMBER_WORDS).join("|");
+const SO_TIENG_ANH: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+};
+
+function docSo(token: string) {
+  if (/^\d+$/.test(token)) return Number(token);
+  return VIETNAMESE_NUMBER_WORDS[token] ?? SO_TIENG_ANH[token];
+}
+
+/**
+ * Dò cụm từ trên chữ CÓ DẤU, ranh giới là chữ cái Unicode (`\b` của JavaScript
+ * coi "é", "ư" là ký tự ngắt từ). Dùng cho những chữ mà bỏ dấu đi thì trùng
+ * nghĩa khác: "con" (trẻ) với "còn", "đền" với "đến", "hang" với "hàng".
+ */
+function coTuCoDau(coDau: string, mau: string) {
+  return new RegExp(`(?<![\\p{L}\\d])(?:${mau})(?![\\p{L}])`, "u").test(coDau);
+}
+
+/** Số trẻ em: "2 bé", "hai cháu", "2 đứa con", "con 5 tuổi", "2 kids". */
+function demTreEm(text: string, coDau: string): number | undefined {
+  const theoSo = text.match(
+    new RegExp(
+      `\\b(\\d+|${SO_BANG_CHU}|one|two|three|four|five)\\s+(?:dua\\s+)?(?:tre(?:\\s+(?:em|con|nho))?|be|chau|nhoc|kids?|children|child)\\b`,
+    ),
+  );
+  if (theoSo) return docSo(theoSo[1]);
+  const con = coDau.match(
+    /(?<![\p{L}\d])(\d+|một|hai|ba|bốn|năm)\s+(?:đứa\s+)?con(?![\p{L}])/u,
+  );
+  if (con) return docSo(normalizedText(con[1]));
+  if (
+    coTuCoDau(
+      coDau,
+      "con nhỏ|con trai|con gái|đứa con|với con|cùng con|cho con|con \\d+ tuổi|bé|cháu|em bé|trẻ con|trẻ nhỏ|trẻ em|nhóc",
+    ) ||
+    /\b(?:kids?|child|children|son|daughter|baby|toddler)\b/.test(text)
+  ) {
+    return 1;
+  }
+  return undefined;
+}
+
+/**
+ * Cả đoàn bao nhiêu người, khi khách đếm gộp: "gia đình 4 người", "nhóm 5",
+ * "3 đứa bạn", "tôi với 2 người bạn" (ba người, tính cả người nói).
+ */
+function demTongNguoi(text: string): number | undefined {
+  const nguoi = text.match(
+    new RegExp(
+      `\\b(\\d+|${SO_BANG_CHU})\\s+nguoi\\b(?!\\s+(?:lon|cao tuoi|gia|yeu|ban))`,
+    ),
+  );
+  if (nguoi) return docSo(nguoi[1]);
+  const ban = text.match(
+    new RegExp(
+      `\\b(voi|cung)?\\s*(\\d+|${SO_BANG_CHU})\\s+(?:dua\\s+|nguoi\\s+)?ban\\b(?!\\s+(?:trai|gai))`,
+    ),
+  );
+  if (ban) return (docSo(ban[2]) ?? 0) + (ban[1] ? 1 : 0) || undefined;
+  const nhom = text.match(
+    new RegExp(
+      `\\b(?:nhom|doan|gia dinh|nha|ca nha)\\s+(?:minh\\s+|toi\\s+)?(\\d+|${SO_BANG_CHU})\\b`,
+    ),
+  );
+  if (nhom) return docSo(nhom[1]);
+  const tiengAnh = text.match(
+    /\b(\d+|one|two|three|four|five|six|seven|eight)\s+(?:people|persons|of us)\b|\bfamily of (\d+|three|four|five|six)\b/,
+  );
+  if (tiengAnh) return docSo(tiengAnh[1] ?? tiengAnh[2]);
+  const banAnh = text.match(/\b(with\s+)?(\d+|two|three|four|five)\s+friends\b/);
+  if (banAnh) return (docSo(banAnh[2]) ?? 0) + (banAnh[1] ? 1 : 0) || undefined;
+  return undefined;
+}
+
+/**
+ * Tên điểm khách nhắc tới đầu tiên. Chỉ những nơi máy xếp lịch được
+ * (`DESTINATIONS`); "phố cổ" đứng trước "Hoa Lư" để "phố cổ Hoa Lư" không bị
+ * đọc thành cố đô.
+ */
+const TEN_DIEM: ReadonlyArray<readonly [RegExp, string]> = [
+  [/\bpho co(?: hoa lu)?\b|\bold town\b/, "hoa-lu-old-town"],
+  [/\btrang an\b/, "trang-an"],
+  [/\bbai dinh\b/, "bai-dinh"],
+  [/\btam coc\b|\bbich dong\b/, "tam-coc-bich-dong"],
+  [/\bhang mua\b|\bmua cave\b/, "hang-mua"],
+  [/\b(?:co do )?hoa lu\b/, "hoa-lu-ancient-capital"],
+  [/\bthung nham\b/, "thung-nham"],
+  [/\bvan long\b/, "van-long"],
+  [/\btam chuc\b/, "tam-chuc"],
+];
+
+function diemDuocNhac(text: string) {
+  let som: { viTri: number; slug: string } | undefined;
+  for (const [mau, slug] of TEN_DIEM) {
+    const viTri = text.search(mau);
+    if (viTri >= 0 && (!som || viTri < som.viTri)) som = { viTri, slug };
+  }
+  return som
+    ? DESTINATIONS.find((destination) => destination.slug === som.slug)?.id
+    : undefined;
+}
+
+/**
+ * Giờ bắt đầu theo buổi khách nói. "Tôi" bỏ dấu cũng là "toi", nên buổi tối
+ * chỉ nhận khi đi kèm "buổi", "nay", "mai".
+ */
+function docBuoi(text: string) {
+  if (/\bbuoi trua\b|\btrua nay\b|\btrua mai\b|\bnoon\b/.test(text)) return 11 * 60;
+  if (/\bbuoi chieu\b|\bchieu nay\b|\bchieu mai\b|\bdi chieu\b|\bafternoon\b/.test(text)) return 13 * 60;
+  if (/\bbuoi toi\b|\btoi nay\b|\btoi mai\b|\bevening\b/.test(text)) return 17 * 60;
+  return undefined;
+}
+
+const THU_TRONG_TUAN: Record<string, number> = {
+  "2": 1, hai: 1, "3": 2, ba: 2, "4": 3, tu: 3, "5": 4, nam: 4, "6": 5, sau: 5, "7": 6, bay: 6,
+};
+const THU_TIENG_ANH: Record<string, number> = {
+  sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6,
+};
+
+/**
+ * Ngày nói miệng: "hôm nay", "mai", "ngày kia", "thứ 7 này", "chủ nhật tuần
+ * sau", "cuối tuần này". Trước 07/10/2026 máy chỉ đọc "12/10" và "12 tháng
+ * 10", nên "ngày mai" rơi sạch và lịch lặng lẽ đặt một ngày cách đó bảy hôm.
+ */
+function docNgayNoiMieng(text: string, now: Date) {
+  const homNay = todayInVietnam(now);
+  const goc = Date.UTC(homNay.year, homNay.month - 1, homNay.day);
+  const thuHomNay = new Date(goc).getUTCDay();
+  const cong = (soNgay: number, confidence = 0.9) => {
+    const ngay = new Date(goc + soNgay * 24 * 60 * 60 * 1000);
+    return {
+      date: isoDate(ngay.getUTCFullYear(), ngay.getUTCMonth() + 1, ngay.getUTCDate()),
+      confidence,
+    };
+  };
+  if (/\bhom nay\b|\btoday\b/.test(text)) return cong(0);
+  if (/\bngay kia\b|\bngay mot\b|\bday after tomorrow\b/.test(text)) return cong(2);
+  if (/\b(?:ngay|sang|chieu|toi|trua) mai\b|\bmai (?:minh|toi|di|em|anh|chi|nha)\b|\btomorrow\b/.test(text)) {
+    return cong(1);
+  }
+  const thu =
+    text.match(/\b(?:thu\s*(2|3|4|5|6|7|hai|ba|tu|nam|sau|bay)|t([2-7]))\b(\s+tuan\s+(?:sau|toi))?/) ??
+    undefined;
+  const chuNhat = text.match(/\b(?:chu nhat|cn)\b(\s+tuan\s+(?:sau|toi))?/);
+  const anh = text.match(/\b(next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/);
+  let dich: number | undefined;
+  let tuanSau = false;
+  if (thu) {
+    dich = THU_TRONG_TUAN[thu[1] ?? thu[2]];
+    tuanSau = Boolean(thu[3]);
+  } else if (chuNhat) {
+    dich = 0;
+    tuanSau = Boolean(chuNhat[1]);
+  } else if (anh) {
+    dich = THU_TIENG_ANH[anh[2]];
+    tuanSau = Boolean(anh[1]);
+  }
+  if (dich !== undefined) {
+    if (!tuanSau) return cong((dich - thuHomNay + 7) % 7);
+    // "Tuần sau" là tuần lịch kế tiếp, tính từ thứ hai.
+    const toiThuHai = (1 - thuHomNay + 7) % 7 || 7;
+    return cong(toiThuHai + ((dich + 6) % 7));
+  }
+  if (/\bcuoi tuan\b|\bweekend\b/.test(text)) {
+    return cong(thuHomNay === 6 || thuHomNay === 0 ? 0 : 6 - thuHomNay, 0.75);
+  }
+  return undefined;
+}
+
 export function parseJourneyIntent(input: {
   text: string;
   locale: "vi" | "en";
@@ -227,6 +398,7 @@ export function parseJourneyIntent(input: {
 }): JourneyIntentDraft {
   const rawText = input.text.trim();
   const text = normalizedText(rawText);
+  const coDau = rawText.normalize("NFC").toLocaleLowerCase("vi-VN");
   const draft: JourneyIntentDraft = {
     locale: input.locale,
     rawText,
@@ -265,7 +437,7 @@ export function parseJourneyIntent(input: {
       draft.durationMinutes = 600;
       draft.tripDays = 2;
       draft.fieldConfidence.durationMinutes = 0.6;
-    } else if (/\bone day\b/.test(text)) {
+    } else if (/\bone day\b|\bca ngay\b|\btron ngay\b|\bfull day\b|\ball day\b|\bwhole day\b/.test(text)) {
       draft.durationMinutes = 600;
       draft.tripDays = 1;
       draft.fieldConfidence.durationMinutes = 0.99;
@@ -279,70 +451,116 @@ export function parseJourneyIntent(input: {
     }
   }
 
+  // Đếm người. Soát 07/10/2026 trên production: sáu câu khách hay gõ thì cả
+  // sáu bị hiểu sai — "vợ chồng với con 5 tuổi" ra hai người lớn, "4 người có
+  // 2 bé" ra bốn người lớn, "3 đứa bạn" ra một người. Thứ tự đọc: số nói thẳng
+  // ra trước, rồi tổng số người trừ đi trẻ em, cuối cùng mới tới cách nói
+  // (vợ chồng, một mình, bố mẹ).
   const adults =
     countBeforeKeyword(text, "nguoi lon") ?? countBeforeKeyword(text, "adults?");
-  const children =
-    countBeforeKeyword(text, "tre") ?? countBeforeKeyword(text, "children?");
-  const seniors =
+  const children = demTreEm(text, coDau);
+  const seniorsSaid =
     countBeforeKeyword(text, "nguoi cao tuoi") ??
     countBeforeKeyword(text, "seniors?");
+  const tongNguoi = demTongNguoi(text);
   // "Cặp đôi" và "đi một mình" là hai cách nói phổ biến nhất mà máy vẫn chưa
   // hiểu. Số khách nói thẳng ra vẫn được ưu tiên hơn con số suy từ cách nói.
   const couple =
-    /\bcap doi\b|\bvo chong\b|\bnguoi yeu\b|\bban gai\b|\bban trai\b/.test(
+    /\bcap doi\b|\bvo chong\b|\bnguoi yeu\b|\bban gai\b|\bban trai\b|\bvoi vo\b|\bvoi chong\b/.test(
       text,
-    ) || /\bcouple\b|\bhoneymoon\b/.test(text);
+    ) ||
+    /\bcouple\b|\bhoneymoon\b|\bmy (?:wife|husband|partner|girlfriend|boyfriend)\b/.test(text);
   const solo = /\bmot minh\b/.test(text) || /\bsolo\b|\balone\b/.test(text);
-  if (/\bbo me\b|\bparents?\b/.test(text)) {
-    draft.party = { adults: adults ?? 3, children: children ?? 0, seniors: 0 };
+  // "Bố mẹ già", "ông bà": người lớn tuổi đi cùng. Chỉ "bố mẹ" trơn thì giữ
+  // cách hiểu cũ (ba người lớn) vì chưa chắc bố mẹ đã cao tuổi.
+  const coNguoiGia =
+    /\b(?:bo me|ba me|cha me) (?:gia|lon tuoi|cao tuoi|yeu)\b|\bong ba\b|\bnguoi gia\b|\bgrandparents?\b|\belderly\b/.test(
+      text,
+    );
+  const seniors = seniorsSaid ?? (coNguoiGia ? 2 : undefined);
+  const treEm = children ?? 0;
+  const nguoiGia = seniors ?? 0;
+  if (/\bbo me\b|\bba me\b|\bcha me\b|\bparents?\b/.test(text)) {
+    draft.party = {
+      adults: adults ?? (coNguoiGia ? 1 : 3),
+      children: treEm,
+      seniors: nguoiGia,
+    };
     draft.partyContext = ["travelling-with-parents"];
     draft.fieldConfidence.party = adults ? 0.96 : 0.82;
+  } else if (tongNguoi && tongNguoi >= 1 && adults === undefined) {
+    // "Gia đình 4 người có 2 bé": bốn người là cả đoàn, trẻ em nằm trong đó.
+    draft.party = {
+      adults: Math.max(1, tongNguoi - treEm - nguoiGia),
+      children: treEm,
+      seniors: nguoiGia,
+    };
+    if (couple && tongNguoi - treEm === 2) draft.partyContext = ["couple"];
+    draft.fieldConfidence.party = 0.85;
   } else if (couple) {
-    draft.party = { adults: adults ?? 2, children: children ?? 0, seniors: 0 };
-    draft.partyContext = ["couple"];
+    draft.party = { adults: adults ?? 2, children: treEm, seniors: nguoiGia };
+    draft.partyContext = treEm > 0 ? [] : ["couple"];
     draft.fieldConfidence.party = adults ? 0.96 : 0.88;
   } else if (solo) {
-    draft.party = { adults: adults ?? 1, children: children ?? 0, seniors: 0 };
+    draft.party = { adults: adults ?? 1, children: treEm, seniors: nguoiGia };
     draft.partyContext = ["solo"];
     draft.fieldConfidence.party = adults ? 0.96 : 0.9;
   } else if (adults || children || seniors) {
+    // Có trẻ mà không nói người lớn: nhà đi chơi thì thường hai bố mẹ, còn
+    // không thì ít nhất một người lớn dẫn đi.
+    const giaDinh = /\bgia dinh\b|\bca nha\b|\bfamily\b/.test(text);
     draft.party = {
-      adults: adults ?? 0,
-      children: children ?? 0,
-      seniors: seniors ?? 0,
+      adults: adults ?? (nguoiGia > 0 && treEm === 0 ? 0 : giaDinh ? 2 : 1),
+      children: treEm,
+      seniors: nguoiGia,
     };
-    draft.fieldConfidence.party = 0.95;
-  } else {
-    // "Nhà tôi 4 người có trẻ nhỏ" là cách người Việt đếm đoàn thường ngày, và
-    // trước đây máy bỏ qua sạch: không có "người lớn", không có "cặp đôi",
-    // không có "một mình" — nên đoàn bốn người rơi về mặc định MỘT khách, rồi
-    // trang gợi ý gói với lý do "Đi một mình cũng thoải mái".
-    //
-    // Nhánh này chỉ chạy khi không đọc được bất kỳ con số cụ thể nào ở trên,
-    // nên "hai người cao tuổi" hay "3 người lớn" vẫn đi đường cũ và không bị
-    // đếm hai lần. Máy chưa biết trong bốn người ấy mấy trẻ nhỏ, nên không tự
-    // bịa ra; độ chắc để vừa phải, và ô "Chỉnh lại cho đúng" vẫn cho khách sửa.
-    const people = countBeforeKeyword(text, "nguoi") ?? countBeforeKeyword(text, "people");
-    if (people && people >= 1) {
-      draft.party = { adults: people, children: 0, seniors: 0 };
-      draft.fieldConfidence.party = 0.8;
-    }
+    draft.fieldConfidence.party = adults ? 0.95 : 0.8;
   }
 
-  if (/\bit di bo\b|\blow walking\b|\bless walking\b/.test(text)) {
+  // Mức đi bộ. Câu "không leo được" phải xét trước "leo núi", không thì
+  // "không leo núi được" lại đọc thành người thích leo.
+  if (
+    /\bit di bo\b|\bdi bo it\b|\bchan yeu\b|\bdau chan\b|\bdau goi\b|\bkhong (?:the |muon |thich |nen |duoc )?leo\b|\bngai leo\b|\bkhong di (?:bo )?(?:duoc )?(?:nhieu|xa)\b|\bxe lan\b|\bxe day\b|\bmang thai\b|\bco bau\b|\bgia yeu\b|\blow walking\b|\bless walking\b|\bcan(?:no|')t (?:walk|climb)\b|\bno (?:climbing|hiking)\b|\bwheelchair\b/.test(
+      text,
+    ) ||
+    (coNguoiGia && !/\bleo nui\b|\bhiking\b/.test(text))
+  ) {
     draft.walkingTolerance = "low";
-    draft.fieldConfidence.walkingTolerance = 0.99;
-  } else if (/\bdi bo nhieu\b|\bactive walking\b/.test(text)) {
+    draft.fieldConfidence.walkingTolerance = coNguoiGia ? 0.8 : 0.95;
+  } else if (
+    /\bdi bo nhieu\b|\bleo nui\b|\bleo bac\b|\bleo hang mua\b|\btrekking\b|\bhiking\b|\bactive walking\b|\bclimb/.test(
+      text,
+    )
+  ) {
     draft.walkingTolerance = "high";
+    draft.fieldConfidence.walkingTolerance = 0.9;
+  } else if (/\bdi bo vua phai\b|\bsome walking\b|\bmoderate walking\b/.test(text)) {
+    draft.walkingTolerance = "moderate";
     draft.fieldConfidence.walkingTolerance = 0.9;
   }
 
-  if (/\bnhe nhang\b|\bthu tha\b|\brelaxed\b|\bslow pace\b/.test(text)) {
+  if (
+    /\bnhe nhang\b|\bthu tha\b|\bthong tha\b|\bdi cham\b|\bcham thoi\b|\bcham rai\b|\bkhong voi\b|\bnghi ngoi\b|\bthu gian\b|\brelaxed?\b|\bslow\b|\bchill\b/.test(
+      text,
+    )
+  ) {
     draft.pace = "relaxed";
-    draft.fieldConfidence.pace = 0.97;
-  } else if (/\bnang dong\b|\bactive pace\b/.test(text)) {
+    draft.fieldConfidence.pace = 0.95;
+  } else if (
+    /\bnang dong\b|\bnhieu noi\b|\bdi nhieu\b|\btranh thu\b|\bdi het\b|\bcang nhieu cang tot\b|\bactive pace\b|\bas much as\b/.test(
+      text,
+    )
+  ) {
     draft.pace = "active";
-    draft.fieldConfidence.pace = 0.92;
+    draft.fieldConfidence.pace = 0.9;
+  } else if (/\bvua phai\b|\bcan bang\b|\bmoderate pace\b|\bsteady\b|\bbalanced\b/.test(text)) {
+    draft.pace = "balanced";
+    draft.fieldConfidence.pace = 0.9;
+  } else if (coNguoiGia || draft.walkingTolerance === "low") {
+    // Không nói nhịp nhưng có người già hay chân yếu: đi thong thả là suy ra
+    // được, độ chắc để thấp cho màn hình ghi là đoán.
+    draft.pace = "relaxed";
+    draft.fieldConfidence.pace = 0.7;
   }
 
   const million = text.match(/(\d+(?:[.,]\d+)?)\s*(?:trieu|million)/);
@@ -361,22 +579,61 @@ export function parseJourneyIntent(input: {
     draft.fieldConfidence.budgetVnd = 0.95;
   }
 
+  // Sở thích. "Đền", "sông", "hang" phải đọc trên chữ CÓ DẤU: bỏ dấu đi thì
+  // "đến Ninh Bình" thành "den", "hàng chờ" thành "hang".
   const interests: string[] = [];
-  if (/\bdi san\b|\bheritage\b|\blich su\b/.test(text)) {
+  if (/\bdi san\b|\bheritage\b|\blich su\b|\bco do\b|\bhistory\b/.test(text)) {
     interests.push("heritage");
   }
-  if (/\bthien nhien\b|\bnature\b/.test(text)) interests.push("nature");
-  if (/\bnhiếp ảnh\b|\bnhiep anh\b|\bphotograph/.test(text)) {
+  if (
+    /\bthien nhien\b|\bnature\b|\bboats?\b|\bcaves?\b|\briver\b/.test(text) ||
+    coTuCoDau(coDau, "thuyền|đò|hang|sông|núi|chim|rừng|cánh đồng|lúa")
+  ) {
+    interests.push("nature");
+  }
+  if (
+    /\bnhiep anh\b|\bchup anh\b|\bchup hinh\b|\bsong ao\b|\bcheck ?in\b|\bhoang hon\b|\bbinh minh\b|\bphotograph|\bphotos?\b|\bsunset\b|\bsunrise\b/.test(
+      text,
+    )
+  ) {
     interests.push("photography");
   }
-  if (/\bam thuc\b|\bfood\b/.test(text)) interests.push("food");
-  if (/\btam linh\b|\bspiritual/.test(text)) interests.push("spirituality");
+  if (/\bam thuc\b|\bdac san\b|\bde nui\b|\bcom chay\b|\bfood\b/.test(text)) {
+    interests.push("food");
+  }
+  if (
+    /\btam linh\b|\bspiritual|\bpagodas?\b|\btemples?\b/.test(text) ||
+    coTuCoDau(coDau, "chùa|đền|lễ phật|cầu an")
+  ) {
+    interests.push("spirituality");
+  }
   if (interests.length > 0) {
     draft.interests = interests;
     draft.fieldConfidence.interests = 0.9;
   }
 
-  const visitDate = parseVisitDate(text, input.today ?? new Date());
+  // Tên điểm khách nhắc tới đầu tiên thì xếp đầu lịch (vẫn qua luật đi bộ,
+  // giờ mở cửa như điểm khách bấm chọn ở trang điểm đến).
+  const diemNhac = diemDuocNhac(text);
+  if (diemNhac) {
+    draft.startSiteId = diemNhac;
+    draft.fieldConfidence.startSiteId = 0.9;
+  }
+
+  const buoi = docBuoi(text);
+  if (buoi) {
+    draft.batDauPhut = buoi;
+    draft.fieldConfidence.batDauPhut = 0.85;
+    // "Đi buổi chiều" mà không nói mấy tiếng: một buổi, không phải trọn ngày.
+    if (!draft.durationMinutes) {
+      draft.durationMinutes = buoi >= 17 * 60 ? 180 : 300;
+      draft.fieldConfidence.durationMinutes = 0.7;
+    }
+  }
+
+  const visitDate =
+    parseVisitDate(text, input.today ?? new Date()) ??
+    docNgayNoiMieng(text, input.today ?? new Date());
   if (visitDate) {
     draft.visitDate = visitDate.date;
     draft.fieldConfidence.visitDate = visitDate.confidence;
@@ -452,6 +709,8 @@ export type ItineraryGenerationOptions = {
    * lập lịch nói lý do.
    */
   uuTienSiteId?: string;
+  /** Phút trong ngày bắt đầu lịch; mặc định 8 giờ sáng. */
+  batDauPhut?: number;
 };
 
 export function generateItinerary(
@@ -487,7 +746,8 @@ export function generateItinerary(
         !unavailable.has(destination.id),
     );
 
-  let cursor = 8 * 60;
+  const batDau = options.batDauPhut ?? 8 * 60;
+  let cursor = batDau;
   let previousSlug: string | undefined;
   const items: ItineraryItem[] = [];
 
@@ -496,7 +756,7 @@ export function generateItinerary(
     const window = openingWindow(destination);
     const startMinute = Math.max(cursor + travel, window.start);
     const endMinute = startMinute + destination.suggestedMinutes;
-    const elapsed = endMinute - 8 * 60;
+    const elapsed = endMinute - batDau;
     if (endMinute > window.end || elapsed > intent.durationMinutes) continue;
 
     items.push({
@@ -530,7 +790,7 @@ export function generateItinerary(
     regionId: NINH_BINH_TOURISM_CORE.id,
     intentId: intent.id,
     items,
-    totalMinutes: items.length > 0 ? cursor - 8 * 60 : 0,
+    totalMinutes: items.length > 0 ? cursor - batDau : 0,
     estimatedPriceVnd,
     validation: { valid: true, issues: [] },
     explanation:

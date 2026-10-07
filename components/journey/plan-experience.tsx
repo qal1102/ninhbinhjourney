@@ -4,6 +4,7 @@ import Link from "next/link";
 import { goiHienThi } from "@/content/packages-en";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CONTACT } from "@/content/contact";
+import { DESTINATIONS } from "@/content/destinations";
 import {
   parseJourneyIntent,
   REQUIRED_VIETNAMESE_SAMPLE,
@@ -93,6 +94,18 @@ const WALKING_SUMMARY: Record<
   low: { vi: "ít đi bộ", en: "little walking" },
   moderate: { vi: "đi bộ vừa phải", en: "some walking" },
   high: { vi: "đi bộ nhiều được", en: "plenty of walking" },
+};
+
+function vietHoaDau(cau: string) {
+  return cau.charAt(0).toLocaleUpperCase("vi-VN") + cau.slice(1);
+}
+
+const SO_THICH_SUMMARY: Record<string, { vi: string; en: string }> = {
+  heritage: { vi: "thích di sản", en: "heritage" },
+  nature: { vi: "thích thiên nhiên, sông nước", en: "nature and rivers" },
+  photography: { vi: "thích chụp ảnh", en: "photography" },
+  food: { vi: "thích ăn đặc sản", en: "local food" },
+  spirituality: { vi: "thích chùa, đền", en: "temples and pagodas" },
 };
 
 /** Câu mẫu tiếng Anh; bộ phân tích đọc được "one day", "parents", "6 hours"… */
@@ -332,6 +345,9 @@ export function PlanExperience({
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [draft, setDraft] = useState<JourneyIntentDraft | null>(null);
   const [visitDate, setVisitDate] = useState("");
+  // Ngày đi do máy tạm đặt (khách chưa nói), để dòng tóm tắt không trình bày
+  // nó như điều khách vừa kể.
+  const [ngayDoan, setNgayDoan] = useState(false);
   const [minVisitDate, setMinVisitDate] = useState("");
   const [showDetails, setShowDetails] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState(600);
@@ -404,6 +420,9 @@ export function PlanExperience({
     if (!draft) return null;
     return matchPackagesToIntent({
       pace,
+      // Khách chưa nói nhịp mà màn hình tạm để "vừa phải" thì không được
+      // chấm điểm theo nhịp, càng không được ghi "Đúng kiểu đi bạn muốn".
+      paceKnown: Boolean(draft.pace) || pace !== "balanced",
       durationMinutes,
       party: { adults, children, seniors },
       partyContext: draft.partyContext ?? [],
@@ -419,6 +438,15 @@ export function PlanExperience({
     visitDate,
   ]);
 
+  // Tên điểm khách nhắc trong câu ("muốn đi Tràng An") xếp đầu lịch như điểm
+  // bấm chọn ở trang điểm đến. Điểm bấm chọn vẫn được ưu tiên hơn.
+  const diemTuCau = useMemo<DiemMuonGhe | undefined>(() => {
+    const diem = draft?.startSiteId
+      ? DESTINATIONS.find((destination) => destination.id === draft.startSiteId)
+      : undefined;
+    return diem ? { id: diem.id, ten: diem.name[lang], mucDiBo: diem.mobilityLevel } : undefined;
+  }, [draft, lang]);
+
   // `source` cho phép bấm một thẻ gợi ý là chạy ngay trong cùng một nhịp.
   // Gọi `setText()` rồi `parseText()` thì `parseText` vẫn đọc giá trị cũ của
   // lần dựng trước -- lỗi kinh điển, và ở đây nó biểu hiện thành "bấm thẻ mà
@@ -432,6 +460,7 @@ export function PlanExperience({
     setVisitDate(
       (current) => parsed.visitDate ?? (current || localDateInDays(7)),
     );
+    setNgayDoan(!parsed.visitDate);
     setDurationMinutes(
       parsed.durationMinutes ? nearestDurationChoice(parsed.durationMinutes) : 600,
     );
@@ -526,6 +555,7 @@ export function PlanExperience({
 
   async function confirmAndGenerate() {
     if (!draft) return;
+    const diemUuTien = diemChon ?? diemTuCau;
     setPending(true);
     setMessage("");
     try {
@@ -542,7 +572,8 @@ export function PlanExperience({
           walkingTolerance: walking,
           budgetVnd: { target: budget, tolerancePercent: 20 },
           visitDate,
-          ...(diemChon ? { uuTienSiteId: diemChon.id } : {}),
+          ...(diemUuTien ? { uuTienSiteId: diemUuTien.id } : {}),
+          ...(draft.batDauPhut ? { batDauPhut: draft.batDauPhut } : {}),
         }),
       });
       const payload = (await response.json()) as {
@@ -559,15 +590,15 @@ export function PlanExperience({
       // Điểm khách chọn vẫn phải qua luật đi bộ và giờ mở cửa. Không xếp được
       // thì nói lý do, không lặng lẽ bỏ đi.
       const diemChuaXep =
-        diemChon && !payload.itinerary.items.some((item) => item.siteId === diemChon.id)
-          ? BAC_DI_BO[diemChon.mucDiBo] > BAC_DI_BO[walking]
+        diemUuTien && !payload.itinerary.items.some((item) => item.siteId === diemUuTien.id)
+          ? BAC_DI_BO[diemUuTien.mucDiBo] > BAC_DI_BO[walking]
             ? t(
-                `${diemChon.ten} cần đi bộ nhiều hơn mức bạn chọn nên chưa xếp vào. Nếu bạn vẫn muốn ghé, mời bạn chỉnh mức đi bộ lên rồi dựng lại.`,
-                `${diemChon.ten} needs more walking than you chose, so it is not in the plan. To include it, raise the walking level and build again.`,
+                `${diemUuTien.ten} cần đi bộ nhiều hơn mức bạn chọn nên chưa xếp vào. Nếu bạn vẫn muốn ghé, mời bạn chỉnh mức đi bộ lên rồi dựng lại.`,
+                `${diemUuTien.ten} needs more walking than you chose, so it is not in the plan. To include it, raise the walking level and build again.`,
               )
             : t(
-                `${diemChon.ten} chưa vừa với giờ mở cửa và ${Math.round(durationMinutes / 60)} tiếng bạn có. Mời bạn chọn thêm thời gian rồi dựng lại.`,
-                `${diemChon.ten} does not fit the opening hours and the ${Math.round(durationMinutes / 60)} hours you have. Add more time and build again.`,
+                `${diemUuTien.ten} chưa vừa với giờ mở cửa và ${Math.round(durationMinutes / 60)} tiếng bạn có. Mời bạn chọn thêm thời gian rồi dựng lại.`,
+                `${diemUuTien.ten} does not fit the opening hours and the ${Math.round(durationMinutes / 60)} hours you have. Add more time and build again.`,
               )
           : undefined;
       setResult({
@@ -748,16 +779,47 @@ export function PlanExperience({
             {/* Một dòng tóm tắt thay cho chín ô. Chín ô vẫn còn nguyên, chỉ
                 gập lại -- giấu đi thì khách không biết mình đang bị đoán hộ
                 những gì, mà bày cả ra thì lại đúng bức tường cũ. */}
-            <p
-              data-plan-summary
-              className="mt-3 text-sm leading-6 text-[#59654b]"
-            >
-              {PACE_SUMMARY[pace][lang]} · {WALKING_SUMMARY[walking][lang]} ·{" "}
-              {Math.round(durationMinutes / 60)} {t("tiếng", "hours")} · {adults} {t("người lớn", adults === 1 ? "adult" : "adults")}
-              {children > 0 ? t(`, ${children} trẻ em`, `, ${children} children`) : ""}
-              {seniors > 0 ? t(`, ${seniors} người cao tuổi`, `, ${seniors} older travellers`) : ""}
-              {visitDate ? t(` · đi ngày ${visitDate.split("-").reverse().join("/")}`, ` · on ${visitDate.split("-").reverse().join("/")}`) : ""}
-            </p>
+            {/* Soát 07/10/2026: dòng này từng trình bày giá trị mặc định (đi
+                vừa phải, ngày cách hôm nay bảy hôm) như điều khách vừa kể. Nay
+                tách hai dòng: điều khách đã nói, và điều máy tạm để. */}
+            {(() => {
+              const daHieu: string[] = [];
+              const tamDe: string[] = [];
+              const nhom = `${adults} ${t("người lớn", adults === 1 ? "adult" : "adults")}${
+                children > 0 ? t(`, ${children} trẻ em`, `, ${children} children`) : ""
+              }${seniors > 0 ? t(`, ${seniors} người cao tuổi`, `, ${seniors} older travellers`) : ""}`;
+              const gio = `${Math.round(durationMinutes / 60)} ${t("tiếng", "hours")}${
+                draft.batDauPhut ? t(` từ ${Math.floor(draft.batDauPhut / 60)} giờ`, ` from ${Math.floor(draft.batDauPhut / 60)}:00`) : ""
+              }`;
+              const ngay = visitDate
+                ? t(`đi ngày ${visitDate.split("-").reverse().join("/")}`, `on ${visitDate.split("-").reverse().join("/")}`)
+                : "";
+              (draft.pace || pace !== "balanced" ? daHieu : tamDe).push(PACE_SUMMARY[pace][lang]);
+              (draft.walkingTolerance || walking !== "moderate" ? daHieu : tamDe).push(WALKING_SUMMARY[walking][lang]);
+              (draft.durationMinutes || durationMinutes !== 600 ? daHieu : tamDe).push(gio);
+              (draft.party || adults + children + seniors !== 1 ? daHieu : tamDe).push(nhom);
+              if (ngay) (ngayDoan ? tamDe : daHieu).push(ngay);
+              for (const soThich of draft.interests ?? []) {
+                const nhan = SO_THICH_SUMMARY[soThich];
+                if (nhan) daHieu.push(nhan[lang]);
+              }
+              if (diemTuCau && !diemChon) daHieu.push(t(`ưu tiên ${diemTuCau.ten}`, `${diemTuCau.ten} first`));
+              return (
+                <>
+                  <p data-plan-summary className="mt-3 text-sm leading-6 text-[#59654b]">
+                    {daHieu.length > 0
+                      ? vietHoaDau(daHieu.join(" · "))
+                      : t("Câu này chúng tôi chưa đọc ra điều gì cụ thể.", "We could not pick out anything specific from that.")}
+                  </p>
+                  {tamDe.length > 0 ? (
+                    <p data-plan-tam-de className="mt-1 text-sm leading-6 text-[#8a5a1f]">
+                      {t("Bạn chưa nói nên chúng tôi tạm để: ", "Not mentioned, so for now: ")}
+                      {tamDe.join(" · ")}
+                    </p>
+                  ) : null}
+                </>
+              );
+            })()}
             {/* Khách nói "hai ngày" thì phải trả lời cho đúng chuyện ấy. Máy
                 mới xếp được một ngày, nên nói thẳng ra là mình xếp ngày đầu.
                 Im lặng đưa một ngày rồi để khách tự đoán là cách nhanh nhất
@@ -790,7 +852,10 @@ export function PlanExperience({
                   type="date"
                   value={visitDate}
                   min={minVisitDate}
-                  onChange={(event) => setVisitDate(event.target.value)}
+                  onChange={(event) => {
+                    setVisitDate(event.target.value);
+                    setNgayDoan(false);
+                  }}
                   className="mt-2 min-h-11 w-full rounded-xl border border-[#c9ccc5] bg-white px-3 font-normal"
                 />
                 {visitDate ? (

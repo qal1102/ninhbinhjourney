@@ -53,6 +53,8 @@ export interface JourneyIntentDraft {
   budgetVnd?: { target: number; tolerancePercent: number };
   accessibilityNeeds?: string[];
   startSiteId?: UUID;
+  /** Phút trong ngày bắt đầu lịch khi khách nói buổi ("buổi chiều" là 13:00). */
+  batDauPhut?: number;
   visitDate?: string;
   fieldConfidence: Record<string, number>;
 }

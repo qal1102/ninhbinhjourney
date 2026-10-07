@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { loiTinhTrang, tinhTrangMua } from "@/domain/mua-trang";
+import { tinhTrangHoaSung } from "@/domain/mua-hoa-sung";
 
 /**
  * Bốn cổng vào bốn thế giới — có gợi ý để khách biết bấm được.
@@ -65,17 +66,22 @@ const ANH: Record<CongId, string> = {
   booking: "/images/destinations/tam-chuc.jpg",
 };
 
-function moTa(id: CongId, lang: "vi" | "en"): string {
+function moTa(id: CongId, lang: "vi" | "en", so: SoLieuCong, bayGio: string): string {
+  const trungThuKhep = tinhTrangMua(new Date(bayGio), DEM_MUA, DEM_RAM).giaiDoan === "het-mua";
   const vi: Record<CongId, string> = {
-    travel: "Chín nơi đáng đi. Xem trên bản đồ rồi chọn.",
+    travel: `${so.soDiemDen} nơi đáng đi. Xem trên bản đồ rồi chọn.`,
     collaboration: "Hồ sơ ý tưởng mời thương hiệu hợp tác.",
-    seasonal: "Trung thu bên sông Ngô Đồng: bàn tối, quà, lịch trăng.",
+    seasonal: trungThuKhep
+      ? "Mùa hoa súng Tam Cốc sắp tới; Trung thu vừa qua vẫn để xem lại."
+      : "Trung thu bên sông Ngô Đồng: bàn tối, quà, lịch trăng.",
     booking: "Các gói đi sẵn, có giờ và giá rõ ràng.",
   };
   const en: Record<CongId, string> = {
-    travel: "Nine places worth the trip, each with its own rhythm. See them on the map.",
+    travel: `${so.soDiemDen} places worth the trip. See them on the map.`,
     collaboration: "A magazine-form dossier on creative possibilities in Ninh Binh.",
-    seasonal: "A chapter of its own for the moon season: three nights, one river.",
+    seasonal: trungThuKhep
+      ? "Tam Coc water lilies are coming; the Mid-Autumn chapter stays open to look back."
+      : "A chapter of its own for the moon season: three nights, one river.",
     booking: "Journeys with a route, a time and a clear price.",
   };
   return lang === "vi" ? vi[id] : en[id];
@@ -99,10 +105,20 @@ function conSo(
     case "collaboration":
       return lang === "vi" ? `${so.soHoSo} hồ sơ` : `${so.soHoSo} dossiers`;
     case "booking":
-      if (ngan) return lang === "vi" ? `${so.soGoi} tuyến` : `${so.soGoi} routes`;
-      return lang === "vi" ? `${so.soGoi} hành trình` : `${so.soGoi} journeys`;
+      // "Tuyến" đã là tuyến thuyền trên trang chủ; con số này đếm gói.
+      return lang === "vi" ? `${so.soGoi} gói` : `${so.soGoi} packages`;
     case "seasonal": {
       const tt = tinhTrangMua(new Date(bayGio), DEM_MUA, DEM_RAM);
+      if (tt.giaiDoan === "het-mua") {
+        // Trung thu đã khép thì cổng dẫn về kệ mùa, nơi mùa hoa súng đứng
+        // đầu. Soát 07/10/2026: cổng ghi "mùa đã khép" trong khi trang mùa
+        // ghi "còn 18 ngày tới mùa hoa", khách đọc thành không còn gì để xem.
+        const hs = tinhTrangHoaSung(new Date(bayGio));
+        if (hs.giaiDoan === "sap-toi") {
+          return lang === "vi" ? `hoa súng · ${hs.ngayToiMua} ngày` : `lilies in ${hs.ngayToiMua} days`;
+        }
+        return lang === "vi" ? "đang mùa hoa súng" : "lilies in bloom";
+      }
       if (!ngan) {
         // Câu đầy đủ dài quá cho một con chữ nhỏ; lấy phần sau dấu chấm giữa.
         const cau = loiTinhTrang(tt, lang);
@@ -112,7 +128,6 @@ function conSo(
       // rằm") kéo hàng cổng rộng ra tới mức cổng thứ tư bị đẩy hẳn ra ngoài
       // màn hình — tức là lại làm đúng cái việc mình đang đi chữa.
       if (tt.giaiDoan === "dung-ram") return lang === "vi" ? "rằm đêm nay" : "full moon tonight";
-      if (tt.giaiDoan === "het-mua") return lang === "vi" ? "mùa đã khép" : "season closed";
       const n = Math.abs(tt.conMayDem);
       return lang === "vi" ? `còn ${n} đêm` : `${n} nights left`;
     }
@@ -217,7 +232,7 @@ function TamXemTruoc({
       </span>
       <span className="block px-4 pb-4 pt-3">
         <span className="font-display block text-lg text-[#fbf7ee]">{cong.nhan}</span>
-        <span className="mt-1 block text-sm leading-6 text-white/64">{moTa(cong.id, lang)}</span>
+        <span className="mt-1 block text-sm leading-6 text-white/64">{moTa(cong.id, lang, soLieu, bayGio)}</span>
         {so ? (
           <span className="mt-3 inline-flex items-center rounded-full border border-[#E7B96A]/45 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-[#E7B96A]">
             {so}

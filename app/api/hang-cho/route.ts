@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { isSameOriginCustomerRequest } from "@/domain/customer-identity";
-import { laMaBen } from "@/domain/hang-cho";
+import { laMaBen, trongGioNhanSo } from "@/domain/hang-cho";
 import { HangChoLoi, docTongQuanBen, huyLuot, laySo, xemLuot } from "@/lib/hang-cho-repository";
 
 /**
@@ -43,7 +43,8 @@ export async function GET(request: Request) {
   const ben = new URL(request.url).searchParams.get("ben") ?? "";
   if (!laMaBen(ben)) return traVe({ ok: false, ma: "KHONG_CO" }, 404);
   try {
-    return traVe({ ok: true, tong_quan: await docTongQuanBen(ben) });
+    const tongQuan = await docTongQuanBen(ben);
+    return traVe({ ok: true, tong_quan: { ...tongQuan, ngoaiGio: !trongGioNhanSo() } });
   } catch (error) {
     return traLoi(error);
   }
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
     const yc = YeuCau.parse(JSON.parse(tho));
     if (yc.hanh_dong === "lay-so") {
       if (!laMaBen(yc.ben)) return traVe({ ok: false, ma: "KHONG_CO" }, 404);
+      if (!trongGioNhanSo()) return traVe({ ok: false, ma: "NGOAI_GIO" }, 409);
       const kq = await laySo({ ben: yc.ben, soKhach: yc.so_khach, ngonNgu: yc.ngon_ngu, maMay: yc.ma_may });
       return traVe({ ok: true, bi_mat: kq.bimat, so_thu_tu: kq.soThuTu, da_co: kq.daCo });
     }

@@ -5,6 +5,7 @@ import "@fontsource-variable/manrope/index.css";
 import "./globals.css";
 import { PageTransition } from "@/components/shared/page-transition";
 import { ScrollProgress } from "@/components/shared/scroll-progress";
+import { DongBoNgonNgu } from "@/components/shared/dong-bo-ngon-ngu";
 import { CustomerBehaviorTracker } from "@/components/customer-data/customer-behavior-tracker";
 import { CustomerConsentCenter } from "@/components/customer-data/customer-consent-center";
 import { SITE_URL } from "@/lib/site-url";
@@ -36,6 +37,7 @@ export default function RootLayout({
         <ScrollProgress />
         <Suspense fallback={null}>
           <CustomerBehaviorTracker />
+          <DongBoNgonNgu />
         </Suspense>
         {process.env.CUSTOMER_CONSENT_MANAGEMENT_ENABLED === "true" ? (
           <CustomerConsentCenter />

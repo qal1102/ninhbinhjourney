@@ -1,5 +1,7 @@
 "use client";
 
+import { DanhSachGon } from "@/components/erp/danh-sach-gon";
+
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import type { ErpSite } from "@/domain/erp";
@@ -281,8 +283,13 @@ export function ShiftHandoverPanel({
           Chưa có phiếu bàn giao nào tại {site.shortName}.
         </p>
       ) : (
-        <ul className="space-y-3">
-          {handovers.map((handover) => (
+        <DanhSachGon
+          the="ul"
+          tenMuc="phiếu bàn giao"
+          soDau={3}
+          buocThem={10}
+          className="space-y-3"
+          muc={handovers.map((handover) => (
             <li
               key={handover.id}
               className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6"
@@ -359,7 +366,7 @@ export function ShiftHandoverPanel({
               ) : null}
             </li>
           ))}
-        </ul>
+        />
       )}
     </section>
   );

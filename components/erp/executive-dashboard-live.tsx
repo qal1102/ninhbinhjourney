@@ -306,15 +306,19 @@ export function ExecutiveDashboard({
                     `Chênh lệch ${formatVnd(declaredDifferenceVnd)}`,
                   ],
                 ]),
+            // Soát 07/10/2026: dòng chào ghi "5 phiếu công việc" mà ô này ghi 0
+            // (nó chỉ đếm phiếu đang làm). Nay ô đếm cùng một thứ với dòng chào.
             [
-              "Công việc hiện trường",
-              activeWorkdays.length.toLocaleString("vi-VN"),
-              `${submittedWorkdays.length} chờ duyệt · ${overdueWorkdays.length} quá hạn`,
+              "Phiếu công việc hôm nay",
+              workdays.length.toLocaleString("vi-VN"),
+              `${activeWorkdays.length} đang làm · ${submittedWorkdays.length} chờ duyệt · ${overdueWorkdays.length} quá hạn`,
             ],
             [
               "Bút toán đã ghi sổ",
               postedJournals.length.toLocaleString("vi-VN"),
-              `${formatVnd(postedValueVnd)} · NCC đã ghi nhận ${formatVnd(postedSupplierPayable)}`,
+              postedJournals.length > 0 || postedSupplierPayable > 0
+                ? `${formatVnd(postedValueVnd)} · nhà cung cấp ${formatVnd(postedSupplierPayable)}`
+                : "Chưa có bút toán nào được ghi sổ",
             ],
           ].map(([label, value, note]) => (
             <article
@@ -661,7 +665,7 @@ export function ExecutiveDashboard({
                     </div>
                     {request.proposedBudgetBillion !== null ? (
                       <span className="shrink-0 font-black text-[#76551f]">
-                        {request.proposedBudgetBillion} tỷ
+                        {Number(request.proposedBudgetBillion).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ
                       </span>
                     ) : null}
                   </Link>
@@ -751,11 +755,15 @@ export function ExecutiveDashboard({
             // Cơ sở chưa có hồ sơ nào thì năm ô toàn 0 chỉ chiếm chỗ mà
             // không nói được gì (production 28/09: cả bốn cơ sở như vậy).
             // Thu về một dòng; có hồ sơ đầu tiên là thẻ tự hiện đủ ô.
+            // 07/10/2026: phiếu việc mẫu đã duyệt hết mà thẻ vẫn bung đủ ô toàn
+            // 0, bốn thẻ giống hệt nhau ngay dưới khối 825 khách. Không có gì
+            // đang dở thì cũng thu về một dòng.
+            const siteDaDuyet = siteWorkdays.filter((record) => record.status === "approved").length;
             const siteTrong =
               siteShifts.length === 0 &&
-              siteWorkdays.length === 0 &&
               siteJournals.length === 0 &&
-              siteSupplierAp.length === 0;
+              siteSupplierAp.length === 0 &&
+              siteWorkdays.length === siteDaDuyet;
             if (siteTrong) {
               return (
                 <Link
@@ -768,7 +776,11 @@ export function ExecutiveDashboard({
                     {site.shortName}
                   </h3>
                   <p className="text-xs text-[#66736c]">
-                    Chưa chốt ca, chưa có phiếu việc hay bút toán
+                    Chưa chốt ca ·{" "}
+                    {siteWorkdays.length > 0
+                      ? `${siteDaDuyet} phiếu việc đã duyệt`
+                      : "chưa có phiếu việc"}{" "}
+                    · chưa có bút toán
                   </p>
                 </Link>
               );
@@ -851,7 +863,7 @@ export function ExecutiveDashboard({
                   </div>
                   <div>
                     <dt className="text-[#849089]">
-                      Công nợ NCC đã ghi nhận
+                      Công nợ nhà cung cấp đã ghi nhận
                     </dt>
                     <dd className="mt-1 break-words font-black">
                       {formatVnd(siteSupplierPayable)}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DanhSachGon } from "@/components/erp/danh-sach-gon";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
 import { ERP_REGISTRY_ROLE_LABELS } from "@/domain/erp-account-roles";
 import {
@@ -239,9 +240,9 @@ export function AuditTimelineView({
           </p>
         ) : null}
 
-        <ol className="mt-5 divide-y divide-[#e6ebe8]">
-          {rowsThat.map(renderRow)}
-        </ol>
+        <div className="mt-5">
+          <DanhSachGon the="ol" tenMuc="thao tác" soDau={15} buocThem={30} className="divide-y divide-[#e6ebe8]" muc={rowsThat.map(renderRow)} />
+        </div>
 
         {/* QA-RESIDUE-02 ổ 3: dòng do bộ smoke tự đánh dấu (`QA-T10B-RT-…`) không
             xoá được — ba bảng tài chính cấm sửa xoá — nên gập riêng xuống cuối,

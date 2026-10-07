@@ -3,6 +3,7 @@ import { ngayVietNam, thoiLuongChu } from "@/domain/thoi-luong";
 import type { Customer360BookingOrder } from "@/lib/customer-data/booking-repository";
 import type { Customer360OutboundAction } from "@/lib/customer-data/recommendation-repository";
 import { nhanCachTra } from "@/domain/customer-booking";
+import { DanhSachGon } from "@/components/erp/danh-sach-gon";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
 // Vé web mang uuid cơ sở; màn soát vé đi theo tên cơ sở trong đường dẫn.
@@ -229,8 +230,15 @@ export function Customer360Dashboard({
         >
           <p className="text-xs font-black uppercase tracking-[0.14em] text-[#607b70]">Đặt chỗ trên web · mọi khách đã có đơn</p>
           <h2 className="mt-2 text-2xl font-black text-[#203a30]">Đơn, tiền và vé của từng khách</h2>
-          <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            {orders.map((order, thuTuDon) => (
+          <div className="mt-4">
+            <DanhSachGon
+              tenMuc="đơn"
+              goiYTim="Tìm theo mã đơn, mã vé, tên gói, ngày đi"
+              className="grid gap-3 lg:grid-cols-2"
+              tim={orders.map((order) =>
+                [order.orderCode, order.productName, shortCustomerId(order.profileId), ngayVietNam(order.visitDate), ...order.tickets.map((ticket) => ticket.ticketCode)].join(" "),
+              )}
+              muc={orders.map((order, thuTuDon) => (
               <article
                 key={order.orderId}
                 className="rounded-2xl border border-[#dfe7e2] bg-[#f7f9f7] p-4 text-sm text-[#42574e]"
@@ -282,6 +290,7 @@ export function Customer360Dashboard({
                 ) : null}
               </article>
             ))}
+            />
           </div>
         </section>
       ) : null}

@@ -136,7 +136,7 @@ export default async function PrivacyPage({
           </section>
         ) : null}
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#56766a]">Thông báo xử lý dữ liệu · phiên bản 17.09.2026</p>
-        <h1 className="font-display mt-4 max-w-4xl text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">Bạn quyết định dữ liệu của mình được dùng thế nào.</h1>
+        <h1 className="font-display mt-4 max-w-4xl text-5xl leading-[0.98] text-[#183f34] sm:text-7xl">Quyền riêng tư và dữ liệu của bạn</h1>
         <p className="mt-6 max-w-3xl text-lg leading-8 text-[#596b63]">
           Xuân Trường vận hành Ninh Bình Journey và chịu trách nhiệm với dữ liệu được gửi qua website. Chúng tôi chỉ ghi nhận cách website được sử dụng sau khi bạn đồng ý; việc phục vụ hành trình và việc gửi thông tin giới thiệu luôn là hai lựa chọn riêng.
         </p>

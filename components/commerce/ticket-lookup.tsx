@@ -214,6 +214,15 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
         </p>
       </div>
 
+      {/* Soát 07/10/2026: trang này và Hộ chiếu hỏi cùng hai ô, khách không biết vào đâu. */}
+      <p className="mt-4 text-sm leading-6 text-[#59654b]">
+        {t("Trang này mở lại vé QR của một đơn. Muốn xem mọi chuyến đã đặt bằng cùng số điện thoại, mời bạn mở ", "This page reopens the QR tickets of one booking. To see every trip booked with the same contact, open ")}
+        <Link href={lang === "en" ? "/ho-so?lang=en" : "/ho-so"} className="font-bold text-[#183f34] underline underline-offset-2">
+          {t("Hộ chiếu Ninh Bình", "your Ninh Binh passport")}
+        </Link>
+        .
+      </p>
+
       <form onSubmit={submit} className="mt-8 grid gap-4 rounded-[2rem] bg-[#183f34] p-6 text-white sm:p-8">
         <label className="grid gap-1 text-xs font-bold text-white/70">
           {t("Mã đặt chỗ", "Booking code")}

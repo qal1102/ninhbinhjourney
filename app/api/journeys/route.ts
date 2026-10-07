@@ -52,6 +52,7 @@ export async function POST(request: Request) {
     const itinerary = generateItinerary(intent, {
       visitDate: input.visitDate,
       uuTienSiteId: input.uuTienSiteId,
+      batDauPhut: input.batDauPhut,
     });
     if (!itinerary.validation.valid) {
       throw new DomainError(

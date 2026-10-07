@@ -1180,6 +1180,12 @@ export function CustomerBookingCheckout({
             >
               {pending === "hold" ? t("Đang khóa chỗ…", "Holding seats…") : t("Giữ chỗ 15 phút", "Hold for 15 minutes")}
             </button>
+            {/* Soát 07/10/2026: nút mờ mà không nói vì sao, khách tưởng hỏng. */}
+            {pending === null && (!visitDate || !selectedSlot) ? (
+              <p data-testid="giu-cho-can-gi" className="mt-2 text-center text-sm text-white/75">
+                {!visitDate ? t("Mời bạn chọn ngày đi ở trên.", "Pick a date above.") : t("Mời bạn chọn một khung giờ ở trên.", "Pick a time slot above.")}
+              </p>
+            ) : null}
           </>
         ) : (
           <>

@@ -27,6 +27,20 @@ export function benCuaDiemDen(slug: string): MaBen | null {
   return null;
 }
 
+/**
+ * Giờ nhận số ở bến, theo giờ Việt Nam: từ lúc đò bắt đầu chạy (6:30) tới nửa
+ * tiếng trước khi đò nghỉ (17:30, `GIO_CHAY` ở màn Thuyền). Soát 07/10/2026:
+ * 21 giờ khách vẫn lấy được số, trang báo "Ngay" và "10 phút ra bến" dù bến đã
+ * nghỉ.
+ */
+export const GIO_NHAN_SO = { mo: 6 * 60 + 30, dong: 17 * 60 } as const;
+
+export function trongGioNhanSo(now: Date = new Date()) {
+  const vn = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  const phut = vn.getUTCHours() * 60 + vn.getUTCMinutes();
+  return phut >= GIO_NHAN_SO.mo && phut < GIO_NHAN_SO.dong;
+}
+
 export type TrangThaiLuot = "cho" | "da-goi" | "da-len" | "bo-luot" | "khach-huy" | "het-ngay";
 
 export type TongQuanHangCho = {
@@ -45,6 +59,8 @@ export type TongQuanHangCho = {
   nhomBoLuot: number;
   nhomHuy: number;
   phutChoTrungBinh: number | null;
+  /** Ngoài giờ nhận số; máy chủ gắn vào lúc trả lời, kho không biết. */
+  ngoaiGio?: boolean;
 };
 
 export type LuotCuaKhach = {

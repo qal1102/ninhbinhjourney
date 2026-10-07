@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { HoSoKhachView } from "@/components/commerce/ho-so-khach-view";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
@@ -47,6 +48,13 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
       <h2 className="font-display text-3xl text-[#183f34]">{t("Mở hộ chiếu của bạn", "Open your passport")}</h2>
       <p className="mt-3 leading-7 text-[#59654b]">
         {t("Nhập một mã đặt chỗ bất kỳ cùng số điện thoại hoặc email bạn đã dùng lúc đặt. Mọi chuyến đi cùng số ấy hiện ra chung một hồ sơ.", "Enter any booking code with the phone or email you used. Every trip booked with that contact appears in one passport.")}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-[#59654b]">
+        {t("Chỉ cần lấy lại vé QR để vào cổng? Mời bạn ", "Only need your QR ticket for the gate? ")}
+        <Link href={lang === "en" ? "/tra-cuu-ve?lang=en" : "/tra-cuu-ve"} className="font-bold text-[#183f34] underline underline-offset-2">
+          {t("mở lại vé", "Reopen your ticket")}
+        </Link>
+        .
       </p>
       <label className="mt-5 grid gap-1 text-sm font-bold text-[#27362f]">
         {t("Mã đặt chỗ", "Booking code")}

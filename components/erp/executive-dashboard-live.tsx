@@ -759,10 +759,14 @@ export function ExecutiveDashboard({
             // 0, bốn thẻ giống hệt nhau ngay dưới khối 825 khách. Không có gì
             // đang dở thì cũng thu về một dòng.
             const siteDaDuyet = siteWorkdays.filter((record) => record.status === "approved").length;
+            // So đúng những gì thẻ in ra: bút toán và công nợ đã ghi sổ, ngoại lệ
+            // nhà cung cấp. Hồ sơ còn chờ duyệt không in lên thẻ này (nó nằm ở
+            // "Cần giám đốc quyết định" phía trên), nên không giữ thẻ bung ra.
             const siteTrong =
               siteShifts.length === 0 &&
-              siteJournals.length === 0 &&
-              siteSupplierAp.length === 0 &&
+              sitePosted.length === 0 &&
+              siteSupplierPayable === 0 &&
+              siteSupplierExceptions === 0 &&
               siteWorkdays.length === siteDaDuyet;
             if (siteTrong) {
               return (
@@ -780,7 +784,7 @@ export function ExecutiveDashboard({
                     {siteWorkdays.length > 0
                       ? `${siteDaDuyet} phiếu việc đã duyệt`
                       : "chưa có phiếu việc"}{" "}
-                    · chưa có bút toán
+                    · chưa có bút toán ghi sổ
                   </p>
                 </Link>
               );

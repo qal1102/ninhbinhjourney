@@ -524,6 +524,27 @@ export type NguoiCheo = {
   /** Tiếng chào khách được, ghi như người quản lý nhập: "Tiếng Việt, chào hỏi tiếng Anh". */
   ngonNgu: string | null;
   ghiChu: string | null;
+  /** Mã giới thiệu khách và hoa hồng tháng này (migration 116); chưa cấp mã thì null. */
+  gioiThieu?: GioiThieuNguoiCheo | null;
+};
+
+/**
+ * Người chèo giới thiệu khách: mã nằm trong sổ đại lý (099), nên hoa hồng tính
+ * theo đúng luật đại lý — đơn đã trả mà khách đã qua cổng, theo tháng ngày đi.
+ */
+export type GioiThieuNguoiCheo = {
+  ma: string;
+  tyLe: number;
+  /** "YYYY-MM" theo giờ Việt Nam. */
+  thang: string;
+  don: number;
+  khach: number;
+  khachToi: number;
+  doanhThuToi: number;
+  hoaHong: number;
+  daChi: number | null;
+  trangThaiChi: "cho-duyet" | "da-ghi-so" | "bi-tra-lai" | null;
+  dangHopTac: boolean;
 };
 
 export type DuLieuBen = { ngay: string; doi: DoiThuyen | null; luotVao: number[]; nguoiCheo: NguoiCheo[] };

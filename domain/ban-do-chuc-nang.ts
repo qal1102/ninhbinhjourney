@@ -207,6 +207,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "gioi-thieu-nguoi-cheo",
+        ten: "Người chèo giới thiệu khách, nhận hoa hồng",
+        moTa: "Mỗi người chèo có một mã QR giới thiệu. Khách quét rồi đặt gói thì đơn ghi cho người chèo; khách tới cổng thì tính hoa hồng, chi qua màn Đại lý & hoa hồng.",
+        vai: "director",
+        duongDan: "/erp/thuyen",
+        diem: "gioi-thieu-nguoi-cheo",
+        moi: "07/10",
+        cacViec: [
+          "Dưới ba ô \"Hôm nay\" của sổ người chèo là dòng tổng: bao nhiêu người có mã, đưa về bao nhiêu khách, hoa hồng tạm tính.",
+          "Bấm một người chèo: mục \"Giới thiệu khách\" có đơn đặt qua mã, khách đã tới, doanh thu, hoa hồng và mã QR đưa khách quét.",
+          "Người chưa có mã: nhập tỷ lệ rồi bấm \"Cấp mã giới thiệu\". Chi hoa hồng ở màn Đại lý & hoa hồng, nhóm \"Người chèo giới thiệu khách\".",
+        ],
+      },
+      {
         id: "thoi-tiet-ben",
         ten: "Thời tiết bến trong giờ thuyền chạy",
         moTa: "Dự báo từng giờ ở bến Tràng An và Văn Lâm; giờ có dông, mưa to, gió giật mạnh thì báo cân nhắc tạm dừng.",

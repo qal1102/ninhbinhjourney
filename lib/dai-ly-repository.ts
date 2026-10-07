@@ -60,7 +60,17 @@ export async function docBangDaiLy(thang: string): Promise<BangDaiLy> {
       loiNhan: error.code === "PGRST202" || error.code === "42883" ? "Kho chưa có sổ đại lý (migration 099 chưa áp)." : "Chưa đọc được sổ đại lý. Xin tải lại trang.",
     };
   }
-  return { trangThai: "co", dong: docBangThang(data) };
+  const dong = docBangThang(data);
+  // `erp_dai_ly_thang` (102) chưa trả loại; đọc riêng cột `loai` (116). Kho
+  // chưa có cột thì mọi dòng là đại lý như trước.
+  const { data: loai, error: loiLoai } = await kho.from("dai_ly").select("id, loai").eq("tenant_id", TENANT_ID);
+  if (!loiLoai) {
+    const theoId = new Map((loai ?? []).map((row) => [String(row.id), row.loai === "nguoi-cheo" ? "nguoi-cheo" : "dai-ly"] as const));
+    for (const d of dong) d.loai = theoId.get(d.id) ?? "dai-ly";
+  } else if (loiLoai.code !== "42703") {
+    console.error("Agency type read failed", loiLoai);
+  }
+  return { trangThai: "co", dong };
 }
 
 export async function docDonCuaDaiLy(daiLyId: string, gioiHan = 20) {

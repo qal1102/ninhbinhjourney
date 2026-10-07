@@ -8,10 +8,13 @@ import {
   type CoSoThuyen,
   type DoiThuyen,
   type DuLieuBen,
+  type GioiThieuNguoiCheo,
   type NguoiCheo,
   xepSoNguoiCheo,
 } from "@/domain/thuyen-song";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
+import { docBangDaiLy } from "@/lib/dai-ly-repository";
+import { thangHienTai } from "@/domain/dai-ly";
 
 /** Thuyền trên sông (migration 104): chuyến của người chèo, bản đồ sống và bến. */
 
@@ -197,17 +200,23 @@ export async function soNguoiCheo(coSo: CoSoThuyen): Promise<NguoiCheo[]> {
   if (!kho) return [];
   const doc = (cot: string) =>
     kho.from("erp_nguoi_cheo").select(cot).eq("tenant_id", TENANT_ID).eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[coSo]).limit(2000);
-  let { data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, que_quan, nam_vao_nghe, ngon_ngu, ghi_chu");
-  // Kho chưa áp 112 thì chưa có cột hồ sơ: vẫn đọc sổ như cũ.
+  let { data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, que_quan, nam_vao_nghe, ngon_ngu, ghi_chu, dai_ly_id");
+  // Kho chưa áp 116 thì chưa có mã giới thiệu, chưa áp 112 thì chưa có cột hồ
+  // sơ: lùi dần, vẫn đọc sổ như cũ.
+  if (error?.code === "42703") ({ data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, que_quan, nam_vao_nghe, ngon_ngu, ghi_chu"));
   if (error?.code === "42703") ({ data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, ghi_chu"));
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") return [];
     loiKho(error);
   }
+  const gioiThieu = await gioiThieuTheoDaiLy(
+    (data ?? []).some((row) => typeof (row as unknown as Record<string, unknown>).dai_ly_id === "string"),
+  );
   return xepSoNguoiCheo(
     (data ?? []).map((row) => {
       const d = row as unknown as Record<string, unknown>;
       return {
+        gioiThieu: typeof d.dai_ly_id === "string" ? (gioiThieu.get(d.dai_ly_id) ?? null) : null,
         id: String(d.id),
         soThuyen: String(d.so_thuyen),
         hoTen: String(d.ho_ten),
@@ -220,6 +229,71 @@ export async function soNguoiCheo(coSo: CoSoThuyen): Promise<NguoiCheo[]> {
       };
     }),
   );
+}
+
+/**
+ * Số giới thiệu tháng này của mọi mã trong sổ đại lý, theo id đại lý. Một lượt
+ * đọc cho cả bến; đọc hỏng thì sổ vẫn hiện, chỉ thiếu phần hoa hồng.
+ */
+// Bản đồ và sổ cùng hỏi lại API bến mỗi phút; bảng hoa hồng tháng phải dò lượt
+// qua cổng của từng đơn, nên nhớ 5 phút cho mỗi máy chủ.
+const NHO_GIOI_THIEU_MS = 5 * 60_000;
+let nhoGioiThieu: { thang: string; luc: number; bang: Map<string, GioiThieuNguoiCheo> } | null = null;
+
+async function gioiThieuTheoDaiLy(canDoc: boolean): Promise<Map<string, GioiThieuNguoiCheo>> {
+  const ket = new Map<string, GioiThieuNguoiCheo>();
+  if (!canDoc) return ket;
+  const thang = thangHienTai();
+  if (nhoGioiThieu && nhoGioiThieu.thang === thang && Date.now() - nhoGioiThieu.luc < NHO_GIOI_THIEU_MS) {
+    return nhoGioiThieu.bang;
+  }
+  const bang = await docBangDaiLy(thang).catch(() => null);
+  if (!bang || bang.trangThai !== "co") return ket;
+  for (const d of bang.dong) {
+    ket.set(d.id, {
+      ma: d.ma,
+      tyLe: d.tyLe,
+      thang,
+      don: d.don,
+      khach: d.khach,
+      khachToi: d.khachToi,
+      doanhThuToi: d.doanhThuToi,
+      hoaHong: d.hoaHong,
+      daChi: d.daChi,
+      trangThaiChi: d.trangThaiChi,
+      dangHopTac: d.trangThai === "hop-tac",
+    });
+  }
+  nhoGioiThieu = { thang, luc: Date.now(), bang: ket };
+  return ket;
+}
+
+/** Cấp mã giới thiệu cho một người chèo (116). Đã có mã thì trả lại mã cũ. */
+export async function capMaGioiThieu(coSo: CoSoThuyen, id: string, tyLe: number, nguoi: string): Promise<string> {
+  const kho = canKho();
+  const { data: nguoiCheo, error: loiDoc } = await kho
+    .from("erp_nguoi_cheo")
+    .select("id")
+    .eq("tenant_id", TENANT_ID)
+    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[coSo])
+    .eq("id", id)
+    .maybeSingle();
+  if (loiDoc) loiKho(loiDoc);
+  if (!nguoiCheo) throw new ThuyenLoi("Người này không có trong sổ của bến.", "LOI");
+  const { data, error } = await kho.rpc("erp_nguoi_cheo_cap_ma", {
+    p_tenant_id: TENANT_ID,
+    p_nguoi_cheo_id: id,
+    p_ty_le: tyLe,
+    p_tao_boi: nguoi,
+  });
+  if (error) {
+    if (error.code === "PGRST202" || error.code === "42883") {
+      throw new ThuyenLoi("Kho chưa có mã giới thiệu cho người chèo (migration 116 chưa áp).", "CHUA_NOI_KHO");
+    }
+    loiKho(error);
+  }
+  nhoGioiThieu = null;
+  return String(data);
 }
 
 function chu(x: unknown): string | null {

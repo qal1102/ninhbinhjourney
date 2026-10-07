@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { DanhSachGon } from "@/components/erp/danh-sach-gon";
 import {
   capKhoaCongAction,
   doiTrangThaiDaiLyAction,
@@ -50,6 +51,9 @@ export function DaiLyWorkspace({
   const tongHoaHong = dong.reduce((s, d) => s + d.hoaHong, 0);
   const tongDaChi = dong.reduce((s, d) => s + (d.daChi ?? 0), 0);
   const tongKhachToi = dong.reduce((s, d) => s + d.khachToi, 0);
+  // Người chèo có hoa hồng lớn nhất đứng đầu nhóm của mình.
+  const daiLy = dong.filter((d) => d.loai !== "nguoi-cheo");
+  const nguoiCheo = dong.filter((d) => d.loai === "nguoi-cheo").sort((a, b) => b.hoaHong - a.hoaHong || b.khach - a.khach);
 
   return (
     <div className="space-y-6" data-testid="dai-ly-erp" data-chi="dai-ly" data-chi-loi="Mỗi đại lý một dòng: hoa hồng tháng, đường dẫn giới thiệu, nút ghi đã chi.">
@@ -80,10 +84,38 @@ export function DaiLyWorkspace({
       </section>
 
       <ul className="space-y-4">
-        {dong.map((d) => (
+        {daiLy.map((d) => (
           <TheDaiLy key={d.id} d={d} thang={thang} daKhep={daKhep} maQr={maQr[d.id] ?? ""} duongGoc={duongGoc} laGiamDoc={laGiamDoc} duocGhiChi={duocGhiChi} />
         ))}
       </ul>
+
+      {/* 116: người chèo giới thiệu khách cũng là một mã trong sổ này, chi
+          hoa hồng cùng một luồng. Gom riêng một nhóm để danh sách lữ hành
+          không bị hai chục người chèo chen giữa. */}
+      {nguoiCheo.length > 0 ? (
+        <section aria-labelledby="dai-ly-nguoi-cheo" data-testid="dai-ly-nguoi-cheo">
+          <h2 id="dai-ly-nguoi-cheo" className="text-xl font-extrabold text-[#183f34]">Người chèo giới thiệu khách</h2>
+          <p className="mt-1 text-sm leading-6 text-[#5c6f66]">
+            {nguoiCheo.length} người có mã · {nguoiCheo.reduce((t, d) => t + d.khachToi, 0)} khách đã tới · hoa hồng{" "}
+            {tien(nguoiCheo.reduce((t, d) => t + d.hoaHong, 0))}. Cấp mã ở hồ sơ người chèo, màn{" "}
+            <Link href="/erp/thuyen?chi=so-nguoi-cheo" className="font-bold underline underline-offset-2">Thuyền trên sông</Link>.
+          </p>
+          <div className="mt-4">
+            <DanhSachGon
+              the="ul"
+              tenMuc="người chèo"
+              soDau={3}
+              buocThem={10}
+              goiYTim="Tìm theo tên hay mã"
+              className="space-y-4"
+              tim={nguoiCheo.map((d) => `${d.ten} ${d.ma}`)}
+              muc={nguoiCheo.map((d) => (
+                <TheDaiLy key={d.id} d={d} thang={thang} daKhep={daKhep} maQr={maQr[d.id] ?? ""} duongGoc={duongGoc} laGiamDoc={laGiamDoc} duocGhiChi={duocGhiChi} />
+              ))}
+            />
+          </div>
+        </section>
+      ) : null}
 
       {laGiamDoc ? <ThemDaiLy duongGoc={duongGoc} /> : null}
     </div>

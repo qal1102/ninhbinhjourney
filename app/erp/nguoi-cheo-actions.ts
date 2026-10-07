@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { laCoSoThuyen, type CoSoThuyen } from "@/domain/thuyen-song";
 import { getCurrentErpUser } from "@/lib/erp/demo-session";
-import { ghiNguoiCheo, ThuyenLoi, xoaNguoiCheo } from "@/lib/erp/thuyen-repository";
+import { capMaGioiThieu, ghiNguoiCheo, ThuyenLoi, xoaNguoiCheo } from "@/lib/erp/thuyen-repository";
 
 /**
  * Sổ người chèo (migration 111): giám đốc và quản lý của đúng bến sửa được,
@@ -77,5 +77,26 @@ export async function xoaNguoiCheoAction(coSo: string, id: string): Promise<KetQ
     return { ok: true };
   } catch (error) {
     return { ok: false, loi: error instanceof ThuyenLoi ? error.message : "Chưa xoá được. Xin thử lại." };
+  }
+}
+
+/**
+ * Cấp mã giới thiệu khách cho một người chèo (migration 116). Mã nằm trong sổ
+ * đại lý: khách quét QR `/dl/<mã>` rồi đặt thì đơn ghi cho người ấy, hoa hồng
+ * tính và chi ở màn Đại lý & hoa hồng như mọi đại lý khác.
+ */
+export async function capMaGioiThieuAction(coSo: string, id: string, tyLe: number): Promise<KetQua & { ma?: string }> {
+  const quyen = await nguoiSuaDuoc(coSo);
+  if ("loi" in quyen) return { ok: false, loi: quyen.loi };
+  if (!z.uuid().safeParse(id).success) return { ok: false, loi: "Yêu cầu không hợp lệ." };
+  if (!Number.isFinite(tyLe) || tyLe < 0 || tyLe > 30) return { ok: false, loi: "Tỷ lệ hoa hồng từ 0 tới 30%." };
+  const user = await getCurrentErpUser();
+  try {
+    const ma = await capMaGioiThieu(quyen.coSo, id, Math.round(tyLe * 100) / 100, user?.username ?? user?.id ?? "erp");
+    revalidatePath("/erp/thuyen");
+    revalidatePath("/erp/dai-ly");
+    return { ok: true, ma };
+  } catch (error) {
+    return { ok: false, loi: error instanceof ThuyenLoi ? error.message : "Chưa cấp được mã. Xin thử lại." };
   }
 }

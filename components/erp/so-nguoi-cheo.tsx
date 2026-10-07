@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { luuNguoiCheoAction, xoaNguoiCheoAction } from "@/app/erp/nguoi-cheo-actions";
+import Link from "next/link";
+import QRCode from "qrcode";
+import { capMaGioiThieuAction, luuNguoiCheoAction, xoaNguoiCheoAction } from "@/app/erp/nguoi-cheo-actions";
+import { tenThang, tien } from "@/domain/dai-ly";
 import {
   chuyenTuLuotVao,
   docBenTuApi,
@@ -15,6 +18,7 @@ import {
   SU_KIEN_MO_HO_SO_NGUOI_CHEO,
   type ChuyenUocTinh,
   type CoSoThuyen,
+  type GioiThieuNguoiCheo,
   type NgayCuaNguoiCheo,
   type NguoiCheo,
 } from "@/domain/thuyen-song";
@@ -94,6 +98,7 @@ function TrangThai({ ngay, coDuLieu }: { ngay: NgayCuaNguoiCheo | undefined; coD
 function dongPhu(n: NguoiCheo, namNay: number): string {
   const nam = soNamCheo(n.namVaoNghe, namNay);
   const phan = [n.queQuan, nam === null ? null : nam === 0 ? "mới vào nghề" : `${nam} năm chèo`].filter(Boolean);
+  if (n.gioiThieu && n.gioiThieu.khach > 0) phan.push(`giới thiệu ${n.gioiThieu.khach} khách`);
   return phan.length ? phan.join(" · ") : n.soDienThoai ?? "Chưa ghi quê, năm vào nghề";
 }
 
@@ -203,7 +208,18 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
       router.refresh();
     });
 
+  const capMa = (n: NguoiCheo, tyLe: number) =>
+    batDau(async () => {
+      setLoi("");
+      const kq = await capMaGioiThieuAction(coSo, n.id, tyLe);
+      if (!kq.ok) return setLoi(kq.loi);
+      router.refresh();
+    });
+
   const namNay = namNayVietNam();
+  const coMa = ds.filter((n) => n.gioiThieu);
+  const khachGioiThieu = coMa.reduce((tong, n) => tong + (n.gioiThieu?.khach ?? 0), 0);
+  const hoaHongTam = coMa.reduce((tong, n) => tong + (n.gioiThieu?.hoaHong ?? 0), 0);
   const dangTrenSong = ds.filter((n) => theoNguoi.get(n.id)?.dangCheo).length;
   const daNhan = ds.filter((n) => theoNguoi.has(n.id)).length;
   const dangMo = ds.find((n) => n.id === moId) ?? null;
@@ -247,6 +263,21 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
             </dd>
           </div>
         </dl>
+      ) : null}
+
+      {coMa.length > 0 ? (
+        <p
+          className="mt-3 text-sm leading-6 text-[#42554c]"
+          data-testid="so-nguoi-cheo-gioi-thieu"
+          data-chi="gioi-thieu-nguoi-cheo"
+          data-chi-loi="Dòng này cộng cả sổ: bao nhiêu người có mã giới thiệu, đưa về bao nhiêu khách, hoa hồng tạm tính. Bấm một người chèo để xem mã QR và số của riêng người ấy."
+        >
+          {tenThang(coMa[0].gioiThieu!.thang).replace(/^t/, "T")}: {coMa.length} người có mã giới thiệu, đưa về {khachGioiThieu} khách · hoa hồng tạm tính{" "}
+          <strong>{tien(hoaHongTam)}</strong>.{" "}
+          <Link href="/erp/dai-ly" className="font-bold text-[#183f34] underline underline-offset-2">
+            Chi hoa hồng
+          </Link>
+        </p>
       ) : null}
 
       {!coKho ? <p className="mt-4 text-sm text-[#59654b]">Bản chạy này chưa nối kho dữ liệu nên chưa có sổ.</p> : null}
@@ -364,7 +395,7 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
         className="m-auto w-[min(34rem,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl bg-white p-0 text-[#20342c] shadow-2xl backdrop:bg-[#0d1f19]/55"
         data-testid="ho-so-nguoi-cheo"
       >
-        {dangMo ? <HoSo n={dangMo} tenBen={tenBen} ngay={theoNguoi.get(dangMo.id)} coDuLieu={ben !== null} namNay={namNay} bayGio={bayGio} coKho={coKho} dang={dang} onDong={dongHoSo} onSua={() => batDauSua(dangMo)} onXoa={() => xoa(dangMo)} /> : null}
+        {dangMo ? <HoSo n={dangMo} tenBen={tenBen} ngay={theoNguoi.get(dangMo.id)} coDuLieu={ben !== null} namNay={namNay} bayGio={bayGio} coKho={coKho} dang={dang} onDong={dongHoSo} onSua={() => batDauSua(dangMo)} onXoa={() => xoa(dangMo)} onCapMa={(tyLe) => capMa(dangMo, tyLe)} loi={loi} /> : null}
       </dialog>
     </section>
   );
@@ -382,6 +413,8 @@ function HoSo({
   onDong,
   onSua,
   onXoa,
+  onCapMa,
+  loi,
 }: {
   n: NguoiCheo;
   tenBen: string;
@@ -394,6 +427,8 @@ function HoSo({
   onDong: () => void;
   onSua: () => void;
   onXoa: () => void;
+  onCapMa: (tyLe: number) => void;
+  loi: string;
 }) {
   const nam = soNamCheo(n.namVaoNghe, namNay);
   const gioTrenSong = ngay ? Math.round(ngay.phutTrenSong) : 0;
@@ -479,6 +514,8 @@ function HoSo({
           )}
         </section>
 
+        <GioiThieu g={n.gioiThieu ?? null} coKho={coKho} dang={dang} onCapMa={onCapMa} loi={loi} />
+
         <dl className="grid gap-2 sm:grid-cols-2">
           {dong("Tiếng chào khách", n.ngonNgu ?? "Chưa ghi")}
           {dong("Vào nghề", n.namVaoNghe ? `Năm ${n.namVaoNghe}` : "Chưa ghi")}
@@ -524,5 +561,131 @@ function HoSo({
         </div>
       </div>
     </div>
+  );
+}
+
+const NHAN_CHI: Record<NonNullable<GioiThieuNguoiCheo["trangThaiChi"]>, string> = {
+  "cho-duyet": "Đã ghi chi, chờ kế toán trưởng duyệt",
+  "da-ghi-so": "Đã chi, kế toán đã ghi sổ",
+  "bi-tra-lai": "Lần chi bị kế toán trả lại, ghi chi lại ở màn Đại lý & hoa hồng",
+};
+
+/**
+ * Người chèo giới thiệu khách (migration 116). Mã nằm trong sổ đại lý: khách
+ * quét QR rồi đặt thì đơn ghi cho người chèo; hoa hồng chỉ tính đơn đã trả mà
+ * khách đã qua cổng, theo tháng ngày đi, chi ở màn Đại lý & hoa hồng.
+ */
+function GioiThieu({
+  g,
+  coKho,
+  dang,
+  onCapMa,
+  loi,
+}: {
+  g: GioiThieuNguoiCheo | null;
+  coKho: boolean;
+  dang: boolean;
+  onCapMa: (tyLe: number) => void;
+  loi: string;
+}) {
+  const [tyLe, setTyLe] = useState("5");
+  const [qr, setQr] = useState("");
+  const duongDan = g ? `${typeof window === "undefined" ? "" : window.location.origin}/dl/${g.ma}` : "";
+  useEffect(() => {
+    if (!duongDan) return;
+    let huy = false;
+    void QRCode.toDataURL(duongDan, { width: 320, margin: 1, color: { dark: "#183f34", light: "#ffffff" } })
+      .then((url) => {
+        if (!huy) setQr(url);
+      })
+      .catch(() => undefined);
+    return () => {
+      huy = true;
+    };
+  }, [duongDan]);
+
+  if (!g) {
+    if (!coKho) return null;
+    return (
+      <section aria-label="Giới thiệu khách" className="rounded-2xl border border-dashed border-[#c9d6cf] p-4" data-testid="gioi-thieu-chua-co-ma">
+        <h4 className="text-sm font-black uppercase tracking-[0.12em] text-[#5f7d70]">Giới thiệu khách & hoa hồng</h4>
+        <p className="mt-2 text-sm leading-6 text-[#4f6158]">
+          Chưa có mã giới thiệu. Cấp mã thì người chèo có một mã QR đưa khách quét; khách đặt gói qua mã ấy và tới cổng thì người chèo được hoa hồng.
+        </p>
+        <div className="mt-3 flex flex-wrap items-end gap-2">
+          <label className="text-xs font-bold text-[#53675e]">
+            Hoa hồng (%)
+            <input
+              value={tyLe}
+              onChange={(e) => setTyLe(e.target.value)}
+              inputMode="decimal"
+              className="mt-1 block min-h-11 w-24 rounded-xl border border-[#ccd8d1] px-3 text-sm"
+            />
+          </label>
+          <button
+            type="button"
+            disabled={dang}
+            onClick={() => onCapMa(Number(tyLe.replace(",", ".")))}
+            className="min-h-11 rounded-xl bg-[#183f34] px-4 text-sm font-black text-white disabled:opacity-60"
+          >
+            {dang ? "Đang cấp…" : "Cấp mã giới thiệu"}
+          </button>
+        </div>
+        {loi ? <p role="alert" className="mt-2 text-sm font-bold text-[#9b2c1f]">{loi}</p> : null}
+      </section>
+    );
+  }
+
+  const o = "rounded-xl border border-[#e0e7e3] px-2 py-2 text-center";
+  return (
+    <section aria-label="Giới thiệu khách" data-testid="gioi-thieu-nguoi-cheo">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4 className="text-sm font-black uppercase tracking-[0.12em] text-[#5f7d70]">Giới thiệu khách · {tenThang(g.thang)}</h4>
+        <span className="rounded-full bg-[#eef5f1] px-2.5 py-1 text-[0.7rem] font-black text-[#235443]">
+          Mã {g.ma} · {String(g.tyLe).replace(".", ",")}%
+        </span>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className={o}>
+          <dt className="text-[0.7rem] font-bold text-[#66786f]">Đơn đặt qua mã</dt>
+          <dd className="text-2xl font-black tabular-nums text-[#183f34]">{g.don}</dd>
+        </div>
+        <div className={o}>
+          <dt className="text-[0.7rem] font-bold text-[#66786f]">Khách đã tới</dt>
+          <dd className="text-2xl font-black tabular-nums text-[#183f34]">
+            {g.khachToi}
+            <span className="text-sm font-bold text-[#7d8c84]">/{g.khach}</span>
+          </dd>
+        </div>
+        <div className={o}>
+          <dt className="text-[0.7rem] font-bold text-[#66786f]">Doanh thu đã tới</dt>
+          <dd className="text-base font-black leading-8 tabular-nums text-[#183f34]">{tien(g.doanhThuToi)}</dd>
+        </div>
+        <div className={`${o} bg-[#fbf7ee]`}>
+          <dt className="text-[0.7rem] font-bold text-[#7a5520]">Hoa hồng</dt>
+          <dd className="text-base font-black leading-8 tabular-nums text-[#7a5520]">{tien(g.hoaHong)}</dd>
+        </div>
+      </dl>
+      <p className="mt-2 text-xs leading-5 text-[#66786f]">
+        {g.trangThaiChi ? NHAN_CHI[g.trangThaiChi] : "Tạm tính: chỉ đơn đã trả mà khách đã qua cổng; chi sau khi khép tháng."}{" "}
+        <Link href="/erp/dai-ly" className="font-bold text-[#183f34] underline underline-offset-2">
+          Màn Đại lý & hoa hồng
+        </Link>
+      </p>
+      {g.dangHopTac ? (
+        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-[#f4f7f5] p-3">
+          {qr ? (
+            // eslint-disable-next-line @next/next/no-img-element -- ảnh QR dựng tại chỗ dạng data URL
+            <img src={qr} alt={`Mã QR giới thiệu ${g.ma}`} width={112} height={112} className="h-28 w-28 shrink-0 rounded-lg bg-white" />
+          ) : null}
+          <p className="min-w-0 text-sm leading-6 text-[#42554c]">
+            Khách quét mã này rồi đặt gói thì đơn ghi cho người chèo.
+            <span className="mt-1 block break-all font-mono text-xs text-[#183f34]">{duongDan}</span>
+          </p>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-[#7a5520]">Mã đang tạm ngừng ở màn Đại lý & hoa hồng, khách quét sẽ không được ghi.</p>
+      )}
+    </section>
   );
 }

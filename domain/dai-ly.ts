@@ -21,6 +21,8 @@ export type DongDaiLy = {
   dienThoai: string | null;
   tyLe: number;
   trangThai: "hop-tac" | "tam-ngung";
+  /** Lữ hành, homestay… hay người chèo giới thiệu khách (migration 116). */
+  loai: "dai-ly" | "nguoi-cheo";
   laMau: boolean;
   coKhoa: boolean;
   don: number;
@@ -101,6 +103,7 @@ export function docBangThang(raw: unknown): DongDaiLy[] {
       dienThoai: chuoi(r.dien_thoai),
       tyLe: so(r.ty_le),
       trangThai: r.trang_thai === "tam-ngung" ? "tam-ngung" : "hop-tac",
+      loai: r.loai === "nguoi-cheo" ? "nguoi-cheo" : "dai-ly",
       laMau: r.la_mau === true,
       coKhoa: r.co_khoa === true,
       don: so(r.don),

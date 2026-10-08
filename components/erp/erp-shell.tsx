@@ -143,6 +143,13 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
               Việc &amp; ghi chú
             </Link>
             <Link
+              href="/erp/soat-giay-to"
+              data-testid="loi-vao-soat-giay-to"
+              className="hidden min-h-10 items-center whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] xl:inline-flex"
+            >
+              ✦ Soát giấy tờ
+            </Link>
+            <Link
               href="/erp/nhat-ky"
               className="hidden min-h-10 items-center whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"
             >

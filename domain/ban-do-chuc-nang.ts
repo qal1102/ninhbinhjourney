@@ -315,6 +315,19 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
           "Hoá đơn vượt hợp đồng thì lên giám đốc quyết; khớp thì kế toán ghi sổ.",
         ],
       },
+      {
+        id: "soat-giay-to",
+        ten: "Soát giấy tờ bằng AI",
+        moTa: "Chụp hoá đơn, biên bản nghiệm thu, hợp đồng: AI đọc, hệ thống báo thiếu mã số thuế, cộng sai, chưa ký, thiếu dấu, đối chiếu cả bộ rồi điền sẵn hồ sơ nhà cung cấp.",
+        vai: "director",
+        duongDan: "/erp/soat-giay-to",
+        diem: "soat-giay-to",
+        moi: "08/10",
+        cacViec: [
+          "Bấm \"Hoá đơn có lỗi\" trong phần giấy tờ mẫu: thấy báo thiếu MST người mua, cộng tiền sai, chưa ký, ngày lập ở tương lai.",
+          "Thêm \"Hoá đơn đủ\" và \"Biên bản nghiệm thu\": phần Cả bộ hồ sơ đối chiếu nhà cung cấp, giá trị, thứ tự ngày; bấm \"Điền vào hồ sơ hoá đơn nhà cung cấp\".",
+        ],
+      },
     ],
   },
   {
@@ -706,10 +719,10 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
   {
     id: "web-hoi-nhanh",
     nhom: "kham-pha",
-    ten: "Hỏi nhanh, AI trả lời theo nội dung web",
-    moTa: "Nút \"Hỏi nhanh\" ở góc phải mọi trang khách. Câu hay gặp trả lời ngay từ nội dung soạn sẵn; câu lạ thì Gemini trả lời, chỉ dựa trên thông tin của web, không có thì chỉ số điện thoại.",
+    ten: "Hỏi AI, trả lời mọi câu và đặt giúp",
+    moTa: "Nút \"✦ Hỏi AI\" ở góc phải mọi trang khách. Câu hay gặp trả lời ngay từ nội dung soạn sẵn; câu tự gõ thì AI của Ninh Bình Journey trả lời, giá và luật đặt chỗ lấy đúng theo web; nhờ đặt thì AI điền sẵn đơn.",
     duongDan: "/",
-    cacViec: ["Bấm \"Hỏi nhanh\" rồi bấm một câu gợi ý như \"Trẻ em có mất vé không?\".", "Gõ một câu tự do, ví dụ \"Gói nào hợp cho gia đình có con nhỏ?\": câu trả lời kèm nút sang đúng trang gói."],
+    cacViec: ["Bấm \"Hỏi AI\", gõ một câu bất kỳ như \"Ninh Bình có đặc sản gì?\": câu trả lời có nhãn AI.", "Bấm câu mẫu \"Đặt giúp mình gói Gia đình khám phá thứ bảy này…\": AI điền đơn, bấm \"Mở đơn đã điền\" là trang đặt vé mở sẵn ngày và số người."],
     moi: "08/10",
   },
   {

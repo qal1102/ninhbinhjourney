@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { useTenNguoi } from "./ten-nguoi";
 import { useFormStatus } from "react-dom";
 import {
@@ -15,6 +15,7 @@ import {
   type SupplierApActionState,
 } from "@/app/erp/supplier-ap-actions";
 import { ERP_SITES, type ErpSite } from "@/domain/erp";
+import { KHOA_DIEN_HOA_DON, type DienHoaDonNcc } from "@/domain/soat-giay-to";
 import {
   SUPPLIER_AP_EXCEPTION_LABELS,
   type SupplierApInvoice,
@@ -208,8 +209,33 @@ function CreateInvoiceForm({
     submitSupplierInvoiceAction,
     INITIAL_ACTION_STATE,
   );
+  // Từ màn Soát giấy tờ (08/10/2026): AI đã đọc hoá đơn, nghiệm thu, hợp đồng
+  // và để giá trị trong sessionStorage. Đọc một lần, mở sẵn biểu mẫu đã điền;
+  // người gửi vẫn xem lại và tự bấm gửi.
+  const [dien, setDien] = useState<DienHoaDonNcc | null>(null);
+  useEffect(() => {
+    let luu: { siteId?: string; dien?: DienHoaDonNcc; luc?: number } | null = null;
+    try {
+      luu = JSON.parse(sessionStorage.getItem(KHOA_DIEN_HOA_DON) ?? "null");
+      sessionStorage.removeItem(KHOA_DIEN_HOA_DON);
+    } catch {
+      luu = null;
+    }
+    if (!luu?.dien || luu.siteId !== site.id || Date.now() - (luu.luc ?? 0) > 30 * 60_000) return;
+    const giaTri = luu.dien;
+    const khung = window.requestAnimationFrame(() => {
+      setDien(giaTri);
+      document.getElementById("ho-so-moi")?.scrollIntoView({ block: "start" });
+    });
+    return () => window.cancelAnimationFrame(khung);
+  }, [site.id]);
   return (
-    <details className="rounded-2xl border border-[#ccd9d3] bg-white shadow-sm">
+    <details
+      id="ho-so-moi"
+      open={dien ? true : undefined}
+      className="scroll-mt-24 rounded-2xl border border-[#ccd9d3] bg-white shadow-sm"
+      data-testid="bieu-mau-hoa-don-ncc"
+    >
       <summary className="cursor-pointer list-none p-5 sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">
           Hồ sơ mới · {site.shortName}
@@ -224,9 +250,15 @@ function CreateInvoiceForm({
         </div>
       </summary>
       <form
+        key={dien ? "dien-san" : "trong"}
         action={action}
         className="border-t border-[#e2e8e4] bg-[#f8faf8] p-5 sm:p-6"
       >
+        {dien ? (
+          <p className="mb-4 rounded-xl border border-[#e7b96a] bg-[#fff8e8] p-3 text-sm font-bold text-[#6b4a14]" data-testid="bieu-mau-ai-dien">
+            ✦ AI đã điền từ giấy tờ vừa soát. Xin xem lại từng ô, nhập mã đề nghị mua và trung tâm chi phí rồi mới gửi.
+          </p>
+        ) : null}
         <input type="hidden" name="siteId" value={site.id} />
         <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <label className="grid gap-1 text-xs font-bold text-[#5f7068]">
@@ -234,6 +266,7 @@ function CreateInvoiceForm({
             <select
               name="supplierId"
               required
+              defaultValue={dien?.supplierId ?? ""}
               className="min-h-11 min-w-0 rounded-xl border border-[#ced8d1] bg-white px-3 text-sm font-medium"
             >
               <option value="">Chọn nhà cung cấp</option>
@@ -254,6 +287,7 @@ function CreateInvoiceForm({
             name="contractReference"
             label="Mã hợp đồng/phụ lục"
             required={false}
+            defaultValue={dien?.contractReference}
           />
           <MoneyField
             name="purchaseOrderTotalVnd"
@@ -263,10 +297,12 @@ function CreateInvoiceForm({
             name="acceptanceReference"
             label="Mã biên bản nghiệm thu"
             required={false}
+            defaultValue={dien?.acceptanceReference}
           />
           <MoneyField
             name="acceptedTotalVnd"
             label="Giá trị đã nghiệm thu (đ)"
+            defaultValue={dien?.acceptedTotalVnd}
           />
           <label className="grid gap-1 text-xs font-bold text-[#5f7068]">
             Nhóm chi phí
@@ -282,13 +318,13 @@ function CreateInvoiceForm({
               <option value="tools-and-equipment">Công cụ/thiết bị</option>
             </select>
           </label>
-          <TextField name="invoiceSeries" label="Ký hiệu hóa đơn" />
-          <TextField name="invoiceNumber" label="Số hóa đơn" />
-          <TextField name="invoiceDate" label="Ngày hóa đơn" type="date" />
+          <TextField name="invoiceSeries" label="Ký hiệu hóa đơn" defaultValue={dien?.invoiceSeries} />
+          <TextField name="invoiceNumber" label="Số hóa đơn" defaultValue={dien?.invoiceNumber} />
+          <TextField name="invoiceDate" label="Ngày hóa đơn" type="date" defaultValue={dien?.invoiceDate} />
           <TextField name="dueDate" label="Hạn thanh toán" type="date" />
-          <MoneyField name="netVnd" label="Giá trị trước thuế (đ)" />
-          <MoneyField name="vatVnd" label="Thuế GTGT (đ)" />
-          <MoneyField name="totalVnd" label="Tổng thanh toán (đ)" />
+          <MoneyField name="netVnd" label="Giá trị trước thuế (đ)" defaultValue={dien?.netVnd} />
+          <MoneyField name="vatVnd" label="Thuế GTGT (đ)" defaultValue={dien?.vatVnd} />
+          <MoneyField name="totalVnd" label="Tổng thanh toán (đ)" defaultValue={dien?.totalVnd} />
           <TextField name="costCenter" label="Trung tâm chi phí" />
           <TextField
             name="projectCode"
@@ -300,6 +336,7 @@ function CreateInvoiceForm({
             <input
               name="description"
               required
+              defaultValue={dien?.description}
               className="min-h-11 min-w-0 rounded-xl border border-[#ced8d1] bg-white px-3 text-sm font-medium"
             />
           </label>

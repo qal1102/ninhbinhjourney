@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   if (!isCustomerBookingEnabled()) return disabled();
   if (!isSameOriginCustomerRequest(request)) {
     return Response.json(
-      { accepted: false, error: { code: "VISITOR_GROUP_ORIGIN_REJECTED", message: "Chỉ nhận yêu cầu first-party từ cùng origin." } },
+      { accepted: false, error: { code: "VISITOR_GROUP_ORIGIN_REJECTED", message: "Yêu cầu này không đến từ trang Ninh Bình Journey nên chưa xử lý được." } },
       { status: 403, headers: NO_STORE },
     );
   }
@@ -121,7 +121,7 @@ export async function PATCH(request: Request) {
   if (!isCustomerBookingEnabled()) return disabled();
   if (!isSameOriginCustomerRequest(request)) {
     return Response.json(
-      { accepted: false, error: { code: "VISITOR_GROUP_ORIGIN_REJECTED", message: "Chỉ nhận yêu cầu first-party từ cùng origin." } },
+      { accepted: false, error: { code: "VISITOR_GROUP_ORIGIN_REJECTED", message: "Yêu cầu này không đến từ trang Ninh Bình Journey nên chưa xử lý được." } },
       { status: 403, headers: NO_STORE },
     );
   }

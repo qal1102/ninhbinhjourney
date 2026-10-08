@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     return reject(
       403,
       "CUSTOMER_EVENT_ORIGIN_REJECTED",
-      "Chỉ nhận event first-party từ cùng origin.",
+      "Yêu cầu này không đến từ trang Ninh Bình Journey nên chưa xử lý được.",
     );
   }
 

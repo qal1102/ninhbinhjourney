@@ -6,8 +6,10 @@ import type { SupplierApSupplier } from "@/domain/erp-supplier-ap";
 import type { ErpRole } from "@/domain/erp";
 import {
   KHOA_DIEN_HOA_DON,
+  KHOA_DIEN_PHIEU_DOAN,
   TEN_LOAI,
   dienHoaDonNcc,
+  dienPhieuDoan,
   doiChieuBo,
   kiemGiayTo,
   type KetQuaSoat,
@@ -15,12 +17,24 @@ import {
   type TrichXuat,
 } from "@/domain/soat-giay-to";
 
-type GiayTo = { id: string; ten: string; anh: string; trangThai: "dang-doc" | "xong" | "loi"; trich?: TrichXuat; loi?: string };
+type GiayTo = { id: string; ten: string; anh: string; laPdf: boolean; trangThai: "dang-doc" | "xong" | "loi"; trich?: TrichXuat; loi?: string };
+
+const PDF_TOI_DA = 3 * 1024 * 1024;
+
+function docTep(tep: Blob): Promise<string> {
+  return new Promise((ok, loi) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result));
+    r.onerror = () => loi(r.error);
+    r.readAsDataURL(tep);
+  });
+}
 
 const MAU = [
   { tep: "hoa-don-hop-le.jpg", ten: "Hoá đơn đủ" },
   { tep: "hoa-don-co-loi.jpg", ten: "Hoá đơn có lỗi" },
   { tep: "nghiem-thu-thieu-ky.jpg", ten: "Biên bản nghiệm thu" },
+  { tep: "danh-sach-doan.jpg", ten: "Danh sách đoàn" },
 ] as const;
 
 const NHAN_KET_LUAN: Record<KetQuaSoat["ketLuan"], { chu: string; lop: string }> = {
@@ -137,14 +151,19 @@ export function SoatGiayToWorkspace({
   async function doc(ten: string, nguon: Blob) {
     setLoiChung("");
     const id = crypto.randomUUID();
-    let anh: string;
-    try {
-      anh = await thuNho(nguon);
-    } catch {
-      setLoiChung("Không mở được ảnh này. Xin chọn ảnh JPEG hoặc PNG.");
+    const laPdf = nguon.type === "application/pdf";
+    if (laPdf && nguon.size > PDF_TOI_DA) {
+      setLoiChung("Tệp PDF lớn hơn 3MB. Xin chọn tệp nhỏ hơn hoặc chụp ảnh trang cần soát.");
       return;
     }
-    setDs((cu) => [{ id, ten, anh, trangThai: "dang-doc" }, ...cu]);
+    let anh: string;
+    try {
+      anh = laPdf ? await docTep(nguon) : await thuNho(nguon);
+    } catch {
+      setLoiChung("Không mở được tệp này. Xin chọn ảnh chụp hoặc tệp PDF.");
+      return;
+    }
+    setDs((cu) => [{ id, ten, anh, laPdf, trangThai: "dang-doc" }, ...cu]);
     try {
       const res = await fetch("/api/erp/soat-giay-to", {
         method: "POST",
@@ -152,7 +171,7 @@ export function SoatGiayToWorkspace({
         body: JSON.stringify({ anh }),
       });
       const kq = (await res.json().catch(() => null)) as { trich?: TrichXuat; message?: string } | null;
-      if (!res.ok || !kq?.trich) throw new Error(kq?.message ?? "AI chưa đọc được ảnh. Xin thử lại.");
+      if (!res.ok || !kq?.trich) throw new Error(kq?.message ?? "AI chưa đọc được giấy tờ này. Xin thử lại.");
       setDs((cu) => cu.map((g) => (g.id === id ? { ...g, trangThai: "xong", trich: kq.trich } : g)));
     } catch (error) {
       setDs((cu) => cu.map((g) => (g.id === id ? { ...g, trangThai: "loi", loi: error instanceof Error ? error.message : "Lỗi không rõ." } : g)));
@@ -173,6 +192,20 @@ export function SoatGiayToWorkspace({
   const daDoc = ds.filter((g) => g.trangThai === "xong" && g.trich).map((g) => g.trich!);
   const doiChieu = doiChieuBo(daDoc);
   const coHoSoNcc = daDoc.some((t) => t.loai === "hoa-don" || t.loai === "nghiem-thu" || t.loai === "hop-dong");
+
+  // Phiếu đoàn tại quầy: nhân viên bán vé, quản lý và giám đốc lập được; kế toán thì không.
+  const lapDuocPhieuDoan = vai === "employee" || vai === "manager" || vai === "director";
+
+  function lapPhieuDoan(t: TrichXuat) {
+    const dien = dienPhieuDoan(t);
+    if (!dien || !coSoMacDinh) return;
+    try {
+      sessionStorage.setItem(KHOA_DIEN_PHIEU_DOAN, JSON.stringify({ siteId: coSoMacDinh, ...dien, luc: Date.now() }));
+    } catch {
+      // Chặn lưu tạm thì màn bán vé mở như thường, nhập tay số người.
+    }
+    router.push(`/erp/${coSoMacDinh}/ve-dat-cho#phieu-doan`);
+  }
 
   function dienVaoHoSo() {
     // Biểu mẫu gửi hoá đơn chỉ quản lý cơ sở thấy; vai khác (kể cả giám đốc)
@@ -195,11 +228,12 @@ export function SoatGiayToWorkspace({
   return (
     <div className="space-y-6" data-testid="soat-giay-to">
       <section className="rounded-3xl bg-[#173f34] p-5 text-white shadow-sm sm:p-7" data-chi="soat-giay-to">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#e7b96a]">✦ AI đọc · luật soát</p>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#e7b96a]">✦ AI đọc giấy tờ</p>
         <h1 className="mt-2 text-2xl font-black sm:text-3xl">Soát giấy tờ</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-          Chụp hoá đơn, biên bản nghiệm thu, hợp đồng hay danh sách đoàn. AI đọc chữ trên ảnh; hệ thống soát theo luật: thiếu mã số thuế, cộng tiền sai,
-          chưa ký, thiếu dấu, ngày lập sai, rồi đối chiếu chéo cả bộ và điền sẵn vào hồ sơ hoá đơn nhà cung cấp. Ảnh không được lưu.
+          Chụp hoặc chọn ảnh, tệp PDF của hoá đơn, biên bản nghiệm thu, hợp đồng hay danh sách đoàn. AI đọc giấy tờ, hệ thống chỉ ra chỗ thiếu, chỗ sai:
+          mã số thuế, cộng tiền, chữ ký, con dấu, ngày lập. Cả bộ hồ sơ được đối chiếu với nhau, rồi điền sẵn vào hồ sơ nhà cung cấp hay phiếu đoàn.
+          Giấy tờ không được lưu lại.
         </p>
         {coAi ? (
           <div className="mt-5 flex flex-wrap gap-2.5">
@@ -215,13 +249,13 @@ export function SoatGiayToWorkspace({
               onClick={() => oChon.current?.click()}
               className="inline-flex min-h-12 items-center rounded-2xl border border-white/40 px-5 text-sm font-black text-white"
             >
-              Chọn ảnh có sẵn
+              Chọn ảnh hoặc PDF
             </button>
             <input ref={oChup} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void chonTep(e.target.files)} />
-            <input ref={oChon} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={(e) => void chonTep(e.target.files)} />
+            <input ref={oChon} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple className="hidden" onChange={(e) => void chonTep(e.target.files)} />
           </div>
         ) : (
-          <p className="mt-4 rounded-xl bg-white/10 p-3 text-sm">Máy chủ chưa bật AI (thiếu AI_API_KEY), nên chưa đọc được ảnh.</p>
+          <p className="mt-4 rounded-xl bg-white/10 p-3 text-sm">AI chưa được bật cho hệ thống này, nên chưa đọc được giấy tờ.</p>
         )}
         {coAi ? (
           <div className="mt-4">
@@ -270,12 +304,12 @@ export function SoatGiayToWorkspace({
                 data-testid="soat-dien-ho-so"
                 className="inline-flex min-h-12 items-center rounded-2xl bg-[#183f34] px-5 text-sm font-black text-white"
               >
-                {vai === "manager" ? "Điền vào hồ sơ hoá đơn nhà cung cấp →" : "Xem bản sẽ điền vào hồ sơ"}
+                {vai === "manager" ? "Điền vào hồ sơ nhà cung cấp →" : "Xem bản sẽ điền vào hồ sơ"}
               </button>
               {xemDien && vai !== "manager" ? <BanDienSan daDoc={daDoc} dsNcc={dsNcc} /> : null}
               <p className="mt-2 text-xs leading-5 text-[#6e7b75]">
                 {vai === "manager"
-                  ? "Mở biểu mẫu \"Gửi hóa đơn kèm PO và nghiệm thu\" với nhà cung cấp, số hoá đơn, ngày, tiền và số nghiệm thu đã điền. Mã đề nghị mua, trung tâm chi phí vẫn nhập tay."
+                  ? "Mở biểu mẫu gửi hoá đơn với nhà cung cấp, số hoá đơn, ngày, tiền và số nghiệm thu đã điền. Mã đề nghị mua và trung tâm chi phí vẫn nhập tay."
                   : "Biểu mẫu gửi hoá đơn do quản lý cơ sở mở; ở vai này bấm nút để xem trước những ô sẽ được điền. Muốn thử trọn vẹn: bấm \"Xem theo vai trò\" trên thanh đầu trang, chọn quản lý Tràng An, quay lại màn này."}
               </p>
             </div>
@@ -289,8 +323,14 @@ export function SoatGiayToWorkspace({
           return (
             <article key={g.id} className="rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-5" data-testid="soat-the" data-ket-luan={kq?.ketLuan ?? g.trangThai}>
               <div className="flex gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element -- ảnh khách vừa chụp, chỉ nằm trong bộ nhớ trình duyệt */}
-                <img src={g.anh} alt={`Ảnh ${g.ten}`} className="h-24 w-20 shrink-0 rounded-lg border border-[#e2e8e4] object-cover object-top" />
+                {g.laPdf ? (
+                  <span aria-hidden="true" className="grid h-24 w-20 shrink-0 place-items-center rounded-lg border border-[#e2e8e4] bg-[#f3f6f4] text-sm font-black text-[#a3341f]">
+                    PDF
+                  </span>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element -- ảnh vừa chụp, chỉ nằm trong bộ nhớ trình duyệt
+                  <img src={g.anh} alt={`Ảnh ${g.ten}`} className="h-24 w-20 shrink-0 rounded-lg border border-[#e2e8e4] object-cover object-top" />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-bold text-[#6e7b75]">{g.ten}</p>
                   {g.trangThai === "dang-doc" ? (
@@ -318,6 +358,35 @@ export function SoatGiayToWorkspace({
                 </button>
               </div>
               {kq ? <DanhSachMuc muc={kq.muc} /> : null}
+              {g.trich?.loai === "danh-sach-doan" && dienPhieuDoan(g.trich) ? (
+                <div className="mt-4 border-t border-[#e2e8e4] pt-3">
+                  {g.trich.danhSachTen.length ? (
+                    <details className="text-sm">
+                      <summary className="cursor-pointer font-bold text-[#183f34]">Xem {g.trich.danhSachTen.length} tên đọc được</summary>
+                      <ol className="mt-2 list-decimal space-y-0.5 pl-6 text-[#4c5f56]">
+                        {g.trich.danhSachTen.map((ten, i) => (
+                          <li key={i}>{ten}</li>
+                        ))}
+                      </ol>
+                    </details>
+                  ) : null}
+                  {lapDuocPhieuDoan ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => lapPhieuDoan(g.trich!)}
+                        data-testid="soat-lap-phieu-doan"
+                        className="mt-3 inline-flex min-h-11 items-center rounded-2xl bg-[#183f34] px-4 text-sm font-black text-white"
+                      >
+                        Lập phiếu đoàn với danh sách này →
+                      </button>
+                      <p className="mt-1.5 text-xs leading-5 text-[#6e7b75]">
+                        Màn bán vé mở sẵn số người và tên đoàn; lập phiếu xong bấm &quot;Điền tên từng người&quot; để gắn tên theo danh sách.
+                      </p>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
             </article>
           );
         })}

@@ -54,6 +54,9 @@ export const TrichXuat = z.object({
   coDauBenMua: co,
   soNguoi: so,
   danhSachTen: z.array(z.string()),
+  tenDoan: chu,
+  truongDoan: chu,
+  soDienThoai: chu,
   ghiChu: z.string(),
 });
 export type TrichXuat = z.infer<typeof TrichXuat>;
@@ -66,7 +69,7 @@ export const HUONG_DAN_DOC = `Bạn đọc ảnh giấy tờ kế toán, hành c
 - Số tiền là số nguyên đồng, bỏ dấu chấm ngăn cách. thueSuat là phần trăm (8 cho 8%). Biên bản nghiệm thu: giá trị nghiệm thu đặt vào tienTruocThue.
 - canCu: hợp đồng/đơn hàng được dẫn chiếu (ví dụ "hợp đồng số 03/2026/HĐDV").
 - coChuKySoBenBan: có khung chữ ký số ("Ký bởi", "Signature Valid"). coChuKy...: có chữ ký tay. coDau...: có con dấu tròn đỏ. Không thấy thì false; phần không áp dụng thì null.
-- soNguoi, danhSachTen: chỉ với danh sách đoàn.
+- Với danh sách đoàn: soNguoi là tổng số người GHI trên giấy (không tự đếm), danhSachTen là họ tên từng người theo thứ tự, tenDoan là tên đoàn/công ty/nơi xuất phát, truongDoan là họ tên trưởng đoàn, soDienThoai là số liên lạc của đoàn.
 - ghiChu: điều bất thường thấy được (tẩy xoá, sửa tay, chữ không khớp), một câu; không có thì chuỗi rỗng.
 Ô để trống hay không có thì null.`;
 
@@ -133,8 +136,8 @@ function kiemTien(t: TrichXuat): MucSoat[] {
 export function kiemGiayTo(t: TrichXuat, homNay: string, dsNcc: readonly SupplierApSupplier[] = []): KetQuaSoat {
   const muc: MucSoat[] = [
     t.docRo
-      ? { ten: "Ảnh đọc được", trangThai: "dat", chiTiet: "Chữ và số rõ." }
-      : { ten: "Ảnh đọc được", trangThai: "can-xem", chiTiet: "Ảnh mờ hoặc mất góc, số liệu dưới đây có thể sai; nên chụp lại." },
+      ? { ten: "Đọc được giấy tờ", trangThai: "dat", chiTiet: "Chữ và số rõ." }
+      : { ten: "Đọc được giấy tờ", trangThai: "can-xem", chiTiet: "Giấy tờ mờ hoặc mất góc, số liệu dưới đây có thể sai; nên chụp lại." },
   ];
 
   if (t.loai === "hoa-don") {
@@ -193,13 +196,23 @@ export function kiemGiayTo(t: TrichXuat, homNay: string, dsNcc: readonly Supplie
       kiemCo("Con dấu hai bên", Boolean(t.coDauBenBan && t.coDauBenMua), "can-xem", "Thiếu dấu của ít nhất một bên."),
     );
   } else if (t.loai === "danh-sach-doan") {
-    const soTen = t.danhSachTen.filter((x) => x.trim()).length;
+    const ten = t.danhSachTen.map((x) => x.trim()).filter(Boolean);
+    const soTen = ten.length;
+    const trung = [...new Set(ten.filter((x, i) => ten.indexOf(x) !== i))];
+    const soPhieu = t.soNguoi ?? soTen;
     muc.push(
+      coChu(t.tenDoan) ? { ten: "Tên đoàn", trangThai: "dat", chiTiet: t.tenDoan } : { ten: "Tên đoàn", trangThai: "can-xem", chiTiet: "Danh sách không ghi tên đoàn hay nơi xuất phát; nhãn phiếu đoàn phải tự đặt." },
       soTen > 0 ? { ten: "Họ tên khách", trangThai: "dat", chiTiet: `${soTen} người có tên.` } : { ten: "Họ tên khách", trangThai: "thieu", chiTiet: "Không đọc được tên khách nào." },
       t.soNguoi === null || t.soNguoi === soTen
-        ? { ten: "Khớp số người", trangThai: "dat", chiTiet: t.soNguoi === null ? "Danh sách không ghi tổng." : `${t.soNguoi} người.` }
+        ? { ten: "Khớp số người", trangThai: t.soNguoi === null ? "can-xem" : "dat", chiTiet: t.soNguoi === null ? `Danh sách không ghi tổng; đếm được ${soTen} tên.` : `${t.soNguoi} người.` }
         : { ten: "Khớp số người", trangThai: "sai", chiTiet: `Ghi ${t.soNguoi} người nhưng đọc được ${soTen} tên.` },
+      coChu(t.truongDoan) ? { ten: "Trưởng đoàn", trangThai: "dat", chiTiet: t.truongDoan } : { ten: "Trưởng đoàn", trangThai: "thieu", chiTiet: "Chưa ghi ai là trưởng đoàn." },
+      coChu(t.soDienThoai) && t.soDienThoai.replace(/\D/g, "").length >= 9
+        ? { ten: "Số liên lạc", trangThai: "dat", chiTiet: t.soDienThoai }
+        : { ten: "Số liên lạc", trangThai: "thieu", chiTiet: "Thiếu số điện thoại để gọi đoàn khi cần." },
     );
+    if (trung.length) muc.push({ ten: "Tên trùng", trangThai: "can-xem", chiTiet: `Tên xuất hiện hai lần: ${trung.join(", ")}.` });
+    if (soPhieu > 45) muc.push({ ten: "Cỡ phiếu đoàn", trangThai: "can-xem", chiTiet: `${soPhieu} người: phiếu đoàn tại quầy tối đa 45 người, cần tách làm nhiều phiếu.` });
   } else {
     muc.push({ ten: "Loại giấy tờ", trangThai: "can-xem", chiTiet: "Chưa nhận ra đây là hoá đơn, biên bản, hợp đồng hay danh sách đoàn." });
   }
@@ -306,4 +319,18 @@ export function dienHoaDonNcc(ds: readonly TrichXuat[], dsNcc: readonly Supplier
     ...(nt?.tienTruocThue != null ? { acceptedTotalVnd: nt.tienTruocThue } : {}),
   };
   return { siteId: ncc?.siteId, dien };
+}
+
+/** Giá trị điền sẵn vào khối "Lập phiếu đoàn" ở màn bán vé (`TicketGuestWorkspace`). */
+export type DienPhieuDoan = { partySize: number; groupLabel: string; ten: string[] };
+
+export const KHOA_DIEN_PHIEU_DOAN = "nbj-dien-phieu-doan";
+
+export function dienPhieuDoan(t: TrichXuat): DienPhieuDoan | null {
+  if (t.loai !== "danh-sach-doan") return null;
+  const ten = t.danhSachTen.map((x) => x.trim()).filter(Boolean);
+  const partySize = Math.min(45, Math.max(1, t.soNguoi ?? ten.length));
+  if (!ten.length && t.soNguoi === null) return null;
+  const nhan = [t.tenDoan, t.truongDoan ? `trưởng đoàn ${t.truongDoan}` : null].filter(Boolean).join(" · ");
+  return { partySize, groupLabel: (nhan || "Đoàn theo danh sách").slice(0, 120), ten: ten.slice(0, partySize).map((x) => x.slice(0, 200)) };
 }

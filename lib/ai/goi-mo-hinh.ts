@@ -51,7 +51,7 @@ export async function hoiMoHinh(opts: {
   quyThoiGianMs?: number;
 }): Promise<{ noiDung: string; moHinh: string }> {
   const khoa = process.env.AI_API_KEY?.trim();
-  if (!khoa) throw new LoiMoHinh("Chưa có AI_API_KEY.");
+  if (!khoa) throw new LoiMoHinh("Chưa bật AI.");
   const goc = (process.env.AI_BASE_URL?.trim() || AI_BASE_URL_MAC_DINH).replace(/\/+$/, "");
   const hetHan = Date.now() + (opts.quyThoiGianMs ?? 8_000);
   let loiCuoi: LoiMoHinh = new LoiMoHinh("Không mẫu nào trả lời.");

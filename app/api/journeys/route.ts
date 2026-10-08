@@ -74,7 +74,7 @@ export async function POST(request: Request) {
         {
           error: {
             code: "CUSTOMER_JOURNEY_ORIGIN_REJECTED",
-            message: "Chỉ nhận hành trình first-party từ cùng origin.",
+            message: "Yêu cầu này không đến từ trang Ninh Bình Journey nên chưa xử lý được.",
           },
         },
         { status: 403, headers: { "Cache-Control": "no-store" } },

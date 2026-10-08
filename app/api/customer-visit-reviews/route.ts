@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     return tuChoi("CUSTOMER_BOOKING_DISABLED", "Đặt chỗ trực tuyến chưa được bật.", 503);
   }
   if (!isSameOriginCustomerRequest(request)) {
-    return tuChoi("VISIT_REVIEW_ORIGIN_REJECTED", "Chỉ nhận yêu cầu first-party từ cùng origin.", 403);
+    return tuChoi("VISIT_REVIEW_ORIGIN_REJECTED", "Yêu cầu này không đến từ trang Ninh Bình Journey nên chưa xử lý được.", 403);
   }
   try {
     const rawBody = await request.text();

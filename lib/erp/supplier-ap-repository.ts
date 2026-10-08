@@ -173,7 +173,7 @@ function createAdminClient(): SupabaseClient {
   ].filter((value): value is string => Boolean(value));
   if (missing.length) {
     throw new SupplierApRepositoryConfigurationError(
-      "Kho công nợ Supabase chưa được cấu hình đủ biến môi trường.",
+      "Kho công nợ chưa được kết nối. Xin báo người quản trị hệ thống.",
       missing,
     );
   }

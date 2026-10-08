@@ -82,7 +82,7 @@ export function TheBanNhap({
     <div className={`rounded-2xl p-3.5 ${nen}`} data-testid="the-ban-nhap">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-black uppercase tracking-[0.12em] text-[#6f8d7f]">Bản nháp · xem lại rồi lưu</p>
-        <span className="text-[0.68rem] text-[#8b9a92]">{boHieu === "claude" ? "Claude hiểu" : boHieu === "ai" ? "AI hiểu" : "Hiểu theo mẫu câu"}</span>
+        <span className="text-[0.68rem] text-[#8b9a92]">{boHieu === "luat" ? "Hiểu theo mẫu câu" : "AI hiểu"}</span>
       </div>
 
       <div role="radiogroup" aria-label="Loại" className="mt-2.5 grid grid-cols-3 gap-1 rounded-xl bg-[#eef3f0] p-1">

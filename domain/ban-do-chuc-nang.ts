@@ -171,7 +171,6 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         giamDocLamDuoc: true,
         duongDan: "/erp/tam-coc/suc-chua",
         diem: "goi-luot",
-        moi: "30/09",
         cacViec: [
           "Bấm \"Mở trang khách ↗\" (hay quét mã dán ở bến) và lấy thử một số.",
           "Quay lại đây, chọn số đò đang trống rồi bấm \"Gọi … nhóm tiếp\": máy khách tự báo tới lượt.",
@@ -318,7 +317,7 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
       {
         id: "soat-giay-to",
         ten: "Soát giấy tờ bằng AI",
-        moTa: "Chụp hoá đơn, biên bản nghiệm thu, hợp đồng: AI đọc, hệ thống báo thiếu mã số thuế, cộng sai, chưa ký, thiếu dấu, đối chiếu cả bộ rồi điền sẵn hồ sơ nhà cung cấp.",
+        moTa: "Chụp hay chọn ảnh, tệp PDF của hoá đơn, biên bản nghiệm thu, hợp đồng, danh sách đoàn: AI đọc, hệ thống báo thiếu mã số thuế, cộng sai, chưa ký, thiếu dấu, đối chiếu cả bộ rồi điền sẵn hồ sơ nhà cung cấp hay phiếu đoàn.",
         vai: "director",
         duongDan: "/erp/soat-giay-to",
         diem: "soat-giay-to",
@@ -326,6 +325,7 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         cacViec: [
           "Bấm \"Hoá đơn có lỗi\" trong phần giấy tờ mẫu: thấy báo thiếu MST người mua, cộng tiền sai, chưa ký, ngày lập ở tương lai.",
           "Thêm \"Hoá đơn đủ\" và \"Biên bản nghiệm thu\": phần Cả bộ hồ sơ đối chiếu nhà cung cấp, giá trị, thứ tự ngày; bấm \"Điền vào hồ sơ hoá đơn nhà cung cấp\".",
+          "Bấm \"Danh sách đoàn\": thấy tổng ghi 13 người mà chỉ có 12 tên; bấm \"Lập phiếu đoàn với danh sách này\" là màn bán vé mở sẵn số người, tên đoàn.",
         ],
       },
     ],
@@ -446,7 +446,6 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         vai: "chief-accountant",
         duongDan: "/erp/finance",
         diem: "so-nhat-ky",
-        moi: "03/10",
         cacViec: [
           "Trước đó, ở tài khoản giám đốc: Quản trị → Đại lý & hoa hồng, chọn tháng, bấm \"Ghi đã chi\" ở một thẻ đại lý.",
           "Ở \"Sổ nhật ký\", mở bút toán nhãn \"Hoa hồng đại lý\": thấy Nợ 6418, Có 1121, phần của từng cơ sở.",
@@ -460,7 +459,6 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         vai: "chief-accountant",
         duongDan: "/erp/finance",
         diem: "ky-ke-toan",
-        moi: "03/10",
         cacViec: [
           "Hai thẻ kỳ gần nhất nằm ở khối được khoanh: kỳ tháng này đang mở.",
           "Khoá kỳ khi đã soát xong; kỳ đã khoá thì không lập thêm bút toán vào được.",
@@ -473,7 +471,6 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         vai: "director",
         duongDan: "/erp/{site}/ve-dat-cho",
         diem: "tien-ve-co-so",
-        moi: "03/10",
         cacViec: [
           "Ô \"Tiền vé của cơ sở\" = tiền quầy + phần web của cơ sở này; dòng nhỏ ghi rõ từng phần.",
           "Màn Báo cáo của cơ sở có thêm ô \"Tiền vé · 28 ngày\" tách quầy và web.",
@@ -564,7 +561,6 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         vai: "director",
         duongDan: "/erp/dai-ly",
         diem: "dai-ly",
-        moi: "03/10",
         cacViec: [
           "Chọn một tháng đã khép ở hàng nút trên cùng.",
           "Mỗi đại lý một thẻ: đơn đã trả, khách đã tới, hoa hồng (chỉ tính khách đã qua cổng).",
@@ -763,7 +759,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Khối \"Đặt vé nơi này\"",
     moTa: "Bốn cơ sở có cổng vé liệt kê gói còn bán đi qua nơi ấy, bấm là sang trang gói.",
     duongDan: "/destination/tam-chuc",
-    moi: "03/10",
     cacViec: ["Kéo xuống khối \"Đặt vé nơi này\", bấm một gói. Hai điểm Hoa Lư không có khối này: không bán vé tại đây."],
   },
   {
@@ -815,7 +810,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Hộ chiếu của một khách thật, xem từ hệ thống",
     moTa: "Khách qua cổng là hộ chiếu đóng dấu mộc ghi ngày, như dấu xuất nhập cảnh.",
     duongDan: "/erp/khach-hang#khach-thay-gi",
-    moi: "03/10",
     cacViec: [
       "Ở màn Khách hàng, bấm \"Xem như khách\" ở một đơn đã qua cổng.",
       "Khối \"Khách thấy gì\" hiện hộ chiếu của khách ấy, chặng đã đi có dấu mộc.",
@@ -827,7 +821,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Lấy số hàng chờ bến đò Tam Cốc",
     moTa: "Khách quét mã ở bến, lấy số trên điện thoại, máy báo khi tới lượt.",
     duongDan: "/xep-hang/tam-coc",
-    moi: "30/09",
     cacViec: [
       "Lấy một số; trang khách tự cập nhật còn bao nhiêu nhóm phía trước.",
       "Gọi lượt ở màn Tam Cốc → Sức chứa: trang khách đổi sang \"Tới lượt bạn\".",
@@ -839,7 +832,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Nghe thuyết minh theo vị trí",
     moTa: "Đi tới đâu, điện thoại kể chuyện nơi ấy bằng giọng người đọc.",
     duongDan: "/nghe",
-    moi: "30/09",
     cacViec: ["Cho phép đọc vị trí; ở xa Ninh Bình thì chọn một điểm trong danh sách để nghe thử."],
   },
   {
@@ -848,7 +840,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Kiosk tại cơ sở",
     moTa: "Màn hình đứng ở cổng: xem gói, lấy số hàng chờ, tự về màn chào sau một phút không ai chạm.",
     duongDan: "/kiosk/tam-coc",
-    moi: "30/09",
     cacViec: ["Chạm thử từng nút như khách đứng trước kiosk."],
   },
   {
@@ -902,7 +893,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Sương trôi trên ảnh đầu trang chủ",
     moTa: "Sương phủ núi đá, rê chuột thì sương tách theo, cuộn xuống thì các điểm đến hiện dần ra.",
     duongDan: "/",
-    moi: "03/10",
     cacViec: [
       "Mở trang chủ, đứng yên vài giây nhìn sương trôi ngang qua núi.",
       "Rê chuột qua ảnh: sương rẽ ra quanh con trỏ. Cuộn xuống chậm: sương dày lên rồi nhường chỗ cho các điểm đến.",
@@ -914,7 +904,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Sương vén khi vào một điểm đến",
     moTa: "Mở trang một nơi là sương phủ kín, kéo dần xuống và tan, ảnh và tên nơi ấy hiện ra.",
     duongDan: "/destination/van-long",
-    moi: "03/10",
     cacViec: ["Mở trang, đứng yên ba giây nhìn sương tan.", "Màu sương theo giờ thật ở Ninh Bình: sáng trắng, chiều vàng, tối ánh trăng."],
   },
   {
@@ -923,16 +912,15 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Dải núi thuỷ mặc",
     moTa: "Trang Lập hành trình mở đầu bằng bốn lớp núi đá vôi vẽ như tranh mực, một con đò trôi chậm.",
     duongDan: "/plan",
-    moi: "03/10",
     cacViec: ["Đứng yên nhìn đò trôi qua giữa các lớp núi.", "Cuộn xuống: các lớp núi trôi lệch tầng, gần nhanh xa chậm."],
   },
   {
     id: "web-thuyen-cuon",
     nhom: "hieu-ung",
     ten: "Câu chuyện Tràng An, thuyền đi theo cuộn",
-    moTa: "Cuộn tới đâu, con thuyền trên đường tiến độ đi tới đó, qua từng chặng hang và đền.",
+    moTa: "Cuộn tới đâu, con thuyền trên tuyến đi tới đó, qua từng chặng hang và đền. Từ 08/10 có cả trên điện thoại.",
     duongDan: "/#cau-chuyen-trang-an",
-    moi: "03/10",
+    moi: "08/10",
     cacViec: ["Cuộn chậm qua khối Tràng An: thuyền nhỏ ở đường tiến độ chạy theo, mỗi chặng đổi ảnh và lời kể."],
   },
   {
@@ -941,7 +929,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Đèn hoa đăng trên vệt trăng",
     moTa: "Đèn hoa đăng trôi trên mặt sông dưới vòng trăng, nến lập loè, bóng đèn soi xuống nước.",
     duongDan: "/seasonal/mid-autumn",
-    moi: "03/10",
     cacViec: ["Kéo tới vòng trăng, nhìn mặt nước ngay bên dưới."],
   },
   {
@@ -950,7 +937,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Thẻ gói kiểu vé giấy",
     moTa: "Ô giá là cuống vé răng cưa; rê chuột thì thẻ nghiêng như cầm vé, vệt nhũ vàng chạy theo.",
     duongDan: "/packages",
-    moi: "03/10",
     chiMayTinh: true,
     cacViec: ["Rê chuột chậm qua một thẻ gói."],
   },
@@ -960,7 +946,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Con trỏ theo ngữ cảnh",
     moTa: "Đưa chuột vào dải tuyến, thẻ điểm đến, ảnh gói: con trỏ hiện chữ Kéo, Xem, Mở.",
     duongDan: "/#destinations-highlights",
-    moi: "03/10",
     chiMayTinh: true,
     cacViec: ["Rê chuột lên dải tuyến hay ảnh điểm đến ở trang chủ: nhãn \"Kéo\", \"Xem\" đi theo con trỏ; rời ra là tắt."],
   },
@@ -970,7 +955,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Tiến trình đặt chỗ kiểu bến đò",
     moTa: "Năm bến dọc một dòng sông; con đò trôi tới bến của bước đang làm, bến đã qua sáng đèn.",
     duongDan: "/checkout?package=slow-ninh-binh",
-    moi: "03/10",
     cacViec: ["Chọn khung giờ rồi giữ chỗ: đò trôi sang bến kế tiếp."],
   },
   {
@@ -979,7 +963,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Hoa súng nở theo giờ thật",
     moTa: "Đường cong độ nở trong buổi sáng, chấm là giờ lúc này ở Ninh Bình; bông hoa nét mảnh xoè hay khép theo giờ.",
     duongDan: "/seasonal/hoa-sung",
-    moi: "06/10",
     cacViec: ["Mở trang, kéo tới \"Hoa chỉ mở buổi sáng\": chấm trên đường cong là giờ lúc này.", "Kéo thanh giờ từ 05:00 tới 12:00 để xem hoa xoè rồi khép."],
   },
   {
@@ -988,7 +971,6 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Các mùa, kể cả mùa đã khép",
     moTa: "Trang Sự kiện theo mùa xếp mùa hoa súng đang tới cạnh Trung thu 2026 đã khép; mùa đã qua vẫn xem lại được.",
     duongDan: "/seasonal",
-    moi: "06/10",
     cacViec: [
       "Mở trang: thẻ Trung thu ghi \"Đã khép mùa · xem lại\", bấm vào là trang Trung thu với dải báo mùa đã khép.",
       "Cuối trang hoa súng và trang Trung thu đều có khối \"Mùa khác\" để sang mùa kia.",

@@ -166,7 +166,7 @@ function createAdminClient(): SupabaseClient<Database> {
   const missing = requiredSupabaseEnvironment();
   if (missing.length > 0) {
     throw new AccountingRepositoryConfigurationError(
-      "Kho kế toán Supabase chưa được cấu hình đủ biến môi trường.",
+      "Kho kế toán chưa được kết nối. Xin báo người quản trị hệ thống.",
       missing,
     );
   }

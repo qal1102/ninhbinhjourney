@@ -70,7 +70,7 @@ function mapRepositoryError(error: unknown) {
     message.includes("CUSTOMER_SESSION_ID_COLLISION")
   ) {
     return new CustomerEventRepositoryError(
-      "ID event hoặc session đã được dùng cho một payload khác.",
+      "Mã ghi nhận này đã được dùng cho dữ liệu khác.",
       "ID_COLLISION",
     );
   }

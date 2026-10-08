@@ -40,7 +40,7 @@ export function luuTruViecGhi(): LuuTruViecGhi {
 
 function loiKho(error: { code?: string; message?: string }): never {
   if (error.code === "PGRST202" || error.code === "42883" || error.code === "42P01") {
-    throw new ViecGhiLoi("Kho chưa có bảng việc và ghi chú (migration 110 chưa áp).");
+    throw new ViecGhiLoi("Kho chưa có bảng việc và ghi chú. Xin báo người quản trị hệ thống.");
   }
   const cau = findRpcBusinessMessage(error);
   if (cau) throw new ViecGhiLoi(cau);

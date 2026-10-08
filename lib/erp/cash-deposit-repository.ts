@@ -51,7 +51,7 @@ function createAdminClient(): SupabaseClient {
   const secret = process.env.SUPABASE_SECRET_KEY?.trim();
   if (!url || !secret) {
     throw new CashDepositRepositoryConfigurationError(
-      "Đối soát tiền mặt chưa được cấu hình đủ biến môi trường ở phía máy chủ.",
+      "Đối soát tiền mặt chưa được kết nối kho dữ liệu. Xin báo người quản trị hệ thống.",
     );
   }
   return createClient(url, secret, {

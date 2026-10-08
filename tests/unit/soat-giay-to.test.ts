@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SupplierApSupplier } from "@/domain/erp-supplier-ap";
-import { dienHoaDonNcc, doiChieuBo, kiemGiayTo, type TrichXuat } from "@/domain/soat-giay-to";
+import { dienHoaDonNcc, dienPhieuDoan, doiChieuBo, kiemGiayTo, type TrichXuat } from "@/domain/soat-giay-to";
 
 const ncc: SupplierApSupplier[] = [
   { id: "ncc-1", siteId: "trang-an", code: "NCC-TA-018", name: "Công ty Dịch vụ Tràng An Xanh", taxCode: "2700123456", paymentTermsDays: 30, status: "active" },
@@ -30,6 +30,9 @@ const trong: TrichXuat = {
   coDauBenMua: null,
   soNguoi: null,
   danhSachTen: [],
+  tenDoan: null,
+  truongDoan: null,
+  soDienThoai: null,
   ghiChu: "",
 };
 
@@ -139,5 +142,40 @@ describe("đối chiếu cả bộ và điền hồ sơ", () => {
       acceptedTotalVnd: 12_000_000,
       contractReference: "03/2026/HĐDV-TAX",
     });
+  });
+});
+
+describe("danh sách đoàn", () => {
+  const doan: TrichXuat = {
+    ...trong,
+    loai: "danh-sach-doan",
+    soNguoi: 13,
+    danhSachTen: ["Nguyễn Văn An", "Trần Thị Bình", "Lê Văn Cường"],
+    tenDoan: "Hội Cựu giáo chức phường Mẫu, Hà Nội",
+    truongDoan: "Nguyễn Văn An",
+    soDienThoai: "0123 456 789",
+  };
+
+  it("báo lệch giữa tổng ghi trên giấy và số tên đọc được", () => {
+    const kq = kiemGiayTo(doan, "2026-10-09");
+    expect(kq.ketLuan).toBe("thieu");
+    expect(kq.muc.find((m) => m.ten === "Khớp số người")).toMatchObject({ trangThai: "sai", chiTiet: "Ghi 13 người nhưng đọc được 3 tên." });
+    expect(kq.muc.find((m) => m.ten === "Trưởng đoàn")?.trangThai).toBe("dat");
+  });
+
+  it("thiếu trưởng đoàn và số điện thoại thì báo thiếu", () => {
+    const kq = kiemGiayTo({ ...doan, soNguoi: 3, truongDoan: null, soDienThoai: null }, "2026-10-09");
+    expect(kq.muc.find((m) => m.ten === "Trưởng đoàn")?.trangThai).toBe("thieu");
+    expect(kq.muc.find((m) => m.ten === "Số liên lạc")?.trangThai).toBe("thieu");
+  });
+
+  it("điền phiếu đoàn: số người theo giấy, nhãn có tên đoàn và trưởng đoàn, tối đa 45", () => {
+    expect(dienPhieuDoan(doan)).toEqual({
+      partySize: 13,
+      groupLabel: "Hội Cựu giáo chức phường Mẫu, Hà Nội · trưởng đoàn Nguyễn Văn An",
+      ten: ["Nguyễn Văn An", "Trần Thị Bình", "Lê Văn Cường"],
+    });
+    expect(dienPhieuDoan({ ...doan, soNguoi: 60 })?.partySize).toBe(45);
+    expect(dienPhieuDoan(trong)).toBeNull();
   });
 });

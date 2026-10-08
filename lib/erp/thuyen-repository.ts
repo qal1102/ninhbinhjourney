@@ -288,7 +288,7 @@ export async function capMaGioiThieu(coSo: CoSoThuyen, id: string, tyLe: number,
   });
   if (error) {
     if (error.code === "PGRST202" || error.code === "42883") {
-      throw new ThuyenLoi("Kho chưa có mã giới thiệu cho người chèo (migration 116 chưa áp).", "CHUA_NOI_KHO");
+      throw new ThuyenLoi("Kho chưa có mã giới thiệu cho người chèo. Xin báo người quản trị hệ thống.", "CHUA_NOI_KHO");
     }
     loiKho(error);
   }
@@ -334,8 +334,8 @@ export async function ghiNguoiCheo(v: GhiNguoiCheo): Promise<void> {
     : await kho.from("erp_nguoi_cheo").insert(dong);
   if (error) {
     if (error.code === "23505") throw new ThuyenLoi("Số thuyền này đã có người trong sổ của bến.", "LOI");
-    if (error.code === "42P01" || error.code === "PGRST205") throw new ThuyenLoi("Kho chưa có sổ người chèo (migration 111 chưa áp).", "CHUA_NOI_KHO");
-    if (error.code === "42703") throw new ThuyenLoi("Kho chưa có cột hồ sơ người chèo (migration 112 chưa áp).", "CHUA_NOI_KHO");
+    if (error.code === "42P01" || error.code === "PGRST205") throw new ThuyenLoi("Kho chưa có sổ người chèo. Xin báo người quản trị hệ thống.", "CHUA_NOI_KHO");
+    if (error.code === "42703") throw new ThuyenLoi("Kho chưa có cột hồ sơ người chèo. Xin báo người quản trị hệ thống.", "CHUA_NOI_KHO");
     loiKho(error);
   }
 }

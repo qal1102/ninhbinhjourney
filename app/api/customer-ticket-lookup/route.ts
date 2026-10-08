@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   }
   if (!isSameOriginCustomerRequest(request)) {
     return jsonResponse(
-      { accepted: false, error: { code: "CUSTOMER_LOOKUP_ORIGIN_REJECTED", message: "Chỉ nhận yêu cầu tra cứu first-party từ cùng origin." } },
+      { accepted: false, error: { code: "CUSTOMER_LOOKUP_ORIGIN_REJECTED", message: "Yêu cầu này không đến từ trang Ninh Bình Journey nên chưa xử lý được." } },
       403,
     );
   }

@@ -415,7 +415,7 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CUSTOMER_SESSION_ID_COLLISION:
     "Mã phiên khách hàng đã thuộc về một hồ sơ khác; không được tự ghép hai hồ sơ.",
   CUSTOMER_EVENT_ID_COLLISION:
-    "Mã event đã được dùng cho một payload khác; hãy tạo mã mới thay vì ghi đè lịch sử.",
+    "Mã sự kiện này đã được dùng cho dữ liệu khác; hãy tạo mã mới thay vì ghi đè lịch sử.",
   CUSTOMER_PROFILE_NOT_FOUND:
     "Không tìm thấy hồ sơ khách hàng trong đơn vị hiện tại.",
   CUSTOMER_BOOKING_INPUT_INVALID:

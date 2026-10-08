@@ -202,11 +202,9 @@ export function ViecGhiWorkspace({ dong, ten, toiId, luuTru, loiKho, boHieu }: P
           </p>
         ) : null}
         <p className="mt-3 text-xs text-white/50">
-          {boHieu === "claude"
-            ? "Câu nói được Claude đọc để hiểu."
-            : boHieu === "ai"
-              ? "Câu nói gửi tới Gemini để hiểu; Gemini chậm hay lỗi thì trợ lý hiểu theo mẫu câu."
-              : "Trợ lý hiểu câu theo mẫu câu tiếng Việt ngay trên máy chủ, không gửi câu nói ra ngoài."}
+          {boHieu === "luat"
+            ? "Trợ lý hiểu câu theo mẫu câu tiếng Việt ngay trong hệ thống, không gửi câu nói ra ngoài."
+            : "Câu nói được AI đọc để hiểu; AI chậm hay lỗi thì trợ lý hiểu theo mẫu câu."}
           {luuTru === "memory" ? " Bản chạy thử ở máy: lưu trong bộ nhớ, khởi động lại là mất." : ""}
         </p>
       </header>

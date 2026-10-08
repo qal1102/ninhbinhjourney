@@ -122,7 +122,7 @@ export async function docHangChoErp(siteId: ErpSiteId): Promise<HangChoErp> {
       trangThai: "loi",
       loiNhan:
         error.code === "PGRST202" || error.code === "42883"
-          ? "Kho chưa có hàng chờ (migration 097 chưa áp)."
+          ? "Kho chưa có hàng chờ. Xin báo người quản trị hệ thống."
           : "Chưa đọc được hàng chờ. Xin tải lại trang.",
     };
   }

@@ -41,7 +41,7 @@ export async function docBaoCaoCoSo(siteId: ErpSiteId): Promise<BaoCaoCoSo> {
       trangThai: "loi",
       loiNhan:
         error.code === "42883" || error.code === "PGRST202"
-          ? "Kho dữ liệu chưa có hàm báo cáo (migration 093 chưa áp)."
+          ? "Kho dữ liệu chưa có hàm báo cáo. Xin báo người quản trị hệ thống."
           : "Chưa đọc được số liệu báo cáo. Xin tải lại trang.",
     };
   }

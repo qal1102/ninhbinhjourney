@@ -17,6 +17,7 @@ import type { ShiftCloseRecord } from "@/domain/erp-shift-close";
 import { isDemoTicketCode } from "@/domain/erp-ticket-code";
 import { ticketStatusLabel } from "@/domain/erp-ticket-sales";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
+import { KHOA_DIEN_PHIEU_DOAN, type DienPhieuDoan } from "@/domain/soat-giay-to";
 import type { CurrentErpUser } from "@/lib/erp/demo-session";
 import { useGateCameraScanner } from "@/lib/erp/use-gate-camera-scanner";
 import type {
@@ -124,6 +125,70 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   // sống sót qua mọi lần dựng lại giữa hai lượt gửi của cùng một tấm phiếu.
   const counterRequestKeyRef = useRef<string | null>(null);
   const [counterQr, setCounterQr] = useState("");
+  // Từ màn Soát giấy tờ (09/10/2026): AI đọc danh sách đoàn, để sẵn số người,
+  // nhãn đoàn và họ tên. Lập phiếu xong thì gắn tên theo mã từng người qua đúng
+  // đường khách tự khai tên (`/api/customer-group-members`).
+  const [tenTuDanhSach, setTenTuDanhSach] = useState<string[]>([]);
+  const [dienTuAi, setDienTuAi] = useState(false);
+  const [dangDienTen, setDangDienTen] = useState(false);
+  const [loiDienTen, setLoiDienTen] = useState("");
+
+  useEffect(() => {
+    if (mode !== "sales") return;
+    let luu: (DienPhieuDoan & { siteId?: string; luc?: number }) | null = null;
+    try {
+      luu = JSON.parse(sessionStorage.getItem(KHOA_DIEN_PHIEU_DOAN) ?? "null");
+      sessionStorage.removeItem(KHOA_DIEN_PHIEU_DOAN);
+    } catch {
+      luu = null;
+    }
+    if (!luu || luu.siteId !== site.id || Date.now() - (luu.luc ?? 0) > 30 * 60_000) return;
+    const giaTri = luu;
+    const khung = window.requestAnimationFrame(() => {
+      setCounterPartySize(String(giaTri.partySize));
+      setCounterGroupLabel(giaTri.groupLabel);
+      setTenTuDanhSach(giaTri.ten ?? []);
+      setDienTuAi(true);
+      document.getElementById("phieu-doan")?.scrollIntoView({ block: "start" });
+    });
+    return () => window.cancelAnimationFrame(khung);
+  }, [mode, site.id]);
+
+  async function dienTenTuDanhSach() {
+    if (!counterGroup || dangDienTen) return;
+    setDangDienTen(true);
+    setLoiDienTen("");
+    const cap = counterGroup.members.slice(0, tenTuDanhSach.length);
+    let duoc = 0;
+    const daGan: Record<string, string> = {};
+    for (const [i, nguoi] of cap.entries()) {
+      try {
+        const res = await fetch("/api/customer-group-members", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ member_code: nguoi.memberCode, display_name: tenTuDanhSach[i] }),
+        });
+        if (res.ok) {
+          duoc += 1;
+          daGan[nguoi.memberCode] = tenTuDanhSach[i];
+        }
+      } catch {
+        // Bỏ qua người này, đếm ở dưới; đoàn trưởng vẫn tự điền được ở trang đoàn.
+      }
+    }
+    setCounterGroup((cu) =>
+      cu
+        ? {
+            ...cu,
+            activatedCount: cu.activatedCount + duoc,
+            members: cu.members.map((m) => (daGan[m.memberCode] ? { ...m, displayName: daGan[m.memberCode] } : m)),
+          }
+        : cu,
+    );
+    if (duoc === cap.length) setTenTuDanhSach([]);
+    else setLoiDienTen(`Mới gắn được ${duoc}/${cap.length} tên. Bấm lại để thử những người còn thiếu, hoặc để đoàn trưởng tự điền.`);
+    setDangDienTen(false);
+  }
   // TC-16: camera chỉ đổ mã vào đúng ô quét bên dưới, luồng xử lý giữ nguyên.
   const videoRef = useRef<HTMLVideoElement>(null);
   const camera = useGateCameraScanner(videoRef, setScanCode);
@@ -573,7 +638,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           treo vé. Mã đoàn và mã từng người luôn do máy sinh (ERP-UX-06):
           không có ô nào cho gõ tay mã. */}
       {mode === "sales" ? (
-        <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+        <section id="phieu-doan" className="scroll-mt-24 rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
           <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Đoàn mua tại quầy</p>
           <h2 className="mt-2 text-2xl font-black text-[#20342c]" data-chi="phieu-doan" data-chi-loi="Gõ số người và một nhãn cho đoàn, bấm Lập phiếu đoàn: mỗi người có mã riêng, đoàn trưởng tự điền tên sau.">Lập phiếu đoàn, đưa QR cho khách</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5c6f67]">
@@ -582,6 +647,12 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
             đoàn trưởng có thể tự điền tên từng người sau, hoặc bỏ qua — ai chưa
             điền vẫn đi tham quan bình thường.
           </p>
+          {dienTuAi && !counterGroup ? (
+            <p className="mt-3 rounded-xl border border-[#e7b96a] bg-[#fff8e8] p-3 text-sm font-bold text-[#6b4a14]" data-testid="phieu-doan-ai-dien">
+              ✦ AI đã điền từ danh sách đoàn vừa soát
+              {tenTuDanhSach.length ? `, kèm ${tenTuDanhSach.length} họ tên` : ""}. Xem lại số người và tên đoàn rồi bấm Lập phiếu đoàn.
+            </p>
+          ) : null}
           <form onSubmit={submitCounterGroup} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
             <label className="text-xs font-bold text-[#5c6f67] sm:w-32">
               Số người
@@ -637,6 +708,20 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                   Đưa mã QR này cho khách quét ở cổng. Đoàn trưởng có thể tự điền
                   tên từng người tại trang <span className="font-mono">/doan/{counterGroup.groupCode}</span>.
                 </p>
+                {tenTuDanhSach.length ? (
+                  <button
+                    type="button"
+                    onClick={() => void dienTenTuDanhSach()}
+                    disabled={dangDienTen}
+                    data-testid="phieu-doan-dien-ten"
+                    className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#183f34] px-4 text-sm font-black text-white disabled:opacity-60"
+                  >
+                    {dangDienTen ? "Đang gắn tên…" : `✦ Điền tên ${Math.min(tenTuDanhSach.length, counterGroup.memberCount)} người từ danh sách`}
+                  </button>
+                ) : counterGroup.activatedCount > 0 ? (
+                  <p className="mt-2 text-xs font-bold text-[#1d6b3e]">Đã có tên {counterGroup.activatedCount}/{counterGroup.memberCount} người.</p>
+                ) : null}
+                {loiDienTen ? <p className="mt-2 text-xs font-bold text-[#8b3d31]">{loiDienTen}</p> : null}
               </div>
             </div>
           ) : null}

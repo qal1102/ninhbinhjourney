@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
   if (!isSameOriginCustomerRequest(request)) {
     return Response.json(
-      { accepted: false, error: { code: "CUSTOMER_IDENTITY_ORIGIN_REJECTED", message: "Chỉ nhận liên hệ first-party từ cùng origin." } },
+      { accepted: false, error: { code: "CUSTOMER_IDENTITY_ORIGIN_REJECTED", message: "Yêu cầu này không đến từ trang Ninh Bình Journey nên chưa xử lý được." } },
       { status: 403, headers: { "Cache-Control": "no-store" } },
     );
   }

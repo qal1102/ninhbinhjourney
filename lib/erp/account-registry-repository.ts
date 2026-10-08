@@ -511,7 +511,7 @@ export async function deleteAuthUser(authUserId: string) {
   const client = createAdminClient();
   const result = await client.auth.admin.deleteUser(authUserId);
   if (result.error) {
-    throw new AccountRegistryError("Supabase Auth chưa xoá được người dùng đăng nhập.", {
+    throw new AccountRegistryError("Chưa xoá được tài khoản đăng nhập. Xin thử lại.", {
       cause: result.error,
     });
   }

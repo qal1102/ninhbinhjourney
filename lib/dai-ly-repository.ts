@@ -57,7 +57,7 @@ export async function docBangDaiLy(thang: string): Promise<BangDaiLy> {
     console.error("Agency month read failed", error);
     return {
       trangThai: "loi",
-      loiNhan: error.code === "PGRST202" || error.code === "42883" ? "Kho chưa có sổ đại lý (migration 099 chưa áp)." : "Chưa đọc được sổ đại lý. Xin tải lại trang.",
+      loiNhan: error.code === "PGRST202" || error.code === "42883" ? "Kho chưa có sổ đại lý. Xin báo người quản trị hệ thống." : "Chưa đọc được sổ đại lý. Xin tải lại trang.",
     };
   }
   const dong = docBangThang(data);

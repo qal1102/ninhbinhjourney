@@ -76,6 +76,43 @@ function DanhSachMuc({ muc }: { muc: readonly MucSoat[] }) {
   );
 }
 
+const NHAN_O: Record<string, string> = {
+  supplierId: "Nhà cung cấp",
+  invoiceSeries: "Ký hiệu hoá đơn",
+  invoiceNumber: "Số hoá đơn",
+  invoiceDate: "Ngày hoá đơn",
+  netVnd: "Giá trị trước thuế",
+  vatVnd: "Thuế GTGT",
+  totalVnd: "Tổng thanh toán",
+  description: "Nội dung",
+  contractReference: "Mã hợp đồng",
+  acceptanceReference: "Mã biên bản nghiệm thu",
+  acceptedTotalVnd: "Giá trị đã nghiệm thu",
+};
+
+function BanDienSan({ daDoc, dsNcc }: { daDoc: readonly TrichXuat[]; dsNcc: readonly SupplierApSupplier[] }) {
+  const { dien } = dienHoaDonNcc(daDoc, dsNcc);
+  const dong = Object.entries(dien).map(([k, v]) => {
+    const giaTri =
+      k === "supplierId"
+        ? (dsNcc.find((n) => n.id === v)?.name ?? String(v))
+        : typeof v === "number"
+          ? `${v.toLocaleString("vi-VN")} đ`
+          : String(v);
+    return [NHAN_O[k] ?? k, giaTri] as const;
+  });
+  return (
+    <dl className="mt-3 grid gap-x-4 gap-y-1.5 rounded-xl border border-[#e7b96a] bg-[#fff8e8] p-3 text-sm sm:grid-cols-[auto_1fr]" data-testid="soat-ban-dien">
+      {dong.map(([nhan, giaTri]) => (
+        <div key={nhan} className="contents">
+          <dt className="font-bold text-[#6b4a14]">{nhan}</dt>
+          <dd className="break-words text-[#20342c]">{giaTri}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export function SoatGiayToWorkspace({
   dsNcc,
   coAi,
@@ -90,6 +127,7 @@ export function SoatGiayToWorkspace({
   const router = useRouter();
   const [ds, setDs] = useState<GiayTo[]>([]);
   const [loiChung, setLoiChung] = useState("");
+  const [xemDien, setXemDien] = useState(false);
   const oChup = useRef<HTMLInputElement>(null);
   const oChon = useRef<HTMLInputElement>(null);
   const homNay = homNayVn();
@@ -135,6 +173,12 @@ export function SoatGiayToWorkspace({
   const coHoSoNcc = daDoc.some((t) => t.loai === "hoa-don" || t.loai === "nghiem-thu" || t.loai === "hop-dong");
 
   function dienVaoHoSo() {
+    // Biểu mẫu gửi hoá đơn chỉ quản lý cơ sở thấy; vai khác (kể cả giám đốc)
+    // xem bản điền sẵn ngay tại đây thay vì bị đưa sang trang không có biểu mẫu.
+    if (vai !== "manager") {
+      setXemDien(true);
+      return;
+    }
     const { siteId, dien } = dienHoaDonNcc(daDoc, dsNcc);
     const coSo = siteId ?? coSoMacDinh;
     if (!coSo) return;
@@ -205,7 +249,9 @@ export function SoatGiayToWorkspace({
             .filter((loai) => daDoc.filter((t) => t.loai === loai).length > 1)
             .map((loai) => (
               <p key={loai} className="mt-2 rounded-lg bg-[#fff1d6] px-3 py-2 text-xs font-bold text-[#7a5520]">
-                Có {daDoc.filter((t) => t.loai === loai).length} {({ "hoa-don": "hoá đơn", "nghiem-thu": "biên bản nghiệm thu", "hop-dong": "hợp đồng" } as const)[loai]} trong bộ: đang đối chiếu và điền theo cái thêm sau cùng. Bấm
+                Có {daDoc.filter((t) => t.loai === loai).length}{" "}
+                {({ "hoa-don": "hoá đơn", "nghiem-thu": "biên bản nghiệm thu", "hop-dong": "hợp đồng" } as const)[loai]}{" "}
+                trong bộ: đang đối chiếu và điền theo cái thêm sau cùng. Bấm{" "}
                 &quot;Bỏ&quot; ở cái không thuộc việc này.
               </p>
             ))}
@@ -222,12 +268,15 @@ export function SoatGiayToWorkspace({
                 data-testid="soat-dien-ho-so"
                 className="inline-flex min-h-12 items-center rounded-2xl bg-[#183f34] px-5 text-sm font-black text-white"
               >
-                Điền vào hồ sơ hoá đơn nhà cung cấp →
+                {vai === "manager" ? "Điền vào hồ sơ hoá đơn nhà cung cấp →" : "Xem bản sẽ điền vào hồ sơ nhà cung cấp"}
               </button>
+              {xemDien && vai !== "manager" ? <BanDienSan daDoc={daDoc} dsNcc={dsNcc} /> : null}
               <p className="mt-2 text-xs leading-5 text-[#6e7b75]">
                 Mở biểu mẫu &quot;Gửi hóa đơn kèm PO và nghiệm thu&quot; với nhà cung cấp, số hoá đơn, ngày, tiền và số nghiệm thu đã điền. Mã đề nghị mua,
                 trung tâm chi phí vẫn nhập tay.
-                {vai !== "manager" ? " Biểu mẫu này do quản lý cơ sở gửi; vai khác mở ra sẽ chỉ thấy danh sách hồ sơ." : ""}
+                {vai !== "manager"
+                  ? " Biểu mẫu gửi hoá đơn do quản lý cơ sở mở. Muốn thử trọn vẹn: bấm \"Xem theo vai trò\" trên thanh đầu trang, chọn quản lý Tràng An, quay lại màn này."
+                  : ""}
               </p>
             </div>
           ) : null}

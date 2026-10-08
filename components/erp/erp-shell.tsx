@@ -62,6 +62,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           { href: "/erp/thuyen", label: "Thuyền trên sông", hint: "Bản đồ sống từng thuyền Tràng An, Tam Cốc" },
           { href: "/erp/future-planning", label: "Future planning", hint: "Lịch lễ hội ba năm tới, công nghệ nên áp dụng" },
           { href: "/erp/bang-gia-quay", label: "Giá vé quầy", hint: "Đặt giá bán tại quầy của bốn cơ sở" },
+          { href: "/erp/soat-giay-to", label: "✦ Soát giấy tờ bằng AI", hint: "Chụp hoá đơn, nghiệm thu: AI đọc, báo thiếu, điền sẵn hồ sơ NCC" },
         ]
       : []),
     ...(systemAdmin ? [{ href: "/erp/tai-khoan", label: "Tài khoản", hint: "Người dùng và phân quyền" }] : []),
@@ -142,6 +143,8 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             >
               Việc &amp; ghi chú
             </Link>
+            {/* Giám đốc đã có Dạo một vòng, Quản trị, Xem theo vai trên thanh: thêm nút nữa là che chữ thương hiệu ở 1440px; giám đốc vào qua Quản trị. */}
+            {user.role !== "director" ? (
             <Link
               href="/erp/soat-giay-to"
               data-testid="loi-vao-soat-giay-to"
@@ -149,6 +152,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             >
               ✦ Soát giấy tờ
             </Link>
+            ) : null}
             <Link
               href="/erp/nhat-ky"
               className="hidden min-h-10 items-center whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-4 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7] lg:inline-flex"

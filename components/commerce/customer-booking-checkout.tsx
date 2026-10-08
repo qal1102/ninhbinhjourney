@@ -215,10 +215,16 @@ export function CustomerBookingCheckout({
   batDauHomNay = false,
   lang = "vi",
   chuGoi,
+  dienSan,
 }: {
   packageItem: PackageCatalogItem;
   /** `?ngay=hom-nay` từ màn Hướng dẫn trong ERP: mở sẵn ngày đi là hôm nay. */
   batDauHomNay?: boolean;
+  /**
+   * Đơn AI của khung Hỏi nhanh đã điền (08/10/2026): ngày đi, giờ chuyến,
+   * số người lớn, trẻ em. Khách vẫn xem lại, đổi được, và tự bấm giữ chỗ.
+   */
+  dienSan?: { ngay?: string; gio?: string; nguoiLon?: number; treEm?: number };
   lang?: NgonNgu;
   /** Tên, đối tượng, thời lượng của gói theo ngôn ngữ đang chọn. */
   chuGoi?: { name: string; audience: string; durationLabel: string };
@@ -227,14 +233,24 @@ export function CustomerBookingCheckout({
   const tenGoi = chuGoi?.name ?? packageItem.name;
   // Mặc định: gói cố định tổng khách thì mọi chỗ tính là người lớn cho tới
   // khi khách tự đổi tỉ lệ; gói thường mặc định hai người lớn như trước đây.
-  const [adults, setAdults] = useState(() => (packageItem.fixedPartySize ? Math.max(1, packageItem.fixedPartySize) : 2));
-  const [children, setChildren] = useState(0);
+  const [adults, setAdults] = useState(() =>
+    packageItem.fixedPartySize ? Math.max(1, packageItem.fixedPartySize) : Math.min(45, Math.max(1, dienSan?.nguoiLon ?? 2)),
+  );
+  const [children, setChildren] = useState(() =>
+    packageItem.fixedPartySize ? 0 : Math.min(45 - Math.max(1, dienSan?.nguoiLon ?? 2), Math.max(0, dienSan?.treEm ?? 0)),
+  );
   const partySize = adults + children;
   // Gói theo mùa (Bàn Trăng, mùa hoa súng) chỉ nhận đặt trong khung bán của nó.
   const khungBan = useMemo(() => khungBanGoi(packageItem), [packageItem]);
-  const [visitDate, setVisitDate] = useState(
-    () => khungBan.tu ?? localIsoDate(batDauHomNay ? 0 : 1),
-  );
+  const [visitDate, setVisitDate] = useState(() => {
+    const ngayAi = dienSan?.ngay;
+    if (ngayAi && ngayAi >= localIsoDate(0) && (!khungBan.tu || ngayAi >= khungBan.tu) && (!khungBan.den || ngayAi <= khungBan.den)) {
+      return ngayAi;
+    }
+    return khungBan.tu ?? localIsoDate(batDauHomNay ? 0 : 1);
+  });
+  // Giờ chuyến AI điền chỉ dùng cho lần tải khung giờ đầu tiên.
+  const gioMuon = useRef(dienSan?.gio ?? null);
   const [slots, setSlots] = useState<CustomerProductTimeSlot[] | null>(null);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [slotsError, setSlotsError] = useState("");
@@ -328,6 +344,16 @@ export function CustomerBookingCheckout({
           return;
         }
         setSlots(payload.slots);
+        const gio = gioMuon.current;
+        gioMuon.current = null;
+        if (gio) {
+          const khop = payload.slots.find(
+            (slot) =>
+              slot.bookable &&
+              new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit" }).format(new Date(slot.startsAt)) === gio,
+          );
+          if (khop) setSelectedSlotStartsAt(khop.startsAt);
+        }
       } catch {
         if (!cancelled) {
           setSlots(null);

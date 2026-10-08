@@ -186,7 +186,7 @@ function tuGoi(): MucHoiDap[] {
       tuKhoa: [...tachTu(vi.audience), ...tachTu(en.audience), "goi", "tour", "package", "gia"],
       tenRieng: [...new Set([...tachTu(vi.name), ...tachTu(en.name)])],
       thang: false,
-      lienKet: { href: `/packages/${goi.slug}`, nhan: { vi: "Xem gói", en: "View package" } },
+      lienKet: { href: `/packages/${goi.slug}`, nhan: { vi: `Gói ${vi.name}`, en: en.name } },
     };
   });
 }
@@ -212,7 +212,7 @@ function tuDiemDen(): MucHoiDap[] {
         tuKhoa: ["diem", "den", "tham", "quan", "place", "visit", "di", "dau", "where", ...tachTu(d.category.vi), ...tachTu(d.category.en)],
         tenRieng: [...new Set([...tachTu(d.name.vi), ...tachTu(d.name.en)])],
         thang: false,
-        lienKet: { href: `/destination/${DESTINATION_PAGE_SLUGS[d.id as DestinationId]}`, nhan: { vi: "Xem điểm đến", en: "View place" } },
+        lienKet: { href: `/destination/${DESTINATION_PAGE_SLUGS[d.id as DestinationId]}`, nhan: { vi: d.name.vi, en: d.name.en } },
       },
     ];
   });
@@ -269,4 +269,20 @@ export function loiChuaCoThongTin(lang: NgonNgu): string {
   return lang === "en"
     ? `There is no information on that here yet. Please call ${dienThoai} and the team will help.`
     : `Câu này chưa có thông tin trên web. Xin gọi ${dienThoai} để được trả lời.`;
+}
+
+/**
+ * Câu muốn đặt luôn ("đặt giúp mình 2 vé gói gia đình thứ bảy") chứ không
+ * phải hỏi cách đặt ("đặt vé thế nào"): có chữ đặt/book/giữ chỗ và kèm số,
+ * ngày hay lời nhờ. Câu như vậy không trả lời thẳng từ sổ mà để AI điền đơn.
+ */
+export function coYDatVe(cau: string): boolean {
+  const tu = boDau(cau).split(" ");
+  const dat = tu.some((t) => ["dat", "book", "giu", "reserve", "mua"].includes(t));
+  if (!dat) return false;
+  return tu.some(
+    (t) =>
+      /^\d+$/.test(t) ||
+      ["giup", "ho", "mai", "nay", "toi", "minh", "thu", "chu", "nhat", "tuan", "nguoi", "khach", "be", "tre", "for", "me", "tomorrow", "saturday", "sunday", "people", "adults", "kids"].includes(t),
+  );
 }

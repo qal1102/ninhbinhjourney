@@ -46,6 +46,8 @@ export async function hoiMoHinh(opts: {
   /** JSON Schema khi cần trả về đúng khuôn; bỏ trống thì trả chữ. */
   khuon?: { ten: string; schema: Record<string, unknown> };
   toiDaToken?: number;
+  /** Mặc định 0 (đọc bản nháp cần ổn định); hỏi đáp để cao hơn cho đỡ lặp câu mẫu. */
+  nhietDo?: number;
   quyThoiGianMs?: number;
 }): Promise<{ noiDung: string; moHinh: string }> {
   const khoa = process.env.AI_API_KEY?.trim();
@@ -64,7 +66,7 @@ export async function hoiMoHinh(opts: {
         headers: { "content-type": "application/json", authorization: `Bearer ${khoa}` },
         body: JSON.stringify({
           model: moHinh,
-          temperature: 0,
+          temperature: opts.nhietDo ?? 0,
           ...(opts.toiDaToken ? { max_tokens: opts.toiDaToken } : {}),
           messages: opts.tinNhan,
           ...(opts.khuon

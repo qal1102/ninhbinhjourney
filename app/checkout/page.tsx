@@ -111,6 +111,12 @@ export default async function CheckoutPage({
             <CustomerBookingCheckout
               packageItem={packageItem}
               batDauHomNay={params.ngay === "hom-nay"}
+              dienSan={{
+                ngay: typeof params.ngay === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.ngay) ? params.ngay : undefined,
+                gio: typeof params.gio === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(params.gio) ? params.gio : undefined,
+                nguoiLon: Number(params.nguoiLon) || undefined,
+                treEm: typeof params.treEm === "string" ? Number(params.treEm) || 0 : undefined,
+              }}
               lang={lang}
               chuGoi={goiHienThi(packageItem, lang)}
             />

@@ -69,12 +69,19 @@
   text-transform: uppercase;
 }
 
+/*
+ * 08/10/2026: chữ "f" tiếng Anh nhìn như lỗi font ("runs for"). Hai nguyên do:
+ * khoảng chữ -0.045em làm móc f dính chữ kế bên, và ở 100px Fraunces tự lấy
+ * nét cỡ lớn nhất (opsz 144) nên nét ngang chữ f mảnh như sợi chỉ. Nới khoảng
+ * chữ, giữ cỡ nét như .font-display.
+ */
 .headline,
 .title {
   margin: 1rem 0 0;
   font-family: var(--font-heading), Georgia, serif;
   font-weight: 500;
-  letter-spacing: -0.045em;
+  font-variation-settings: "opsz" 72, "SOFT" 40, "WONK" 0;
+  letter-spacing: -0.018em;
   line-height: 0.98;
 }
 
@@ -108,6 +115,108 @@
 .counter,
 .boat {
   display: none;
+}
+
+/*
+ * Điện thoại (08/10/2026): cảnh cũng được ghim như máy tính, có nét tuyến và
+ * thuyền trôi theo. Tuyến mảnh sát mép phải, số chặng ở góc trên; tên các
+ * chặng thì bỏ (dòng nhỏ phía trên tiêu đề đã nói đang ở đâu). Chữ chừa lề
+ * phải cho tuyến và lề dưới cho khung đồng ý.
+ */
+@media (max-width: 767px) {
+  .root[data-motion="full"] .beat,
+  .root[data-motion="full"] .copy {
+    min-height: 100svh;
+  }
+
+  .root[data-motion="full"] .copy {
+    padding: 6rem 3.75rem 7.5rem 1.25rem;
+  }
+
+  .root[data-motion="full"] .intro {
+    padding: 1.5rem 5rem 0 1.25rem;
+  }
+
+  .root[data-motion="full"] .route {
+    position: absolute;
+    z-index: 20;
+    top: 50%;
+    right: 0.85rem;
+    display: block;
+    width: 2.2rem;
+    height: 42svh;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .root[data-motion="full"] .route > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .root[data-motion="full"] .boat {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 0.72rem;
+    height: 1.85rem;
+    margin: -0.92rem 0 0 -0.36rem;
+    color: rgb(255 253 247 / 94%);
+    filter: drop-shadow(0 0 0.35rem rgb(0 0 0 / 55%));
+    opacity: 0;
+    transition: opacity 500ms ease;
+    will-change: transform;
+  }
+
+  .root[data-motion="full"] .boat svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .root[data-motion="full"] .boat[data-ready="true"] {
+    opacity: 1;
+  }
+
+  .root[data-motion="full"] .routeBase,
+  .root[data-motion="full"] .routeProgress {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .root[data-motion="full"] .routeBase {
+    stroke: rgb(255 253 247 / 30%);
+    stroke-width: 1.2;
+  }
+
+  .root[data-motion="full"] .routeProgress {
+    stroke: var(--trang-an-accent);
+    stroke-width: 2.4;
+  }
+
+  .root[data-motion="full"] .counter {
+    position: absolute;
+    z-index: 21;
+    top: 1.6rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: rgb(255 253 247 / 88%);
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+  }
+
+  .root[data-motion="full"] .counterRule {
+    display: block;
+    width: 1.25rem;
+    height: 1px;
+    background: var(--trang-an-accent);
+  }
 }
 
 @media (min-width: 768px) {

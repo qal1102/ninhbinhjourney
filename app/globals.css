@@ -1007,17 +1007,23 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   }
 }
 
+/*
+ * Chữ phải tắt hẳn trước khi cả màn mở đầu mờ đi (opening-shell, từ 91%).
+ * 08/10/2026: chữ còn hiện lúc màn mờ, chồng lên chữ "Ninh Bình" của trang
+ * chủ và khung đồng ý phía sau, điện thoại thấy rõ nhất.
+ */
 @keyframes lockup-rise {
   0%,
-  80% {
+  74% {
     opacity: 0;
     transform: translateY(28px);
   }
-  84%,
-  94% {
+  78%,
+  86% {
     opacity: 1;
     transform: translateY(0);
   }
+  89%,
   100% {
     opacity: 0;
     transform: translateY(-12px);
@@ -2174,6 +2180,28 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
 
 .suong-troi[data-hien="1"] {
   opacity: 1;
+}
+
+/*
+ * Điện thoại (08/10/2026): một lớp sương cố định phủ cả trang chủ thay cho
+ * lớp chỉ nằm ở ảnh đầu trang. Dưới thanh đầu trang, hộp thoại và khung đồng
+ * ý; không bắt chạm. Máy tính giữ nguyên sương ở ảnh đầu trang.
+ */
+.suong-troi-toan-trang {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .suong-troi-dau-trang {
+    display: none;
+  }
+
+  .suong-troi-toan-trang {
+    display: block;
+    height: 100lvh;
+    position: fixed;
+    z-index: 25;
+  }
 }
 
 /*

@@ -29,8 +29,8 @@ const ACCENTS = ["#d8b36a", "#9bc4b2", "#d9d6c5", "#b6cf72", "#e2a869", "#9ac8c0
 
 /**
  * A self-contained editorial scene. Its default markup deliberately remains
- * readable in source order; GSAP only turns it into a pinned scene when the
- * visitor has a desktop viewport and has not requested reduced motion.
+ * readable in source order; GSAP turns it into a pinned scene on every
+ * viewport unless the visitor has requested reduced motion.
  */
 export function TrangAnScrollStory({
   beats,
@@ -46,10 +46,14 @@ export function TrangAnScrollStory({
     if (!root || beats.length < 2 || reducedMotion) return;
 
     gsap.registerPlugin(ScrollTrigger);
+    // Thanh địa chỉ điện thoại co giãn khi cuộn: đừng tính lại cảnh ghim mỗi lần.
+    ScrollTrigger.config({ ignoreMobileResize: true });
     const media = gsap.matchMedia();
 
     const context = gsap.context(() => {
-      media.add("(min-width: 768px)", () => {
+      // 08/10/2026: chạy cả trên điện thoại. Trước chỉ từ 768px nên điện thoại
+      // mất thuyền trôi theo tuyến (chủ dự án: "web có, mobile không có").
+      media.add("all", () => {
         const scene = root.querySelector<HTMLElement>("[data-story-scene]");
         const intro = root.querySelector<HTMLElement>("[data-story-intro]");
         const beatNodes = Array.from(root.querySelectorAll<HTMLElement>("[data-story-beat]"));

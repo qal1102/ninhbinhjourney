@@ -1579,6 +1579,8 @@ export default function NinhBinhLanding({
       <TrangAnScrollStory {...trangAnStory[lang]} />
 
       <JourneyConcierge lang={lang} source={source} midAutumnSeasonOpen={midAutumnSeasonOpen} />
+      {/* Điện thoại: sương phủ cả trang, thay lớp sương đầu trang (globals.css `.suong-troi-toan-trang`). */}
+      <SuongTroi band={ninhBinhHour?.band ?? null} toanTrang />
 
       <section id="map" data-customer-section="home-map" className="scroll-mt-20 px-4 py-16 min-[280px]:px-5 sm:px-8 lg:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">

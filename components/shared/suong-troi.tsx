@@ -54,6 +54,8 @@ uniform float u_pointerOn;
 uniform float u_progress;
 uniform float u_strength;
 uniform vec3 u_tint;
+uniform float u_scaleX;
+uniform float u_speed;
 varying vec2 v_uv;
 
 float hash(vec2 p) {
@@ -93,8 +95,8 @@ void main() {
   p += normalize(p - pp + 0.0001) * 0.07 * day;
 
   // Sương nằm thành dải ngang: kéo giãn nhiễu theo chiều ngang, nén theo chiều dọc.
-  vec2 s = vec2(p.x * 0.55, p.y * 2.6);
-  float t = u_time * 0.03;
+  vec2 s = vec2(p.x * 0.55 * u_scaleX, p.y * 2.6);
+  float t = u_time * 0.03 * u_speed;
   vec2 q = vec2(fbm(s * 1.3 + vec2(t, 0.0)), fbm(s * 1.3 + vec2(3.1, 7.7) - vec2(t * 0.5, 0.0)));
   // Dải gần, sát mặt nước: trôi nhanh hơn. Dải xa, quanh chân núi: trôi chậm, mỏng hơn.
   float gan = fbm(s * 1.8 + 1.4 * q + vec2(t * 1.8, 0.0));
@@ -123,7 +125,12 @@ function bienDich(gl: WebGLRenderingContext, loai: number, nguon: string) {
   return shader;
 }
 
-export function SuongTroi({ band, className = "" }: { band: DayBand | null; className?: string }) {
+/**
+ * `toanTrang`: lớp sương cố định phủ cả trang chủ, chỉ hiện trên điện thoại
+ * (chủ dự án 08/10/2026: sương trên điện thoại "hầu như không thấy", muốn có
+ * ở cả trang). Khi ấy sương đầu trang ẩn trên điện thoại để không chồng hai lớp.
+ */
+export function SuongTroi({ band, className = "", toanTrang = false }: { band: DayBand | null; className?: string; toanTrang?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduced = useReducedMotion();
   const bandName = band ?? "morning";
@@ -160,10 +167,18 @@ export function SuongTroi({ band, className = "" }: { band: DayBand | null; clas
       progress: gl.getUniformLocation(program, "u_progress"),
       strength: gl.getUniformLocation(program, "u_strength"),
       tint: gl.getUniformLocation(program, "u_tint"),
+      scaleX: gl.getUniformLocation(program, "u_scaleX"),
+      speed: gl.getUniformLocation(program, "u_speed"),
     };
 
     const hep = window.matchMedia("(max-width: 767px)");
-    const doDay = () => (bandName === "night" ? 0.66 : 0.56) * (hep.matches ? 0.85 : 1);
+    // Lớp phủ cả trang mỏng hơn sương đầu trang để chữ bên dưới vẫn đọc rõ.
+    const doDay = () => (bandName === "night" ? 0.66 : 0.56) * (toanTrang ? 0.62 : 1);
+    // Màn dọc hẹp: nhiễu co theo tỉ lệ khung nên mỗi mảng sương bị phóng to
+    // khoảng 3,5 lần, trông như đứng yên (chủ dự án 08/10/2026). Kéo cỡ mảng về
+    // ngang máy tính và cho trôi nhanh hơn.
+    const coNgang = () => (hep.matches ? Math.max(1, 1.5 / Math.max(canvas.clientWidth / Math.max(canvas.clientHeight, 1), 0.1)) : 1);
+    const tocDo = () => (hep.matches ? 1.7 : 1);
 
     const doKichThuoc = () => {
       const tiLe = hep.matches ? 0.33 : 0.5;
@@ -213,7 +228,7 @@ export function SuongTroi({ band, className = "" }: { band: DayBand | null; clas
       lanVe = bayGio;
 
       const rect = scene.getBoundingClientRect();
-      const tienDo = Math.max(0, Math.min(1, -rect.top / Math.max(rect.height, 1)));
+      const tienDo = toanTrang ? 0 : Math.max(0, Math.min(1, -rect.top / Math.max(rect.height, 1)));
       const coMat = bayGio - conTro.lanCuoi < 1400 ? 1 : 0;
       conTro.on += (coMat - conTro.on) * 0.06;
       conTro.x += (conTro.tx - conTro.x) * 0.08;
@@ -227,6 +242,8 @@ export function SuongTroi({ band, className = "" }: { band: DayBand | null; clas
       gl.uniform1f(u.progress, tienDo);
       gl.uniform1f(u.strength, doDay());
       gl.uniform3f(u.tint, r, g, b);
+      gl.uniform1f(u.scaleX, coNgang());
+      gl.uniform1f(u.speed, tocDo());
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -252,7 +269,7 @@ export function SuongTroi({ band, className = "" }: { band: DayBand | null; clas
       gl.deleteShader(vs);
       gl.deleteShader(fs);
     };
-  }, [reduced, bandName]);
+  }, [reduced, bandName, toanTrang]);
 
   if (reduced) return null;
   return (
@@ -261,7 +278,7 @@ export function SuongTroi({ band, className = "" }: { band: DayBand | null; clas
       aria-hidden="true"
       data-suong-troi
       data-hien="0"
-      className={`suong-troi pointer-events-none ${className}`}
+      className={`suong-troi pointer-events-none ${toanTrang ? "suong-troi-toan-trang" : "suong-troi-dau-trang"} ${className}`}
     />
   );
 }

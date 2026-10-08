@@ -184,41 +184,32 @@ test("the section title never sits on a chapter headline and returns when scroll
   }
 });
 
-test("mobile uses five readable story beats in ordinary one-finger vertical flow", async ({
+// 08/10/2026: chủ dự án muốn điện thoại cũng có thuyền trôi theo tuyến như
+// máy tính, nên điện thoại nay cũng ghim cảnh (trước đây cố ý cuộn thường).
+test("mobile pins the story and the boat follows the route through all five beats", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const story = await openStory(page, "vi");
-  const beats = story.locator("[data-story-beat]");
-  await expect(beats).toHaveCount(5);
+  await expect(story.locator("[data-story-beat]")).toHaveCount(5);
 
-  const mobileFlow = await story.evaluate((element) => {
-    const rootStyle = getComputedStyle(element);
-    const beatElements = Array.from(
-      element.querySelectorAll<HTMLElement>("[data-story-beat]"),
-    );
-    const positions = beatElements.map((beat) => getComputedStyle(beat).position);
-    const bounds = beatElements.map((beat) => beat.getBoundingClientRect());
-    return {
-      rootOverflowX: rootStyle.overflowX,
-      noPinnedBeats: positions.every(
-        (position) => position !== "fixed" && position !== "sticky",
-      ),
-      distinctVerticalPositions:
-        new Set(bounds.map((bound) => Math.round(bound.top))).size === bounds.length,
-      scrollableDocument: document.documentElement.scrollHeight > window.innerHeight,
-    };
-  });
-  expect(mobileFlow.rootOverflowX).not.toBe("scroll");
-  expect(mobileFlow.noPinnedBeats).toBe(true);
-  expect(mobileFlow.distinctVerticalPositions).toBe(true);
-  expect(mobileFlow.scrollableDocument).toBe(true);
+  const boat = story.locator("[data-story-boat]");
+  await expect(story.locator("[data-story-route]")).toBeVisible();
+  await expect(boat).toHaveAttribute("data-ready", "true");
 
-  for (let index = 0; index < 5; index += 1) {
-    await beats.nth(index).scrollIntoViewIfNeeded();
-    await expect(beats.nth(index)).toBeVisible();
-  }
+  const top = await story.evaluate((element) => element.getBoundingClientRect().top + window.scrollY);
+  const boatY = async () => (await boat.boundingBox())?.y ?? 0;
+  await page.evaluate((y) => window.scrollTo(0, y + 10), top);
+  await page.waitForTimeout(900);
+  const startY = await boatY();
+  await page.evaluate((y) => window.scrollTo(0, y + window.innerHeight * 5.4), top);
+  await expect(story.locator("[data-story-current]")).toHaveText("05");
+  await page.waitForTimeout(900);
+  expect(await boatY()).toBeGreaterThan(startY + 100);
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
 });
 
 test("the minimum pinned breakpoint reserves a clear column for its route rail", async ({

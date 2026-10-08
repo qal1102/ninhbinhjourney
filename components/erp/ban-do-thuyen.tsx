@@ -459,8 +459,10 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
       // Rê chuột (máy tính) để xem nhanh; bấm hay chạm (điện thoại) thì thẻ
       // ghim lại kèm nút đóng, để đọc người chèo và gọi điện.
       const theNhanh = new maplibregl.Popup({ closeButton: false, offset: 16, maxWidth: "224px", className: "the-thuyen" });
-      const theGhim = new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 16, maxWidth: "224px", className: "the-thuyen" });
-      const moThe = (e: maplibregl.MapLayerMouseEvent, ghim: boolean) => {
+      // Không để MapLibre tự đóng khi bấm bản đồ: cùng một cú chạm sang thuyền khác
+      // sẽ vừa mở vừa đóng thẻ. Hàm chạm bên dưới tự đóng khi chạm chỗ trống.
+      const theGhim = new maplibregl.Popup({ closeButton: true, closeOnClick: false, offset: 16, maxWidth: "224px", className: "the-thuyen" });
+      const moThe = (e: { features?: maplibregl.MapGeoJSONFeature[] }, ghim: boolean) => {
         const f = e.features?.[0];
         if (!f) return;
         const lng = (f.geometry as GeoJSON.Point).coordinates as [number, number];
@@ -475,7 +477,23 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         map.getCanvas().style.cursor = "pointer";
         moThe(e, false);
       });
-      map.on("click", "thuyen", (e) => moThe(e, true));
+      // Chạm bằng ngón tay (08/10/2026): hình thuyền chỉ ~20px và đang trôi,
+      // chạm lệch vài milimét là trượt nên điện thoại "bấm không hiện gì".
+      // Tìm thuyền trong một ô quanh chỗ chạm (28px với ngón tay, 8px với
+      // chuột) rồi lấy chiếc gần nhất.
+      const banKinh = camUng ? 28 : 8;
+      map.on("click", (e) => {
+        const { x, y } = e.point;
+        const gan = map
+          .queryRenderedFeatures([[x - banKinh, y - banKinh], [x + banKinh, y + banKinh]], { layers: ["thuyen"] })
+          .map((f) => {
+            const p = map.project((f.geometry as GeoJSON.Point).coordinates as [number, number]);
+            return { f, d: (p.x - x) ** 2 + (p.y - y) ** 2 };
+          })
+          .sort((a, b) => a.d - b.d)[0];
+        if (gan) moThe({ features: [gan.f] }, true);
+        else theGhim.remove();
+      });
       map.on("mouseleave", "thuyen", () => {
         map.getCanvas().style.cursor = "";
         theNhanh.remove();

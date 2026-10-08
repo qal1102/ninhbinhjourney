@@ -157,32 +157,84 @@ type CheDo =
   | { kieu: "truc-tiep" }
   | { kieu: "xem-lai"; gocThat: number; gocXem: number; dangChay: boolean };
 
+/**
+ * Đò Tràng An nhìn từ trên xuống, mũi chỉ lên trên (0°). 08/10/2026 vẽ lại
+ * theo ý chủ dự án ("làm mẫu khác nhìn đẹp hơn"): thân gỗ thon hai đầu, lòng
+ * thuyền sáng có ba băng ngồi, người chèo đội nón lá ở đuôi cầm mái chèo
+ * chếch ra mạn phải. Vẽ ở 2x và to hơn bản cũ một chút để ngón tay dễ chạm.
+ */
 function veHinhThuyen(mauThan: string, mauNon: string, vien: string): ImageData {
-  // Thuyền nan nhìn từ trên xuống, mũi chỉ lên trên (0°); chấm tròn là nón lá.
-  const w = 24;
-  const h = 52;
+  const k = 2;
+  const w = 34;
+  const h = 66;
   const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
+  c.width = w * k;
+  c.height = h * k;
   const g = c.getContext("2d")!;
-  g.fillStyle = "rgba(0,0,0,0.25)";
-  g.beginPath();
-  g.ellipse(w / 2 + 1.5, h / 2 + 2, 7, 21, 0, 0, Math.PI * 2);
+  g.scale(k, k);
+  const cx = 15;
+  const than = (le: number) => {
+    g.beginPath();
+    g.moveTo(cx, 3 + le);
+    g.bezierCurveTo(cx + 9 - le, 14, cx + 9 - le, 46, cx, 63 - le);
+    g.bezierCurveTo(cx - 9 + le, 46, cx - 9 + le, 14, cx, 3 + le);
+    g.closePath();
+  };
+  // Bóng đổ xuống mặt nước.
+  g.save();
+  g.translate(1.6, 2.2);
+  than(0);
+  g.fillStyle = "rgba(0,0,0,0.22)";
   g.fill();
+  g.restore();
+  // Mạn thuyền.
+  than(0);
   g.fillStyle = mauThan;
-  g.strokeStyle = vien;
-  g.lineWidth = 2;
-  g.beginPath();
-  g.moveTo(w / 2, 2);
-  g.bezierCurveTo(w - 2, 13, w - 2, 39, w / 2, h - 2);
-  g.bezierCurveTo(2, 39, 2, 13, w / 2, 2);
   g.fill();
+  g.lineWidth = 1.6;
+  g.strokeStyle = vien;
   g.stroke();
+  // Lòng thuyền sáng hơn, thấy rõ là thuyền chứ không phải chiếc lá.
+  than(2.6);
+  g.fillStyle = "rgba(255,248,230,0.32)";
+  g.fill();
+  // Ba băng ngồi.
+  g.strokeStyle = "rgba(255,248,230,0.85)";
+  g.lineWidth = 1.4;
+  g.lineCap = "round";
+  for (const y of [21, 31, 41]) {
+    const nua = 6.2 - Math.abs(y - 31) * 0.12;
+    g.beginPath();
+    g.moveTo(cx - nua, y);
+    g.lineTo(cx + nua, y);
+    g.stroke();
+  }
+  // Mái chèo: cán từ người chèo chếch ra mạn phải, bản chèo dẹt ở cuối.
+  g.strokeStyle = vien;
+  g.lineWidth = 1.3;
+  g.beginPath();
+  g.moveTo(cx + 1, 50);
+  g.lineTo(cx + 15, 59);
+  g.stroke();
+  g.fillStyle = vien;
+  g.beginPath();
+  g.ellipse(cx + 15.5, 59.5, 1.6, 3.4, -0.98, 0, Math.PI * 2);
+  g.fill();
+  // Nón lá người chèo: vành, vòng nan, chóp.
   g.fillStyle = mauNon;
   g.beginPath();
-  g.arc(w / 2, h * 0.58, 4.6, 0, Math.PI * 2);
+  g.arc(cx, 50, 4.4, 0, Math.PI * 2);
   g.fill();
-  return g.getImageData(0, 0, w, h);
+  g.strokeStyle = "rgba(0,0,0,0.28)";
+  g.lineWidth = 0.7;
+  g.beginPath();
+  g.arc(cx, 50, 2.6, 0, Math.PI * 2);
+  g.stroke();
+  g.fillStyle = "rgba(0,0,0,0.35)";
+  g.beginPath();
+  g.arc(cx, 50, 0.8, 0, Math.PI * 2);
+  g.fill();
+  return g.getImageData(0, 0, w * k, h * k);
 }
 
 function boundsTuyen(coSo: CoSoThuyen) {
@@ -403,8 +455,8 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
       for (const lop of ["duong-vien", "duong-phu", "duong-chinh"]) dat(lop, "line-opacity", 0.45);
       if (map.getLayer("khoi-nha")) map.setLayoutProperty("khoi-nha", "visibility", "none");
 
-      map.addImage("thuyen-uoc", veHinhThuyen(MAU.thuyenUoc, MAU.nonUoc, "#ffffff"), { pixelRatio: 1.6 });
-      map.addImage("thuyen-that", veHinhThuyen(MAU.thuyenThat, MAU.nonThat, "#183f34"), { pixelRatio: 1.3 });
+      map.addImage("thuyen-uoc", veHinhThuyen(MAU.thuyenUoc, MAU.nonUoc, "#ffffff"), { pixelRatio: 3.2 });
+      map.addImage("thuyen-that", veHinhThuyen(MAU.thuyenThat, MAU.nonThat, "#183f34"), { pixelRatio: 2.7 });
       map.addSource("tuyen", {
         type: "geojson",
         data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: tuyen.duong.map((p) => [p[0], p[1]]) } },

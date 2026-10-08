@@ -5,6 +5,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { ErpSiteId } from "@/domain/erp";
 import { phanTichCauNoi, type BanNhap, type LoaiGhi, type NguoiTrongDanhBa } from "@/domain/tro-ly-ghi";
+import { coMoHinhAi, hoiMoHinh } from "@/lib/ai/goi-mo-hinh";
 
 /**
  * Hiểu một câu nói thành bản nháp việc / ghi chú / nhật ký.
@@ -26,13 +27,11 @@ import { phanTichCauNoi, type BanNhap, type LoaiGhi, type NguoiTrongDanhBa } fro
 
 export type BoHieu = "luat" | "claude" | "ai";
 
-const AI_BASE_URL_MAC_DINH = "https://generativelanguage.googleapis.com/v1beta/openai";
-const AI_MODEL_MAC_DINH = "gemini-3.5-flash-lite";
 const CHO_TOI_DA_MS = 8_000;
 
 export function boHieuDangDung(): BoHieu {
   if (process.env.ANTHROPIC_API_KEY?.trim()) return "claude";
-  if (process.env.AI_API_KEY?.trim()) return "ai";
+  if (coMoHinhAi()) return "ai";
   return "luat";
 }
 
@@ -86,31 +85,16 @@ async function hoiClaude(cau: string, bayGio: Date, danhBa: readonly NguoiTrongD
 const KHUON_JSON: Record<string, unknown> = { ...z.toJSONSchema(BanNhapMoHinh) };
 delete KHUON_JSON.$schema;
 
-/** Hỏi mô hình theo chuẩn OpenAI (Gemini, Groq, OpenRouter, Ollama…). */
+/** Hỏi mô hình theo chuẩn OpenAI (Gemini, Groq, OpenRouter, Ollama…), có chuỗi mẫu dự phòng. */
 async function hoiMoHinhChuanOpenAi(cau: string, bayGio: Date, danhBa: readonly NguoiTrongDanhBa[], loaiEp?: LoaiGhi) {
-  const goc = (process.env.AI_BASE_URL?.trim() || AI_BASE_URL_MAC_DINH).replace(/\/+$/, "");
-  const res = await fetch(`${goc}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${process.env.AI_API_KEY?.trim()}`,
-    },
-    body: JSON.stringify({
-      model: process.env.AI_MODEL?.trim() || AI_MODEL_MAC_DINH,
-      temperature: 0,
-      messages: [
-        { role: "system", content: HUONG_DAN },
-        { role: "user", content: loiNguoiDung(cau, bayGio, danhBa, loaiEp) },
-      ],
-      response_format: { type: "json_schema", json_schema: { name: "ban_nhap", strict: true, schema: KHUON_JSON } },
-    }),
-    signal: AbortSignal.timeout(CHO_TOI_DA_MS),
-    cache: "no-store",
+  const { noiDung } = await hoiMoHinh({
+    tinNhan: [
+      { role: "system", content: HUONG_DAN },
+      { role: "user", content: loiNguoiDung(cau, bayGio, danhBa, loaiEp) },
+    ],
+    khuon: { ten: "ban_nhap", schema: KHUON_JSON },
+    quyThoiGianMs: CHO_TOI_DA_MS,
   });
-  if (!res.ok) throw new Error(`AI ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const body = (await res.json()) as { choices?: { message?: { content?: string | null } }[] };
-  const noiDung = body.choices?.[0]?.message?.content;
-  if (!noiDung) return null;
   const parsed = BanNhapMoHinh.safeParse(JSON.parse(noiDung));
   return parsed.success ? parsed.data : null;
 }

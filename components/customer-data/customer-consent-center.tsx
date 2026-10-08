@@ -193,7 +193,7 @@ export function CustomerConsentCenter() {
       đồng ý và đổi được bất cứ lúc nào — nhưng gói trong một dòng.
     */
     return (
-      <aside ref={bannerRef} className="fixed inset-x-2 bottom-2 z-[1300] mx-auto max-w-3xl rounded-[22px] border border-white/16 bg-[#0f2a22]/92 px-4 py-3 text-white shadow-[0_18px_44px_rgba(3,16,12,.34)] backdrop-blur-md sm:inset-x-4 sm:bottom-4 sm:rounded-full sm:px-5 sm:py-2.5" aria-label={language === "en" ? "Privacy choice" : "Lựa chọn quyền riêng tư"}>
+      <aside ref={bannerRef} data-dai-dong-y className="fixed inset-x-2 bottom-2 z-[1300] mx-auto max-w-3xl rounded-[22px] border border-white/16 bg-[#0f2a22]/92 px-4 py-3 text-white shadow-[0_18px_44px_rgba(3,16,12,.34)] backdrop-blur-md sm:inset-x-4 sm:bottom-4 sm:rounded-full sm:px-5 sm:py-2.5" aria-label={language === "en" ? "Privacy choice" : "Lựa chọn quyền riêng tư"}>
         {/*
           Tiêu đề giữ lại cho trình đọc màn hình. Bản rút gọn đầu tiên gỡ hẳn
           thẻ `h2` và thế là dải mất tên gọi trong cây trợ năng — bài

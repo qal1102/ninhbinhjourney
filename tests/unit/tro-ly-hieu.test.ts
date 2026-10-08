@@ -66,6 +66,20 @@ describe("trợ lý hiểu câu qua mô hình chuẩn OpenAI", () => {
     expect((await hieuCauNoi("ghi chú mai gọi nhà xe", { bayGio, danhBa })).boHieu).toBe("luat");
   });
 
+  it("mẫu đầu hết lượt thì hỏi mẫu kế trong chuỗi", async () => {
+    const fetchGia = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("quota", { status: 429 }))
+      .mockResolvedValueOnce(
+        traLoi({ loai: "ghi-chu", noi_dung: "Gọi nhà xe", nguoi_nhan_id: null, ten_nghe: null, han: null, ngay: "2026-10-08", co_so: null, khan: false }),
+      );
+    vi.stubGlobal("fetch", fetchGia);
+
+    expect((await hieuCauNoi("ghi chú mai gọi nhà xe", { bayGio, danhBa })).boHieu).toBe("ai");
+    const moHinh = fetchGia.mock.calls.map(([, init]) => JSON.parse(String((init as RequestInit).body)).model);
+    expect(moHinh).toEqual(["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]);
+  });
+
   it("không có khoá thì không gọi ra ngoài", async () => {
     vi.stubEnv("AI_API_KEY", "");
     const fetchGia = vi.fn();

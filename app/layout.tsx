@@ -8,6 +8,7 @@ import { ScrollProgress } from "@/components/shared/scroll-progress";
 import { DongBoNgonNgu } from "@/components/shared/dong-bo-ngon-ngu";
 import { CustomerBehaviorTracker } from "@/components/customer-data/customer-behavior-tracker";
 import { CustomerConsentCenter } from "@/components/customer-data/customer-consent-center";
+import { HoiDapNoi } from "@/components/shared/hoi-dap-noi";
 import { SITE_URL } from "@/lib/site-url";
 
 // Không đặt `alternates.canonical` ở đây: bố cục gốc bọc mọi trang, nên một
@@ -43,6 +44,10 @@ export default function RootLayout({
           <CustomerConsentCenter />
         ) : null}
         <PageTransition>{children}</PageTransition>
+        {/* Khung hỏi đáp nổi của web khách; tự ẩn ở ERP và màn quầy. */}
+        <Suspense fallback={null}>
+          <HoiDapNoi />
+        </Suspense>
         {/*
           Lop hat phim + rua mau am, dat NGOAI <PageTransition> giong
           <ScrollProgress>: bat cu thu gi `position: fixed` ma nam ben

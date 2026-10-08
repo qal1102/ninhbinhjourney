@@ -704,6 +704,15 @@ export type ChucNangWeb = {
 
 export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
   {
+    id: "web-hoi-nhanh",
+    nhom: "kham-pha",
+    ten: "Hỏi nhanh, AI trả lời theo nội dung web",
+    moTa: "Nút \"Hỏi nhanh\" ở góc phải mọi trang khách. Câu hay gặp trả lời ngay từ nội dung soạn sẵn; câu lạ thì Gemini trả lời, chỉ dựa trên thông tin của web, không có thì chỉ số điện thoại.",
+    duongDan: "/",
+    cacViec: ["Bấm \"Hỏi nhanh\" rồi bấm một câu gợi ý như \"Trẻ em có mất vé không?\".", "Gõ một câu tự do, ví dụ \"Gói nào hợp cho gia đình có con nhỏ?\": câu trả lời kèm nút sang đúng trang gói."],
+    moi: "08/10",
+  },
+  {
     id: "web-ban-do",
     nhom: "kham-pha",
     ten: "Bản đồ mười lăm điểm đến",

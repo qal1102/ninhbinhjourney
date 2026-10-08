@@ -96,7 +96,9 @@ function BanDienSan({ daDoc, dsNcc }: { daDoc: readonly TrichXuat[]; dsNcc: read
     const giaTri =
       k === "supplierId"
         ? (dsNcc.find((n) => n.id === v)?.name ?? String(v))
-        : typeof v === "number"
+        : k === "invoiceDate" && typeof v === "string"
+          ? v.split("-").reverse().join("/")
+          : typeof v === "number"
           ? `${v.toLocaleString("vi-VN")} đ`
           : String(v);
     return [NHAN_O[k] ?? k, giaTri] as const;
@@ -268,15 +270,13 @@ export function SoatGiayToWorkspace({
                 data-testid="soat-dien-ho-so"
                 className="inline-flex min-h-12 items-center rounded-2xl bg-[#183f34] px-5 text-sm font-black text-white"
               >
-                {vai === "manager" ? "Điền vào hồ sơ hoá đơn nhà cung cấp →" : "Xem bản sẽ điền vào hồ sơ nhà cung cấp"}
+                {vai === "manager" ? "Điền vào hồ sơ hoá đơn nhà cung cấp →" : "Xem bản sẽ điền vào hồ sơ"}
               </button>
               {xemDien && vai !== "manager" ? <BanDienSan daDoc={daDoc} dsNcc={dsNcc} /> : null}
               <p className="mt-2 text-xs leading-5 text-[#6e7b75]">
-                Mở biểu mẫu &quot;Gửi hóa đơn kèm PO và nghiệm thu&quot; với nhà cung cấp, số hoá đơn, ngày, tiền và số nghiệm thu đã điền. Mã đề nghị mua,
-                trung tâm chi phí vẫn nhập tay.
-                {vai !== "manager"
-                  ? " Biểu mẫu gửi hoá đơn do quản lý cơ sở mở. Muốn thử trọn vẹn: bấm \"Xem theo vai trò\" trên thanh đầu trang, chọn quản lý Tràng An, quay lại màn này."
-                  : ""}
+                {vai === "manager"
+                  ? "Mở biểu mẫu \"Gửi hóa đơn kèm PO và nghiệm thu\" với nhà cung cấp, số hoá đơn, ngày, tiền và số nghiệm thu đã điền. Mã đề nghị mua, trung tâm chi phí vẫn nhập tay."
+                  : "Biểu mẫu gửi hoá đơn do quản lý cơ sở mở; ở vai này bấm nút để xem trước những ô sẽ được điền. Muốn thử trọn vẹn: bấm \"Xem theo vai trò\" trên thanh đầu trang, chọn quản lý Tràng An, quay lại màn này."}
               </p>
             </div>
           ) : null}

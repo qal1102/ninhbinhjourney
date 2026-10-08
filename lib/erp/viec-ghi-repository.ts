@@ -65,7 +65,7 @@ function docDong(row: unknown): ViecGhi | null {
     trangThai: (r.trang_thai as TrangThaiViecGhi) ?? "mo",
     nguon: r.nguon === "giong-noi" ? "giong-noi" : "go-tay",
     cauGoc: typeof r.cau_goc === "string" ? r.cau_goc : null,
-    boHieu: r.bo_hieu === "claude" ? "claude" : r.bo_hieu === "luat" ? "luat" : null,
+    boHieu: r.bo_hieu === "claude" || r.bo_hieu === "ai" || r.bo_hieu === "luat" ? r.bo_hieu : null,
     taoLuc: typeof r.tao_luc === "string" ? new Date(r.tao_luc).toISOString() : new Date().toISOString(),
     xongLuc: typeof r.xong_luc === "string" ? new Date(r.xong_luc).toISOString() : null,
   };
@@ -86,7 +86,7 @@ export type TaoViecGhi = {
   khan: boolean;
   nguon: "giong-noi" | "go-tay";
   cauGoc: string | null;
-  boHieu: "luat" | "claude" | null;
+  boHieu: "luat" | "claude" | "ai" | null;
 };
 
 export async function taoViecGhi(input: TaoViecGhi): Promise<ViecGhi> {

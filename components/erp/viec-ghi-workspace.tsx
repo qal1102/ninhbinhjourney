@@ -14,7 +14,7 @@ type Props = {
   toiId: string;
   luuTru: "supabase" | "memory";
   loiKho: string | null;
-  boHieu: "luat" | "claude";
+  boHieu: "luat" | "claude" | "ai";
 };
 
 const tenCoSo = (id: string | null) => (id ? (ERP_SITES.find((s) => s.id === id)?.shortName ?? null) : null);
@@ -202,7 +202,11 @@ export function ViecGhiWorkspace({ dong, ten, toiId, luuTru, loiKho, boHieu }: P
           </p>
         ) : null}
         <p className="mt-3 text-xs text-white/50">
-          {boHieu === "claude" ? "Câu nói được Claude đọc để hiểu." : "Trợ lý hiểu câu theo mẫu câu tiếng Việt ngay trên máy chủ, không gửi câu nói ra ngoài."}
+          {boHieu === "claude"
+            ? "Câu nói được Claude đọc để hiểu."
+            : boHieu === "ai"
+              ? "Câu nói gửi tới Gemini để hiểu; Gemini chậm hay lỗi thì trợ lý hiểu theo mẫu câu."
+              : "Trợ lý hiểu câu theo mẫu câu tiếng Việt ngay trên máy chủ, không gửi câu nói ra ngoài."}
           {luuTru === "memory" ? " Bản chạy thử ở máy: lưu trong bộ nhớ, khởi động lại là mất." : ""}
         </p>
       </header>

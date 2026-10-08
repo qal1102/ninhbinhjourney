@@ -75,7 +75,7 @@ const LuuSchema = z.object({
   khan: z.boolean(),
   nguon: z.enum(["giong-noi", "go-tay"]),
   cauGoc: z.string().max(1000).nullable(),
-  boHieu: z.enum(["luat", "claude"]).nullable(),
+  boHieu: z.enum(["luat", "claude", "ai"]).nullable(),
 });
 
 export type DuLieuLuu = z.input<typeof LuuSchema>;

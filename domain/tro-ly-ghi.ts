@@ -526,7 +526,7 @@ export type ViecGhi = {
   trangThai: TrangThaiViecGhi;
   nguon: "giong-noi" | "go-tay";
   cauGoc: string | null;
-  boHieu: "luat" | "claude" | null;
+  boHieu: "luat" | "claude" | "ai" | null;
   taoLuc: string;
   xongLuc: string | null;
 };

@@ -72,5 +72,5 @@ test("xoá hội thoại dọn sạch luồng", async ({ page }) => {
 
   await page.getByRole("button", { name: "Xoá hội thoại" }).click();
   await expect(page.getByText("Mở màn hình sức chứa để xem theo cơ sở")).toHaveCount(0);
-  await expect(page.getByText(/Nói tên màn hình để mở, hoặc nói việc cần ghi/)).toBeVisible();
+  await expect(page.getByText(/Nói tên màn hình để mở, nói việc cần ghi/)).toBeVisible();
 });

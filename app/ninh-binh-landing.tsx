@@ -1526,7 +1526,7 @@ export default function NinhBinhLanding({
           */}
           <h1 className="hero-signature-title fade-up break-words font-display text-[clamp(3.25rem,14vw,9rem)] leading-[0.9]" data-hero-title={t.title}><span>{t.title}</span></h1>
           <div className="hero-copy-safe">
-            <p className="fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
+            <p className="hero-phu fade-up mt-6 max-w-2xl text-xl leading-8 text-[#FBFAF6]/88 sm:text-2xl">{t.subtitle}</p>
           {/*
             Gio that tai Ninh Binh. Bien trang tu mot to roi thanh mot noi
             DANG TON TAI -- va vi moi khung gio keo theo mot chi tiet rieng
@@ -1534,14 +1534,14 @@ export default function NinhBinhLanding({
             Chi hien sau khi mount (xem chu thich trong ninh-binh-hour.tsx).
           */}
           {ninhBinhHour ? (
-            <p className="mt-5 text-sm text-[#FBFAF6]/72 sm:text-base">
+            <p className="hero-gio mt-5 text-sm text-[#FBFAF6]/72 sm:text-base">
               <span className="tabular-nums text-[#E7B96A]">
                 {t.hourLead as string} {ninhBinhHour.clock}
               </span>
               , {(t.hourPhrases as Record<DayBand, string>)[ninhBinhHour.band]}.
             </p>
           ) : null}
-          <div className="fade-up mt-9 flex flex-col gap-3 sm:flex-row">
+          <div className="hero-nut fade-up mt-9 flex flex-col gap-3 sm:flex-row">
             <a data-customer-track="home-hero-plan" data-customer-content-id="journey-planner" data-customer-content-type="primary-cta" href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
             <a data-customer-track="home-hero-explore" data-customer-content-id="explore-map" data-customer-content-type="secondary-cta" href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
           </div>

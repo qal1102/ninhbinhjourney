@@ -3,8 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { CAU_GOI_Y } from "@/domain/hoi-dap-goi-y";
-import { coYDatVe, mucTheoId, timMuc, traLoiThang } from "@/domain/hoi-dap";
-import { GIOI_HAN_AI, kiemBanNhapDatVe, layLuotAi, traLoiCauHoi } from "@/lib/hoi-dap/tra-loi";
+import { BAN_DO_CHUC_NANG, CHUC_NANG_WEB } from "@/domain/ban-do-chuc-nang";
+import { banDoHeThong, coYDatVe, mucTheoId, timMuc, traLoiThang } from "@/domain/hoi-dap";
+import { GIOI_HAN_AI, kiemBanNhapDatVe, layLuotAi, thieuDau, traLoiCauHoi } from "@/lib/hoi-dap/tra-loi";
 
 const aiTraLoi = (traLoi: string, datVe: unknown = null) =>
   new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ traLoi, datVe }) } }] }));
@@ -18,6 +19,16 @@ describe("sổ hỏi đáp", () => {
     expect(traLoiThang("Trẻ em có mất vé không?")?.id).toBe("tre-em");
     expect(traLoiThang("do children need a ticket")?.id).toBe("tre-em");
     expect(traLoiThang("thanh toán bằng QR được không")?.id).toBe("thanh-toan");
+  });
+
+  it("sổ có mọi chức năng web và ERP, bản đồ hệ thống kể đủ", () => {
+    const ban = banDoHeThong();
+    for (const nhom of BAN_DO_CHUC_NANG) for (const cn of nhom.chucNang) {
+      expect(mucTheoId(`erp-${cn.id}`)?.pham).toBe("erp");
+      expect(ban).toContain(cn.ten);
+    }
+    for (const cn of CHUC_NANG_WEB) expect(mucTheoId(`web-${cn.id}`)?.pham).toBe("web");
+    expect(timMuc("làm sao chấm công nhân viên")[0]?.muc.pham).toBe("erp");
   });
 
   it("câu về một nơi tìm đúng điểm đến nhưng để AI trả lời cho đúng ý", () => {
@@ -85,6 +96,61 @@ describe("trả lời câu hỏi", () => {
     expect(kiemBanNhapDatVe({ goi: "khong-co", ngay: null, gio: null, nguoiLon: 2, treEm: 0 }, "vi", bayGio)).toBeUndefined();
     const d = kiemBanNhapDatVe({ goi: "slow-ninh-binh", ngay: "2026-10-01", gio: "25:00", nguoiLon: 80, treEm: 9 }, "vi", bayGio);
     expect(d).toMatchObject({ ngay: null, gio: null, nguoiLon: 45, treEm: 0 });
+  });
+
+  it("câu hỏi về ERP gửi kèm bản đồ hệ thống và dẫn đúng màn AI chỉ ra", async () => {
+    const fetchGia = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: JSON.stringify({ traLoi: "Mở Chấm công, bấm Vào ca.", datVe: null, manHinh: "/erp/trang-an/cham-cong" }) } }],
+        }),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchGia);
+    const kq = await traLoiCauHoi({ cau: "Làm sao để chấm công?", lang: "vi", phamVi: "erp", vai: "employee", khoaKhach: "g" });
+    expect(kq.nguon).toBe("ai");
+    const body = JSON.parse(String((fetchGia.mock.calls[0] as unknown as [string, RequestInit])[1].body));
+    expect(body.messages[0].content).toContain("BẢN ĐỒ HỆ THỐNG");
+    expect(body.messages[0].content).toContain("vai Nhân viên");
+    expect(kq.lienKet.some((l) => l.href.startsWith("/erp/"))).toBe(true);
+  });
+
+  it("web khách không dẫn sang màn ERP, màn AI bịa ra thì bỏ", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: JSON.stringify({ traLoi: "ERP có màn chấm công cho nhân sự.", datVe: null, manHinh: "/erp/khong-co" }) } }],
+          }),
+        ),
+      ),
+    );
+    const kq = await traLoiCauHoi({ cau: "ERP chấm công nhân viên thế nào?", lang: "vi", khoaKhach: "h" });
+    expect(kq.nguon).toBe("ai");
+    expect(kq.lienKet.every((l) => !l.href.startsWith("/erp"))).toBe(true);
+  });
+
+  it("không hỏi được AI và không khớp mục nào thì vẫn mở lối đi tiếp", async () => {
+    vi.unstubAllEnvs();
+    vi.stubEnv("AI_API_KEY", "");
+    const kq = await traLoiCauHoi({ cau: "xyzzy qwrtp", lang: "vi", khoaKhach: "i" });
+    expect(kq.nguon).toBe("chua-co");
+    expect(kq.traLoi).not.toContain("chưa có thông tin");
+    expect(kq.lienKet.map((l) => l.href)).toEqual(["/packages", "/plan"]);
+  });
+
+  it("AI trả tiếng Việt không dấu thì hỏi lại một lần", async () => {
+    expect(thieuDau("Chot ca la viec nhan vien cong tien quay va gui quan ly")).toBe(true);
+    expect(thieuDau("Chốt ca là việc nhân viên cộng tiền quầy rồi gửi quản lý")).toBe(false);
+    const fetchGia = vi
+      .fn()
+      .mockResolvedValueOnce(aiTraLoi("Chot ca la viec nhan vien cong tien quay va gui quan ly xac nhan."))
+      .mockResolvedValueOnce(aiTraLoi("Chốt ca là việc nhân viên cộng tiền quầy và gửi quản lý xác nhận."));
+    vi.stubGlobal("fetch", fetchGia);
+    const kq = await traLoiCauHoi({ cau: "Chốt ca là gì vậy bạn?", lang: "vi", phamVi: "erp", khoaKhach: "k" });
+    expect(kq.traLoi).toBe("Chốt ca là việc nhân viên cộng tiền quầy và gửi quản lý xác nhận.");
+    expect(fetchGia).toHaveBeenCalledTimes(2);
   });
 
   it("mỗi khách chỉ được vài lượt AI mỗi phút", () => {

@@ -2,6 +2,8 @@ import { CONTACT } from "@/content/contact";
 import { DESTINATION_PAGE_SLUGS, destinationFacts, destinations, type DestinationId } from "@/content/landing-destinations";
 import { PACKAGES } from "@/content/packages";
 import { giaGoi, goiHienThi } from "@/content/packages-en";
+import { BAN_DO_CHUC_NANG, CHUC_NANG_WEB, TEN_NHOM_WEB } from "@/domain/ban-do-chuc-nang";
+import { ERP_MODULES, ERP_ROLE_LABELS, ERP_SITES } from "@/domain/erp";
 import type { NgonNgu } from "@/lib/ngon-ngu";
 
 /**
@@ -32,6 +34,8 @@ export type MucHoiDap = {
   tuChinh?: string[];
   thang: boolean;
   lienKet?: { href: string; nhan: Chu };
+  /** Mục dựng từ bản đồ chức năng: của web khách hay của ERP. */
+  pham?: "web" | "erp";
 };
 
 export function boDau(chu: string): string {
@@ -218,7 +222,84 @@ function tuDiemDen(): MucHoiDap[] {
   });
 }
 
-export const SO_HOI_DAP: readonly MucHoiDap[] = [...CO_DINH, ...tuGoi(), ...tuDiemDen()];
+/**
+ * Mỗi chức năng của web và ERP thành một mục (10/10/2026, chủ dự án: "hỏi bất
+ * kì cái gì về web và ERP đều trả lời được, không phải cứ reply không biết").
+ * Lấy nguyên từ bản đồ chức năng của màn Dạo một vòng, nên thêm chức năng ở đó
+ * là AI biết luôn. Chữ chỉ có tiếng Việt; AI dịch khi khách hỏi tiếng Anh.
+ * Mục chức năng không bao giờ trả thẳng (`thang: false`).
+ */
+function tuChucNang(): MucHoiDap[] {
+  const tuKhoaCua = (...chu: string[]) => [...new Set(chu.flatMap(tachTu).filter((t) => t.length > 1))];
+  const web = CHUC_NANG_WEB.map((cn): MucHoiDap => {
+    const chu = `${cn.moTa} Cách làm: ${cn.cacViec.join(" ")} Trang: ${cn.duongDan}`;
+    return {
+      id: `web-${cn.id}`,
+      hoi: { vi: cn.ten, en: cn.ten },
+      traLoi: { vi: chu, en: chu },
+      tuKhoa: tuKhoaCua(cn.ten, cn.moTa),
+      tenRieng: [],
+      thang: false,
+      pham: "web",
+      lienKet: { href: cn.duongDan, nhan: { vi: "Mở trang này", en: "Open this page" } },
+    };
+  });
+  const erp = BAN_DO_CHUC_NANG.flatMap((nhom) =>
+    nhom.chucNang.map((cn): MucHoiDap => {
+      const duongDan = cn.duongDan.replace("{site}", "trang-an");
+      const chu = `${cn.moTa} Vai làm: ${ERP_ROLE_LABELS[cn.vai]}. Màn: ${duongDan}. Các bước: ${cn.cacViec.join(" ")}`;
+      return {
+        id: `erp-${cn.id}`,
+        hoi: { vi: cn.ten, en: cn.ten },
+        traLoi: { vi: chu, en: chu },
+        tuKhoa: tuKhoaCua(cn.ten, cn.moTa, nhom.ten, "erp he thong dieu hanh"),
+        tenRieng: [],
+        thang: false,
+        pham: "erp",
+        lienKet: { href: duongDan, nhan: { vi: "Mở màn này", en: "Open this screen" } },
+      };
+    }),
+  );
+  const moDun = ERP_MODULES.map((m): MucHoiDap => {
+    const chu = `Module "${m.name}" của ERP, có ở từng cơ sở (Tràng An, Tam Cốc, Tam Chúc, Bái Đính): ${m.description} Màn: /erp/trang-an/${m.id}.`;
+    return {
+      id: `erp-module-${m.id}`,
+      hoi: { vi: m.name, en: m.name },
+      traLoi: { vi: chu, en: chu },
+      tuKhoa: tuKhoaCua(m.name, m.description, "module erp"),
+      tenRieng: [],
+      thang: false,
+      pham: "erp",
+      lienKet: { href: `/erp/trang-an/${m.id}`, nhan: { vi: "Mở module này", en: "Open this module" } },
+    };
+  });
+  return [...web, ...erp, ...moDun];
+}
+
+export const SO_HOI_DAP: readonly MucHoiDap[] = [...CO_DINH, ...tuGoi(), ...tuDiemDen(), ...tuChucNang()];
+
+/**
+ * Bản đồ gọn của cả web lẫn ERP, gửi kèm mọi lần hỏi AI để AI biết hệ thống
+ * có những gì, kể cả khi câu hỏi không trúng mục nào trong sổ.
+ */
+export function banDoHeThong(): string {
+  const web = (Object.keys(TEN_NHOM_WEB) as (keyof typeof TEN_NHOM_WEB)[])
+    .filter((nhom) => nhom !== "hieu-ung")
+    .map((nhom) => `- ${TEN_NHOM_WEB[nhom]}: ${CHUC_NANG_WEB.filter((c) => c.nhom === nhom).map((c) => `${c.ten} (${c.duongDan})`).join("; ")}`)
+    .join("\n");
+  const erp = BAN_DO_CHUC_NANG.map(
+    (nhom) => `- ${nhom.ten}: ${nhom.chucNang.map((c) => `${c.ten} [${ERP_ROLE_LABELS[c.vai]}, ${c.duongDan.replace("{site}", "trang-an")}]`).join("; ")}`,
+  ).join("\n");
+  return [
+    "WEB KHÁCH (ninhbinhjourney.vercel.app, ai cũng xem được):",
+    web,
+    "",
+    `ERP, HỆ THỐNG ĐIỀU HÀNH NỘI BỘ (/erp, nhân sự đăng nhập; giám đốc xem được mọi vai qua "Xem theo vai trò"; hướng dẫn bấm thử ở /erp/huong-dan):`,
+    `Cơ sở: ${ERP_SITES.map((s) => s.shortName).join(", ")}. Vai: ${Object.values(ERP_ROLE_LABELS).join(", ")}.`,
+    `${ERP_MODULES.length} module ở mỗi cơ sở: ${ERP_MODULES.map((m) => m.name).join(", ")}.`,
+    erp,
+  ].join("\n");
+}
 
 
 export function diemKhop(cau: string, muc: MucHoiDap): number {
@@ -235,8 +316,13 @@ export function diemKhop(cau: string, muc: MucHoiDap): number {
   return diem;
 }
 
-export function timMuc(cau: string, toiDa = 4): { muc: MucHoiDap; diem: number }[] {
-  return SO_HOI_DAP.map((muc) => ({ muc, diem: diemKhop(cau, muc) }))
+export function timMuc(
+  cau: string,
+  toiDa = 4,
+  loc: (muc: MucHoiDap) => boolean = () => true,
+): { muc: MucHoiDap; diem: number }[] {
+  return SO_HOI_DAP.filter(loc)
+    .map((muc) => ({ muc, diem: diemKhop(cau, muc) }))
     .filter((k) => k.diem > 0)
     .sort((a, b) => b.diem - a.diem)
     .slice(0, toiDa);
@@ -255,7 +341,8 @@ function khopTuChinh(cau: string, muc: MucHoiDap): boolean {
  * bị trả nhầm sang mục giá vé.
  */
 export function traLoiThang(cau: string): MucHoiDap | null {
-  const [dau, ke] = timMuc(cau, 2);
+  // Chỉ so trong sổ soạn tay; mục chức năng dài, để AI diễn đạt.
+  const [dau, ke] = timMuc(cau, 2, (m) => !m.pham);
   if (!dau || !dau.muc.thang || dau.diem < 2 || !khopTuChinh(cau, dau.muc)) return null;
   if (ke && ke.diem >= dau.diem) return null;
   return dau.muc;
@@ -265,10 +352,15 @@ export function mucTheoId(id: string): MucHoiDap | undefined {
   return SO_HOI_DAP.find((m) => m.id === id);
 }
 
+/**
+ * Câu dự phòng khi không hỏi được AI (hết lượt, AI lỗi) và câu hỏi không khớp
+ * mục nào: nói web giúp được những gì và mở lối đi tiếp, không đáp suông
+ * "chưa có thông tin".
+ */
 export function loiChuaCoThongTin(lang: NgonNgu): string {
   return lang === "en"
-    ? `There is no information on that here yet. Please call ${dienThoai} and the team will help.`
-    : `Câu này chưa có thông tin trên web. Xin gọi ${dienThoai} để được trả lời.`;
+    ? `I could not answer that one right now. I can help with packages and prices, booking and payment, planning a day, the 15 places on the map, tickets, the boat queue and audio guide, and the internal ERP. Try asking again in other words, or call ${dienThoai} to talk to the team.`
+    : `Câu này mình chưa trả lời được ngay lúc này. Mình giúp được về gói và giá, đặt vé và thanh toán, lập lịch đi, 15 điểm đến trên bản đồ, tra vé, hàng chờ bến đò, nghe thuyết minh, và hệ thống điều hành ERP. Bạn thử hỏi lại theo cách khác, hoặc gọi ${dienThoai} để nói chuyện với đội ngũ.`;
 }
 
 /**

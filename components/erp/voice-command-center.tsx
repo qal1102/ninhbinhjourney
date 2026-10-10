@@ -57,6 +57,8 @@ type ThreadEntry =
       hrefLabel?: string;
       /** Câu chưa hiểu: cho ghi lại thành ghi chú. */
       ghiLai?: string;
+      /** Câu trả lời do AI viết (hỏi cách làm, hỏi về hệ thống). */
+      ai?: true;
     }
   | {
       kind: "draft";
@@ -107,6 +109,7 @@ type CommandResult = {
   href?: string;
   hrefLabel?: string;
   ghiLai?: string;
+  ai?: true;
 };
 
 type ModuleCommand = {
@@ -142,6 +145,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Giao cho quản lý Tam Cốc sáng mai kiểm áo phao",
     "Ghi chú gọi lại nhà in vé chiều nay",
     "Mở hướng dẫn",
+    "Làm sao duyệt hoá đơn nhà cung cấp?",
     "Hôm nay doanh thu bao nhiêu?",
     "Công nợ nhà cung cấp đã ghi nhận bao nhiêu?",
     "Mở báo cáo hiện trường Tràng An",
@@ -158,6 +162,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
   manager: [
     "Nhờ nhân viên kiểm két trước 5 giờ chiều",
     "Nhật ký hôm nay đón 3 đoàn khách",
+    "Chốt ca cuối ngày làm thế nào?",
     "Mở hóa đơn nhà cung cấp",
     "Mở báo cáo hiện trường",
     "Mở camera hiện trường",
@@ -171,6 +176,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
   ],
   accountant: [
     "Nhắc tôi 3 giờ chiều đối chiếu sao kê",
+    "Ai ghi sổ bút toán kế toán lập?",
     "Mở đối soát toàn vùng",
     "Mở công nợ nhà cung cấp",
     "Hóa đơn nào cần tôi xử lý?",
@@ -182,6 +188,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
   ],
   "chief-accountant": [
     "Ghi chú hỏi lại hoá đơn tiền điện tháng 9",
+    "Khoá kỳ kế toán thế nào?",
     "Mở bút toán chờ kiểm tra",
     "Mở đối soát toàn vùng",
     "Mở công nợ nhà cung cấp",
@@ -193,6 +200,7 @@ const suggestionsByRole: Record<ErpRole, string[]> = {
     "Nhật ký hôm nay kiểm xong 40 áo phao",
     "Ghi chú báo quản lý thuyền số 12 hỏng mái chèo",
     "Nộp ảnh hiện trường",
+    "Làm sao vào ca bằng GPS?",
     "Mở chấm công",
     "Mở check-in khách",
     "Mở sự cố",
@@ -210,6 +218,29 @@ function normalize(value: string) {
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Câu hỏi cách làm hay hỏi về hệ thống ("làm sao duyệt hoá đơn", "chốt ca là
+ * gì", "ai duyệt đề xuất?"): để AI trả lời thay vì mở thẳng một màn. Lệnh
+ * mở màn ("mở chấm công Tam Cốc") và câu hỏi số liệu sống vẫn đi lối cũ.
+ */
+export function laCauHoiCach(raw: string): boolean {
+  const c = normalize(raw);
+  if (/^(mo|vao|chuyen|den|di toi|truy cap)\b/.test(c)) return false;
+  return (
+    raw.trim().endsWith("?") ||
+    /\b(lam sao|lam the nao|the nao|nhu the nao|cach nao|cach de|cach|la gi|la sao|nghia la|giai thich|tai sao|vi sao|o dau|ai duyet|ai lam|ai ky|duoc khong|co duoc|khac gi|khac nhau|bao lau|khi nao|huong dan|gioi thieu|co nhung|gom nhung|co gi)\b/.test(c)
+  );
+}
+
+/** Câu hỏi số liệu đang chạy (doanh thu, khách, công nợ hôm nay): đọc kho, không hỏi AI. */
+function laCauHoiSoLieu(command: string): boolean {
+  if (/(qua tai|dong nhat|can chu y)/.test(command)) return true;
+  return (
+    /(bao nhieu|hom nay|hien tai|bay gio)/.test(command) &&
+    /(doanh thu|ban duoc|thu duoc|chi phi|loi nhuan|khach|cong no|hoa don|phai tra|gap)/.test(command)
+  );
 }
 
 function containsTerm(command: string, term: string) {
@@ -449,6 +480,54 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     }
   }
 
+  async function hoiAi(cau: string, choGhiLai = false) {
+    setVoiceMessage("AI đang trả lời…");
+    // Bốn lượt gần nhất làm ngữ cảnh, để hỏi tiếp "thế còn Tam Cốc?" vẫn hiểu.
+    const lichSu = thread
+      .slice(-8)
+      .flatMap((e): { vai: "khach" | "tro-ly"; chu: string }[] =>
+        e.kind === "voice" || e.kind === "typed"
+          ? [{ vai: "khach" as const, chu: e.text.slice(0, 900) }]
+          : e.kind === "reply"
+            ? [{ vai: "tro-ly" as const, chu: `${e.answer} ${e.detail}`.slice(0, 900) }]
+            : [],
+      )
+      .slice(-4);
+    try {
+      const response = await fetch("/api/erp/hoi-dap", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cau: cau.slice(0, 300), lichSu }),
+      });
+      const kq = (await response.json()) as {
+        traLoi?: string;
+        nguon?: string;
+        lienKet?: { href: string; nhan: string }[];
+        message?: string;
+      };
+      if (!response.ok || !kq.traLoi) throw new Error(kq.message ?? "Máy chủ chưa phản hồi.");
+      const lienKet = kq.lienKet?.[0];
+      pushReply({
+        answer: kq.traLoi,
+        detail: kq.nguon === "ai" || kq.nguon === "nho" ? "AI có thể nhầm; số liệu thật xem trên màn." : "Lấy từ hướng dẫn của hệ thống.",
+        href: lienKet?.href,
+        hrefLabel: lienKet?.nhan,
+        ...(choGhiLai ? { ghiLai: cau } : {}),
+        ai: true,
+      });
+      setVoiceMessage("");
+    } catch (error) {
+      pushReply({
+        answer: "Chưa hỏi được AI lúc này",
+        detail: `${error instanceof Error ? error.message : "Máy chủ chưa phản hồi."} Màn Dạo một vòng có hướng dẫn từng chức năng.`,
+        href: "/erp/huong-dan",
+        hrefLabel: "Mở Dạo một vòng",
+        ghiLai: cau,
+      });
+      setVoiceMessage("");
+    }
+  }
+
   function ketThucNhap(id: string, kq: KetThucNhap) {
     setThread((previous) => previous.map((e) => (e.id === id && e.kind === "draft" ? { ...e, xong: kq } : e)));
     setVoiceMessage(kq.loiNhan);
@@ -469,6 +548,12 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     // Lời nhờ ghi lại ("Giao cho…", "Ghi chú…", "Nhật ký…") thành bản nháp.
     if (nhanLoaiCau(rawCommand)) {
       await taoBanNhap(rawCommand, spoken ? "giong-noi" : "go-tay");
+      return;
+    }
+
+    // Hỏi cách làm, hỏi về hệ thống: AI trả lời kèm nút mở đúng màn.
+    if (laCauHoiCach(rawCommand) && !laCauHoiSoLieu(command)) {
+      await hoiAi(rawCommand);
       return;
     }
 
@@ -557,11 +642,9 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
       return;
     }
 
-    pushReply({
-      answer: "Chưa tìm thấy màn hình phù hợp",
-      detail: "Muốn mở màn hình thì nói “Mở” kèm nghiệp vụ và cơ sở, ví dụ “Mở camera Tam Chúc”. Hay ghi câu này lại?",
-      ghiLai: rawCommand,
-    });
+    // Không khớp lệnh nào: hỏi AI thay vì đáp "chưa tìm thấy" (chủ dự án
+    // 10/10/2026: "hỏi bất kì cái gì về web và ERP đều trả lời được").
+    await hoiAi(rawCommand, true);
   }
 
   function stopDurationTimer() {
@@ -718,8 +801,9 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
             >
               {thread.length === 0 && !interim ? (
                 <p className="rounded-2xl bg-white/70 p-3 text-xs leading-5 text-[#69786f]">
-                  Nói tên màn hình để mở, hoặc nói việc cần ghi: “Giao cho…”, “Ghi chú…”,
-                  “Nhật ký hôm nay…”. Việc cần ghi thành bản nháp để bạn xem lại rồi lưu.
+                  Nói tên màn hình để mở, nói việc cần ghi (“Giao cho…”, “Ghi chú…”,
+                  “Nhật ký hôm nay…”), hoặc hỏi bất cứ điều gì về hệ thống và web khách:
+                  “Làm sao…”, “… là gì?”. Việc cần ghi thành bản nháp để bạn xem lại rồi lưu.
                 </p>
               ) : null}
 
@@ -748,7 +832,16 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
                     key={entry.id}
                     className="mr-6 rounded-2xl rounded-tl-md bg-[#183f34] p-3.5 text-white"
                   >
-                    <p className="text-sm font-black leading-5">{entry.answer}</p>
+                    {entry.ai ? (
+                      <>
+                        <p className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-[#E7B96A]">
+                          <span aria-hidden="true">✦ </span>AI trả lời
+                        </p>
+                        <p className="mt-1.5 whitespace-pre-line text-sm font-medium leading-6">{entry.answer}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm font-black leading-5">{entry.answer}</p>
+                    )}
                     <p className="mt-1.5 text-xs leading-5 text-white/68">{entry.detail}</p>
                     {entry.href ? (
                       <button

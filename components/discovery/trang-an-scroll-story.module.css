@@ -129,8 +129,14 @@
     min-height: 100svh;
   }
 
+  /*
+   * Lề dưới phải qua được nút "Hỏi AI" (đáy màn 72px, cao 48px) và, khi dải
+   * đồng ý còn hiện, cả dải lẫn nút ấy bị đẩy lên trên dải. Soát 10/10/2026
+   * trên production: lề cũ 7,5rem để nút che hai dòng cuối đoạn mô tả. Lề
+   * trên bớt còn 4,5rem cho đoạn chữ vẫn vừa màn khi lề dưới lớn lên.
+   */
   .root[data-motion="full"] .copy {
-    padding: 6rem 3.75rem 7.5rem 1.25rem;
+    padding: 4.5rem 3.75rem max(8.5rem, calc(var(--nbj-consent-offset, 0px) + 4.25rem)) 1.25rem;
   }
 
   .root[data-motion="full"] .intro {
@@ -407,6 +413,25 @@
 
   .headline {
     font-size: clamp(3.8rem, min(7.1vw, 12svh), 8.25rem);
+  }
+}
+
+/* Màn thấp (iPhone SE 568px): chữ nhỏ lại để vẫn nằm giữa số chặng và nút "Hỏi AI". */
+@media (max-width: 767px) and (max-height: 640px) {
+  .root[data-motion="full"] .copy {
+    padding-top: 3.75rem;
+  }
+
+  .root[data-motion="full"] .headline {
+    max-width: 15ch;
+    margin-top: 0.6rem;
+    font-size: 2.15rem;
+  }
+
+  .root[data-motion="full"] .body {
+    margin-top: 0.85rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 }
 

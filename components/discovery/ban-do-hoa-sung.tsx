@@ -109,7 +109,12 @@ export default function BanDoHoaSung({ lang }: { lang: "vi" | "en" }) {
     map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), "top-right");
     map.once("idle", () => {
       const o = map.getContainer().querySelector<HTMLDetailsElement>("details.maplibregl-ctrl-attrib");
-      if (o) o.open = false;
+      if (o) {
+        o.open = false;
+        // Bỏ cả lớp "đang mở" của MapLibre: chỉ đóng thẻ thì lần chạm đầu vào nút
+        // "i" chỉ gỡ lớp ấy, không mở gì (soát 10/10/2026).
+        o.classList.remove("maplibregl-compact-show");
+      }
     });
 
     const nhanCacMoc: maplibregl.Marker[] = [];
@@ -204,6 +209,14 @@ export default function BanDoHoaSung({ lang }: { lang: "vi" | "en" }) {
           .setLngLat([...giua[Math.floor(giua.length / 2)]] as [number, number])
           .addTo(map),
       );
+      // Nhãn chỉ để đọc: MapLibre tự gắn role=button, tabindex và nhãn "Map marker"
+      // (đè cả chữ trong nhãn với trình đọc màn hình). Gỡ đi (soát 10/10/2026).
+      for (const m of nhanCacMoc) {
+        const el = m.getElement();
+        el.removeAttribute("role");
+        el.removeAttribute("tabindex");
+        el.removeAttribute("aria-label");
+      }
 
       const ve = (bayGio: number) => {
         khungHinh = 0;

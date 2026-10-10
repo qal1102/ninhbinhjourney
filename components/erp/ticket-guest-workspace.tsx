@@ -738,7 +738,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
           </div>
           <div className="grid grid-cols-4 rounded-xl bg-[#f0f4f1] p-1">
             {(["day", "week", "month", "year"] as const).map((item) => (
-              <button key={item} type="button" onClick={() => setPeriod(item)} className={`min-h-11 rounded-lg px-2 text-xs font-black ${period === item ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}>
+              <button key={item} type="button" onClick={() => setPeriod(item)} aria-pressed={period === item} className={`min-h-11 rounded-lg px-2 text-xs font-black ${period === item ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}>
                 {item === "day" ? "Ngày" : item === "week" ? "Tuần" : item === "month" ? "Tháng" : "Năm"}
               </button>
             ))}

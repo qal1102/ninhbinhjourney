@@ -414,7 +414,12 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.once("idle", () => {
       const o = map.getContainer().querySelector<HTMLDetailsElement>("details.maplibregl-ctrl-attrib");
-      if (o) o.open = false;
+      if (o) {
+        o.open = false;
+        // Bỏ cả lớp "đang mở" của MapLibre: chỉ đóng thẻ thì lần chạm đầu vào nút
+        // "i" chỉ gỡ lớp ấy, không mở gì (soát 10/10/2026).
+        o.classList.remove("maplibregl-compact-show");
+      }
     });
 
     // Nhãn bến nằm ngay trên bến: còn bao nhiêu thuyền chờ khách.
@@ -434,6 +439,10 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
     const benMarker = new maplibregl.Marker({ element: nhan, anchor: "top-right", offset: [16, 8] })
       .setLngLat([tuyen.moc[0].lonLat[0], tuyen.moc[0].lonLat[1]])
       .addTo(map);
+    // Nhãn bến chỉ để đọc: gỡ role=button, tabindex và nhãn "Map marker" MapLibre tự gắn.
+    nhan.removeAttribute("role");
+    nhan.removeAttribute("tabindex");
+    nhan.removeAttribute("aria-label");
 
     let frame = 0;
     let lanVe = 0;

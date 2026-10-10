@@ -212,6 +212,7 @@ export function CameraAiWorkspace({ site, user, sceneAt, initialCameraId }: Prop
                 key={value}
                 type="button"
                 onClick={() => setFilter(value)}
+                aria-pressed={filter === value}
                 className={`min-h-11 rounded-lg px-2 text-xs font-black transition sm:px-3 ${filter === value ? "bg-[#183f34] text-white" : "text-[#65756e]"}`}
               >
                 {value === "all" ? "Tất cả" : statusStyle[value].label}

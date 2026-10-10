@@ -202,6 +202,60 @@ function hinhDuong(duong: DuongNoi | null): GeoJSON.FeatureCollection {
   };
 }
 
+/**
+ * Tách ghim chồng (10/10/2026). Ở khổ điện thoại, bản đồ trang chủ ôm trọn 15
+ * điểm nên tám ghim quanh Tràng An dồn thành một cục: không đọc được số, bấm
+ * không trúng. Mỗi lần đổi mức phóng, ghim nào cách nhau dưới KHOANG_CHONG
+ * điểm ảnh thì gom nhóm (bắc cầu) và xoè thành vòng tròn quanh tâm nhóm; phóng
+ * to tới khi chúng tự xa nhau thì mỗi ghim về đúng chỗ thật.
+ */
+const KHOANG_CHONG = 24;
+function tachGhimChong(map: MapLibreMap, ghims: Iterable<Marker>) {
+  const ds = [...ghims].map((m) => ({ m, p: map.project(m.getLngLat()) }));
+  // Gom bằng hợp nhất: lúc đầu theo vị trí thật, sau đó theo vị trí đã xoè,
+  // vì vòng của một nhóm có thể đè lên ghim đứng gần nhưng ngoài nhóm.
+  const cha = ds.map((_, i) => i);
+  const goc = (i: number): number => (cha[i] === i ? i : (cha[i] = goc(cha[i])));
+  const gop = (i: number, j: number) => {
+    cha[goc(i)] = goc(j);
+  };
+  const gan = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y) < KHOANG_CHONG;
+  for (let i = 0; i < ds.length; i++) for (let j = i + 1; j < ds.length; j++) if (gan(ds[i].p, ds[j].p)) gop(i, j);
+
+  let viTri = ds.map((d) => ({ x: d.p.x, y: d.p.y }));
+  for (let vong = 0; vong < 5; vong++) {
+    const nhom = new Map<number, number[]>();
+    ds.forEach((_, i) => {
+      const g = goc(i);
+      if (!nhom.has(g)) nhom.set(g, []);
+      nhom.get(g)!.push(i);
+    });
+    viTri = ds.map((d) => ({ x: d.p.x, y: d.p.y }));
+    for (const ds2 of nhom.values()) {
+      if (ds2.length === 1) continue;
+      const cx = ds2.reduce((t, n) => t + ds[n].p.x, 0) / ds2.length;
+      const cy = ds2.reduce((t, n) => t + ds[n].p.y, 0) / ds2.length;
+      // Hai ghim cạnh nhau trên vòng cách nhau khoảng 30px, vừa một ghim.
+      const banKinh = Math.max(16, 30 / (2 * Math.sin(Math.PI / ds2.length)));
+      ds2.forEach((n, thu) => {
+        const gocQuay = -Math.PI / 2 + (thu * 2 * Math.PI) / ds2.length;
+        viTri[n] = { x: cx + banKinh * Math.cos(gocQuay), y: cy + banKinh * Math.sin(gocQuay) };
+      });
+    }
+    let conDe = false;
+    for (let i = 0; i < ds.length; i++) {
+      for (let j = i + 1; j < ds.length; j++) {
+        if (goc(i) !== goc(j) && gan(viTri[i], viTri[j])) {
+          gop(i, j);
+          conDe = true;
+        }
+      }
+    }
+    if (!conDe) break;
+  }
+  ds.forEach((d, i) => d.m.setOffset([viTri[i].x - d.p.x, viTri[i].y - d.p.y]));
+}
+
 export function BrandMap({
   ghim,
   dangChon = null,
@@ -265,6 +319,16 @@ export function BrandMap({
       locale: CHU_MAPLIBRE,
     });
     banDo.current = map;
+    let khungTach = 0;
+    const tachLai = () => {
+      cancelAnimationFrame(khungTach);
+      khungTach = requestAnimationFrame(() => tachGhimChong(map, boGhim.values()));
+    };
+    map.on("zoom", tachLai);
+    map.on("rotate", tachLai);
+    map.on("pitch", tachLai);
+    map.on("load", tachLai);
+    map.on("resize", tachLai);
 
     map.addControl(
       new maplibregl.AttributionControl({ compact: true, customAttribution: GHI_CONG_BAN_DO }),
@@ -279,7 +343,12 @@ export function BrandMap({
       const o = map
         .getContainer()
         .querySelector<HTMLDetailsElement>("details.maplibregl-ctrl-attrib");
-      if (o) o.open = false;
+      if (o) {
+        o.open = false;
+        // Bỏ cả lớp "đang mở" của MapLibre: chỉ đóng thẻ thì lần chạm đầu vào nút
+        // "i" chỉ gỡ lớp ấy, không mở gì (soát 10/10/2026).
+        o.classList.remove("maplibregl-compact-show");
+      }
     };
     thuGhiCong();
     map.on("load", thuGhiCong);
@@ -299,6 +368,7 @@ export function BrandMap({
     map.on("styleimagemissing", () => undefined);
 
     return () => {
+      cancelAnimationFrame(khungTach);
       boGhim.forEach((m) => m.remove());
       boGhim.clear();
       map.remove();
@@ -337,12 +407,21 @@ export function BrandMap({
       const moi = new maplibregl.Marker({ element: el, anchor: "center" })
         .setLngLat([g.toaDo[1], g.toaDo[0]])
         .addTo(map);
+      if (g.khongBam) {
+        // MapLibre tự gắn role=button, tabindex=0 và nhãn "Map marker" cho mọi
+        // ghim: ghim chỉ để nhìn thành một "nút" bấm không ra gì, bàn phím vẫn
+        // dừng ở đó (soát 10/10/2026). Gỡ đi cho đúng là hình vẽ.
+        el.removeAttribute("role");
+        el.removeAttribute("tabindex");
+        el.removeAttribute("aria-label");
+      }
       cacGhim.current.set(g.id, moi);
     }
     for (const id of conLai) {
       cacGhim.current.get(id)?.remove();
       cacGhim.current.delete(id);
     }
+    tachGhimChong(map, cacGhim.current.values());
   }, [ghim, dangChon]);
 
   // Đường nối các điểm. Vẽ bằng một lớp của chính bản đồ chứ không phải một

@@ -87,8 +87,9 @@ function Stepper({
         <button
           type="button"
           onClick={() => onChange(Math.max(0, value - 1))}
+          disabled={value <= 0}
           aria-label={`Bớt một vé ${label.toLowerCase()}`}
-          className="h-11 w-11 rounded-xl border border-[#ccd8d1] bg-white text-xl font-black text-[#183f34]"
+          className="h-11 w-11 rounded-xl border border-[#ccd8d1] bg-white text-xl font-black text-[#183f34] disabled:cursor-not-allowed disabled:opacity-40"
         >
           −
         </button>
@@ -98,8 +99,9 @@ function Stepper({
         <button
           type="button"
           onClick={() => onChange(Math.min(COUNTER_SALE_MAX_PARTY, value + 1))}
+          disabled={value >= COUNTER_SALE_MAX_PARTY}
           aria-label={`Thêm một vé ${label.toLowerCase()}`}
-          className="h-11 w-11 rounded-xl border border-[#ccd8d1] bg-white text-xl font-black text-[#183f34]"
+          className="h-11 w-11 rounded-xl border border-[#ccd8d1] bg-white text-xl font-black text-[#183f34] disabled:cursor-not-allowed disabled:opacity-40"
         >
           +
         </button>
@@ -109,6 +111,7 @@ function Stepper({
               key={n}
               type="button"
               onClick={() => onChange(n)}
+              aria-pressed={value === n}
               className={`h-11 min-w-11 flex-1 rounded-lg px-2 text-sm font-black sm:flex-none ${
                 value === n ? "bg-[#183f34] text-white" : "bg-white text-[#42574e] ring-1 ring-[#dfe6e2]"
               }`}

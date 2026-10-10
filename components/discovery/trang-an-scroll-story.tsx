@@ -199,7 +199,21 @@ export function TrangAnScrollStory({
         ScrollTrigger.addEventListener("refresh", datThuyen);
         datThuyen();
 
+        // Khung đầu trang trên điện thoại cao thêm hay co lại khi dải đồng ý
+        // hiện, tắt (globals.css `.hero-identity-scene`). ScrollTrigger không
+        // tự biết, mà `ignoreMobileResize` còn bỏ qua sự kiện resize, nên
+        // trang đổi chiều cao thì tự tính lại chỗ ghim.
+        let caoTrang = document.body.scrollHeight;
+        const theoDoiCao = new ResizeObserver(() => {
+          const cao = document.body.scrollHeight;
+          if (Math.abs(cao - caoTrang) < 1) return;
+          caoTrang = cao;
+          ScrollTrigger.refresh();
+        });
+        theoDoiCao.observe(document.body);
+
         return () => {
+          theoDoiCao.disconnect();
           ScrollTrigger.removeEventListener("refresh", datThuyen);
           if (boat) delete boat.dataset.ready;
           root.style.removeProperty("--trang-an-accent");

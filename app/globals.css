@@ -1482,6 +1482,37 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   }
 }
 
+/*
+ * Dưới 1024px hàng cổng nằm riêng dưới đầu trang (đáy ở khoảng 123px). Khung
+ * cao cố định thì khối chữ xếp từ đáy lên, cộng thêm phần chừa cho dải đồng
+ * ý (140px), sẽ tràn lên trên: soát 10/10/2026 trên production, iPhone 13
+ * (664px) và iPhone SE thấy "Ninh Bình" đè lên hàng cổng. Nay khung chỉ đặt
+ * chiều cao tối thiểu và cao thêm khi chữ không vừa, đầu khối chữ luôn dưới
+ * hàng cổng. Chiều cao chỉ đổi khi dải đồng ý hiện hay tắt, không đổi khi
+ * cuộn; cảnh tuyến 1 tự tính lại chỗ ghim (trang-an-scroll-story.tsx).
+ */
+@media (max-width: 1023px) {
+  .hero-identity-scene {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    min-height: max(44rem, 100svh);
+  }
+
+  .hero-scene-content {
+    flex: 1 0 auto;
+    height: auto;
+    padding-top: 8.75rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-identity-scene {
+    min-height: max(43rem, 100svh);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-scene-image,
   .hero-depth-window,

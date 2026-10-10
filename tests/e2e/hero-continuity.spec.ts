@@ -23,7 +23,11 @@ async function waitForHero(page: Page, motion: "full" | "reduced") {
   const hero = page.locator("[data-hero-scene]");
   await expect(hero).toHaveAttribute("data-motion", motion);
   await expect(hero.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(hero.locator("[data-hero-depth-window]")).toBeVisible();
+  // Điện thoại bỏ khung ảnh mưa thứ hai (10/10/2026): nó chỉ còn là bóng ngôi
+  // đền mờ ở góc trên, làm đầu trang mờ đục. Từ 768px vẫn giữ.
+  const rong = page.viewportSize()?.width ?? 1440;
+  if (rong >= 768) await expect(hero.locator("[data-hero-depth-window]")).toBeVisible();
+  else await expect(hero.locator("[data-hero-depth-window]")).toBeHidden();
   await expect(page.locator("[data-hero-cinematic-handoff]")).toHaveCount(1);
   await expect(page.getByTestId("trang-an-scroll-story")).toHaveCount(1);
   await page.evaluate(async () => {
@@ -161,7 +165,7 @@ test("hero depth remains legible and geometry-stable at the required widths", as
     expect(settled.heroHeight).toBe(start.heroHeight);
     expect(settled.visualMotion.imageOpacity).not.toBe(start.visualMotion.imageOpacity);
     expect(settled.visualMotion.imageTransform).not.toBe(start.visualMotion.imageTransform);
-    expect(settled.visualMotion.windowOpacity).not.toBe(start.visualMotion.windowOpacity);
+    if (viewport.width >= 768) expect(settled.visualMotion.windowOpacity).not.toBe(start.visualMotion.windowOpacity);
     expect(settled.visualMotion.contentTransform).not.toBe(start.visualMotion.contentTransform);
     await page.locator("[data-hero-cinematic-handoff] h2").scrollIntoViewIfNeeded();
     const cinematicOverlap = await page.evaluate(() => {

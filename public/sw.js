@@ -4,8 +4,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "Ninh Bình Điều hành", {
       body: data.body || "Có cập nhật vận hành mới.",
-      icon: data.icon || "/brand/pwa-192.png",
-      badge: "/brand/pwa-192.png",
+      icon: data.icon || "/brand/erp-192.png",
+      badge: "/brand/erp-192.png",
       data: { url: data.url || "/erp" },
     }),
   );

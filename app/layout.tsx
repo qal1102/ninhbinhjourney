@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Ninh Bình Journey",
   description: "Núi đá vôi, sông nước và cố đô Hoa Lư.",
+  // App của web khách. ERP có app riêng (`app/erp/layout.tsx`), ghi đè trường này.
+  manifest: "/manifest.webmanifest",
+  applicationName: "Ninh Bình Journey",
+  icons: { apple: "/brand/pwa-apple-180.png" },
+  appleWebApp: { capable: true, title: "Ninh Bình", statusBarStyle: "default" },
   openGraph: {
     siteName: "Ninh Bình Journey",
     locale: "vi_VN",

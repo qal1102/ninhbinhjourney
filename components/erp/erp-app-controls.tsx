@@ -130,8 +130,8 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
       const registration = await navigator.serviceWorker.ready;
       await registration.showNotification("Đã bật thông báo điều hành", {
         body: "Các việc vượt ngưỡng sẽ xuất hiện tại trung tâm thông báo.",
-        icon: "/brand/pwa-192.png",
-        badge: "/brand/pwa-192.png",
+        icon: "/brand/erp-192.png",
+        badge: "/brand/erp-192.png",
         data: { url: "/erp" },
       });
     }

@@ -136,7 +136,8 @@ select {
 
 .opening-image {
   animation: opening-image 6.5s ease forwards;
-  filter: saturate(1.18) contrast(1.06) brightness(0.88);
+  /* Ảnh đã được làm sáng sẵn (10/10/2026, chủ dự án chê "mờ mịt"), không hạ sáng nữa. */
+  filter: saturate(1.08) contrast(1.04);
   transform: scale(1.06);
 }
 
@@ -197,6 +198,23 @@ select {
     linear-gradient(90deg, rgba(6, 18, 15, 0.48), rgba(6, 18, 15, 0.08) 50%, rgba(6, 18, 15, 0.42));
   inset: 0;
   position: absolute;
+}
+
+/*
+ * Điện thoại (10/10/2026, chủ dự án: ảnh mở đầu "mờ mịt"): viền tối và lớp đổi
+ * màu nhẹ hẳn đi, để ngôi đền giữa khung còn sáng và đúng màu gỗ.
+ */
+@media (orientation: portrait) {
+  .opening-vignette {
+    background:
+      linear-gradient(180deg, rgba(6, 18, 15, 0.16), rgba(6, 18, 15, 0.02) 46%, rgba(6, 18, 15, 0.4)),
+      linear-gradient(90deg, rgba(6, 18, 15, 0.18), transparent 50%, rgba(6, 18, 15, 0.16));
+  }
+
+  .opening-palette {
+    animation: none;
+    opacity: 0.3;
+  }
 }
 
 .opening-sequence {
@@ -1162,6 +1180,13 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   transition: background 1200ms ease;
 }
 
+/* Điện thoại: lớp màu theo giờ nhẹ đi một nửa, ảnh còn tươi (chủ dự án 10/10/2026: "mờ mịt"). */
+@media (max-width: 767px) {
+  .hero-tod {
+    opacity: 0.5;
+  }
+}
+
 .hero-tod-dawn {
   background: linear-gradient(
     170deg,
@@ -1257,8 +1282,8 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
  */
 .hero-scene-scrim {
   background:
-    linear-gradient(90deg, rgba(8, 24, 20, 0.6) 0%, rgba(8, 24, 20, 0.34) 47%, rgba(8, 24, 20, 0.06) 76%),
-    linear-gradient(180deg, rgba(24, 63, 52, 0.08), rgba(24, 63, 52, 0.3) 48%, rgba(16, 34, 29, 0.9));
+    linear-gradient(90deg, rgba(8, 24, 20, 0.52) 0%, rgba(8, 24, 20, 0.26) 47%, rgba(8, 24, 20, 0.02) 76%),
+    linear-gradient(180deg, rgba(24, 63, 52, 0.04), rgba(24, 63, 52, 0.18) 48%, rgba(16, 34, 29, 0.82));
 }
 
 .hero-depth-window {
@@ -1295,7 +1320,7 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     rgba(0, 0, 0, 0.22) 60%,
     transparent 78%
   );
-  opacity: calc(0.44 - var(--hero-progress) * 0.16);
+  opacity: calc(0.3 - var(--hero-progress) * 0.12);
   overflow: hidden;
   position: absolute;
 }
@@ -1412,14 +1437,22 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
    */
   .hero-scene-scrim {
     background:
-      linear-gradient(90deg, rgba(8, 24, 20, 0.52), rgba(8, 24, 20, 0.12)),
+      linear-gradient(90deg, rgba(8, 24, 20, 0.34), rgba(8, 24, 20, 0.06)),
       linear-gradient(
         180deg,
-        rgba(16, 34, 29, 0.34) 0%,
-        rgba(16, 34, 29, 0.12) 26%,
-        rgba(16, 34, 29, 0.62) 62%,
-        rgba(16, 34, 29, 0.93) 100%
+        rgba(16, 34, 29, 0.26) 0%,
+        rgba(16, 34, 29, 0.12) 30%,
+        rgba(16, 34, 29, 0.5) 62%,
+        rgba(16, 34, 29, 0.9) 100%
       );
+  }
+
+  /*
+   * Ngôi đền giữa sông nằm ở khoảng 27% chiều ngang ảnh. Cắt giữa như máy tính
+   * thì điện thoại chỉ còn vách núi; dời khung để đền vào giữa màn (10/10/2026).
+   */
+  .hero-scene-image {
+    object-position: 16% 50%;
   }
 
   /*
@@ -1428,12 +1461,12 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
    * không đọc ra khung cửa đá nữa. Hạ hẳn độ rõ để nó chỉ còn là một lớp
    * chất liệu mờ, và mặt nạ ở bản gốc lo phần tan mép.
    */
+  /*
+   * Khung ảnh mưa thứ hai: trên điện thoại nó chỉ còn là bóng ngôi đền mờ ở góc
+   * trên, chồng lên ảnh nền làm cả đầu trang mờ đục (chủ dự án 10/10/2026). Bỏ.
+   */
   .hero-depth-window {
-    height: 72%;
-    opacity: calc(0.16 - var(--hero-progress) * 0.04);
-    right: -42vw;
-    top: 8%;
-    width: 118vw;
+    display: none;
   }
 
   /*
@@ -1563,7 +1596,7 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
    * gần rõ như ảnh nền, đúng cái "hai tấm ảnh chồng nhau" chủ dự án từng chê.
    */
   .hero-depth-window {
-    opacity: 0.44;
+    opacity: 0.3;
   }
 
   .hero-signature-title::before {

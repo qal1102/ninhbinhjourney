@@ -867,14 +867,14 @@ function createRoute(duration: string, selected: string[]) {
 /*
  * Ảnh màn mở đầu theo khổ màn hình (07/10/2026). Ảnh mưa chỉ rộng 1672px:
  * máy tính khung ngang thì đủ nét, nhưng điện thoại khung dọc phải phóng gần
- * ba lần nên vách đá nhoè thành mảng. Khung dọc dùng `trang-an-doc.jpg`: cắt sẵn
+ * ba lần nên vách đá nhoè thành mảng. Khung dọc dùng `trang-an-doc-sang.jpg`: cắt sẵn
  * khung dọc 1640×3567 quanh mái đình từ ảnh Tràng An 5670px (ảnh nền đầu trang,
  * nên màn mở đầu tan ra là liền). Cắt sẵn để điện thoại chỉ tải bản rộng khoảng
  * 1200px (khoảng 0,3 MB) mà vẫn đủ nét theo chiều cao; để trình duyệt cắt từ
  * ảnh ngang thì phải tải bản 3840px nặng 1,15 MB.
  */
 const ANH_MO_DAU_CHUNG = { alt: "", fill: true, sizes: "100vw", loading: "eager", fetchPriority: "high" } as const;
-const ANH_MO_DAU_DOC = getImageProps({ ...ANH_MO_DAU_CHUNG, src: "/images/destinations/trang-an-doc.jpg" }).props;
+const ANH_MO_DAU_DOC = getImageProps({ ...ANH_MO_DAU_CHUNG, src: "/images/destinations/trang-an-doc-sang.jpg" }).props;
 const ANH_MO_DAU_NGANG = getImageProps({ ...ANH_MO_DAU_CHUNG, src: "/images/destinations/intro-trang-an-rain.png" }).props;
 
 const INTRO_SESSION_KEY = "nbj-intro-played";
@@ -1385,7 +1385,7 @@ export default function NinhBinhLanding({
       ) : null}
       <section ref={heroSceneRef} data-customer-section="home-hero" data-hero-scene data-motion="static" className="hero-identity-scene relative overflow-hidden bg-[#183F34] text-[#FBFAF6]">
         <Image
-          src="/images/destinations/trang-an.jpg"
+          src="/images/destinations/trang-an-sang.jpg"
           alt={lang === "en" ? "Ninh Binh limestone landscape" : "Phong cảnh núi đá vôi Ninh Bình"}
           fill
           priority
@@ -1420,7 +1420,7 @@ export default function NinhBinhLanding({
         {/*
           Bảng chú thích ảnh, dựng đứng sát mép phải như dòng ghi công trong
           ấn phẩm. Nó thay chỗ hai nét vẽ cũ bằng một thứ **nói điều thật**:
-          đúng nơi chụp (ảnh nền là trang-an.jpg), đúng toạ độ lấy từ chính
+          đúng nơi chụp (ảnh nền là trang-an-sang.jpg), đúng toạ độ lấy từ chính
           kho dữ liệu điểm đến. Ẩn ở khổ hẹp — chỗ ấy đã chật.
         */}
         <p

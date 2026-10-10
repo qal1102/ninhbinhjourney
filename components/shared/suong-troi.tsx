@@ -173,7 +173,7 @@ export function SuongTroi({ band, className = "", toanTrang = false }: { band: D
 
     const hep = window.matchMedia("(max-width: 767px)");
     // Lớp phủ cả trang mỏng hơn sương đầu trang để chữ bên dưới vẫn đọc rõ.
-    const doDay = () => (bandName === "night" ? 0.66 : 0.56) * (toanTrang ? 0.62 : 1);
+    const doDay = () => (bandName === "night" ? 0.66 : 0.56) * (toanTrang ? 0.42 : 0.8);
     // Màn dọc hẹp: nhiễu co theo tỉ lệ khung nên mỗi mảng sương bị phóng to
     // khoảng 3,5 lần, trông như đứng yên (chủ dự án 08/10/2026). Kéo cỡ mảng về
     // ngang máy tính và cho trôi nhanh hơn.

@@ -235,16 +235,21 @@ test("seasonal employee gets expiring trained-only access and manager can see th
   await expect(seasonalRecord.getByLabel("Vé", { exact: true })).toHaveCount(0);
 });
 
-test("ERP exposes an installable manifest and service worker", async ({ request }) => {
-  const manifestResponse = await request.get("/manifest.webmanifest");
-  expect(manifestResponse.ok()).toBeTruthy();
-  const manifest = await manifestResponse.json();
-  expect(manifest.start_url).toBe("/erp");
-  expect(manifest.display).toBe("standalone");
-  expect(manifest.icons).toEqual(expect.arrayContaining([
-    expect.objectContaining({ sizes: "192x192" }),
-    expect.objectContaining({ sizes: "512x512" }),
-  ]));
+test("ERP and the visitor site are two separate installable apps", async ({ request }) => {
+  // 10/10/2026: một manifest chung (phạm vi "/", mở /erp) làm app cài từ web
+  // khách mở ra ERP và nhảy qua lại giữa hai bên. Nay mỗi bên một app.
+  const erp = await (await request.get("/erp.webmanifest")).json();
+  expect(erp).toMatchObject({ id: "/erp", start_url: "/erp", scope: "/erp", display: "standalone" });
+  const web = await (await request.get("/manifest.webmanifest")).json();
+  expect(web).toMatchObject({ id: "/", start_url: "/", scope: "/", name: "Ninh Bình Journey" });
+  for (const m of [erp, web]) {
+    expect(m.icons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ sizes: "192x192" }),
+      expect.objectContaining({ sizes: "512x512" }),
+    ]));
+  }
+  expect(await (await request.get("/packages")).text()).toContain('rel="manifest" href="/manifest.webmanifest"');
+  expect(await (await request.get("/erp/login")).text()).toContain('rel="manifest" href="/erp.webmanifest"');
 
   const workerResponse = await request.get("/sw.js");
   expect(workerResponse.ok()).toBeTruthy();

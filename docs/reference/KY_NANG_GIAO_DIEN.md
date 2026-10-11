@@ -218,7 +218,50 @@ hoặc H4 sau khi có ảnh tách lớp. Và sửa riêng lớp phủ ban đêm 
 
 ---
 
-## 10. Nguồn
+## 10. Đợt nghiên cứu UX 11/10/2026: thứ đẹp nhờ dễ dùng
+
+Chủ dự án giao: *"nghiên cứu thêm các cách thiết kế UX đẹp mắt"*. Thực đơn ở
+trên nghiêng về hiệu ứng. Đợt này soát bằng mắt trên production (iPhone 13,
+iPhone SE, 1440), đối chiếu với mã, rồi chỉ giữ những cách mà trang **chưa có**
+và người chấm **thấy ngay khi cầm máy**. Bài viết của các hãng thiết kế phần lớn
+là quảng cáo, con số trong đó không đáng tin; chỗ nào dựa vào số đo thật của
+trang thì ghi rõ.
+
+### 10.1 Đã sửa luôn trong đợt (là lỗi, không phải món trang trí)
+
+| # | Thấy gì | Đã làm |
+|---|---|---|
+| E0a | Nút nổi "✦ Hỏi AI" (96×48px) và "Trợ lý hành trình" (184×48px) che chữ ở mép phải trên điện thoại: tiêu đề gói, ô "Tốc độ" nghe thuyết minh, dòng "Đang đi tham quan?…" | Kiểu nút nổi co giãn của Material 3, cũng là cách Gmail, Google Maps làm: cuộn xuống thì thu về vòng tròn 48×48 chỉ còn biểu tượng, cuộn lên hay về đầu trang thì hiện chữ lại. Chỉ dưới 640px; tên đọc cho trình đọc màn hình giữ nguyên. `lib/use-thu-gon-khi-cuon.ts` |
+| E0b | Tiêu đề rớt một chữ xuống dòng cuối ("Di sản trong một / ngày") | `text-wrap: balance` cho h1–h3 và `.font-display`, `text-wrap: pretty` cho đoạn văn, trong `@layer base` để lớp tiện ích vẫn thắng. Chrome 114, Safari 17.5, Firefox 121 trở lên; máy cũ chỉ xuống dòng như trước |
+| E0c | Bản đồ nhỏ trang gói ở iPhone SE: nút ⓘ đè lên ghim số 1, ghim số 2 sát mép | Lề ôm ghim 24 → 40/48/56px (`mini-route-map-canvas.tsx`) |
+
+### 10.2 Đề xuất, chờ chọn món
+
+| # | Món | Vì sao (thấy ở đâu) | Công | Rủi ro |
+|---|---|---|---|---|
+| E1 | **Thanh đặt chỗ dính đáy** ở trang gói trên điện thoại: giá + nút "Giữ chỗ", hiện khi đã cuộn qua ảnh đầu | Giá và nút giữ chỗ nằm ở cuối trang, sau khoảng bốn màn cuộn. Airbnb, Booking đều giữ nút đặt trong tầm ngón cái | Nhỏ | Phải xếp cùng dải đồng ý và nút "Hỏi AI" (đã có `useFloatingYield`) |
+| E2 | **Tên gói lên màn đầu** trên điện thoại (chữ đè lên đáy ảnh, hoặc đặt trên ảnh) | Màn đầu trang gói chỉ thấy ảnh Bái Đính, tên gói nằm dưới mép màn hình | Nhỏ | Rất thấp |
+| E3 | **Hộp thoại mở và đóng mềm** bằng `@starting-style` + `transition-behavior: allow-discrete` | Hai hộp `showModal` ("Hỏi AI", hồ sơ người chèo) hiện ra rồi tắt đi cụt lủn. Có từ Chrome 117, Safari 17.5, Firefox 129 | Rất nhỏ | Không; giảm chuyển động thì tắt |
+| E4 | **Ảnh hiện dần từ bản xem trước mờ** (`placeholder="blur"` của `next/image`, hoặc màu chủ đạo của ảnh) | Kho chưa có chỗ nào dùng ảnh xem trước; ảnh gốc 2–4MB, trên 4G yếu khách nhìn ô trống | Nhỏ | Thấp; ảnh đi qua `next/image` sẵn |
+| E5 | **Ảnh thẻ bay thành ảnh đầu trang** khi bấm từ danh sách gói hay điểm đến (View Transitions có tên phần tử) | Đã có chuyển trang View Transitions cho cả trang; nối thêm ảnh thẻ là cú "chuyển cảnh máy quay" đúng tinh thần mục 0. Hỗ trợ khoảng 89% (Interop 2026) | Vừa | Trình duyệt chưa hỗ trợ thì chuyển trang như cũ |
+| E6 | **Hiện dần theo cuộn bằng CSS gốc** (`animation-timeline: view()`) thay JS ở các khối "fade-up" | Nhẹ máy hơn GSAP cho việc vặt. Hỗ trợ khoảng 80%, còn ghi "Limited" | Nhỏ | Phải bọc `@supports` và giảm chuyển động; chỉ là gia vị |
+| E7 | **Ghim bản đồ không đè tên địa danh** của nền bản đồ | Ghim số 2 che chữ "P. Tân… Hoa Lư" ở bản đồ trang gói | Nhỏ | Thấp; ẩn lớp tên phường xã ở bản đồ tĩnh |
+
+**Riêng ERP** (chủ dự án từng nói ERP "nhiều tính năng nhưng không hiểu phải làm gì"):
+
+| # | Món | Vì sao | Công | Rủi ro |
+|---|---|---|---|---|
+| E8 | **Hộp "Việc cần bạn" theo vai** ở trang đầu: đề xuất chờ duyệt, hoá đơn chờ, sự cố đang mở, việc được giao, gom một chỗ, bấm là tới đúng màn | Các bài về ERP cùng một ý: vào theo việc, không vào theo màn; mỗi vai một lối vào. ERP có 74 màn, số chờ đang rải ở chuông, đề xuất, từng module | Vừa | Thấp nếu chỉ đọc lại số đã có, không thêm nguồn số thứ hai |
+| E9 | **Bảng lệnh Ctrl+K** trên máy tính: gõ vài chữ là nhảy tới màn, dùng chung bộ dò của nút Trợ lý | 74 màn mà chỉ đi bằng menu; Linear, GitHub, Vercel đều có | Nhỏ | Thấp |
+| E10 | **Hoàn tác thay vì hỏi lại**: làm xong hiện dòng "Đã đánh dấu xong · Hoàn tác" vài giây | Kho chưa có chỗ nào hoàn tác được; chỉ hợp việc đảo được (đánh dấu việc xong, ẩn thông báo), không dùng cho sổ tài chính | Vừa | Không được làm cho bút toán hay duyệt |
+
+**Không đề nghị:** ghim tooltip bằng `anchor-name` (Interop 2026 vẫn ghi
+"Limited", khoảng 77%), cuộn cướp tay, âm thanh tự phát (đã ghi ở mục 7).
+
+**Nếu chỉ chọn ba món:** E1 (đặt chỗ trong tầm ngón cái), E8 (ERP có mạch
+dẫn), E3 (rẻ nhất mà thấy sang ngay).
+
+## 11. Nguồn
 
 - Cách chấm của Awwwards (trọng số, ngưỡng điểm, nhánh Mobile Excellence):
   <https://www.hontran.dev/blog/awwwards-judging-criteria>
@@ -227,3 +270,10 @@ hoặc H4 sau khi có ảnh tách lớp. Và sửa riêng lớp phủ ban đêm 
   <https://www.utsubo.com/blog/best-threejs-websites-2026>
 - Điều khoản OpenFreeMap: <https://openfreemap.org/>
 - Bảng giá MapTiler: <https://www.maptiler.com/cloud/pricing/>
+- Đợt 11/10/2026 (mục 10): mức hỗ trợ trình duyệt theo
+  <https://modern-css.com/reference/interop-2026/>; hiệu ứng kích theo cuộn
+  <https://developer.chrome.com/blog/scroll-triggered-animations>; ERP vào theo
+  việc và theo vai
+  <https://www.uxmatters.com/mt/archives/2025/02/designing-the-erp-dashboard-user-experience.php>,
+  <https://fuselabcreative.com/enterprise-ux-design-guide-2026-best-practices/>;
+  hệ thiết kế Airbnb 2025 <https://www.itsnicethat.com/articles/airbnb-app-redesign-140525>

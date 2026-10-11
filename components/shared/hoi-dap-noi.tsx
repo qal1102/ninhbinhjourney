@@ -7,6 +7,7 @@ import { useReducedMotion } from "@/components/shared/use-reduced-motion";
 import { CAU_GOI_Y } from "@/domain/hoi-dap-goi-y";
 import type { NgonNgu } from "@/lib/ngon-ngu";
 import { FLOATING_YIELD_CLASS } from "@/lib/use-floating-yield";
+import { useThuGonKhiCuon } from "@/lib/use-thu-gon-khi-cuon";
 
 /**
  * Khung "Hỏi AI" nổi trên web khách (08/10/2026): chủ dự án muốn "hiện ra
@@ -115,6 +116,7 @@ export function HoiDapNoi() {
   // Màn thấp (iPhone SE) mà dải đồng ý còn hiện thì không đủ chỗ: nút nằm
   // trên dải sẽ che nút chính của trang. Tạm ẩn cho tới khi khách trả lời dải.
   const [nhuongCho, setNhuongCho] = useState(false);
+  const gon = useThuGonKhiCuon();
   const hop = useRef<HTMLDialogElement>(null);
   const cuoi = useRef<HTMLDivElement>(null);
   const oNhap = useRef<HTMLInputElement>(null);
@@ -197,15 +199,18 @@ export function HoiDapNoi() {
         data-testid="hoi-dap-mo"
         aria-hidden={nhuongCho ? true : undefined}
         tabIndex={nhuongCho ? -1 : undefined}
+        data-gon={gon ? "true" : undefined}
         style={deDay !== null ? { bottom: deDay } : undefined}
-        className={`fixed right-3 z-[1250] inline-flex min-h-12 items-center gap-2 rounded-full border border-[#E7B96A] bg-[#183F34] px-4 text-sm font-extrabold text-white shadow-[0_14px_42px_rgba(10,31,24,.32)] transition hover:bg-[#24594A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B96A] motion-reduce:transition-none sm:right-5 ${
+        className={`group fixed right-3 z-[1250] inline-flex min-h-12 min-w-12 items-center justify-center rounded-full border border-[#E7B96A] bg-[#183F34] px-4 text-sm font-extrabold text-white shadow-[0_14px_42px_rgba(10,31,24,.32)] transition-all duration-300 hover:bg-[#24594A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B96A] motion-reduce:transition-none max-sm:data-[gon=true]:px-0 sm:right-5 ${
           pathname === "/" ? "bottom-[4.5rem] sm:bottom-[5.25rem]" : "bottom-3 sm:bottom-5"
         } ${nhuongCho ? FLOATING_YIELD_CLASS : ""}`}
       >
         <span aria-hidden="true" className="text-base leading-none text-[#E7B96A]">
           ✦
         </span>
-        {t("nut")}
+        <span className="ml-2 inline-block max-w-[7rem] overflow-hidden whitespace-nowrap transition-all duration-300 motion-reduce:transition-none max-sm:group-data-[gon=true]:ml-0 max-sm:group-data-[gon=true]:max-w-0 max-sm:group-data-[gon=true]:opacity-0">
+          {t("nut")}
+        </span>
       </button>
 
       <dialog

@@ -25,7 +25,9 @@ import type { ToneBanDo } from "@/lib/map/brand-style";
  * Nên nó khoá hẳn thao tác; muốn lái thì đã có bản đồ lớn ở trang khám phá.
  */
 
-const LE_OM_GHIM = { top: 24, bottom: 34, left: 24, right: 24 };
+// Ghim tròn bán kính khoảng 20px, nút ⓘ ghi nguồn chiếm góc dưới phải. Lề 24px
+// để ghim nằm sát mép và dưới nút ⓘ ở khung hẹp (iPhone SE, soát 11/10/2026).
+const LE_OM_GHIM = { top: 40, bottom: 56, left: 40, right: 48 };
 
 export default function MiniRouteMapCanvas({
   points,

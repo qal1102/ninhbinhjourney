@@ -11,6 +11,7 @@ import {
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { FLOATING_YIELD_CLASS, useFloatingYield } from "@/lib/use-floating-yield";
+import { useThuGonKhiCuon } from "@/lib/use-thu-gon-khi-cuon";
 
 /** Nút "Mục lục" ở đầu trang bắn sự kiện này để mở hộp thoại mục lục. */
 export const JOURNEY_CONCIERGE_OPEN_EVENT = "nbj:open-journey-concierge";
@@ -245,6 +246,7 @@ export function JourneyConcierge({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const mounted = useSyncExternalStore(subscribeNothing, () => true, () => false);
   const nhuongCho = useFloatingYield();
+  const gon = useThuGonKhiCuon();
   // Nút đã mở hộp thoại, để đóng xong trả tiêu điểm đúng chỗ: nút nổi, hoặc nút
   // "Mục lục" ở đầu trang điện thoại.
   const openerRef = useRef<HTMLElement | null>(null);
@@ -391,7 +393,8 @@ export function JourneyConcierge({
             data-journey-concierge-trigger
             aria-hidden={nhuongCho && !open ? true : undefined}
             tabIndex={nhuongCho && !open ? -1 : undefined}
-            className={`fixed bottom-3 right-3 z-[80] inline-flex min-h-12 max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full border border-white/25 bg-[#183F34] px-3.5 text-sm font-extrabold text-white shadow-[0_14px_42px_rgba(10,31,24,.3)] transition duration-200 hover:bg-[#24594A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B96A] motion-reduce:transition-none max-[279px]:h-14 max-[279px]:w-14 max-[279px]:justify-center max-[279px]:p-0 sm:bottom-5 sm:right-5 sm:px-4 ${
+            data-gon={gon && !open ? "true" : undefined}
+            className={`group fixed bottom-3 right-3 z-[80] inline-flex min-h-12 min-w-12 max-w-[calc(100vw-1.5rem)] items-center justify-center rounded-full border border-white/25 bg-[#183F34] px-3.5 text-sm font-extrabold text-white shadow-[0_14px_42px_rgba(10,31,24,.3)] transition-all duration-300 hover:bg-[#24594A] max-sm:data-[gon=true]:px-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B96A] motion-reduce:transition-none max-[279px]:h-14 max-[279px]:w-14 max-[279px]:justify-center max-[279px]:p-0 sm:bottom-5 sm:right-5 sm:px-4 ${
               nhuongCho && !open ? FLOATING_YIELD_CLASS : ""
             }`}
           >
@@ -411,7 +414,7 @@ export function JourneyConcierge({
                 <path d="M12 3 9.7 9.7 3 12l6.7 2.3L12 21l2.3-6.7L21 12l-6.7-2.3L12 3Z" />
               </svg>
             </span>
-            <span className="max-w-[9rem] truncate max-[279px]:sr-only">
+            <span className="ml-2 max-w-[9rem] truncate transition-all duration-300 motion-reduce:transition-none max-[279px]:sr-only max-sm:group-data-[gon=true]:ml-0 max-sm:group-data-[gon=true]:max-w-0 max-sm:group-data-[gon=true]:opacity-0">
               {lang === "vi" ? "Trợ lý hành trình" : "Journey concierge"}
             </span>
           </button>

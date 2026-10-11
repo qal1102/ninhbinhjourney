@@ -66,6 +66,25 @@ select {
  * doi document height va keo scroll anchoring lui/toi. Motion typography tu
  * nay phai nam trong mot scene co kich thuoc khoa, khong sua metric global.
  */
+/*
+ * Tiêu đề không để một chữ rớt xuống dòng cuối ("Di sản trong một / ngày"),
+ * đoạn văn không để chữ mồ côi. Chỉ đổi chỗ xuống dòng, không đổi cỡ chữ.
+ */
+@layer base {
+  h1,
+  h2,
+  h3,
+  .font-display {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+}
+
 .font-display {
   font-family: var(--font-heading);
   font-variation-settings: "opsz" 84, "SOFT" 40, "WONK" 0;

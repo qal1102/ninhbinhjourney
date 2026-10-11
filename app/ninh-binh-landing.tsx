@@ -929,6 +929,7 @@ export default function NinhBinhLanding({
     () => false,
   );
   const showIntro = introVisible && !introAlreadyPlayed;
+  const boQuaRef = useRef<HTMLInputElement>(null);
   const modalOpen = Boolean(detailId || checkoutOpen);
   const ninhBinhHour = useNinhBinhHour();
   // A15-TRUNG-THU-01: một cờ duy nhất, tính theo đồng hồ thật của khách,
@@ -1180,6 +1181,14 @@ export default function NinhBinhLanding({
 
   useEffect(() => {
     if (introAlreadyPlayed) return;
+    if (boQuaRef.current?.checked) {
+      // Khách đã bấm "Bỏ qua" trước khi trang nạp xong: CSS đã giấu màn.
+      const ngay = window.setTimeout(() => {
+        setIntroVisible(false);
+        markIntroPlayed();
+      }, 0);
+      return () => window.clearTimeout(ngay);
+    }
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timeout = window.setTimeout(() => {
       setIntroVisible(false);
@@ -1369,18 +1378,29 @@ export default function NinhBinhLanding({
             <div />
             <span>{trailerWords.slice(1).join(" · ")}</span>
           </div>
-          <button
-            type="button"
-            className="opening-skip"
-            data-testid="opening-skip"
-            onClick={() => {
+          {/*
+            Nút "Bỏ qua" chạy được cả khi JavaScript chưa nạp xong (11/10/2026):
+            điện thoại yếu nạp trang chậm, khách bấm mà không ăn là hỏng đúng
+            việc nút này sinh ra để làm. Bấm vào nhãn là đánh dấu ô ẩn, CSS
+            (`.opening-screen:has(.opening-skip-toggle:checked)`) giấu màn
+            ngay; nạp xong thì React đọc ô ấy và ghi là đã xem.
+          */}
+          <input
+            ref={boQuaRef}
+            id="bo-qua-mo-dau"
+            type="checkbox"
+            role="button"
+            aria-label={lang === "en" ? "Skip" : "Bỏ qua"}
+            className="opening-skip-toggle"
+            onChange={() => {
               setIntroVisible(false);
               markIntroPlayed();
             }}
-          >
+          />
+          <label htmlFor="bo-qua-mo-dau" className="opening-skip" data-testid="opening-skip" aria-hidden="true">
             {lang === "en" ? "Skip" : "Bỏ qua"}
             <span aria-hidden="true">→</span>
-          </button>
+          </label>
         </div>
       ) : null}
       <section ref={heroSceneRef} data-customer-section="home-hero" data-hero-scene data-motion="static" className="hero-identity-scene relative overflow-hidden bg-[#183F34] text-[#FBFAF6]">

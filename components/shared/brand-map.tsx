@@ -131,6 +131,7 @@ export type BrandMapProps = {
 
 /** Góc nhìn mở đầu của bản đồ 3D: đủ thấy vách núi mà ghim phía xa vẫn đọc được. */
 const NGHIENG_3D = 55;
+const NGHIENG_3D_KHI_CHON = 62;
 const XOAY_3D = -18;
 
 export const LOI_NHAN_HONG_TUONG_TAC =
@@ -506,7 +507,10 @@ export function BrandMap({
         // Một cú "chuyển cảnh máy quay": vừa tiến lại gần vừa hạ thấp góc
         // nhìn, nên khối nhà và nếp núi nổi lên đúng lúc khách nhìn tới.
         const phang = khoi3d && !dang3dRef.current;
-        map.flyTo({ ...den, pitch: phang ? 0 : NGHIENG_KHI_CHON, bearing: phang ? 0 : -12, speed: 0.9, curve: 1.42, essential: true });
+        // Bản đồ 3D hạ máy quay thấp hơn (62°) và xoay chéo, để vách đá vôi
+        // quanh điểm vừa chọn dựng lên thành khối, không chỉ là bóng mờ.
+        const goc = phang ? 0 : khoi3d ? NGHIENG_3D_KHI_CHON : NGHIENG_KHI_CHON;
+        map.flyTo({ ...den, pitch: goc, bearing: phang ? 0 : khoi3d ? -28 : -12, speed: 0.9, curve: 1.42, essential: true });
       }
       daBay.current = true;
       return;

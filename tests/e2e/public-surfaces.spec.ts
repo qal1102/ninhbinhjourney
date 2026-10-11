@@ -125,12 +125,13 @@ test("nút Bỏ qua và phím Escape tắt màn mở đầu ngay", async ({ page
   await page.goto("/?lang=vi", { waitUntil: "domcontentloaded" });
   const intro = page.getByTestId("opening-intro");
   await expect(intro).toHaveCount(1);
-  // Bấm lặp tới khi trang đã gắn sự kiện (hydrate xong); hạn 5 giây để chắc
-  // là nút tắt màn chứ không phải màn tự tắt lúc 6,5 giây.
-  await expect(async () => {
-    await page.getByTestId("opening-skip").click({ timeout: 500 });
-    await expect(intro).toHaveCount(0, { timeout: 500 });
-  }).toPass({ timeout: 5000 });
+  // Nút chạy cả trước khi trang nạp xong JavaScript (CSS giấu màn ngay), nên
+  // một cú bấm là đủ; hạn 5 giây để chắc là nút tắt màn chứ không phải màn tự
+  // tắt lúc 6,5 giây. Trước 11/10/2026 bài bấm lặp chờ hydrate và đỏ 4/6 lần
+  // khi máy chạy nhiều luồng.
+  await page.getByTestId("opening-skip").click();
+  await expect(intro).toBeHidden({ timeout: 1500 });
+  await expect(intro).toHaveCount(0, { timeout: 15000 });
   await expect(page.getByText("Lập hành trình", { exact: true }).first()).toBeVisible();
 
   // clearIntroSession xoá cờ ở mọi lần nạp trang, nên lượt sau là lượt ghé mới.

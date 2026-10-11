@@ -34,13 +34,18 @@ export const GHI_CONG_BAN_DO =
   '<a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a> · <a href="https://www.openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a> · dữ liệu <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>';
 
 /**
- * Độ cao để núi đá vôi nổi khối (bản đồ 3D, 11/10/2026). Terrain Tiles trên
- * AWS Open Data: miễn phí, không khoá, không đăng ký, cho dùng thương mại,
- * chỉ cần ghi nguồn. Mã hoá "terrarium" (độ cao nằm trong ba kênh màu).
+ * Độ cao để núi đá vôi nổi khối (bản đồ 3D, 11/10/2026). Mapterhorn: dữ liệu
+ * độ cao mở, miễn phí, không khoá, không đăng ký, chỉ cần ghi nguồn; mã hoá
+ * "terrarium" (độ cao nằm trong ba kênh màu), ô 512px, ở Ninh Bình có tới z12.
+ *
+ * 12/10/2026 đổi từ Terrain Tiles trên AWS (chủ dự án: "có vẻ khá nặng và
+ * không load kịp"): đo từ Việt Nam, mỗi ô AWS mất khoảng 1,1 giây vì máy chủ
+ * ở Mỹ, không qua CDN; Mapterhorn qua Cloudflare mất 0,25 giây, mà mỗi ô
+ * 512px phủ bằng bốn ô 256px nên số lượt tải còn một phần tư.
  */
-export const NGUON_DO_CAO = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+export const NGUON_DO_CAO = "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp";
 export const GHI_CONG_DIA_HINH =
-  'địa hình <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noreferrer">Terrain Tiles</a> (Mapzen, SRTM)';
+  'địa hình <a href="https://mapterhorn.com/attribution" target="_blank" rel="noreferrer">© Mapterhorn</a>';
 /**
  * Núi Ninh Bình cao chừng 100–200 m nhưng vách dựng đứng và hẹp; dữ liệu
  * 30 m làm chúng thấp hẳn đi. Phóng 1,8 lần thì khối núi đọc được ở tầm cả
@@ -131,7 +136,7 @@ export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay", diaHinh = false): 
   const m = BANG[tone];
   // Hai nguồn riêng cho khối núi và bóng đổ: MapLibre khuyên vậy, dùng chung
   // một nguồn thì bóng đổ bị vỡ ô khi bản đồ nghiêng.
-  const doCao = { type: "raster-dem" as const, tiles: [NGUON_DO_CAO], encoding: "terrarium" as const, tileSize: 256, maxzoom: 14 };
+  const doCao = { type: "raster-dem" as const, tiles: [NGUON_DO_CAO], encoding: "terrarium" as const, tileSize: 512, maxzoom: 12 };
 
   return {
     version: 8,

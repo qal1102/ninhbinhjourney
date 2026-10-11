@@ -140,8 +140,22 @@ select {
   z-index: 3;
 }
 
+/* Ô ẩn sau nút "Bỏ qua": bấm là màn tắt ngay, kể cả lúc JavaScript chưa nạp xong. */
+.opening-skip-toggle {
+  clip: rect(0 0 0 0);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.opening-screen:has(.opening-skip-toggle:checked) {
+  display: none;
+}
+
 .opening-skip:hover,
-.opening-skip:focus-visible {
+.opening-skip-toggle:focus-visible + .opening-skip {
   background: rgba(251, 250, 246, 0.16);
   outline: 2px solid #e7b96a;
   outline-offset: 2px;

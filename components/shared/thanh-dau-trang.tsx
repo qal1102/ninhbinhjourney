@@ -127,7 +127,7 @@ export function ThanhDauTrang({
       <nav
         data-thanh-day
         aria-label={lang === "en" ? "Main sections" : "Các phần chính"}
-        className="fixed inset-x-0 bottom-0 z-[1150] grid grid-cols-5 gap-1 border-t border-[#e1dacb] bg-[#fbf8f1]/96 px-1.5 pt-1.5 backdrop-blur-md sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-[1150] grid grid-cols-5 gap-1 border-t max-[379px]:grid-cols-[repeat(5,minmax(44px,auto))] max-[379px]:gap-0.5 border-[#e1dacb] bg-[#fbf8f1]/96 px-1.5 pt-1.5 backdrop-blur-md sm:hidden"
         style={{ height: "calc(64px + env(safe-area-inset-bottom, 0px))", paddingBottom: "calc(6px + env(safe-area-inset-bottom, 0px))" }}
       >
         {MUC.map((m) => {
@@ -137,7 +137,7 @@ export function ThanhDauTrang({
               key={m.id}
               href={doiDuongDan ? doiDuongDan(m.href) : lang === "en" ? `${m.href}?lang=en` : m.href}
               aria-current={dangO ? "page" : undefined}
-              className={`flex h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-2xl px-0.5 text-[10px] font-bold leading-none tracking-[-0.02em] ${dangO ? "bg-[#183f34] text-white" : "text-[#42574e]"}`}
+              className={`flex h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-2xl px-0.5 text-[10px] font-bold leading-none tracking-[-0.02em] max-[379px]:px-1 max-[379px]:tracking-[-0.03em] ${dangO ? "bg-[#183f34] text-white" : "text-[#42574e]"}`}
             >
               <BieuTuong id={m.id} />
               {lang === "en" ? m.nganEn : m.nganVi}

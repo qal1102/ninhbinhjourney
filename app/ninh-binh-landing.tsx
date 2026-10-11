@@ -1535,9 +1535,14 @@ export default function NinhBinhLanding({
           */}
           {ninhBinhHour ? (
             <p className="hero-gio mt-5 text-sm text-[#FBFAF6]/72 sm:text-base">
-              <span className="tabular-nums text-[#E7B96A]">
+              {/* F1 (11/10/2026): giờ Ninh Bình dẫn sang trang "Hôm nay ở Ninh Bình". */}
+              <a
+                href={`/hom-nay?lang=${lang}`}
+                data-customer-track="home-hero-hom-nay"
+                className="tabular-nums text-[#E7B96A] underline decoration-[#E7B96A]/45 underline-offset-4 transition hover:decoration-[#E7B96A]"
+              >
                 {t.hourLead as string} {ninhBinhHour.clock}
-              </span>
+              </a>
               , {(t.hourPhrases as Record<DayBand, string>)[ninhBinhHour.band]}.
             </p>
           ) : null}

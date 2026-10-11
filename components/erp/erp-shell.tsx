@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import {
   ERP_MODULES,
   ERP_ROLE_LABELS,
+  ERP_SITES,
   type ErpSite,
 } from "@/domain/erp";
 import {
@@ -20,7 +21,8 @@ import { RoleSwitchControl } from "./role-switch-control";
 import { VoiceCommandCenter } from "./voice-command-center";
 import { ErpMobileMenu } from "./erp-mobile-menu";
 import { ChiDiem } from "@/components/shared/chi-diem";
-import { CHUC_NANG_MOI } from "@/domain/ban-do-chuc-nang";
+import { BAN_DO_CHUC_NANG, CHUC_NANG_MOI } from "@/domain/ban-do-chuc-nang";
+import { BangLenh, type MucBangLenh } from "./bang-lenh";
 
 type Props = {
   user: CurrentErpUser;
@@ -66,6 +68,41 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
         ]
       : []),
     ...(systemAdmin ? [{ href: "/erp/tai-khoan", label: "Tài khoản", hint: "Người dùng và phân quyền" }] : []),
+  ];
+
+  // G2: mục của bảng lệnh Ctrl+K, chỉ gồm màn người này vào được.
+  const mucBangLenh: MucBangLenh[] = [
+    { id: "trang-dau", nhom: "man", ten: "Trang đầu", phu: "Tổng quan hôm nay", href: "/erp" },
+    { id: "viec", nhom: "man", ten: "Việc & ghi chú", phu: "Giao việc, ghi chú bằng giọng nói", href: "/erp/viec" },
+    { id: "de-xuat", nhom: "man", ten: "Đề xuất & phê duyệt", phu: "Xin nghỉ, tạm ứng, mua hàng, sửa chữa", href: "/erp/de-xuat" },
+    { id: "nhat-ky", nhom: "man", ten: "Nhật ký", phu: "Ai làm gì, lúc nào", href: "/erp/nhat-ky" },
+    { id: "soat-giay-to", nhom: "man", ten: "Soát giấy tờ bằng AI", phu: "Chụp hoá đơn, danh sách đoàn", href: "/erp/soat-giay-to" },
+    ...(user.role === "director" || user.actingAs
+      ? [{ id: "huong-dan", nhom: "man" as const, ten: "Dạo một vòng", phu: "Mọi chức năng, bấm là tới đúng chỗ", href: "/erp/huong-dan" }]
+      : []),
+    ...adminLinks.map((item) => ({ id: item.href, nhom: "man" as const, ten: item.label.replace(/^✦ /, ""), phu: item.hint, href: item.href })),
+    ...user.siteIds.flatMap((siteId) => {
+      const coSo = ERP_SITES.find((s) => s.id === siteId);
+      if (!coSo) return [];
+      return ERP_MODULES.filter((module) => (user.moduleIdsBySite[siteId] ?? []).includes(module.id)).map((module) => ({
+        id: `${siteId}/${module.id}`,
+        nhom: "man" as const,
+        ten: `${module.name} · ${coSo.shortName}`,
+        phu: module.description,
+        href: `/erp/${siteId}/${module.id}`,
+      }));
+    }),
+    ...(user.role === "director" || user.actingAs
+      ? BAN_DO_CHUC_NANG.flatMap((nhom) =>
+          nhom.chucNang.map((cn) => ({
+            id: `cn-${cn.id}`,
+            nhom: "chuc-nang" as const,
+            ten: cn.ten,
+            phu: `${nhom.ten} · ${cn.moTa}`,
+            href: cn.duongDan.replace("{site}", user.siteIds[0] ?? "trang-an"),
+          })),
+        )
+      : []),
   ];
 
   return (
@@ -116,6 +153,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             ) : null}
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            <BangLenh muc={mucBangLenh} />
             <ErpAppControls role={user.role} accountId={user.id} />
             {/* ERP-UX-01: trợ lý nay đứng trên thanh đầu trang thay vì nổi đè
                 lên nội dung. Xem chú thích trong `voice-command-center.tsx`. */}

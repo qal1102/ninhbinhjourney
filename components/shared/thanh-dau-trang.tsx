@@ -25,6 +25,39 @@ const MUC: ReadonlyArray<{ id: MucDauTrang; href: string; vi: string; en: string
   { id: "ve", href: "/tra-cuu-ve", vi: "Vé của tôi", en: "My tickets", nganVi: "Vé", nganEn: "Tickets" },
 ];
 
+function BieuTuong({ id }: { id: MucDauTrang }) {
+  const net = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  return (
+    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" {...net}>
+      {id === "kham-pha" ? <path d="M3 20l5-14 4 8 3-5 6 11z" /> : null}
+      {id === "lap-lich" ? (
+        <>
+          <rect x="3" y="5" width="18" height="16" rx="3" />
+          <path d="M3 10h18M8 3v4M16 3v4" />
+        </>
+      ) : null}
+      {id === "goi" ? (
+        <>
+          <path d="M4 7h16l-1.5 12a2 2 0 0 1-2 1.8h-9A2 2 0 0 1 5.5 19z" />
+          <path d="M9 7a3 3 0 0 1 6 0" />
+        </>
+      ) : null}
+      {id === "mua" ? (
+        <>
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" />
+        </>
+      ) : null}
+      {id === "ve" ? (
+        <>
+          <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
+          <path d="M14 6v12" strokeDasharray="2 2" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
 export function ThanhDauTrang({
   lang,
   hienTai,
@@ -85,11 +118,33 @@ export function ThanhDauTrang({
         </div>
         <nav
           aria-label={lang === "en" ? "Main sections" : "Các phần chính"}
-          className="order-last -mx-1 flex w-full gap-0 overflow-x-auto min-[380px]:gap-0.5 sm:gap-1 pb-1 [scrollbar-width:none] lg:order-none lg:mx-0 lg:w-auto lg:pb-0"
+          className="order-last -mx-1 hidden w-full gap-0 overflow-x-auto pb-1 [scrollbar-width:none] sm:flex sm:gap-1 lg:order-none lg:mx-0 lg:w-auto lg:pb-0"
         >
           {lienKet}
         </nav>
       </div>
+      {/* F6 (11/10/2026): điện thoại đưa năm lối chính xuống đáy màn, trong tầm ngón cái. */}
+      <nav
+        data-thanh-day
+        aria-label={lang === "en" ? "Main sections" : "Các phần chính"}
+        className="fixed inset-x-0 bottom-0 z-[1150] grid grid-cols-5 gap-1 border-t border-[#e1dacb] bg-[#fbf8f1]/96 px-1.5 pt-1.5 backdrop-blur-md sm:hidden"
+        style={{ height: "calc(64px + env(safe-area-inset-bottom, 0px))", paddingBottom: "calc(6px + env(safe-area-inset-bottom, 0px))" }}
+      >
+        {MUC.map((m) => {
+          const dangO = hienTai === m.id;
+          return (
+            <Link
+              key={m.id}
+              href={doiDuongDan ? doiDuongDan(m.href) : lang === "en" ? `${m.href}?lang=en` : m.href}
+              aria-current={dangO ? "page" : undefined}
+              className={`flex h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-2xl text-[10.5px] font-bold leading-none tracking-[-0.01em] ${dangO ? "bg-[#183f34] text-white" : "text-[#42574e]"}`}
+            >
+              <BieuTuong id={m.id} />
+              {lang === "en" ? m.nganEn : m.nganVi}
+            </Link>
+          );
+        })}
+      </nav>
     </header>
   );
 }

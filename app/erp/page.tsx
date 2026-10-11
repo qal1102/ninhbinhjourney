@@ -5,6 +5,7 @@ import { ExecutiveDashboard } from "@/components/erp/executive-dashboard";
 import { RoleHomeDashboard } from "@/components/erp/role-home-dashboard";
 import { ViecDauTienPanel } from "@/components/erp/viec-dau-tien-panel";
 import { tongViecCho, type DemViecChoGiamDoc } from "@/domain/viec-dau-tien";
+import { danhSachViecCanBan } from "@/domain/viec-can-ban";
 import { CHUC_NANG_MOI, CHUC_NANG_WEB } from "@/domain/ban-do-chuc-nang";
 import { duongDenMucMoi, TONG_VIEC_TRA_CUU } from "@/domain/huong-dan";
 import Link from "next/link";
@@ -131,6 +132,13 @@ export default async function ErpHomePage({ searchParams }: Props) {
         <ViecDauTienPanel
           dem={demViecChoGiamDoc}
           siteId={visibleSites[0]?.id ?? ERP_SITES[0].id}
+          danhSach={danhSachViecCanBan({
+            sop: pendingSopDecisions,
+            suCo: escalatedIncidents,
+            caLech: shiftClosures.filter((record) => record.status === "exception-pending-director"),
+            hoaDon: supplierAp.invoices.filter((invoice) => invoice.status === "director-exception"),
+            duAn: pendingProjectChangeRequests,
+          })}
         />
       ) : null}
 

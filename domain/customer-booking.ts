@@ -150,10 +150,26 @@ export type CustomerProductTimeSlot = {
   endsAt: string;
   siteIds: string[];
   remaining: number;
+  /** Tỉ lệ chỗ đã có người giữ ở cơ sở chật nhất của chuyến, 0–1 (F2, 11/10/2026). */
+  fill: number;
+  doDong: MucDoDong;
   capacitySourceKind: "estimate" | "customer" | "measured";
   bookable: boolean;
   blockedReason: "passed" | "paused" | "full" | null;
 };
+
+export type MucDoDong = "vang" | "vua" | "dong";
+
+/**
+ * Chọn giờ theo độ đông (F2, chủ dự án chọn 11/10/2026 từ bảng vẽ). Dưới 40%
+ * chỗ đã giữ là vắng, từ 75% là đông. Chỉ tính chỗ đặt qua web và đoàn; khách
+ * mua tại quầy không có trong số này, nên chữ trên trang nói "chỗ đã giữ".
+ */
+export function mucDoDong(fill: number): MucDoDong {
+  if (fill < 0.4) return "vang";
+  if (fill < 0.75) return "vua";
+  return "dong";
+}
 
 /**
  * Máy chủ từ chối giữ chỗ cho chuyến bắt đầu trong vòng 5 phút tới
@@ -199,6 +215,10 @@ export function mergeProductSlotRows(
   return [...byStartsAt.entries()]
     .map(([startsAt, group]) => {
       const remaining = Math.min(...group.map((row) => row.remaining));
+      const fill = Math.min(
+        1,
+        Math.max(0, ...group.map((row) => (row.effectiveCapacity > 0 ? row.reserved / row.effectiveCapacity : 1))),
+      );
       const paused = group.some((row) => row.slotStatus === "paused");
       const passed = hanGiuCho !== null && Date.parse(startsAt) <= hanGiuCho;
       const endsAt = group.reduce(
@@ -217,6 +237,8 @@ export function mergeProductSlotRows(
         endsAt,
         siteIds: [...new Set(group.map((row) => row.siteId))].sort(),
         remaining,
+        fill,
+        doDong: mucDoDong(fill),
         capacitySourceKind,
         bookable: !passed && !paused && remaining > 0,
         blockedReason: passed

@@ -168,3 +168,25 @@ describe("TC-02 vá gấp: chuyến nhiều chặng không bị cắt đôi", ()
     expect(merged).toHaveLength(2);
   });
 });
+
+describe("F2 độ đông của khung giờ", () => {
+  it("lấy tỉ lệ đã giữ của cơ sở chật nhất và xếp vắng / vừa / đông", () => {
+    const merged = mergeProductSlotRows([
+      row({ siteId: "site-a", effectiveCapacity: 40, reserved: 4, remaining: 36 }),
+      row({ siteId: "site-b", effectiveCapacity: 40, reserved: 32, remaining: 8 }),
+    ]);
+    expect(merged[0].fill).toBeCloseTo(0.8);
+    expect(merged[0].doDong).toBe("dong");
+  });
+
+  it("khung chưa ai giữ là vắng, giữ một nửa là vừa", () => {
+    expect(mergeProductSlotRows([row({ reserved: 0 })])[0].doDong).toBe("vang");
+    expect(mergeProductSlotRows([row({ reserved: 20, remaining: 20 })])[0].doDong).toBe("vua");
+  });
+
+  it("sức chứa bằng 0 coi như đầy, không chia cho 0", () => {
+    const merged = mergeProductSlotRows([row({ effectiveCapacity: 0, reserved: 0, remaining: 0 })]);
+    expect(merged[0].fill).toBe(1);
+    expect(merged[0].doDong).toBe("dong");
+  });
+});

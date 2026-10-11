@@ -56,6 +56,24 @@ function DauMoc({ id, ngay, thuTu, nhan }: { id: string; ngay: string; thuTu: nu
   );
 }
 
+/** Vòng tiến độ cổng đã qua (F4). Phần đã qua tô son như màu dấu mộc. */
+function VongTienDo({ da, tong }: { da: number; tong: number }) {
+  const r = 40;
+  const chuVi = 2 * Math.PI * r;
+  const ti = tong > 0 ? da / tong : 0;
+  return (
+    <span className="relative grid size-24 shrink-0 place-items-center" role="img" aria-label={`${da}/${tong}`}>
+      <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden="true">
+        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,.16)" strokeWidth="9" />
+        {da > 0 ? <circle cx="50" cy="50" r={r} fill="none" stroke="#e7c78d" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${(chuVi * ti).toFixed(1)} ${chuVi.toFixed(1)}`} /> : null}
+      </svg>
+      <span className="font-display text-2xl leading-none text-white" aria-hidden="true">
+        {da}<span className="text-sm text-white/60">/{tong}</span>
+      </span>
+    </span>
+  );
+}
+
 function tenGoi(ten: string, lang: "vi" | "en") {
   if (lang === "vi") return ten;
   const goi = PACKAGES.find((item) => item.name === ten);
@@ -83,15 +101,37 @@ export function HoSoKhachView({
   return (
     <div data-testid="ho-so-khach" className="text-[#151a17]">
       <section className="rounded-3xl bg-[#183f34] p-6 text-white sm:p-8">
-        <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#e7c78d]">{t("Hộ chiếu Ninh Bình", "Ninh Binh passport")}</p>
-        <h2 className="font-display mt-3 text-3xl leading-tight sm:text-4xl">
-          {hoSo.noiDaDen.length === 0
-            ? t("Chuyến đi của bạn bắt đầu từ cổng đầu tiên", "Your journey starts at the first gate")
-            : t(`Bạn đã qua ${hoSo.noiDaDen.length} trên ${noi.length} cổng`, `You have passed ${hoSo.noiDaDen.length} of ${noi.length} gates`)}
-        </h2>
+        <div className="flex items-center gap-5">
+          {/* F4 (11/10/2026): vòng tiến độ số cổng đã qua. Chỉ bốn nơi có cổng soát vé, nên vòng đếm trên bốn. */}
+          <VongTienDo da={hoSo.noiDaDen.length} tong={noi.length} />
+          <div className="min-w-0">
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#e7c78d]">{t("Hộ chiếu Ninh Bình", "Ninh Binh passport")}</p>
+            <h2 className="font-display mt-2 text-3xl leading-tight sm:text-4xl">
+              {hoSo.noiDaDen.length === 0
+                ? t("Chuyến đi của bạn bắt đầu từ cổng đầu tiên", "Your journey starts at the first gate")
+                : t(`Bạn đã qua ${hoSo.noiDaDen.length} trên ${noi.length} cổng`, `You have passed ${hoSo.noiDaDen.length} of ${noi.length} gates`)}
+            </h2>
+          </div>
+        </div>
         <p className="mt-3 leading-7 text-white/75">
           {t("Mỗi lần nhân viên quét vé ở cổng, nơi ấy sáng lên ở đây. Đi đủ các vùng thì mở thêm quà cho chuyến sau.", "Each time your ticket is scanned at a gate, that place lights up here. Visit every area to unlock gifts for your next trip.")}
         </p>
+        {(() => {
+          const ke = hoSo.nhiemVu.find((nv) => !nv.xong);
+          if (!ke) return null;
+          const nvEn = NHIEM_VU_EN[ke.id];
+          return (
+            <div data-testid="nhiem-vu-ke" className="mt-5 rounded-2xl bg-white/10 p-4">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#e7c78d]">{t("Quà kế tiếp", "Next gift")}</p>
+              <p className="mt-1 font-bold">{lang === "en" && nvEn ? nvEn.ten : ke.ten} · {ke.duoc}/{ke.can}</p>
+              <p className="mt-0.5 text-sm text-white/72">{lang === "en" && nvEn ? nvEn.moTa : ke.moTa}</p>
+              <span aria-hidden="true" className="mt-3 block h-1.5 overflow-hidden rounded-full bg-white/15">
+                <span className="block h-full rounded-full bg-[#e7c78d]" style={{ width: `${Math.round((ke.duoc / Math.max(1, ke.can)) * 100)}%` }} />
+              </span>
+              <p className="mt-2 text-sm text-white/80">{t("Xong là nhận: ", "Unlocks: ")}{lang === "en" && nvEn ? nvEn.qua : ke.phanThuong}</p>
+            </div>
+          );
+        })()}
         <dl className="mt-6 grid grid-cols-3 gap-3 text-center">
           <div className="rounded-2xl bg-white/10 px-2 py-3">
             <dt className="text-xs text-white/60">{t("Chuyến đã đặt", "Trips booked")}</dt>

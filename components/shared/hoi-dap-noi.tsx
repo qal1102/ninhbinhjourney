@@ -8,6 +8,7 @@ import { CAU_GOI_Y } from "@/domain/hoi-dap-goi-y";
 import type { NgonNgu } from "@/lib/ngon-ngu";
 import { FLOATING_YIELD_CLASS } from "@/lib/use-floating-yield";
 import { useThuGonKhiCuon } from "@/lib/use-thu-gon-khi-cuon";
+import { useNgheGiongNoi } from "@/lib/use-nghe-giong-noi";
 
 /**
  * Khung "Hỏi AI" nổi trên web khách (08/10/2026): chủ dự án muốn "hiện ra
@@ -56,6 +57,10 @@ const CHU = {
     en: "Book the Family discovery package this Saturday for 2 adults and 1 child",
   },
   oNhap: { vi: "Hỏi AI bất cứ điều gì…", en: "Ask the AI anything…" },
+  dangXem: { vi: "Đang xem:", en: "Viewing:" },
+  dangNghe: { vi: "Đang nghe, nói xong bấm lại micro…", en: "Listening, tap the mic again when done…" },
+  dungNghe: { vi: "Dừng nghe", en: "Stop listening" },
+  noi: { vi: "Hỏi bằng giọng nói", en: "Ask by voice" },
   gui: { vi: "Gửi", en: "Send" },
   dong: { vi: "Đóng", en: "Close" },
   dangTraLoi: { vi: "AI đang soạn câu trả lời", en: "The AI is writing" },
@@ -117,6 +122,9 @@ export function HoiDapNoi() {
   // trên dải sẽ che nút chính của trang. Tạm ẩn cho tới khi khách trả lời dải.
   const [nhuongCho, setNhuongCho] = useState(false);
   const gon = useThuGonKhiCuon();
+  // F5 (11/10/2026): khung biết khách đang xem trang nào, và nghe được giọng nói.
+  const [dangXem, setDangXem] = useState("");
+  const nghe = useNgheGiongNoi((noi) => void hoi(noi), lang === "en" ? "en-US" : "vi-VN");
   const hop = useRef<HTMLDialogElement>(null);
   const cuoi = useRef<HTMLDivElement>(null);
   const oNhap = useRef<HTMLInputElement>(null);
@@ -158,6 +166,8 @@ export function HoiDapNoi() {
   const themLang = (href: string) => (href.includes("lang=") ? href : `${href}${href.includes("?") ? "&" : "?"}lang=${lang}`);
 
   function mo() {
+    const tieuDe = document.querySelector("main h1")?.textContent?.replace(/s+/g, " ").trim() ?? "";
+    setDangXem(tieuDe.length > 48 ? `${tieuDe.slice(0, 46)}…` : tieuDe);
     const d = hop.current;
     if (d && !d.open) d.showModal();
     window.setTimeout(() => oNhap.current?.focus(), 50);
@@ -222,7 +232,8 @@ export function HoiDapNoi() {
         }}
         className="fixed inset-x-2 bottom-2 top-auto m-0 mx-auto flex max-h-[min(42rem,calc(100dvh-1rem))] w-auto max-w-none flex-col overflow-hidden rounded-[24px] border border-[#D7D4C8] bg-[#F8F4EA] p-0 text-[#183F34] shadow-[0_28px_90px_rgba(7,27,21,.38)] backdrop:bg-[#0f1b17]/55 open:flex sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[min(27rem,calc(100vw-2.5rem))] [&:not([open])]:hidden"
       >
-        <header className="flex items-start justify-between gap-3 bg-[#183F34] px-5 pb-4 pt-4 text-white">
+        <header className="relative flex items-start justify-between gap-3 bg-[#183F34] px-5 pb-4 pt-5 text-white sm:pt-4">
+          <span aria-hidden="true" className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-white/30 sm:hidden" />
           <div className="flex gap-3">
             <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#E7B96A] text-lg text-[#183F34]">
               ✦
@@ -231,7 +242,7 @@ export function HoiDapNoi() {
               <h2 id="hoi-dap-tieu-de" className="font-display text-[1.3rem] leading-tight">
                 {t("ten")}
               </h2>
-              <p className="mt-1 text-[0.78rem] leading-5 text-white/75">{t("dan")}</p>
+              <p className="mt-1 text-[0.78rem] leading-5 text-white/75">{dangXem ? `${t("dangXem")} ${dangXem}` : t("dan")}</p>
             </div>
           </div>
           <button
@@ -355,14 +366,31 @@ export function HoiDapNoi() {
           <div className="flex gap-2">
             <input
               ref={oNhap}
-              value={cau}
+              value={nghe.dangNghe ? nghe.tamThoi : cau}
+              readOnly={nghe.dangNghe}
               onChange={(e) => setCau(e.target.value)}
               maxLength={300}
-              placeholder={t("oNhap")}
+              placeholder={nghe.dangNghe ? t("dangNghe") : t("oNhap")}
               aria-label={t("oNhap")}
               data-testid="hoi-dap-o-nhap"
               className="min-h-12 min-w-0 flex-1 rounded-xl border border-[#cfc8b4] bg-white px-3.5 text-base outline-none focus:border-[#183F34]"
             />
+            {nghe.hoTro ? (
+              <button
+                type="button"
+                onClick={() => (nghe.dangNghe ? nghe.dung() : nghe.batDau())}
+                aria-label={nghe.dangNghe ? t("dungNghe") : t("noi")}
+                aria-pressed={nghe.dangNghe}
+                data-testid="hoi-dap-mic"
+                className={`grid size-12 shrink-0 place-items-center rounded-xl ${nghe.dangNghe ? "bg-[#b23a2a] text-white motion-safe:animate-pulse" : "bg-[#E7B96A] text-[#183F34]"}`}
+              >
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="3" width="6" height="11" rx="3" />
+                  <path d="M5 11a7 7 0 0 0 14 0" />
+                  <path d="M12 18v3" />
+                </svg>
+              </button>
+            ) : null}
             <button
               type="submit"
               disabled={dangHoi || !cau.trim()}
@@ -371,6 +399,7 @@ export function HoiDapNoi() {
               {t("gui")}
             </button>
           </div>
+          {nghe.loi ? <p role="status" className="mt-1.5 text-center text-[0.72rem] text-[#8b3d31]">{lang === "en" ? "Could not hear that. Please try again or type." : nghe.loi}</p> : null}
           <p className="mt-1.5 text-center text-[0.68rem] text-[#7b8a82]">{t("canhBao")}</p>
         </form>
       </dialog>

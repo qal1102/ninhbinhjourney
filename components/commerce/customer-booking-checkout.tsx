@@ -14,6 +14,7 @@ import { maVung, type NgonNgu } from "@/lib/ngon-ngu";
 import { BenDoTienTrinh } from "./ben-do-tien-trinh";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
+import { ChuyenCuaBan } from "@/components/commerce/chuyen-cua-ban";
 import { DESTINATIONS } from "@/content/destinations";
 
 type VisitorGroupApiResponse =
@@ -111,6 +112,13 @@ type ConfirmationResult = {
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
+
+// F2 chọn giờ theo độ đông (11/10/2026). Ba mức khác nhau cả độ sáng lẫn chữ, không chỉ màu.
+const DO_DONG: Record<CustomerProductTimeSlot["doDong"], { vi: string; en: string; chip: string; thanh: string }> = {
+  vang: { vi: "Vắng", en: "Quiet", chip: "bg-[#dcebe4] text-[#1f5a45]", thanh: "bg-[#4e8a73]" },
+  vua: { vi: "Vừa", en: "Moderate", chip: "bg-[#f3e3bf] text-[#6b5520]", thanh: "bg-[#b8913f]" },
+  dong: { vi: "Đông", en: "Busy", chip: "bg-[#f6d2be] text-[#8a3a12]", thanh: "bg-[#c2672f]" },
+};
 
 // Nói theo cách khách hiểu, không theo cách bảng dữ liệu gọi. "child" ở đây
 // nghĩa hẹp là trẻ dưới 1m3 — nhóm không mất vé. Vé cũ phát trước TC-03 gộp cả
@@ -346,6 +354,14 @@ export function CustomerBookingCheckout({
   }, [packageItem.id, visitDate, t]);
 
   const selectedSlot = slots?.find((slot) => slot.startsAt === selectedSlotStartsAt) ?? null;
+  // F2: gắn nhãn "ít người nhất" chỉ khi các khung thật sự chênh nhau, không thì khung nào cũng như nhau.
+  const gioVangNhat = useMemo(() => {
+    const mo = (slots ?? []).filter((slot) => slot.bookable && typeof slot.fill === "number");
+    if (mo.length < 2) return null;
+    const fills = mo.map((slot) => slot.fill);
+    if (Math.max(...fills) - Math.min(...fills) < 0.15) return null;
+    return mo.reduce((vang, slot) => (slot.fill < vang.fill ? slot : vang)).startsAt;
+  }, [slots]);
   // Màn Hướng dẫn khoanh đúng một chỗ cho mỗi bước (components/shared/chi-diem.tsx).
   const hetKhung = Boolean(slots && slots.length > 0 && !slots.some((slot) => slot.bookable));
   const buocChi = confirmation
@@ -724,6 +740,10 @@ export function CustomerBookingCheckout({
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {slots.map((slot) => {
                   const selected = slot.startsAt === selectedSlotStartsAt;
+                  // Máy chủ cũ hay bản giả lập có thể chưa gửi độ đông: thiếu thì không hiện nhãn.
+                  const dong = slot.doDong ? DO_DONG[slot.doDong] : null;
+                  const coDoDong = Boolean(dong) && typeof slot.fill === "number";
+                  const vangNhat = slot.startsAt === gioVangNhat;
                   const timeLabel = formatSlotTime(slot.startsAt);
                   const statusLabel = slot.blockedReason === "passed"
                     ? t("Đã qua giờ", "Already passed")
@@ -744,7 +764,9 @@ export function CustomerBookingCheckout({
                       key={slot.startsAt}
                       type="button"
                       aria-pressed={selected}
-                      aria-label={t(`Khung ${timeLabel}, ${statusLabel.toLowerCase()}`, `${timeLabel}, ${statusLabel.toLowerCase()}`)}
+                      aria-label={slot.bookable && dong
+                        ? t(`Khung ${timeLabel}, ${dong.vi.toLowerCase()}, ${statusLabel.toLowerCase()}`, `${timeLabel}, ${dong.en.toLowerCase()}, ${statusLabel.toLowerCase()}`)
+                        : t(`Khung ${timeLabel}, ${statusLabel.toLowerCase()}`, `${timeLabel}, ${statusLabel.toLowerCase()}`)}
                       disabled={!slot.bookable}
                       onClick={() => selectSlot(slot.startsAt)}
                       className={`min-h-[4.25rem] rounded-2xl border px-3 py-2 text-left transition-colors ${
@@ -755,15 +777,33 @@ export function CustomerBookingCheckout({
                             : "cursor-not-allowed border-[#e5e1d8] bg-[#f1efe8] text-[#9aa39a]"
                       }`}
                     >
-                      <span className="block text-lg font-extrabold">{timeLabel}</span>
+                      <span className="flex items-baseline justify-between gap-2">
+                        <span className="text-lg font-extrabold">{timeLabel}</span>
+                        {slot.bookable && dong ? (
+                          <span aria-hidden="true" className={`rounded-full px-2 py-0.5 text-[0.68rem] font-extrabold ${dong.chip}`}>
+                            {t(dong.vi, dong.en)}
+                          </span>
+                        ) : null}
+                      </span>
+                      {slot.bookable && dong && coDoDong ? (
+                        <span aria-hidden="true" className={`mt-2 block h-1.5 overflow-hidden rounded-full ${selected ? "bg-white/20" : "bg-[#183f34]/10"}`}>
+                          <span className={`block h-full rounded-full ${selected ? "bg-[#e7c78d]" : dong.thanh}`} style={{ width: `${Math.max(6, Math.round(slot.fill * 100))}%` }} />
+                        </span>
+                      ) : null}
                       <span className="mt-1 block text-xs font-normal">{statusLabel}</span>
+                      {vangNhat ? (
+                        <span className={`mt-1 block text-[0.7rem] font-extrabold ${selected ? "text-[#e7c78d]" : "text-[#1f5a45]"}`}>{t("Ít người nhất trong ngày", "Quietest time of the day")}</span>
+                      ) : null}
                     </button>
                   );
                 })}
               </div>
             )}
-            {slots?.some((slot) => slot.capacitySourceKind === "estimate") ? (
-              <p className="mt-2 text-xs text-[#6b786f]">{t("Số chỗ còn lại là ước tính theo sức chứa của điểm tham quan.", "Seats left are estimated from the site's capacity.")}</p>
+            {slots && slots.some((slot) => slot.bookable && slot.doDong) ? (
+              <p className="mt-2 text-xs text-[#6b786f]">
+                {t("Vắng, vừa, đông tính theo số chỗ đã có người giữ trong khung giờ.", "Quiet, moderate and busy follow how many seats are already held in each time.")}
+                {slots.some((slot) => slot.capacitySourceKind === "estimate") ? t(" Số chỗ còn lại là ước tính theo sức chứa của điểm tham quan.", " Seats left are estimated from the site's capacity.") : ""}
+              </p>
             ) : null}
           </div>
 
@@ -905,6 +945,16 @@ export function CustomerBookingCheckout({
             <p className="rounded-2xl bg-[#dceadd] p-4 font-bold text-[#183f34]">
               {confirmation.payment.mode === "qr-transfer" ? t("Đã thanh toán bằng QR", "Paid by QR code") : t("Đã xác nhận", "Confirmed")} · {confirmation.order.code}
             </p>
+
+            <ChuyenCuaBan
+              batDau={hold?.slots[0]?.startsAt ?? null}
+              ngayDi={visitDate}
+              diemDen={tenDiem(hold?.slots[0]?.siteId ?? packageItem.siteIds[0], lang)}
+              toaDo={DESTINATIONS.find((d) => d.id === (hold?.slots[0]?.siteId ?? packageItem.siteIds[0]))?.coordinates ?? null}
+              tenGoi={tenGoi}
+              maDon={confirmation.order.code}
+              lang={lang}
+            />
 
             {/* Hệ thống chưa gửi tin nhắn hay email nào, nên không viết chữ
                 nào ngụ ý "đã gửi cho bạn". Đường giữ vé là ảnh vé lưu về máy

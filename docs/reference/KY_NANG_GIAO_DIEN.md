@@ -263,6 +263,28 @@ trang thì ghi rõ.
 **Nếu chỉ chọn ba món:** E1 (đặt chỗ trong tầm ngón cái), E8 (ERP có mạch
 dẫn), E3 (rẻ nhất mà thấy sang ngay).
 
+### 10.3 Đợt tham khảo thứ hai (11/10/2026): ngoài giao diện, còn gì đáng làm
+
+Đã làm từ bảng vẽ: F1–F6, G1, G2 (HANDOFF `2cx`). Đợt này soi các nơi đang
+quản lý khách đông thật, chỉ giữ thứ làm được bằng dữ liệu và hạ tầng sẵn có,
+không tốn tiền, không cần tài khoản bên thứ ba.
+
+| # | Món | Học từ đâu | Dữ liệu thật đã có | Công |
+|---|---|---|---|---|
+| H1 | **Dự báo độ đông theo giờ cho ngày đi**: chọn ngày ở `/plan` hay trang gói là thấy dải giờ vắng/đông của từng điểm | Kyoto Travel Congestion Forecast: dự báo theo giờ tới hai tháng, thang năm mức, có chọn thời tiết | Lịch sử lượt qua cổng 60 ngày, thứ trong tuần, dự báo Open-Meteo | Vừa |
+| H2 | **Báo khi sắp tới lượt ở hàng chờ bến đò** (thông báo đẩy của trình duyệt, kèm rung) | Ứng dụng công viên Disney: báo khi hàng ngắn lại, khi tới lượt | Hàng chờ Tam Cốc, `sw.js` và thông báo đẩy đã có ở ERP | Vừa |
+| H3 | **Tải trước để dùng khi mất sóng**: vé QR, thuyết minh, bản đồ một điểm lưu sẵn trong máy | Ứng dụng NPS: tải cả công viên để dùng ngoại tuyến | Trang vé, `/nghe`, `sw.js` | Vừa |
+| H4 | **Bưu thiếp kỷ niệm** tự dựng sau khi qua cổng: ảnh nơi ấy, dấu mộc, ngày; lưu hay gửi qua Zalo | NPS: virtual postcards | Lượt qua cổng, dấu mộc hộ chiếu, ảnh điểm đến | Nhỏ |
+| H5 | **Lọc theo sức đi**: ít bậc, có xe điện, có chỗ ngồi nghỉ, hợp xe đẩy | NPS: thông tin tiếp cận từng điểm | Bộ hiểu câu đã nhận "chân yếu, không leo núi"; cần soát dữ kiện từng điểm | Vừa |
+| H6 | **Một mã QR cho cả ngày**: vé nhiều điểm gộp thành một mã, quét ở cổng nào cũng nhận | Venice Access Fee: một QR theo ngày | Vé từng điểm đã có mã riêng | Vừa, đụng luồng cổng |
+| H7 | **Hộp phân loại kiểu Linear trong ERP**: nhận, từ chối kèm lý do, hoãn tới mai, bằng phím tắt | Linear Triage | Đề xuất, sự cố, hoá đơn chờ; \"hoãn\" cần thêm cột (migration) | Vừa |
+| H8 | **ERP bấm là xong ngay** (optimistic UI): đánh dấu việc xong, duyệt, hiện kết quả tức thì rồi mới ghi | Linear | Việc & ghi chú, đề xuất | Nhỏ |
+
+**Cần thêm tư liệu hay người thật, chưa làm được ngay:** nhìn lại kinh đô Hoa
+Lư xưa bằng AR (học Acropolis: cần mô hình 3D phục dựng có căn cứ), dạo
+thuyền 360° hay hướng dẫn viên điều khiển từ xa (học Faroe Remote Tourism:
+cần ảnh 360° hay người cầm máy).
+
 ## 11. Nguồn
 
 - Cách chấm của Awwwards (trọng số, ngưỡng điểm, nhánh Mobile Excellence):
@@ -279,3 +301,11 @@ dẫn), E3 (rẻ nhất mà thấy sang ngay).
   <https://www.uxmatters.com/mt/archives/2025/02/designing-the-erp-dashboard-user-experience.php>,
   <https://fuselabcreative.com/enterprise-ux-design-guide-2026-best-practices/>;
   hệ thiết kế Airbnb 2025 <https://www.itsnicethat.com/articles/airbnb-app-redesign-140525>
+- Đợt tham khảo thứ hai (mục 10.3): Kyoto congestion forecast
+  <https://kyoto.travel/en/info/maps-apps/congestion.html>; Venice Access Fee
+  <https://veneziaunica.it/en/content/venice_access_fee>; ứng dụng NPS
+  <https://www.nps.gov/yell/planyourvisit/app.htm>; ứng dụng công viên Disney
+  <https://www.macworld.com/article/210787/disneyland_maps.html>; Faroe Remote
+  Tourism <https://thinkdigital.travel/cases/visit-faroe-islands-on-remote-tourism>;
+  Linear Triage <https://linear.app/changelog/2021-06-29-linear-release-and-issue-triage>;
+  AR ở Acropolis <https://techxplore.com/news/2023-10-app-ancient-greek-sites-thousands.pdf>

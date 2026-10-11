@@ -28,7 +28,7 @@ const LOI: Record<string, string> = {
   "no-speech": "Chưa nghe thấy gì. Đưa máy gần hơn rồi thử lại.",
 };
 
-export function useNgheGiongNoi(onXong: (cau: string) => void) {
+export function useNgheGiongNoi(onXong: (cau: string) => void, maNgonNgu = "vi-VN") {
   const boNghe = useRef<BoNghe | null>(null);
   const onXongRef = useRef(onXong);
   const [dangNghe, setDangNghe] = useState(false);
@@ -53,7 +53,7 @@ export function useNgheGiongNoi(onXong: (cau: string) => void) {
     setLoi("");
     setTamThoi("");
     const r = new Lop();
-    r.lang = "vi-VN";
+    r.lang = maNgonNgu;
     // Ghi chú có thể dài và có chỗ ngập ngừng: nghe liên tục, bấm lần nữa để dừng.
     r.continuous = true;
     r.interimResults = true;

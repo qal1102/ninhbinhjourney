@@ -8,6 +8,7 @@ import { PACKAGES } from "@/content/packages";
 import { goiHienThi } from "@/content/packages-en";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
+import { ChuyenCuaBan } from "@/components/commerce/chuyen-cua-ban";
 import type { CustomerTicketLookupTicket } from "@/domain/customer-booking";
 
 type LookupResponse =
@@ -278,6 +279,16 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
               </p>
             </div>
           )}
+
+          <ChuyenCuaBan
+            batDau={null}
+            ngayDi={result.order.visit_date}
+            diemDen={siteName(result.tickets[0]?.siteId ?? "", lang)}
+            toaDo={DESTINATIONS.find((d) => d.id === result.tickets[0]?.siteId)?.coordinates ?? null}
+            tenGoi={productName(result.order.product_id, lang)}
+            maDon={result.order.code}
+            lang={lang}
+          />
 
           <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">{t("Vé của bạn", "Your tickets")}</p>
           <ul className="mt-3 space-y-4">

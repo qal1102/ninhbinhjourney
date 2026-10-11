@@ -2972,3 +2972,29 @@ html[data-nbj-consent-banner-visible="true"] .thanh-dat-cho {
     }
   }
 }
+
+/*
+ * Thanh điều hướng đáy trên điện thoại (F6, 11/10/2026) — thanh-dau-trang.tsx.
+ * Trang nào có thanh thì nội dung chừa đáy, nút "Hỏi AI" và thanh giữ chỗ nằm
+ * trên thanh. Dải đồng ý (z 1300) vẫn phủ lên thanh khi còn hiện.
+ */
+@media (max-width: 639px) {
+  body:has([data-thanh-day]) {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body:has([data-thanh-day]) [data-testid="hoi-dap-mo"] {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Dưới thanh đáy (z 1150): ẩn thì nấp sau thanh, hiện thì trượt ra từ sau thanh. */
+  body:has([data-thanh-day]) .thanh-dat-cho {
+    z-index: 1100;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 12px;
+  }
+
+  html[data-thanh-dat-hien]:not([data-nbj-consent-banner-visible="true"]) body:has([data-thanh-day]) [data-testid="hoi-dap-mo"] {
+    bottom: calc(var(--nbj-thanh-dat, 76px) + 76px + env(safe-area-inset-bottom, 0px));
+  }
+}

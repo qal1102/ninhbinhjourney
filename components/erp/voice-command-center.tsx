@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 import { FLOATING_YIELD_CLASS, useFloatingYield } from "@/lib/use-floating-yield";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
@@ -646,6 +646,20 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
     // 10/10/2026: "hỏi bất kì cái gì về web và ERP đều trả lời được").
     await hoiAi(rawCommand, true);
   }
+
+  // G2 (11/10/2026): bảng lệnh Ctrl+K chuyển câu khách gõ sang trợ lý khi không có màn nào khớp.
+  const hoiTuBangLenh = useEffectEvent((cau: string) => {
+    setOpen(true);
+    void execute(cau);
+  });
+  useEffect(() => {
+    const nghe = (event: Event) => {
+      const cau = (event as CustomEvent<{ cau?: string }>).detail?.cau?.trim();
+      if (cau) hoiTuBangLenh(cau);
+    };
+    window.addEventListener("nbj:tro-ly-hoi", nghe);
+    return () => window.removeEventListener("nbj:tro-ly-hoi", nghe);
+  }, []);
 
   function stopDurationTimer() {
     if (durationTimerRef.current !== null) {

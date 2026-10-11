@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 import type { ErpSiteId } from "@/domain/erp";
+import { duBaoTuCacNgay, ngayCungThuTruoc, type DuBaoDoDong } from "@/domain/du-bao-do-dong";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
@@ -17,23 +18,24 @@ export type LuotTheoGio = {
   chamTran: boolean;
 };
 
-/**
- * Lượt qua cổng hôm nay theo giờ ở một cơ sở (F1 "Hôm nay ở Ninh Bình",
- * 11/10/2026). Chỉ đếm lượt cổng nhận (`result = accepted`), theo giờ Việt
- * Nam. Kho chưa nối (máy cục bộ) thì trả `null`: trang nói chưa có số, không
- * vẽ số đoán.
- */
-export async function luotQuaCongHomNay(siteId: ErpSiteId, bayGio = new Date()): Promise<LuotTheoGio | null> {
+function khoDoc() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const secret = process.env.SUPABASE_SECRET_KEY?.trim();
   if (process.env.ERP_PERSISTENCE_MODE?.trim() !== "supabase" || !url || !secret) return null;
-  const vn = new Date(bayGio.getTime() + 7 * 3_600_000).toISOString().slice(0, 10);
-  const tu = new Date(`${vn}T00:00:00+07:00`).toISOString();
-  const den = new Date(Date.parse(tu) + 86_400_000).toISOString();
-  const kho = createClient(url, secret, {
+  return createClient(url, secret, {
     auth: { autoRefreshToken: false, detectSessionInUrl: false, persistSession: false },
     global: { headers: { "X-Client-Info": "ninh-binh-journey-hom-nay" } },
   });
+}
+
+export function ngayVietNam(bayGio = new Date()) {
+  return new Date(bayGio.getTime() + 7 * 3_600_000).toISOString().slice(0, 10);
+}
+
+/** Lượt qua cổng được nhận (`result = accepted`) theo giờ Việt Nam của một ngày. */
+async function luotQuaCongNgay(kho: NonNullable<ReturnType<typeof khoDoc>>, siteId: ErpSiteId, ngay: string): Promise<LuotTheoGio | null> {
+  const tu = new Date(`${ngay}T00:00:00+07:00`).toISOString();
+  const den = new Date(Date.parse(tu) + 86_400_000).toISOString();
   const { data, error } = await kho
     .from("erp_gate_scan_events")
     .select("scanned_at")
@@ -51,4 +53,30 @@ export async function luotQuaCongHomNay(siteId: ErpSiteId, bayGio = new Date()):
     if (o >= 0) theoGio[o] += 1;
   }
   return { theoGio, tong: data.length, chamTran: data.length >= TRAN };
+}
+
+/**
+ * Lượt qua cổng hôm nay theo giờ ở một cơ sở (F1 "Hôm nay ở Ninh Bình",
+ * 11/10/2026). Kho chưa nối (máy cục bộ) thì trả `null`: trang nói chưa có
+ * số, không vẽ số đoán.
+ */
+export async function luotQuaCongHomNay(siteId: ErpSiteId, bayGio = new Date()): Promise<LuotTheoGio | null> {
+  const kho = khoDoc();
+  if (!kho) return null;
+  return luotQuaCongNgay(kho, siteId, ngayVietNam(bayGio));
+}
+
+export type KetQuaDuBao = { trangThai: "co"; duBao: DuBaoDoDong } | { trangThai: "chua-du" | "chua-noi" };
+
+/**
+ * Dự báo độ đông cho ngày đi (H1): đọc tám ngày cùng thứ trước đó, mỗi ngày
+ * một truy vấn song song, rồi giao cho `duBaoTuCacNgay` tính trung bình.
+ */
+export async function duBaoDoDongNgay(siteId: ErpSiteId, ngayDi: string, bayGio = new Date()): Promise<KetQuaDuBao> {
+  const kho = khoDoc();
+  if (!kho) return { trangThai: "chua-noi" };
+  const cacNgay = ngayCungThuTruoc(ngayDi, ngayVietNam(bayGio));
+  const luot = await Promise.all(cacNgay.map((ngay) => luotQuaCongNgay(kho, siteId, ngay).catch(() => null)));
+  const duBao = duBaoTuCacNgay(ngayDi, GIO_HOM_NAY, luot.flatMap((l) => (l ? [l.theoGio] : [])));
+  return duBao ? { trangThai: "co", duBao } : { trangThai: "chua-du" };
 }

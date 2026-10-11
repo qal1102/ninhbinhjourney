@@ -28,6 +28,8 @@ export const destinationInterests = [
 export type DestinationInterest = (typeof destinationInterests)[number];
 export type MobilityLevel = "low" | "moderate" | "high";
 
+export type SuDi = "khong-leo-bac" | "xe-dien" | "cho-nghi" | "ngoi-thuyen";
+
 type Localized = { vi: string; en: string };
 
 export type DestinationCatalogItem = {
@@ -51,6 +53,13 @@ export type DestinationCatalogItem = {
   interests: readonly DestinationInterest[];
   mobilityLevel: MobilityLevel;
   mobilityNote: Localized;
+  /**
+   * H5 lọc theo sức đi (11/10/2026). Chỉ gắn điều `mobilityNote` ngay trên
+   * đã nói: "ít đi bộ" mà không nhắc bậc thì `khong-leo-bac`, có nhắc xe điện
+   * thì `xe-dien`, nói có chỗ nghỉ thì `cho-nghi`, tuyến chính bằng thuyền thì
+   * `ngoi-thuyen`. Chưa có nguồn nào nói hợp xe đẩy nên không có nhãn ấy.
+   */
+  suDi: readonly SuDi[];
   suitableFor: readonly ("children" | "seniors")[];
   demoOpeningWindow: string;
   image: string;
@@ -138,6 +147,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Ít đi bộ; cần bước xuống thuyền và ngồi liên tục trong thời gian dài.",
       en: "Low walking; requires stepping into a boat and sitting for an extended period.",
     },
+    suDi: ["khong-leo-bac", "ngoi-thuyen"],
     suitableFor: ["children", "seniors"],
     demoOpeningWindow: "07:00–17:00",
     image: "/images/destinations/trang-an.jpg",
@@ -237,6 +247,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Đường tương đối bằng; có một số bậc và sân lát đá.",
       en: "Mostly level paths with some steps and stone courtyards.",
     },
+    suDi: [],
     suitableFor: ["children", "seniors"],
     demoOpeningWindow: "08:00–17:00",
     image: "/images/destinations/hoa-lu-ancient-capital.png",
@@ -326,6 +337,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Khuôn viên rộng; nên dùng xe điện và chọn tuyến ngắn cho người lớn tuổi.",
       en: "Large grounds; use the electric cart and a shorter route for older visitors.",
     },
+    suDi: ["xe-dien"],
     suitableFor: ["children", "seniors"],
     demoOpeningWindow: "08:00–18:00",
     image: "/images/destinations/editorial/bai-dinh-editorial.png",
@@ -408,6 +420,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Phù hợp dạo bộ nhẹ; có thể nghỉ thường xuyên quanh hồ.",
       en: "Suitable for gentle walking with frequent places to rest around the lake.",
     },
+    suDi: ["khong-leo-bac", "cho-nghi"],
     suitableFor: ["children", "seniors"],
     demoOpeningWindow: "18:00–22:00",
     image: "/images/destinations/hoa-lu-old-town.jpg",
@@ -444,6 +457,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Tuyến thuyền ít đi bộ; phần Bích Động có bậc đá và mặt đường không đều.",
       en: "The boat route is low-walking; Bich Dong includes stone steps and uneven surfaces.",
     },
+    suDi: ["ngoi-thuyen"],
     suitableFor: ["children", "seniors"],
     demoOpeningWindow: "07:00–17:00",
     image: "/images/destinations/editorial/tam-coc-editorial.png",
@@ -501,6 +515,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Nhiều bậc đá dốc, ít bóng râm; không phù hợp người hạn chế vận động.",
       en: "Many steep stone steps with little shade; unsuitable for mobility-limited visitors.",
     },
+    suDi: [],
     suitableFor: [],
     demoOpeningWindow: "07:00–18:00",
     image: "/images/destinations/hang-mua.png",
@@ -541,6 +556,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Có đoạn đi bộ và lên xuống thuyền; nên chọn tuyến ngắn cho người lớn tuổi.",
       en: "Includes walking and boat access; choose a shorter route for older visitors.",
     },
+    suDi: ["ngoi-thuyen"],
     suitableFor: ["children", "seniors"],
     demoOpeningWindow: "08:00–18:00",
     image: "/images/destinations/thung-nham.png",
@@ -589,6 +605,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Ít đi bộ; cần bước vào thuyền nan thấp.",
       en: "Low walking; requires stepping into a low bamboo boat.",
     },
+    suDi: ["khong-leo-bac", "ngoi-thuyen"],
     suitableFor: ["children", "seniors"],
     demoOpeningWindow: "07:00–17:00",
     image: "/images/destinations/van-long.png",
@@ -663,6 +680,7 @@ export const DESTINATIONS: readonly DestinationCatalogItem[] = [
       vi: "Quãng đi bộ dài và nhiều bậc; nên dùng xe điện và bố trí điểm nghỉ cho người lớn tuổi.",
       en: "Long distances and many steps; use the shuttle and plan rest stops for older visitors.",
     },
+    suDi: ["xe-dien"],
     suitableFor: ["children", "seniors"],
     demoOpeningWindow: "06:00–18:00",
     image: "/images/destinations/tam-chuc.jpg",

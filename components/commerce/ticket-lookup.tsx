@@ -9,6 +9,7 @@ import { goiHienThi } from "@/content/packages-en";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
 import { ChuyenCuaBan } from "@/components/commerce/chuyen-cua-ban";
+import { MaCaNgay } from "@/components/commerce/ma-ca-ngay";
 import { batNgoaiTuyen, docVeTrenMay, luuVeTrenMay } from "@/lib/ve-luu-may";
 import type { CustomerTicketLookupTicket } from "@/domain/customer-booking";
 
@@ -327,6 +328,14 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
             toaDo={DESTINATIONS.find((d) => d.id === result.tickets[0]?.siteId)?.coordinates ?? null}
             tenGoi={productName(result.order.product_id, lang)}
             maDon={result.order.code}
+            lang={lang}
+          />
+
+          <MaCaNgay
+            maDon={result.order.code}
+            noi={[...ticketsBySite.keys()].map((id) => siteName(id, lang))}
+            ngayDi={result.order.visit_date}
+            soLuot={result.order.adults ?? result.order.party_size}
             lang={lang}
           />
 

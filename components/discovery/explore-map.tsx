@@ -55,6 +55,8 @@ export default function ExploreMap({
       dangChon={selectedSlug}
       nhanVung={ch(lang, "Bản đồ các điểm đến Ninh Bình", "Map of Ninh Binh destinations")}
       className="min-h-[31rem] w-full rounded-3xl border border-[#b9cbc3]"
+      khoi3d
+      nhanGocNhin={ch(lang, "Góc nhìn bản đồ", "Map view")}
       onChonGhim={(id, phanTu) => {
         const chon = destinations.find((d) => d.slug === id);
         if (chon) onSelect(chon, phanTu);

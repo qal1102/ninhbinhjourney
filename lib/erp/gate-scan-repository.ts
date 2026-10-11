@@ -12,6 +12,7 @@ import {
   type TicketSalesProductShare,
 } from "@/domain/erp-ticket-sales";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
+import { chonVeChoMaDon, laMaDon, type VeCuaDon } from "@/domain/ma-ca-ngay";
 import { vietnamDateKey } from "@/lib/erp/workday-repository";
 
 const SCAN_COOKIE = "nbj-erp-demo-gate-scans";
@@ -347,14 +348,36 @@ function memberFromRow(value: unknown): GroupMemberSummary | null {
   };
 }
 
+/**
+ * Một mã cho cả ngày (H6, 11/10/2026): khách đi gói nhiều nơi chỉ cần đưa mã
+ * đơn `NBJ-` cộng 12 ký tự. Cổng đổi nó sang vé của đơn ấy tại chính cơ sở
+ * đang quét (còn lượt, đúng ngày trước), rồi mọi luật soát vé cũ vẫn chạy y
+ * nguyên trong `erp_gate_scan_ticket`. Đơn không có vé ở đây thì vẫn đưa một
+ * vé của đơn sang để cổng báo đúng lý do (sai nơi, sai ngày) thay vì "không thấy".
+ */
+async function doiMaDonThanhMaVe(client: ReturnType<typeof createAdminClient>, siteId: ErpSiteId, raw: string): Promise<string> {
+  const ma = laMaDon(raw);
+  if (!ma) return raw;
+  const { data, error } = await client
+    .from("erp_tickets")
+    .select("ticket_code, site_id, valid_on, entries_allowed, entries_used, status")
+    .eq("tenant_id", TENANT_ID)
+    .eq("booking_reference", ma)
+    .limit(40);
+  if (error || !data?.length) return raw;
+  const homNay = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
+  return chonVeChoMaDon(data as VeCuaDon[], ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId], homNay)?.ticket_code ?? raw;
+}
+
 async function validateInSupabase(
   input: ValidateGateScanInput,
 ): Promise<GateScanDecision> {
   const client = createAdminClient();
+  const code = await doiMaDonThanhMaVe(client, input.siteId, input.code);
   const result = await client.rpc("erp_gate_scan_ticket", {
     p_tenant_id: TENANT_ID,
     p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
-    p_code: input.code,
+    p_code: code,
     p_actor_account_id: input.actorId,
     p_actor_name: input.actorName,
     p_idempotency_key: input.idempotencyKey ?? null,

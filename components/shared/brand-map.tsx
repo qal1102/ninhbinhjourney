@@ -118,7 +118,20 @@ export type BrandMapProps = {
    * Đẩy tâm sang chỗ trống là xong.
    */
   doiTamKhiChon?: readonly [number, number];
+  /**
+   * Núi đá vôi nổi khối thật từ dữ liệu độ cao (11/10/2026, chủ dự án: "bản đồ
+   * 3D được không, nhìn sẽ VIP hơn"). Mở bằng góc nghiêng, xoay nhẹ một vòng
+   * ngắn, có nút 2D/3D ngay dưới nút phóng to, thu nhỏ (góc dưới đã có thiệp chào và dòng ghi nguồn). Ai bật giảm chuyển động thì mở
+   * phẳng, không xoay; vẫn có bóng núi và vẫn bấm 3D được.
+   */
+  khoi3d?: boolean;
+  /** Tên nhóm nút 2D/3D cho trình đọc màn hình. */
+  nhanGocNhin?: string;
 };
+
+/** Góc nhìn mở đầu của bản đồ 3D: đủ thấy vách núi mà ghim phía xa vẫn đọc được. */
+const NGHIENG_3D = 55;
+const XOAY_3D = -18;
 
 export const LOI_NHAN_HONG_TUONG_TAC =
   "Bản đồ chưa về kịp. Các điểm vẫn ghim đúng chỗ, mời bạn chọn thử một nơi.";
@@ -271,6 +284,8 @@ export function BrandMap({
   zoomMacDinh = 10,
   loiNhanHong = LOI_NHAN_HONG_TUONG_TAC,
   doiTamKhiChon,
+  khoi3d = false,
+  nhanGocNhin = "Góc nhìn bản đồ",
 }: BrandMapProps) {
   const khung = useRef<HTMLDivElement | null>(null);
   const banDo = useRef<MapLibreMap | null>(null);
@@ -284,6 +299,13 @@ export function BrandMap({
   } | null>(null);
   const itChuyenDong = useReducedMotion();
   const [hong, setHong] = useState(false);
+  // null: chưa ai bấm, theo mặc định (nghiêng nếu không giảm chuyển động).
+  const [chon3d, setChon3d] = useState<boolean | null>(null);
+  const dang3d = khoi3d && (chon3d ?? !itChuyenDong);
+  const dang3dRef = useRef(dang3d);
+  useEffect(() => {
+    dang3dRef.current = dang3d;
+  }, [dang3d]);
   const idVung = useId();
 
   // Giữ hàm gọi lại trong ref: MapLibre gắn sự kiện một lần lúc dựng ghim, mà
@@ -300,7 +322,9 @@ export function BrandMap({
 
     const map = new maplibregl.Map({
       container: khung.current,
-      style: kieuBanDoThuongHieu(tone),
+      style: kieuBanDoThuongHieu(tone, khoi3d),
+      // Kéo nghiêng tới 70° mới thấy hết chiều cao vách núi; mặc định chặn ở 60.
+      maxPitch: khoi3d ? 70 : 60,
       center: (tamMacDinh
         ? [tamMacDinh[1], tamMacDinh[0]]
         : TAM_NINH_BINH) as [number, number],
@@ -481,7 +505,8 @@ export function BrandMap({
       } else {
         // Một cú "chuyển cảnh máy quay": vừa tiến lại gần vừa hạ thấp góc
         // nhìn, nên khối nhà và nếp núi nổi lên đúng lúc khách nhìn tới.
-        map.flyTo({ ...den, pitch: NGHIENG_KHI_CHON, bearing: -12, speed: 0.9, curve: 1.42, essential: true });
+        const phang = khoi3d && !dang3dRef.current;
+        map.flyTo({ ...den, pitch: phang ? 0 : NGHIENG_KHI_CHON, bearing: phang ? 0 : -12, speed: 0.9, curve: 1.42, essential: true });
       }
       daBay.current = true;
       return;
@@ -496,16 +521,44 @@ export function BrandMap({
     );
     const omTron = { bien, padding: le, maxZoom: zoomToiDa };
     khungCuoi.current = omTron;
+    const lanDau = !daBay.current;
+    const nghieng = khoi3d && dang3dRef.current;
     map.fitBounds(bien, {
       padding: le,
       maxZoom: zoomToiDa,
-      pitch: 0,
-      bearing: 0,
+      pitch: nghieng ? NGHIENG_3D : 0,
+      bearing: nghieng ? XOAY_3D : 0,
       animate: !itChuyenDong && daBay.current,
       duration: 700,
     });
     daBay.current = true;
-  }, [ghim, dangChon, itChuyenDong, doiTamKhiChon, le, zoomToiDa]);
+    if (lanDau && nghieng && !itChuyenDong) {
+      // Một vòng xoay chậm lúc mở, như máy quay lia qua dãy núi. Khách chạm
+      // vào bản đồ là MapLibre tự dừng cú lia.
+      map.once("idle", () => {
+        if (banDo.current === map && dang3dRef.current) {
+          map.easeTo({ bearing: XOAY_3D + 14, duration: 7000, easing: (t) => t });
+        }
+      });
+    }
+  }, [ghim, dangChon, itChuyenDong, doiTamKhiChon, le, zoomToiDa, khoi3d]);
+
+  // Bấm 2D/3D: chỉ đổi góc nhìn, giữ nguyên tâm và mức phóng khách đang xem.
+  const daDoiGoc = useRef(false);
+  useEffect(() => {
+    const map = banDo.current;
+    if (!map || !khoi3d) return;
+    if (!daDoiGoc.current) {
+      daDoiGoc.current = true;
+      return;
+    }
+    map.easeTo({
+      pitch: dang3d ? NGHIENG_3D : 0,
+      bearing: dang3d ? XOAY_3D : 0,
+      duration: itChuyenDong ? 0 : 900,
+      essential: true,
+    });
+  }, [dang3d, khoi3d, itChuyenDong]);
 
   // MapLibre đo khung một lần lúc dựng. Trang `/explore` giữ bản đồ luôn nằm
   // trong cây nhưng ẩn đi khi khách chuyển sang "Danh sách", nên phải tự đo
@@ -551,6 +604,30 @@ export function BrandMap({
           className="h-full w-full"
         />
       </div>
+      {khoi3d && !tinh && !hong ? (
+        <div
+          role="group"
+          aria-label={nhanGocNhin}
+          data-testid="ban-do-goc-nhin"
+          className="nb-goc-nhin absolute right-[10px] top-[106px] z-[4] grid grid-cols-2 rounded-full bg-[#FBFAF6]/92 p-1 shadow-lg shadow-[#183F34]/20 backdrop-blur"
+          data-3d={dang3d}
+        >
+          <span aria-hidden className="nb-goc-nhin-nen" />
+          {([false, true] as const).map((la3d) => (
+            <button
+              key={String(la3d)}
+              type="button"
+              aria-pressed={dang3d === la3d}
+              onClick={() => setChon3d(la3d)}
+              className={`relative z-[1] min-h-10 min-w-12 rounded-full px-3 text-sm font-extrabold tracking-wide transition-colors motion-reduce:transition-none ${
+                dang3d === la3d ? "text-[#F3EEE3]" : "text-[#183F34]"
+              }`}
+            >
+              {la3d ? "3D" : "2D"}
+            </button>
+          ))}
+        </div>
+      ) : null}
       {hong ? <MatGiayThayThe loiNhan={loiNhanHong} /> : null}
     </div>
   );

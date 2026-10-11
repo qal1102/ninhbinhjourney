@@ -155,6 +155,8 @@ export default function TourismMap({
         dangChon={dangMo}
         nhanVung="Bản đồ điểm đến Ninh Bình"
         className="h-full w-full rounded-[8px]"
+        khoi3d
+        nhanGocNhin={lang === "en" ? "Map view" : "Góc nhìn bản đồ"}
         doiTamKhiChon={khoHep ? [0, -150] : [170, 0]}
         onChonGhim={(id) => setDangMo(id)}
       />

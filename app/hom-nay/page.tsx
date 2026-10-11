@@ -9,10 +9,11 @@ import { docTongQuanBen } from "@/lib/hang-cho-repository";
 import { gioHienTaiVN, moTaThoiTiet, phanTichThoiTiet, type GioDuBao } from "@/domain/thoi-tiet-ben";
 import { tinhTrangHoaSung, ngayDoc } from "@/domain/mua-hoa-sung";
 import { trongGioNhanSo } from "@/domain/hang-cho";
+import { DuBaoDoDong } from "@/components/commerce/du-bao-do-dong";
 
 export const metadata: Metadata = {
   title: "Hôm nay ở Ninh Bình · Ninh Bình Journey",
-  description: "Lượt qua cổng theo giờ, thời tiết bến, giờ hoa súng nở và hàng chờ bến đò, trong một trang.",
+  description: "Lượt qua cổng theo giờ, ngày nào giờ nào đông, thời tiết bến, giờ hoa súng nở và hàng chờ bến đò, trong một trang.",
 };
 
 export const dynamic = "force-dynamic";
@@ -135,6 +136,8 @@ export default async function HomNayPage({ searchParams }: { searchParams: Promi
               <p className="mt-3 text-sm text-white/80">{ch(lang, "Chưa đọc được lượt qua cổng lúc này.", "Gate entries are not available right now.")}</p>
             )}
           </section>
+
+          <DuBaoDoDong lang={lang} />
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <TheThoiTiet ten={ch(lang, "Thời tiết · bến Tràng An", "Weather · Trang An pier")} du={duTrangAn} bayGio={bayGio} lang={lang} />

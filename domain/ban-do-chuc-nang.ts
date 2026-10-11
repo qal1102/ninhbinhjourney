@@ -80,7 +80,9 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         cacViec: [
           "Đưa mã vé vào máy quét, hoặc gõ mã vào ô quét.",
           "Bấm \"Xác thực & ghi nhận\". Máy không có đầu quét thì bấm \"Quét bằng camera\".",
+          "Khách đi gói nhiều nơi đưa mã đơn (NBJ- cộng 12 ký tự): cổng tự tìm vé của đơn ở cơ sở này.",
         ],
+        moi: "11/10",
       },
       {
         id: "thu-tai-diem",
@@ -678,6 +680,7 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         cacViec: [
           "Ngay dưới \"Việc nên làm trước\" là danh sách đủ, mỗi dòng có loại, cơ sở, hạn.",
           "Bấm \"Mở\" là tới đúng màn xử lý việc ấy.",
+          "Chưa làm được thì bấm \"Để mai\" (máy tính: phím j, k đi qua từng việc, Enter mở, h để mai); sáng mai việc tự hiện lại.",
         ],
         moi: "11/10",
       },
@@ -751,9 +754,10 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     id: "web-ban-do",
     nhom: "kham-pha",
     ten: "Bản đồ mười lăm điểm đến",
-    moTa: "Bản đồ riêng của Ninh Bình Journey: bấm tên một nơi là bản đồ nghiêng và bay tới đó.",
+    moTa: "Bản đồ riêng của Ninh Bình Journey, núi đá vôi nổi khối 3D: bấm tên một nơi là bản đồ nghiêng và bay tới đó.",
     duongDan: "/#map",
-    cacViec: ["Kéo xuống khối bản đồ ở trang chủ.", "Bấm một tên trong danh sách: bản đồ bay tới, hiện thời gian tham quan và mức đi bộ."],
+    cacViec: ["Kéo xuống khối bản đồ ở trang chủ: bản đồ mở nghiêng, lia chậm qua dãy núi.", "Bấm một tên trong danh sách: bản đồ bay tới, hiện thời gian tham quan và mức đi bộ.", "Bấm 2D hoặc 3D ngay dưới nút phóng to để đổi góc nhìn."],
+    moi: "11/10",
   },
   {
     id: "web-kham-pha",
@@ -761,7 +765,8 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Khám phá theo cách đi",
     moTa: "Lọc theo thời gian có, nhịp đi, mức đi bộ, người đi cùng; bản đồ và danh sách lọc theo nhau.",
     duongDan: "/explore",
-    cacViec: ["Đổi \"Thời gian\" hay \"Mức đi bộ\": số điểm hợp với bạn đổi ngay.", "Chuyển giữa Bản đồ và Danh sách; bấm một nơi để sang trang của nơi ấy."],
+    cacViec: ["Đổi \"Thời gian\" hay \"Mức đi bộ\": số điểm hợp với bạn đổi ngay.", "Bấm các nút \"Không phải leo bậc\", \"Ngồi thuyền là chính\", \"Có xe điện\", \"Có chỗ ngồi nghỉ\" để lọc theo sức đi.", "Chuyển giữa Bản đồ và Danh sách; bấm một nơi để sang trang của nơi ấy."],
+    moi: "11/10",
   },
   {
     id: "web-lap-hanh-trinh",
@@ -820,7 +825,7 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Hôm nay ở Ninh Bình",
     moTa: "Lượt qua cổng Tràng An theo giờ, thời tiết hai bến, giờ hoa súng nở, hàng chờ bến đò Tam Cốc, trong một trang.",
     duongDan: "/hom-nay",
-    cacViec: ["Trang chủ: bấm dòng \"Ở Ninh Bình bây giờ…\" màu vàng, hoặc mở thẳng /hom-nay.", "Xem giờ nào đông, giờ nào vắng trước khi chọn giờ đi."],
+    cacViec: ["Trang chủ: bấm dòng \"Ở Ninh Bình bây giờ…\" màu vàng, hoặc mở thẳng /hom-nay.", "Xem giờ nào đông, giờ nào vắng trước khi chọn giờ đi.", "Khối \"Đông vắng theo ngày bạn đi\": chọn nơi và một ngày trong 14 ngày tới, biểu đồ tính từ lượt qua cổng những ngày cùng thứ."],
     moi: "11/10",
   },
   {
@@ -829,7 +834,7 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Chọn giờ theo độ đông",
     moTa: "Mỗi khung giờ ở trang đặt vé ghi Vắng, Vừa hay Đông theo số chỗ đã có người giữ, khung ít người nhất có nhãn riêng.",
     duongDan: "/checkout?package=slow-ninh-binh",
-    cacViec: ["Chọn ngày đi: mỗi khung giờ có nhãn độ đông và thanh đầy dần.", "Khung \"Ít người nhất trong ngày\" hiện khi các khung chênh nhau rõ."],
+    cacViec: ["Chọn ngày đi: mỗi khung giờ có nhãn độ đông và thanh đầy dần.", "Khung \"Ít người nhất trong ngày\" hiện khi các khung chênh nhau rõ.", "Dưới các khung giờ: biểu đồ \"Ngày này thường đông lúc nào\" theo lượt qua cổng những tuần trước."],
     moi: "11/10",
   },
   {
@@ -847,7 +852,7 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Tra lại vé đã đặt",
     moTa: "Lỡ đóng trang vé thì mở lại bằng mã đặt chỗ cùng số điện thoại đã dùng. Vé hiện như vé giấy có tem nhũ; vé đã qua cổng có dấu mộc đỏ.",
     duongDan: "/tra-cuu-ve",
-    cacViec: ["Gõ mã đặt chỗ (bắt đầu bằng NBJ) và số điện thoại lúc đặt.", "Vé và mã QR hiện lại, đưa nhân viên quét thẳng trên màn hình.", "Rê chuột hay kéo ngón trên vé: lớp nhũ chạy theo góc nghiêng. Vé đã vào cổng mang dấu \"Đã qua cổng\" hoặc \"Đã vào 1/2\"."],
+    cacViec: ["Gõ mã đặt chỗ (bắt đầu bằng NBJ) và số điện thoại lúc đặt.", "Vé và mã QR hiện lại, đưa nhân viên quét thẳng trên màn hình.", "Rê chuột hay kéo ngón trên vé: lớp nhũ chạy theo góc nghiêng. Vé đã vào cổng mang dấu \"Đã qua cổng\" hoặc \"Đã vào 1/2\".", "Gói đi từ hai nơi: thẻ \"Một mã cho cả ngày\" ở đầu, cổng nào cũng quét được.", "Tra một lần là vé lưu trên máy: vào hang mất sóng, mở lại /tra-cuu-ve vẫn thấy vé và mã QR."],
     moi: "11/10",
   },
   {
@@ -865,7 +870,7 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     ten: "Hộ chiếu Ninh Bình",
     moTa: "Mọi chuyến của một khách gom về một chỗ: nơi đã qua cổng, nhiệm vụ, quà cho chuyến sau.",
     duongDan: "/ho-so",
-    cacViec: ["Gõ một mã đặt chỗ cùng số điện thoại đã dùng lúc đặt.", "Vòng tiến độ đếm cổng đã qua; thẻ \"Quà kế tiếp\" báo còn mấy nơi là mở quà.", "Nơi đã qua cổng sáng lên kèm dấu mộc."],
+    cacViec: ["Gõ một mã đặt chỗ cùng số điện thoại đã dùng lúc đặt.", "Vòng tiến độ đếm cổng đã qua; thẻ \"Quà kế tiếp\" báo còn mấy nơi là mở quà.", "Nơi đã qua cổng sáng lên kèm dấu mộc.", "Dưới mỗi nơi đã qua cổng bấm \"Tạo bưu thiếp\": ảnh nơi ấy kèm dấu mộc và ngày, gửi qua Zalo hay lưu về máy."],
     moi: "11/10",
   },
   {
@@ -888,7 +893,9 @@ export const CHUC_NANG_WEB: readonly ChucNangWeb[] = [
     cacViec: [
       "Lấy một số; trang khách tự cập nhật còn bao nhiêu nhóm phía trước.",
       "Gọi lượt ở màn Tam Cốc → Sức chứa: trang khách đổi sang \"Tới lượt bạn\".",
+      "Bấm \"Báo cho tôi khi sắp tới lượt\": còn hai nhóm thì máy rung và hiện thông báo (để trang mở trong trình duyệt).",
     ],
+    moi: "11/10",
   },
   {
     id: "web-nghe",

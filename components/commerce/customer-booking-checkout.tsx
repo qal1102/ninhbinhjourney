@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import QRCode from "qrcode";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import type { PackageCatalogItem } from "@/content/packages";
 import { khungBanGoi } from "@/content/packages-en";
 import type { CustomerProductTimeSlot } from "@/domain/customer-booking";
@@ -16,6 +16,9 @@ import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
 import { ChuyenCuaBan } from "@/components/commerce/chuyen-cua-ban";
 import { DESTINATIONS } from "@/content/destinations";
+import { batNgoaiTuyen, luuVeTrenMay } from "@/lib/ve-luu-may";
+import { CO_SO_THEO_UUID, DuBaoDoDong } from "@/components/commerce/du-bao-do-dong";
+import { MaCaNgay } from "@/components/commerce/ma-ca-ngay";
 
 type VisitorGroupApiResponse =
   | { accepted: true; group: VisitorGroupStatus }
@@ -355,6 +358,8 @@ export function CustomerBookingCheckout({
 
   const selectedSlot = slots?.find((slot) => slot.startsAt === selectedSlotStartsAt) ?? null;
   // F2: gắn nhãn "ít người nhất" chỉ khi các khung thật sự chênh nhau, không thì khung nào cũng như nhau.
+  // H1: gói đi qua cơ sở có cổng soát vé thì xem độ đông thường gặp của ngày ấy.
+  const coSoDuBao = packageItem.siteIds.map((id) => CO_SO_THEO_UUID[id]).find(Boolean);
   const gioVangNhat = useMemo(() => {
     const mo = (slots ?? []).filter((slot) => slot.bookable && typeof slot.fill === "number");
     if (mo.length < 2) return null;
@@ -506,6 +511,31 @@ export function CustomerBookingCheckout({
       setPending(null);
     }
   }
+
+  // H3: có vé là lưu ngay trên máy, vào hang mất sóng vẫn mở được ở /tra-cuu-ve.
+  // Chỉ lưu một lần khi vé vừa về; đổi số khách sau đó không đổi vé đã phát.
+  const luuVeVuaPhat = useEffectEvent((xacNhan: ConfirmationResult) => {
+    luuVeTrenMay({
+      accepted: true,
+      found: true,
+      order: {
+        code: xacNhan.order.code,
+        product_id: packageItem.id,
+        visit_date: visitDate,
+        party_size: adults + children,
+        adults,
+        children,
+        total_vnd: hold?.amount.total_vnd ?? packageItem.demoPriceVnd * adults,
+        currency: "VND",
+      },
+      payment: { mode: xacNhan.payment.mode === "pay-on-site" ? "pay-on-site" : "simulation", status: xacNhan.payment.status, amount_due_vnd: xacNhan.payment.amount_due_vnd },
+      tickets: xacNhan.tickets.map((ve) => ({ ...ve, entriesUsed: 0, status: ve.status === "void" ? "void" : "issued" })),
+    });
+    batNgoaiTuyen();
+  });
+  useEffect(() => {
+    if (confirmation) luuVeVuaPhat(confirmation);
+  }, [confirmation]);
 
   // Xin mã QR thanh toán cho lượt giữ đang có. Mã trỏ tới trang
   // /thanh-toan/[phiếu]; điện thoại quét mã, bấm xác nhận là xong.
@@ -805,6 +835,7 @@ export function CustomerBookingCheckout({
                 {slots.some((slot) => slot.capacitySourceKind === "estimate") ? t(" Số chỗ còn lại là ước tính theo sức chứa của điểm tham quan.", " Seats left are estimated from the site's capacity.") : ""}
               </p>
             ) : null}
+            {visitDate && coSoDuBao ? <DuBaoDoDong key={visitDate} lang={lang} coSo={coSoDuBao} ngay={visitDate} coDinh /> : null}
           </div>
 
           <div className="mt-7 max-w-xs">
@@ -1004,6 +1035,15 @@ export function CustomerBookingCheckout({
                 )}
               </p>
             </div>
+
+            <MaCaNgay
+              maDon={confirmation.order.code}
+              noi={[...new Set(confirmation.tickets.map((ve) => ve.siteId))].map((id) => tenDiem(id, lang))}
+              ngayDi={visitDate}
+              soLuot={adults}
+              lang={lang}
+              toi
+            />
 
             <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white/55">{t("Vé của bạn", "Your tickets")}</p>
             <p className="mt-1 text-sm leading-6 text-white/70">{t("Tới cổng, bạn đưa mã cho nhân viên quét là vào được ngay.", "At the gate, show the code to be scanned and walk straight in.")}</p>

@@ -12,6 +12,7 @@ import {
   type DestinationCatalogItem,
   type DestinationInterest,
   type MobilityLevel,
+  type SuDi,
 } from "@/content/destinations";
 import {
   destinationFromExploreHref,
@@ -21,6 +22,14 @@ import {
 } from "@/lib/page-continuity";
 import { ch, type NgonNgu } from "@/lib/ngon-ngu";
 import { NHAN_SO_THICH, nhanThoiLuong } from "@/content/destination-labels";
+
+// H5 (11/10/2026): nhãn lấy từ `suDi` trong content/destinations.ts, vốn chỉ gắn điều ghi chú đi lại đã nói.
+const NHAN_SU_DI: readonly { id: SuDi; vi: string; en: string }[] = [
+  { id: "khong-leo-bac", vi: "Không phải leo bậc", en: "No stair climbs" },
+  { id: "ngoi-thuyen", vi: "Ngồi thuyền là chính", en: "Mostly by boat" },
+  { id: "xe-dien", vi: "Có xe điện", en: "Electric cart" },
+  { id: "cho-nghi", vi: "Có chỗ ngồi nghỉ", en: "Places to rest" },
+];
 
 type ViewMode = "map" | "list";
 type FamilyFilter = "all" | "children" | "seniors";
@@ -194,6 +203,7 @@ export function ExploreExperience({
   const [walking, setWalking] = useState<MobilityLevel>("moderate");
   const [family, setFamily] = useState<FamilyFilter>("all");
   const [availableOnly, setAvailableOnly] = useState(true);
+  const [suDi, setSuDi] = useState<readonly SuDi[]>([]);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [detailDestination, setDetailDestination] =
     useState<DestinationCatalogItem | null>(null);
@@ -223,9 +233,10 @@ export function ExploreExperience({
       if (family !== "all" && !destination.suitableFor.includes(family)) {
         return false;
       }
+      if (suDi.some((nhan) => !destination.suDi.includes(nhan))) return false;
       return !availableOnly || destination.demoOpeningWindow.length > 0;
     });
-  }, [availableOnly, family, interest, maxMinutes, pace, walking]);
+  }, [availableOnly, family, interest, maxMinutes, pace, walking, suDi]);
 
   const activeDestination =
     filtered.find((destination) => destination.slug === activeSlug) ?? null;
@@ -529,6 +540,37 @@ export function ExploreExperience({
         </label>
       </div>
 
+      <div
+        role="group"
+        aria-label={ch(lang, "Lọc theo sức đi", "Filter by how you get around")}
+        data-testid="loc-suc-di"
+        className="-mx-4 mt-3 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0"
+      >
+        {NHAN_SU_DI.map((nhan) => {
+          const bat = suDi.includes(nhan.id);
+          return (
+            <button
+              key={nhan.id}
+              type="button"
+              aria-pressed={bat}
+              data-su-di={nhan.id}
+              onClick={() => {
+                setSuDi((cu) => (cu.includes(nhan.id) ? cu.filter((x) => x !== nhan.id) : [...cu, nhan.id]));
+                clearActiveDestination();
+              }}
+              className={`inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors ${
+                bat ? "border-[#183f34] bg-[#183f34] text-[#f3eee3]" : "border-[#d7d5cd] bg-white text-[#26342e] hover:border-[#183f34]"
+              }`}
+            >
+              <svg aria-hidden="true" viewBox="0 0 16 16" className={`size-4 transition-transform ${bat ? "scale-100" : "scale-0"} motion-reduce:transition-none`}>
+                <path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className={`transition-[margin] duration-200 motion-reduce:transition-none ${bat ? "" : "-ml-6"}`}>{nhan[lang]}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
         <p
           ref={resultsStatusRef}
@@ -631,6 +673,7 @@ export function ExploreExperience({
                   setWalking("high");
                   setFamily("all");
                   setAvailableOnly(false);
+                  setSuDi([]);
                   clearActiveDestination();
                 }}
                 className="mt-4 min-h-11 rounded-full border border-[#183f34] px-5 font-bold"

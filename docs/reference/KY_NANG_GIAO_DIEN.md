@@ -280,6 +280,8 @@ không tốn tiền, không cần tài khoản bên thứ ba.
 | H7 | **Hộp phân loại kiểu Linear trong ERP**: nhận, từ chối kèm lý do, hoãn tới mai, bằng phím tắt | Linear Triage | Đề xuất, sự cố, hoá đơn chờ; \"hoãn\" cần thêm cột (migration) | Vừa |
 | H8 | **ERP bấm là xong ngay** (optimistic UI): đánh dấu việc xong, duyệt, hiện kết quả tức thì rồi mới ghi | Linear | Việc & ghi chú, đề xuất | Nhỏ |
 
+**Đã làm cả tám (11/10/2026), cộng bản đồ 3D núi đá vôi:** chi tiết và giới hạn ở `docs/HANDOFF.md` mục `2cy`. H3 chưa lưu bản đồ ngoại tuyến; H7 chỉ có hoãn tới mai và phím tắt (nhận, từ chối vẫn ở màn gốc).
+
 **Cần thêm tư liệu hay người thật, chưa làm được ngay:** nhìn lại kinh đô Hoa
 Lư xưa bằng AR (học Acropolis: cần mô hình 3D phục dựng có căn cứ), dạo
 thuyền 360° hay hướng dẫn viên điều khiển từ xa (học Faroe Remote Tourism:

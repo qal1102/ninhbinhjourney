@@ -2998,3 +2998,22 @@ html[data-nbj-consent-banner-visible="true"] .thanh-dat-cho {
     bottom: calc(var(--nbj-thanh-dat, 76px) + 76px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Nút 2D/3D của bản đồ (11/10/2026): một viên màu rêu trượt sang ô đang chọn. */
+.nb-goc-nhin-nen {
+  position: absolute;
+  inset: 4px auto 4px 4px;
+  width: calc(50% - 4px);
+  border-radius: 999px;
+  background: #183f34;
+  box-shadow: 0 6px 14px -6px rgba(24, 63, 52, 0.7);
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.nb-goc-nhin[data-3d="true"] .nb-goc-nhin-nen {
+  transform: translateX(100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nb-goc-nhin-nen {
+    transition: none;
+  }
+}

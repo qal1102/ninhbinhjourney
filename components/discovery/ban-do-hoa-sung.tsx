@@ -91,10 +91,11 @@ export default function BanDoHoaSung({ lang }: { lang: "vi" | "en" }) {
       DUONG_TAM_COC.forEach((p) => b.extend([p[0], p[1]]));
       map = new maplibregl.Map({
         container: el,
-        style: kieuBanDoThuongHieu("giay"),
+        // Núi nổi khối (11/10/2026): đò len giữa hai vách đá vôi thật, không phải trên mặt phẳng.
+        style: kieuBanDoThuongHieu("giay", true),
         bounds: b,
         fitBoundsOptions: { padding: 40 },
-        maxPitch: 60,
+        maxPitch: 70,
         attributionControl: false,
         cooperativeGestures: true,
         locale: lang === "vi" ? CHU_MAPLIBRE : undefined,
@@ -132,7 +133,7 @@ export default function BanDoHoaSung({ lang }: { lang: "vi" | "en" }) {
         {
           padding: ngang ? { top: 60, right: 90, bottom: 60, left: 80 } : { top: 40, right: 70, bottom: 40, left: 30 },
           bearing: huong,
-          pitch: 42,
+          pitch: 52,
           duration: 0,
         },
       );

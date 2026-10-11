@@ -33,6 +33,21 @@ const GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 export const GHI_CONG_BAN_DO =
   '<a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a> · <a href="https://www.openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a> · dữ liệu <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>';
 
+/**
+ * Độ cao để núi đá vôi nổi khối (bản đồ 3D, 11/10/2026). Terrain Tiles trên
+ * AWS Open Data: miễn phí, không khoá, không đăng ký, cho dùng thương mại,
+ * chỉ cần ghi nguồn. Mã hoá "terrarium" (độ cao nằm trong ba kênh màu).
+ */
+export const NGUON_DO_CAO = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+export const GHI_CONG_DIA_HINH =
+  'địa hình <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noreferrer">Terrain Tiles</a> (Mapzen, SRTM)';
+/**
+ * Núi Ninh Bình cao chừng 100–200 m nhưng vách dựng đứng và hẹp; dữ liệu
+ * 30 m làm chúng thấp hẳn đi. Phóng 1,8 lần thì khối núi đọc được ở tầm cả
+ * tỉnh mà lại gần cũng chưa thành gai nhọn.
+ */
+export const DO_NOI_NUI = 1.8;
+
 /** Tâm vùng Ninh Bình, dạng MapLibre `[kinh độ, vĩ độ]`. */
 export const TAM_NINH_BINH: [number, number] = [105.897, 20.2503];
 
@@ -112,8 +127,11 @@ const TEN_DIA_DANH: ExpressionSpecification = [
  * tượng kiểu khi chạy, nên dùng chung một hằng số giữa hai bản đồ là hai bản
  * đồ giẫm lên nhau.
  */
-export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay"): StyleSpecification {
+export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay", diaHinh = false): StyleSpecification {
   const m = BANG[tone];
+  // Hai nguồn riêng cho khối núi và bóng đổ: MapLibre khuyên vậy, dùng chung
+  // một nguồn thì bóng đổ bị vỡ ô khi bản đồ nghiêng.
+  const doCao = { type: "raster-dem" as const, tiles: [NGUON_DO_CAO], encoding: "terrarium" as const, tileSize: 256, maxzoom: 14 };
 
   return {
     version: 8,
@@ -125,7 +143,9 @@ export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay"): StyleSpecificatio
         url: NGUON_BAN_DO,
         attribution: GHI_CONG_BAN_DO,
       },
+      ...(diaHinh ? { "do-cao": { ...doCao, attribution: GHI_CONG_DIA_HINH }, "do-cao-bong": doCao } : {}),
     },
+    ...(diaHinh ? { terrain: { source: "do-cao", exaggeration: DO_NOI_NUI } } : {}),
     // Bầu trời chỉ hiện khi bản đồ nghiêng; nằm phẳng thì không thấy gì.
     sky: {
       "sky-color": tone === "dem" ? "#0B1512" : "#CFE1E6",
@@ -166,6 +186,24 @@ export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay"): StyleSpecificatio
         filter: ["in", ["get", "class"], ["literal", ["residential", "suburb", "neighbourhood"]]],
         paint: { "fill-color": m.dan_cu },
       },
+      // Bóng núi nằm trên đất, dưới nước và đường: vách đá vôi tối đi về phía
+      // đông nam như nắng chiều, mặt nước vẫn phẳng và trong.
+      ...(diaHinh
+        ? [
+            {
+              id: "bong-nui",
+              type: "hillshade" as const,
+              source: "do-cao-bong",
+              paint: {
+                "hillshade-method": "igor" as const,
+                "hillshade-exaggeration": tone === "dem" ? 0.45 : 0.6,
+                "hillshade-shadow-color": tone === "dem" ? "#040907" : "#1F3A31",
+                "hillshade-highlight-color": tone === "dem" ? "#2A3F37" : "#FFF9EA",
+                "hillshade-accent-color": tone === "dem" ? "#0B1512" : "#4E6E61",
+              },
+            },
+          ]
+        : []),
       // Nước vẽ SAU đất và TRƯỚC đường: ở Ninh Bình nước là nhân vật chính,
       // không phải nền.
       {

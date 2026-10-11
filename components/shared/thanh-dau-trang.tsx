@@ -137,7 +137,7 @@ export function ThanhDauTrang({
               key={m.id}
               href={doiDuongDan ? doiDuongDan(m.href) : lang === "en" ? `${m.href}?lang=en` : m.href}
               aria-current={dangO ? "page" : undefined}
-              className={`flex h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-2xl text-[10.5px] font-bold leading-none tracking-[-0.01em] ${dangO ? "bg-[#183f34] text-white" : "text-[#42574e]"}`}
+              className={`flex h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-2xl px-0.5 text-[10px] font-bold leading-none tracking-[-0.02em] ${dangO ? "bg-[#183f34] text-white" : "text-[#42574e]"}`}
             >
               <BieuTuong id={m.id} />
               {lang === "en" ? m.nganEn : m.nganVi}

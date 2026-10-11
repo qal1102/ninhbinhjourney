@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { doiTrangThaiViecGhiAction, hieuCauNoiAction, type KetQuaHieu } from "@/app/erp/tro-ly-ghi-actions";
 import { TheBanNhap } from "@/components/erp/the-ban-nhap";
 import { ERP_SITES } from "@/domain/erp";
@@ -42,12 +42,15 @@ function DongViec({
   const router = useRouter();
   const [dang, batDau] = useTransition();
   const [loi, setLoi] = useState("");
-  const tre = quaHan(v, bayGio);
+  // H8 (11/10/2026): bấm là thấy xong ngay, ghi vào kho chạy sau; lỗi thì tự quay về như cũ.
+  const [trangThai, datTrangThai] = useOptimistic(v.trangThai);
+  const tre = trangThai === "mo" && quaHan(v, bayGio);
   const coSo = tenCoSo(v.coSo);
-  const doi = (trangThai: "mo" | "xong" | "huy") =>
+  const doi = (moi: "mo" | "xong" | "huy") =>
     batDau(async () => {
       setLoi("");
-      const kq = await doiTrangThaiViecGhiAction(v.id, trangThai);
+      datTrangThai(moi);
+      const kq = await doiTrangThaiViecGhiAction(v.id, moi);
       if (!kq.ok) setLoi(kq.loi ?? "Chưa đổi được.");
       else router.refresh();
     });
@@ -60,7 +63,7 @@ function DongViec({
       : null;
 
   return (
-    <li className={`rounded-2xl border bg-white p-4 ${tre ? "border-[#e8b4a8]" : "border-[#dde5e0]"} ${v.trangThai !== "mo" ? "opacity-60" : ""}`} data-viec-ghi={v.id}>
+    <li className={`rounded-2xl border bg-white p-4 ${tre ? "border-[#e8b4a8]" : "border-[#dde5e0]"} ${trangThai !== "mo" ? "opacity-60" : ""}`} data-viec-ghi={v.id}>
       <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
         {v.khan ? <span className="rounded-full bg-[#fdecea] px-2 py-0.5 text-[#9b2c1f]">Khẩn</span> : null}
         {nguoi ? <span className="text-[#42554c]">{nguoi}</span> : null}
@@ -70,9 +73,9 @@ function DongViec({
             <MicIcon className="h-3.5 w-3.5" /> Nói
           </span>
         ) : null}
-        {v.trangThai === "xong" ? <span className="text-[#28654d]">Đã xong</span> : v.trangThai === "huy" ? <span className="text-[#8b9a92]">Đã huỷ</span> : null}
+        {trangThai === "xong" ? <span className="text-[#28654d]">Đã xong</span> : trangThai === "huy" ? <span className="text-[#8b9a92]">Đã huỷ</span> : null}
       </div>
-      <p className={`mt-1.5 text-base font-bold leading-6 text-[#20342c] ${v.trangThai === "xong" ? "line-through decoration-[#9bb0a6]" : ""}`}>{v.noiDung}</p>
+      <p className={`mt-1.5 text-base font-bold leading-6 text-[#20342c] ${trangThai === "xong" ? "line-through decoration-[#9bb0a6]" : ""}`}>{v.noiDung}</p>
       {v.han ? (
         <p className={`mt-1 text-sm ${tre ? "font-bold text-[#b0412d]" : "text-[#5f7068]"}`}>
           {tre ? "Quá hạn · " : v.loai === "viec" ? "Hạn " : "Nhắc "}
@@ -86,19 +89,19 @@ function DongViec({
         </details>
       ) : null}
       {loi ? <p role="alert" className="mt-2 text-xs font-bold text-[#9b2c1f]">{loi}</p> : null}
-      {v.loai !== "nhat-ky" && v.trangThai !== "huy" ? (
+      {v.loai !== "nhat-ky" && trangThai !== "huy" ? (
         <div className="mt-3 flex flex-wrap gap-2">
-          {v.trangThai === "mo" && (v.loai !== "viec" || v.nguoiNhan === toiId || v.nguoiTao === toiId) ? (
+          {trangThai === "mo" && (v.loai !== "viec" || v.nguoiNhan === toiId || v.nguoiTao === toiId) ? (
             <button type="button" disabled={dang} onClick={() => doi("xong")} className="min-h-11 rounded-xl bg-[#183f34] px-4 text-sm font-black text-white disabled:opacity-60">
               Xong
             </button>
           ) : null}
-          {v.trangThai === "xong" ? (
+          {trangThai === "xong" ? (
             <button type="button" disabled={dang} onClick={() => doi("mo")} className="min-h-11 rounded-xl border border-[#ccd8d1] px-4 text-sm font-bold text-[#42554c]">
               Mở lại
             </button>
           ) : null}
-          {v.loai === "viec" && v.nguoiTao === toiId && v.trangThai === "mo" ? (
+          {v.loai === "viec" && v.nguoiTao === toiId && trangThai === "mo" ? (
             <button type="button" disabled={dang} onClick={() => doi("huy")} className="min-h-11 rounded-xl border border-[#ccd8d1] px-4 text-sm font-bold text-[#42554c]">
               Huỷ việc
             </button>

@@ -60,6 +60,26 @@ function maMay(): string {
   return moi;
 }
 
+/**
+ * Thông báo của hệ điều hành (H2, 11/10/2026; học ứng dụng công viên Disney):
+ * khách bật một lần, trang vẫn dò hàng mỗi 15 giây và hiện thông báo khi còn
+ * hai nhóm, rồi khi tới lượt. Không có máy chủ đẩy: trang phải còn mở trong
+ * trình duyệt (chuyển sang ứng dụng khác vẫn được), chữ trên trang nói rõ.
+ */
+const KHOA_BAO = "nbj-hang-cho-bao";
+
+async function hienThongBao(tieuDe: string, noiDung: string) {
+  try {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    const dangKy = await navigator.serviceWorker?.getRegistration("/");
+    const tuyChon = { body: noiDung, icon: "/brand/pwa-192.png", badge: "/brand/pwa-192.png", tag: "nbj-hang-cho", renotify: true, vibrate: [300, 150, 300], data: { url: location.pathname } } as NotificationOptions;
+    if (dangKy) await dangKy.showNotification(tieuDe, tuyChon);
+    else new Notification(tieuDe, tuyChon);
+  } catch {
+    // Trình duyệt không cho: rung, tiếng và tiêu đề trang vẫn báo.
+  }
+}
+
 function baoToiLuot() {
   try {
     navigator.vibrate?.([300, 150, 300, 150, 600]);
@@ -102,6 +122,28 @@ export function HangChoKhach({
   const [loiNhan, setLoiNhan] = useState<string | null>(null);
   const [hoiHuy, setHoiHuy] = useState(false);
   const daBao = useRef<number | null>(null);
+  const [batBao, setBatBao] = useState(false);
+  const [hoTroBao, setHoTroBao] = useState(true);
+  const daBaoSap = useRef<string | null>(null);
+  useEffect(() => {
+    const khung = window.requestAnimationFrame(() => {
+      setHoTroBao(typeof Notification !== "undefined" && "serviceWorker" in navigator);
+      setBatBao(docBoNho(KHOA_BAO) === "1" && typeof Notification !== "undefined" && Notification.permission === "granted");
+    });
+    return () => window.cancelAnimationFrame(khung);
+  }, []);
+  const batThongBao = useCallback(async () => {
+    try {
+      await navigator.serviceWorker?.register("/sw.js", { scope: "/", updateViaCache: "none" });
+      const quyen = await Notification.requestPermission();
+      const duoc = quyen === "granted";
+      setBatBao(duoc);
+      ghiBoNho(KHOA_BAO, duoc ? "1" : null);
+      if (duoc) void hienThongBao(t("Đã bật báo lượt", "Turn alerts are on"), t("Còn hai nhóm là máy báo, tới lượt báo lần nữa.", "We will alert you at two groups ahead, and again on your turn."));
+    } catch {
+      setBatBao(false);
+    }
+  }, [t]);
 
   const taiTongQuan = useCallback(async () => {
     const res = await fetch(`/api/hang-cho?ben=${ben}`, { cache: "no-store" }).catch(() => null);
@@ -187,11 +229,27 @@ export function HangChoKhach({
     if (daBao.current !== soToiLuot) {
       daBao.current = soToiLuot;
       baoToiLuot();
+      if (batBao) void hienThongBao(t(`Tới lượt bạn · số ${soHienThi(soToiLuot)}`, `Your turn · number ${soHienThi(soToiLuot)}`), t("Mời bạn ra bến đò ngay.", "Please come to the pier now."));
     }
     return () => {
       document.title = cu;
     };
-  }, [soToiLuot, t]);
+  }, [soToiLuot, t, batBao]);
+
+  const sapToi = luotHienTai?.trangThai === "cho" && luotHienTai.nhomTruoc <= 2 ? `${luotHienTai.soThuTu}-${luotHienTai.nhomTruoc}` : null;
+  useEffect(() => {
+    if (!sapToi || !batBao || !luotHienTai || daBaoSap.current === sapToi) return;
+    daBaoSap.current = sapToi;
+    try {
+      navigator.vibrate?.([200, 120, 200]);
+    } catch {
+      // Máy không rung được thì thôi.
+    }
+    void hienThongBao(
+      t(`Sắp tới lượt · số ${soHienThi(luotHienTai.soThuTu)}`, `Almost your turn · number ${soHienThi(luotHienTai.soThuTu)}`),
+      luotHienTai.nhomTruoc === 0 ? t("Bạn đứng đầu hàng, mời ra gần bến.", "You are next, please head to the pier.") : t(`Còn ${luotHienTai.nhomTruoc} nhóm trước bạn, mời ra gần bến.`, `${luotHienTai.nhomTruoc} groups ahead, please head to the pier.`),
+    );
+  }, [sapToi, batBao, luotHienTai, t]);
 
   async function laySo() {
     setDangGui(true);
@@ -346,7 +404,7 @@ export function HangChoKhach({
       ) : null}
 
       {luotHienTai ? (
-        <LuotCuaToi ben={ben} luot={luotHienTai} lang={lang} hoiHuy={hoiHuy} setHoiHuy={setHoiHuy} huy={huy} lamMoi={() => void tai()} />
+        <LuotCuaToi ben={ben} luot={luotHienTai} lang={lang} hoiHuy={hoiHuy} setHoiHuy={setHoiHuy} huy={huy} lamMoi={() => void tai()} batBao={batBao} hoTroBao={hoTroBao} batThongBao={() => void batThongBao()} />
       ) : null}
     </div>
   );
@@ -381,7 +439,13 @@ function LuotCuaToi({
   setHoiHuy,
   huy,
   lamMoi,
+  batBao,
+  hoTroBao,
+  batThongBao,
 }: {
+  batBao: boolean;
+  hoTroBao: boolean;
+  batThongBao: () => void;
   ben: MaBen;
   luot: LuotCuaKhach;
   lang: NgonNgu;
@@ -416,10 +480,22 @@ function LuotCuaToi({
             <p className="mt-1 text-[#59654b]">
               {phut === 0 ? t("Sắp được gọi.", "You'll be called shortly.") : t(`Chờ khoảng ${phut} phút.`, `About ${phut} minutes.`)}
             </p>
+            {hoTroBao ? (
+              batBao ? (
+                <p data-testid="bao-luot-da-bat" className="mx-auto mt-4 inline-flex min-h-10 items-center gap-2 rounded-full bg-[#dcebe4] px-4 text-sm font-extrabold text-[#1f5a45]">
+                  <span aria-hidden="true">●</span> {t("Đã bật báo: còn 2 nhóm là máy báo", "Alerts on: we buzz at two groups ahead")}
+                </p>
+              ) : (
+                <button type="button" onClick={batThongBao} data-testid="bat-bao-luot" className="mx-auto mt-4 flex min-h-12 w-full max-w-xs items-center justify-center gap-2 rounded-full bg-[#183f34] px-5 font-extrabold text-white">
+                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                  {t("Báo cho tôi khi sắp tới lượt", "Alert me when it is almost my turn")}
+                </button>
+              )
+            ) : null}
             <p className="mt-4 text-sm leading-6 text-[#59654b]">
               {t(
-                "Cứ đi dạo, uống nước quanh bến. Để trang này mở: tới lượt máy sẽ rung, kêu một tiếng và đổi màu.",
-                "Wander around the pier. Keep this page open: when it's your turn your phone buzzes, beeps and the page turns orange.",
+                "Cứ đi dạo, uống nước quanh bến. Để trang này mở trong trình duyệt (chuyển sang ứng dụng khác vẫn được): tới lượt máy sẽ rung, kêu một tiếng và đổi màu.",
+                "Wander around the pier. Keep this page open in the browser (switching apps is fine): on your turn your phone buzzes, beeps and the page turns orange.",
               )}
             </p>
           </>

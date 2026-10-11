@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
+import { BuuThiep } from "@/components/commerce/buu-thiep";
 import { tripPassportPlaces } from "@/domain/trip-passport";
 import { PACKAGES } from "@/content/packages";
 import { goiHienThi } from "@/content/packages-en";
@@ -178,6 +179,7 @@ export function HoSoKhachView({
                       ? `${new Date(den.lanDau).toLocaleDateString(vung, { timeZone: "Asia/Ho_Chi_Minh" })}${den.soLan > 1 ? t(` · ${den.soLan} lượt`, ` · ${den.soLan} visits`) : ""}`
                       : t("Chưa ghé", "Not yet")}
                   </p>
+                  {den && !xemThu ? <BuuThiep ten={diem.shortName[lang]} anh={diem.image} lanDau={den.lanDau} lang={lang} /> : null}
                 </div>
               </li>
             );

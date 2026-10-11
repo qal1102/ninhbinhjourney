@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CONTACT } from "@/content/contact";
 import { DESTINATIONS } from "@/content/destinations";
@@ -9,6 +9,7 @@ import { goiHienThi } from "@/content/packages-en";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
 import { ChuyenCuaBan } from "@/components/commerce/chuyen-cua-ban";
+import { batNgoaiTuyen, docVeTrenMay, luuVeTrenMay } from "@/lib/ve-luu-may";
 import type { CustomerTicketLookupTicket } from "@/domain/customer-booking";
 
 type LookupResponse =
@@ -94,6 +95,21 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<Extract<LookupResponse, { found: true }> | null>(null);
+  // H3: vé lưu trên máy, mở được khi mất sóng.
+  const [banLuu, setBanLuu] = useState<ReturnType<typeof docVeTrenMay>>(null);
+  const [dangXemBanLuu, setDangXemBanLuu] = useState(false);
+  useEffect(() => {
+    batNgoaiTuyen();
+    const khung = window.requestAnimationFrame(() => {
+      const da = docVeTrenMay();
+      setBanLuu(da);
+      if (da && !navigator.onLine) {
+        setResult(da.ve);
+        setDangXemBanLuu(true);
+      }
+    });
+    return () => window.cancelAnimationFrame(khung);
+  }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,6 +127,9 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
       const payload = (await response.json().catch(() => null)) as LookupResponse | null;
       if (payload && payload.accepted && payload.found) {
         setResult(payload);
+        setDangXemBanLuu(false);
+        luuVeTrenMay(payload);
+        setBanLuu(docVeTrenMay());
         return;
       }
       // Nhánh "chưa tìm ra chuyến nào" và nhánh "bạn thử hơi nhiều lần" là hai
@@ -165,6 +184,19 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
       <p className="mt-4 max-w-xl leading-7 text-[#59654b]">
         {t("Nhập mã đặt chỗ cùng số điện thoại hoặc email đã dùng lúc đặt, vé và mã QR hiện lại ngay. Tới cổng, nhân viên quét thẳng trên màn hình của bạn.", "Enter your booking code with the phone or email you used, and your tickets and QR codes appear right here. You can open this page at the gate and staff scan it straight from your screen.")}
       </p>
+
+      {banLuu && !result ? (
+        <section data-testid="ve-luu-may" className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl bg-[#183f34] p-4 text-white">
+          <span className="min-w-0 flex-[999_1_14rem]">
+            <span className="block text-xs font-extrabold uppercase tracking-[0.16em] text-[#e7c78d]">{t("Vé đã lưu trên máy này", "Ticket saved on this phone")}</span>
+            <span className="mt-1 block font-mono font-bold tracking-[0.06em]">{banLuu.ve.order.code}</span>
+            <span className="block text-xs text-white/70">{t("Mở được cả khi mất sóng, trong hang hay giữa sông.", "Opens even with no signal, in the caves or on the river.")}</span>
+          </span>
+          <button type="button" onClick={() => { setResult(banLuu.ve); setDangXemBanLuu(true); }} className="inline-flex min-h-11 items-center rounded-full bg-[#e7c78d] px-5 font-extrabold text-[#183f34]">
+            {t("Mở vé đã lưu", "Open saved ticket")}
+          </button>
+        </section>
+      ) : null}
 
       <div className="mt-6 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
         <p className="font-extrabold">{t("Bản này chưa gửi tin nhắn hay email xác nhận", "This version sends no text or email confirmation")}</p>
@@ -232,6 +264,14 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
 
       {result ? (
         <section data-testid="ticket-lookup-result" className="mt-8 rounded-[2rem] border border-[#dde1db] bg-white p-6 sm:p-8">
+          {dangXemBanLuu && banLuu ? (
+            <p data-testid="dang-xem-ban-luu" className="mb-5 rounded-xl bg-[#edf3ee] px-4 py-3 text-sm leading-6 text-[#274c40]">
+              {t(
+                `Đang xem vé lưu trên máy lúc ${new Date(banLuu.luuLuc).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ${new Date(banLuu.luuLuc).toLocaleDateString("vi-VN")}. Mã QR vẫn quét được; số lượt đã vào có thể đã khác.`,
+                `Showing the ticket saved on this phone at ${new Date(banLuu.luuLuc).toLocaleString("en-GB")}. The QR still scans; entries used may have changed.`,
+              )}
+            </p>
+          ) : null}
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">
             {t("Chuyến của bạn", "Your booking")}
           </p>

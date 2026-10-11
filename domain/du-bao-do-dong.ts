@@ -8,6 +8,11 @@ import { mucDoDong, type MucDoDong } from "@/domain/customer-booking";
  */
 export const SO_TUAN_NHIN_LAI = 8;
 export const NGAY_TOI_THIEU = 2;
+/**
+ * Giờ được gợi ý là "thong thả nhất": từ 7 giờ tới 15 giờ. Giờ cuối ngày luôn
+ * vắng vì cổng sắp đóng, gợi khách tới lúc ấy là gợi một chuyến vội.
+ */
+export const GIO_GOI_Y = { tu: 7, den: 15 } as const;
 
 export type DuBaoDoDong = {
   ngayDi: string;
@@ -38,9 +43,10 @@ export function duBaoTuCacNgay(ngayDi: string, gio: readonly number[], cacNgay: 
   const cao = Math.max(...theoGio);
   const mucTheoGio = theoGio.map((n) => mucDoDong(cao > 0 ? n / cao : 0));
   const oDinh = cao > 0 ? theoGio.indexOf(cao) : -1;
-  // Giờ vắng nhất chỉ tính trong những giờ thường có khách, để khỏi gợi 6 giờ sáng khi cổng chưa mở.
+  // Giờ vắng nhất chỉ tính trong những giờ thường có khách và còn kịp đi trọn.
   let oVang = -1;
   theoGio.forEach((n, i) => {
+    if (gio[i] < GIO_GOI_Y.tu || gio[i] > GIO_GOI_Y.den) return;
     if (n > 0 && (oVang < 0 || n < theoGio[oVang])) oVang = i;
   });
   const dinh = oDinh >= 0 ? gio[oDinh] : null;

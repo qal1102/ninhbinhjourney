@@ -19,4 +19,10 @@ describe("dự báo độ đông theo ngày đi", () => {
     expect(du).toMatchObject({ theoGio: [0, 15, 50, 5], soNgay: 2, dinh: 9, vangNhat: 10 });
     expect(du?.mucTheoGio).toEqual(["vang", "vang", "dong", "vang"]);
   });
+
+  it("không gợi giờ sắp đóng cổng là giờ thong thả", () => {
+    const gio = [6, 7, 8, 9, 16, 17];
+    const du = duBaoTuCacNgay("2026-10-18", gio, [[0, 8, 49, 66, 29, 7], [0, 8, 49, 66, 29, 7]]);
+    expect(du).toMatchObject({ dinh: 9, vangNhat: 7 });
+  });
 });

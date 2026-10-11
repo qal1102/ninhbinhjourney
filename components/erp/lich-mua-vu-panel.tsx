@@ -140,12 +140,15 @@ export function LichMuaVuPanel({ lich }: { lich: readonly DipSapToi[] }) {
                 <Link
                   href={`/erp/marketing?dip=${encodeURIComponent(d.dip.id)}#tao-chien-dich`}
                   prefetch={false}
-                  className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 py-3 transition hover:bg-[#f6efe2]"
+                  // Điện thoại: ngày và "còn N ngày" một hàng, tên dịp trọn bề ngang
+                  // bên dưới. Cột ngày cố định 10,5rem ép tên dịp xuống mỗi dòng một
+                  // chữ và "còn N ngày" đè lên ngày âm lịch (soát 10/10/2026).
+                  className="grid min-h-11 grid-cols-[1fr_auto] items-baseline gap-x-3 gap-y-1 py-3 transition hover:bg-[#f6efe2] sm:flex sm:flex-wrap sm:items-center"
                 >
-                  <span className="w-[10.5rem] shrink-0 text-sm font-black text-[#3d3325]">
+                  <span className="text-sm font-black text-[#3d3325] sm:w-[10.5rem] sm:shrink-0">
                     {ngayDoc(d.ngayBatDau)}
                   </span>
-                  <span className="min-w-0 flex-1 text-sm font-bold text-[#4a4133]">
+                  <span className="order-3 col-span-2 min-w-0 text-sm font-bold text-[#4a4133] sm:order-none sm:flex-1">
                     {d.dip.ten}
                     {d.dip.lich === "am" ? (
                       <span className="ml-2 text-xs font-medium text-[#8a8171]">
@@ -158,10 +161,10 @@ export function LichMuaVuPanel({ lich }: { lich: readonly DipSapToi[] }) {
                       </span>
                     ) : null}
                   </span>
-                  <span className="text-xs text-[#8a8171]">còn {d.conBaoNhieuNgay} ngày</span>
+                  <span className="order-2 justify-self-end text-xs text-[#8a8171] sm:order-none">còn {d.conBaoNhieuNgay} ngày</span>
                   <span
                     aria-hidden="true"
-                    className="text-sm font-black text-[#6b5520] underline underline-offset-4"
+                    className="order-4 col-span-2 text-sm font-black text-[#6b5520] underline underline-offset-4 sm:order-none"
                   >
                     Mở chiến dịch
                   </span>

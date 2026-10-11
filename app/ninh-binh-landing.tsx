@@ -1514,7 +1514,7 @@ export default function NinhBinhLanding({
           bayGio={bayGio}
           className="absolute inset-x-0 top-[4.4rem] z-20 overflow-x-auto px-5 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
         />
-        <div id="top" className="hero-scene-content relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-offset,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-offset,0px))]">
+        <div id="top" className="hero-scene-content relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-[calc(4rem+var(--nbj-consent-hero,0px))] pt-28 min-[280px]:px-5 sm:px-8 lg:pb-[calc(6rem+var(--nbj-consent-hero,0px))]">
           {/*
             Nhan "Client demonstration · Supabase shared core" da GO HAN
             05/08. Day la ngon ngu KY THUAT NOI BO lot thang ra mat khach

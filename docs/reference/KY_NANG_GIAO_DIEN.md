@@ -258,6 +258,8 @@ trang thì ghi rõ.
 **Không đề nghị:** ghim tooltip bằng `anchor-name` (Interop 2026 vẫn ghi
 "Limited", khoảng 77%), cuộn cướp tay, âm thanh tự phát (đã ghi ở mục 7).
 
+**Bản chạy thử (11/10):** C2, A4, D2 (thêm lớp nhũ và dấu mộc), E5, E1 + E3 dựng thành trang bấm thử được, ảnh thật của dự án: Artifact riêng tư <https://claude.ai/artifact/PovZFBkAhtWsmL3B1mMpBy>.
+
 **Nếu chỉ chọn ba món:** E1 (đặt chỗ trong tầm ngón cái), E8 (ERP có mạch
 dẫn), E3 (rẻ nhất mà thấy sang ngay).
 

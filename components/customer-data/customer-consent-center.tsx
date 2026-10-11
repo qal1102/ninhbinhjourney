@@ -45,6 +45,7 @@ export function CustomerConsentCenter() {
   const [message, setMessage] = useState("");
   const nhuongCho = useFloatingYield();
   const bannerRef = useRef<HTMLElement | null>(null);
+  const dangLuu = useRef(false);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -88,6 +89,7 @@ export function CustomerConsentCenter() {
 
   async function save(nextAnalytics: boolean, nextMarketing: boolean) {
     setPending(true);
+    dangLuu.current = true;
     setMessage("");
     try {
       const anonymousId = getOrCreateCustomerAnonymousId(window.localStorage);
@@ -120,6 +122,7 @@ export function CustomerConsentCenter() {
       setOpen(false);
       window.dispatchEvent(new Event(CUSTOMER_CONSENT_CHANGED_EVENT));
     } catch (error) {
+      dangLuu.current = false;
       setMessage(
         error instanceof Error
           ? error.message
@@ -161,6 +164,12 @@ export function CustomerConsentCenter() {
       // nên chừa ở cuối trang không cứu được nút "Lập hành trình" bị dải này
       // đè. Công bố chiều cao dải để màn đầu tự chừa chỗ.
       root.style.setProperty("--nbj-consent-offset", offset);
+      // Riêng màn đầu trang chủ: giữ khoảng chừa tới khi rời trang (xem
+      // effect bên dưới). Rút ngay lúc khách bấm "Đồng ý" thì khối chữ xếp
+      // từ đáy lên tụt theo 85–140px (đo production 11/10/2026). Từ lúc khách
+      // bấm lưu thì thôi đo: nút đổi sang "Đang lưu…", dải cao thêm 28px, đo
+      // theo thì chữ nhích lên.
+      if (!dangLuu.current) root.style.setProperty("--nbj-consent-hero", offset);
     };
     apply();
     const observer = new ResizeObserver(apply);
@@ -179,6 +188,13 @@ export function CustomerConsentCenter() {
       }
     };
   }, [ready, hasDecision, pathname]);
+
+  useEffect(
+    () => () => {
+      document.documentElement.style.removeProperty("--nbj-consent-hero");
+    },
+    [pathname],
+  );
 
   if (!ready || !isCustomerConsentSurface(pathname)) return null;
 

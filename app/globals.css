@@ -1520,7 +1520,7 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
    * trên của dải và bị che một nửa.
    */
   .hero-scene-content {
-    padding-bottom: calc(6.75rem + var(--nbj-consent-offset, 0px));
+    padding-bottom: calc(6.75rem + var(--nbj-consent-hero, 0px));
   }
 
   .hero-cinematic-handoff .cinematic-copy {
@@ -1591,7 +1591,7 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   }
 
   .hero-scene-content {
-    padding-bottom: calc(7.75rem + var(--nbj-consent-offset, 0px));
+    padding-bottom: calc(7.75rem + var(--nbj-consent-hero, 0px));
   }
 }
 

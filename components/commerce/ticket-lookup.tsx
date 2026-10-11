@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import QRCode from "qrcode";
 import { CONTACT } from "@/content/contact";
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGES } from "@/content/packages";
 import { goiHienThi } from "@/content/packages-en";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
+import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
 import type { CustomerTicketLookupTicket } from "@/domain/customer-booking";
 
 type LookupResponse =
@@ -70,48 +70,6 @@ const LOOKUP_NETWORK_MESSAGE = {
   vi: `Đường truyền đang trục trặc. Mời bạn thử lại sau ít phút, hoặc gọi ${CONTACT.phoneLabel} để chúng tôi mở vé giúp.`,
   en: `The connection is having trouble. Please try again in a few minutes, or call ${CONTACT.phoneLabel} and we will open your ticket.`,
 };
-
-/**
- * Mã QR của vé chứa ĐÚNG mã vé trần, không kèm địa chỉ web nào.
- *
- * Máy trực cổng đọc nội dung QR rồi đối chiếu thẳng với mã vé; nhét thêm một
- * đường dẫn vào đây là tấm vé không quét được. Cách vẽ lấy nguyên của màn hình
- * đặt chỗ, dùng lại gói `qrcode` đã có trong dự án.
- */
-function TicketQrCode({ ticketCode, lang }: { ticketCode: string; lang: "vi" | "en" }) {
-  const [qrDataUrl, setQrDataUrl] = useState("");
-
-  useEffect(() => {
-    let alive = true;
-    void QRCode.toDataURL(ticketCode, {
-      errorCorrectionLevel: "M",
-      margin: 1,
-      width: 320,
-      color: { dark: "#183f34", light: "#ffffff" },
-    })
-      .then((url) => {
-        if (alive) setQrDataUrl(url);
-      })
-      .catch(() => {
-        if (alive) setQrDataUrl("");
-      });
-    return () => {
-      alive = false;
-    };
-  }, [ticketCode]);
-
-  if (!qrDataUrl) {
-    return <div className="size-28 shrink-0 rounded-xl bg-white/10" aria-hidden />;
-  }
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={qrDataUrl}
-      alt={lang === "en" ? `QR code for the gate, ticket ${ticketCode}` : `Mã QR để quét ở cổng, mã vé ${ticketCode}`}
-      className="size-28 shrink-0 rounded-xl bg-white p-1"
-    />
-  );
-}
 
 const GUEST_GROUP_LABEL: Record<CustomerTicketLookupTicket["guestGroup"], { vi: string; en: string }> = {
   adult: { vi: "Từ 1m3 trở lên", en: "1.3 m and taller" },
@@ -323,28 +281,17 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
 
           <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">{t("Vé của bạn", "Your tickets")}</p>
           <ul className="mt-3 space-y-4">
-            {[...ticketsBySite.entries()].map(([siteId, ticketsForSite]) => (
-              <li key={siteId} className="rounded-2xl border border-[#dde1db] p-4">
-                <p className="font-bold text-[#183f34]">{siteName(siteId, lang)}</p>
-                <ul className="mt-3 space-y-3 border-t border-[#e4e7e1] pt-3">
-                  {ticketsForSite.map((ticket) => (
-                    <li key={ticket.ticketId} className="flex items-center gap-3">
-                      <TicketQrCode ticketCode={ticket.ticketCode} lang={lang} />
-                      <div className="min-w-0">
-                        <code className="text-lg font-extrabold tracking-[0.08em] text-[#9a6328]">
-                          {ticket.ticketCode}
-                        </code>
-                        <p className="mt-1 text-sm text-[#59654b]">
-                          {GUEST_GROUP_LABEL[ticket.guestGroup][lang]} · {ticket.entriesAllowed} {t("lượt vào", "entries")}
-                          {ticket.entriesUsed > 0 ? t(` · đã vào ${ticket.entriesUsed}`, ` · ${ticket.entriesUsed} used`) : ""}
-                        </p>
-                        <p className="mt-1 text-sm text-[#6b786f]">
-                          {t("Hiệu lực", "Valid on")} {new Date(`${ticket.validOn}T00:00:00`).toLocaleDateString(lang === "en" ? "en-GB" : "vi-VN")}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+            {[...ticketsBySite.values()].flat().map((ticket) => (
+              <li key={ticket.ticketId}>
+                <VeLapLanh
+                  ticketCode={ticket.ticketCode}
+                  siteName={siteName(ticket.siteId, lang)}
+                  detail={GUEST_GROUP_LABEL[ticket.guestGroup][lang]}
+                  validOn={ticket.validOn}
+                  entriesAllowed={ticket.entriesAllowed}
+                  entriesUsed={ticket.entriesUsed}
+                  lang={lang}
+                />
               </li>
             ))}
           </ul>

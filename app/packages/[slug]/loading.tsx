@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { SharedImageTransition } from "@/components/shared/shared-image-transition";
+import { SharedImageTransition, SharedTitleTransition } from "@/components/shared/shared-image-transition";
 import { getPackageBySlug } from "@/content/packages";
 import { getPackageHeroImage } from "@/content/package-images";
-import { packageImageTransitionName } from "@/lib/page-continuity";
+import { packageImageTransitionName, packageTitleTransitionName } from "@/lib/page-continuity";
 
 export default function PackageDetailLoading() {
   const pathname = usePathname();
@@ -56,9 +56,11 @@ export default function PackageDetailLoading() {
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
               Đang chuẩn bị lịch trình · {item.durationLabel}
             </p>
-            <h1 className="font-display mt-4 text-5xl leading-[0.92] sm:text-7xl">
-              {item.name}
-            </h1>
+            <SharedTitleTransition name={packageTitleTransitionName(item.slug)}>
+              <h1 className="font-display mt-4 text-5xl leading-[0.92] sm:text-7xl">
+                {item.name}
+              </h1>
+            </SharedTitleTransition>
             <div className="mt-8 h-px w-28 overflow-hidden bg-white/15">
               <span className="block h-full w-1/2 animate-pulse bg-[#e7c78d] motion-reduce:animate-none" />
             </div>

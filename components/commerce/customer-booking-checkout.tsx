@@ -13,6 +13,8 @@ import { formatVietnameseDate } from "@/lib/vietnamese-date";
 import { maVung, type NgonNgu } from "@/lib/ngon-ngu";
 import { BenDoTienTrinh } from "./ben-do-tien-trinh";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
+import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
+import { DESTINATIONS } from "@/content/destinations";
 
 type VisitorGroupApiResponse =
   | { accepted: true; group: VisitorGroupStatus }
@@ -60,41 +62,15 @@ function MemberQrCode({ memberCode, lang }: { memberCode: string; lang: NgonNgu 
   );
 }
 
-// Mã QR của vé chứa đúng mã vé trần (ví dụ `WEB-A1B2C3D4E5F6`), khác hẳn
-// `MemberQrCode` ở trên vốn chứa một địa chỉ web. Máy quét ở cổng đọc thẳng
-// nội dung QR rồi đối chiếu với mã vé — nhét thêm đường dẫn vào đây là vé
-// không quét được nữa.
-//
-// Cách vẽ giữ nguyên `MemberQrCode`, dùng lại gói `qrcode` đã có trong dự án.
-function TicketQrCode({ ticketCode, lang }: { ticketCode: string; lang: NgonNgu }) {
-  const [qrDataUrl, setQrDataUrl] = useState("");
+// Vé hiện bằng thẻ VeLapLanh (D2): mã QR chứa đúng mã vé trần, như trước.
+const NHOM_KHACH_VE: Record<ConfirmationResult["tickets"][number]["guestGroup"], Record<NgonNgu, string>> = {
+  adult: { vi: "Từ 1m3 trở lên", en: "1.3 m and taller" },
+  child: { vi: "Dưới 1m3", en: "Under 1.3 m" },
+  group: { vi: "Cả đoàn", en: "Whole group" },
+};
 
-  useEffect(() => {
-    let active = true;
-    void QRCode.toDataURL(ticketCode, {
-      width: 168,
-      margin: 1,
-      errorCorrectionLevel: "M",
-      color: { dark: "#151A17", light: "#F4F0E7" },
-    }).then((url) => {
-      if (active) setQrDataUrl(url);
-    });
-    return () => {
-      active = false;
-    };
-  }, [ticketCode]);
-
-  if (!qrDataUrl) {
-    return <div className="grid size-16 shrink-0 place-items-center rounded-xl bg-[#f4f0e7] text-[10px] text-[#6b786f]">{lang === "en" ? "Making…" : "Đang tạo…"}</div>;
-  }
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={qrDataUrl}
-      alt={lang === "en" ? `QR code for the gate, ticket ${ticketCode}` : `Mã QR để quét ở cổng, mã vé ${ticketCode}`}
-      className="size-16 shrink-0 rounded-xl bg-[#f4f0e7]"
-    />
-  );
+function tenDiem(siteId: string, lang: NgonNgu) {
+  return DESTINATIONS.find((item) => item.id === siteId)?.name[lang] ?? (lang === "en" ? "Site" : "Điểm tham quan");
 }
 
 type HoldResult = {
@@ -990,16 +966,19 @@ export function CustomerBookingCheckout({
                   return bySite;
                 }, new Map<string, ConfirmationResult["tickets"]>()),
               ).map(([siteId, ticketsForSite]) => (
-                <li key={siteId} className="rounded-2xl border border-white/15 bg-white/8 p-4">
+                <li key={siteId}>
                   <p className="text-sm font-bold text-white/85">{formatGuestGroupSummary(ticketsForSite, lang)}</p>
-                  <ul className="mt-3 space-y-3 border-t border-white/10 pt-3">
+                  <ul className="mt-3 space-y-4">
                     {ticketsForSite.map((ticket) => (
-                      <li key={ticket.ticketId} className="flex items-center gap-3">
-                        <TicketQrCode ticketCode={ticket.ticketCode} lang={lang} />
-                        <div className="min-w-0">
-                          <code className="text-lg font-extrabold tracking-[0.08em] text-[#e7c78d]">{ticket.ticketCode}</code>
-                          <p className="mt-1 text-sm text-white/62">{t(`${ticket.entriesAllowed} lượt vào · hiệu lực`, `${ticket.entriesAllowed} entries · valid on`)} {new Date(`${ticket.validOn}T00:00:00`).toLocaleDateString(maVung(lang))}</p>
-                        </div>
+                      <li key={ticket.ticketId}>
+                        <VeLapLanh
+                          ticketCode={ticket.ticketCode}
+                          siteName={tenDiem(ticket.siteId, lang)}
+                          detail={NHOM_KHACH_VE[ticket.guestGroup][lang]}
+                          validOn={ticket.validOn}
+                          entriesAllowed={ticket.entriesAllowed}
+                          lang={lang}
+                        />
                       </li>
                     ))}
                   </ul>

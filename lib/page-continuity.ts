@@ -293,6 +293,11 @@ export function packageImageTransitionName(slug: string) {
   return `package-image-${safePackageSlug(slug)}`;
 }
 
+/** Tên gói bay theo ảnh từ thẻ ở /packages sang tiêu đề trang gói (E5, 11/10/2026). */
+export function packageTitleTransitionName(slug: string) {
+  return `package-title-${safePackageSlug(slug)}`;
+}
+
 export function destinationImageTransitionName(slug: string) {
   return `destination-image-${safeDestinationSlug(slug)}`;
 }

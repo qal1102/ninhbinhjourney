@@ -2768,3 +2768,207 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     animation: none;
   }
 }
+
+/*
+ * Vé QR lấp lánh (D2, 11/10/2026) — components/commerce/ve-lap-lanh.tsx.
+ * Lớp nhũ nằm DƯỚI mã QR: máy cổng phải quét được, nên mã giữ nền trắng.
+ * Bóng đổ đặt ở khung ngoài vì răng cưa (mask) cắt mất box-shadow của thẻ.
+ */
+@property --ve-nhu {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 30%;
+}
+
+.ve-lap-lanh-san {
+  perspective: 1000px;
+  filter: drop-shadow(0 16px 28px rgba(9, 28, 24, 0.28));
+}
+
+.ve-lap-lanh {
+  --ve-cot-ma: 164px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--ve-cot-ma);
+  align-items: center;
+  border-radius: 20px;
+  background: linear-gradient(160deg, #1d4a3e, #123128 70%);
+  color: #f3eee3;
+  transform: rotateX(var(--ve-rx, 0deg)) rotateY(var(--ve-ry, 0deg));
+  transition: transform 0.2s ease-out;
+  touch-action: pan-y;
+  -webkit-mask:
+    radial-gradient(circle 11px at calc(100% - var(--ve-cot-ma)) 0, transparent 98%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle 11px at calc(100% - var(--ve-cot-ma)) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle 11px at calc(100% - var(--ve-cot-ma)) 0, transparent 98%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle 11px at calc(100% - var(--ve-cot-ma)) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
+}
+
+.ve-lap-lanh-chu {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  padding: 18px 16px 18px 20px;
+}
+
+.ve-lap-lanh-ma {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border-left: 2px dashed rgba(243, 238, 227, 0.3);
+}
+
+.ve-lap-lanh-nhu {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  opacity: 0.42;
+  background:
+    linear-gradient(115deg, transparent calc(var(--ve-nhu) - 22%), rgba(255, 255, 255, 0.5) var(--ve-nhu), transparent calc(var(--ve-nhu) + 22%)),
+    linear-gradient(115deg, transparent calc(var(--ve-nhu) - 40%), rgba(255, 170, 90, 0.32) calc(var(--ve-nhu) - 12%), rgba(120, 230, 200, 0.32) calc(var(--ve-nhu) + 6%), rgba(140, 150, 255, 0.32) calc(var(--ve-nhu) + 22%), transparent calc(var(--ve-nhu) + 45%));
+  animation: ve-nhu-troi 7s ease-in-out infinite alternate;
+}
+
+.ve-lap-lanh[data-dang-nghieng] .ve-lap-lanh-nhu {
+  animation: none;
+}
+
+@keyframes ve-nhu-troi {
+  from { --ve-nhu: 8%; }
+  to { --ve-nhu: 92%; }
+}
+
+.ve-lap-lanh-dau {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: calc(var(--ve-cot-ma) - 6px);
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 3px solid #b23a2a;
+  background: rgba(243, 238, 227, 0.93);
+  box-shadow: inset 0 0 0 4px rgba(243, 238, 227, 0.93), inset 0 0 0 5.5px #b23a2a;
+  color: #b23a2a;
+  text-align: center;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  rotate: -9deg;
+  animation: ve-dap 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.2) 0.25s both;
+}
+
+.ve-lap-lanh-dau b {
+  display: block;
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@keyframes ve-dap {
+  from { opacity: 0; scale: 2.2; rotate: -24deg; }
+  70% { opacity: 1; scale: 0.94; }
+  to { opacity: 1; scale: 1; rotate: -9deg; }
+}
+
+@media (max-width: 519px) {
+  .ve-lap-lanh {
+    grid-template-columns: minmax(0, 1fr);
+    -webkit-mask: none;
+    mask: none;
+  }
+
+  /* Mã QR sát trái, dấu mộc nằm bên phải mã: không chạm ô định vị của mã. */
+  .ve-lap-lanh-ma {
+    justify-items: start;
+    border-left: 0;
+    border-top: 2px dashed rgba(243, 238, 227, 0.3);
+  }
+
+  .ve-lap-lanh-dau {
+    top: auto;
+    right: 14px;
+    bottom: 40px;
+    width: 86px;
+    height: 86px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-lap-lanh,
+  .ve-lap-lanh-nhu,
+  .ve-lap-lanh-dau {
+    animation: none;
+    transition: none;
+  }
+}
+
+/*
+ * Thanh đặt chỗ dính đáy trang gói (E1, 11/10/2026) — thanh-dat-cho.tsx.
+ * Dải đồng ý còn hiện thì thanh nhường; thanh hiện thì nút "Hỏi AI" nhích lên.
+ */
+.thanh-dat-cho {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  translate: 0 110%;
+  transition: translate 0.32s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.thanh-dat-cho[data-hien] {
+  translate: 0 0;
+}
+
+html[data-nbj-consent-banner-visible="true"] .thanh-dat-cho {
+  translate: 0 110%;
+}
+
+@media (max-width: 1023px) {
+  html[data-thanh-dat-hien]:not([data-nbj-consent-banner-visible="true"]) [data-testid="hoi-dap-mo"] {
+    bottom: calc(var(--nbj-thanh-dat, 76px) + 12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thanh-dat-cho {
+    transition: none;
+  }
+}
+
+/*
+ * Hộp thoại mở mềm (E3, 11/10/2026): hai <dialog> gốc ("Hỏi AI", hồ sơ người
+ * chèo) hiện dần và hơi phóng lên thay vì bật ra cụt. Dùng `scale` chứ không
+ * `translate` để không đụng các lớp căn giữa bằng translate.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  dialog[open] {
+    transition:
+      opacity 0.26s ease,
+      scale 0.32s cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+
+  dialog[open]::backdrop {
+    transition: opacity 0.26s ease;
+  }
+
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      scale: 0.96;
+    }
+
+    dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}

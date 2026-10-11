@@ -18,13 +18,15 @@ import {
   readPublicEnvironment,
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
-import { SharedImageTransition } from "@/components/shared/shared-image-transition";
+import { SharedImageTransition, SharedTitleTransition } from "@/components/shared/shared-image-transition";
+import { ThanhDatCho } from "@/components/commerce/thanh-dat-cho";
 import {
   checkoutHref,
   destinationFromPackageHref,
   destinationImageTransitionName,
   packageDetailBackHref,
   packageImageTransitionName,
+  packageTitleTransitionName,
   readContinuityContext,
 } from "@/lib/page-continuity";
 
@@ -102,6 +104,7 @@ export default async function PackageDetailPage({
             className="object-cover"
           />
         </SharedImageTransition>
+        <div data-thanh-dat-moc="anh" aria-hidden="true" />
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_0.72fr]">
           <section>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#e7c78d]">
@@ -111,9 +114,11 @@ export default async function PackageDetailPage({
                   ? `${ch(lang, "Dữ liệu minh họa", "Sample data")} · ${chu.durationLabel}`
                 : `${ch(lang, "Bảng giá tham khảo", "Reference prices")} · ${chu.durationLabel}`}
             </p>
-            <h1 className="font-display mt-4 text-6xl leading-[0.92] sm:text-8xl">
-              {chu.name}
-            </h1>
+            <SharedTitleTransition name={packageTitleTransitionName(item.slug)}>
+              <h1 className="font-display mt-4 text-6xl leading-[0.92] sm:text-8xl">
+                {chu.name}
+              </h1>
+            </SharedTitleTransition>
             <p className="mt-6 max-w-xl text-xl leading-8 text-white/68">
               {chu.editorialDescription ??
                 ch(
@@ -176,7 +181,7 @@ export default async function PackageDetailPage({
               </div>
             ) : null}
           </section>
-          <aside className="h-fit rounded-3xl bg-[#fbfaf6] p-6 text-[#151a17] sm:p-8">
+          <aside data-thanh-dat-moc="gia" className="h-fit rounded-3xl bg-[#fbfaf6] p-6 text-[#151a17] sm:p-8">
             <p className="text-sm text-[#59654b]">
               {item.priceLabel
                 ? ch(lang, "Giá giới thiệu mùa 2026", "2026 introductory price")
@@ -227,6 +232,15 @@ export default async function PackageDetailPage({
         </div>
       </div>
     </main>
+      {checkoutAvailable && !hetMua ? (
+        <ThanhDatCho
+          href={checkoutHref(item.slug, navigationContext)}
+          gia={giaGoi(item, lang)}
+          nhanGia={item.priceLabel ? ch(lang, "Giá giới thiệu mùa 2026", "2026 introductory price") : ch(lang, "Mỗi người lớn · giá minh hoạ", "Per adult · sample price")}
+          nut={customerBookingEnabled ? ch(lang, "Giữ chỗ", "Hold seats") : ch(lang, "Tiếp tục", "Continue")}
+          goiId={item.id}
+        />
+      ) : null}
     </>
   );
 }

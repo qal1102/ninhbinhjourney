@@ -12,7 +12,7 @@ import {
   readPublicEnvironment,
 } from "@/config/experience";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
-import { SharedImageTransition } from "@/components/shared/shared-image-transition";
+import { SharedImageTransition, SharedTitleTransition } from "@/components/shared/shared-image-transition";
 import { ConTroNhan } from "@/components/shared/con-tro-nhan";
 import { AnhNhu } from "@/components/shared/anh-nhu";
 import {
@@ -20,6 +20,7 @@ import {
   packageCatalogBack,
   packageDetailHref,
   packageImageTransitionName,
+  packageTitleTransitionName,
   readContinuityContext,
   type ContinuityContext,
 } from "@/lib/page-continuity";
@@ -89,9 +90,11 @@ function PackageCard({
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#557568]">
               {chu.durationLabel} · {chu.nhip}
             </p>
-            <h2 className={`font-display mt-2 break-words leading-tight text-[#183f34] ${featured ? "text-4xl" : "text-3xl"}`}>
-              {chu.name}
-            </h2>
+            <SharedTitleTransition name={packageTitleTransitionName(item.slug)}>
+              <h2 className={`font-display mt-2 break-words leading-tight text-[#183f34] ${featured ? "text-4xl" : "text-3xl"}`}>
+                {chu.name}
+              </h2>
+            </SharedTitleTransition>
             <p className="mt-2 text-sm text-[#59654b]">{chu.audience}</p>
             {hetMua ? (
               <p data-testid="goi-het-mua" className="mt-3 inline-flex rounded-full bg-[#efe6d6] px-3 py-1 text-xs font-extrabold text-[#6b5326]">

@@ -23,6 +23,7 @@ import { absoluteUrl } from "@/lib/site-url";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
 import { NHAN_SO_THICH, nhanThoiLuong } from "@/content/destination-labels";
 import { ch } from "@/lib/ngon-ngu";
+import { ngayVietNam } from "@/domain/thoi-luong";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { SuongVen } from "@/components/shared/suong-ven";
 import { JsonLd } from "@/components/shared/json-ld";
@@ -400,7 +401,9 @@ export default async function DestinationPage({
                   ch(lang, "Ninh Bình Journey tự biên tập", "Written by Ninh Binh Journey")
                 )}
                 <br />
-                {destination.source.reviewedAt}
+                <span className="text-xs text-[#6b7268]">
+                  {ch(lang, `Soát lại ${ngayVietNam(destination.source.reviewedAt)}`, `Checked ${ngayVietNam(destination.source.reviewedAt)}`)}
+                </span>
               </dd>
             </div>
           </dl>

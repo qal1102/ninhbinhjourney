@@ -44,6 +44,9 @@ export default function MiniRouteMapCanvas({
         nhan: point.label,
         // Một điểm thì đánh số là thừa; nhiều điểm thì số chính là thứ tự đi.
         thuTu: points.length > 1 ? index + 1 : undefined,
+        // Một điểm thì in tên cạnh ghim: quanh nhiều nơi bản đồ không có tên làng nào,
+        // khách nhìn khung nhỏ không biết chấm vàng là gì.
+        ...(points.length === 1 ? { nhanPhu: point.label, lopNhanPhu: "nb-ghim-ten" } : {}),
         khongBam: true,
       })),
     [points],
@@ -80,7 +83,10 @@ export default function MiniRouteMapCanvas({
       // đúng một mảng xanh phẳng, trong khi mặt nước Tràng An nằm ngay phía
       // trên mép. Lùi về 12.6 thì khung ôm khoảng 4km và khách thấy được điều
       // đáng thấy: nơi này nằm ở đâu giữa vùng núi và sông.
-      zoomToiDa={points.length > 1 ? 13 : 12.6}
+      // 12/10/2026: ở 12.6 khung vẫn không có một tên nào (ảnh 390 và 1440),
+      // khách không biết ghim nằm gần đâu. Lùi về 11.2 thì hiện tên phường,
+      // xã quanh đó mà vẫn thấy mặt nước, núi.
+      zoomToiDa={points.length > 1 ? 13 : 11.2}
       className="h-full w-full"
       loiNhanHong={LOI_NHAN_HONG_TINH}
     />

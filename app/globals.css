@@ -839,6 +839,24 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   font-weight: 800;
 }
 
+/* Tên điểm in cạnh ghim duy nhất của bản đồ "Vị trí" ở trang điểm đến (12/10/2026). */
+.nb-ghim-ten {
+  color: #183f34;
+  font-size: 13px;
+  font-weight: 800;
+  left: calc(100% + 8px);
+  line-height: 1;
+  pointer-events: none;
+  position: absolute;
+  text-shadow:
+    0 0 3px #fbfaf6,
+    0 0 6px #fbfaf6,
+    0 0 10px rgba(251, 250, 246, 0.9);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
 .nb-passport-row.is-fresh {
   animation: nb-passport-row-light 1800ms var(--motion-editorial-ease) both;
 }
@@ -2990,11 +3008,16 @@ html[data-nbj-consent-banner-visible="true"] .thanh-dat-cho {
 /*
  * Thanh điều hướng đáy trên điện thoại (F6, 11/10/2026) — thanh-dau-trang.tsx.
  * Trang nào có thanh thì nội dung chừa đáy, nút "Hỏi AI" và thanh giữ chỗ nằm
- * trên thanh. Dải đồng ý (z 1300) vẫn phủ lên thanh khi còn hiện.
+ * trên thanh. Dải đồng ý cũng nằm trên thanh (12/10/2026): trước đó dải phủ
+ * kín thanh, khách mới vào chưa trả lời dải thì không bấm được lối nào.
  */
 @media (max-width: 639px) {
   body:has([data-thanh-day]) {
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body:has([data-thanh-day]) [data-dai-dong-y] {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 
   body:has([data-thanh-day]) [data-testid="hoi-dap-mo"] {

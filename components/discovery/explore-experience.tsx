@@ -446,7 +446,9 @@ export function ExploreExperience({
 
   return (
     <div data-testid="explore-experience">
-      <div className="grid gap-3 rounded-3xl border border-[#d7d5cd] bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-6">
+      {/* Điện thoại xếp hai cột (12/10/2026): một cột thì sáu ô cao gần 500px,
+          khách phải cuộn qua cả màn mới thấy bản đồ. */}
+      <div className="grid gap-x-2.5 gap-y-3 rounded-3xl min-[360px]:grid-cols-2 border border-[#d7d5cd] bg-white p-3.5 shadow-sm sm:gap-3 sm:p-4 xl:grid-cols-6">
         <label className="text-sm font-bold text-[#26342e]">
           {ch(lang, "Sở thích", "Interest")}
           <select
@@ -526,7 +528,7 @@ export function ExploreExperience({
             <option value="children">{ch(lang, "Trẻ em", "Children")}</option>
           </select>
         </label>
-        <label className="flex min-h-11 items-center gap-3 self-end rounded-xl bg-[#edf3f0] px-3 text-sm font-bold">
+        <label className="flex min-h-11 items-center gap-2.5 self-end rounded-xl bg-[#edf3f0] px-3 text-sm font-bold leading-tight">
           <input
             type="checkbox"
             checked={availableOnly}

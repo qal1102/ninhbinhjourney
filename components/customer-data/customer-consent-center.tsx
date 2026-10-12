@@ -158,7 +158,9 @@ export function CustomerConsentCenter() {
     );
     root.setAttribute("data-nbj-consent-banner-visible", "true");
     const apply = () => {
-      const offset = `${node.offsetHeight + 24}px`;
+      // Đo từ mép trên của dải tới đáy màn: trên điện thoại có thanh điều hướng
+      // đáy thì dải nằm trên thanh, khoảng chừa phải tính cả thanh.
+      const offset = `${Math.max(node.offsetHeight, window.innerHeight - node.getBoundingClientRect().top) + 24}px`;
       document.body.style.paddingBottom = offset;
       // QA-P2-09: màn đầu trang chủ cao đúng một màn hình và dồn nút xuống đáy,
       // nên chừa ở cuối trang không cứu được nút "Lập hành trình" bị dải này

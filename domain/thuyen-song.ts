@@ -526,7 +526,50 @@ export type NguoiCheo = {
   ghiChu: string | null;
   /** Mã giới thiệu khách và hoa hồng tháng này (migration 116); chưa cấp mã thì null. */
   gioiThieu?: GioiThieuNguoiCheo | null;
+  /** Hợp đồng (migration 120). Kho cũ chưa có cột thì coi là dài hạn không thời hạn. */
+  loaiHopDong?: LoaiHopDong;
+  /** "YYYY-MM-DD"; null là không ghi ngày bắt đầu. */
+  hopDongTu?: string | null;
+  /** "YYYY-MM-DD"; null là không thời hạn (chỉ dài hạn). */
+  hopDongDen?: string | null;
 };
+
+export type LoaiHopDong = "dai-han" | "thoi-vu";
+
+export const TEN_LOAI_HOP_DONG: Record<LoaiHopDong, string> = { "dai-han": "Dài hạn", "thoi-vu": "Thời vụ" };
+
+/** Hợp đồng còn bao nhiêu ngày nữa thì coi là "sắp hết", để quản lý kịp gia hạn. */
+export const NGAY_BAO_SAP_HET = 14;
+
+export type TrangThaiHopDong =
+  | { loai: "con-han"; conNgay: number | null }
+  | { loai: "sap-het"; conNgay: number }
+  | { loai: "het-han"; quaNgay: number }
+  | { loai: "chua-bat-dau"; conNgay: number };
+
+function soNgay(tu: string, den: string) {
+  return Math.round((Date.parse(`${den}T00:00:00Z`) - Date.parse(`${tu}T00:00:00Z`)) / 86_400_000);
+}
+
+/** Ngày "YYYY-MM-DD" theo giờ Việt Nam của một mốc thời gian. */
+export function ngayVietNamCua(ms: number) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(ms));
+}
+
+/** Hợp đồng của một người vào ngày `ngay` ("YYYY-MM-DD", giờ Việt Nam). Ngày hết hạn vẫn tính là còn. */
+export function trangThaiHopDong(nguoi: Pick<NguoiCheo, "hopDongTu" | "hopDongDen">, ngay: string): TrangThaiHopDong {
+  if (nguoi.hopDongTu && ngay < nguoi.hopDongTu) return { loai: "chua-bat-dau", conNgay: soNgay(ngay, nguoi.hopDongTu) };
+  if (!nguoi.hopDongDen) return { loai: "con-han", conNgay: null };
+  if (ngay > nguoi.hopDongDen) return { loai: "het-han", quaNgay: soNgay(nguoi.hopDongDen, ngay) };
+  const con = soNgay(ngay, nguoi.hopDongDen);
+  return con <= NGAY_BAO_SAP_HET ? { loai: "sap-het", conNgay: con } : { loai: "con-han", conNgay: con };
+}
+
+/** Còn trong hợp đồng vào ngày ấy thì mới vào hàng gọi lượt. */
+export function trongHopDong(nguoi: Pick<NguoiCheo, "hopDongTu" | "hopDongDen">, ngay: string) {
+  const t = trangThaiHopDong(nguoi, ngay);
+  return t.loai === "con-han" || t.loai === "sap-het";
+}
 
 /**
  * Người chèo giới thiệu khách: mã nằm trong sổ đại lý (099), nên hoa hồng tính
@@ -561,10 +604,16 @@ export function xepSoNguoiCheo(so: readonly NguoiCheo[]): NguoiCheo[] {
  * trống lúc thuyền rời bến thì chuyến ấy không có ai trong sổ (không đoán).
  * Kết quả chỉ phụ thuộc vào sổ và các chuyến đã rời bến, nên chạy lại cho cùng
  * một kết quả.
+ *
+ * Người hết hợp đồng hay chưa tới ngày bắt đầu (migration 120) không vào hàng
+ * gọi, tính theo ngày của chuyến rời bến sớm nhất (một bến chỉ có chuyến của
+ * một ngày).
  */
 export function ganNguoiCheo(chuyen: readonly ChuyenUocTinh[], so: readonly NguoiCheo[]): Map<string, NguoiCheo> {
   const ket = new Map<string, NguoiCheo>();
-  const hang = xepSoNguoiCheo(so);
+  const dauNgay = chuyen.reduce((min, c) => Math.min(min, c.roiBenLuc), Number.POSITIVE_INFINITY);
+  const ngay = Number.isFinite(dauNgay) ? ngayVietNamCua(dauNgay) : null;
+  const hang = xepSoNguoiCheo(ngay ? so.filter((n) => trongHopDong(n, ngay)) : so);
   const dangCheo: { nguoi: NguoiCheo; veLuc: number }[] = [];
   for (const c of [...chuyen].sort((a, b) => a.roiBenLuc - b.roiBenLuc || a.id.localeCompare(b.id))) {
     // Ai đã về bến trước lúc thuyền này rời thì vào cuối hàng, theo giờ về.

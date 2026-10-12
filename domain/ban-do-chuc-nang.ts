@@ -255,6 +255,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "hop-dong-nguoi-cheo",
+        ten: "Hợp đồng người chèo: dài hạn, thời vụ, ngày hết hạn",
+        moTa: "Mỗi người có loại hợp đồng và ngày hết hạn. Hết hợp đồng hay chưa tới ngày bắt đầu thì tự ra khỏi lượt gọi; còn dưới 14 ngày thì báo để gia hạn. Sổ mẫu 30 người mỗi bến.",
+        vai: "director",
+        duongDan: "/erp/thuyen",
+        diem: "hop-dong-nguoi-cheo",
+        moi: "12/10",
+        cacViec: [
+          "Ở \"Sổ người chèo\", đọc dòng đếm: bao nhiêu người trong lượt gọi hôm nay, bao nhiêu hết hợp đồng, bao nhiêu sắp hết.",
+          "Bấm nút lọc \"Sắp hết\" hay \"Hết hợp đồng\": thẻ đỏ \"nghỉ lượt\" là người không được gọi chèo.",
+          "Mở hồ sơ một người, bấm \"Sửa hồ sơ\", đổi ngày hết hạn để gia hạn: lưu xong người ấy quay lại lượt gọi.",
+        ],
+      },
+      {
         id: "gioi-thieu-nguoi-cheo",
         ten: "Người chèo giới thiệu khách, nhận hoa hồng",
         moTa: "Mỗi người chèo có một mã QR giới thiệu. Khách quét rồi đặt gói thì đơn ghi cho người chèo; khách tới cổng thì tính hoa hồng, chi qua màn Đại lý & hoa hồng.",

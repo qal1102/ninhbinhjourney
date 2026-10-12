@@ -200,9 +200,12 @@ export async function soNguoiCheo(coSo: CoSoThuyen): Promise<NguoiCheo[]> {
   if (!kho) return [];
   const doc = (cot: string) =>
     kho.from("erp_nguoi_cheo").select(cot).eq("tenant_id", TENANT_ID).eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[coSo]).limit(2000);
-  let { data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, que_quan, nam_vao_nghe, ngon_ngu, ghi_chu, dai_ly_id");
-  // Kho chưa áp 116 thì chưa có mã giới thiệu, chưa áp 112 thì chưa có cột hồ
-  // sơ: lùi dần, vẫn đọc sổ như cũ.
+  let { data, error } = await doc(
+    "id, so_thuyen, ho_ten, so_dien_thoai, la_mau, que_quan, nam_vao_nghe, ngon_ngu, ghi_chu, dai_ly_id, loai_hop_dong, hop_dong_tu, hop_dong_den",
+  );
+  // Kho chưa áp 120 thì chưa có hợp đồng, chưa áp 116 thì chưa có mã giới
+  // thiệu, chưa áp 112 thì chưa có cột hồ sơ: lùi dần, vẫn đọc sổ như cũ.
+  if (error?.code === "42703") ({ data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, que_quan, nam_vao_nghe, ngon_ngu, ghi_chu, dai_ly_id"));
   if (error?.code === "42703") ({ data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, que_quan, nam_vao_nghe, ngon_ngu, ghi_chu"));
   if (error?.code === "42703") ({ data, error } = await doc("id, so_thuyen, ho_ten, so_dien_thoai, la_mau, ghi_chu"));
   if (error) {
@@ -226,6 +229,9 @@ export async function soNguoiCheo(coSo: CoSoThuyen): Promise<NguoiCheo[]> {
         namVaoNghe: typeof d.nam_vao_nghe === "number" ? d.nam_vao_nghe : null,
         ngonNgu: chu(d.ngon_ngu),
         ghiChu: chu(d.ghi_chu),
+        loaiHopDong: d.loai_hop_dong === "thoi-vu" ? ("thoi-vu" as const) : ("dai-han" as const),
+        hopDongTu: chu(d.hop_dong_tu)?.slice(0, 10) ?? null,
+        hopDongDen: chu(d.hop_dong_den)?.slice(0, 10) ?? null,
       };
     }),
   );
@@ -310,6 +316,9 @@ export type GhiNguoiCheo = {
   namVaoNghe: number | null;
   ngonNgu: string | null;
   ghiChu: string | null;
+  loaiHopDong: "dai-han" | "thoi-vu";
+  hopDongTu: string | null;
+  hopDongDen: string | null;
 };
 
 /** Thêm hay sửa một người trong sổ. Trùng số thuyền trong cùng bến thì báo. */
@@ -325,6 +334,9 @@ export async function ghiNguoiCheo(v: GhiNguoiCheo): Promise<void> {
     nam_vao_nghe: v.namVaoNghe,
     ngon_ngu: v.ngonNgu?.trim() || null,
     ghi_chu: v.ghiChu?.trim() || null,
+    loai_hop_dong: v.loaiHopDong,
+    hop_dong_tu: v.hopDongTu,
+    hop_dong_den: v.hopDongDen,
     // Sửa tay là thành người thật trong sổ, thôi nhãn "mẫu".
     la_mau: false,
     sua_luc: new Date().toISOString(),
@@ -335,7 +347,8 @@ export async function ghiNguoiCheo(v: GhiNguoiCheo): Promise<void> {
   if (error) {
     if (error.code === "23505") throw new ThuyenLoi("Số thuyền này đã có người trong sổ của bến.", "LOI");
     if (error.code === "42P01" || error.code === "PGRST205") throw new ThuyenLoi("Kho chưa có sổ người chèo. Xin báo người quản trị hệ thống.", "CHUA_NOI_KHO");
-    if (error.code === "42703") throw new ThuyenLoi("Kho chưa có cột hồ sơ người chèo. Xin báo người quản trị hệ thống.", "CHUA_NOI_KHO");
+    if (error.code === "42703") throw new ThuyenLoi("Kho chưa có cột hồ sơ hay hợp đồng người chèo (migration 120). Xin báo người quản trị hệ thống.", "CHUA_NOI_KHO");
+    if (error.code === "23514") throw new ThuyenLoi("Hợp đồng chưa hợp lệ: thời vụ phải có ngày hết hạn, ngày hết không trước ngày bắt đầu.", "LOI");
     loiKho(error);
   }
 }

@@ -16,7 +16,11 @@ import {
   phutChu,
   soNamCheo,
   SU_KIEN_MO_HO_SO_NGUOI_CHEO,
+  TEN_LOAI_HOP_DONG,
+  trangThaiHopDong,
+  trongHopDong,
   type ChuyenUocTinh,
+  type LoaiHopDong,
   type CoSoThuyen,
   type GioiThieuNguoiCheo,
   type NgayCuaNguoiCheo,
@@ -42,8 +46,68 @@ type Nhap = {
   namVaoNghe: string;
   ngonNgu: string;
   ghiChu: string;
+  loaiHopDong: LoaiHopDong;
+  hopDongTu: string;
+  hopDongDen: string;
 };
-const TRONG: Nhap = { soThuyen: "", hoTen: "", soDienThoai: "", queQuan: "", namVaoNghe: "", ngonNgu: "", ghiChu: "" };
+const TRONG: Nhap = {
+  soThuyen: "",
+  hoTen: "",
+  soDienThoai: "",
+  queQuan: "",
+  namVaoNghe: "",
+  ngonNgu: "",
+  ghiChu: "",
+  loaiHopDong: "dai-han",
+  hopDongTu: "",
+  hopDongDen: "",
+};
+
+type Loc = "tat-ca" | "sap-het" | "het-han" | "thoi-vu";
+
+function ngayNgan(iso: string | null | undefined) {
+  const k = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? "");
+  return k ? `${k[3]}/${k[2]}/${k[1]}` : "";
+}
+
+/** Nhãn hợp đồng cạnh tên: chỉ hiện khi đáng chú ý (thời vụ, sắp hết, đã hết, chưa bắt đầu). */
+function NhanHopDong({ n, homNay }: { n: NguoiCheo; homNay: string }) {
+  const t = trangThaiHopDong(n, homNay);
+  if (t.loai === "het-han") {
+    return <span className="rounded-full bg-[#fdecea] px-2.5 py-1 text-[0.7rem] font-black text-[#9b2c1f]">Hết hợp đồng {ngayNgan(n.hopDongDen).slice(0, 5)} · nghỉ lượt</span>;
+  }
+  if (t.loai === "chua-bat-dau") {
+    return <span className="rounded-full bg-[#eef1f7] px-2.5 py-1 text-[0.7rem] font-black text-[#3d5a80]">Bắt đầu {ngayNgan(n.hopDongTu).slice(0, 5)}</span>;
+  }
+  if (t.loai === "sap-het") {
+    return <span className="rounded-full bg-[#fff1d6] px-2.5 py-1 text-[0.7rem] font-black text-[#7a5520]">Còn {t.conNgay} ngày hợp đồng</span>;
+  }
+  if (n.loaiHopDong === "thoi-vu") {
+    return <span className="rounded-full bg-[#eef1f7] px-2.5 py-1 text-[0.7rem] font-bold text-[#3d5a80]">Thời vụ · đến {ngayNgan(n.hopDongDen).slice(0, 5)}</span>;
+  }
+  return null;
+}
+
+/** Dòng hợp đồng trong hộp hồ sơ: loại, từ ngày đến ngày, còn hay đã hết. */
+function ChuHopDong({ n, homNay }: { n: NguoiCheo; homNay: string }) {
+  const t = trangThaiHopDong(n, homNay);
+  const khoang = [n.hopDongTu ? `từ ${ngayNgan(n.hopDongTu)}` : null, n.hopDongDen ? `đến ${ngayNgan(n.hopDongDen)}` : "không thời hạn"]
+    .filter(Boolean)
+    .join(" ");
+  const tinh =
+    t.loai === "het-han"
+      ? `đã hết ${t.quaNgay} ngày, không vào lượt gọi`
+      : t.loai === "chua-bat-dau"
+        ? `còn ${t.conNgay} ngày nữa mới bắt đầu`
+        : t.conNgay !== null
+          ? `còn ${t.conNgay} ngày`
+          : "đang làm";
+  return (
+    <span className={t.loai === "het-han" ? "text-[#9b2c1f]" : t.loai === "sap-het" ? "text-[#7a5520]" : undefined}>
+      {TEN_LOAI_HOP_DONG[n.loaiHopDong ?? "dai-han"]} · {khoang} · {tinh}
+    </span>
+  );
+}
 
 const HOI_BEN_MS = 60_000;
 const MAU_ANH = ["#2f6b57", "#7a5520", "#3d5a80", "#8a3b2e", "#4d6b2f", "#5b4a7a"];
@@ -58,6 +122,10 @@ function mauCua(id: string): string {
 function chuDau(hoTen: string): string {
   const ten = hoTen.trim().split(/\s+/).pop() ?? "";
   return ten.charAt(0).toUpperCase() || "?";
+}
+
+function homNayVietNam(): string {
+  return ngayCuaLuc(Date.now());
 }
 
 function namNayVietNam(): number {
@@ -108,6 +176,7 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
   const [loi, setLoi] = useState("");
   const [dang, batDau] = useTransition();
   const [moId, setMoId] = useState<string | null>(null);
+  const [loc, setLoc] = useState<Loc>("tat-ca");
   const [ben, setBen] = useState<{ chuyen: ChuyenUocTinh[]; bayGio: number; lech: number } | null>(null);
   const [bayGio, setBayGio] = useState(0);
   const hop = useRef<HTMLDialogElement>(null);
@@ -199,6 +268,9 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
             namVaoNghe: n.namVaoNghe ? String(n.namVaoNghe) : "",
             ngonNgu: n.ngonNgu ?? "",
             ghiChu: n.ghiChu ?? "",
+            loaiHopDong: n.loaiHopDong ?? "dai-han",
+            hopDongTu: n.hopDongTu ?? "",
+            hopDongDen: n.hopDongDen ?? "",
           }
         : { ...TRONG },
     );
@@ -234,6 +306,16 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
     });
 
   const namNay = namNayVietNam();
+  const homNay = homNayVietNam();
+  const trongLuot = ds.filter((n) => trongHopDong(n, homNay));
+  const soSapHet = ds.filter((n) => trangThaiHopDong(n, homNay).loai === "sap-het").length;
+  const soHetHan = ds.filter((n) => trangThaiHopDong(n, homNay).loai === "het-han").length;
+  const soThoiVu = ds.filter((n) => n.loaiHopDong === "thoi-vu").length;
+  const dsHien = ds.filter((n) => {
+    if (loc === "tat-ca") return true;
+    if (loc === "thoi-vu") return n.loaiHopDong === "thoi-vu";
+    return trangThaiHopDong(n, homNay).loai === loc;
+  });
   const coMa = ds.filter((n) => n.gioiThieu);
   const khachGioiThieu = coMa.reduce((tong, n) => tong + (n.gioiThieu?.khach ?? 0), 0);
   const hoaHongTam = coMa.reduce((tong, n) => tong + (n.gioiThieu?.hoaHong ?? 0), 0);
@@ -271,15 +353,46 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
           </div>
           <div className="rounded-xl bg-[#eef5f1] px-3 py-2">
             <dt className="text-[0.7rem] font-bold text-[#3f6656]">Ở bến</dt>
-            <dd className="text-xl font-black tabular-nums text-[#183f34]">{ds.length - dangTrenSong}</dd>
+            <dd className="text-xl font-black tabular-nums text-[#183f34]">{Math.max(0, trongLuot.length - dangTrenSong)}</dd>
           </div>
           <div className="rounded-xl bg-[#f3f5f4] px-3 py-2">
             <dt className="text-[0.7rem] font-bold text-[#5c6b64]">Đã nhận lượt hôm nay</dt>
             <dd className="text-xl font-black tabular-nums text-[#20342c]">
-              {daNhan}/{ds.length}
+              {daNhan}/{trongLuot.length}
             </dd>
           </div>
         </dl>
+      ) : null}
+
+      {ds.length ? (
+        <div className="mt-4" data-testid="hop-dong-nguoi-cheo" data-chi="hop-dong-nguoi-cheo" data-chi-loi="Người hết hợp đồng tự ra khỏi lượt gọi. Bấm “Sắp hết” để gia hạn kịp.">
+          <p className="text-sm leading-6 text-[#42554c]">
+            <strong className="text-[#20342c]">{trongLuot.length}</strong> người trong lượt gọi hôm nay
+            {soHetHan ? <> · <strong className="text-[#9b2c1f]">{soHetHan}</strong> hết hợp đồng, nghỉ lượt</> : null}
+            {soSapHet ? <> · <strong className="text-[#7a5520]">{soSapHet}</strong> còn dưới 14 ngày hợp đồng</> : null}
+            {soThoiVu ? <> · {soThoiVu} thời vụ</> : null}.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Lọc theo hợp đồng">
+            {(
+              [
+                ["tat-ca", `Tất cả · ${ds.length}`],
+                ["sap-het", `Sắp hết · ${soSapHet}`],
+                ["het-han", `Hết hợp đồng · ${soHetHan}`],
+                ["thoi-vu", `Thời vụ · ${soThoiVu}`],
+              ] as const
+            ).map(([gt, nhan]) => (
+              <button
+                key={gt}
+                type="button"
+                aria-pressed={loc === gt}
+                onClick={() => setLoc(gt)}
+                className={`min-h-9 rounded-full border px-3 text-xs font-black ${loc === gt ? "border-[#183f34] bg-[#183f34] text-white" : "border-[#ccd8d1] bg-white text-[#42574e]"}`}
+              >
+                {nhan}
+              </button>
+            ))}
+          </div>
+        </div>
       ) : null}
 
       {coMa.length > 0 ? (
@@ -348,6 +461,32 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
             Tiếng chào khách
             <input value={nhap.ngonNgu} onChange={(e) => setNhap({ ...nhap, ngonNgu: e.target.value })} className={`${o} mt-1`} maxLength={120} placeholder="Tiếng Việt, chào hỏi tiếng Anh" />
           </label>
+          <label className="block text-xs font-bold text-[#53675e]">
+            Hợp đồng
+            <select
+              value={nhap.loaiHopDong}
+              onChange={(e) => setNhap({ ...nhap, loaiHopDong: e.target.value as LoaiHopDong })}
+              className={`${o} mt-1`}
+            >
+              <option value="dai-han">{TEN_LOAI_HOP_DONG["dai-han"]}</option>
+              <option value="thoi-vu">{TEN_LOAI_HOP_DONG["thoi-vu"]}</option>
+            </select>
+          </label>
+          <label className="block text-xs font-bold text-[#53675e]">
+            Từ ngày
+            <input type="date" value={nhap.hopDongTu} onChange={(e) => setNhap({ ...nhap, hopDongTu: e.target.value })} className={`${o} mt-1`} />
+          </label>
+          <label className="block text-xs font-bold text-[#53675e]">
+            Đến ngày {nhap.loaiHopDong === "thoi-vu" ? "(bắt buộc)" : "(trống là không thời hạn)"}
+            <input
+              type="date"
+              value={nhap.hopDongDen}
+              min={nhap.hopDongTu || undefined}
+              required={nhap.loaiHopDong === "thoi-vu"}
+              onChange={(e) => setNhap({ ...nhap, hopDongDen: e.target.value })}
+              className={`${o} mt-1`}
+            />
+          </label>
           <label className="block text-xs font-bold text-[#53675e] sm:col-span-2">
             Ghi chú
             <input value={nhap.ghiChu} onChange={(e) => setNhap({ ...nhap, ghiChu: e.target.value })} className={`${o} mt-1`} maxLength={300} placeholder="Chứng chỉ cứu đuối, biết sơ cứu…" />
@@ -369,9 +508,10 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
       ) : null}
 
       {coKho && ds.length === 0 ? <p className="mt-4 text-sm text-[#5f7068]">Sổ còn trống.</p> : null}
-      {ds.length ? (
+      {ds.length && dsHien.length === 0 ? <p className="mt-4 text-sm text-[#5f7068]">Không ai thuộc nhóm này.</p> : null}
+      {dsHien.length ? (
         <ul className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-          {ds.map((n) => (
+          {dsHien.map((n) => (
             <li key={n.id} data-nguoi-cheo={n.soThuyen}>
               <button
                 type="button"
@@ -388,12 +528,14 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
                   </span>
                   <span className="block truncate text-xs text-[#6e7b75]">{dongPhu(n, namNay)}</span>
                   {/* Màn hẹp: nhãn xuống dưới để tên không bị cắt. */}
-                  <span className="mt-1.5 block lg:hidden">
-                    <TrangThai ngay={theoNguoi.get(n.id)} coDuLieu={ben !== null} />
+                  <span className="mt-1.5 flex flex-wrap gap-1.5 lg:hidden">
+                    {trongHopDong(n, homNay) ? <TrangThai ngay={theoNguoi.get(n.id)} coDuLieu={ben !== null} /> : null}
+                    <NhanHopDong n={n} homNay={homNay} />
                   </span>
                 </span>
-                <span className="hidden shrink-0 lg:block">
-                  <TrangThai ngay={theoNguoi.get(n.id)} coDuLieu={ben !== null} />
+                <span className="hidden shrink-0 flex-col items-end gap-1 lg:flex">
+                  {trongHopDong(n, homNay) ? <TrangThai ngay={theoNguoi.get(n.id)} coDuLieu={ben !== null} /> : null}
+                  <NhanHopDong n={n} homNay={homNay} />
                 </span>
               </button>
             </li>
@@ -534,6 +676,7 @@ function HoSo({
         <GioiThieu g={n.gioiThieu ?? null} coKho={coKho} dang={dang} onCapMa={onCapMa} loi={loi} />
 
         <dl className="grid gap-2 sm:grid-cols-2">
+          {dong("Hợp đồng", <ChuHopDong n={n} homNay={homNayVietNam()} />)}
           {dong("Tiếng chào khách", n.ngonNgu ?? "Chưa ghi")}
           {dong("Vào nghề", n.namVaoNghe ? `Năm ${n.namVaoNghe}` : "Chưa ghi")}
           {dong(

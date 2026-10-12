@@ -140,8 +140,23 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
   return (
     <div className="flex items-center gap-2">
       {!isStandalone && installEvent ? (
-        <button type="button" onClick={installApp} className="hidden min-h-10 rounded-xl border border-[#ced8d1] px-3 text-sm font-bold text-[#43554e] hover:bg-[#f4f7f5] sm:block">
-          Cài lên máy
+        // 12/10/2026: chữ "Cài lên máy" bị bẻ hai dòng, tràn khỏi thanh đầu
+        // trang (chủ dự án gửi ảnh). Màn hẹp chỉ còn biểu tượng, màn rộng mới
+        // có chữ, và không bao giờ xuống dòng.
+        <button
+          type="button"
+          onClick={installApp}
+          aria-label="Cài lên máy"
+          title="Cài lên máy"
+          data-testid="cai-len-may"
+          className="inline-flex h-11 min-w-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[#ced8d1] bg-white px-2.5 text-sm font-bold text-[#43554e] hover:bg-[#f4f7f5]"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 4v11" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 20h14" />
+          </svg>
+          <span className="hidden 2xl:inline">Cài lên máy</span>
         </button>
       ) : null}
 

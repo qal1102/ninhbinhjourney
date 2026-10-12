@@ -110,7 +110,9 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
     <div className="min-h-screen overflow-x-clip bg-[#f2f4f1] text-[#17231f]">
       <header className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
         <div className="mx-auto flex min-h-16 max-w-[1600px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
+          {/* overflow-hidden: chật thì khối này tự cắt, không để nút bên phải đè
+              lên chữ (chủ dự án gửi ảnh 12/10/2026). */}
+          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
             <NutQuayLaiApp veTrang="/erp" />
             {/* `accountId` + `systemAdmin`: trên máy tính, hồ sơ cá nhân và
                 "Tài khoản & phân quyền" nằm ở thanh đầu trang, nhưng cả hai
@@ -138,8 +140,8 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 height={38}
                 className="h-9 w-9 rounded-full object-cover"
               />
-              <span className="hidden text-sm font-black tracking-[-0.02em] text-[#183f34] sm:block">
-                NINH BÌNH <span className="font-medium text-[#738078]">/ ĐIỀU HÀNH</span>
+              <span className="hidden whitespace-nowrap text-sm font-black tracking-[-0.02em] text-[#183f34] sm:block lg:hidden xl:block">
+                NINH BÌNH <span className="hidden font-medium text-[#738078] min-[1700px]:inline">/ ĐIỀU HÀNH</span>
               </span>
             </Link>
             {site ? (
@@ -147,7 +149,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 <span className="text-[#bdc5c0]">/</span>
                 <Link
                   href={`/erp/${site.id}`}
-                  className="flex min-h-11 items-center truncate text-sm font-bold text-[#34453e] hover:text-[#183f34]"
+                  className="block min-h-11 min-w-0 truncate whitespace-nowrap py-3 text-sm font-bold leading-5 text-[#34453e] hover:text-[#183f34]"
                 >
                   {site.shortName}
                 </Link>
@@ -171,7 +173,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
                 className="hidden min-h-10 items-center gap-2 whitespace-nowrap rounded-xl border border-[#e0b979] bg-[#fff8eb] px-4 text-sm font-bold text-[#7a5520] transition hover:border-[#d58c35] lg:inline-flex"
               >
                 Dạo một vòng
-                <span className="hidden rounded-full bg-[#d58c35] px-2 py-0.5 text-xs font-black text-white xl:inline">
+                <span className="hidden rounded-full bg-[#d58c35] px-2 py-0.5 text-xs font-black text-white min-[1700px]:inline">
                   {CHUC_NANG_MOI.length} mới
                 </span>
               </Link>
@@ -243,7 +245,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             >
               <p className="whitespace-nowrap text-sm font-bold text-[#25352f] hover:underline">{user.name}</p>
               {/* Dòng chức danh chỉ hiện từ màn rộng: ở 1024px thanh đầu trang của giám đốc hết chỗ. */}
-              <p className="hidden whitespace-nowrap text-xs text-[#738078] xl:block">
+              <p className="hidden whitespace-nowrap text-xs text-[#738078] min-[1366px]:block">
                 {ERP_ROLE_LABELS[user.role]} · {user.jobTitle}
               </p>
             </Link>

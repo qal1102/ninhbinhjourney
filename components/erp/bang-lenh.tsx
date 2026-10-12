@@ -104,14 +104,13 @@ export function BangLenh({ muc }: { muc: readonly MucBangLenh[] }) {
         data-chi="bang-lenh"
         data-chi-loi="Bấm kính lúp, gõ vài chữ không cần dấu là ra màn cần mở."
         aria-label="Tìm màn, việc"
-        title="Tìm màn, việc (máy tính: Ctrl K)"
+        title="Tìm màn, việc"
         className="inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-xl border border-[#ced8d1] bg-white px-2.5 text-sm font-bold text-[#43554e] transition hover:border-[#8fa99f] hover:bg-[#f7f9f7]"
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-4-4" />
         </svg>
-        <kbd className="hidden rounded-md border border-[#ced8d1] px-1.5 text-[0.68rem] font-bold text-[#6e7b75] 2xl:inline">Ctrl K</kbd>
       </button>
 
       <dialog

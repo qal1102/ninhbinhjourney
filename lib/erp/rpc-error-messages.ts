@@ -697,6 +697,12 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   LOYALTY_VOUCHER_NOT_FOUND: "Không tìm thấy voucher này.",
   LOYALTY_VOUCHER_REDEEMED: "Voucher này đã được đổi rồi.",
   LOYALTY_VOUCHER_EXPIRED: "Voucher này đã hết hạn.",
+  KHAN_CAP_INPUT_INVALID: "Thiếu loại việc khẩn cấp. Chọn một loại rồi gửi lại.",
+  KHAN_CAP_ACTOR_NOT_AT_SITE: "Tài khoản này không được phân công ở cơ sở ấy. Gọi thẳng cấp trên.",
+  KHAN_CAP_SITE_INVALID: "Cơ sở này chưa nhận báo khẩn cấp qua hệ thống. Gọi thẳng cấp trên.",
+  KHAN_CAP_NOT_FOUND: "Không tìm thấy báo động này.",
+  KHAN_CAP_NOT_SUPERVISOR: "Chỉ giám đốc và quản lý của cơ sở ấy nhận được báo động.",
+  KHAN_CAP_APPEND_ONLY: "Báo động đã ghi thì không sửa được; chỉ nhận một lần và ghi đã gọi một lần.",
   LOYALTY_APPEND_ONLY: "Liên kết tích điểm và voucher đã ghi thì không sửa được; voucher chỉ đổi được một lần.",
   TRAVEL_COMPANY_INPUT_INVALID:
     "Thông tin công ty chưa hợp lệ: tên ít nhất hai ký tự, mã số thuế 10 số (hoặc 10 số kèm -3 số), email và số điện thoại đúng dạng.",

@@ -24,6 +24,9 @@ import { NutQuayLaiApp } from "@/components/shared/nut-quay-lai-app";
 import { ChiDiem } from "@/components/shared/chi-diem";
 import { BAN_DO_CHUC_NANG, CHUC_NANG_MOI } from "@/domain/ban-do-chuc-nang";
 import { BangLenh, type MucBangLenh } from "./bang-lenh";
+import { BaoKhanCap } from "./bao-khan-cap";
+import { khoaCongKhaiDay } from "@/lib/erp/day-thong-bao";
+import { CanhBaoKhanCap } from "./canh-bao-khan-cap";
 
 type Props = {
   user: CurrentErpUser;
@@ -159,8 +162,16 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
             ) : null}
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Báo khẩn cấp (12/10/2026, migration 121): ai cũng thấy, ở mọi cỡ màn. */}
+            <BaoKhanCap
+              sites={(user.role === "director" ? ERP_SITES.map((s) => s.id) : user.siteIds).map((id) => ({
+                id,
+                name: ERP_SITES.find((s) => s.id === id)?.name ?? id,
+              }))}
+              siteMacDinh={site?.id}
+            />
             <BangLenh muc={mucBangLenh} />
-            <ErpAppControls role={user.role} accountId={user.id} />
+            <ErpAppControls role={user.role} accountId={user.id} khoaDay={khoaCongKhaiDay()} />
             {/* ERP-UX-01: trợ lý nay đứng trên thanh đầu trang thay vì nổi đè
                 lên nội dung. Xem chú thích trong `voice-command-center.tsx`. */}
             <VoiceCommandCenter role={user.role} siteIds={user.siteIds} currentSiteId={site?.id} />
@@ -262,6 +273,9 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           </div>
         </div>
       </header>
+
+      {/* Cấp trên nhận cảnh báo khẩn cấp bám màn tới khi bấm Đã nhận. */}
+      {user.role === "director" || user.role === "manager" ? <CanhBaoKhanCap /> : null}
 
       <RoleSwitchBanner user={user} />
 

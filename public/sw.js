@@ -7,6 +7,11 @@ self.addEventListener("push", (event) => {
       icon: data.icon || "/brand/erp-192.png",
       badge: "/brand/erp-192.png",
       data: { url: data.url || "/erp" },
+      // Báo khẩn cấp (12/10/2026): rung mạnh, giữ trên màn tới khi bấm, báo lại nếu cùng mã.
+      tag: data.tag || undefined,
+      renotify: Boolean(data.tag),
+      requireInteraction: Boolean(data.khanCap),
+      vibrate: data.khanCap ? [500, 200, 500, 200, 1000, 300, 1000] : undefined,
     }),
   );
 });

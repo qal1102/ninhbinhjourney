@@ -200,6 +200,22 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "bao-khan-cap",
+        ten: "Báo khẩn cấp một chạm, cấp trên rung tới khi nhận",
+        moTa: "Nút đỏ trên thanh đầu ERP: máy tự lấy vị trí, chạm một loại việc, chụp ảnh nếu kịp, gửi. Máy giám đốc và quản lý cơ sở rung, kêu, hiện cảnh báo bám màn tới khi bấm Đã nhận; quá 2 phút chưa ai nhận thì máy người báo tự gọi cấp trên. Mỗi lần báo mở một hồ sơ sự cố P1.",
+        vai: "employee",
+        giamDocLamDuoc: true,
+        duongDan: "/erp",
+        diem: "bao-khan-cap",
+        moi: "12/10",
+        cacViec: [
+          "Bấm nút đỏ SOS ở thanh đầu trang: dòng trên cùng báo đã lấy vị trí.",
+          "Chạm một ô như \"Người gặp nạn\", chụp ảnh nếu kịp, bấm \"GỬI BÁO KHẨN CẤP\": đồng hồ 2 phút bắt đầu chạy.",
+          "Ở máy giám đốc hay quản lý cơ sở (mở ERP, hoặc đã bật thông báo): hộp đỏ bật lên, máy rung; bấm \"Đã nhận\" là máy người báo đổi sang xanh.",
+          "Để ghi số điện thoại cho việc tự gọi: mỗi cấp trên mở Hồ sơ của mình, điền Số điện thoại.",
+        ],
+      },
+      {
         id: "suc-chua",
         ten: "Sức chứa theo giờ",
         moTa: "Lượt qua cổng trong giờ so với ngưỡng từng bến, biết điểm nghẽn trước khi phải dừng luồng.",

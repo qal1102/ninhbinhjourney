@@ -2,14 +2,40 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { luuDangKyDayAction } from "@/app/erp/khan-cap-actions";
 import type { ErpRole } from "@/domain/erp";
+
+/** Khoá công khai VAPID (base64url) thành mảng byte cho pushManager.subscribe. */
+function khoaThanhByte(khoa: string) {
+  const dem = "=".repeat((4 - (khoa.length % 4)) % 4);
+  const nhiPhan = atob((khoa + dem).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(nhiPhan, (c) => c.charCodeAt(0));
+}
+
+/**
+ * Đăng ký nhận thông báo đẩy (báo khẩn cấp tới cả khi app đang đóng). Máy chủ
+ * chưa có khoá VAPID thì bỏ qua: cảnh báo trong app vẫn chạy.
+ */
+async function dangKyDay(registration: ServiceWorkerRegistration, khoaDay: string | null) {
+  if (!khoaDay || !("pushManager" in registration)) return;
+  try {
+    const cu = await registration.pushManager.getSubscription();
+    const dk = cu ?? (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: khoaThanhByte(khoaDay) }));
+    const json = dk.toJSON() as { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
+    if (json.endpoint && json.keys?.p256dh && json.keys.auth) {
+      await luuDangKyDayAction({ endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth });
+    }
+  } catch {
+    // Trình duyệt không cho đăng ký (iOS chưa cài app lên màn hình chính…): bỏ qua.
+  }
+}
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: string }) {
+export function ErpAppControls({ role, accountId, khoaDay = null }: { role: ErpRole; accountId: string; khoaDay?: string | null }) {
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -29,6 +55,10 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
 
     if ("serviceWorker" in navigator) {
       void navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" });
+      // Đã cho phép thông báo từ trước: đăng ký nhận thông báo đẩy nếu chưa có.
+      if ("Notification" in window && Notification.permission === "granted") {
+        void navigator.serviceWorker.ready.then((reg) => dangKyDay(reg, khoaDay));
+      }
     }
 
     const rememberPrompt = (event: Event) => {
@@ -46,7 +76,7 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
       window.removeEventListener("beforeinstallprompt", rememberPrompt);
       window.removeEventListener("appinstalled", installed);
     };
-  }, []);
+  }, [khoaDay]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -128,6 +158,7 @@ export function ErpAppControls({ role, accountId }: { role: ErpRole; accountId: 
     setNotificationState(permission);
     if (permission === "granted") {
       const registration = await navigator.serviceWorker.ready;
+      await dangKyDay(registration, khoaDay);
       await registration.showNotification("Đã bật thông báo điều hành", {
         body: "Các việc vượt ngưỡng sẽ xuất hiện tại trung tâm thông báo.",
         icon: "/brand/erp-192.png",

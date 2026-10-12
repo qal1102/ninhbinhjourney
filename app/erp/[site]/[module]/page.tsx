@@ -6,7 +6,7 @@ import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { ModuleContextHelp } from "@/components/erp/module-context-help";
 import { ModuleWorkspace } from "@/components/erp/module-workspace";
-import { getErpModule, getErpSite, isOperationalModule } from "@/domain/erp";
+import { ERP_SITES, getErpModule, getErpSite, isOperationalModule } from "@/domain/erp";
 import { accountCanAccessModule, getCurrentErpUser } from "@/lib/erp/demo-session";
 import { forecastSiteCapacity } from "@/lib/erp/capacity-forecast-repository";
 import { getAccessState } from "@/lib/erp/staff-access-repository";
@@ -258,6 +258,38 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
         </div>
         <h1 className="font-display mt-1 text-4xl leading-tight text-[#183f34] sm:text-6xl">{moduleDefinition.name}</h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-[#68776f]">{moduleDefinition.description}</p>
+        {/*
+          12/10/2026, chủ dự án: "bấm vào vé và đặt chỗ mặc định là Tràng An à?
+          Vậy còn các địa điểm kia?". Lối vào module lấy cơ sở đầu danh sách;
+          người quản nhiều cơ sở đổi ngay tại đây, giữ nguyên module.
+        */}
+        {(() => {
+          const coSoKhac = ERP_SITES.filter((item) => (user.moduleIdsBySite[item.id] ?? []).includes(moduleDefinition.id));
+          return coSoKhac.length > 1 ? (
+            <nav aria-label="Chọn cơ sở" data-testid="chon-co-so-module" className="mt-4 flex flex-wrap gap-2">
+              {user.role === "director" && (moduleDefinition.id === "ve-dat-cho" || moduleDefinition.id === "check-in-khach") ? (
+                <Link
+                  href="/erp#director-ticket-overview"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-[#e0b979] bg-[#fff8eb] px-4 text-sm font-bold whitespace-nowrap text-[#7a5520]"
+                >
+                  Cả vùng
+                </Link>
+              ) : null}
+              {coSoKhac.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/erp/${item.id}/${moduleDefinition.id}`}
+                  aria-current={item.id === site.id ? "page" : undefined}
+                  className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-bold whitespace-nowrap ${
+                    item.id === site.id ? "border-[#183f34] bg-[#183f34] text-white" : "border-[#cbd7d1] bg-white text-[#183f34] hover:border-[#183f34]"
+                  }`}
+                >
+                  {item.shortName}
+                </Link>
+              ))}
+            </nav>
+          ) : null;
+        })()}
       </div>
       {ben && duongKhachHangCho ? (
         hangCho?.trangThai === "co" ? (

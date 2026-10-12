@@ -1,3 +1,9 @@
+import {
+  capacityAlertLevel,
+  capacityLoadPercent,
+  type CapacityAlertLevel,
+  type CapacityThreshold,
+} from "@/domain/erp-capacity";
 import { congNgay, type NgayBaoCao } from "@/domain/bao-cao-co-so";
 
 /**
@@ -84,4 +90,30 @@ export function phanTramDoi(hienTai: number, truoc: number): number | null {
 
 export function tiTrong(phan: number, tong: number) {
   return tong > 0 ? Math.round((phan / tong) * 100) : 0;
+}
+
+/**
+ * Sức chứa giờ này của một cơ sở cho màn Toàn vùng (12/10/2026): lượt qua cổng
+ * trong giờ và điểm nghẽn đầy nhất, cùng công thức với màn Sức chứa của cơ sở
+ * (`capacityLoadPercent`, `capacityAlertLevel`). Cơ sở chưa đặt ngưỡng nào
+ * thì không có điểm nghẽn, chỉ có số lượt.
+ */
+export type SucChuaGioNay = {
+  luot: number;
+  nghen: { ten: string; phanTram: number; muc: CapacityAlertLevel; tranGio: number } | null;
+};
+
+export function sucChuaGioNay(
+  luot: number,
+  nguong: readonly Pick<CapacityThreshold, "bottleneckName" | "effectiveCapacity" | "watchPercent" | "restrictPercent" | "stopPercent">[],
+): SucChuaGioNay {
+  let nghen: SucChuaGioNay["nghen"] = null;
+  for (const n of nguong) {
+    if (!(n.effectiveCapacity > 0)) continue;
+    const phanTram = capacityLoadPercent(luot, n.effectiveCapacity);
+    if (!nghen || phanTram > nghen.phanTram) {
+      nghen = { ten: n.bottleneckName, phanTram, muc: capacityAlertLevel(phanTram, n), tranGio: n.effectiveCapacity };
+    }
+  }
+  return { luot, nghen };
 }

@@ -12,12 +12,16 @@ import {
   cacNgayTrongKy,
   docKy,
   phanTramDoi,
+  sucChuaGioNay,
   tienCua,
   tiTrong,
   tongTheoKy,
   type KyToanVung,
+  type SucChuaGioNay,
   type TongKy,
 } from "@/domain/toan-vung";
+import { vietnamHourWindow, type CapacityAlertLevel } from "@/domain/erp-capacity";
+import { listCapacityWorkspace } from "@/lib/erp/capacity-repository";
 import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { ERP_OVERVIEW_BACK_TARGET } from "@/lib/erp/erp-back-link";
@@ -43,7 +47,19 @@ type CoSoDoc = {
   suCo: IncidentCase[];
   duAn: ProjectWorkspace | null;
   nhanSu: number | null;
+  sucChua: SucChuaGioNay | null;
 };
+
+const MAU_MUC: Record<CapacityAlertLevel, { nen: string; chu: string; ten: string }> = {
+  green: { nen: "bg-[#e3f1ea]", chu: "text-[#1f5a3f]", ten: "Bình thường" },
+  yellow: { nen: "bg-[#fff4d6]", chu: "text-[#7a5520]", ten: "Theo dõi" },
+  orange: { nen: "bg-[#fde6d4]", chu: "text-[#9a4a12]", ten: "Hạn chế" },
+  red: { nen: "bg-[#fdecea]", chu: "text-[#9b2c1f]", ten: "Dừng luồng" },
+};
+
+function gioVN(iso: string) {
+  return new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(iso));
+}
 
 function mot(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -103,15 +119,19 @@ export default async function ToanVungPage({ searchParams }: Props) {
   const [coSo, caChot, congNo, sopCho] = await Promise.all([
     Promise.all(
       sites.map(async (site): Promise<CoSoDoc> => {
-        const [baoCao, suCo, duAn, nhanSu] = await Promise.all([
+        const [baoCao, suCo, duAn, nhanSu, sucChua] = await Promise.all([
           docBaoCaoCoSo(site.id, { soNgay: SO_NGAY_CAN_DOC - 1, gomHomNay: true }).catch(() => null),
           getIncidentCases(site.id)
             .then((cases) => cases.filter((item) => item.status !== "closed"))
             .catch(() => []),
           getProjectWorkspace(site.id).catch(() => null),
           countEmployeesOnShift(site.id).catch(() => null),
+          // Sức chứa giờ này, cùng nguồn với màn Sức chứa của cơ sở (12/10/2026).
+          listCapacityWorkspace(site.id)
+            .then((ws) => (ws ? sucChuaGioNay(ws.acceptedEntriesThisHour, ws.thresholds) : null))
+            .catch(() => null),
         ]);
-        return { site, baoCao, suCo, duAn, nhanSu };
+        return { site, baoCao, suCo, duAn, nhanSu, sucChua };
       }),
     ),
     listShiftClosures({ siteIds: user.siteIds }).catch(() => []),
@@ -178,6 +198,9 @@ export default async function ToanVungPage({ searchParams }: Props) {
   const tongConPhaiTra = theoCoSo.reduce((n, item) => n + item.conPhaiTra, 0);
   const khongDocDuoc = theoCoSo.filter((item) => !item.docDuoc).map((item) => item.site.shortName);
   const chiTiet = coSoChon ? theoCoSo.find((item) => item.site.id === coSoChon.id) ?? null : null;
+  const khungGio = vietnamHourWindow();
+  const luotGioNay = theoCoSo.reduce((n, item) => n + (item.sucChua?.luot ?? 0), 0);
+  const coSucChua = theoCoSo.some((item) => item.sucChua);
 
   const lienKet = (next: { ky?: KyToanVung; coSo?: ErpSiteId | null }) => {
     const params = new URLSearchParams();
@@ -323,6 +346,58 @@ export default async function ToanVungPage({ searchParams }: Props) {
             dongLai={lienKet({ coSo: null })}
           />
         ) : null}
+
+        <section aria-labelledby="suc-chua-ca-vung" className="min-w-0 rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm" data-testid="suc-chua-ca-vung" data-chi="suc-chua-ca-vung" data-chi-loi="Lượt qua cổng giờ này và điểm nghẽn đầy nhất của từng cơ sở. Bấm một dòng để mở màn Sức chứa của cơ sở ấy.">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <h2 id="suc-chua-ca-vung" className="text-xl font-black text-[#20342c]">Sức chứa giờ này</h2>
+            <p className="text-xs text-[#6d7c75]">
+              {gioVN(khungGio.start)}–{gioVN(khungGio.end)} · {so(luotGioNay)} lượt qua cổng cả vùng
+            </p>
+          </div>
+          {!coSucChua ? (
+            <p className="mt-3 text-sm text-[#6d7c75]">Chưa đọc được sức chứa ở môi trường này.</p>
+          ) : (
+            <ul className="mt-3 divide-y divide-[#edf1ee]">
+              {theoCoSo.map((item) => {
+                const sc = item.sucChua;
+                const muc = sc?.nghen ? MAU_MUC[sc.nghen.muc] : null;
+                return (
+                  <li key={item.site.id}>
+                    <Link
+                      href={`/erp/${item.site.id}/suc-chua`}
+                      className="flex min-h-14 items-center gap-3 py-2 hover:bg-[#f7f9f7]"
+                    >
+                      <span className="w-24 shrink-0 text-sm font-black text-[#24372f] sm:w-32">{item.site.shortName}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm text-[#42554c]">
+                          <strong className="tabular-nums text-[#20342c]">{sc ? so(sc.luot) : "—"}</strong> lượt giờ này
+                        </span>
+                        {sc?.nghen ? (
+                          <span className="mt-1 block">
+                            <span className="block truncate text-xs text-[#6d7c75]">
+                              {sc.nghen.ten}: {sc.nghen.phanTram}% trần {so(sc.nghen.tranGio)}/giờ
+                            </span>
+                            <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-[#e7ece9]" aria-hidden="true">
+                              <span
+                                className={`block h-full rounded-full ${sc.nghen.muc === "red" ? "bg-[#c0392b]" : sc.nghen.muc === "orange" ? "bg-[#d9772b]" : sc.nghen.muc === "yellow" ? "bg-[#d6a73a]" : "bg-[#397a62]"}`}
+                                style={{ width: `${Math.min(100, sc.nghen.phanTram)}%` }}
+                              />
+                            </span>
+                          </span>
+                        ) : sc ? (
+                          <span className="mt-0.5 block text-xs text-[#8a8f8c]">Chưa đặt ngưỡng sức chứa</span>
+                        ) : null}
+                      </span>
+                      {muc ? (
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-black ${muc.nen} ${muc.chu}`}>{muc.ten}</span>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         <section aria-labelledby="tai-chinh" className="min-w-0 overflow-hidden rounded-2xl border border-[#d8e0db] bg-white shadow-sm">
           <div className="border-b border-[#e3e9e5] p-5">

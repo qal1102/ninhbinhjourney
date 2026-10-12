@@ -64,7 +64,11 @@ export async function prepareOfflineGateManifest(input: {
     snapshotDigest: row.snapshot_digest,
     tickets: Array.isArray(row.tickets) ? row.tickets.map((ticket) => {
       const item = ticket as Record<string, unknown>;
-      return { codeDigest: item.code_digest, entriesRemaining: item.entries_remaining };
+      return {
+        codeDigest: item.code_digest,
+        entriesRemaining: item.entries_remaining,
+        ...(typeof item.alias_of === "string" ? { aliasOf: item.alias_of } : {}),
+      };
     }) : [],
   });
 }

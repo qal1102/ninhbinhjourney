@@ -53,3 +53,27 @@ describe("CUS-08 offline gate local queue", () => {
     expect(synced.scans).toEqual([]);
   });
 });
+
+describe("mã đoàn quầy ngoại tuyến (migration 122)", () => {
+  // "b" là mã vé đoàn 2 lượt; "d" là mã đoàn, bí danh của "b".
+  const coDoan: OfflineGateManifest = {
+    ...manifest,
+    ticketCount: 2,
+    tickets: [
+      { codeDigest: "b".repeat(64), entriesRemaining: 2 },
+      { codeDigest: "d".repeat(64), entriesRemaining: 2, aliasOf: "b".repeat(64) },
+    ],
+  };
+  const doanState = (): OfflineGateDeviceState => ({ version: 1, siteId: "trang-an", deviceId: coDoan.deviceId, manifest: coDoan, scans: [] });
+
+  it("mã đoàn và mã vé đoàn trừ chung một quỹ lượt", () => {
+    const a = stateWithQueuedScan({ state: doanState(), code: "DOAN-AAAAAAAAAA", codeDigest: "d".repeat(64), scannedAt: "2026-08-20T02:00:00.000Z", idempotencyKey: "30000000-0000-4000-8000-000000000001" });
+    const b = stateWithQueuedScan({ state: a.state, code: "QUAY-BBBBBBBBBBBB", codeDigest: "b".repeat(64), scannedAt: "2026-08-20T02:01:00.000Z", idempotencyKey: "30000000-0000-4000-8000-000000000002" });
+    const c = stateWithQueuedScan({ state: b.state, code: "DOAN-AAAAAAAAAA", codeDigest: "d".repeat(64), scannedAt: "2026-08-20T02:02:00.000Z", idempotencyKey: "30000000-0000-4000-8000-000000000003" });
+    expect([a.item.localResult, b.item.localResult, c.item.localResult]).toEqual(["accepted", "accepted", "exhausted"]);
+  });
+
+  it("bản kê cũ không có bí danh thì mỗi mã đếm riêng như trước", () => {
+    expect(decideOfflineGateResult({ manifest, priorScans: [], codeDigest: "b".repeat(64), now: "2026-08-20T02:00:00.000Z" })).toBe("accepted");
+  });
+});

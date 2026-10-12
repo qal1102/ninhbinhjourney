@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { congNgay, type NgayBaoCao } from "@/domain/bao-cao-co-so";
-import { cacNgayTrongKy, docKy, phanTramDoi, tiTrong, tongTheoKy } from "@/domain/toan-vung";
+import { cacNgayTrongKy, docKy, phanTramDoi, sucChuaGioNay, tiTrong, tongTheoKy } from "@/domain/toan-vung";
 
 const HOM_NAY = "2026-10-12";
 
@@ -55,5 +55,24 @@ describe("màn Toàn vùng", () => {
     expect(tiTrong(0, 0)).toBe(0);
     expect(tiTrong(25, 100)).toBe(25);
     expect(phanTramDoi(120, 100)).toBe(20);
+  });
+});
+
+describe("sức chứa giờ này của một cơ sở", () => {
+  const nguong = (ten: string, tran: number) => ({ bottleneckName: ten, effectiveCapacity: tran, watchPercent: 70, restrictPercent: 85, stopPercent: 100 });
+
+  it("chọn điểm nghẽn đầy nhất và đặt mức theo ngưỡng của chính nó", () => {
+    const kq = sucChuaGioNay(360, [nguong("Cổng soát vé", 1200), nguong("Bến thuyền", 400)]);
+    expect(kq.luot).toBe(360);
+    expect(kq.nghen).toEqual({ ten: "Bến thuyền", phanTram: 90, muc: "orange", tranGio: 400 });
+  });
+
+  it("chưa đặt ngưỡng, hay trần bằng 0, thì không có điểm nghẽn", () => {
+    expect(sucChuaGioNay(50, []).nghen).toBeNull();
+    expect(sucChuaGioNay(50, [nguong("Bãi xe", 0)]).nghen).toBeNull();
+  });
+
+  it("chưa ai qua cổng thì 0% và mức bình thường", () => {
+    expect(sucChuaGioNay(0, [nguong("Bến thuyền", 400)]).nghen).toMatchObject({ phanTram: 0, muc: "green" });
   });
 });

@@ -15,6 +15,11 @@ export const OfflineGateManifestSchema = z.object({
   tickets: z.array(z.object({
     codeDigest: z.string().regex(/^[0-9a-f]{64}$/),
     entriesRemaining: z.number().int().positive(),
+    /**
+     * Mã đoàn quầy là bí danh của mã vé đoàn (migration 122): quét mã nào cũng
+     * trừ chung một quỹ lượt, không cho cả đoàn vào gấp đôi khi mất mạng.
+     */
+    aliasOf: z.string().regex(/^[0-9a-f]{64}$/).optional(),
   })).max(5000),
 });
 export type OfflineGateManifest = z.infer<typeof OfflineGateManifestSchema>;
@@ -66,11 +71,15 @@ export function decideOfflineGateResult(input: {
   if (!Number.isFinite(timestamp) || timestamp > Date.parse(input.manifest.expiresAt)) {
     return "not-found";
   }
-  const ticket = input.manifest.tickets.find((item) => item.codeDigest === input.codeDigest);
-  if (!ticket) return "not-found";
+  const entry = input.manifest.tickets.find((item) => item.codeDigest === input.codeDigest);
+  if (!entry) return "not-found";
+  // Bí danh (mã đoàn) và mã gốc (mã vé đoàn) cùng một quỹ lượt.
+  const goc = (digest: string) => input.manifest.tickets.find((item) => item.codeDigest === digest)?.aliasOf ?? digest;
+  const khoa = entry.aliasOf ?? entry.codeDigest;
+  const ticket = input.manifest.tickets.find((item) => item.codeDigest === khoa) ?? entry;
   const locallyAccepted = input.priorScans.filter(
     (scan) => scan.manifestId === input.manifest.manifestId
-      && scan.codeDigest === input.codeDigest
+      && goc(scan.codeDigest) === khoa
       && scan.localResult === "accepted",
   ).length;
   return locallyAccepted < ticket.entriesRemaining ? "accepted" : "exhausted";

@@ -708,6 +708,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "suc-chua-ca-vung",
+        ten: "Sức chứa giờ này của cả vùng",
+        moTa: "Trên màn Toàn vùng: lượt qua cổng giờ này của từng cơ sở và điểm nghẽn đầy nhất, có mức màu như màn Sức chứa.",
+        vai: "director",
+        duongDan: "/erp/toan-vung",
+        diem: "suc-chua-ca-vung",
+        moi: "12/10",
+        cacViec: [
+          "Mở Toàn vùng, kéo tới khối \"Sức chứa giờ này\": dòng đầu ghi khung giờ và tổng lượt cả vùng.",
+          "Mỗi cơ sở một dòng: lượt giờ này, điểm nghẽn đầy nhất bao nhiêu phần trăm trần, nhãn Theo dõi / Hạn chế / Dừng luồng.",
+          "Bấm một dòng để mở màn Sức chứa của cơ sở ấy, chỉnh ngưỡng hay xem quy tắc phản ứng.",
+        ],
+      },
+      {
         id: "ghi-bang-giong-noi",
         ten: "Giao việc, ghi chú bằng giọng nói",
         moTa: "Nói một câu như nói với đồng nghiệp; trợ lý viết bản nháp người nhận, hạn, cơ sở để xem lại rồi lưu.",

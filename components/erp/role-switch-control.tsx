@@ -45,7 +45,16 @@ export function RoleSwitchControl({ currentUserId, targets, variant = "dropdown"
           inline ? "justify-between" : ""
         }`}
       >
-        {currentUserId ? "Đổi vai trò khác" : "Xem theo vai trò"}
+        {/* Màn chưa đủ rộng chỉ ghi "Vai trò": chữ dài đẩy tên cơ sở trên thanh
+            đầu trang tới mức bị cắt (soát production 12/10/2026). */}
+        {inline ? (
+          currentUserId ? "Đổi vai trò khác" : "Xem theo vai trò"
+        ) : (
+          <>
+            <span className="min-[1700px]:hidden">Vai trò</span>
+            <span className="hidden min-[1700px]:inline">{currentUserId ? "Đổi vai trò khác" : "Xem theo vai trò"}</span>
+          </>
+        )}
         {inline ? <span aria-hidden="true" className="text-[#93a199]">▾</span> : null}
       </summary>
       <form

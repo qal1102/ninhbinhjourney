@@ -44,7 +44,8 @@ test("giám đốc chuyển sang xem như nhân viên: bị chặn đúng như n
     await page.getByRole("button", { name: "Mở menu" }).click();
     roleSwitchContainer = page.getByLabel("Menu điều hành");
   }
-  await roleSwitchContainer.getByText("Xem theo vai trò").click();
+  // Màn chưa đủ rộng nút chỉ ghi "Vai trò" (12/10/2026): bấm chính nút, không bám chữ.
+  await roleSwitchContainer.locator("summary", { hasText: /Vai trò|Xem theo vai trò/ }).first().click();
   await roleSwitchContainer
     .locator('select[name="targetUserId"]')
     .selectOption("employee-trang-an-01");

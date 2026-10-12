@@ -27,6 +27,7 @@ import type {
 } from "@/lib/erp/gate-scan-repository";
 import { ShiftCloseSiteWorkflow } from "./shift-close-workflow";
 import { OfflineGateConsole } from "./offline-gate-console";
+import { DuaVeChoKhach } from "./dua-ve-cho-khach";
 import { CounterSalePanel } from "./counter-sale-panel";
 import type { CounterSaleWorkspace } from "@/lib/erp/counter-sale-repository";
 import { buildTicketSalesReport, ticketSalesHasData } from "@/lib/export/ticket-sales-report";
@@ -311,6 +312,8 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
       });
       if (result.ok) {
         setCounterGroup(result.status);
+        // Kết quả nằm dưới biểu mẫu: cuộn tới để người bán thấy ngay (12/10/2026).
+        window.requestAnimationFrame(() => document.getElementById("ket-qua-phieu-doan")?.scrollIntoView({ block: "start", behavior: "smooth" }));
         setCounterMessage("");
         setCounterPartySize("");
         setCounterGroupLabel("");
@@ -694,7 +697,8 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
             </p>
           ) : null}
           {counterGroup ? (
-            <div className="mt-4 flex flex-col items-start gap-4 rounded-xl border border-[#d8e0db] bg-[#f3f6f4] p-4 sm:flex-row sm:items-center">
+            <div id="ket-qua-phieu-doan" className="mt-4 scroll-mt-20 space-y-4">
+            <div className="flex flex-col items-start gap-4 rounded-xl border border-[#d8e0db] bg-[#f3f6f4] p-4 sm:flex-row sm:items-center">
               {counterQr ? (
                 // eslint-disable-next-line @next/next/no-img-element -- QR is a generated data URL, not an optimizable asset
                 <img src={counterQr} alt={`Mã QR đoàn ${counterGroup.groupCode}`} className="h-32 w-32 shrink-0 rounded-lg bg-white p-2" />
@@ -704,9 +708,10 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                 <p className="mt-1 text-sm text-[#3f524a]">
                   {counterGroup.groupLabel} · {counterGroup.memberCount.toLocaleString("vi-VN")} người
                 </p>
-                <p className="mt-2 text-xs leading-5 text-[#7b8881]">
-                  Đưa mã QR này cho khách quét ở cổng. Đoàn trưởng có thể tự điền
-                  tên từng người tại trang <span className="font-mono">/doan/{counterGroup.groupCode}</span>.
+                <p className="mt-2 text-xs leading-5 text-[#5c6f67]">
+                  <strong>Mã vào cổng của cả đoàn.</strong> Nhân viên cổng quét mã này một lần
+                  cho mỗi người đi qua, tới đủ {counterGroup.memberCount.toLocaleString("vi-VN")} lượt.
+                  Trưởng đoàn có mã này trên điện thoại khi mở đường dẫn bên dưới.
                 </p>
                 {tenTuDanhSach.length ? (
                   <button
@@ -723,6 +728,13 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                 ) : null}
                 {loiDienTen ? <p className="mt-2 text-xs font-bold text-[#8b3d31]">{loiDienTen}</p> : null}
               </div>
+            </div>
+            <DuaVeChoKhach
+              url={`${window.location.origin}/doan/truong/${counterGroup.groupCode}`}
+              tieuDe="Gửi vé đoàn cho trưởng đoàn"
+              loiDan="Trưởng đoàn quét mã này: điện thoại hiện mã vào cổng của cả đoàn và danh sách ai đã qua cổng. Ở xa thì gửi đường dẫn qua Zalo."
+              chuChiaSe={`Vé đoàn ${counterGroup.groupLabel} tại Ninh Bình, mở để xem mã vào cổng:`}
+            />
             </div>
           ) : null}
         </section>

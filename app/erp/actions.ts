@@ -71,14 +71,19 @@ import { validateCounterVisitorGroupInput } from "@/domain/erp-counter-visitor-g
 import {
   createCounterVisitorGroup,
   CounterVisitorGroupRepositoryError,
+  ticketCodeForGroupCode,
 } from "@/lib/erp/visitor-group-counter-repository";
 import {
   CounterSaleRepositoryError,
   createCounterSale,
+  getCounterSaleWorkspace,
+  readCounterSaleBy,
   setCounterPrice,
   voidCounterSale,
 } from "@/lib/erp/counter-sale-repository";
-import type { CounterSaleReceipt } from "@/domain/erp-counter-sale";
+import { computeCounterCart, type CounterSaleReceipt } from "@/domain/erp-counter-sale";
+import { niemPhieuQuay, PhieuQuayError, PHUT_GIU_CHO_QUAY } from "@/lib/erp/phieu-quay";
+import { absoluteUrl } from "@/lib/site-url";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
 import { laDuongDanErpAnToan } from "@/domain/ban-do-chuc-nang";
 
@@ -689,9 +694,17 @@ export async function recordGateScanAction(input: {
   ) {
     return { success: false, message: "Bạn không được phân công check-in tại cơ sở này." };
   }
-  const normalized = input.code.trim().toUpperCase();
+  let normalized = input.code.trim().toUpperCase();
+  // Camera đọc được cả đường dẫn trang trưởng đoàn: lấy mã đoàn ở cuối.
+  const trongDuongDan = /\/DOAN\/(?:TRUONG\/)?(DOAN-[A-Z0-9]+)/.exec(normalized);
+  if (trongDuongDan) normalized = trongDuongDan[1];
   if (normalized.length < 6) {
     return { success: false, message: "Mã QR không hợp lệ." };
+  }
+  // Mã đoàn quầy (12/10/2026): cổng soát bằng mã vé của cả đoàn.
+  if (normalized.startsWith("DOAN-")) {
+    const maVe = await ticketCodeForGroupCode(normalized);
+    if (maVe) normalized = maVe;
   }
 
   try {
@@ -1090,6 +1103,93 @@ export async function createCounterSaleAction(input: {
   } catch (error) {
     if (error instanceof CounterSaleRepositoryError) return { ok: false, message: error.message };
     return { ok: false, message: "Chưa lưu được phiếu. Xin thử lại; nếu vẫn vậy thì báo bộ phận kỹ thuật." };
+  }
+}
+
+export type MaKhachQuetResult =
+  | { ok: true; url: string; expiresAt: number; totalVnd: number }
+  | { ok: false; message: string };
+
+/**
+ * Khách quét QR để trả và nhận vé trên điện thoại (12/10/2026, chủ dự án).
+ *
+ * Chưa ghi gì vào kho: chỉ niêm số vé, người bán và khoá phiếu vào một mã.
+ * Khách mở mã ở `/ve-quay/<mã>` thì phiếu mới được ghi, dưới tên người bán
+ * này. Thanh toán là giả lập: mở được mã là coi như đã trả.
+ */
+export async function taoMaKhachQuetAction(input: {
+  siteId: string;
+  adults: number;
+  children: number;
+  requestKey: string;
+}): Promise<MaKhachQuetResult> {
+  const user = await getCurrentErpUser();
+  if (!user) return { ok: false, message: "Phiên đăng nhập đã hết hạn." };
+  if (!isErpSiteId(input.siteId)) return { ok: false, message: "Cơ sở không hợp lệ." };
+  if (!accountCanAccessModule(user, input.siteId, "ve-dat-cho")) {
+    return { ok: false, message: "Tài khoản này chưa được phân công bán vé tại cơ sở này." };
+  }
+  const adults = Math.trunc(Number(input.adults));
+  const children = Math.trunc(Number(input.children));
+  const requestKey = String(input.requestKey ?? "");
+  if (!(adults >= 0 && children >= 0 && adults + children >= 1 && adults + children <= 45) || requestKey.length < 8) {
+    return { ok: false, message: "Số vé chưa hợp lệ." };
+  }
+  const workspace = await getCounterSaleWorkspace({ siteId: input.siteId, viewerAccountId: user.id });
+  if (!workspace.available) return { ok: false, message: workspace.message };
+  const cart = computeCounterCart({ adults, children, prices: workspace.prices });
+  try {
+    const expiresAt = Date.now() + PHUT_GIU_CHO_QUAY * 60_000;
+    const ma = niemPhieuQuay({
+      loai: "cho",
+      siteId: input.siteId,
+      adults,
+      children,
+      actorAccountId: user.id,
+      actorName: user.name,
+      actingDirectorAccountId: user.actingAs?.directorId ?? null,
+      requestKey,
+      totalVnd: cart.totalVnd,
+      expiresAt,
+    });
+    return { ok: true, url: absoluteUrl(`/ve-quay/${ma}`), expiresAt, totalVnd: cart.totalVnd };
+  } catch (error) {
+    if (error instanceof PhieuQuayError) return { ok: false, message: error.message };
+    return { ok: false, message: "Chưa tạo được mã cho khách quét. Xin thử lại." };
+  }
+}
+
+/** Màn quầy hỏi: khách đã quét mã chưa? Có phiếu thì trả phiếu. */
+export async function docMaKhachQuetAction(input: {
+  siteId: string;
+  requestKey: string;
+}): Promise<{ receipt: CounterSaleReceipt | null }> {
+  const user = await getCurrentErpUser();
+  if (!user || !isErpSiteId(input.siteId) || !accountCanAccessModule(user, input.siteId, "ve-dat-cho")) {
+    return { receipt: null };
+  }
+  try {
+    const receipt = await readCounterSaleBy({ siteId: input.siteId, requestKey: String(input.requestKey ?? "") });
+    return { receipt: receipt && receipt.soldByAccountId === user.id ? receipt : null };
+  } catch {
+    return { receipt: null };
+  }
+}
+
+/** Đường dẫn mở lại vé của một phiếu đã bán trên điện thoại khách. */
+export async function duongDanVeKhachAction(input: {
+  siteId: string;
+  saleCode: string;
+}): Promise<{ url: string | null }> {
+  const user = await getCurrentErpUser();
+  if (!user || !isErpSiteId(input.siteId) || !accountCanAccessModule(user, input.siteId, "ve-dat-cho")) {
+    return { url: null };
+  }
+  try {
+    const ma = niemPhieuQuay({ loai: "ve", siteId: input.siteId, saleCode: String(input.saleCode ?? "") });
+    return { url: absoluteUrl(`/ve-quay/${ma}`) };
+  } catch {
+    return { url: null };
   }
 }
 

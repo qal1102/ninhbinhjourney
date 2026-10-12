@@ -164,3 +164,34 @@ export async function createCounterVisitorGroup(input: {
   }
   return status;
 }
+
+/**
+ * Mã vé cổng của một đoàn, tra từ mã đoàn `DOAN-…` (12/10/2026).
+ *
+ * Màn quầy và trang trưởng đoàn đưa khách mã đoàn, nhưng hàm soát vé ở cổng
+ * chỉ biết mã vé (`QUAY-…`, giữ đủ lượt cho cả đoàn) và mã từng người
+ * (`TV-…`). Cổng quét mã đoàn thì đổi sang mã vé của đoàn rồi soát như
+ * thường. Không thấy đoàn thì trả `null` để cổng báo đúng "không có vé".
+ */
+export async function ticketCodeForGroupCode(groupCode: string): Promise<string | null> {
+  let client: SupabaseClient;
+  try {
+    client = createAdminClient();
+  } catch {
+    return null;
+  }
+  const { data: group } = await client
+    .from("erp_visitor_groups")
+    .select("ticket_id")
+    .eq("tenant_id", TENANT_ID)
+    .eq("group_code", groupCode)
+    .maybeSingle();
+  if (!group?.ticket_id) return null;
+  const { data: ticket } = await client
+    .from("erp_tickets")
+    .select("ticket_code")
+    .eq("tenant_id", TENANT_ID)
+    .eq("id", group.ticket_id)
+    .maybeSingle();
+  return typeof ticket?.ticket_code === "string" ? ticket.ticket_code : null;
+}

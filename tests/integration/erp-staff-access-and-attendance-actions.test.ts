@@ -12,6 +12,7 @@ const doubles = vi.hoisted(() => ({
   updateEmployeeAccessGrant: vi.fn(),
 }));
 
+vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({
   revalidatePath: doubles.revalidatePath,
 }));

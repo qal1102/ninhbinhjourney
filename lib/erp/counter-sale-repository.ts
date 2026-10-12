@@ -276,3 +276,32 @@ export async function setCounterPrice(input: {
   }
   return parseCounterPrices(data);
 }
+
+/**
+ * Đọc một phiếu quầy theo khoá phiếu hoặc theo mã phiếu (12/10/2026).
+ *
+ * Dùng cho mã QR khách quét (`lib/erp/phieu-quay.ts`): màn quầy hỏi "khách
+ * quét chưa?" bằng khoá phiếu, trang vé trên điện thoại khách đọc lại bằng mã
+ * phiếu. Không có phiếu thì trả `null`, không ném lỗi.
+ */
+export async function readCounterSaleBy(input: {
+  siteId: ErpSiteId;
+  requestKey?: string;
+  saleCode?: string;
+}): Promise<CounterSaleReceipt | null> {
+  const client = createAdminClient();
+  let query = client
+    .from("erp_counter_sales")
+    .select("id")
+    .eq("tenant_id", TENANT_ID)
+    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId]);
+  if (input.requestKey) query = query.eq("request_key", input.requestKey);
+  else if (input.saleCode) query = query.eq("sale_code", input.saleCode);
+  else return null;
+  const { data, error } = await query.maybeSingle();
+  if (error) throw tuChoi(error);
+  if (!data?.id) return null;
+  const receipt = await client.rpc("erp_counter_sale_receipt", { p_tenant_id: TENANT_ID, p_sale_id: data.id });
+  if (receipt.error) throw tuChoi(receipt.error);
+  return parseCounterSaleReceipt(receipt.data);
+}

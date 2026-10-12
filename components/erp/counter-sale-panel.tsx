@@ -8,8 +8,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   createCounterSaleAction,
+  docMaKhachQuetAction,
+  duongDanVeKhachAction,
+  taoMaKhachQuetAction,
   voidCounterSaleAction,
 } from "@/app/erp/actions";
+import { DuaVeChoKhach } from "./dua-ve-cho-khach";
 import type { ErpSite } from "@/domain/erp";
 import {
   ReceiptPrinterSettings,
@@ -227,6 +231,7 @@ function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receip
                 <div className="mx-auto h-40 w-40 rounded-lg bg-[#eef1ef]" aria-hidden="true" />
               )}
               <figcaption className="mt-1 text-xs">
+                <span className="block font-bold">Nhân viên cổng quét mã này để cho vào</span>
                 <span className="block font-mono font-bold">{line.ticketCode}</span>
                 {COUNTER_PRODUCT_LABELS[line.product]} · cho {line.entriesAllowed} lượt vào ·
                 dùng trong ngày {ngayVietNam(receipt.businessDate)}
@@ -273,6 +278,89 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
   const cash = Number(cashText.replace(/[^0-9]/g, "")) || 0;
   const change = counterChange(cash, cart.totalVnd);
   const readiness = counterSaleReadiness({ cart, cashReceivedVnd: cash, cashCountedConfirmed: confirmed, paymentMethod });
+  // Khách quét QR (12/10/2026): mã đang chờ khách quét, và đường dẫn vé của
+  // phiếu đang mở để gửi sang điện thoại khách.
+  const [maCho, setMaCho] = useState<{ url: string; expiresAt: number; key: string; totalVnd: number } | null>(null);
+  const [conGiay, setConGiay] = useState(0);
+  const [veDienThoai, setVeDienThoai] = useState<{ saleCode: string; url: string } | null>(null);
+
+  // Phiếu vừa bán (hay vừa bấm "Xem, in lại") nằm dưới biểu mẫu: cuộn tới để
+  // người bán thấy ngay, không tưởng là chưa có gì (chủ dự án 12/10/2026).
+  function denPhieu() {
+    window.requestAnimationFrame(() =>
+      document.getElementById("khoi-phieu-vua-ban")?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      }),
+    );
+  }
+
+  function moPhieu(phieu: CounterSaleReceipt) {
+    setReceipt(phieu);
+    denPhieu();
+  }
+
+  // Có phiếu là có đường dẫn vé cho điện thoại khách.
+  useEffect(() => {
+    if (!receipt || receipt.status === "voided") return;
+    let huy = false;
+    void duongDanVeKhachAction({ siteId: site.id, saleCode: receipt.saleCode }).then((kq) => {
+      if (!huy && kq.url) setVeDienThoai({ saleCode: receipt.saleCode, url: kq.url });
+    });
+    return () => {
+      huy = true;
+    };
+  }, [receipt, site.id]);
+
+  // Đang chờ khách quét: hỏi kho hai giây một lần, khách trả xong là hiện phiếu.
+  useEffect(() => {
+    if (!maCho) return;
+    let huy = false;
+    const dem = window.setInterval(() => setConGiay(Math.max(0, Math.ceil((maCho.expiresAt - Date.now()) / 1000))), 1000);
+    const hoi = window.setInterval(async () => {
+      const kq = await docMaKhachQuetAction({ siteId: site.id, requestKey: maCho.key }).catch(() => null);
+      if (huy || !kq?.receipt) return;
+      huy = true;
+      setMaCho(null);
+      setMessage({ tone: "ok", text: `Khách đã quét và trả ${formatVnd(kq.receipt.totalVnd)}. Vé đã hiện trên điện thoại khách (phiếu ${kq.receipt.saleCode}).` });
+      soanPhieuMoi();
+      moPhieu(kq.receipt);
+      router.refresh();
+    }, 2000);
+    return () => {
+      huy = true;
+      window.clearInterval(dem);
+      window.clearInterval(hoi);
+    };
+    // soanPhieuMoi, moPhieu chỉ đặt state; không cần chạy lại theo chúng.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maCho, site.id, router]);
+
+  function taoMaKhachQuet() {
+    if (pending || cart.partySize === 0) return;
+    setMessage(null);
+    startTransition(async () => {
+      const kq = await taoMaKhachQuetAction({
+        siteId: site.id,
+        adults: cart.lines.find((l) => l.product === "adult")?.quantity ?? 0,
+        children: cart.lines.find((l) => l.product === "child")?.quantity ?? 0,
+        requestKey: requestKey.current,
+      });
+      if (kq.ok) {
+        setMaCho({ url: kq.url, expiresAt: kq.expiresAt, key: requestKey.current, totalVnd: kq.totalVnd });
+        setConGiay(Math.ceil((kq.expiresAt - Date.now()) / 1000));
+      } else {
+        setMessage({ tone: "error", text: kq.message });
+      }
+    });
+  }
+
+  function huyMaCho() {
+    setMaCho(null);
+    // Mã cũ có thể vẫn nằm trên máy khách: phiếu sau phải mang khoá mới.
+    requestKey.current = khoaMoi();
+    setReference(counterPaymentReference(requestKey.current));
+  }
   const canVoid = userRole === "manager" || userRole === "director";
   // Chỗ màn Hướng dẫn khoanh (components/shared/chi-diem.tsx), dời theo từng
   // bước: tiền khách đưa → ô xác nhận đã đếm → nút bán → phiếu thu.
@@ -293,6 +381,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
   function doiSo(fn: () => void) {
     fn();
     setConfirmed(false);
+    if (maCho) huyMaCho();
   }
 
   function soanPhieuMoi() {
@@ -319,9 +408,9 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
         requestKey: requestKey.current,
       });
       if (ketQua.ok) {
-        setReceipt(ketQua.receipt);
         setMessage({ tone: "ok", text: ketQua.message });
         soanPhieuMoi();
+        moPhieu(ketQua.receipt);
         router.refresh();
       } else {
         setMessage({ tone: "error", text: ketQua.message });
@@ -417,7 +506,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                     paymentMethod === pt ? "border-[#183f34] bg-[#183f34] text-white" : "border-[#ccd8d1] bg-white text-[#42574e]"
                   }`}
                 >
-                  {COUNTER_PAYMENT_METHOD_LABELS[pt]}
+                  {pt === "cash" ? "Tiền mặt" : "Khách quét QR"}
                 </button>
               ))}
             </div>
@@ -451,7 +540,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                     </button>
                   ))}
                 </div>
-                <p className={`mt-2 text-lg font-black tabular-nums ${change === null ? "text-[#8b3d31]" : "text-[#2d735b]"}`}>
+                <p className={`mt-2 text-lg font-black tabular-nums ${cash === 0 ? "text-[#6e7b75]" : change === null ? "text-[#8b3d31]" : "text-[#2d735b]"}`}>
                   {cash === 0
                     ? "Chưa nhập tiền khách đưa"
                     : change === null
@@ -460,20 +549,44 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                 </p>
               </div>
             ) : (
-              <div className="rounded-xl border border-[#b8cfbf] bg-[#edf3f0] p-4 text-sm leading-6 text-[#365247]">
-                <p className="font-black text-[#20342c]">Mời khách quét mã QR chuyển khoản của quầy</p>
-                <p className="mt-1">
-                  Số tiền: <strong className="tabular-nums">{formatVnd(cart.totalVnd)}</strong>
-                </p>
-                <p>
-                  Nội dung chuyển khoản: <strong className="font-mono text-base">{reference}</strong>
-                </p>
-                <p className="mt-2 text-xs text-[#5c6f67]">
-                  Nhờ khách ghi đúng nội dung này để kế toán khớp với sao kê. Chỉ xác nhận khi đã thấy tiền về tài khoản.
-                </p>
+              <div className="space-y-3" data-testid="khach-quet-qr">
+                {maCho ? (
+                  <>
+                    <DuaVeChoKhach
+                      url={maCho.url}
+                      tieuDe={`Mời khách quét · ${formatVnd(maCho.totalVnd)}`}
+                      loiDan="Khách mở camera điện thoại quét mã này: coi như đã trả (bản trình diễn), vé hiện ngay trên máy khách và phiếu tự hiện ở đây. Khách ở xa thì gửi đường dẫn qua Zalo."
+                      chuChiaSe="Mở đường dẫn để trả và nhận vé Ninh Bình:"
+                    />
+                    <p role="status" className="flex items-center justify-between gap-3 rounded-xl bg-[#fff8eb] px-4 py-3 text-sm font-bold text-[#6b5326]">
+                      <span>{conGiay > 0 ? "Đang chờ khách quét…" : "Mã đã hết hạn giữ chỗ."}</span>
+                      <span className="tabular-nums">{String(Math.floor(conGiay / 60)).padStart(2, "0")}:{String(conGiay % 60).padStart(2, "0")}</span>
+                    </p>
+                    <button type="button" onClick={huyMaCho} className="min-h-11 w-full rounded-xl border border-[#ccd8d1] px-4 text-sm font-black text-[#42574e]">
+                      {conGiay > 0 ? "Huỷ mã, bán lại" : "Tạo mã mới"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="rounded-xl border border-[#b8cfbf] bg-[#edf3f0] p-4 text-sm leading-6 text-[#365247]">
+                      Bấm tạo mã: màn hình hiện một mã QR. Khách quét bằng điện thoại là trả xong và
+                      nhận vé ngay trên máy mình; phiếu tự ghi tên bạn, không cần tích xác nhận.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={taoMaKhachQuet}
+                      disabled={pending || cart.partySize === 0}
+                      className="min-h-12 w-full rounded-xl bg-[#183f34] px-5 text-base font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {pending ? "Đang tạo mã…" : `Tạo mã cho khách quét · ${formatVnd(cart.totalVnd)}`}
+                    </button>
+                  </>
+                )}
               </div>
             )}
 
+            {paymentMethod === "cash" ? (
+            <>
             <label
               className="flex gap-3 rounded-xl border-2 border-[#e7c78d] bg-[#fff8eb] p-4 text-sm leading-6 text-[#5d5037]"
               {...chi("dem", "Tích ô này: bạn xác nhận đã đếm đủ tiền.")}
@@ -486,9 +599,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
               />
               <span>
                 <strong>
-                  {paymentMethod === "qr-transfer"
-                    ? `Tôi đã thấy ${formatVnd(cart.totalVnd)} về tài khoản, đúng nội dung ${reference}.`
-                    : cash > 0 && change !== null
+                  {cash > 0 && change !== null
                       ? `Tôi đã đếm đủ ${formatVnd(cash)} khách đưa, thối lại ${formatVnd(change)}, và bỏ ${formatVnd(cart.totalVnd)} vào quỹ.`
                       : `Tôi đã đếm đủ tiền khách đưa và bỏ ${formatVnd(cart.totalVnd)} vào quỹ.`}
                 </strong>{" "}
@@ -508,6 +619,8 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
             {!readiness.ok ? (
               <p className="text-sm text-[#6e7b75]">{readiness.reason}</p>
             ) : null}
+            </>
+            ) : null}
             {message ? (
               <p
                 role={message.tone === "error" ? "alert" : "status"}
@@ -521,10 +634,10 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
           </div>
 
           <div className="space-y-3">
-            <ReceiptPrinterSettings printer={printer} onTestPrint={inThu} />
             {receipt ? (
               <div
-                className="space-y-3"
+                id="khoi-phieu-vua-ban"
+                className="scroll-mt-20 space-y-3"
                 {...chi("xong", "Phiếu thu đã ra, in được ngay. Tiền quầy tự cộng vào đối soát cuối ca.")}
               >
                 <ReceiptSheet id="counter-receipt" site={site} receipt={receipt} />
@@ -547,12 +660,22 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                     Đóng
                   </button>
                 </div>
+                {receipt.status !== "voided" && veDienThoai?.saleCode === receipt.saleCode ? (
+                  <DuaVeChoKhach
+                    className="mx-auto max-w-sm"
+                    url={veDienThoai.url}
+                    tieuDe="Gửi vé sang điện thoại khách"
+                    loiDan="Khách quét mã này bằng camera là có vé trên máy, mất phiếu giấy vẫn vào được. Hoặc gửi đường dẫn qua Zalo."
+                    chuChiaSe="Vé Ninh Bình của bạn, mở để xem và lưu:"
+                  />
+                ) : null}
               </div>
             ) : (
               <p className="rounded-xl border border-dashed border-[#b8c6bf] px-4 py-10 text-center text-sm text-[#6e7b75]">
-                Bán xong, phiếu thu và mã QR hiện ở đây để đưa khách quét hoặc in ra.
+                Bán xong, phiếu thu hiện ở đây: in ra cho khách, hoặc cho khách quét mã để có vé trên điện thoại.
               </p>
             )}
+            <ReceiptPrinterSettings printer={printer} onTestPrint={inThu} />
           </div>
 
           <div className="xl:col-span-2">
@@ -597,7 +720,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                           ) : null}
                           <button
                             type="button"
-                            onClick={() => setReceipt(sale)}
+                            onClick={() => moPhieu(sale)}
                             className="rounded-lg border border-[#ccd8d1] px-2 py-1 text-xs font-black text-[#35594b]"
                           >
                             Xem, in lại

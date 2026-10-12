@@ -1,5 +1,6 @@
 "use client";
 
+import QRCode from "qrcode";
 import { useEffect, useMemo, useState } from "react";
 import { TripPassport } from "@/components/commerce/trip-passport";
 import { DESTINATIONS } from "@/content/destinations";
@@ -37,6 +38,38 @@ function formatVisitDate(value: string) {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+/**
+ * Mã vào cổng của cả đoàn (12/10/2026): trưởng đoàn mở trang này trên điện
+ * thoại, tới cổng đưa mã cho nhân viên quét — mỗi người qua là một lượt.
+ */
+function MaVaoCongDoan({ groupCode, memberCount }: { groupCode: string; memberCount: number }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    let huy = false;
+    void QRCode.toDataURL(groupCode, { width: 480, margin: 1, errorCorrectionLevel: "M", color: { dark: "#183f34", light: "#ffffff" } }).then((url) => {
+      if (!huy) setSrc(url);
+    });
+    return () => {
+      huy = true;
+    };
+  }, [groupCode]);
+  return (
+    <div className="mt-6 rounded-3xl border border-[#183f34]/20 bg-white p-6 text-center" data-testid="ma-vao-cong-doan">
+      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#9a6328]">Mã vào cổng của cả đoàn</p>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element -- mã QR sinh tại chỗ
+        <img src={src} alt={`Mã QR vào cổng của đoàn ${groupCode}`} className="mx-auto mt-3 h-56 w-56 rounded-2xl bg-white p-2" />
+      ) : (
+        <div className="mx-auto mt-3 h-56 w-56 rounded-2xl bg-[#e7ebe8]" aria-hidden="true" />
+      )}
+      <code className="mt-2 block font-extrabold tracking-[0.06em] text-[#27362f]">{groupCode}</code>
+      <p className="mt-2 text-sm leading-6 text-[#59654b]">
+        Tới cổng, đưa màn hình này cho nhân viên quét: mỗi người qua là một lượt, đủ {memberCount} lượt cho cả đoàn.
+      </p>
+    </div>
+  );
 }
 
 /** Chưa ghi tên thì gọi theo số thứ tự — đừng bịa một cái tên không ai đặt. */
@@ -217,6 +250,8 @@ function LeaderGroupView({
           <dd>{group.memberCount} người</dd>
         </div>
       </dl>
+
+      <MaVaoCongDoan groupCode={group.groupCode} memberCount={group.memberCount} />
 
       <div className="mt-7 rounded-3xl border border-[#183f34]/20 bg-white p-6 text-center">
         <p className="text-7xl font-black tabular-nums text-[#183f34]">{headline.big}</p>

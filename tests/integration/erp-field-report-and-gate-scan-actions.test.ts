@@ -10,6 +10,7 @@ const doubles = vi.hoisted(() => ({
   submitFieldReport: vi.fn(),
 }));
 
+vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({
   revalidatePath: doubles.revalidatePath,
 }));

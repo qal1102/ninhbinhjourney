@@ -20,6 +20,7 @@ import { RoleSwitchBanner } from "./role-switch-banner";
 import { RoleSwitchControl } from "./role-switch-control";
 import { VoiceCommandCenter } from "./voice-command-center";
 import { ErpMobileMenu } from "./erp-mobile-menu";
+import { NutQuayLaiApp } from "@/components/shared/nut-quay-lai-app";
 import { ChiDiem } from "@/components/shared/chi-diem";
 import { BAN_DO_CHUC_NANG, CHUC_NANG_MOI } from "@/domain/ban-do-chuc-nang";
 import { BangLenh, type MucBangLenh } from "./bang-lenh";
@@ -110,6 +111,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
       <header className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
         <div className="mx-auto flex min-h-16 max-w-[1600px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
+            <NutQuayLaiApp veTrang="/erp" />
             {/* `accountId` + `systemAdmin`: trên máy tính, hồ sơ cá nhân và
                 "Tài khoản & phân quyền" nằm ở thanh đầu trang, nhưng cả hai
                 đều `hidden` dưới `lg`. Ngăn kéo trước đây không chép chúng

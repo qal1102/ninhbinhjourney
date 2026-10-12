@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
+import { NutQuayLaiApp } from "@/components/shared/nut-quay-lai-app";
 import type { NgonNgu } from "@/lib/ngon-ngu";
 
 /**
@@ -108,10 +109,13 @@ export function ThanhDauTrang({
       {/* Một thanh điều hướng: máy tính nằm giữa hàng, điện thoại xuống hàng
           riêng và vuốt ngang được, không đẩy trang tràn ra. */}
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2.5 sm:px-8">
+        <div className="flex shrink-0 items-center gap-2">
+        <NutQuayLaiApp veTrang="/" tone={toi ? "toi" : "sang"} />
         <Link href={veTrangChu} className={`inline-flex min-h-11 shrink-0 items-center gap-2.5 ${chu}`}>
           <Image src="/brand/ninh-binh-mark.png" alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
           <span className="font-display text-lg tracking-[0.12em]">NINH BÌNH</span>
         </Link>
+        </div>
         <div className="flex shrink-0 items-center gap-2 lg:order-last">
           {them}
           <NutNgonNgu lang={lang} tone={tone} />

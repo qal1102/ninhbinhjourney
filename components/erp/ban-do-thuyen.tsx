@@ -31,7 +31,7 @@ import {
   type ThuyenTrenBanDo,
 } from "@/domain/thuyen-song";
 import { ngayVietNam } from "@/domain/thoi-luong";
-import { CHU_MAPLIBRE, GHI_CONG_BAN_DO, kieuBanDoThuongHieu } from "@/lib/map/brand-style";
+import { CHU_MAPLIBRE, DO_NOI_NUI, GHI_CONG_BAN_DO, ID_VE_TINH, KHOA_MAPTILER, kieuBanDoThuongHieu } from "@/lib/map/brand-style";
 
 /**
  * Bản đồ sống thuyền trên sông và bảng bến (Tràng An, Tam Cốc).
@@ -51,6 +51,9 @@ import { CHU_MAPLIBRE, GHI_CONG_BAN_DO, kieuBanDoThuongHieu } from "@/lib/map/br
  * Toạ độ nhân viên chỉ đi giữa máy chủ của mình và trình duyệt người xem; nền
  * bản đồ tải theo ô vuông vùng Ninh Bình, không gửi toạ độ thuyền cho bên nào.
  */
+
+/** Có khoá ảnh vệ tinh MapTiler ở bản chạy này (biến công khai, cố định lúc build). */
+const CO_VE_TINH = Boolean(KHOA_MAPTILER);
 
 const TRE_HIEN_THI_MS = 6000;
 const HOI_THUYEN_MS = 4000;
@@ -297,6 +300,12 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
   const [loiThuyen, setLoiThuyen] = useState("");
   const [loiBen, setLoiBen] = useState("");
   const tuyen = TUYEN_THUYEN[coSo];
+  // 12/10/2026, chủ dự án: bản đồ thuyền "nhìn hơi sơ sài", muốn như bản đồ
+  // 2D/3D ngoài web. Mặc định ảnh vệ tinh thật, núi nổi khối, nghiêng nhẹ;
+  // "Bản đồ" là bản giấy phẳng cũ, đọc tên bến, hang rõ hơn. Không có khoá
+  // ảnh vệ tinh thì chỉ còn bản đồ giấy.
+  const [veTinh, setVeTinh] = useState(CO_VE_TINH);
+  const veTinhRef = useRef(veTinh);
 
   function doiCheDo(moi: CheDo) {
     cheRef.current = moi;
@@ -388,14 +397,48 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
     };
   }, [coSo]);
 
+  // Đổi giữa ảnh vệ tinh 3D và bản đồ giấy, giữ nguyên tâm và mức phóng.
+  useEffect(() => {
+    veTinhRef.current = veTinh;
+    const map = banDo.current;
+    if (!map || !CO_VE_TINH) return;
+    const doi = () => {
+      if (map.getLayer(ID_VE_TINH)) map.setLayoutProperty(ID_VE_TINH, "visibility", veTinh ? "visible" : "none");
+      map.setTerrain(veTinh ? { source: "do-cao", exaggeration: DO_NOI_NUI } : null);
+      // Bản đồ giấy cũ không có bóng núi; để lại thì nền lốm đốm, tuyến chìm.
+      if (map.getLayer("bong-nui")) map.setLayoutProperty("bong-nui", "visibility", veTinh ? "visible" : "none");
+      if (map.getLayer("thuyen")) {
+        map.setLayoutProperty(
+          "thuyen",
+          "icon-image",
+          veTinh ? ["case", ["get", "uocTinh"], "thuyen-uoc-vt", "thuyen-that-vt"] : ["case", ["get", "uocTinh"], "thuyen-uoc", "thuyen-that"],
+        );
+      }
+      const giam = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      // Nghiêng thì nửa trên khung xa hơn: phóng gần thêm để tuyến sông không bé lại.
+      const khungPhang = map.cameraForBounds(boundsTuyen(coSo), { padding: { top: 48, right: 56, bottom: 84, left: 40 } });
+      const zoomPhang = khungPhang?.zoom ?? map.getZoom();
+      map.easeTo({
+        center: khungPhang?.center ?? map.getCenter(),
+        pitch: veTinh ? 48 : 0,
+        bearing: veTinh ? -14 : 0,
+        zoom: veTinh ? zoomPhang + 0.3 : zoomPhang,
+        duration: giam ? 0 : 700,
+      });
+    };
+    if (map.isStyleLoaded() && map.getLayer("thuyen")) doi();
+    else map.once("idle", doi);
+  }, [veTinh, coSo]);
+
   // Dựng bản đồ và vòng vẽ.
   useEffect(() => {
     if (!khung.current || banDo.current) return;
     const camUng = window.matchMedia("(pointer: coarse)").matches;
     const map = new maplibregl.Map({
       container: khung.current,
-      style: kieuBanDoThuongHieu("giay"),
+      style: kieuBanDoThuongHieu("giay", CO_VE_TINH, CO_VE_TINH ? (veTinhRef.current ? "hien" : "an") : null),
       bounds: boundsTuyen(coSo),
+      maxPitch: 70,
       // Lề dưới rộng hơn: nhãn bến nằm ngay dưới bến.
       fitBoundsOptions: { padding: { top: 48, right: 56, bottom: 84, left: 40 } },
       attributionControl: false,
@@ -436,7 +479,8 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
     nhanBen.current = soBen;
     // Hai bến đều ở đầu đông nam của tuyến, tuyến đi lên phía tây bắc: nhãn đứng
     // dưới-trái bến để không che thuyền vừa rời, cũng không tràn mép phải ở 390px.
-    const benMarker = new maplibregl.Marker({ element: nhan, anchor: "top-right", offset: [16, 8] })
+    // Núi nổi khối che mất bến thì MapLibre làm mờ nhãn; nhãn bến luôn phải đọc được.
+    const benMarker = new maplibregl.Marker({ element: nhan, anchor: "top-right", offset: [16, 8], opacityWhenCovered: "1" })
       .setLngLat([tuyen.moc[0].lonLat[0], tuyen.moc[0].lonLat[1]])
       .addTo(map);
     // Nhãn bến chỉ để đọc: gỡ role=button, tabindex và nhãn "Map marker" MapLibre tự gắn.
@@ -466,6 +510,10 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
 
       map.addImage("thuyen-uoc", veHinhThuyen(MAU.thuyenUoc, MAU.nonUoc, "#ffffff"), { pixelRatio: 3.2 });
       map.addImage("thuyen-that", veHinhThuyen(MAU.thuyenThat, MAU.nonThat, "#183f34"), { pixelRatio: 2.7 });
+      // Trên ảnh vệ tinh, thân xanh đậm chìm vào màu nước và rừng: thuyền ước
+      // tính đổi sang thân kem viền đậm, to hơn một chút.
+      map.addImage("thuyen-uoc-vt", veHinhThuyen("#fbfaf6", "#e7c78d", "#183f34"), { pixelRatio: 2.6 });
+      map.addImage("thuyen-that-vt", veHinhThuyen(MAU.thuyenThat, "#fbfaf6", "#ffffff"), { pixelRatio: 2.3 });
       map.addSource("tuyen", {
         type: "geojson",
         data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: tuyen.duong.map((p) => [p[0], p[1]]) } },
@@ -482,7 +530,9 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         type: "symbol",
         source: "thuyen",
         layout: {
-          "icon-image": ["case", ["get", "uocTinh"], "thuyen-uoc", "thuyen-that"],
+          "icon-image": veTinhRef.current
+            ? ["case", ["get", "uocTinh"], "thuyen-uoc-vt", "thuyen-that-vt"]
+            : ["case", ["get", "uocTinh"], "thuyen-uoc", "thuyen-that"],
           "icon-rotate": ["get", "huong"],
           "icon-rotation-alignment": "map",
           "icon-allow-overlap": true,
@@ -516,6 +566,12 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         layout: { "text-field": ["get", "ten"], "text-font": ["Noto Sans Bold"], "text-size": 13, "text-offset": [0, 1.1], "text-anchor": "top" },
         paint: { "text-color": "#183f34", "text-halo-color": "#ffffff", "text-halo-width": 2 },
       });
+
+      if (veTinhRef.current) {
+        map.easeTo({ pitch: 48, bearing: -14, zoom: map.getZoom() + 0.3, duration: giamChuyenDong.matches ? 0 : 900 });
+      } else if (map.getLayer("bong-nui")) {
+        map.setLayoutProperty("bong-nui", "visibility", "none");
+      }
 
       // Rê chuột (máy tính) để xem nhanh; bấm hay chạm (điện thoại) thì thẻ
       // ghim lại kèm nút đóng, để đọc người chèo và gọi điện.
@@ -826,7 +882,29 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         </div>
       ) : null}
 
-      <div ref={khung} className="h-[min(64vh,540px)] w-full overflow-hidden rounded-2xl border border-[#d8e0db]" />
+      <div className="relative">
+        <div ref={khung} className="h-[min(64vh,540px)] w-full overflow-hidden rounded-2xl border border-[#d8e0db]" />
+        {CO_VE_TINH ? (
+          <div
+            role="group"
+            aria-label="Kiểu bản đồ thuyền"
+            className="absolute left-3 top-3 z-10 flex rounded-full border border-white/60 bg-white/90 p-1 text-xs font-black shadow-md backdrop-blur"
+          >
+            {([true, false] as const).map((la) => (
+              <button
+                key={String(la)}
+                type="button"
+                aria-pressed={veTinh === la}
+                data-kieu-ban-do-thuyen={la ? "ve-tinh" : "ban-do"}
+                onClick={() => setVeTinh(la)}
+                className={`min-h-9 rounded-full px-3 ${veTinh === la ? "bg-[#183f34] text-white" : "text-[#183f34]"}`}
+              >
+                {la ? "Vệ tinh 3D" : "Bản đồ"}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
       {che?.kieu === "xem-lai" && khung2 ? (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#d8e0db] bg-white p-3">

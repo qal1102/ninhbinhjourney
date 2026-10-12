@@ -2993,3 +2993,15 @@ html[data-nbj-consent-banner-visible="true"] .thanh-dat-cho {
     transition: none;
   }
 }
+
+/* Nút quay lại chỉ có khi web chạy như ứng dụng cài trên máy (12/10/2026),
+   components/shared/nut-quay-lai-app.tsx. */
+.nut-quay-lai-app {
+  display: none;
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  .nut-quay-lai-app {
+    display: inline-flex;
+  }
+}

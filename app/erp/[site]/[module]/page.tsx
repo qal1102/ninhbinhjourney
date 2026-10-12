@@ -88,7 +88,23 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
   // còn phần vé đã bán và phiếu đoàn bên dưới vẫn mở bình thường.
   const counterSaleDangDoc =
     moduleDefinition.id === "ve-dat-cho"
-      ? getCounterSaleWorkspace({ siteId: site.id, viewerAccountId: user.id }).catch(
+      ? Promise.all([
+          getCounterSaleWorkspace({ siteId: site.id, viewerAccountId: user.id }),
+          listStaffDirectory().catch(() => []),
+        ])
+          .then(([quay, danhBa]) =>
+            quay.available
+              ? {
+                  ...quay,
+                  // Vé mời: người mời là người đang làm việc ở cơ sở này, hoặc giám đốc.
+                  nguoiMoi: danhBa
+                    .filter((nguoi) => nguoi.active && (nguoi.role === "director" || nguoi.siteIds.includes(site.id)))
+                    .sort((a, b) => (a.role === b.role ? a.displayName.localeCompare(b.displayName, "vi") : a.role === "director" ? -1 : b.role === "director" ? 1 : a.role === "manager" ? -1 : b.role === "manager" ? 1 : 0))
+                    .map((nguoi) => ({ id: nguoi.accountId, name: nguoi.displayName, title: nguoi.jobTitle })),
+                }
+              : quay,
+          )
+          .catch(
           (error) => {
             console.error("Counter sale workspace read failed", error);
             return {

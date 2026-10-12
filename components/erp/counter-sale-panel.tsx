@@ -13,7 +13,11 @@ import {
   taoMaKhachQuetAction,
   voidCounterSaleAction,
 } from "@/app/erp/actions";
+import { capVeMoiAction } from "@/app/erp/ve-doan-actions";
 import { DuaVeChoKhach } from "./dua-ve-cho-khach";
+import { BanVeDoan } from "./ban-ve-doan";
+import type { DienPhieuDoan } from "@/domain/soat-giay-to";
+import type { CounterSaleWorkspace } from "@/lib/erp/counter-sale-repository";
 import type { ErpSite } from "@/domain/erp";
 import {
   ReceiptPrinterSettings,
@@ -25,6 +29,7 @@ import {
 import {
   COUNTER_PAYMENT_METHOD_LABELS,
   COUNTER_PRODUCT_LABELS,
+  COUNTER_COMP_MAX,
   COUNTER_SALE_MAX_PARTY,
   computeCounterCart,
   counterCashSuggestions,
@@ -32,21 +37,21 @@ import {
   counterPaymentReference,
   counterSaleReadiness,
   formatVnd,
-  type CounterPaymentMethod,
-  type CounterPrice,
   type CounterSaleReceipt,
 } from "@/domain/erp-counter-sale";
-
-type Workspace =
-  | { available: true; prices: CounterPrice[]; sales: CounterSaleReceipt[] }
-  | { available: false; message: string };
 
 type Props = {
   site: ErpSite;
   userId: string;
   userRole: string;
-  workspace: Workspace | null;
+  workspace: CounterSaleWorkspace | null;
+  /** Từ màn Soát giấy tờ: AI đã đọc danh sách đoàn, mở sẵn ô Vé đoàn. */
+  dienSanDoan?: DienPhieuDoan | null;
 };
+
+type LoaiPhieu = "le" | "doan" | "moi";
+
+const TEN_LOAI: Record<LoaiPhieu, string> = { le: "Vé lẻ", doan: "Vé đoàn", moi: "Vé mời" };
 
 function khoaMoi() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -130,7 +135,7 @@ function Stepper({
 }
 
 /** Phiếu thu in cho khách. Ghi rõ không phải hoá đơn giá trị gia tăng. */
-function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receipt: CounterSaleReceipt }) {
+export function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receipt: CounterSaleReceipt }) {
   const [qr, setQr] = useState<Record<string, string>>({});
   useEffect(() => {
     let huy = false;
@@ -161,7 +166,9 @@ function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receip
       className="mx-auto w-full max-w-sm rounded-2xl border border-[#d8e0db] bg-white p-5 text-[#1d2925] shadow-sm"
     >
       <header className="border-b border-dashed border-[#b8c6bf] pb-3 text-center">
-        <p className="text-xs font-black uppercase tracking-[0.2em]">Phiếu thu bán vé</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em]">
+          {receipt.saleKind === "group" ? "Phiếu thu vé đoàn" : receipt.saleKind === "comp" ? "Phiếu vé mời" : "Phiếu thu bán vé"}
+        </p>
         <p className="mt-1 text-lg font-black">{site.name}</p>
         <p className="mt-1 font-mono text-sm font-bold">{receipt.saleCode}</p>
         <p className="text-xs text-[#5c6f67]">{gioVietNam(receipt.soldAt)}</p>
@@ -171,6 +178,24 @@ function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receip
           </p>
         ) : null}
       </header>
+
+      {receipt.saleKind === "group" ? (
+        <dl className="mt-3 space-y-0.5 text-xs" data-testid="phieu-thong-tin-doan">
+          <div className="flex justify-between gap-2"><dt className="text-[#5c6f67]">Trưởng đoàn</dt><dd className="text-right font-bold">{receipt.groupLeaderName}{receipt.groupLeaderPhone ? ` · ${receipt.groupLeaderPhone}` : ""}</dd></div>
+          {receipt.travelCompany ? (
+            <div className="flex justify-between gap-2"><dt className="text-[#5c6f67]">Công ty</dt><dd className="text-right font-bold">{receipt.travelCompany.name}{receipt.travelCompany.taxCode ? ` · MST ${receipt.travelCompany.taxCode}` : ""}</dd></div>
+          ) : null}
+          {receipt.groupCode ? (
+            <div className="flex justify-between gap-2"><dt className="text-[#5c6f67]">Mã đoàn</dt><dd className="font-mono font-bold">{receipt.groupCode}</dd></div>
+          ) : null}
+          {receipt.invoiceRequested ? <p className="font-bold text-[#24533f]">Có đề nghị xuất hoá đơn cho công ty.</p> : null}
+        </dl>
+      ) : receipt.saleKind === "comp" ? (
+        <dl className="mt-3 space-y-0.5 text-xs" data-testid="phieu-thong-tin-moi">
+          <div className="flex justify-between gap-2"><dt className="text-[#5c6f67]">Người mời</dt><dd className="text-right font-bold">{receipt.compInviterName}</dd></div>
+          <div className="flex justify-between gap-2"><dt className="text-[#5c6f67]">Lý do</dt><dd className="text-right">{receipt.compReason}</dd></div>
+        </dl>
+      ) : null}
 
       <table className="mt-3 w-full text-sm">
         <tbody>
@@ -189,11 +214,28 @@ function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receip
       </table>
 
       <dl className="mt-2 space-y-1 border-t border-dashed border-[#b8c6bf] pt-2 text-sm tabular-nums">
+        {receipt.discountVnd > 0 ? (
+          <>
+            <div className="flex justify-between">
+              <dt>{receipt.saleKind === "comp" ? "Trị giá vé" : "Tạm tính"}</dt>
+              <dd>{formatVnd(receipt.totalVnd + receipt.discountVnd)}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt>{receipt.saleKind === "comp" ? "Vé mời" : `Ưu đãi công ty ${receipt.discountPercent}%`}</dt>
+              <dd>−{formatVnd(receipt.discountVnd)}</dd>
+            </div>
+          </>
+        ) : null}
         <div className="flex justify-between font-black">
           <dt>Tổng tiền</dt>
           <dd>{formatVnd(receipt.totalVnd)}</dd>
         </div>
-        {receipt.paymentMethod === "qr-transfer" ? (
+        {receipt.paymentMethod === "complimentary" ? (
+          <div className="flex justify-between">
+            <dt>{COUNTER_PAYMENT_METHOD_LABELS.complimentary}</dt>
+            <dd>0 đ</dd>
+          </div>
+        ) : receipt.paymentMethod === "qr-transfer" ? (
           <div className="flex justify-between">
             <dt>{COUNTER_PAYMENT_METHOD_LABELS["qr-transfer"]}</dt>
             <dd>{receipt.paymentReference ?? "đã nhận"}</dd>
@@ -254,13 +296,16 @@ function ReceiptSheet({ id, site, receipt }: { id: string; site: ErpSite; receip
   );
 }
 
-export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
+export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoan = null }: Props) {
   const router = useRouter();
+  const [loai, setLoai] = useState<LoaiPhieu>(dienSanDoan ? "doan" : "le");
+  const [nguoiMoi, setNguoiMoi] = useState("");
+  const [lyDoMoi, setLyDoMoi] = useState("");
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [cashText, setCashText] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<CounterPaymentMethod>("cash");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "qr-transfer">("cash");
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [receipt, setReceipt] = useState<CounterSaleReceipt | null>(null);
   const [voiding, setVoiding] = useState<string | null>(null);
@@ -280,7 +325,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
   const readiness = counterSaleReadiness({ cart, cashReceivedVnd: cash, cashCountedConfirmed: confirmed, paymentMethod });
   // Khách quét QR (12/10/2026): mã đang chờ khách quét, và đường dẫn vé của
   // phiếu đang mở để gửi sang điện thoại khách.
-  const [maCho, setMaCho] = useState<{ url: string; expiresAt: number; key: string; totalVnd: number } | null>(null);
+  const [maCho, setMaCho] = useState<{ url: string; manKhachUrl: string; expiresAt: number; key: string; totalVnd: number } | null>(null);
   const [conGiay, setConGiay] = useState(0);
   const [veDienThoai, setVeDienThoai] = useState<{ saleCode: string; url: string } | null>(null);
 
@@ -347,7 +392,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
         requestKey: requestKey.current,
       });
       if (kq.ok) {
-        setMaCho({ url: kq.url, expiresAt: kq.expiresAt, key: requestKey.current, totalVnd: kq.totalVnd });
+        setMaCho({ url: kq.url, manKhachUrl: kq.manKhachUrl, expiresAt: kq.expiresAt, key: requestKey.current, totalVnd: kq.totalVnd });
         setConGiay(Math.ceil((kq.expiresAt - Date.now()) / 1000));
       } else {
         setMessage({ tone: "error", text: kq.message });
@@ -418,6 +463,30 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
     });
   }
 
+  function capVeMoi() {
+    if (pending || cart.partySize === 0) return;
+    setMessage(null);
+    startTransition(async () => {
+      const kq = await capVeMoiAction({
+        siteId: site.id,
+        adults,
+        children,
+        inviterAccountId: nguoiMoi,
+        reason: lyDoMoi,
+        requestKey: requestKey.current,
+      });
+      if (kq.ok) {
+        setMessage({ tone: "ok", text: kq.message });
+        soanPhieuMoi();
+        setLyDoMoi("");
+        moPhieu(kq.receipt);
+        router.refresh();
+      } else {
+        setMessage({ tone: "error", text: kq.message });
+      }
+    });
+  }
+
   function xacNhanHuy(saleCode: string) {
     if (pending) return;
     setMessage(null);
@@ -456,6 +525,44 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
       ) : (
         <div className="mt-5 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
+            <div role="tablist" aria-label="Loại phiếu" className="grid grid-cols-3 rounded-xl bg-[#eef3f0] p-1" data-testid="loai-phieu-quay">
+              {(["le", "doan", "moi"] as const).map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  role="tab"
+                  aria-selected={loai === item}
+                  onClick={() => {
+                    setLoai(item);
+                    setMessage(null);
+                    if (maCho) huyMaCho();
+                  }}
+                  className={`min-h-11 rounded-lg text-sm font-black ${loai === item ? "bg-[#183f34] text-white" : "text-[#42574e]"}`}
+                  {...(item === "doan"
+                    ? { "data-chi": "phieu-doan", "data-chi-loi": "Bấm Vé đoàn: ghi trưởng đoàn, chọn công ty để có ưu đãi, rồi thu tiền." }
+                    : item === "moi"
+                      ? { "data-chi": "ve-moi", "data-chi-loi": "Bấm Vé mời: chọn người mời, ghi lý do, cấp vé 0 đ." }
+                      : {})}
+                >
+                  {TEN_LOAI[item]}
+                </button>
+              ))}
+            </div>
+
+            {loai === "doan" ? (
+              <BanVeDoan
+                site={site}
+                prices={prices}
+                congTy={workspace.congTy}
+                dienSan={dienSanDoan}
+                onDaBan={(phieu, text) => {
+                  setMessage({ tone: "ok", text });
+                  moPhieu(phieu);
+                  router.refresh();
+                }}
+              />
+            ) : (
+            <>
             <div className="grid gap-3 sm:grid-cols-2">
               <Stepper
                 label="Người lớn"
@@ -494,6 +601,51 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
               </p>
             </div>
 
+            {loai === "moi" ? (
+              <div className="space-y-3 rounded-xl border-2 border-[#e7c78d] bg-[#fff8eb] p-4" data-testid="ve-moi">
+                <p className="text-sm leading-6 text-[#5d5037]">
+                  Vé mời không thu tiền. Phiếu ghi trị giá vé, <strong>người mời</strong> và lý do; báo cáo và đối soát cuối ca tách riêng,
+                  không lẫn vào tiền bán. Tối đa {COUNTER_COMP_MAX} khách một phiếu.
+                </p>
+                <label className="block text-xs font-black text-[#5c6f67]">
+                  Người mời
+                  <select
+                    value={nguoiMoi}
+                    onChange={(e) => setNguoiMoi(e.target.value)}
+                    className="mt-1 min-h-11 w-full rounded-xl border border-[#ccd8d1] bg-white px-3 text-sm text-[#20342c]"
+                  >
+                    <option value="">Chọn người mời…</option>
+                    {workspace.nguoiMoi.map((nguoi) => (
+                      <option key={nguoi.id} value={nguoi.id}>
+                        {nguoi.name} · {nguoi.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs font-black text-[#5c6f67]">
+                  Lý do mời
+                  <input
+                    value={lyDoMoi}
+                    onChange={(e) => setLyDoMoi(e.target.value)}
+                    maxLength={300}
+                    placeholder="Ví dụ: Đoàn báo chí khảo sát lễ hội"
+                    className="mt-1 min-h-11 w-full rounded-xl border border-[#ccd8d1] bg-white px-3 text-sm text-[#20342c]"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={capVeMoi}
+                  disabled={pending || cart.partySize === 0 || cart.partySize > COUNTER_COMP_MAX || !nguoiMoi || lyDoMoi.trim().length < 5}
+                  className="min-h-12 w-full rounded-xl bg-[#183f34] px-5 text-base font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {pending ? "Đang cấp vé…" : `Cấp vé mời · ${cart.partySize} khách · 0 đ`}
+                </button>
+                <p className="text-xs text-[#6e7b75]">
+                  {!nguoiMoi ? "Chọn người mời." : lyDoMoi.trim().length < 5 ? "Ghi lý do mời, ít nhất năm ký tự." : cart.partySize > COUNTER_COMP_MAX ? `Tối đa ${COUNTER_COMP_MAX} khách.` : `Trị giá vé ${formatVnd(cart.totalVnd)}, ghi vào sổ vé mời.`}
+                </p>
+              </div>
+            ) : (
+            <>
             <div role="radiogroup" aria-label="Cách khách trả tiền" className="grid grid-cols-2 gap-2">
               {(["cash", "qr-transfer"] as const).map((pt) => (
                 <button
@@ -552,6 +704,14 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
               <div className="space-y-3" data-testid="khach-quet-qr">
                 {maCho ? (
                   <>
+                    <button
+                      type="button"
+                      onClick={() => window.open(maCho.manKhachUrl, "nbj-man-khach")}
+                      data-testid="mo-man-khach"
+                      className="min-h-12 w-full rounded-xl bg-[#e7c78d] px-4 text-sm font-black text-[#183f34]"
+                    >
+                      Mở màn hình cho khách (số tiền, đồng hồ 15 phút)
+                    </button>
                     <DuaVeChoKhach
                       url={maCho.url}
                       tieuDe={`Mời khách quét · ${formatVnd(maCho.totalVnd)}`}
@@ -621,6 +781,10 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
             ) : null}
             </>
             ) : null}
+            </>
+            )}
+            </>
+            )}
             {message ? (
               <p
                 role={message.tone === "error" ? "alert" : "status"}
@@ -704,6 +868,16 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <span className="font-mono font-bold">{sale.saleCode}</span>
+                          {sale.saleKind === "group" ? (
+                            <span className="ml-2 rounded-full bg-[#e1edf4] px-2 py-0.5 text-xs font-bold text-[#315f79]">
+                              Đoàn · {sale.groupLeaderName}
+                              {sale.travelCompany ? ` · ${sale.travelCompany.name}` : ""}
+                            </span>
+                          ) : sale.saleKind === "comp" ? (
+                            <span className="ml-2 rounded-full bg-[#fff0ce] px-2 py-0.5 text-xs font-bold text-[#77531c]">
+                              Vé mời · {sale.compInviterName}
+                            </span>
+                          ) : null}
                           {daQuaCong ? (
                             <span className="ml-2 rounded-full bg-[#e7efe9] px-2 py-0.5 text-xs font-bold text-[#35594b]">Đã qua cổng</span>
                           ) : null}

@@ -124,6 +124,11 @@ function readCounterCashRow(value: unknown): ShiftCounterCash | null {
     qrTotalVnd: Number(row.qr_total_vnd ?? 0),
     voidedCount: Number(row.voided_count ?? 0),
     voidedVnd: Number(row.voided_vnd ?? 0),
+    // Trước migration 118 máy chủ chưa trả bốn trường này.
+    compCount: Number(row.comp_count ?? 0),
+    compGuests: Number(row.comp_guests ?? 0),
+    groupCount: Number(row.group_count ?? 0),
+    groupDiscountVnd: Number(row.discount_vnd ?? 0),
     sellers: sellers.map((entry) => {
       const item = (entry ?? {}) as Record<string, unknown>;
       const accountId = String(item.account_id ?? "");

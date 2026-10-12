@@ -1,7 +1,7 @@
 "use server";
 
 import { counterPaymentReference } from "@/domain/erp-counter-sale";
-import { CounterSaleRepositoryError, createCounterSale } from "@/lib/erp/counter-sale-repository";
+import { CounterSaleRepositoryError, createCounterGroupSale, createCounterSale } from "@/lib/erp/counter-sale-repository";
 import { moPhieuQuay, PhieuQuayError } from "@/lib/erp/phieu-quay";
 import { timPhieuCuaMa } from "./tim-phieu";
 import { veTuPhieu, type VeQuayHienThi } from "./ve-tu-phieu";
@@ -24,8 +24,30 @@ export async function xacNhanQuetAction(ma: string): Promise<XacNhanQuetResult> 
   if (phieu.loai !== "cho") return { ok: false, message: "Mã này chỉ để xem lại vé." };
   try {
     const daCo = await timPhieuCuaMa(phieu);
+    const chung = {
+      siteId: phieu.siteId,
+      actorAccountId: phieu.actorAccountId,
+      actorName: phieu.actorName,
+      actingDirectorAccountId: phieu.actingDirectorAccountId,
+      paymentMethod: "qr-transfer" as const,
+      cashReceivedVnd: 0,
+      paymentReference: counterPaymentReference(phieu.requestKey),
+      cashCountedConfirmed: true,
+      requestKey: phieu.requestKey,
+    };
     const receipt =
       daCo ??
+      (phieu.doan
+        ? await createCounterGroupSale({
+            ...chung,
+            partySize: phieu.adults,
+            groupLabel: phieu.doan.groupLabel,
+            leaderName: phieu.doan.leaderName,
+            leaderPhone: phieu.doan.leaderPhone,
+            travelCompanyId: phieu.doan.travelCompanyId,
+            invoiceRequested: phieu.doan.invoiceRequested,
+          })
+        : null) ??
       (await createCounterSale({
         siteId: phieu.siteId,
         actorAccountId: phieu.actorAccountId,

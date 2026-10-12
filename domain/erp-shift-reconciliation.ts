@@ -210,6 +210,12 @@ export type ShiftCounterCash = {
   qrTotalVnd: number;
   voidedCount: number;
   voidedVnd: number;
+  /** Vé mời 0 đ (migration 118): không có tiền, đếm riêng để không lẫn vào tiền bán. */
+  compCount: number;
+  compGuests: number;
+  /** Phiếu đoàn trong ca và tổng tiền ưu đãi công ty đã giảm. */
+  groupCount: number;
+  groupDiscountVnd: number;
   sellers: readonly CounterSeller[];
 };
 

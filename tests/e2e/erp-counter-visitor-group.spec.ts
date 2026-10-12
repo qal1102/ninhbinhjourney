@@ -99,12 +99,25 @@ async function maThanhVienCua(groupCode: string): Promise<MemberRow[]> {
   return members;
 }
 
-/** Lập một phiếu đoàn tại quầy, đúng cách nhân viên làm: gõ hai ô rồi bấm. */
+const TRUONG_DOAN = "HDV Kiểm Thử";
+
+/**
+ * Bán một vé đoàn ở quầy, đúng cách nhân viên làm từ 12/10/2026 (migration
+ * 118): ô Vé đoàn, số người, trưởng đoàn, thu đủ tiền mặt, tích đã đếm, bấm.
+ */
+async function dienVeDoan(page: Page, soNguoi: number, nhan: string) {
+  const khoi = page.getByTestId("ban-ve-doan");
+  await khoi.getByLabel("Số người").fill(String(soNguoi));
+  await khoi.getByLabel("Trưởng đoàn / hướng dẫn viên").fill(TRUONG_DOAN);
+  await khoi.getByLabel("Nhãn đoàn (không bắt buộc)").fill(nhan);
+  await khoi.getByRole("button", { name: "Đủ tiền" }).click();
+  await khoi.getByRole("checkbox", { name: /Tôi đã đếm đủ/ }).check();
+}
+
 async function lapPhieuDoan(page: Page, soNguoi: number, nhan: string) {
-  await page.getByLabel("Số người").fill(String(soNguoi));
-  await page.getByLabel("Nhãn đoàn").fill(nhan);
-  await page.getByRole("button", { name: "Lập phiếu đoàn" }).click();
-  const ma = page.locator("p.font-mono").filter({ hasText: /^DOAN-/ });
+  await dienVeDoan(page, soNguoi, nhan);
+  await page.getByRole("button", { name: "Thu tiền, cấp vé đoàn" }).click();
+  const ma = page.getByTestId("ket-qua-ve-doan").locator("p.font-mono").filter({ hasText: /^DOAN-/ });
   await expect(ma).toBeVisible({ timeout: 20_000 });
   return ((await ma.textContent()) ?? "").trim();
 }
@@ -112,7 +125,8 @@ async function lapPhieuDoan(page: Page, soNguoi: number, nhan: string) {
 async function moManHinhQuay(page: Page) {
   await loginAsDirector(page);
   await page.goto("/erp/trang-an/ve-dat-cho");
-  await expect(page.getByRole("heading", { name: "Lập phiếu đoàn, đưa QR cho khách" })).toBeVisible();
+  await page.getByRole("tab", { name: "Vé đoàn" }).click();
+  await expect(page.getByTestId("ban-ve-doan")).toBeVisible();
 }
 
 // --- Bước 1 + 2 ------------------------------------------------------------
@@ -123,7 +137,7 @@ test("bước 1+2: quầy lập được phiếu đoàn nhỏ và đoàn 45 ch�
   const nhanNho = `Đoàn thử nhỏ ${randomUUID().slice(0, 8)}`;
   const maNho = await lapPhieuDoan(page, 4, nhanNho);
   expect(maNho, "mã đoàn phải do máy sinh, đúng khuôn DOAN- cộng 10 ký tự").toMatch(/^DOAN-[A-Z0-9]{10}$/);
-  await expect(page.getByText(`${nhanNho} · 4 người`)).toBeVisible();
+  await expect(page.getByText(`${TRUONG_DOAN} · 4 người`)).toBeVisible();
 
   const thanhVienNho = await maThanhVienCua(maNho);
   expect(thanhVienNho).toHaveLength(4);
@@ -135,7 +149,7 @@ test("bước 1+2: quầy lập được phiếu đoàn nhỏ và đoàn 45 ch�
   const nhanXe = `Đoàn Hà Nội 45 chỗ ${randomUUID().slice(0, 8)}`;
   const maXe = await lapPhieuDoan(page, 45, nhanXe);
   expect(maXe).not.toBe(maNho);
-  await expect(page.getByText(`${nhanXe} · 45 người`)).toBeVisible();
+  await expect(page.getByText(`${TRUONG_DOAN} · 45 người`)).toBeVisible();
 
   const thanhVienXe = await maThanhVienCua(maXe);
   expect(thanhVienXe, "đoàn 45 người phải có đủ 45 mã riêng").toHaveLength(45);
@@ -212,7 +226,10 @@ test("bước 4: quét mã một người ở cổng — lượt đầu nhận, 
 });
 
 /**
- * DEFECT-A · chặn hẳn.
+ * DEFECT-A · đã vá 12/10/2026: cổng đổi mã đoàn sang mã vé của đoàn
+ * (`ticketCodeForGroupCode`) rồi soát như thường.
+ *
+ * Ghi chú cũ, giữ để hiểu vì sao có bài này: DEFECT-A · chặn hẳn.
  *
  * Màn hình quầy in ra một mã QR chứa **mã đoàn** (`DOAN-…`) và bảo nhân viên
  * "Đưa mã QR này cho khách quét ở cổng"
@@ -225,8 +242,7 @@ test("bước 4: quét mã một người ở cổng — lượt đầu nhận, 
  * đang ghi lại một chỗ hỏng, và ngày ai đó vá xong thì bài tự đỏ để nhắc gỡ
  * chú thích này — chứ không lặng lẽ khoá chỗ hỏng lại.
  */
-test("bước 2 + 4 · DEFECT-A: mã QR quầy đưa cho khách lại không quét được ở cổng", async ({ page }) => {
-  test.fail();
+test("bước 2 + 4 · DEFECT-A đã vá: mã QR đoàn quầy đưa cho khách quét được ở cổng", async ({ page }) => {
   await moManHinhQuay(page);
   const ma = await lapPhieuDoan(page, 2, `Đoàn QR đoàn ${randomUUID().slice(0, 8)}`);
 
@@ -334,15 +350,14 @@ test("bước 6: gửi lại sau khi mất kết nối trả về đúng tấm p
     await route.abort("failed");
   });
 
-  await page.getByLabel("Số người").fill("7");
-  await page.getByLabel("Nhãn đoàn").fill(nhan);
-  await page.getByRole("button", { name: "Lập phiếu đoàn" }).click();
-  await expect(page.getByRole("button", { name: "Lập phiếu đoàn" })).toBeEnabled({ timeout: 20_000 });
-  await expect(page.locator("p.font-mono").filter({ hasText: /^DOAN-/ })).toHaveCount(0);
+  await dienVeDoan(page, 7, nhan);
+  await page.getByRole("button", { name: "Thu tiền, cấp vé đoàn" }).click();
+  await expect(page.getByRole("button", { name: "Thu tiền, cấp vé đoàn" })).toBeEnabled({ timeout: 20_000 });
+  await expect(page.getByTestId("ket-qua-ve-doan")).toHaveCount(0);
 
-  // Bấm lại đúng như nhân viên sẽ làm. Hai ô vẫn còn nguyên chữ đã gõ.
-  await page.getByRole("button", { name: "Lập phiếu đoàn" }).click();
-  const ma = page.locator("p.font-mono").filter({ hasText: /^DOAN-/ });
+  // Bấm lại đúng như nhân viên sẽ làm. Các ô vẫn còn nguyên chữ đã gõ.
+  await page.getByRole("button", { name: "Thu tiền, cấp vé đoàn" }).click();
+  const ma = page.getByTestId("ket-qua-ve-doan").locator("p.font-mono").filter({ hasText: /^DOAN-/ });
   await expect(ma).toBeVisible({ timeout: 20_000 });
 
   const doan = (await docKho(

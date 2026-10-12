@@ -8,6 +8,9 @@ export type VeQuayHienThi = {
   businessDate: string;
   totalVnd: number;
   daHuy: boolean;
+  /** Có khi là vé đoàn: mã đoàn để mở trang trưởng đoàn. */
+  doan: { groupCode: string | null; leaderName: string; companyName: string | null; discountVnd: number } | null;
+  laVeMoi: boolean;
   lines: { ticketCode: string; product: CounterProduct; quantity: number; entriesAllowed: number; entriesUsed: number }[];
 };
 
@@ -18,6 +21,16 @@ export function veTuPhieu(siteId: ErpSiteId, receipt: CounterSaleReceipt): VeQua
     businessDate: receipt.businessDate,
     totalVnd: receipt.totalVnd,
     daHuy: receipt.status === "voided",
+    doan:
+      receipt.saleKind === "group"
+        ? {
+            groupCode: receipt.groupCode,
+            leaderName: receipt.groupLeaderName ?? "",
+            companyName: receipt.travelCompany?.name ?? null,
+            discountVnd: receipt.discountVnd,
+          }
+        : null,
+    laVeMoi: receipt.saleKind === "comp",
     lines: receipt.lines.map((line) => ({
       ticketCode: line.ticketCode,
       product: line.product,

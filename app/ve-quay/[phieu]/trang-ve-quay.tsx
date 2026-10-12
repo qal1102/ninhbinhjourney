@@ -85,11 +85,27 @@ export function TrangVeQuay({
             {ve.daHuy ? "×" : "✓"}
           </div>
           <h1 className="font-display mt-4 text-3xl">
-            {ve.daHuy ? t("Vé này đã huỷ", "This ticket was cancelled") : vuaTra ? t("Thanh toán thành công", "Payment successful") : t("Vé của bạn", "Your ticket")}
+            {ve.daHuy
+              ? t("Vé này đã huỷ", "This ticket was cancelled")
+              : vuaTra
+                ? t("Thanh toán thành công", "Payment successful")
+                : ve.doan
+                  ? t("Vé đoàn của bạn", "Your group ticket")
+                  : ve.laVeMoi
+                    ? t("Vé mời của bạn", "Your complimentary ticket")
+                    : t("Vé của bạn", "Your ticket")}
           </h1>
           <p className="mt-2 text-white/75">
-            {ve.siteName} · {tongLuot} {t("lượt vào", tongLuot === 1 ? "entry" : "entries")} · {ve.totalVnd.toLocaleString("vi-VN")} đ
+            {ve.siteName} · {tongLuot} {t("lượt vào", tongLuot === 1 ? "entry" : "entries")} ·{" "}
+            {ve.laVeMoi ? t("vé mời, không thu tiền", "complimentary") : `${ve.totalVnd.toLocaleString("vi-VN")} đ`}
           </p>
+          {ve.doan ? (
+            <p className="mt-1 text-sm text-white/75">
+              {t("Trưởng đoàn", "Group leader")} {ve.doan.leaderName}
+              {ve.doan.companyName ? ` · ${ve.doan.companyName}` : ""}
+              {ve.doan.discountVnd > 0 ? ` · ${t("ưu đãi", "discount")} ${ve.doan.discountVnd.toLocaleString("vi-VN")} đ` : ""}
+            </p>
+          ) : null}
           <p className="mt-1 text-sm text-white/60">
             {t("Dùng trong ngày", "Valid on")} {ngay(ve.businessDate)} · {ve.saleCode}
           </p>
@@ -116,6 +132,15 @@ export function TrangVeQuay({
                 </li>
               ))}
             </ul>
+            {ve.doan?.groupCode ? (
+              <a
+                href={`/doan/truong/${ve.doan.groupCode}`}
+                data-testid="ve-quay-trang-truong-doan"
+                className="mt-6 flex min-h-12 items-center justify-center rounded-full border-2 border-[#183f34] px-5 text-center font-extrabold text-[#183f34]"
+              >
+                {t("Trang trưởng đoàn: mã từng người, ai đã qua cổng", "Group leader page: personal codes, who has entered")}
+              </a>
+            ) : null}
             <LuuAnhVe
               orderCode={ve.saleCode}
               productName={ve.siteName}

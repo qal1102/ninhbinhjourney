@@ -41,13 +41,31 @@ function ngayVietNam(value: string) {
 /** Nội dung phiếu thu dạng dòng, dùng cho máy in nhiệt Bluetooth. */
 export function receiptLinesForSale(siteName: string, receipt: CounterSaleReceipt): PrintLine[] {
   const lines: PrintLine[] = [
-    { kind: "text", text: "PHIẾU THU BÁN VÉ", bold: true, center: true, small: true },
+    {
+      kind: "text",
+      text: receipt.saleKind === "group" ? "PHIẾU THU VÉ ĐOÀN" : receipt.saleKind === "comp" ? "PHIẾU VÉ MỜI" : "PHIẾU THU BÁN VÉ",
+      bold: true,
+      center: true,
+      small: true,
+    },
     { kind: "title", text: siteName },
     { kind: "text", text: receipt.saleCode, center: true, bold: true },
     { kind: "text", text: gioVietNam(receipt.soldAt), center: true, small: true },
   ];
   if (receipt.status === "voided") lines.push({ kind: "text", text: "ĐÃ HUỶ", center: true, bold: true });
   lines.push({ kind: "rule" });
+  if (receipt.saleKind === "group") {
+    lines.push({ kind: "text", text: `Trưởng đoàn: ${receipt.groupLeaderName ?? ""}${receipt.groupLeaderPhone ? ` · ${receipt.groupLeaderPhone}` : ""}`, small: true });
+    if (receipt.travelCompany) {
+      lines.push({ kind: "text", text: `Công ty: ${receipt.travelCompany.name}${receipt.travelCompany.taxCode ? ` · MST ${receipt.travelCompany.taxCode}` : ""}`, small: true });
+    }
+    if (receipt.groupCode) lines.push({ kind: "text", text: `Mã đoàn: ${receipt.groupCode}`, small: true });
+    lines.push({ kind: "rule" });
+  } else if (receipt.saleKind === "comp") {
+    lines.push({ kind: "text", text: `Người mời: ${receipt.compInviterName ?? ""}`, small: true });
+    lines.push({ kind: "text", text: `Lý do: ${receipt.compReason ?? ""}`, small: true });
+    lines.push({ kind: "rule" });
+  }
   for (const line of receipt.lines) {
     lines.push({
       kind: "row",
@@ -56,8 +74,17 @@ export function receiptLinesForSale(siteName: string, receipt: CounterSaleReceip
     });
   }
   lines.push({ kind: "rule" });
+  if (receipt.discountVnd > 0) {
+    lines.push({
+      kind: "row",
+      left: receipt.saleKind === "comp" ? "Vé mời" : `Ưu đãi ${receipt.discountPercent}%`,
+      right: `-${formatVnd(receipt.discountVnd)}`,
+    });
+  }
   lines.push({ kind: "row", left: "Tổng tiền", right: formatVnd(receipt.totalVnd), bold: true });
-  if (receipt.paymentMethod === "qr-transfer") {
+  if (receipt.paymentMethod === "complimentary") {
+    lines.push({ kind: "row", left: "Vé mời", right: "0 đ" });
+  } else if (receipt.paymentMethod === "qr-transfer") {
     lines.push({ kind: "row", left: "Chuyển khoản QR", right: formatVnd(receipt.totalVnd) });
     if (receipt.paymentReference) lines.push({ kind: "text", text: `Nội dung: ${receipt.paymentReference}`, small: true });
   } else {

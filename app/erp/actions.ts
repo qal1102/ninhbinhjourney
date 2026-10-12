@@ -1108,7 +1108,7 @@ export async function createCounterSaleAction(input: {
 }
 
 export type MaKhachQuetResult =
-  | { ok: true; url: string; expiresAt: number; totalVnd: number }
+  | { ok: true; url: string; manKhachUrl: string; expiresAt: number; totalVnd: number }
   | { ok: false; message: string };
 
 /**
@@ -1153,7 +1153,7 @@ export async function taoMaKhachQuetAction(input: {
       totalVnd: cart.totalVnd,
       expiresAt,
     });
-    return { ok: true, url: absoluteUrl(`/ve-quay/${ma}`), expiresAt, totalVnd: cart.totalVnd };
+    return { ok: true, url: absoluteUrl(`/ve-quay/${ma}`), manKhachUrl: absoluteUrl(`/man-khach/${ma}`), expiresAt, totalVnd: cart.totalVnd };
   } catch (error) {
     if (error instanceof PhieuQuayError) return { ok: false, message: error.message };
     return { ok: false, message: "Chưa tạo được mã cho khách quét. Xin thử lại." };

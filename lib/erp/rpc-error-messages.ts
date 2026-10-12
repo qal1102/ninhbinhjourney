@@ -684,6 +684,14 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
     "Chưa đánh dấu đã đếm tiền và bỏ vào quỹ, nên phiếu chưa được lưu.",
   COUNTER_SALE_CASH_SHORT: "Số tiền khách đưa chưa đủ tổng theo bảng giá hôm nay.",
   COUNTER_SALE_PRICE_MISSING: "Quầy chưa có giá cho loại vé này. Xin báo quản lý.",
+  GROUP_SALE_INPUT_INVALID:
+    "Vé đoàn cần từ 2 đến 45 người và tên trưởng đoàn; xuất hoá đơn thì phải chọn công ty. Số điện thoại chỉ gồm chữ số.",
+  COMP_SALE_INPUT_INVALID: "Vé mời tối đa 20 khách một phiếu và cần ghi lý do mời, ít nhất năm ký tự.",
+  COMP_SALE_INVITER_INVALID: "Người mời phải là một tài khoản đang làm việc trong hệ thống.",
+  TRAVEL_COMPANY_INPUT_INVALID:
+    "Thông tin công ty chưa hợp lệ: tên ít nhất hai ký tự, mã số thuế 10 số (hoặc 10 số kèm -3 số), email và số điện thoại đúng dạng.",
+  TRAVEL_COMPANY_NOT_FOUND: "Không tìm thấy công ty lữ hành này. Xin tải lại trang.",
+  TRAVEL_COMPANY_DISCOUNT_DIRECTOR_ONLY: "Chỉ giám đốc được đặt mức ưu đãi riêng cho công ty.",
   COUNTER_SALE_VOID_REASON_REQUIRED: "Xin ghi lý do huỷ, ít nhất mười ký tự.",
   COUNTER_SALE_VOID_NOT_ALLOWED: "Chỉ quản lý cơ sở hoặc giám đốc được huỷ vé.",
   COUNTER_SALE_VOID_OWN_SALE:

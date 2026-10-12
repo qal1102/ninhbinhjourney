@@ -36,6 +36,19 @@ export type PhieuQuayCho = {
   totalVnd: number;
   /** Hết giữ chỗ, mili giây. */
   expiresAt: number;
+  /** Có khi đây là vé đoàn (migration 118): `adults` là số người cả đoàn. */
+  doan?: PhieuDoan;
+};
+
+export type PhieuDoan = {
+  leaderName: string;
+  leaderPhone: string | null;
+  travelCompanyId: string | null;
+  invoiceRequested: boolean;
+  groupLabel: string;
+  /** Chỉ để hiện trên màn khách; kho tự tính lại. */
+  companyName: string | null;
+  discountPercent: number;
 };
 
 export type PhieuQuayVe = {
@@ -91,6 +104,17 @@ export function niemPhieuQuay(phieu: PhieuQuay, khoa: Buffer = khoaPhieuQuay()):
           k: phieu.requestKey,
           t: phieu.totalVnd,
           e: phieu.expiresAt,
+          g: phieu.doan
+            ? {
+                l: phieu.doan.leaderName,
+                p: phieu.doan.leaderPhone ?? undefined,
+                c: phieu.doan.travelCompanyId ?? undefined,
+                h: phieu.doan.invoiceRequested ? 1 : undefined,
+                b: phieu.doan.groupLabel || undefined,
+                n: phieu.doan.companyName ?? undefined,
+                d: phieu.doan.discountPercent || undefined,
+              }
+            : undefined,
         };
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", khoa, iv);
@@ -127,7 +151,27 @@ export function moPhieuQuay(
     }
     return { loai: "ve", siteId: nen.s, saleCode: nen.m as string, viewerAccountId: nen.u as string, businessDate: nen.b };
   }
-  const { a, c, u, n, d, k, t, e } = nen;
+  const { a, c, u, n, d, k, t, e, g } = nen;
+  let doan: PhieuDoan | undefined;
+  if (g !== undefined) {
+    const x = (g && typeof g === "object" ? g : {}) as Record<string, unknown>;
+    if (
+      !chu(x.l, 2, 120) || (x.p !== undefined && !chu(x.p, 8, 20)) || (x.c !== undefined && !chu(x.c, 36, 36))
+      || (x.b !== undefined && !chu(x.b, 1, 120)) || (x.n !== undefined && !chu(x.n, 1, 200))
+      || (x.d !== undefined && !so(x.d, 0, 100)) || !so(a, 2, 45) || c !== 0
+    ) {
+      throw new PhieuQuayError(HONG, "PHIEU_HONG");
+    }
+    doan = {
+      leaderName: x.l as string,
+      leaderPhone: (x.p as string | undefined) ?? null,
+      travelCompanyId: (x.c as string | undefined) ?? null,
+      invoiceRequested: x.h === 1,
+      groupLabel: (x.b as string | undefined) ?? "",
+      companyName: (x.n as string | undefined) ?? null,
+      discountPercent: (x.d as number | undefined) ?? 0,
+    };
+  }
   if (
     nen.l !== "c"
     || !so(a, 0, 45) || !so(c, 0, 45) || (a as number) + (c as number) < 1 || (a as number) + (c as number) > 45
@@ -150,5 +194,6 @@ export function moPhieuQuay(
     requestKey: k as string,
     totalVnd: t as number,
     expiresAt: e,
+    ...(doan ? { doan } : {}),
   };
 }

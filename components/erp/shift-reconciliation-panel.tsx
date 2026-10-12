@@ -368,6 +368,7 @@ export function ShiftReconciliationPanel({
             </p>
           ) : reconciliation.counterCash.count +
               reconciliation.counterCash.qrCount +
+              reconciliation.counterCash.compCount +
               reconciliation.counterCash.voidedCount ===
             0 ? (
             <p className="mt-2 text-sm font-medium text-[#5f7068]">
@@ -388,6 +389,21 @@ export function ShiftReconciliationPanel({
                     {formatVnd(reconciliation.counterCash.qrTotalVnd)}
                   </strong>{" "}
                   · {formatCount(reconciliation.counterCash.qrCount)} phiếu, tiền nằm ở tài khoản ngân hàng
+                </p>
+              ) : null}
+              {reconciliation.counterCash.groupCount > 0 ? (
+                <p className="mt-1 text-xs font-medium text-[#3f5048]" data-testid="doi-soat-ve-doan">
+                  {formatCount(reconciliation.counterCash.groupCount)} phiếu đoàn
+                  {reconciliation.counterCash.groupDiscountVnd > 0
+                    ? `, đã giảm ${formatVnd(reconciliation.counterCash.groupDiscountVnd)} ưu đãi công ty`
+                    : ""}{" "}
+                  (đã nằm trong số tiền trên)
+                </p>
+              ) : null}
+              {reconciliation.counterCash.compCount > 0 ? (
+                <p className="mt-1 text-xs font-medium text-[#77531c]" data-testid="doi-soat-ve-moi">
+                  {formatCount(reconciliation.counterCash.compCount)} phiếu vé mời ·{" "}
+                  {formatCount(reconciliation.counterCash.compGuests)} khách · 0 đ, không vào quỹ
                 </p>
               ) : null}
               {reconciliation.counterCash.voidedCount > 0 ? (

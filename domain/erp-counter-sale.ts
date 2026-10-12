@@ -17,12 +17,120 @@ export const COUNTER_PRODUCT_LABELS: Readonly<Record<CounterProduct, string>> = 
   child: "Trẻ dưới 1m3",
 });
 
-export type CounterPaymentMethod = "cash" | "qr-transfer";
+export type CounterPaymentMethod = "cash" | "qr-transfer" | "complimentary";
 
 export const COUNTER_PAYMENT_METHOD_LABELS: Readonly<Record<CounterPaymentMethod, string>> = Object.freeze({
   cash: "Tiền mặt",
   "qr-transfer": "Chuyển khoản QR",
+  complimentary: "Vé mời, không thu tiền",
 });
+
+/** Phiếu lẻ, phiếu đoàn (migration 118) hay vé mời 0 đ. */
+export type CounterSaleKind = "single" | "group" | "comp";
+
+/** Đoàn ở quầy: từ 2 tới 45 người, khớp `erp_create_counter_group_sale`. */
+export const COUNTER_GROUP_MIN = 2;
+/** Vé mời: tối đa 20 khách một phiếu. */
+export const COUNTER_COMP_MAX = 20;
+
+/**
+ * Giá vé đoàn, cùng phép tính với `erp_create_counter_group_sale`: giá người
+ * lớn × số người, giảm theo phần trăm ưu đãi của công ty, tiền giảm làm tròn
+ * xuống nghìn đồng. Chỉ để hiện trước; máy chủ tự tính lại.
+ */
+export function giaVeDoan(input: { unitPriceVnd: number; partySize: number; discountPercent: number }) {
+  const tamTinh = Math.max(0, Math.trunc(input.unitPriceVnd)) * Math.max(0, Math.trunc(input.partySize));
+  const phanTram = Math.min(100, Math.max(0, Math.trunc(input.discountPercent)));
+  const giam = Math.floor((tamTinh * phanTram) / 100 / 1000) * 1000;
+  return { tamTinhVnd: tamTinh, giamVnd: giam, tongVnd: tamTinh - giam, phanTram };
+}
+
+/** Bậc ưu đãi theo số đoàn đã trả trong năm, khớp `erp_travel_company_standing`. */
+export function bacUuDai(soDoanNam: number): { phanTram: number; mocKe: number | null } {
+  if (soDoanNam >= 20) return { phanTram: 10, mocKe: null };
+  if (soDoanNam >= 10) return { phanTram: 8, mocKe: 20 };
+  if (soDoanNam >= 5) return { phanTram: 5, mocKe: 10 };
+  return { phanTram: 0, mocKe: 5 };
+}
+
+export type TravelCompanyStanding = {
+  id: string;
+  name: string;
+  taxCode: string | null;
+  address: string;
+  invoiceEmail: string | null;
+  phone: string | null;
+  contactName: string;
+  specialDiscountPercent: number | null;
+  groupsThisYear: number;
+  guestsThisYear: number;
+  revenueThisYearVnd: number;
+  tierPercent: number;
+  nextTierAt: number | null;
+  discountPercent: number;
+  groupsAllTime: number;
+  lastGroupAt: string | null;
+};
+
+export function parseTravelCompanyStanding(value: unknown): TravelCompanyStanding | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const id = typeof row.company_id === "string" ? row.company_id : "";
+  if (!id) return null;
+  const so = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  return {
+    id,
+    name: String(row.name ?? ""),
+    taxCode: chuoiHoacNull(row.tax_code),
+    address: String(row.address ?? ""),
+    invoiceEmail: chuoiHoacNull(row.invoice_email),
+    phone: chuoiHoacNull(row.phone),
+    contactName: String(row.contact_name ?? ""),
+    specialDiscountPercent: row.special_discount_percent === null || row.special_discount_percent === undefined ? null : so(row.special_discount_percent),
+    groupsThisYear: so(row.groups_this_year),
+    guestsThisYear: so(row.guests_this_year),
+    revenueThisYearVnd: so(row.revenue_this_year_vnd),
+    tierPercent: so(row.tier_percent),
+    nextTierAt: row.next_tier_at === null || row.next_tier_at === undefined ? null : so(row.next_tier_at),
+    discountPercent: so(row.discount_percent),
+    groupsAllTime: so(row.groups_all_time),
+    lastGroupAt: chuoiHoacNull(row.last_group_at),
+  };
+}
+
+export type TravelCompanyHistoryRow = {
+  saleCode: string;
+  siteUuid: string;
+  soldAt: string;
+  guests: number;
+  totalVnd: number;
+  discountPercent: number;
+  discountVnd: number;
+  groupLeaderName: string;
+  invoiceRequested: boolean;
+  status: "completed" | "voided";
+};
+
+export function parseTravelCompanyHistory(value: unknown): TravelCompanyHistoryRow[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    if (typeof row.sale_code !== "string") return [];
+    return [{
+      saleCode: row.sale_code,
+      siteUuid: String(row.site_id ?? ""),
+      soldAt: String(row.sold_at ?? ""),
+      guests: Number(row.guests ?? 0),
+      totalVnd: Number(row.total_vnd ?? 0),
+      discountPercent: Number(row.discount_percent ?? 0),
+      discountVnd: Number(row.discount_vnd ?? 0),
+      groupLeaderName: String(row.group_leader_name ?? ""),
+      invoiceRequested: row.invoice_requested === true,
+      status: row.status === "voided" ? "voided" : "completed",
+    }];
+  });
+}
 
 /**
  * Mã nội dung chuyển khoản gợi ý cho khách ghi khi quét QR của quầy.
@@ -201,6 +309,16 @@ export type CounterSaleReceipt = {
   voidedAt: string | null;
   voidReason: string | null;
   lines: CounterSaleReceiptLine[];
+  saleKind: CounterSaleKind;
+  discountPercent: number;
+  discountVnd: number;
+  groupLeaderName: string | null;
+  groupLeaderPhone: string | null;
+  invoiceRequested: boolean;
+  compInviterName: string | null;
+  compReason: string | null;
+  groupCode: string | null;
+  travelCompany: { id: string; name: string; taxCode: string | null; address: string; invoiceEmail: string | null } | null;
 };
 
 function chuoiHoacNull(value: unknown) {
@@ -221,7 +339,8 @@ export function parseCounterSaleReceipt(value: unknown): CounterSaleReceipt | nu
     actingDirectorAccountId: chuoiHoacNull(row.acting_director_account_id),
     soldAt: String(row.sold_at ?? ""),
     businessDate: String(row.business_date ?? ""),
-    paymentMethod: row.payment_method === "qr-transfer" ? "qr-transfer" : "cash",
+    paymentMethod:
+      row.payment_method === "qr-transfer" ? "qr-transfer" : row.payment_method === "complimentary" ? "complimentary" : "cash",
     paymentReference: chuoiHoacNull(row.payment_reference),
     adults: Number(row.adults ?? 0),
     children: Number(row.children ?? 0),
@@ -232,6 +351,28 @@ export function parseCounterSaleReceipt(value: unknown): CounterSaleReceipt | nu
     voidedByName: chuoiHoacNull(row.voided_by_name),
     voidedAt: chuoiHoacNull(row.voided_at),
     voidReason: chuoiHoacNull(row.void_reason),
+    saleKind: row.sale_kind === "group" ? "group" : row.sale_kind === "comp" ? "comp" : "single",
+    discountPercent: Number(row.discount_percent ?? 0),
+    discountVnd: Number(row.discount_vnd ?? 0),
+    groupLeaderName: chuoiHoacNull(row.group_leader_name),
+    groupLeaderPhone: chuoiHoacNull(row.group_leader_phone),
+    invoiceRequested: row.invoice_requested === true,
+    compInviterName: chuoiHoacNull(row.comp_inviter_name),
+    compReason: chuoiHoacNull(row.comp_reason),
+    groupCode: chuoiHoacNull(row.group_code),
+    travelCompany: (() => {
+      const cty = row.travel_company;
+      if (!cty || typeof cty !== "object") return null;
+      const c = cty as Record<string, unknown>;
+      if (typeof c.id !== "string") return null;
+      return {
+        id: c.id,
+        name: String(c.name ?? ""),
+        taxCode: chuoiHoacNull(c.tax_code),
+        address: String(c.address ?? ""),
+        invoiceEmail: chuoiHoacNull(c.invoice_email),
+      };
+    })(),
     lines: lines.flatMap((item) => {
       if (!item || typeof item !== "object") return [];
       const line = item as Record<string, unknown>;

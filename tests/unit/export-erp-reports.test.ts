@@ -68,6 +68,10 @@ function shiftSource(overrides: Partial<ShiftReconciliationSource> = {}): ShiftR
         qrTotalVnd: 500_000,
         voidedCount: 1,
         voidedVnd: 250_000,
+        compCount: 0,
+        compGuests: 0,
+        groupCount: 0,
+        groupDiscountVnd: 0,
         sellers: [
           { accountId: "nv-2", displayName: "Lê Hoà", count: 14, totalVnd: 3_000_000, qrTotalVnd: 500_000 },
         ],

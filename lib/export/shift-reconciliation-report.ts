@@ -187,7 +187,7 @@ export function buildShiftReconciliationReport(input: {
       rows: [],
       emptyText: counterCashUnavailableReason || "Chưa đọc được tiền bán tại quầy của ca này.",
     });
-  } else if (counterCash.count + counterCash.qrCount + counterCash.voidedCount === 0) {
+  } else if (counterCash.count + counterCash.qrCount + counterCash.compCount + counterCash.voidedCount === 0) {
     tables.push({
       title: "Tiền bán tại quầy",
       columns: counterColumns,
@@ -205,6 +205,9 @@ export function buildShiftReconciliationReport(input: {
           : []),
         ...(counterCash.voidedCount > 0
           ? [["Phiếu đã huỷ, đã hoàn cho khách", counterCash.voidedCount, counterCash.voidedVnd]]
+          : []),
+        ...(counterCash.compCount > 0
+          ? [[`Vé mời, ${counterCash.compGuests} khách, không thu tiền`, counterCash.compCount, 0]]
           : []),
       ],
     });

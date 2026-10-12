@@ -6,11 +6,15 @@ import {
   parseCounterPriceHistory,
   parseCounterPrices,
   parseCounterSaleReceipt,
+  parseTravelCompanyHistory,
+  parseTravelCompanyStanding,
   type CounterPaymentMethod,
   type CounterPrice,
   type CounterPriceHistoryRow,
   type CounterProduct,
   type CounterSaleReceipt,
+  type TravelCompanyHistoryRow,
+  type TravelCompanyStanding,
 } from "@/domain/erp-counter-sale";
 import { findRpcBusinessMessage } from "@/lib/erp/rpc-error-messages";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
@@ -69,11 +73,18 @@ function vietnamToday() {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
 }
 
+/** Người được ghi là "người mời" của vé mời: tài khoản đang làm việc. */
+export type NguoiMoi = { id: string; name: string; title: string };
+
 export type CounterSaleWorkspace =
   | {
       available: true;
       prices: CounterPrice[];
       sales: CounterSaleReceipt[];
+      /** Công ty lữ hành kèm số đoàn trong năm và mức ưu đãi (migration 118). */
+      congTy: TravelCompanyStanding[];
+      /** Trang điền sau từ danh bạ nhân sự. */
+      nguoiMoi: NguoiMoi[];
     }
   | { available: false; message: string };
 
@@ -98,7 +109,7 @@ export async function getCounterSaleWorkspace(input: {
     };
   }
   const siteUuid = ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId];
-  const [prices, sales] = await Promise.all([
+  const [prices, sales, congTy] = await Promise.all([
     client.rpc("erp_counter_current_prices", { p_tenant_id: TENANT_ID, p_site_id: siteUuid }),
     client.rpc("erp_counter_sales_for_day", {
       p_tenant_id: TENANT_ID,
@@ -106,6 +117,8 @@ export async function getCounterSaleWorkspace(input: {
       p_viewer_account_id: input.viewerAccountId,
       p_business_date: vietnamToday(),
     }),
+    // Kho chưa có migration 118 thì quầy vẫn bán vé lẻ được, chỉ thiếu danh sách công ty.
+    client.rpc("erp_travel_companies_list", { p_tenant_id: TENANT_ID }),
   ]);
   if (prices.error || sales.error) {
     const error = prices.error ?? sales.error;
@@ -127,6 +140,11 @@ export async function getCounterSaleWorkspace(input: {
           return receipt ? [receipt] : [];
         })
       : [],
+    congTy:
+      !congTy.error && Array.isArray(congTy.data)
+        ? congTy.data.flatMap((item) => parseTravelCompanyStanding(item) ?? [])
+        : [],
+    nguoiMoi: [],
   };
 }
 
@@ -316,4 +334,153 @@ export async function findCounterSale(input: {
 /** Ngày bán theo giờ Việt Nam của một thời điểm. */
 export function ngayBanVietNam(millis: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(millis));
+}
+
+/**
+ * Vé đoàn trả tiền ngay ở quầy (migration 118). Một phiếu bán, một tấm vé
+ * giữ đủ lượt, và đoàn treo đúng vào tấm vé ấy. Giá và ưu đãi do kho tính.
+ */
+export async function createCounterGroupSale(input: {
+  siteId: ErpSiteId;
+  actorAccountId: string;
+  actorName: string;
+  actingDirectorAccountId: string | null;
+  partySize: number;
+  groupLabel: string;
+  leaderName: string;
+  leaderPhone: string | null;
+  travelCompanyId: string | null;
+  invoiceRequested: boolean;
+  paymentMethod: "cash" | "qr-transfer";
+  cashReceivedVnd: number;
+  paymentReference: string | null;
+  cashCountedConfirmed: boolean;
+  requestKey: string;
+}): Promise<CounterSaleReceipt> {
+  const client = createAdminClient();
+  const { data, error } = await client.rpc("erp_create_counter_group_sale", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_actor_account_id: input.actorAccountId,
+    p_actor_name: input.actorName,
+    p_acting_director_account_id: input.actingDirectorAccountId,
+    p_party_size: input.partySize,
+    p_group_label: input.groupLabel,
+    p_leader_name: input.leaderName,
+    p_leader_phone: input.leaderPhone,
+    p_travel_company_id: input.travelCompanyId,
+    p_invoice_requested: input.invoiceRequested,
+    p_payment_method: input.paymentMethod,
+    p_cash_received_vnd: input.cashReceivedVnd,
+    p_payment_reference: input.paymentReference,
+    p_cash_counted_confirmed: input.cashCountedConfirmed,
+    p_request_key: input.requestKey,
+  });
+  if (error) throw tuChoi(error);
+  const receipt = parseCounterSaleReceipt(data);
+  if (!receipt) throw tuChoi(new Error("COUNTER_SALE_EMPTY_RESPONSE"));
+  return receipt;
+}
+
+/** Vé mời 0 đ: người mời là một tài khoản trong sổ, tên do kho lấy từ sổ. */
+export async function createCounterCompSale(input: {
+  siteId: ErpSiteId;
+  actorAccountId: string;
+  actorName: string;
+  actingDirectorAccountId: string | null;
+  adults: number;
+  children: number;
+  inviterAccountId: string;
+  reason: string;
+  requestKey: string;
+}): Promise<CounterSaleReceipt> {
+  const client = createAdminClient();
+  const { data, error } = await client.rpc("erp_create_counter_comp_sale", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_actor_account_id: input.actorAccountId,
+    p_actor_name: input.actorName,
+    p_acting_director_account_id: input.actingDirectorAccountId,
+    p_adults: input.adults,
+    p_children: input.children,
+    p_inviter_account_id: input.inviterAccountId,
+    p_reason: input.reason,
+    p_request_key: input.requestKey,
+  });
+  if (error) throw tuChoi(error);
+  const receipt = parseCounterSaleReceipt(data);
+  if (!receipt) throw tuChoi(new Error("COUNTER_SALE_EMPTY_RESPONSE"));
+  return receipt;
+}
+
+export async function listTravelCompanies(): Promise<TravelCompanyStanding[]> {
+  let client: SupabaseClient;
+  try {
+    client = createAdminClient();
+  } catch {
+    return [];
+  }
+  const { data, error } = await client.rpc("erp_travel_companies_list", { p_tenant_id: TENANT_ID });
+  if (error) {
+    console.error("Travel companies read failed", error);
+    return [];
+  }
+  return Array.isArray(data) ? data.flatMap((item) => parseTravelCompanyStanding(item) ?? []) : [];
+}
+
+export async function createTravelCompany(input: {
+  siteId: ErpSiteId;
+  actorAccountId: string;
+  name: string;
+  taxCode: string | null;
+  address: string;
+  invoiceEmail: string | null;
+  phone: string | null;
+  contactName: string;
+}): Promise<TravelCompanyStanding> {
+  const client = createAdminClient();
+  const { data, error } = await client.rpc("erp_create_travel_company", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_actor_account_id: input.actorAccountId,
+    p_name: input.name,
+    p_tax_code: input.taxCode,
+    p_address: input.address,
+    p_invoice_email: input.invoiceEmail,
+    p_phone: input.phone,
+    p_contact_name: input.contactName,
+  });
+  if (error) throw tuChoi(error);
+  const company = parseTravelCompanyStanding(data);
+  if (!company) throw tuChoi(new Error("TRAVEL_COMPANY_EMPTY_RESPONSE"));
+  return company;
+}
+
+export async function setTravelCompanyDiscount(input: {
+  actorAccountId: string;
+  companyId: string;
+  percent: number | null;
+}): Promise<TravelCompanyStanding> {
+  const client = createAdminClient();
+  const { data, error } = await client.rpc("erp_set_travel_company_discount", {
+    p_tenant_id: TENANT_ID,
+    p_actor_account_id: input.actorAccountId,
+    p_company_id: input.companyId,
+    p_percent: input.percent,
+  });
+  if (error) throw tuChoi(error);
+  const company = parseTravelCompanyStanding(data);
+  if (!company) throw tuChoi(new Error("TRAVEL_COMPANY_EMPTY_RESPONSE"));
+  return company;
+}
+
+export async function travelCompanyHistory(companyId: string): Promise<TravelCompanyHistoryRow[]> {
+  const client = createAdminClient();
+  const { data, error } = await client.rpc("erp_travel_company_history", {
+    p_tenant_id: TENANT_ID,
+    p_company_id: companyId,
+    p_limit: 100,
+  });
+  if (error) throw tuChoi(error);
+  return parseTravelCompanyHistory(data);
 }

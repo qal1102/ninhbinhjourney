@@ -233,6 +233,10 @@ describe("đối soát cuối ca khi quầy đã ghi phiếu", () => {
     qrTotalVnd,
     voidedCount: voidedVnd > 0 ? 1 : 0,
     voidedVnd,
+    compCount: 0,
+    compGuests: 0,
+    groupCount: 0,
+    groupDiscountVnd: 0,
     sellers: [{ accountId: "employee-trang-an-01", displayName: "Lê Minh Tuấn", count: 3, totalVnd, qrTotalVnd }],
   });
 
@@ -300,6 +304,10 @@ describe("QA-ERP-POS-05 — đối soát tách tiền mặt với chuyển kho�
     qrTotalVnd,
     voidedCount: 0,
     voidedVnd: 0,
+    compCount: 0,
+    compGuests: 0,
+    groupCount: 0,
+    groupDiscountVnd: 0,
     sellers: [],
   });
 

@@ -31,8 +31,9 @@ test("quầy chưa nối kho thì nói thẳng là chưa bán được, không b
   await expect(khoi.getByText("chưa bán được vé")).toBeVisible();
   await expect(khoi.getByRole("button", { name: "Xác nhận bán" })).toHaveCount(0);
 
-  // Khối phiếu đoàn bên dưới vẫn còn nguyên.
-  await expect(page.getByRole("heading", { name: "Lập phiếu đoàn, đưa QR cho khách" })).toBeVisible();
+  // Kho quầy chưa nối thì phần bán nói thật là chưa bán được (cả vé đoàn, nằm
+  // trong cùng khối từ 12/10/2026), còn khối vé đã bán bên cạnh vẫn mở.
+  await expect(page.getByText("Vé đã bán", { exact: true })).toBeVisible();
 
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),

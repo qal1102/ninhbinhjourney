@@ -287,6 +287,32 @@ Lư xưa bằng AR (học Acropolis: cần mô hình 3D phục dựng có căn c
 thuyền 360° hay hướng dẫn viên điều khiển từ xa (học Faroe Remote Tourism:
 cần ảnh 360° hay người cầm máy).
 
+### 10.4 Đợt tham khảo thứ ba (12/10/2026): nhìn tận mắt trên điện thoại
+
+Chủ dự án: "UX học hỏi các trang trên mạng xem có cái nào nâng cấp lên đẹp
+không". Lần này không đọc bài tổng hợp mà mở thẳng từng trang ở khổ 390px,
+cuộn từng màn, chụp ảnh: Visit Faroe Islands, Japan.travel, Banff & Lake
+Louise, Kyoto Travel, Aman. Chỉ ghi món web mình **chưa có** (đã dò mã), làm
+được bằng dữ liệu sẵn có, không tốn tiền.
+
+| # | Món | Học từ đâu | Dữ liệu thật đã có | Công |
+|---|---|---|---|---|
+| I1 | **Tấm thông tin bản đồ kéo được ba nấc**: bấm ghim thì tấm chỉ nhô một dải tên + ảnh nhỏ ở đáy, bản đồ vẫn bay tới núi 3D; kéo lên nửa màn đọc thêm, kéo hết là cả trang; vuốt xuống là đóng | Google Maps, Apple Maps, Airbnb: bản đồ vẫn sống phía sau tấm | Thẻ điểm đến đang có; chữa đúng chỗ còn tồn ở `2db` (tấm phủ kín bản đồ) | Vừa |
+| I2 | **Chấm chạm trên ảnh đầu trang**: hai, ba chấm nhỏ nằm đúng trên Thủy Đình, vách đá; bấm hiện tên nơi ấy và lối sang trang điểm đến | Banff: "Explore Park Mode ⊙", "Go Car-Free ⊙" đặt ngay trên ảnh hồ | Ảnh đầu trang và trang điểm đến; chỉ cần đặt toạ độ chấm trên ảnh | Nhỏ |
+| I3 | **Ảnh đầu trang đổi theo mùa**, nút nhỏ "‹ Mùa: Hoa súng ›" ngay dưới tiêu đề: xuân lễ hội, hè lúa chín Tam Cốc, thu đông hoa súng | Banff: nút "‹ Season: Summer ›" trên ảnh đầu | Ảnh lúa Tam Cốc, hoa súng, Bái Đính trong kho; mùa đang tới tự chọn sẵn theo ngày | Vừa |
+| I4 | **Viên giờ và thời tiết ở góc ảnh đầu trang**: "13:24 · 30° · ít mây", bấm là sang `/hom-nay` | Kyoto: viên "3:52 PM │ 26.5°C" góc trên ảnh | Giờ Ninh Bình và Open-Meteo đã dùng ở `/hom-nay` | Nhỏ |
+| I5 | **Tìm kiếm cho khách**: kính lúp ở đầu trang, gõ "hang", "chùa", "hoa súng" ra ngay điểm đến, gói, mùa | Faroe, Japan, Banff đều để kính lúp cạnh logo | Bộ dò của bảng lệnh Ctrl+K ở ERP dùng lại được | Vừa |
+| I6 | **Lưu nơi thích bằng trái tim**, đầu trang có số nơi đã lưu; lưu trong máy, không cần đăng nhập | Faroe, Japan: trái tim cạnh kính lúp | Danh sách điểm đến; gần với "Thêm vào lịch trình" nên phải chọn một trong hai làm lối chính | Nhỏ–vừa |
+| I7 | **Ô "Cần biết trước khi đi"** bốn ô có biểu tượng: Thời tiết, Đi lại, Giờ mở cửa, Gọi hỏi | Banff "Know Before You Go" | `/hom-nay`, thông tin vận hành từng điểm, số điện thoại đặt chỗ | Nhỏ |
+| I8 | **Nút tạm dừng video đầu trang** (chuẩn truy cập WCAG 2.2.2 cho hình động quá 5 giây) | Banff: nút ⏸ nhỏ góc trên trái ảnh đầu | Video đầu trang | Rất nhỏ — **đụng luật "video không có dấu play" của chủ dự án, phải hỏi** |
+
+**Thấy ở trang người ta, không nên học:** bong bóng trợ lý AI tự bật lên che
+chữ (Banff); cửa sổ cookie phủ kín màn với cả trang chữ luật (Japan, Faroe).
+Web mình để dải đồng ý một dòng và nút Hỏi AI không tự mở là đúng hướng.
+
+**Gợi ý nếu chỉ chọn vài món:** I1 (sửa chỗ khách đang khó chịu thật), I4
+(nhỏ, số thật), I2 và I3 (đẹp lên rõ nhất ở màn đầu).
+
 ## 11. Nguồn
 
 - Cách chấm của Awwwards (trọng số, ngưỡng điểm, nhánh Mobile Excellence):
@@ -311,3 +337,9 @@ cần ảnh 360° hay người cầm máy).
   Tourism <https://thinkdigital.travel/cases/visit-faroe-islands-on-remote-tourism>;
   Linear Triage <https://linear.app/changelog/2021-06-29-linear-release-and-issue-triage>;
   AR ở Acropolis <https://techxplore.com/news/2023-10-app-ancient-greek-sites-thousands.pdf>
+- Đợt tham khảo thứ ba (mục 10.4), xem trực tiếp ở khổ 390px ngày 12/10/2026:
+  <https://www.visitfaroeislands.com/en>, <https://www.japan.travel/en/>,
+  <https://www.banfflakelouise.com/>, <https://kyoto.travel/en/>,
+  <https://www.aman.com/>; tấm kéo nhiều nấc trên bản đồ
+  <https://proandroiddev.com/building-a-google-maps-style-bottom-sheet-with-jetpack-compose-eccc1f3cf578>,
+  <https://www.eleken.co/blog-posts/bottom-sheet-ui>

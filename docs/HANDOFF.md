@@ -156,7 +156,7 @@
 - `A15-QUYEN-01` (chủ dự án 28/09: người chấm không có thời gian kiểm phần này, không ưu tiên): phân quyền chưa từng kiểm bằng đăng nhập thật của tài khoản cấp thấp. 28/09 đã soát tĩnh cả 79 server action (bài `tests/security/server-action-tu-kiem-quyen.test.ts`): hàm nào cũng kiểm vai, hàm nhận `siteId` đều kiểm cơ sở ở TypeScript hoặc SQL. Phần đăng nhập thật (cấp đăng nhập tạm cho `employee-trang-an-01` và `manager-tam-coc` qua màn Quản trị tài khoản, thử 4 cơ sở × 13 module và 3 API, rồi gỡ đăng nhập) **bị bộ chặn tự động từ chối** vì tạo đăng nhập trên production; cần chủ dự án quyết cách làm.
 - `A15-DEMO-01`: kho demo tách production (tốn tiền).
 - `ERP-05`: cổng ngoại tuyến cần người cầm máy thật.
-- Thực đơn kỹ năng giao diện `docs/reference/KY_NANG_GIAO_DIEN.md`: đã làm A1, A2, B1, C1–C3, D1–D3 và đèn hoa đăng (gần C5). Còn A3–A5, B2–B5, C4, C6–C8: trang trí tuỳ chọn. Mục 10 (11/10) thêm E1–E10; chủ dự án đã chọn và đã làm D2, E5, E1, E3 (`2cw`). Bảng vẽ F1–F6, G1–G2 đã làm hết (`2cx`). H1–H8 mục 10.3 và bản đồ 3D đã làm (`2cy`, `2cz`, ảnh vệ tinh `2da`). Còn chờ chọn: A4, C2 ở trang thử. Đừng làm cả bảng.
+- Thực đơn kỹ năng giao diện `docs/reference/KY_NANG_GIAO_DIEN.md`: đã làm A1, A2, B1, C1–C3, D1–D3 và đèn hoa đăng (gần C5). Còn A3–A5, B2–B5, C4, C6–C8: trang trí tuỳ chọn. Mục 10 (11/10) thêm E1–E10; chủ dự án đã chọn và đã làm D2, E5, E1, E3 (`2cw`). Bảng vẽ F1–F6, G1–G2 đã làm hết (`2cx`). H1–H8 mục 10.3 và bản đồ 3D đã làm (`2cy`, `2cz`, ảnh vệ tinh `2da`). Còn chờ chọn: A4, C2 ở trang thử; mục 10.4 (12/10, `2dc`) thêm I1–I8 học từ Faroe, Japan, Banff, Kyoto, Aman, gợi ý I1, I4, I2, I3; I8 đụng luật video, phải hỏi. Đừng làm cả bảng.
 
 **Đã khép, đừng làm lại:** `A15-ERP-07` (cờ `ERP_DEMO_TICKETS_ENABLED`), `A15-LOI-03`, `QA-PRICE-03` (chủ dự án: "giá tiền cứ để như vậy"), `TC-13`.
 
@@ -200,6 +200,8 @@
 - **Tệp CRLF:** sửa bằng script xong, soát `git ls-files --eol`.
 
 ## F. Nhật ký rút gọn (mỗi đợt một dòng; chi tiết `grep` mã trong lưu trữ)
+
+- 12/10 `2dc`: xem tận mắt 5 trang du lịch hàng đầu ở khổ 390px, ghi 8 món web chưa có vào `KY_NANG_GIAO_DIEN.md` mục 10.4 (I1–I8) chờ chủ dự án chọn. Chưa sửa mã.
 
 - 12/10 `2db`: soát web khách bằng mắt (14 trang 390, 6 trang 1440); dải đồng ý thôi che thanh đáy, bản đồ Vị trí có tên điểm, ngày nguồn dd/mm/yyyy, bộ lọc Khám phá hai cột. Kiểm: tsc, lint, Vitest 1.907, Playwright 115, ảnh 320–1440.
 

@@ -56,7 +56,7 @@ function createAdminClient(): SupabaseClient {
   });
 }
 
-function policyVersion(name: "analytics" | "service" | "marketing") {
+export function policyVersion(name: "analytics" | "service" | "marketing") {
   const key = `CUSTOMER_${name.toUpperCase()}_POLICY_VERSION`;
   const configured = process.env[key]?.trim();
   if (configured && configured.length <= 80) return configured;

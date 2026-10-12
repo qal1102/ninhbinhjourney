@@ -54,7 +54,7 @@ export default async function VeQuayPage({
   }
 
   return (
-    <main lang={lang} className="min-h-screen bg-[#eef2ef] px-4 py-8 text-[#151a17] sm:px-8 sm:py-14">
+    <main lang={lang} className="min-h-screen bg-[#eef2ef] px-4 pb-28 pt-8 text-[#151a17] sm:px-8 sm:pt-14">
       <TrangVeQuay ma={ma} lang={lang} veBanDau={ve} choXacNhan={choXacNhan} loi={loi} />
     </main>
   );

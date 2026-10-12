@@ -14,6 +14,7 @@ import {
   VISITOR_GROUP_MEMBER_CODE_PATTERN,
   type VisitorGroupMemberJourney,
 } from "@/domain/visitor-group";
+import { TheTichDiem } from "@/components/commerce/the-tich-diem";
 
 type MemberApiResponse =
   | { accepted: true; member: { memberCode: string; displayName: string; activated: boolean } }
@@ -350,12 +351,13 @@ export function VisitorGroupMemberExperience({
           {copy.codeLabel} · <code className="font-mono">{memberCode}</code>
         </p>
         <p className="mt-2 text-xs leading-5 text-[#6b786f]">{copy.transfer}</p>
+        <TheTichDiem className="mt-8" codes={[code]} lang={lang} />
       </section>
     );
   }
 
   return (
-    <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
+    <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-5 pb-28 pt-10 text-[#151a17] sm:px-8 lg:pb-28 lg:pt-16">
       <div className="mx-auto max-w-6xl">
         <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#9a6328]">{copy.kicker}</p>
 

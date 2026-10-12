@@ -3,6 +3,7 @@
 import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
+import { TheTichDiem } from "@/components/commerce/the-tich-diem";
 import { xacNhanQuetAction } from "../actions";
 import type { VeQuayHienThi } from "../ve-tu-phieu";
 
@@ -154,6 +155,14 @@ export function TrangVeQuay({
               lang={lang}
             />
           </div>
+        )}
+        {ve.daHuy ? null : (
+          <TheTichDiem
+            className="mt-4"
+            codes={ve.lines.map((line) => line.ticketCode)}
+            lang={lang}
+            laTruongDoan={Boolean(ve.doan)}
+          />
         )}
       </section>
     );

@@ -16,6 +16,7 @@ import {
 import { capVeMoiAction } from "@/app/erp/ve-doan-actions";
 import { DuaVeChoKhach } from "./dua-ve-cho-khach";
 import { BanVeDoan } from "./ban-ve-doan";
+import { DoiVoucherQuay, GanSoKhachQuay } from "./khach-than-thiet-quay";
 import type { DienPhieuDoan } from "@/domain/soat-giay-to";
 import type { CounterSaleWorkspace } from "@/lib/erp/counter-sale-repository";
 import type { ErpSite } from "@/domain/erp";
@@ -795,6 +796,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
                 {message.text}
               </p>
             ) : null}
+            <DoiVoucherQuay siteId={site.id} onReceipt={moPhieu} />
           </div>
 
           <div className="space-y-3">
@@ -847,6 +849,13 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
                   >
                     {printer.message.text}
                   </p>
+                ) : null}
+                {receipt.status !== "voided" ? (
+                  <GanSoKhachQuay
+                    key={receipt.saleCode}
+                    siteId={site.id}
+                    codes={receipt.lines.map((line) => line.ticketCode)}
+                  />
                 ) : null}
                 {receipt.status !== "voided" && veDienThoai?.saleCode === receipt.saleCode ? (
                   <DuaVeChoKhach

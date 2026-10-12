@@ -659,13 +659,13 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
       },
       {
         id: "bang-lenh",
-        ten: "Bảng lệnh Ctrl+K: gõ là tới màn",
+        ten: "Ô tìm nhanh: gõ là tới màn",
         moTa: "Gõ vài chữ, không cần dấu, là ra màn hay việc cần làm; không khớp thì chuyển câu sang trợ lý.",
         vai: "director",
         duongDan: "/erp",
         diem: "bang-lenh",
         cacViec: [
-          "Bấm Ctrl+K (máy Mac: ⌘K) hoặc nút kính lúp trên thanh đầu trang.",
+          "Bấm nút kính lúp trên thanh đầu trang (điện thoại hay máy tính đều có). Máy tính có bàn phím thì bấm Ctrl+K cho nhanh.",
           "Gõ \"duyet hoa don\" rồi Enter là mở màn; bấm Tab để hỏi trợ lý đúng câu ấy.",
         ],
         moi: "11/10",

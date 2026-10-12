@@ -160,7 +160,9 @@ export function CustomerConsentCenter() {
     const apply = () => {
       // Đo từ mép trên của dải tới đáy màn: trên điện thoại có thanh điều hướng
       // đáy thì dải nằm trên thanh, khoảng chừa phải tính cả thanh.
-      const offset = `${Math.max(node.offsetHeight, window.innerHeight - node.getBoundingClientRect().top) + 24}px`;
+      // Dải bị giấu (không có khung) thì đo mép trên ra 0, đừng chừa cả màn.
+      const tuMepTren = node.getClientRects().length ? window.innerHeight - node.getBoundingClientRect().top : 0;
+      const offset = `${Math.max(node.offsetHeight, tuMepTren) + 24}px`;
       document.body.style.paddingBottom = offset;
       // QA-P2-09: màn đầu trang chủ cao đúng một màn hình và dồn nút xuống đáy,
       // nên chừa ở cuối trang không cứu được nút "Lập hành trình" bị dải này

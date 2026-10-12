@@ -1231,10 +1231,17 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   transition: background 1200ms ease;
 }
 
-/* Điện thoại: lớp màu theo giờ nhẹ đi một nửa, ảnh còn tươi (chủ dự án 10/10/2026: "mờ mịt"). */
+/*
+ * Lớp màu theo giờ chỉ còn gợi ý, ảnh giữ màu thật (chủ dự án 10/10 "mờ mịt",
+ * 12/10 "thay hình khác sáng hơn"): máy tính 0,45, điện thoại 0,3.
+ */
+.hero-identity-scene .hero-tod {
+  opacity: 0.45;
+}
+
 @media (max-width: 767px) {
-  .hero-tod {
-    opacity: 0.5;
+  .hero-identity-scene .hero-tod {
+    opacity: 0.3;
   }
 }
 
@@ -1316,8 +1323,8 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
 }
 
 .hero-scene-image {
-  filter: saturate(0.92) contrast(1.04);
-  opacity: calc(0.86 - var(--hero-progress) * 0.12);
+  filter: saturate(1.04) contrast(1.02);
+  opacity: calc(1 - var(--hero-progress) * 0.12);
   transform: translate3d(0, calc(var(--hero-progress) * -1.75rem), 0)
     scale(calc(1.035 + var(--hero-progress) * 0.025));
   transform-origin: 50% 42%;
@@ -1331,60 +1338,15 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
  * hết bề ngang và khung cửa đá thành điểm nhấn, chứ không còn là chỗ duy
  * nhất nhìn thấy cảnh. Phần đậm giữ ở đáy, nơi thật sự có chữ.
  */
+/*
+ * 12/10/2026: ảnh Tam Cốc ban ngày sáng sẵn, lớp phủ chỉ còn lo cho chữ: dải
+ * tối bên trái sau khối chữ, một vệt mỏng ở mép trên cho thanh điều hướng, và
+ * đáy đậm dần. Giữa ảnh để trống cho lúa và núi.
+ */
 .hero-scene-scrim {
   background:
-    linear-gradient(90deg, rgba(8, 24, 20, 0.52) 0%, rgba(8, 24, 20, 0.26) 47%, rgba(8, 24, 20, 0.02) 76%),
-    linear-gradient(180deg, rgba(24, 63, 52, 0.04), rgba(24, 63, 52, 0.18) 48%, rgba(16, 34, 29, 0.82));
-}
-
-.hero-depth-window {
-  bottom: -1px;
-  filter: saturate(0.82) contrast(1.08) brightness(0.94);
-  height: min(88%, 880px);
-  right: clamp(-5rem, -2vw, -1rem);
-  transform: translate3d(0, calc(var(--hero-progress) * -2.5rem), 0)
-    scale(calc(1 + var(--hero-progress) * 0.035));
-  transform-origin: 72% 100%;
-  width: min(54vw, 780px);
-  will-change: transform, opacity;
-}
-
-/*
- * Lớp chiều sâu: tấm ảnh thứ hai (cảnh mưa Tràng An) chồng rất mờ lên ảnh nền
- * và trôi lệch khi cuộn, để đầu trang có chiều sâu thay vì phẳng lì.
- *
- * TRƯỚC 22/09/2026 nó bị cắt theo một **đa giác vẽ tay hình vòm đá vôi**. Đó
- * là cái mà chủ dự án gọi là "hình ngọn núi" nhìn ngáo — và đúng: đường cắt
- * ấy là một hình do người vẽ ra, đặt lên một tấm ảnh có địa hình thật, nên nó
- * chẳng trùng sườn núi nào. Trước đó còn phải vá riêng hai mép dọc của chính
- * đa giác ấy vì chúng hiện thành hai đường kẻ cứng — vá một hình sai từ gốc
- * thì chỉ ra một hình sai mượt hơn.
- *
- * Nay **không còn hình cắt nào**: chỉ một lớp tan đều bốn phía. Chiều sâu đến
- * từ độ mờ và từ chuyển động lệch khi cuộn, không đến từ một đường viền bịa ra.
- */
-.hero-depth-window {
-  mask-image: radial-gradient(
-    96% 72% at 72% 68%,
-    #000 0%,
-    rgba(0, 0, 0, 0.62) 38%,
-    rgba(0, 0, 0, 0.22) 60%,
-    transparent 78%
-  );
-  opacity: calc(0.3 - var(--hero-progress) * 0.12);
-  overflow: hidden;
-  position: absolute;
-}
-
-.hero-depth-image {
-  transform: scale(1.025);
-}
-
-.hero-depth-grade {
-  background: linear-gradient(135deg, rgba(168, 206, 193, 0.28), rgba(24, 63, 52, 0.04) 58%, rgba(231, 185, 106, 0.32));
-  inset: 0;
-  mix-blend-mode: color;
-  position: absolute;
+    linear-gradient(90deg, rgba(8, 24, 20, 0.46) 0%, rgba(8, 24, 20, 0.14) 45%, rgba(8, 24, 20, 0) 70%),
+    linear-gradient(180deg, rgba(8, 24, 20, 0.3) 0%, rgba(8, 24, 20, 0) 18%, rgba(8, 24, 20, 0) 46%, rgba(12, 30, 25, 0.74) 100%);
 }
 
 .hero-scene-content {
@@ -1488,36 +1450,22 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
    */
   .hero-scene-scrim {
     background:
-      linear-gradient(90deg, rgba(8, 24, 20, 0.34), rgba(8, 24, 20, 0.06)),
+      linear-gradient(90deg, rgba(8, 24, 20, 0.26), rgba(8, 24, 20, 0.02)),
       linear-gradient(
         180deg,
-        rgba(16, 34, 29, 0.26) 0%,
-        rgba(16, 34, 29, 0.12) 30%,
-        rgba(16, 34, 29, 0.5) 62%,
-        rgba(16, 34, 29, 0.9) 100%
+        rgba(16, 34, 29, 0.3) 0%,
+        rgba(16, 34, 29, 0.06) 20%,
+        rgba(16, 34, 29, 0.2) 48%,
+        rgba(16, 34, 29, 0.8) 100%
       );
   }
 
   /*
-   * Ngôi đền giữa sông nằm ở khoảng 27% chiều ngang ảnh. Cắt giữa như máy tính
-   * thì điện thoại chỉ còn vách núi; dời khung để đền vào giữa màn (10/10/2026).
+   * Lạch nước và hang xuyên núi nằm hơi lệch phải giữa ảnh Tam Cốc; dời khung
+   * để con thuyền và cửa hang vào giữa màn điện thoại (12/10/2026).
    */
   .hero-scene-image {
-    object-position: 16% 50%;
-  }
-
-  /*
-   * Ở 390px khung cửa rộng 118vw và lệch ra ngoài màn hình, nên thứ khách
-   * thật sự nhìn thấy chỉ còn **một đường chéo cứng vắt qua nền trời** —
-   * không đọc ra khung cửa đá nữa. Hạ hẳn độ rõ để nó chỉ còn là một lớp
-   * chất liệu mờ, và mặt nạ ở bản gốc lo phần tan mép.
-   */
-  /*
-   * Khung ảnh mưa thứ hai: trên điện thoại nó chỉ còn là bóng ngôi đền mờ ở góc
-   * trên, chồng lên ảnh nền làm cả đầu trang mờ đục (chủ dự án 10/10/2026). Bỏ.
-   */
-  .hero-depth-window {
-    display: none;
+    object-position: 55% 50%;
   }
 
   /*
@@ -1629,7 +1577,6 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
 
 @media (prefers-reduced-motion: reduce) {
   .hero-scene-image,
-  .hero-depth-window,
   .hero-scene-content,
   .hero-signature-title::before {
     opacity: 1;
@@ -1637,18 +1584,6 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     will-change: auto;
   }
 
-  .hero-scene-image {
-    opacity: 0.86;
-  }
-
-  /*
-   * Lớp ảnh mưa thứ hai giữ đúng độ mờ như khi có chuyển động. Trước
-   * 03/10/2026 chỗ này đặt 0.86: bật giảm chuyển động là tấm ảnh thứ hai hiện
-   * gần rõ như ảnh nền, đúng cái "hai tấm ảnh chồng nhau" chủ dự án từng chê.
-   */
-  .hero-depth-window {
-    opacity: 0.3;
-  }
 
   .hero-signature-title::before {
     opacity: 0.72;
@@ -1658,12 +1593,6 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   .hero-signature-title::after {
     opacity: 0.72;
     transform: translate3d(0.12rem, 0.1rem, 0) !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) and (max-width: 767px) {
-  .hero-depth-window {
-    opacity: 0.16;
   }
 }
 
@@ -2327,6 +2256,11 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
   opacity: 1;
 }
 
+/* Sương ở ảnh đầu trang mỏng đi (12/10/2026) để lúa và núi Tam Cốc còn rõ màu. */
+.suong-troi-dau-trang[data-hien="1"] {
+  opacity: 0.5;
+}
+
 /*
  * Điện thoại (08/10/2026): một lớp sương cố định phủ cả trang chủ thay cho
  * lớp chỉ nằm ở ảnh đầu trang. Dưới thanh đầu trang, hộp thoại và khung đồng
@@ -2346,6 +2280,11 @@ html[data-nbj-consent-banner-visible="true"] [data-journey-concierge-trigger] {
     height: 100lvh;
     position: fixed;
     z-index: 25;
+  }
+
+  /* 12/10/2026: phủ cả trang nên giữ mỏng, đầu trang Tam Cốc không bị đục. */
+  .suong-troi-toan-trang[data-hien="1"] {
+    opacity: 0.4;
   }
 }
 

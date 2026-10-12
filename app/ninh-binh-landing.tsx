@@ -1405,23 +1405,22 @@ export default function NinhBinhLanding({
       ) : null}
       <section ref={heroSceneRef} data-customer-section="home-hero" data-hero-scene data-motion="static" className="hero-identity-scene relative overflow-hidden bg-[#183F34] text-[#FBFAF6]">
         <Image
-          src="/images/destinations/trang-an-sang.jpg"
-          alt={lang === "en" ? "Ninh Binh limestone landscape" : "Phong cảnh núi đá vôi Ninh Bình"}
+          src="/images/destinations/tam-coc-lua-dau-trang.jpg"
+          alt={lang === "en" ? "Rowing boats between rice fields and limestone peaks at Tam Coc" : "Thuyền nan đi giữa đồng lúa và núi đá vôi Tam Cốc"}
           fill
           priority
-          sizes="100vw"
+          // Khung dọc phủ kín theo chiều cao: ảnh 3:2 phải rộng ~1,5 lần chiều cao
+          // màn. Để "100vw" thì điện thoại 390px tải bản 640px rồi kéo gấp đôi, mờ
+          // nhoè (đo 12/10/2026).
+          sizes="(orientation: portrait) 160vh, 100vw"
           className="hero-scene-image object-cover"
         />
         <div className="hero-scene-scrim absolute inset-0" />
-        {/* The opening rain frame returns as a clipped limestone aperture. */}
-        <div className="hero-depth-window pointer-events-none absolute" data-hero-depth-window aria-hidden="true">
-          {/* `eager`: Lighthouse trên điện thoại chấm lớp này là ảnh lớn nhất màn
-              đầu (khung rộng 118vw), mà mặc định `lazy` bắt nó chờ tới lượt.
-              LCP trang chủ vẫn khoảng 5 giây vì màn mở đầu phủ hero vài giây ở
-              lượt ghé đầu phiên: đó là thiết kế, không phải ảnh chậm (28/09/2026). */}
-          <Image src="/images/destinations/intro-trang-an-rain.png" alt="" fill loading="eager" sizes="(max-width: 767px) 118vw, 54vw" className="hero-depth-image object-cover" />
-          <span className="hero-depth-grade" />
-        </div>
+        {/*
+          12/10/2026, chủ dự án: "thay hình khác sáng hơn". Ảnh nền đổi từ Tràng An
+          ngược sáng sang thuyền nan giữa đồng lúa Tam Cốc, và gỡ lớp ảnh mưa Tràng
+          An chồng mờ ở góc phải: trên ảnh mới nó là một cảnh khác đè lên, làm đục.
+        */}
         {/*
           ĐÃ GỠ hai nét "nếp núi" và "dòng sông" vẽ tay ở đây (22/09/2026).
           Chủ dự án nhìn production rồi nói: *"nhìn nó cứ ngáo ngáo, như kiểu
@@ -1440,7 +1439,7 @@ export default function NinhBinhLanding({
         {/*
           Bảng chú thích ảnh, dựng đứng sát mép phải như dòng ghi công trong
           ấn phẩm. Nó thay chỗ hai nét vẽ cũ bằng một thứ **nói điều thật**:
-          đúng nơi chụp (ảnh nền là trang-an-sang.jpg), đúng toạ độ lấy từ chính
+          đúng nơi chụp (ảnh nền là tam-coc-lua-dau-trang.jpg), đúng toạ độ lấy từ chính
           kho dữ liệu điểm đến. Ẩn ở khổ hẹp — chỗ ấy đã chật.
         */}
         <p
@@ -1448,7 +1447,7 @@ export default function NinhBinhLanding({
           aria-hidden="true"
           className="pointer-events-none absolute right-4 top-1/2 z-10 hidden -translate-y-1/2 select-none text-[0.68rem] font-semibold uppercase tracking-[0.42em] text-white/38 [writing-mode:vertical-rl] lg:block"
         >
-          {lang === "en" ? "Trang An · 20°15′N 105°54′E" : "Tràng An · 20°15′B 105°54′Đ"}
+          {lang === "en" ? "Tam Coc · 20°13′N 105°56′E" : "Tam Cốc · 20°13′B 105°56′Đ"}
         </p>
         {/*
           Tong mau anh mo dau doi theo GIO THAT o Ninh Binh: hung vang luc

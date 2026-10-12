@@ -23,11 +23,10 @@ async function waitForHero(page: Page, motion: "full" | "reduced") {
   const hero = page.locator("[data-hero-scene]");
   await expect(hero).toHaveAttribute("data-motion", motion);
   await expect(hero.getByRole("heading", { level: 1 })).toBeVisible();
-  // Điện thoại bỏ khung ảnh mưa thứ hai (10/10/2026): nó chỉ còn là bóng ngôi
-  // đền mờ ở góc trên, làm đầu trang mờ đục. Từ 768px vẫn giữ.
-  const rong = page.viewportSize()?.width ?? 1440;
-  if (rong >= 768) await expect(hero.locator("[data-hero-depth-window]")).toBeVisible();
-  else await expect(hero.locator("[data-hero-depth-window]")).toBeHidden();
+  // Ảnh nền là Tam Cốc ban ngày (12/10/2026); lớp ảnh mưa Tràng An chồng ở góc
+  // đã gỡ ở mọi khổ, đầu trang chỉ còn một tấm ảnh.
+  await expect(hero.locator("[data-hero-depth-window]")).toHaveCount(0);
+  await expect(hero.locator('img.hero-scene-image[src*="tam-coc-lua-dau-trang"]')).toHaveCount(1);
   await expect(page.locator("[data-hero-cinematic-handoff]")).toHaveCount(1);
   await expect(page.getByTestId("trang-an-scroll-story")).toHaveCount(1);
   await page.evaluate(async () => {
@@ -53,15 +52,6 @@ test("hero depth remains legible and geometry-stable at the required widths", as
     await page.setViewportSize(viewport);
     await page.goto("/?lang=vi&presentation=1", { waitUntil: "domcontentloaded" });
     await waitForHero(page, "full");
-    await expect
-      .poll(() =>
-        page.evaluate(() =>
-          performance
-            .getEntriesByType("resource")
-            .some((entry) => entry.name.includes("/_next/image") && entry.name.includes("intro-trang-an-rain")),
-        ),
-      )
-      .toBe(true);
 
     const start = await page.evaluate(() => {
       const hero = document.querySelector<HTMLElement>("[data-hero-scene]")!;
@@ -81,7 +71,6 @@ test("hero depth remains legible and geometry-stable at the required widths", as
       const packageCueRect = packageCue.getBoundingClientRect();
       const conciergeRect = concierge?.getBoundingClientRect();
       const sceneImage = hero.querySelector<HTMLElement>(".hero-scene-image")!;
-      const depthWindow = hero.querySelector<HTMLElement>("[data-hero-depth-window]")!;
       const sceneContent = hero.querySelector<HTMLElement>(".hero-scene-content")!;
       const overlaps = (first: DOMRect, second?: DOMRect) =>
         Boolean(
@@ -109,12 +98,11 @@ test("hero depth remains legible and geometry-stable at the required widths", as
         visualMotion: {
           imageOpacity: getComputedStyle(sceneImage).opacity,
           imageTransform: getComputedStyle(sceneImage).transform,
-          windowOpacity: getComputedStyle(depthWindow).opacity,
           contentTransform: getComputedStyle(sceneContent).transform,
         },
         rawDepthAssetRequested: performance
           .getEntriesByType("resource")
-          .some((entry) => entry.name.endsWith("/images/destinations/intro-trang-an-rain.png")),
+          .some((entry) => entry.name.endsWith("/images/destinations/tam-coc-lua-dau-trang.jpg")),
         horizontalOverflow: document.documentElement.scrollWidth - window.innerWidth,
       };
     });
@@ -148,7 +136,6 @@ test("hero depth remains legible and geometry-stable at the required widths", as
     const settled = await page.evaluate(() => {
       const hero = document.querySelector<HTMLElement>("[data-hero-scene]")!;
       const sceneImage = hero.querySelector<HTMLElement>(".hero-scene-image")!;
-      const depthWindow = hero.querySelector<HTMLElement>("[data-hero-depth-window]")!;
       const sceneContent = hero.querySelector<HTMLElement>(".hero-scene-content")!;
       return {
         documentHeight: document.documentElement.scrollHeight,
@@ -156,7 +143,6 @@ test("hero depth remains legible and geometry-stable at the required widths", as
         visualMotion: {
           imageOpacity: getComputedStyle(sceneImage).opacity,
           imageTransform: getComputedStyle(sceneImage).transform,
-          windowOpacity: getComputedStyle(depthWindow).opacity,
           contentTransform: getComputedStyle(sceneContent).transform,
         },
       };
@@ -165,7 +151,6 @@ test("hero depth remains legible and geometry-stable at the required widths", as
     expect(settled.heroHeight).toBe(start.heroHeight);
     expect(settled.visualMotion.imageOpacity).not.toBe(start.visualMotion.imageOpacity);
     expect(settled.visualMotion.imageTransform).not.toBe(start.visualMotion.imageTransform);
-    if (viewport.width >= 768) expect(settled.visualMotion.windowOpacity).not.toBe(start.visualMotion.windowOpacity);
     expect(settled.visualMotion.contentTransform).not.toBe(start.visualMotion.contentTransform);
     await page.locator("[data-hero-cinematic-handoff] h2").scrollIntoViewIfNeeded();
     const cinematicOverlap = await page.evaluate(() => {

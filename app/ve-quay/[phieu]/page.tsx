@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { readCounterSaleBy } from "@/lib/erp/counter-sale-repository";
 import { moPhieuQuay, PhieuQuayError } from "@/lib/erp/phieu-quay";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
+import { timPhieuCuaMa } from "../tim-phieu";
 import { veTuPhieu, type VeQuayHienThi } from "../ve-tu-phieu";
 import { TrangVeQuay } from "./trang-ve-quay";
 
@@ -34,10 +34,7 @@ export default async function VeQuayPage({
   let loi = "";
   try {
     const mo = moPhieuQuay(ma, undefined, undefined, { choPhepHetHan: true });
-    const receipt =
-      mo.loai === "ve"
-        ? await readCounterSaleBy({ siteId: mo.siteId, saleCode: mo.saleCode })
-        : await readCounterSaleBy({ siteId: mo.siteId, requestKey: mo.requestKey });
+    const receipt = await timPhieuCuaMa(mo);
     if (receipt) {
       ve = veTuPhieu(mo.siteId, receipt);
     } else if (mo.loai === "cho") {

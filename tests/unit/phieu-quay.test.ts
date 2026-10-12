@@ -28,8 +28,8 @@ describe("mã QR quầy cho khách quét", () => {
   });
 
   it("mở lại mã xem vé của phiếu đã bán", () => {
-    const ma = niemPhieuQuay({ loai: "ve", siteId: "tam-coc", saleCode: "PT-ABC123DEF456" }, KHOA);
-    expect(moPhieuQuay(ma, KHOA, BAY_GIO)).toEqual({ loai: "ve", siteId: "tam-coc", saleCode: "PT-ABC123DEF456" });
+    const ve = { loai: "ve", siteId: "tam-coc", saleCode: "PT-ABC123DEF456", viewerAccountId: "employee-tam-coc-01", businessDate: "2026-10-12" } as const;
+    expect(moPhieuQuay(niemPhieuQuay(ve, KHOA), KHOA, BAY_GIO)).toEqual(ve);
   });
 
   it("sửa một ký tự là hỏng, không đọc ra số vé khác", () => {

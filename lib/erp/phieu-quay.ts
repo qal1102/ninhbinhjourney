@@ -42,6 +42,10 @@ export type PhieuQuayVe = {
   loai: "ve";
   siteId: ErpSiteId;
   saleCode: string;
+  /** Người tạo đường dẫn: kho chỉ cho đọc phiếu qua danh sách người này thấy. */
+  viewerAccountId: string;
+  /** Ngày bán, YYYY-MM-DD. */
+  businessDate: string;
 };
 
 export type PhieuQuay = PhieuQuayCho | PhieuQuayVe;
@@ -75,7 +79,7 @@ function khoaPhieuQuay(): Buffer {
 export function niemPhieuQuay(phieu: PhieuQuay, khoa: Buffer = khoaPhieuQuay()): string {
   const nen =
     phieu.loai === "ve"
-      ? { l: "v", s: phieu.siteId, m: phieu.saleCode }
+      ? { l: "v", s: phieu.siteId, m: phieu.saleCode, u: phieu.viewerAccountId, b: phieu.businessDate }
       : {
           l: "c",
           s: phieu.siteId,
@@ -118,8 +122,10 @@ export function moPhieuQuay(
   }
   if (typeof nen.s !== "string" || !isErpSiteId(nen.s)) throw new PhieuQuayError(HONG, "PHIEU_HONG");
   if (nen.l === "v") {
-    if (!chu(nen.m, 4, 40)) throw new PhieuQuayError(HONG, "PHIEU_HONG");
-    return { loai: "ve", siteId: nen.s, saleCode: nen.m as string };
+    if (!chu(nen.m, 4, 40) || !chu(nen.u, 2, 100) || typeof nen.b !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(nen.b)) {
+      throw new PhieuQuayError(HONG, "PHIEU_HONG");
+    }
+    return { loai: "ve", siteId: nen.s, saleCode: nen.m as string, viewerAccountId: nen.u as string, businessDate: nen.b };
   }
   const { a, c, u, n, d, k, t, e } = nen;
   if (

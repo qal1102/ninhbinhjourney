@@ -77,11 +77,12 @@ import {
   CounterSaleRepositoryError,
   createCounterSale,
   getCounterSaleWorkspace,
-  readCounterSaleBy,
+  findCounterSale,
+  ngayBanVietNam,
   setCounterPrice,
   voidCounterSale,
 } from "@/lib/erp/counter-sale-repository";
-import { computeCounterCart, type CounterSaleReceipt } from "@/domain/erp-counter-sale";
+import { computeCounterCart, counterPaymentReference, type CounterSaleReceipt } from "@/domain/erp-counter-sale";
 import { niemPhieuQuay, PhieuQuayError, PHUT_GIU_CHO_QUAY } from "@/lib/erp/phieu-quay";
 import { absoluteUrl } from "@/lib/site-url";
 import type { VisitorGroupStatus } from "@/domain/visitor-group";
@@ -1169,7 +1170,12 @@ export async function docMaKhachQuetAction(input: {
     return { receipt: null };
   }
   try {
-    const receipt = await readCounterSaleBy({ siteId: input.siteId, requestKey: String(input.requestKey ?? "") });
+    const receipt = await findCounterSale({
+      siteId: input.siteId,
+      viewerAccountId: user.id,
+      businessDate: ngayBanVietNam(Date.now()),
+      paymentReference: counterPaymentReference(String(input.requestKey ?? "")),
+    });
     return { receipt: receipt && receipt.soldByAccountId === user.id ? receipt : null };
   } catch {
     return { receipt: null };
@@ -1180,13 +1186,20 @@ export async function docMaKhachQuetAction(input: {
 export async function duongDanVeKhachAction(input: {
   siteId: string;
   saleCode: string;
+  businessDate: string;
 }): Promise<{ url: string | null }> {
   const user = await getCurrentErpUser();
   if (!user || !isErpSiteId(input.siteId) || !accountCanAccessModule(user, input.siteId, "ve-dat-cho")) {
     return { url: null };
   }
   try {
-    const ma = niemPhieuQuay({ loai: "ve", siteId: input.siteId, saleCode: String(input.saleCode ?? "") });
+    const ma = niemPhieuQuay({
+      loai: "ve",
+      siteId: input.siteId,
+      saleCode: String(input.saleCode ?? ""),
+      viewerAccountId: user.id,
+      businessDate: String(input.businessDate ?? ""),
+    });
     return { url: absoluteUrl(`/ve-quay/${ma}`) };
   } catch {
     return { url: null };

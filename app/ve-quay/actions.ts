@@ -1,8 +1,9 @@
 "use server";
 
 import { counterPaymentReference } from "@/domain/erp-counter-sale";
-import { CounterSaleRepositoryError, createCounterSale, readCounterSaleBy } from "@/lib/erp/counter-sale-repository";
+import { CounterSaleRepositoryError, createCounterSale } from "@/lib/erp/counter-sale-repository";
 import { moPhieuQuay, PhieuQuayError } from "@/lib/erp/phieu-quay";
+import { timPhieuCuaMa } from "./tim-phieu";
 import { veTuPhieu, type VeQuayHienThi } from "./ve-tu-phieu";
 
 export type XacNhanQuetResult = { ok: true; ve: VeQuayHienThi } | { ok: false; message: string };
@@ -22,7 +23,7 @@ export async function xacNhanQuetAction(ma: string): Promise<XacNhanQuetResult> 
   }
   if (phieu.loai !== "cho") return { ok: false, message: "Mã này chỉ để xem lại vé." };
   try {
-    const daCo = await readCounterSaleBy({ siteId: phieu.siteId, requestKey: phieu.requestKey });
+    const daCo = await timPhieuCuaMa(phieu);
     const receipt =
       daCo ??
       (await createCounterSale({

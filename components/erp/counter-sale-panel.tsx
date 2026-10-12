@@ -304,7 +304,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace }: Props) {
   useEffect(() => {
     if (!receipt || receipt.status === "voided") return;
     let huy = false;
-    void duongDanVeKhachAction({ siteId: site.id, saleCode: receipt.saleCode }).then((kq) => {
+    void duongDanVeKhachAction({ siteId: site.id, saleCode: receipt.saleCode, businessDate: receipt.businessDate }).then((kq) => {
       if (!huy && kq.url) setVeDienThoai({ saleCode: receipt.saleCode, url: kq.url });
     });
     return () => {

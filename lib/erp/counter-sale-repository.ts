@@ -278,30 +278,42 @@ export async function setCounterPrice(input: {
 }
 
 /**
- * Đọc một phiếu quầy theo khoá phiếu hoặc theo mã phiếu (12/10/2026).
+ * Tìm một phiếu quầy trong ngày (12/10/2026), cho mã QR khách quét
+ * (`lib/erp/phieu-quay.ts`).
  *
- * Dùng cho mã QR khách quét (`lib/erp/phieu-quay.ts`): màn quầy hỏi "khách
- * quét chưa?" bằng khoá phiếu, trang vé trên điện thoại khách đọc lại bằng mã
- * phiếu. Không có phiếu thì trả `null`, không ném lỗi.
+ * Bảng `erp_counter_sales` không cho đọc thẳng, kể cả bằng khoá máy chủ, nên
+ * đi qua đúng hàm màn quầy đang dùng: danh sách phiếu trong ngày mà người xem
+ * được thấy. Tìm theo mã phiếu, hoặc theo nội dung chuyển khoản sinh từ khoá
+ * phiếu (`counterPaymentReference`). Không thấy thì trả `null`.
  */
-export async function readCounterSaleBy(input: {
+export async function findCounterSale(input: {
   siteId: ErpSiteId;
-  requestKey?: string;
+  viewerAccountId: string;
+  businessDate: string;
   saleCode?: string;
+  paymentReference?: string;
 }): Promise<CounterSaleReceipt | null> {
   const client = createAdminClient();
-  let query = client
-    .from("erp_counter_sales")
-    .select("id")
-    .eq("tenant_id", TENANT_ID)
-    .eq("site_id", ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId]);
-  if (input.requestKey) query = query.eq("request_key", input.requestKey);
-  else if (input.saleCode) query = query.eq("sale_code", input.saleCode);
-  else return null;
-  const { data, error } = await query.maybeSingle();
+  const { data, error } = await client.rpc("erp_counter_sales_for_day", {
+    p_tenant_id: TENANT_ID,
+    p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[input.siteId],
+    p_viewer_account_id: input.viewerAccountId,
+    p_business_date: input.businessDate,
+  });
   if (error) throw tuChoi(error);
-  if (!data?.id) return null;
-  const receipt = await client.rpc("erp_counter_sale_receipt", { p_tenant_id: TENANT_ID, p_sale_id: data.id });
-  if (receipt.error) throw tuChoi(receipt.error);
-  return parseCounterSaleReceipt(receipt.data);
+  const receipts = Array.isArray(data) ? data.flatMap((item) => parseCounterSaleReceipt(item) ?? []) : [];
+  return (
+    receipts.find((receipt) =>
+      input.saleCode
+        ? receipt.saleCode === input.saleCode
+        : input.paymentReference
+          ? receipt.paymentMethod === "qr-transfer" && receipt.paymentReference === input.paymentReference
+          : false,
+    ) ?? null
+  );
+}
+
+/** Ngày bán theo giờ Việt Nam của một thời điểm. */
+export function ngayBanVietNam(millis: number): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(millis));
 }

@@ -406,14 +406,14 @@ export default async function ToanVungPage({ searchParams }: Props) {
                   {group.modules.map((module) => (
                     <li key={module.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-sm font-black text-[#24372f]">{module.name}</span>
-                      <span className="flex flex-wrap gap-2">
+                      <span className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
                         {sites
                           .filter((site) => (user.moduleIdsBySite[site.id] ?? []).includes(module.id))
                           .map((site) => (
                             <Link
                               key={site.id}
                               href={`/erp/${site.id}/${module.id}`}
-                              className="inline-flex min-h-10 items-center rounded-full border border-[#cbd7d1] px-3 text-xs font-bold whitespace-nowrap text-[#183f34] hover:border-[#183f34] hover:bg-[#f3f7f5]"
+                              className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#cbd7d1] px-1 text-xs font-bold whitespace-nowrap text-[#183f34] hover:border-[#183f34] hover:bg-[#f3f7f5] sm:px-3"
                             >
                               {site.shortName}
                             </Link>

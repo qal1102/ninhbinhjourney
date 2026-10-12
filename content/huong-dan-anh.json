@@ -1,6 +1,565 @@
 {
-  "chupLuc": null,
-  "nguon": null,
-  "anh": [],
-  "pdf": null
+  "chupLuc": "2026-10-12T16:40:26.454Z",
+  "nguon": "https://ninhbinhjourney.vercel.app",
+  "anh": [
+    {
+      "id": "ban-giao-ca",
+      "tep": "/huong-dan/anh/ban-giao-ca.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "ban-quay",
+      "tep": "/huong-dan/anh/ban-quay.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "bang-cong-co-so",
+      "tep": "/huong-dan/anh/bang-cong-co-so.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "bang-lenh",
+      "tep": "/huong-dan/anh/bang-lenh.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "bao-cao",
+      "tep": "/huong-dan/anh/bao-cao.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "bao-cao-du-bao",
+      "tep": "/huong-dan/anh/bao-cao-du-bao.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "bao-khan-cap",
+      "tep": "/huong-dan/anh/bao-khan-cap.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "camera",
+      "tep": "/huong-dan/anh/camera.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "cham-cong",
+      "tep": "/huong-dan/anh/cham-cong.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "dai-ly",
+      "tep": "/huong-dan/anh/dai-ly.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "danh-gia-khach",
+      "tep": "/huong-dan/anh/danh-gia-khach.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "de-xuat",
+      "tep": "/huong-dan/anh/de-xuat.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "doi-pham-vi",
+      "tep": "/huong-dan/anh/doi-pham-vi.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "doi-soat-ca",
+      "tep": "/huong-dan/anh/doi-soat-ca.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "doi-voucher",
+      "tep": "/huong-dan/anh/doi-voucher.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "duyet-hoa-hong",
+      "tep": "/huong-dan/anh/duyet-hoa-hong.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "duyet-ngoai-le",
+      "tep": "/huong-dan/anh/duyet-ngoai-le.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "future-planning",
+      "tep": "/huong-dan/anh/future-planning.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "gan-so-khach",
+      "tep": "/huong-dan/anh/gan-so-khach.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "ghi-bang-giong-noi",
+      "tep": "/huong-dan/anh/ghi-bang-giong-noi.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "ghi-so",
+      "tep": "/huong-dan/anh/ghi-so.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "gia-ve-quay",
+      "tep": "/huong-dan/anh/gia-ve-quay.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "giao-ca",
+      "tep": "/huong-dan/anh/giao-ca.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "gioi-thieu-nguoi-cheo",
+      "tep": "/huong-dan/anh/gioi-thieu-nguoi-cheo.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "goi-viec",
+      "tep": "/huong-dan/anh/goi-viec.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "hang-cho",
+      "tep": "/huong-dan/anh/hang-cho.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "ho-so",
+      "tep": "/huong-dan/anh/ho-so.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "hoa-don-ncc",
+      "tep": "/huong-dan/anh/hoa-don-ncc.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "hop-dong-nguoi-cheo",
+      "tep": "/huong-dan/anh/hop-dong-nguoi-cheo.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "khach-hang",
+      "tep": "/huong-dan/anh/khach-hang.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "khach-than-thiet",
+      "tep": "/huong-dan/anh/khach-than-thiet.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "ky-ke-toan",
+      "tep": "/huong-dan/anh/ky-ke-toan.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "lap-but-toan",
+      "tep": "/huong-dan/anh/lap-but-toan.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "lich-mua-vu",
+      "tep": "/huong-dan/anh/lich-mua-vu.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "marketing",
+      "tep": "/huong-dan/anh/marketing.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "nguoi-cheo",
+      "tep": "/huong-dan/anh/nguoi-cheo.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "nhat-ky",
+      "tep": "/huong-dan/anh/nhat-ky.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "nop-ca",
+      "tep": "/huong-dan/anh/nop-ca.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "nop-quy",
+      "tep": "/huong-dan/anh/nop-quy.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "phieu-doan",
+      "tep": "/huong-dan/anh/phieu-doan.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "quet-cong",
+      "tep": "/huong-dan/anh/quet-cong.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "so-nguoi-cheo",
+      "tep": "/huong-dan/anh/so-nguoi-cheo.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "soat-giay-to",
+      "tep": "/huong-dan/anh/soat-giay-to.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "sop",
+      "tep": "/huong-dan/anh/sop.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "su-co",
+      "tep": "/huong-dan/anh/su-co.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "suc-chua",
+      "tep": "/huong-dan/anh/suc-chua.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "suc-chua-ca-vung",
+      "tep": "/huong-dan/anh/suc-chua-ca-vung.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "tai-khoan",
+      "tep": "/huong-dan/anh/tai-khoan.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "thoi-tiet-ben",
+      "tep": "/huong-dan/anh/thoi-tiet-ben.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "thong-bao",
+      "tep": "/huong-dan/anh/thong-bao.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "thu-tai-diem",
+      "tep": "/huong-dan/anh/thu-tai-diem.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "thuyen-tren-song",
+      "tep": "/huong-dan/anh/thuyen-tren-song.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "tien-ve-co-so",
+      "tep": "/huong-dan/anh/tien-ve-co-so.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "toan-vung",
+      "tep": "/huong-dan/anh/toan-vung.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "tro-ly",
+      "tep": "/huong-dan/anh/tro-ly.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "ve-moi",
+      "tep": "/huong-dan/anh/ve-moi.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "viec-can-ban",
+      "tep": "/huong-dan/anh/viec-can-ban.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "web-ban-do",
+      "tep": "/huong-dan/anh/web-ban-do.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-ben-do",
+      "tep": "/huong-dan/anh/web-ben-do.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-con-tro",
+      "tep": "/huong-dan/anh/web-con-tro.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-dai-ly",
+      "tep": "/huong-dan/anh/web-dai-ly.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-dat-goi",
+      "tep": "/huong-dan/anh/web-dat-goi.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-dat-ve-noi-nay",
+      "tep": "/huong-dan/anh/web-dat-ve-noi-nay.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-dau-moc",
+      "tep": "/huong-dan/anh/web-dau-moc.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-den-hoa-dang",
+      "tep": "/huong-dan/anh/web-den-hoa-dang.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-diem-den",
+      "tep": "/huong-dan/anh/web-diem-den.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-doan",
+      "tep": "/huong-dan/anh/web-doan.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-gio-vang",
+      "tep": "/huong-dan/anh/web-gio-vang.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-goi",
+      "tep": "/huong-dan/anh/web-goi.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-hang-cho",
+      "tep": "/huong-dan/anh/web-hang-cho.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-ho-so",
+      "tep": "/huong-dan/anh/web-ho-so.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-hoa-no-theo-gio",
+      "tep": "/huong-dan/anh/web-hoa-no-theo-gio.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-hoa-sung",
+      "tep": "/huong-dan/anh/web-hoa-sung.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-hoi-nhanh",
+      "tep": "/huong-dan/anh/web-hoi-nhanh.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-hom-nay",
+      "tep": "/huong-dan/anh/web-hom-nay.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-hop-tac",
+      "tep": "/huong-dan/anh/web-hop-tac.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-ke-mua",
+      "tep": "/huong-dan/anh/web-ke-mua.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-kham-pha",
+      "tep": "/huong-dan/anh/web-kham-pha.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-kiosk",
+      "tep": "/huong-dan/anh/web-kiosk.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-lap-hanh-trinh",
+      "tep": "/huong-dan/anh/web-lap-hanh-trinh.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-nghe",
+      "tep": "/huong-dan/anh/web-nghe.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-nui-suong",
+      "tep": "/huong-dan/anh/web-nui-suong.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-song-ngu",
+      "tep": "/huong-dan/anh/web-song-ngu.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-suong",
+      "tep": "/huong-dan/anh/web-suong.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-suong-ven",
+      "tep": "/huong-dan/anh/web-suong-ven.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-thanh-dat-cho",
+      "tep": "/huong-dan/anh/web-thanh-dat-cho.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-thanh-day",
+      "tep": "/huong-dan/anh/web-thanh-day.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-thuyen-cuon",
+      "tep": "/huong-dan/anh/web-thuyen-cuon.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-tich-diem",
+      "tep": "/huong-dan/anh/web-tich-diem.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-tra-cuu-ve",
+      "tep": "/huong-dan/anh/web-tra-cuu-ve.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-trung-thu",
+      "tep": "/huong-dan/anh/web-trung-thu.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-ve-giay",
+      "tep": "/huong-dan/anh/web-ve-giay.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "xem-theo-vai",
+      "tep": "/huong-dan/anh/xem-theo-vai.jpg",
+      "rong": 1280,
+      "cao": 800
+    }
+  ],
+  "pdf": "/huong-dan/huong-dan-su-dung.pdf"
 }

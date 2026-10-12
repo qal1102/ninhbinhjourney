@@ -338,6 +338,13 @@ export function HuongDanWorkspace({ the, chiMoi, ...props }: Props) {
           Bấm vào việc nào là tới đúng màn ấy, chỗ cần bấm có viền cam. Mọi thứ chạy trên dữ liệu thật, nên bán thử một vé là
           có một phiếu thu thật.
         </p>
+        <Link
+          href="/erp/huong-dan/tai-lieu"
+          data-testid="loi-vao-tai-lieu"
+          className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#e7c78d] bg-[#fffaf0] px-4 text-sm font-black text-[#20342c]"
+        >
+          Tài liệu hướng dẫn đầy đủ, có ảnh, tải PDF
+        </Link>
         <nav aria-label="Chọn phần muốn xem" className="mt-6 grid gap-3 sm:grid-cols-3">
           {cacThe.map((t) => {
             const dangChon = t.id === the;

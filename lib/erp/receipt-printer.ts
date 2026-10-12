@@ -33,13 +33,30 @@ export const PAPER_LABELS: Readonly<Record<PaperSize, string>> = Object.freeze({
   k58: "Cuộn 58mm",
 });
 
-/** Quy tắc `@page` cho từng khổ. Giấy cuộn để chiều dài tự chạy theo nội dung. */
+/**
+ * Quy tắc `@page` cho từng khổ. Giấy cuộn không có chiều dài cố định: CSS
+ * không nhận `size: 80mm auto` (trình duyệt bỏ cả dòng và về khổ A4/Letter,
+ * nên phiếu cuộn trước 12/10/2026 in ra giữa một tờ A4). Chiều dài được đo từ
+ * phiếu thật lúc in, xem `pageCssFor`.
+ */
 export const PAPER_PAGE_CSS: Readonly<Record<PaperSize, string>> = Object.freeze({
   a4: "size: A4 portrait; margin: 16mm;",
   a5: "size: A5 portrait; margin: 10mm;",
-  k80: "size: 80mm auto; margin: 3mm;",
-  k58: "size: 58mm auto; margin: 2mm;",
+  k80: "size: 80mm 200mm; margin: 3mm;",
+  k58: "size: 58mm 200mm; margin: 2mm;",
 });
+
+const PAPER_MARGIN_MM: Readonly<Record<PaperSize, number>> = Object.freeze({ a4: 16, a5: 10, k80: 3, k58: 2 });
+
+/** `@page` đúng khổ; giấy cuộn dài bằng phiếu (`contentHeightMm`) cộng lề. */
+export function pageCssFor(paper: PaperSize, contentHeightMm: number) {
+  if (paper === "k80" || paper === "k58") {
+    const margin = PAPER_MARGIN_MM[paper];
+    const height = Math.max(40, Math.ceil(contentHeightMm + margin * 2 + 2));
+    return `size: ${paper === "k80" ? 80 : 58}mm ${height}mm; margin: ${margin}mm;`;
+  }
+  return PAPER_PAGE_CSS[paper];
+}
 
 /** Bề ngang vùng in của phiếu trên từng khổ. */
 export const PAPER_RECEIPT_WIDTH: Readonly<Record<PaperSize, string>> = Object.freeze({
@@ -80,39 +97,132 @@ export function savePrinterSettings(settings: PrinterSettings) {
 
 // --- Đường 1: hộp thoại in của máy ------------------------------------------------
 
+function choTaiXong(node: HTMLLinkElement | HTMLImageElement, timeoutMs: number) {
+  return new Promise<void>((resolve) => {
+    const xong = () => resolve();
+    node.addEventListener("load", xong, { once: true });
+    node.addEventListener("error", xong, { once: true });
+    window.setTimeout(xong, timeoutMs);
+  });
+}
+
 /**
- * In đúng một phần tử, đúng khổ giấy. Chỉ phần tử mang `data-print-active`
- * hiện ra khi in; mọi thứ khác của màn hình ERP bị ẩn.
+ * In đúng một phần tử, đúng khổ giấy.
+ *
+ * Phiếu được chép sang một khung `<iframe>` riêng chỉ chứa phiếu rồi in khung
+ * ấy. Cách cũ (12/10/2026 trở về trước) ẩn mọi thứ khác bằng `visibility:
+ * hidden` ngay trên màn ERP: phần bị ẩn vẫn chiếm chỗ, nên bản in có trang
+ * trắng theo sau, phiếu có khi rơi xuống trang hai, và giấy cuộn bị kéo dài
+ * bằng cả màn hình. Khung riêng thì chỉ có phiếu, nên đo được chiều dài thật
+ * cho giấy cuộn.
  */
-export function printWithSystemDialog(elementId: string, paper: PaperSize) {
+export async function printWithSystemDialog(elementId: string, paper: PaperSize): Promise<boolean> {
   const target = document.getElementById(elementId);
   if (!target) return false;
-  const style = document.createElement("style");
-  style.setAttribute("data-receipt-print-style", "");
-  style.textContent = `@page { ${PAPER_PAGE_CSS[paper]} }
-@media print {
-  body * { visibility: hidden !important; }
-  [data-print-active="true"], [data-print-active="true"] * { visibility: visible !important; }
-  [data-print-active="true"] {
-    position: absolute !important; left: 0 !important; top: 0 !important;
-    width: ${PAPER_RECEIPT_WIDTH[paper]} !important; max-width: ${PAPER_RECEIPT_WIDTH[paper]} !important;
-    margin: 0 auto !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important;
-    font-size: ${paper === "k58" ? "10px" : paper === "k80" ? "11px" : "13px"} !important;
+  document.querySelectorAll("iframe[data-receipt-print-frame]").forEach((old) => old.remove());
+
+  const frame = document.createElement("iframe");
+  frame.setAttribute("data-receipt-print-frame", "");
+  frame.setAttribute("aria-hidden", "true");
+  frame.tabIndex = -1;
+  // Nằm ngoài màn hình nhưng vẫn dựng bố cục, để đo được chiều cao phiếu.
+  frame.style.cssText = `position:fixed;left:-10000px;top:0;width:${PAPER_RECEIPT_WIDTH[paper]};height:100px;border:0;opacity:0;pointer-events:none;`;
+  document.body.appendChild(frame);
+  const doc = frame.contentDocument;
+  const win = frame.contentWindow;
+  if (!doc || !win) {
+    frame.remove();
+    return false;
   }
-  [data-print-active="true"] img { width: ${paper === "k58" ? "32mm" : "40mm"} !important; height: auto !important; }
-}`;
-  document.head.appendChild(style);
-  target.setAttribute("data-print-active", "true");
+
+  const kieu = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+    .filter((node) => !node.hasAttribute("data-receipt-print-style"))
+    .map((node) => node.outerHTML)
+    .join("\n");
+  const coChu = paper === "k58" ? "10px" : paper === "k80" ? "11px" : "13px";
+  const coQr = paper === "k58" ? "32mm" : "40mm";
+  doc.open();
+  doc.write(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><base href="${window.location.origin}/">${kieu}
+<style data-receipt-frame>
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  body { width: ${PAPER_RECEIPT_WIDTH[paper]}; margin: 0 auto !important; color: #000; font-size: ${coChu}; }
+  body > * {
+    width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important;
+    border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    position: static !important; left: auto !important;
+  }
+  img { width: ${coQr} !important; height: auto !important; }
+  figure, tr, dl > div { break-inside: avoid; }
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+</style><style data-receipt-page>@page { ${PAPER_PAGE_CSS[paper]} }</style></head><body></body></html>`);
+  doc.close();
+  const ban = target.cloneNode(true) as HTMLElement;
+  ban.removeAttribute("id");
+  ban.removeAttribute("aria-hidden");
+  doc.body.appendChild(doc.importNode(ban, true));
+
+  // Chờ CSS và ảnh QR trong khung tải xong, có hạn, để không treo nút In.
+  await Promise.all([
+    ...Array.from(doc.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).map((link) =>
+      link.sheet ? Promise.resolve() : choTaiXong(link, 3000),
+    ),
+    ...Array.from(doc.images).map((img) => (img.complete ? Promise.resolve() : choTaiXong(img, 3000))),
+  ]);
+  try {
+    await doc.fonts?.ready;
+  } catch {
+    // Không có API phông chữ: in bằng phông dự phòng.
+  }
+
+  const caoMm = (doc.body.scrollHeight * 25.4) / 96;
+  const trang = doc.querySelector("style[data-receipt-page]");
+  if (trang) trang.textContent = `@page { ${pageCssFor(paper, caoMm)} }`;
+
   const donDep = () => {
-    target.removeAttribute("data-print-active");
-    style.remove();
-    window.removeEventListener("afterprint", donDep);
+    win.removeEventListener("afterprint", donDep);
+    frame.remove();
   };
-  window.addEventListener("afterprint", donDep);
-  window.print();
+  win.addEventListener("afterprint", donDep);
+  try {
+    win.focus();
+    win.print();
+  } catch {
+    donDep();
+    return false;
+  }
   // Có trình duyệt không bắn `afterprint`; dọn dự phòng sau khi hộp thoại đóng.
   window.setTimeout(donDep, 60_000);
   return true;
+}
+
+// --- Tải PDF ngay trên máy ---------------------------------------------------------
+
+/** Bề ngang ảnh phiếu khi làm PDF: gấp đôi đầu in 80mm để chữ nét khi in laser. */
+const PDF_DOTS = 1152;
+
+/**
+ * Vẽ phiếu thành ảnh rồi gói thành tệp PDF đúng khổ đã chọn, tải về máy.
+ * Không qua hộp thoại in, nên chạy cả trong app ERP cài trên iPhone.
+ */
+export async function downloadReceiptPdf(lines: readonly PrintLine[], paper: PaperSize, fileName: string) {
+  const { taoPdfTuAnhJpeg, batCucPhieu } = await import("@/lib/erp/pdf-anh");
+  const canvas = renderReceiptCanvas(lines, PDF_DOTS);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+  if (!blob) throw new Error("Không vẽ được phiếu thành ảnh.");
+  const jpeg = new Uint8Array(await blob.arrayBuffer());
+  const { trang, anh } = batCucPhieu(paper, canvas.width, canvas.height);
+  const pdf = taoPdfTuAnhJpeg({ jpeg, rongPx: canvas.width, caoPx: canvas.height, trang, anh });
+  const url = URL.createObjectURL(new Blob([pdf as BlobPart], { type: "application/pdf" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.rel = "noopener";
+  link.hidden = true;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Thu hồi ngay thì vài trình duyệt huỷ luôn lượt tải đang bắt đầu.
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 // --- Đường 2: máy in nhiệt Bluetooth -----------------------------------------------

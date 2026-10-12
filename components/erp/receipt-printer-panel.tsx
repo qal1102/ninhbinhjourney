@@ -11,6 +11,7 @@ import {
   bluetoothPrintingSupport,
   connectBluetoothPrinter,
   currentBluetoothPrinter,
+  downloadReceiptPdf,
   loadPrinterSettings,
   printLinesToBluetooth,
   printWithSystemDialog,
@@ -134,6 +135,8 @@ export type ReceiptPrinter = {
   bluetoothReason: string;
   connect: () => Promise<void>;
   print: (input: { elementId: string; lines: PrintLine[] }) => Promise<void>;
+  /** Tải tệp PDF đúng khổ đã chọn, không qua hộp thoại in. */
+  downloadPdf: (input: { lines: PrintLine[]; fileName: string }) => Promise<void>;
   message: { tone: "ok" | "error"; text: string } | null;
   busy: boolean;
 };
@@ -216,14 +219,35 @@ export function useReceiptPrinter(): ReceiptPrinter {
         }
         return;
       }
-      if (!printWithSystemDialog(elementId, settings.paper)) {
-        setMessage({ tone: "error", text: "Không tìm thấy phiếu để in. Xin tải lại trang." });
+      setBusy(true);
+      try {
+        if (!(await printWithSystemDialog(elementId, settings.paper))) {
+          setMessage({ tone: "error", text: "Chưa mở được hộp thoại in. Bấm \"Tải PDF\" để lưu phiếu rồi in từ tệp." });
+        }
+      } finally {
+        setBusy(false);
       }
     },
     [settings],
   );
 
-  return { settings, setPaper, setMode, bluetoothName, bluetoothReason, connect, print, message, busy };
+  const downloadPdf = useCallback(
+    async ({ lines, fileName }: { lines: PrintLine[]; fileName: string }) => {
+      setMessage(null);
+      setBusy(true);
+      try {
+        await downloadReceiptPdf(lines, settings.paper, fileName);
+        setMessage({ tone: "ok", text: `Đã tạo tệp PDF khổ ${PAPER_LABELS[settings.paper]}: ${fileName}.` });
+      } catch {
+        setMessage({ tone: "error", text: "Chưa tạo được tệp PDF. Xin thử lại." });
+      } finally {
+        setBusy(false);
+      }
+    },
+    [settings.paper],
+  );
+
+  return { settings, setPaper, setMode, bluetoothName, bluetoothReason, connect, print, downloadPdf, message, busy };
 }
 
 export function ReceiptPrinterSettings({

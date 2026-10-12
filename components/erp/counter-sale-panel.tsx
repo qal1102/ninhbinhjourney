@@ -805,7 +805,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
                 {...chi("xong", "Phiếu thu đã ra, in được ngay. Tiền quầy tự cộng vào đối soát cuối ca.")}
               >
                 <ReceiptSheet id="counter-receipt" site={site} receipt={receipt} />
-                <div className="mx-auto flex max-w-sm gap-2">
+                <div className="mx-auto flex max-w-sm flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() =>
@@ -818,12 +818,36 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
                   </button>
                   <button
                     type="button"
+                    onClick={() =>
+                      void printer.downloadPdf({
+                        lines: receiptLinesForSale(site.name, receipt),
+                        fileName: `phieu-thu-${receipt.saleCode}.pdf`,
+                      })
+                    }
+                    disabled={printer.busy}
+                    className="min-h-11 rounded-xl border border-[#183f34] bg-white px-4 font-black text-[#183f34]"
+                    data-testid="tai-pdf-phieu"
+                  >
+                    Tải PDF
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setReceipt(null)}
                     className="min-h-11 rounded-xl border border-[#ccd8d1] px-4 font-black text-[#42574e]"
                   >
                     Đóng
                   </button>
                 </div>
+                {printer.message ? (
+                  <p
+                    role={printer.message.tone === "error" ? "alert" : "status"}
+                    className={`mx-auto max-w-sm rounded-lg px-3 py-2 text-xs font-bold ${
+                      printer.message.tone === "error" ? "bg-[#fdeceb] text-[#8b3d31]" : "bg-[#e3f1ea] text-[#24533f]"
+                    }`}
+                  >
+                    {printer.message.text}
+                  </p>
+                ) : null}
                 {receipt.status !== "voided" && veDienThoai?.saleCode === receipt.saleCode ? (
                   <DuaVeChoKhach
                     className="mx-auto max-w-sm"

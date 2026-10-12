@@ -141,6 +141,7 @@
 
 **Hàng đợi chủ dự án giao 12/10 (chưa làm, theo thứ tự đề xuất; quyết định đã có: tự áp migration sau PGlite + dry-run, báo khẩn cấp = đẩy rung + tự gọi khi cấp trên chưa nhận 2 phút, vé đoàn = giá người lớn × số người trừ ưu đãi theo công ty, có hoá đơn công ty):**
 1. **Vé đoàn giữ chỗ và trả bằng QR:** lập phiếu đoàn hiện cấp ngay mã vào cổng mà chưa thu tiền. Cần migration: RPC lập đoàn đã trả (phiếu bán quầy + đoàn dùng chung một vé, không đôi lượt), thông tin trưởng đoàn/hướng dẫn viên, công ty lữ hành (xem dùng lại bảng `dai_ly`), xuất hoá đơn cho công ty, lịch sử giao dịch và ưu đãi theo số đoàn trong năm. Màn khách riêng (màn hình thứ hai hướng ra khách) hiện số tiền + đồng hồ 15 phút, quét xong mới hiện vé.
+1b. **Vé mời khách (0 đ):** lựa chọn mới ở quầy, bắt buộc ghi tên người mời (gắn tài khoản ai mời), hiện riêng trong đối soát và báo cáo để không lẫn với vé bán (chủ dự án 12/10).
 2. **Chuyển vé đoàn thành vé cá nhân bằng số điện thoại; tích điểm, quà, voucher theo số lần đi** (khách để lại SĐT càng nhiều càng tốt; tách đồng ý dịch vụ và đồng ý tiếp thị).
 3. **In phiếu vừa khổ giấy và xuất PDF** (chủ dự án: "in vé phải fit vừa tờ giấy, xuất PDF cũng không được") — chưa tái hiện.
 4. **Dự án & sự kiện:** "gói việc bấm vào không ra gì" — cần màn chi tiết gói việc.

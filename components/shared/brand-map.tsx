@@ -10,6 +10,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useReducedMotion } from "@/components/shared/use-reduced-motion";
 import {
   GHI_CONG_BAN_DO,
+  ID_VE_TINH,
   CHU_MAPLIBRE,
   kieuBanDoThuongHieu,
   TAM_NINH_BINH,
@@ -323,7 +324,7 @@ export function BrandMap({
 
     const map = new maplibregl.Map({
       container: khung.current,
-      style: kieuBanDoThuongHieu(tone, khoi3d),
+      style: kieuBanDoThuongHieu(tone, khoi3d, khoi3d ? (dang3dRef.current ? "hien" : "an") : null),
       // Kéo nghiêng tới 70° mới thấy hết chiều cao vách núi; mặc định chặn ở 60.
       maxPitch: khoi3d ? 70 : 60,
       center: (tamMacDinh
@@ -546,6 +547,20 @@ export function BrandMap({
       });
     }
   }, [ghim, dangChon, itChuyenDong, doiTamKhiChon, le, zoomToiDa, khoi3d]);
+
+  // 3D là ảnh vệ tinh thật phủ lên núi; 2D là bản đồ giấy của thương hiệu.
+  // Khối nhà nổi trên bản đồ giấy thì giấu đi khi có ảnh, kẻo đè lên mái thật.
+  useEffect(() => {
+    const map = banDo.current;
+    if (!map || !khoi3d) return;
+    const doi = () => {
+      if (!map.getLayer(ID_VE_TINH)) return;
+      map.setLayoutProperty(ID_VE_TINH, "visibility", dang3d ? "visible" : "none");
+      if (map.getLayer("khoi-nha")) map.setLayoutProperty("khoi-nha", "visibility", dang3d ? "none" : "visible");
+    };
+    if (map.isStyleLoaded()) doi();
+    else map.once("load", doi);
+  }, [dang3d, khoi3d]);
 
   // Bấm 2D/3D: chỉ đổi góc nhìn, giữ nguyên tâm và mức phóng khách đang xem.
   const daDoiGoc = useRef(false);

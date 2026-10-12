@@ -91,8 +91,8 @@ export default function BanDoHoaSung({ lang }: { lang: "vi" | "en" }) {
       DUONG_TAM_COC.forEach((p) => b.extend([p[0], p[1]]));
       map = new maplibregl.Map({
         container: el,
-        // Núi nổi khối (11/10/2026): đò len giữa hai vách đá vôi thật, không phải trên mặt phẳng.
-        style: kieuBanDoThuongHieu("giay", true),
+        // Núi nổi khối (11/10/2026) và ảnh vệ tinh thật (12/10): đò len giữa hai vách đá vôi, sông và ruộng đúng màu.
+        style: kieuBanDoThuongHieu("giay", true, "hien"),
         bounds: b,
         fitBoundsOptions: { padding: 40 },
         maxPitch: 70,

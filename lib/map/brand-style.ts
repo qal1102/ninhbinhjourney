@@ -53,6 +53,19 @@ export const GHI_CONG_DIA_HINH =
  */
 export const DO_NOI_NUI = 1.8;
 
+/**
+ * Ảnh vệ tinh MapTiler cho chế độ 3D (12/10/2026, chủ dự án muốn bản đồ 3D
+ * "VIP" như ảnh thật). Khoá công khai theo kiểu của MapTiler (nằm trong trình
+ * duyệt khách), đặt ở biến `NEXT_PUBLIC_MAPTILER_KEY` trên Vercel và
+ * `.env.local`, không ghi vào mã. Không có khoá thì bản đồ 3D vẫn chạy, chỉ
+ * không có lớp ảnh. Gói miễn phí tính theo lượt tải ô, nên lớp này chỉ bật ở
+ * chế độ 3D; bản đồ 2D vẫn là bản đồ giấy của thương hiệu.
+ */
+export const KHOA_MAPTILER = process.env.NEXT_PUBLIC_MAPTILER_KEY?.trim() ?? "";
+export const ID_VE_TINH = "ve-tinh";
+const GHI_CONG_VE_TINH =
+  'ảnh vệ tinh <a href="https://www.maptiler.com/copyright/" target="_blank" rel="noreferrer">© MapTiler</a>';
+
 /** Tâm vùng Ninh Bình, dạng MapLibre `[kinh độ, vĩ độ]`. */
 export const TAM_NINH_BINH: [number, number] = [105.897, 20.2503];
 
@@ -132,7 +145,13 @@ const TEN_DIA_DANH: ExpressionSpecification = [
  * tượng kiểu khi chạy, nên dùng chung một hằng số giữa hai bản đồ là hai bản
  * đồ giẫm lên nhau.
  */
-export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay", diaHinh = false): StyleSpecification {
+export function kieuBanDoThuongHieu(
+  tone: ToneBanDo = "giay",
+  diaHinh = false,
+  /** Có lớp ảnh vệ tinh, và lúc mở có hiện ngay không. Thiếu khoá thì bỏ qua. */
+  veTinh: "hien" | "an" | null = null,
+): StyleSpecification {
+  const coVeTinh = Boolean(veTinh && KHOA_MAPTILER);
   const m = BANG[tone];
   // Hai nguồn riêng cho khối núi và bóng đổ: MapLibre khuyên vậy, dùng chung
   // một nguồn thì bóng đổ bị vỡ ô khi bản đồ nghiêng.
@@ -149,6 +168,17 @@ export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay", diaHinh = false): 
         attribution: GHI_CONG_BAN_DO,
       },
       ...(diaHinh ? { "do-cao": { ...doCao, attribution: GHI_CONG_DIA_HINH }, "do-cao-bong": doCao } : {}),
+      ...(coVeTinh
+        ? {
+            [ID_VE_TINH]: {
+              type: "raster" as const,
+              tiles: [`https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=${KHOA_MAPTILER}`],
+              tileSize: 512,
+              maxzoom: 19,
+              attribution: GHI_CONG_VE_TINH,
+            },
+          }
+        : {}),
     },
     ...(diaHinh ? { terrain: { source: "do-cao", exaggeration: DO_NOI_NUI } } : {}),
     // Bầu trời chỉ hiện khi bản đồ nghiêng; nằm phẳng thì không thấy gì.
@@ -293,6 +323,8 @@ export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay", diaHinh = false): 
         source: "ofm",
         "source-layer": "building",
         minzoom: 14,
+        // Có ảnh vệ tinh thì mái nhà thật đã ở trong ảnh; khối giấy đè lên chỉ rối.
+        ...(coVeTinh && veTinh === "hien" ? { layout: { visibility: "none" as const } } : {}),
         paint: {
           "fill-extrusion-color": m.nha,
           "fill-extrusion-height": ["coalesce", ["get", "render_height"], 6],
@@ -300,6 +332,19 @@ export function kieuBanDoThuongHieu(tone: ToneBanDo = "giay", diaHinh = false): 
           "fill-extrusion-opacity": 0.82,
         },
       },
+      // Ảnh vệ tinh phủ lên mọi lớp nền và đường, chỉ chừa tên địa danh ở trên:
+      // núi, sông, ruộng hiện đúng màu thật, tên vẫn đọc được nhờ viền chữ.
+      ...(coVeTinh
+        ? [
+            {
+              id: ID_VE_TINH,
+              type: "raster" as const,
+              source: ID_VE_TINH,
+              layout: { visibility: veTinh === "hien" ? ("visible" as const) : ("none" as const) },
+              paint: { "raster-fade-duration": 250, "raster-saturation": 0.08, "raster-contrast": 0.04 },
+            },
+          ]
+        : []),
       {
         id: "ten-song",
         type: "symbol",

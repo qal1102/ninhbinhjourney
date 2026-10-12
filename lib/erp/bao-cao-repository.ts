@@ -18,7 +18,10 @@ export type BaoCaoCoSo =
  * đã đặt trước cho bảy ngày kể từ hôm nay. Đọc hỏng thì nói thật là hỏng,
  * không dựng một biểu đồ rỗng trông như "không có khách".
  */
-export async function docBaoCaoCoSo(siteId: ErpSiteId): Promise<BaoCaoCoSo> {
+export async function docBaoCaoCoSo(
+  siteId: ErpSiteId,
+  khoang?: { soNgay: number; gomHomNay: boolean },
+): Promise<BaoCaoCoSo> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const secret = process.env.SUPABASE_SECRET_KEY?.trim();
   if (process.env.ERP_PERSISTENCE_MODE?.trim() !== "supabase" || !url || !secret) {
@@ -32,8 +35,9 @@ export async function docBaoCaoCoSo(siteId: ErpSiteId): Promise<BaoCaoCoSo> {
   const { data, error } = await client.rpc("erp_bao_cao_co_so", {
     p_tenant_id: TENANT_ID,
     p_site_id: ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[siteId],
-    p_tu: congNgay(homNay, -56),
-    p_den: homNay,
+    // Màn Toàn vùng cần cả hôm nay (chưa hết ngày) để ô "Hôm nay" có số.
+    p_tu: congNgay(homNay, -(khoang?.soNgay ?? 56)),
+    p_den: khoang?.gomHomNay ? congNgay(homNay, 1) : homNay,
   });
   if (error) {
     console.error("Report read failed", error);

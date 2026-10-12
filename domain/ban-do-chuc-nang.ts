@@ -289,8 +289,10 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         diem: "goi-viec",
         cacViec: [
           "Đọc thanh tiến độ và số ngày còn lại tới sự kiện.",
-          "Mở từng gói việc: ai phụ trách, hạn ngày nào, đã xong bao nhiêu.",
+          "Bấm một gói việc: người được giao, hạn còn hay trễ mấy ngày, quyết toán, gói nào phải xong trước.",
+          "Dòng \"Bước tiếp theo\" nói việc đang chờ ai; vai không có nút thì ghi rõ chỉ theo dõi.",
         ],
+        moi: "12/10",
       },
       {
         id: "doi-pham-vi",
@@ -600,6 +602,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
     id: "cong-cu",
     ten: "Công cụ của giám đốc",
     chucNang: [
+      {
+        id: "toan-vung",
+        ten: "Báo cáo toàn vùng",
+        moTa: "Khách, tiền quầy và web, sự cố, dự án, việc chờ quyết của mọi cơ sở trên một màn; bấm một cơ sở là ra chi tiết.",
+        vai: "director",
+        duongDan: "/erp/toan-vung",
+        diem: "toan-vung",
+        moi: "12/10",
+        cacViec: [
+          "Chọn kỳ Hôm nay, 7 ngày hoặc 30 ngày; bốn ô đầu là tổng cả vùng, kèm so với kỳ trước.",
+          "Bấm thẻ một cơ sở: khối chi tiết mở ra với khách theo ngày, sự cố đang mở, dự án, việc chờ quyết, dự báo bảy ngày.",
+          "Khối \"Tài chính theo cơ sở\" so tiền quầy, web và tỉ trọng từng nơi; cuối trang chọn nghiệp vụ rồi bấm tên cơ sở để vào thẳng.",
+        ],
+      },
       {
         id: "ghi-bang-giong-noi",
         ten: "Giao việc, ghi chú bằng giọng nói",

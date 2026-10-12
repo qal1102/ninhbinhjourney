@@ -354,6 +354,16 @@ export function ExecutiveDashboard({
           ))}
         </div>
 
+        {/* 12/10: chủ dự án muốn một màn so sánh từng cơ sở, bấm vào là ra chi tiết. */}
+        <Link
+          href="/erp/toan-vung"
+          data-testid="loi-vao-toan-vung"
+          className="mt-4 flex min-h-12 items-center justify-between gap-3 rounded-xl bg-white px-4 text-sm font-black text-[#173f34] transition hover:bg-[#eef6f2]"
+        >
+          <span>Báo cáo toàn vùng: so sánh {sites.length} cơ sở, bấm vào xem chi tiết</span>
+          <span aria-hidden="true">→</span>
+        </Link>
+
         {/* Không giấu phần dữ liệu mẫu đi — xem `describeSampleRows` ở trên
             cho lý do. Cùng lối diễn đạt với bảng vé ngay bên dưới. */}
         {sampleNote ? (

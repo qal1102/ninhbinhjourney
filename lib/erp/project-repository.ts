@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { ErpRole, ErpSiteId } from "@/domain/erp";
+import { findDemoErpAccountById } from "@/lib/erp/demo-data";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
@@ -45,6 +46,9 @@ export type ProjectWorkItem = {
   submittedForAcceptanceBy: string | null;
   dependsOnCodes: string[];
   version: number;
+  /** Tên người được giao và người gửi nghiệm thu, đọc ra để màn chi tiết gói việc hiện. */
+  assigneeName?: string | null;
+  submittedForAcceptanceByName?: string | null;
 };
 
 export type ProjectMilestone = {
@@ -831,8 +835,27 @@ async function recordSettlementInSupabase(
 // --- public API -----------------------------------------------------------
 
 export async function getProjectWorkspace(siteId: ErpSiteId): Promise<ProjectWorkspace> {
-  if (readMode() === "supabase") return readSupabaseWorkspace(siteId);
-  return readCookieWorkspace(siteId);
+  const workspace =
+    readMode() === "supabase" ? await readSupabaseWorkspace(siteId) : await readCookieWorkspace(siteId);
+  return withPeopleNames(workspace);
+}
+
+function accountName(id: string | null) {
+  return id ? (findDemoErpAccountById(id)?.name ?? null) : null;
+}
+
+function withPeopleNames(workspace: ProjectWorkspace): ProjectWorkspace {
+  return {
+    ...workspace,
+    milestones: workspace.milestones.map((milestone) => ({
+      ...milestone,
+      workItems: milestone.workItems.map((item) => ({
+        ...item,
+        assigneeName: accountName(item.assigneeAccountId),
+        submittedForAcceptanceByName: accountName(item.submittedForAcceptanceBy),
+      })),
+    })),
+  };
 }
 
 export type ProjectChangeRequestWithSite = ProjectChangeRequest & {

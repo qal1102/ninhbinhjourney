@@ -55,6 +55,32 @@ function formatBillion(value: number) {
   return `${value.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
 }
 
+function dueText(item: ProjectWorkItem) {
+  if (item.status === "done") return "đã xong";
+  const days = daysUntil(item.dueDate);
+  if (days < 0) return `trễ ${Math.abs(days)} ngày`;
+  if (days === 0) return "hạn hôm nay";
+  return `còn ${days} ngày`;
+}
+
+/** Bước kế tiếp của gói việc và ai làm, để người chỉ xem cũng biết việc đang chờ ai. */
+function nextStepText(item: ProjectWorkItem, settled: boolean) {
+  switch (item.status) {
+    case "open":
+      return "Người được giao hoặc quản lý cơ sở bấm Bắt đầu xử lý.";
+    case "in-progress":
+      return "Người làm cập nhật tiến độ; đủ 100% thì gửi nghiệm thu.";
+    case "blocked":
+      return "Đang vướng. Quản lý cơ sở hoặc người được giao gỡ chặn khi đã xử lý xong.";
+    case "ready-for-acceptance":
+      return "Quản lý hoặc giám đốc xác nhận hoàn thành (người gửi không tự xác nhận được).";
+    case "done":
+      return item.requiresSettlement && !settled
+        ? "Đã nghiệm thu. Kế toán ghi chi phí thực tế ở khối Quyết toán."
+        : "Đã xong, không còn việc nào.";
+  }
+}
+
 export function ProjectEventWorkspace({ site, user, workspace }: Props) {
   const router = useRouter();
   const { event, milestones, changeRequests, settlements } = workspace;
@@ -98,6 +124,13 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
   }
 
   const settledCodes = new Set(settlements.map((settlement) => settlement.workItemCode));
+  const settledAmountByCode = new Map<string, number>();
+  for (const settlement of settlements) {
+    settledAmountByCode.set(
+      settlement.workItemCode,
+      (settledAmountByCode.get(settlement.workItemCode) ?? 0) + settlement.amountBillion,
+    );
+  }
   const settleableItems = allItems.filter(
     (item) => item.status === "done" && item.requiresSettlement && !settledCodes.has(item.code),
   );
@@ -167,34 +200,104 @@ export function ProjectEventWorkspace({ site, user, workspace }: Props) {
                       const dependencies = item.dependsOnCodes
                         .map((code) => allItems.find((candidate) => candidate.code === code))
                         .filter((candidate): candidate is ProjectWorkItem => Boolean(candidate));
+                      const waitingOnThis = allItems.filter((candidate) => candidate.dependsOnCodes.includes(item.code));
+                      const settledAmount = settledAmountByCode.get(item.code);
+                      const late = item.status !== "done" && daysUntil(item.dueDate) < 0;
+                      const canAct =
+                        (item.status === "ready-for-acceptance" && canAccept && item.submittedForAcceptanceBy !== user.id) ||
+                        (item.status !== "ready-for-acceptance" && item.status !== "done" && canActOnItem(item));
 
                       return (
-                        <details key={item.code} className="rounded-xl border border-[#e0e6e2]">
-                          <summary className="cursor-pointer list-none p-4">
-                            <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-                              <span className="font-mono text-xs font-black text-[#7a8781]">{item.code}</span>
-                              <strong className="text-sm text-[#2c3e36]">{item.title}</strong>
-                              <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-black ${statusTone[item.status]}`}>
-                                {statusLabel[item.status]}
-                              </span>
+                        <details key={item.code} data-goi-viec={item.code} className="group rounded-xl border border-[#e0e6e2] open:border-[#c9d6ce] open:shadow-sm">
+                          <summary className="cursor-pointer list-none rounded-xl p-4 transition-colors hover:bg-[#f8faf8] motion-reduce:transition-none [&::-webkit-details-marker]:hidden">
+                            <div className="flex items-start gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+                                  <span className="font-mono text-xs font-black text-[#7a8781]">{item.code}</span>
+                                  <strong className="text-sm text-[#2c3e36]">{item.title}</strong>
+                                  <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-black ${statusTone[item.status]}`}>
+                                    {statusLabel[item.status]}
+                                  </span>
+                                </div>
+                                <p className="mt-1 text-xs text-[#6e7b75]">
+                                  {item.ownerTeam} · Hạn {formatDate(item.dueDate)}
+                                  {late ? <span className="font-black text-[#a34637]"> · {dueText(item)}</span> : null}
+                                </p>
+                                <div className="mt-2 flex items-center gap-2">
+                                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e7ece9]">
+                                    <div className="h-full rounded-full bg-[#397a62]" style={{ width: `${item.progressPercent}%` }} />
+                                  </div>
+                                  <span className="w-9 text-right text-xs font-black text-[#4a5952]">{item.progressPercent}%</span>
+                                </div>
+                              </div>
+                              <span aria-hidden="true" className="mt-0.5 text-xl font-black leading-none text-[#8a968f] transition-transform group-open:rotate-90 motion-reduce:transition-none">›</span>
                             </div>
-                            <p className="mt-1 text-xs text-[#6e7b75]">
-                              {item.ownerTeam} · Hạn {formatDate(item.dueDate)} · {item.progressPercent}%
-                            </p>
                           </summary>
 
-                          <div className="border-t border-[#edf0ee] bg-[#f8faf8] p-4 space-y-3">
+                          <div className="space-y-3 rounded-b-xl border-t border-[#edf0ee] bg-[#f8faf8] p-4">
+                            <dl className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="rounded-lg bg-white p-3">
+                                <dt className="text-[#7b8881]">Người được giao</dt>
+                                <dd className="mt-1 font-black text-[#2c3e36]">{item.assigneeName ?? "Chưa giao riêng ai"}</dd>
+                                {item.assigneeName ? null : <dd className="mt-0.5 text-[#849089]">Quản lý cơ sở trực tiếp làm</dd>}
+                              </div>
+                              <div className="rounded-lg bg-white p-3">
+                                <dt className="text-[#7b8881]">Nhóm phụ trách</dt>
+                                <dd className="mt-1 font-black text-[#2c3e36]">{item.ownerTeam}</dd>
+                                <dd className="mt-0.5 text-[#849089]">{milestone.name}</dd>
+                              </div>
+                              <div className="rounded-lg bg-white p-3">
+                                <dt className="text-[#7b8881]">Hạn</dt>
+                                <dd className="mt-1 font-black text-[#2c3e36]">{formatDate(item.dueDate)}</dd>
+                                <dd className={`mt-0.5 font-bold ${late ? "text-[#a34637]" : "text-[#849089]"}`}>{dueText(item)}</dd>
+                              </div>
+                              <div className="rounded-lg bg-white p-3">
+                                <dt className="text-[#7b8881]">Quyết toán</dt>
+                                <dd className="mt-1 font-black text-[#2c3e36]">
+                                  {!item.requiresSettlement
+                                    ? "Không cần"
+                                    : settledAmount !== undefined
+                                      ? `Đã ghi ${formatBillion(settledAmount)}`
+                                      : "Cần ghi khi xong"}
+                                </dd>
+                                {item.requiresSettlement && settledAmount === undefined ? (
+                                  <dd className="mt-0.5 text-[#849089]">Kế toán ghi chi phí thực tế</dd>
+                                ) : null}
+                              </div>
+                            </dl>
+
+                            <p className="rounded-lg border border-[#e3d2c4] bg-[#fbf4ec] p-3 text-xs leading-5 text-[#7a4d2a]">
+                              <strong>Bước tiếp theo:</strong> {nextStepText(item, settledAmount !== undefined)}
+                              {item.status === "ready-for-acceptance" && item.submittedForAcceptanceByName ? (
+                                <> Người gửi nghiệm thu: {item.submittedForAcceptanceByName}.</>
+                              ) : null}
+                              {!canAct && item.status !== "done" ? (
+                                <span className="mt-1 block text-[#8a6a52]">Vai đang xem chỉ theo dõi gói này, không có nút thao tác.</span>
+                              ) : null}
+                            </p>
+
                             {dependencies.length > 0 ? (
                               <div className="rounded-lg bg-white p-3 text-xs">
-                                <p className="font-black text-[#607169]">Phụ thuộc</p>
+                                <p className="font-black text-[#607169]">Cần xong trước</p>
                                 <ul className="mt-1 space-y-1">
                                   {dependencies.map((dep) => (
                                     <li key={dep.code} className="flex justify-between gap-2">
-                                      <span className="font-mono">{dep.code}</span>
-                                      <span className={statusTone[dep.status].split(" ")[1]}>
+                                      <span className="min-w-0"><span className="font-mono">{dep.code}</span> {dep.title}</span>
+                                      <span className={`shrink-0 font-black ${statusTone[dep.status].split(" ")[1]}`}>
                                         {statusLabel[dep.status]}
                                       </span>
                                     </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : null}
+
+                            {waitingOnThis.length > 0 ? (
+                              <div className="rounded-lg bg-white p-3 text-xs">
+                                <p className="font-black text-[#607169]">Gói đang chờ gói này</p>
+                                <ul className="mt-1 space-y-1">
+                                  {waitingOnThis.map((next) => (
+                                    <li key={next.code}><span className="font-mono">{next.code}</span> {next.title}</li>
                                   ))}
                                 </ul>
                               </div>

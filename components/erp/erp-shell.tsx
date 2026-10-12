@@ -59,6 +59,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
   const adminLinks = [
     ...(user.role === "director"
       ? [
+          { href: "/erp/toan-vung", label: "Toàn vùng", hint: "Khách, tiền, sự cố, dự án của cả bốn cơ sở; bấm cơ sở xem chi tiết" },
           { href: "/erp/khach-hang", label: "Khách hàng", hint: "Hành trình, đơn đặt và gợi ý chăm sóc khách" },
           { href: "/erp/marketing", label: "Kênh khách", hint: "Mã QR và nguồn khách theo từng kênh" },
           { href: "/erp/dai-ly", label: "Đại lý & hoa hồng", hint: "Đường dẫn giới thiệu, đơn và hoa hồng từng đại lý" },

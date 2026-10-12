@@ -267,9 +267,9 @@ export default async function ErpModulePage({ params, searchParams }: Props) {
           const coSoKhac = ERP_SITES.filter((item) => (user.moduleIdsBySite[item.id] ?? []).includes(moduleDefinition.id));
           return coSoKhac.length > 1 ? (
             <nav aria-label="Chọn cơ sở" data-testid="chon-co-so-module" className="mt-4 flex flex-wrap gap-2">
-              {user.role === "director" && (moduleDefinition.id === "ve-dat-cho" || moduleDefinition.id === "check-in-khach") ? (
+              {user.role === "director" ? (
                 <Link
-                  href="/erp#director-ticket-overview"
+                  href="/erp/toan-vung"
                   className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-[#e0b979] bg-[#fff8eb] px-4 text-sm font-bold whitespace-nowrap text-[#7a5520]"
                 >
                   Cả vùng

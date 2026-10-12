@@ -95,7 +95,7 @@ type ThuyenThatHienThi = ThuyenTrenBanDo & {
  * Thẻ một thuyền trên bản đồ. Gán chữ thuần, không chèn HTML: tên và số điện
  * thoại người chèo do người dùng nhập.
  */
-function dungTheThuyen(p: Record<string, unknown>): HTMLElement {
+function dungTheThuyen(p: Record<string, unknown>, coSo: CoSoThuyen): HTMLElement {
   const the = document.createElement("div");
   the.className = "w-[12rem] text-[#20342c]";
   the.dataset.testid = "the-thuyen";
@@ -138,15 +138,30 @@ function dungTheThuyen(p: Record<string, unknown>): HTMLElement {
       xem.className = "inline-flex min-h-9 items-center rounded-lg border border-[#b9cbc2] px-3 text-sm font-bold text-[#183f34]";
       xem.textContent = "Xem hồ sơ";
       xem.dataset.testid = "the-thuyen-xem-ho-so";
-      xem.addEventListener("click", () => window.dispatchEvent(new CustomEvent(SU_KIEN_MO_HO_SO_NGUOI_CHEO, { detail: { id: nguoiId } })));
+      xem.addEventListener("click", () => {
+        // Sổ người chèo nằm cùng trang thì nó mở hồ sơ và đánh dấu đã mở. Ở
+        // màn Sức chứa không có sổ: sang trang người chèo, mở đúng người ấy
+        // (chủ dự án 12/10/2026: "hồ sơ vẫn không bấm được").
+        const chiTiet = { id: nguoiId, daMo: false };
+        window.dispatchEvent(new CustomEvent(SU_KIEN_MO_HO_SO_NGUOI_CHEO, { detail: chiTiet }));
+        if (!chiTiet.daMo) window.location.assign(`/erp/thuyen?coSo=${coSo}&hoSo=${encodeURIComponent(nguoiId)}`);
+      });
       nutHang.append(xem);
     }
     if (nutHang.childElementCount) the.append(nutHang);
   } else {
+    const soNguoi = Number(p.coSo ?? 0);
     dong(
-      Number(p.coSo ?? 0) > 0 ? "Lượt này chưa có người chèo rảnh trong sổ" : "Bến chưa có sổ người chèo",
+      soNguoi > 0
+        ? `Chưa biết ai chèo: sổ bến mới có ${soNguoi} người và ai cũng đang chèo chuyến khác`
+        : "Chưa biết ai chèo: bến chưa có sổ người chèo",
       "mt-1 text-sm font-bold text-[#7a5520]",
     );
+    const them = document.createElement("a");
+    them.href = `/erp/thuyen?coSo=${coSo}`;
+    them.className = "mt-1.5 inline-flex min-h-9 items-center rounded-lg border border-[#e0b979] px-3 text-sm font-bold text-[#7a5520]";
+    them.textContent = "Thêm người vào sổ";
+    the.append(them);
   }
   dong(String(p.tinhHinh ?? ""), "mt-2 text-xs leading-5 text-[#42554c]");
   dong(
@@ -585,9 +600,9 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
         const lng = (f.geometry as GeoJSON.Point).coordinates as [number, number];
         if (ghim) {
           theNhanh.remove();
-          theGhim.setLngLat(lng).setDOMContent(dungTheThuyen(f.properties ?? {})).addTo(map);
+          theGhim.setLngLat(lng).setDOMContent(dungTheThuyen(f.properties ?? {}, coSo)).addTo(map);
         } else if (!theGhim.isOpen()) {
-          theNhanh.setLngLat(lng).setDOMContent(dungTheThuyen(f.properties ?? {})).addTo(map);
+          theNhanh.setLngLat(lng).setDOMContent(dungTheThuyen(f.properties ?? {}, coSo)).addTo(map);
         }
       };
       map.on("mouseenter", "thuyen", (e) => {

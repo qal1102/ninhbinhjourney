@@ -152,12 +152,29 @@ export function SoNguoiCheo({ coSo, tenBen, ds, coKho }: { coSo: CoSoThuyen; ten
   // Thẻ thuyền trên bản đồ có nút "Xem hồ sơ": mở đúng người ở đây.
   useEffect(() => {
     const nghe = (e: Event) => {
-      const id = (e as CustomEvent<{ id?: string }>).detail?.id;
-      if (id && ds.some((n) => n.id === id)) moHoSo(id);
+      const chiTiet = (e as CustomEvent<{ id?: string; daMo?: boolean }>).detail;
+      const id = chiTiet?.id;
+      if (id && ds.some((n) => n.id === id)) {
+        chiTiet.daMo = true;
+        moHoSo(id);
+      }
     };
     window.addEventListener(SU_KIEN_MO_HO_SO_NGUOI_CHEO, nghe);
     return () => window.removeEventListener(SU_KIEN_MO_HO_SO_NGUOI_CHEO, nghe);
   });
+
+  // Mở từ thẻ thuyền ở màn khác: `?hoSo=<id>` mở đúng hồ sơ một lần khi vào trang.
+  const daMoTuDuongDan = useRef(false);
+  useEffect(() => {
+    if (daMoTuDuongDan.current) return;
+    const id = new URLSearchParams(window.location.search).get("hoSo");
+    if (!id || !ds.some((n) => n.id === id)) return;
+    daMoTuDuongDan.current = true;
+    document.querySelector("[data-testid='so-nguoi-cheo']")?.scrollIntoView({ block: "start" });
+    moHoSo(id);
+    // moHoSo chỉ đặt state và mở hộp thoại.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ds]);
 
   function moHoSo(id: string) {
     if (ben) setBayGio(Date.now() + ben.lech);

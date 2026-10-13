@@ -27,6 +27,7 @@ import { BangLenh, type MucBangLenh } from "./bang-lenh";
 import { BaoKhanCap } from "./bao-khan-cap";
 import { khoaCongKhaiDay } from "@/lib/erp/day-thong-bao";
 import { CanhBaoKhanCap } from "./canh-bao-khan-cap";
+import { MotMenuMotLuc } from "./mot-menu-mot-luc";
 
 type Props = {
   user: CurrentErpUser;
@@ -113,7 +114,8 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
 
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f2f4f1] text-[#17231f]">
-      <header className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
+      <header data-erp-dau-trang className="sticky top-0 z-40 border-b border-[#dce2dd] bg-white/95 backdrop-blur">
+        <MotMenuMotLuc chon="[data-erp-dau-trang]" />
         <div className="mx-auto flex min-h-16 max-w-[1600px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
           {/* overflow-hidden: chật thì khối này tự cắt, không để nút bên phải đè
               lên chữ (chủ dự án gửi ảnh 12/10/2026). */}

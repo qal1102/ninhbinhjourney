@@ -81,8 +81,12 @@ function so(value: number) {
 }
 
 function Doi({ hienTai, truoc, ky }: { hienTai: number; truoc: number; ky: KyToanVung }) {
+  // Hôm nay mới qua một phần ngày: so với CẢ NGÀY hôm qua thì trưa nào cũng
+  // "giảm 59%" (soát 13/10/2026). Số theo ngày không có giờ, nên chỉ ghi số
+  // hôm qua cho giám đốc tự so, không tính phần trăm.
+  if (ky === "hom-nay") return <span>Hôm qua cả ngày: {truoc.toLocaleString("vi-VN")}</span>;
   const doi = phanTramDoi(hienTai, truoc);
-  const kyTruoc = ky === "hom-nay" ? "hôm qua" : `${TEN_KY[ky].toLowerCase()} trước`;
+  const kyTruoc = `${TEN_KY[ky].toLowerCase()} trước`;
   if (doi === null) return <span>chưa có số {kyTruoc}</span>;
   return (
     <span className={doi >= 0 ? "text-[#9fe0c4]" : "text-[#ffc2b4]"}>
@@ -244,7 +248,7 @@ export default async function ToanVungPage({ searchParams }: Props) {
 
           <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
             <article className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] p-4">
-              <p className="text-xs text-white/55">Khách vào cổng</p>
+              <p className="text-xs text-white/55">Khách đã vào cổng</p>
               <p className="mt-2 text-2xl font-black">{so(tong.hienTai.khach)}</p>
               <p className="mt-2 text-xs leading-4 text-[#b5d6ca]">
                 <Doi hienTai={tong.hienTai.khach} truoc={tong.truoc.khach} ky={ky} />

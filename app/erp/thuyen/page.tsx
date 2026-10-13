@@ -55,12 +55,8 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
         </p>
       </div>
 
-      {banDo ? (
-        <Suspense key={banDo} fallback={<p className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">Đang lấy dự báo thời tiết ở bến…</p>}>
-          <ThoiTietBen coSo={banDo} siteHref={`/erp/${banDo}`} />
-        </Suspense>
-      ) : null}
-
+      {/* 13/10/2026: bản đồ thuyền là thứ người ta mở màn này để xem; bảng
+          thời tiết lùi xuống dưới (soát như người mới: màn đầu chỉ thấy thời tiết). */}
       {banDo ? (
         <section
           className="mb-8 rounded-2xl border border-[#d8e0db] bg-white p-4 shadow-sm sm:p-6"
@@ -86,6 +82,12 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
                 ))}
               </nav>
             ) : null}
+
+      {banDo ? (
+        <Suspense key={banDo} fallback={<p className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">Đang lấy dự báo thời tiết ở bến…</p>}>
+          <ThoiTietBen coSo={banDo} siteHref={`/erp/${banDo}`} />
+        </Suspense>
+      ) : null}
           </div>
           <div className="mt-4">
             <BanDoThuyenTre key={banDo} coSo={banDo} xemThuyenThat />

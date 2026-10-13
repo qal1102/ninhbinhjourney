@@ -252,7 +252,7 @@ export function CustomerConsentCenter() {
   return (
     <>
       {/* QA-P2-09: nút nổi nhường chỗ khi đang cuộn xuống đọc hoặc đang gõ. */}
-      <button type="button" onClick={() => setOpen(true)} aria-hidden={nhuongCho && !open ? true : undefined} tabIndex={nhuongCho && !open ? -1 : undefined} className={`fixed bottom-3 left-3 z-[1200] min-h-9 rounded-full border border-[#b9c5bf] bg-white/92 px-3 text-[0.68rem] font-bold text-[#29463b] shadow-md backdrop-blur transition duration-200 motion-reduce:transition-none ${nhuongCho && !open ? FLOATING_YIELD_CLASS : ""}`} aria-label={language === "en" ? "Open privacy settings" : "Mở trung tâm quyền riêng tư"}>
+      <button type="button" data-nut-rieng-tu onClick={() => setOpen(true)} aria-hidden={nhuongCho && !open ? true : undefined} tabIndex={nhuongCho && !open ? -1 : undefined} className={`fixed bottom-3 left-3 z-[1200] min-h-9 rounded-full border border-[#b9c5bf] bg-white/92 px-3 text-[0.68rem] font-bold text-[#29463b] shadow-md backdrop-blur transition duration-200 motion-reduce:transition-none ${nhuongCho && !open ? FLOATING_YIELD_CLASS : ""}`} aria-label={language === "en" ? "Open privacy settings" : "Mở trung tâm quyền riêng tư"}>
         {language === "en" ? "Privacy" : "Riêng tư"}
       </button>
       {open ? (

@@ -11,6 +11,9 @@ import { listPendingProjectChangeRequests } from "@/lib/erp/project-repository";
 import { listShiftClosures } from "@/lib/erp/shift-close-repository";
 import { listSupplierAp } from "@/lib/erp/supplier-ap-repository";
 import { listWorkdaysForUser } from "@/lib/erp/workday-view";
+import { tienCua } from "@/domain/toan-vung";
+import { soHomNay } from "@/lib/erp/so-hom-nay";
+import type { ErpSiteId } from "@/domain/erp";
 import { staffRequestWaitsOn } from "@/domain/erp-staff-requests";
 import { listStaffRequests } from "@/lib/erp/staff-request-repository";
 
@@ -210,6 +213,25 @@ export async function POST(request: Request) {
       scoped.businessDate && scoped.businessDate !== scoped.today
         ? `Chưa có ca chốt ngày ${displayDate(scoped.today)}; số gần nhất là ngày ${displayDate(scoped.businessDate)}.`
         : `Số ca ngày ${displayDate(scoped.businessDate || scoped.today)}.`;
+
+    const homNay = intent === "revenue" || intent === "guests" ? await soHomNay(user.siteIds as ErpSiteId[]) : null;
+    const lienKetHomNay = user.role === "director" ? "/erp/toan-vung" : "/erp";
+    if (homNay && intent === "revenue") {
+      return NextResponse.json({
+        answer: `${formatVnd(tienCua(homNay.hienTai))} tiền thu hôm nay`,
+        detail: `Quầy ${formatVnd(homNay.hienTai.tienQuay)} (${homNay.hienTai.phieuQuay.toLocaleString("vi-VN")} phiếu), web ${formatVnd(homNay.hienTai.tienWeb)}. Hôm qua cả ngày ${formatVnd(tienCua(homNay.truoc))}. Cùng số với màn Toàn vùng; doanh thu theo ca đã chốt xem ở Tài chính.`,
+        href: lienKetHomNay,
+        hrefLabel: "Mở số hôm nay",
+      });
+    }
+    if (homNay && intent === "guests") {
+      return NextResponse.json({
+        answer: `${homNay.hienTai.khach.toLocaleString("vi-VN")} khách đã vào cổng hôm nay`,
+        detail: `Trong đó ${homNay.hienTai.khachWeb.toLocaleString("vi-VN")} khách đặt trên web. Hôm qua cả ngày ${homNay.truoc.khach.toLocaleString("vi-VN")} khách. Cùng số với màn Toàn vùng.`,
+        href: lienKetHomNay,
+        hrefLabel: "Mở số hôm nay",
+      });
+    }
 
     if (intent === "revenue") {
       const gross = scoped.records.reduce(

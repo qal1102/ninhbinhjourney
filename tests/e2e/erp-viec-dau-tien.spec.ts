@@ -31,13 +31,13 @@ test("việc nên làm trước đứng trên cùng và nói rõ vì sao nó đ�
 
   const viTri = await page.evaluate(() => {
     const v = document.querySelector('[data-testid="viec-dau-tien"]');
-    const vong = document.querySelector('[data-testid="loi-vao-huong-dan"]');
+    const vong = document.querySelector('[data-testid="di-thu-mot-vong"]');
     const main = document.querySelector("main");
     if (!v || !main) return null;
     const conCuaMain = Array.from(main.children);
     return {
-      // Khối phải là một trong hai thứ đầu tiên trong thân trang (chỗ đầu có
-      // thể là dòng báo "chưa được phân công" khi có tham số denied).
+      // Khối đứng ngay sau khối số hôm nay (13/10/2026); trước đó có thể có
+      // dòng báo "chưa được phân công" khi có tham số denied.
       viTriTrongMain: conCuaMain.indexOf(v),
       topViec: v.getBoundingClientRect().top + window.scrollY,
       topVong: vong ? vong.getBoundingClientRect().top + window.scrollY : null,
@@ -46,7 +46,7 @@ test("việc nên làm trước đứng trên cùng và nói rõ vì sao nó đ�
   });
 
   expect(viTri).not.toBeNull();
-  expect(viTri!.viTriTrongMain).toBeLessThanOrEqual(1);
+  expect(viTri!.viTriTrongMain).toBeLessThanOrEqual(2);
   expect(viTri!.tranNgang).toBe(false);
   if (viTri!.topVong !== null) {
     expect(viTri!.topViec).toBeLessThan(viTri!.topVong);
@@ -61,7 +61,7 @@ test("có việc thì có nút mở thẳng tới nơi làm; hết việc thì k
   // `/erp` có loading.tsx nên trang đổ dần: đếm ngay sau khi URL đổi có lúc
   // ra 0 rồi khối mới hiện (đỏ oan khi chạy bốn luồng, 04/10/2026). Chờ khối
   // luôn có của trang đầu giám đốc đã dựng xong rồi mới đếm.
-  await expect(page.getByTestId("loi-vao-huong-dan")).toBeVisible();
+  await expect(page.getByTestId("di-thu-mot-vong")).toBeVisible();
 
   if ((await viec.count()) === 0) {
     await expect(nut).toHaveCount(0);

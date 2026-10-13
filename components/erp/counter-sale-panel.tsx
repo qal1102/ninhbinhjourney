@@ -506,7 +506,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
   }
 
   return (
-    <section className="rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
+    <section id="ban-ve-tai-quay" className="scroll-mt-24 rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6">
       <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Bán vé tại quầy</p>
       <h2 className="mt-2 text-2xl font-black text-[#20342c]">Ra đơn, thu tiền, đưa vé cho khách</h2>
       <TestPrintSheet id="counter-test-print" siteName={site.name} paper={printer.settings.paper} />

@@ -3005,3 +3005,10 @@ html[data-nbj-consent-banner-visible="true"] .thanh-dat-cho {
     display: inline-flex;
   }
 }
+
+/* 13/10/2026: nút "Riêng tư" nổi góc trái che nút "Khám phá" của thanh dưới điện thoại. Trang có thanh dưới thì nhấc nút lên trên thanh. */
+@media (max-width: 639px) {
+  body:has([data-thanh-duoi]) [data-nut-rieng-tu] {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+}

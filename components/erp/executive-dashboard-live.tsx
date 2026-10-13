@@ -441,7 +441,7 @@ export function ExecutiveDashboard({
               Quét mã ở cổng →
             </Link>
             <Link
-              href={`/erp/${sites[0].id}/ve-dat-cho`}
+              href={`/erp/${sites[0].id}/ve-dat-cho#ban-ve-tai-quay`}
               className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#d8e0db] px-3 text-sm font-bold text-[#34473f] transition hover:border-[#a8bbb2] hover:bg-[#f4f8f6] sm:justify-start"
             >
               Bán vé, lập phiếu đoàn →

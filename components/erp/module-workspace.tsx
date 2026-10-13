@@ -131,6 +131,9 @@ function MachViecTaiDay({
       viewerRole={viewerRole}
       trangThai={trangThai}
       dangODay={`/erp/${siteId}/${moduleId}`}
+      // 13/10/2026: bản đầy đủ đứng đầu mọi màn với hàng ô số người mới không
+      // hiểu, đẩy việc chính xuống. Bản gọn chỉ còn dòng "đang chờ bạn".
+      gon
     />
   );
 }

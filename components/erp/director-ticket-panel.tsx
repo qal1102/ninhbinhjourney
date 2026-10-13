@@ -105,14 +105,16 @@ export function DirectorTicketPanel({
             ) : null}
           </p>
           <h2 className="mt-2 text-2xl font-black text-[#20342c]">
-            Hôm nay {today.current.toLocaleString("vi-VN")}{" "}
-            {theoLuot ? "lượt khách" : "tấm vé"}
+            {/* 13/10/2026: số này là khách ĐÃ MUA vé; màn Toàn vùng đếm khách ĐÃ QUA
+                CỔNG. Cùng gọi "lượt khách" thì giám đốc thấy hai số vênh nhau. */}
+            Hôm nay bán vé cho {today.current.toLocaleString("vi-VN")}{" "}
+            {theoLuot ? "khách" : "tấm vé"}
           </h2>
         </div>
         {theoLuot ? (
           <p className="text-xs text-[#7c8882]">
-            Đếm theo vé đã phát: vé cho mấy người vào thì cộng mấy lượt, vé đã
-            huỷ không tính.
+            Đếm theo vé đã bán: vé cho mấy người vào thì cộng mấy người, vé đã
+            huỷ không tính. Số khách đã vào cổng xem ở màn Toàn vùng.
           </p>
         ) : (
           /* Kho chưa có hàm cộng lượt (migration 202609170075 chưa áp): lệnh

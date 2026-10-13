@@ -1586,15 +1586,17 @@ export default function NinhBinhLanding({
             <a data-customer-track="home-hero-buy" data-customer-content-id="tickets" data-customer-content-type="primary-cta" href={`/packages?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}#ve`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-bold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.buyTickets as string}</a>
             <a data-customer-track="home-hero-plan" data-customer-content-id="journey-planner" data-customer-content-type="secondary-cta" href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.begin}</a>
           </div>
-          <p data-testid="gia-ve-trang-chu" className="fade-up mt-4 max-w-2xl text-sm leading-6 text-[#FBFAF6]/80">
-            {t.ticketPricesLead as string}{" "}
-            {VE_LE.map((ve) => apBangGia(ve, bangGia)).map((ve, i) => (
-              <span key={ve.slug} className="whitespace-nowrap">
-                {i > 0 ? " · " : ""}
-                {goiHienThi(ve, lang).name.replace(/^Vé |^Ve | ticket$/g, "")} <strong className="font-semibold text-[#E7B96A]">{lang === "en" ? `VND ${ve.demoPriceVnd.toLocaleString("en-US")}` : `${ve.demoPriceVnd.toLocaleString("vi-VN")} đ`}</strong>
-              </span>
-            ))}
-          </p>
+          <div data-testid="gia-ve-trang-chu" className="fade-up mt-4 max-w-2xl text-sm leading-6 text-[#FBFAF6]/80">
+            <p>{t.ticketPricesLead as string}</p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-0.5">
+              {VE_LE.map((ve) => apBangGia(ve, bangGia)).map((ve) => (
+                <li key={ve.slug} className="whitespace-nowrap">
+                  {goiHienThi(ve, lang).name.replace(/^Vé | ticket$/g, "")}{" "}
+                  <strong className="font-semibold text-[#E7B96A]">{lang === "en" ? `VND ${ve.demoPriceVnd.toLocaleString("en-US")}` : `${ve.demoPriceVnd.toLocaleString("vi-VN")} đ`}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
           <a
             data-customer-track="home-hero-explore"
             data-customer-content-id="explore-map"

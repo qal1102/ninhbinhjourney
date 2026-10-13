@@ -131,6 +131,7 @@ export function ThanhDauTrang({
       <nav
         data-thanh-day
         aria-label={lang === "en" ? "Main sections" : "Các phần chính"}
+        data-thanh-duoi
         className="fixed inset-x-0 bottom-0 z-[1150] grid grid-cols-5 gap-1 border-t max-[379px]:grid-cols-[repeat(5,minmax(44px,auto))] max-[379px]:gap-0.5 border-[#e1dacb] bg-[#fbf8f1]/96 px-1.5 pt-1.5 backdrop-blur-md sm:hidden"
         style={{ height: "calc(64px + env(safe-area-inset-bottom, 0px))", paddingBottom: "calc(6px + env(safe-area-inset-bottom, 0px))" }}
       >

@@ -44,7 +44,7 @@ test.describe("Hộ chiếu Ninh Bình", () => {
     });
     await page.goto("/ho-so");
     await page.getByLabel("Mã trên vé").fill("NBJ-ABCDEF123456");
-    await page.getByLabel(/Số điện thoại đã gắn/).fill("0912345678");
+    await page.getByLabel("Số điện thoại", { exact: true }).fill("0912345678");
     await page.getByRole("button", { name: "Xem lượt đi và quà" }).click();
 
     const hoSo = page.getByTestId("ho-so-khach");
@@ -68,9 +68,44 @@ test.describe("Hộ chiếu Ninh Bình", () => {
     );
     await page.goto("/ho-so");
     await page.getByLabel("Mã trên vé").fill("NBJ-000000000000");
-    await page.getByLabel(/Số điện thoại đã gắn/).fill("0900000000");
+    await page.getByLabel("Số điện thoại", { exact: true }).fill("0900000000");
     await page.getByRole("button", { name: "Xem lượt đi và quà" }).click();
     await expect(page.getByText(/Chưa tìm thấy hồ sơ khớp mã đặt chỗ/)).toBeVisible();
+  });
+
+  test("chỉ nhập số điện thoại thì ra mọi vé của số ấy, mã vé đã che", async ({ page }) => {
+    let guiLen: Record<string, unknown> = {};
+    await page.route("**/api/khach-than-thiet", async (route) => {
+      guiLen = route.request().postDataJSON() as Record<string, unknown>;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          accepted: true,
+          ketQua: {
+            found: true,
+            visits: 1,
+            points: 100,
+            nextMilestone: { visits: 2, reward: "Quà lưu niệm", remaining: 1 },
+            voucherCount: 0,
+            visitList: [{ site: "Tràng An", date: "2026-10-13" }],
+            ve: [
+              { maChe: "WEB-••••55E2", site: "Tràng An", validOn: "2026-10-14", status: "issued", entriesAllowed: 2, entriesUsed: 0, tenGoi: "Vé Tràng An" },
+              { maChe: "QUAY-••••1B38", site: "Tràng An", validOn: "2026-10-13", status: "used", entriesAllowed: 1, entriesUsed: 1, tenGoi: "" },
+            ],
+          },
+        }),
+      });
+    });
+    await page.goto("/ho-so");
+    await page.getByLabel("Số điện thoại", { exact: true }).fill("0999 999 901");
+    await page.getByRole("button", { name: "Xem lượt đi và quà" }).click();
+    const kq = page.getByTestId("ket-qua-tra-so");
+    await expect(kq).toContainText("•••901");
+    await expect(page.getByTestId("tra-so-luot")).toHaveText("1");
+    await expect(page.getByTestId("tra-so-ve")).toContainText("WEB-••••55E2");
+    await expect(page.getByTestId("tra-so-ve")).toContainText("đã qua cổng");
+    expect(guiLen).toEqual({ hanh_dong: "tra-so", so_dien_thoai: "0999 999 901" });
   });
 
   test("mã vé quầy cùng số đã gắn thì ra lượt đi và quà; mã phiếu thu được nhắc đổi", async ({ page }) => {
@@ -95,7 +130,7 @@ test.describe("Hộ chiếu Ninh Bình", () => {
     await page.getByTestId("chon-trang-ve-luot").click();
     await expect(page).toHaveURL(/\/ho-so/);
     await page.getByLabel("Mã trên vé").fill("PT-ABCDEF123456");
-    await page.getByLabel(/Số điện thoại đã gắn/).fill("0987654321");
+    await page.getByLabel("Số điện thoại", { exact: true }).fill("0987654321");
     await page.getByRole("button", { name: "Xem lượt đi và quà" }).click();
     await expect(page.getByText(/là mã phiếu thu/)).toBeVisible();
     await page.getByLabel("Mã trên vé").fill("quay-abcdef123456");

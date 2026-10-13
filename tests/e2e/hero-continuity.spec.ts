@@ -60,7 +60,7 @@ test("hero depth remains legible and geometry-stable at the required widths", as
       const subtitle = copy.querySelector<HTMLElement>("p")!;
       const plan = hero.querySelector<HTMLElement>('[data-customer-track="home-hero-plan"]')!;
       const explore = hero.querySelector<HTMLElement>('[data-customer-track="home-hero-explore"]')!;
-      const packageCue = hero.querySelector<HTMLElement>('[data-customer-track="home-hero-packages"]')!;
+      const packageCue = hero.querySelector<HTMLElement>('[data-customer-track="home-hero-buy"]')!;
       const concierge = document.querySelector<HTMLElement>("[data-journey-concierge-trigger]");
       const heroRect = hero.getBoundingClientRect();
       const titleRect = title.getBoundingClientRect();

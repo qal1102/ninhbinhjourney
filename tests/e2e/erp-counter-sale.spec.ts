@@ -33,7 +33,8 @@ test("quầy chưa nối kho thì nói thẳng là chưa bán được, không b
 
   // Kho quầy chưa nối thì phần bán nói thật là chưa bán được (cả vé đoàn, nằm
   // trong cùng khối từ 12/10/2026), còn khối vé đã bán bên cạnh vẫn mở.
-  await expect(page.getByText("Vé đã bán", { exact: true })).toBeVisible();
+  // Khối "Quy trình chốt ca vé" cũng có chữ "Vé đã bán": tìm đúng nhãn khối.
+  await expect(page.locator("p").filter({ hasText: /^Vé đã bán$/ }).first()).toBeVisible();
 
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
@@ -43,9 +44,12 @@ test("quầy chưa nối kho thì nói thẳng là chưa bán được, không b
 test("QA-ERP-POS-05: khu máy in nhớ khổ giấy, In thử mở hộp thoại in đúng khổ", async ({ page }) => {
   // Không có máy in thật trong máy kiểm: thay `window.print` bằng một bộ đếm.
   await page.addInitScript(() => {
-    (window as unknown as { __soLanIn: number }).__soLanIn = 0;
+    // Từ 12/10/2026 phiếu in qua một khung iframe riêng đúng khổ giấy: đếm
+    // lệnh in ở cả trang chính lẫn khung, cộng dồn lên trang chính.
+    const dem = window.top as unknown as { __soLanIn?: number };
+    if (window === window.top) dem.__soLanIn = 0;
     window.print = () => {
-      (window as unknown as { __soLanIn: number }).__soLanIn += 1;
+      dem.__soLanIn = (dem.__soLanIn ?? 0) + 1;
     };
   });
   await loginToErp(page, "nv.trangan", ERP_EMPLOYEE_PASSWORD);
@@ -66,9 +70,11 @@ test("QA-ERP-POS-05: khu máy in nhớ khổ giấy, In thử mở hộp thoại
   await mayInSauTaiLai.locator("summary").click();
   await mayInSauTaiLai.getByRole("button", { name: "In thử" }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __soLanIn: number }).__soLanIn)).toBe(1);
-  await expect(page.locator("style[data-receipt-print-style]")).toHaveCount(1);
-  expect(await page.locator("style[data-receipt-print-style]").textContent()).toContain("size: A5");
-  await expect(page.locator("#counter-test-print")).toHaveAttribute("data-print-active", "true");
+  // Từ 12/10/2026 khổ giấy nằm trong khung in riêng, không gắn vào trang chính.
+  await expect(page.locator("iframe[data-receipt-print-frame]")).toHaveCount(1);
+  expect(
+    await page.frameLocator("iframe[data-receipt-print-frame]").locator("style[data-receipt-page]").textContent(),
+  ).toContain("size: A5");
 
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),

@@ -336,8 +336,9 @@ test("home typography, package actions and animated chapters stay inside exact v
       const actions = page.locator(
         '#packages a[data-customer-content-type="package"]',
       );
-      // Trang chủ chỉ trưng gói còn bán (gói hết mùa như Bàn Trăng bị lọc).
-      await expect(actions).toHaveCount(PACKAGES.filter((goi) => !goiDaHetMua(goi)).length);
+      // Trang chủ chỉ trưng gói còn bán (gói hết mùa như Bàn Trăng bị lọc);
+      // vé lẻ không thuộc khối gói (13/10/2026).
+      await expect(actions).toHaveCount(PACKAGES.filter((goi) => goi.loai !== "ve" && !goiDaHetMua(goi)).length);
       const withinCards = await actions.evaluateAll((links) =>
         links.every((link) => {
           const card = link.closest(".reveal-on-scroll");

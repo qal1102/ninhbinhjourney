@@ -149,6 +149,10 @@
 
 ## C. Việc tiếp theo
 
+**Dữ liệu thử thật trên production, chờ dọn (13/10, chủ dự án cho tạo dữ liệu thật khi bấm thử, dọn sau 3–5 lượt; không xoá theo khoảng thời gian, chỉ đúng các mã này):** phiếu quầy `PT-1C90B6B7314D` (Tràng An, 250.000 đ tiền mặt, giám đốc bán) và vé `QUAY-84A1ADE01B38` (đã gắn số thử `0999999901`, đã quét cổng 11:19 → 1 lượt tích); đơn web `NBJ-DA621315183F` + vé `WEB-6D48AB618425` (Di sản một ngày, 2 người lớn, 14/10 08:00, số `0999999902`, đã trả QR giả lập); hai lượt giữ chỗ 09:00 và 10:00 14/10 cùng số, tự hết hạn.
+
+**Soát như người mới 13/10 (chưa sửa, chờ chủ dự án duyệt hướng):** trang chủ web: màn tải hơn 4 giây + màn ảnh mở đầu, không có nút Mua vé, web chỉ bán gói, chữ "giá minh hoạ"; giữ chỗ mất khi tải lại trang. ERP: số khách hôm nay vênh ba nơi (trang đầu 420 lượt +3,7%, Toàn vùng 366 ▼59%, trợ lý 1.848 vé lấy từ tháng 8); trang đầu mở bằng hồ sơ mẫu 01/08 và khối Chức năng mới; Toàn vùng (màn tốt nhất cho giám đốc) nằm trong Quản trị; thanh module chỉ có trong trang cơ sở; ba menu đầu trang mở chồng nhau; sự cố mẫu luôn "quá hạn".
+
 **Hàng đợi chủ dự án giao 12/10 (chưa làm, theo thứ tự đề xuất; quyết định đã có: tự áp migration sau PGlite + dry-run, báo khẩn cấp = đẩy rung + tự gọi khi cấp trên chưa nhận 2 phút, vé đoàn = giá người lớn × số người trừ ưu đãi theo công ty, có hoá đơn công ty):**
 1. ~~**Vé đoàn giữ chỗ và trả bằng QR**~~ — xong `2dk` (mục A), production chưa bấm thử bằng đăng nhập. Mô tả cũ: lập phiếu đoàn hiện cấp ngay mã vào cổng mà chưa thu tiền. Cần migration: RPC lập đoàn đã trả (phiếu bán quầy + đoàn dùng chung một vé, không đôi lượt), thông tin trưởng đoàn/hướng dẫn viên, công ty lữ hành (xem dùng lại bảng `dai_ly`), xuất hoá đơn cho công ty, lịch sử giao dịch và ưu đãi theo số đoàn trong năm. Màn khách riêng (màn hình thứ hai hướng ra khách) hiện số tiền + đồng hồ 15 phút, quét xong mới hiện vé.
 1b. ~~**Vé mời khách (0 đ)**~~ — xong `2dk`: lựa chọn mới ở quầy, bắt buộc ghi tên người mời (gắn tài khoản ai mời), hiện riêng trong đối soát và báo cáo để không lẫn với vé bán (chủ dự án 12/10).

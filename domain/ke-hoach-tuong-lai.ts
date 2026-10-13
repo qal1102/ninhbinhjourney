@@ -161,8 +161,8 @@ export const CONG_NGHE_DE_XUAT: readonly CongNgheDeXuat[] = [
     id: "tro-ly-ai",
     ten: "Trợ lý AI đọc số liệu điều hành",
     giaiQuyet: "Giám đốc hỏi bằng lời thường (\"tuần này Tam Cốc lệch tiền mấy ca?\") và nhận báo cáo cuối ngày tự viết.",
-    hienCo: "Trợ lý dẫn tới đúng màn và hiểu câu giao việc, ghi chú theo mẫu câu; đặt khoá API của Claude là chuyển sang Claude hiểu câu.",
-    canGi: "Một mô hình ngôn ngữ lớn (như Claude) chỉ được đọc, không được ghi; ghi nhật ký mọi câu hỏi.",
+    hienCo: "Trợ lý AI nội bộ dẫn tới đúng màn và hiểu câu giao việc, ghi chú; AI lỗi hay chậm thì hiểu theo mẫu câu.",
+    canGi: "AI nội bộ chỉ được đọc, không được ghi; ghi nhật ký mọi câu hỏi.",
     uuTien: "nen-lam",
   },
   {

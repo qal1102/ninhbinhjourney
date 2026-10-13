@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { docMaKhachQuetAction } from "@/app/erp/actions";
@@ -246,6 +247,9 @@ export function BanVeDoan({ site, prices, congTy: congTyBanDau, dienSan, onDaBan
 
   return (
     <div className="space-y-4" data-testid="ban-ve-doan">
+      <Link href="/erp/doan" className="inline-flex text-xs font-black text-[#2f6b56] underline underline-offset-4">
+        Xem mọi đoàn, cả đoàn đặt trên web →
+      </Link>
       {dienSan && !vuaBan ? (
         <p className="rounded-xl border border-[#e7b96a] bg-[#fff8e8] p-3 text-sm font-bold text-[#6b4a14]" data-testid="phieu-doan-ai-dien">
           ✦ AI đã điền từ danh sách đoàn vừa soát{dienSan.ten.length ? `, kèm ${dienSan.ten.length} họ tên` : ""}. Ghi trưởng đoàn rồi thu tiền.

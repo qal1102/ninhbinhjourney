@@ -10,6 +10,7 @@ import { docBangGia } from "@/lib/commerce/bang-gia";
 import type { BangGia } from "@/content/packages";
 import { ERP_ROLE_LABELS, type ErpRole } from "@/domain/erp";
 import { tinhTrangHoaSung } from "@/domain/mua-hoa-sung";
+import { laCauHoiDanhTinhAi, loiDanDanhTinh, loTenMoHinh, traLoiDanhTinhAi } from "@/domain/danh-tinh-ai";
 import { coMoHinhAi, hoiMoHinh } from "@/lib/ai/goi-mo-hinh";
 import { cacChuongMua } from "@/lib/seasonal/cac-mua";
 import type { NgonNgu } from "@/lib/ngon-ngu";
@@ -253,6 +254,9 @@ export async function traLoiCauHoi(opts: {
     if (muc) return tuSo(muc, lang);
   }
 
+  // Hỏi "bạn là AI gì": câu cố định, không gọi mô hình, không nêu tên mô hình.
+  if (laCauHoiDanhTinhAi(cau)) return { traLoi: traLoiDanhTinhAi(lang, phamVi), nguon: "so", lienKet: [] };
+
   const thang = datVe || phamVi === "erp" ? null : traLoiThang(cau);
   if (thang) return tuSo(thang, lang);
 
@@ -297,7 +301,7 @@ export async function traLoiCauHoi(opts: {
       tinNhan: [
         {
           role: "system",
-          content: `${huongDan(lang, bayGio, phamVi, opts.vai)}\n\n${lang === "en" ? "PACKAGES (slug | name | length | schedule)" : "DANH SÁCH GÓI (mã | tên | thời lượng | lịch)"}:\n${danhSachGoi(lang, bayGio)}\n\n${lang === "en" ? "SYSTEM MAP (in Vietnamese)" : "BẢN ĐỒ HỆ THỐNG"}:\n${banDoHeThong()}\n\n${lang === "en" ? "SEASONS (in Vietnamese)" : "LỊCH MÙA"}:\n${lichMua(bayGio)}\n\n${lang === "en" ? "MATERIAL" : "TƯ LIỆU"}:\n${tuLieu}`,
+          content: `${huongDan(lang, bayGio, phamVi, opts.vai)}\n${loiDanDanhTinh(phamVi === "erp" ? "vi" : lang)}\n\n${lang === "en" ? "PACKAGES (slug | name | length | schedule)" : "DANH SÁCH GÓI (mã | tên | thời lượng | lịch)"}:\n${danhSachGoi(lang, bayGio)}\n\n${lang === "en" ? "SYSTEM MAP (in Vietnamese)" : "BẢN ĐỒ HỆ THỐNG"}:\n${banDoHeThong()}\n\n${lang === "en" ? "SEASONS (in Vietnamese)" : "LỊCH MÙA"}:\n${lichMua(bayGio)}\n\n${lang === "en" ? "MATERIAL" : "TƯ LIỆU"}:\n${tuLieu}`,
         },
         ...lichSu,
         { role: "user", content: cau },
@@ -315,6 +319,8 @@ export async function traLoiCauHoi(opts: {
       if (doc.success && thieuDau(doc.data.traLoi)) return duPhong();
     }
     if (!doc.success || !doc.data.traLoi.trim()) return duPhong();
+    // Mô hình vẫn lỡ tự xưng tên mình hay hãng: thay bằng câu danh tính cố định.
+    if (loTenMoHinh(doc.data.traLoi)) return { traLoi: traLoiDanhTinhAi(lang, phamVi), nguon: "ai", lienKet: [] };
     const banNhap = phamVi === "erp" ? undefined : kiemBanNhapDatVe(doc.data.datVe, lang, bayGio);
     // Màn AI chỉ ra chỉ nhận khi trùng một đường dẫn có thật trong sổ.
     const manHinh = doc.data.manHinh?.trim();

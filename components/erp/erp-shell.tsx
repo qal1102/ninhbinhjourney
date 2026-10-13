@@ -66,6 +66,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           { href: "/erp/toan-vung", label: "Toàn vùng", hint: "Khách, tiền, sự cố, dự án của cả bốn cơ sở; bấm cơ sở xem chi tiết" },
           { href: "/erp/khach-hang", label: "Khách hàng", hint: "Hành trình, đơn đặt và gợi ý chăm sóc khách" },
           { href: "/erp/marketing", label: "Kênh khách", hint: "Mã QR và nguồn khách theo từng kênh" },
+          { href: "/erp/doan", label: "Đoàn", hint: "Mọi đoàn đặt trên web và mua ở quầy: ai dẫn, mấy người, đã qua cổng bao nhiêu" },
           { href: "/erp/cong-ty-lu-hanh", label: "Công ty lữ hành", hint: "Vé đoàn theo công ty, ưu đãi theo số đoàn, lịch sử giao dịch" },
           { href: "/erp/dai-ly", label: "Đại lý & hoa hồng", hint: "Đường dẫn giới thiệu, đơn và hoa hồng từng đại lý" },
           { href: "/erp/su-kien", label: "Sự kiện & rút thăm", hint: "Gặp gỡ khách mời, khách đăng ký bằng số điện thoại, rút thăm minh bạch" },

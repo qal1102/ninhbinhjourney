@@ -638,6 +638,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "doan",
+        ten: "Đoàn: web và quầy chung một danh sách",
+        moTa: "Đoàn trưởng đoàn tạo mã trên web và đoàn bán ở ô Vé đoàn của quầy hiện cùng nhau: ai dẫn, mấy người, đã qua cổng bao nhiêu, ai cần chăm sóc.",
+        vai: "director",
+        duongDan: "/erp/doan",
+        diem: "tom-tat-doan",
+        moi: "13/10",
+        cacViec: [
+          "Xem bốn ô đầu: số đoàn, số người, đã qua cổng, bao nhiêu đoàn từ web và từ quầy.",
+          "Mỗi thẻ đoàn có nhãn \"Đặt trên web\" hay \"Bán ở quầy\", thanh qua cổng, số đã ghi tên và cần chăm sóc.",
+          "Bấm \"Xem như trưởng đoàn\" để mở đúng trang trưởng đoàn đang thấy trên điện thoại.",
+        ],
+      },
+      {
         id: "su-kien",
         ten: "Sự kiện gặp khách mời, rút thăm minh bạch",
         moTa: "Mở sự kiện, khách đăng ký bằng số điện thoại (đồng ý tiếp thị là ô riêng); qua cổng thêm lượt; rút thăm có mã cam kết công bố trước, ai cũng tự kiểm được.",

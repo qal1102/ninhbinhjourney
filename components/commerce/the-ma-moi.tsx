@@ -1,13 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { chiaSe } from "@/components/commerce/chia-se";
+import { SO_DAU } from "@/domain/so-dau";
 import { duongDanMoi, LUOT_MOI_TOI_DA_MOT_NAM, PHAN_TRAM_GIAM_MA_MOI } from "@/domain/ma-moi";
 
 /**
  * Mã mời bạn (13/10/2026, migration 125). Không gửi tin nhắn nào: khách tự
  * gửi đường dẫn qua Zalo, Messenger… bằng nút chia sẻ của điện thoại.
  */
-export function TheMaMoi({ ma, banDaMoi, lang = "vi" }: { ma: string; banDaMoi: number; lang?: "vi" | "en" }) {
+export function TheMaMoi({
+  ma,
+  banDaMoi,
+  lang = "vi",
+  noiDaDi = [],
+}: {
+  ma: string;
+  banDaMoi: number;
+  lang?: "vi" | "en";
+  /** Tên các điểm đã qua cổng (từ danh sách lượt đi): mỗi điểm một nút khoe kèm mã mời. */
+  noiDaDi?: readonly string[];
+}) {
   const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const [daChep, setDaChep] = useState(false);
   if (!ma) return null;
@@ -49,6 +62,32 @@ export function TheMaMoi({ ma, banDaMoi, lang = "vi" }: { ma: string; banDaMoi: 
           {daChep ? t("Đã chép, dán gửi bạn", "Copied, paste to a friend") : t("Gửi cho bạn", "Send to a friend")}
         </button>
       </div>
+      {(() => {
+        const diem = SO_DAU.filter((d) => d.diemDen && noiDaDi.includes(d.ten.vi));
+        if (diem.length === 0) return null;
+        return (
+          <div className="mt-3" data-testid="khoe-noi-da-di">
+            <p className="text-sm text-[#4a554e]">{t("Khoe nơi bạn đã đi, kèm mã mời:", "Share a place you visited, with your code:")}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {diem.map((d) => (
+                <button
+                  key={d.ma}
+                  type="button"
+                  onClick={() =>
+                    void chiaSe(
+                      `${window.location.origin}/moi/${ma}?d=${d.ma}`,
+                      t(`Mình vừa đi ${d.ten.vi}. Bạn đi thử không? Mã ${ma} giảm 10%.`, `I just went to ${d.ten.en}. Fancy it? Code ${ma} takes 10% off.`),
+                    )
+                  }
+                  className="inline-flex min-h-10 items-center rounded-full border border-[#183f34] px-4 text-xs font-extrabold text-[#183f34]"
+                >
+                  {t(`Khoe ${d.ten.vi}`, `Share ${d.ten.en}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
       {banDaMoi > 0 ? (
         <p className="mt-2 text-sm font-bold text-[#8a5a1f]" data-testid="ban-da-moi">
           {t(`${banDaMoi} bạn đã đi nhờ mã của bạn, đã cộng ${banDaMoi} lượt.`, `${banDaMoi} ${banDaMoi === 1 ? "friend has" : "friends have"} visited with your code: ${banDaMoi} ${banDaMoi === 1 ? "visit" : "visits"} added.`)}

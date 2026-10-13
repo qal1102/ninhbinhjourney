@@ -62,7 +62,7 @@ function KetQuaSo({ ketQua, so, lang, traLai }: { ketQua: Extract<KetQuaTraBangS
           </ul>
         </div>
       ) : null}
-      <TheMaMoi ma={ketQua.maMoi} banDaMoi={ketQua.banDaMoi} lang={lang} />
+      <TheMaMoi ma={ketQua.maMoi} banDaMoi={ketQua.banDaMoi} lang={lang} noiDaDi={ketQua.visitList.map((v) => v.site)} />
       <h3 className="mt-6 font-bold text-[#183f34]">{t("Vé của số này", "Tickets on this number")}</h3>
       {ketQua.ve.length === 0 ? (
         <p className="mt-1 text-sm text-[#6b786f]">{t("Chưa có vé nào gắn với số này.", "No tickets on this number yet.")}</p>

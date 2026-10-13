@@ -16,6 +16,7 @@ import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
 import { ChuyenCuaBan } from "@/components/commerce/chuyen-cua-ban";
 import { chuanHoaMaMoi, giamMaMoi } from "@/domain/ma-moi";
+import { goiYChoNhom, loaiNhom, NHAN_NHOM, type SoNoiBat } from "@/domain/goi-y";
 import { DESTINATIONS } from "@/content/destinations";
 import { batNgoaiTuyen, luuVeTrenMay } from "@/lib/ve-luu-may";
 import { CO_SO_THEO_UUID, DuBaoDoDong } from "@/components/commerce/du-bao-do-dong";
@@ -205,6 +206,8 @@ export function CustomerBookingCheckout({
   chuGoi,
   dienSan,
   maMoiBanDau,
+  soNoiBat,
+  goiDangBan,
 }: {
   packageItem: PackageCatalogItem;
   /** `?ngay=hom-nay` từ màn Hướng dẫn trong ERP: mở sẵn ngày đi là hôm nay. */
@@ -219,6 +222,10 @@ export function CustomerBookingCheckout({
   chuGoi?: { name: string; audience: string; durationLabel: string };
   /** Mã mời trình duyệt nhớ từ đường dẫn `/moi/<mã>` (migration 125). */
   maMoiBanDau?: string;
+  /** Số thật cho gợi ý "khách giống bạn hay chọn" (migration 127). */
+  soNoiBat?: SoNoiBat | null;
+  /** Gói đang bán được gợi ý: mã và tên theo ngôn ngữ. */
+  goiDangBan?: readonly { slug: string; ten: string }[];
 }) {
   const t = useCallback((vi: string, en: string) => (lang === "en" ? en : vi), [lang]);
   const tenGoi = chuGoi?.name ?? packageItem.name;
@@ -237,6 +244,12 @@ export function CustomerBookingCheckout({
   const giaTreEm = packageItem.giaTreEmVnd ?? 0;
   const tamTinh = packageItem.demoPriceVnd * Math.max(0, adults) + giaTreEm * Math.max(0, children);
   const giamDuKien = maMoiChuan && !packageItem.giaRieng ? giamMaMoi(tamTinh) : 0;
+  // 127: khách cùng kiểu nhóm (gia đình có trẻ, hai người…) hay chọn gói nào.
+  const nhomKhach = loaiNhom(adults, children);
+  const goiYNhom = packageItem.fixedPartySize
+    ? null
+    : goiYChoNhom(soNoiBat ?? null, nhomKhach, packageItem.slug, new Set((goiDangBan ?? []).map((g) => g.slug)));
+  const tenGoiYNhom = goiYNhom ? goiDangBan?.find((g) => g.slug === goiYNhom.slug)?.ten : undefined;
   // Gói theo mùa (Bàn Trăng, mùa hoa súng) chỉ nhận đặt trong khung bán của nó.
   const khungBan = useMemo(() => khungBanGoi(packageItem), [packageItem]);
   const [visitDate, setVisitDate] = useState(() => {
@@ -1012,6 +1025,17 @@ export function CustomerBookingCheckout({
                 )}
               </span>
             )}
+            {goiYNhom && tenGoiYNhom && !hold ? (
+              <Link
+                href={`/checkout?package=${goiYNhom.slug}${lang === "en" ? "&lang=en" : ""}`}
+                data-testid="goi-y-nhom"
+                className="mt-3 block rounded-xl border border-[#cfe0d6] bg-[#f1f7f3] px-4 py-3 text-sm leading-6 text-[#274c40] transition hover:bg-[#e6f1ea]"
+              >
+                <span className="font-bold">{NHAN_NHOM[nhomKhach][lang]}:</span>{" "}
+                {t(`${goiYNhom.phanTram}% chọn ${tenGoiYNhom}.`, `${goiYNhom.phanTram}% choose ${tenGoiYNhom}.`)}{" "}
+                <span className="font-bold underline underline-offset-2">{t("Xem gói này", "See it")}</span>
+              </Link>
+            ) : null}
             {partySizeExceedsSlot ? (
               <span className="mt-2 block text-xs font-normal text-[#9a3b2f]">
                 {t(

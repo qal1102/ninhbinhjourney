@@ -292,7 +292,7 @@ export function TheTichDiem({
           </ul>
         </div>
       ) : null}
-      <TheMaMoi ma={tomTat.maMoi} banDaMoi={tomTat.banDaMoi} lang={lang} />
+      <TheMaMoi ma={tomTat.maMoi} banDaMoi={tomTat.banDaMoi} lang={lang} noiDaDi={tomTat.visitList.map((v) => v.site)} />
       {tomTat.voucherCount > 0 && !tomTat.vouchers ? (
         <p className="mt-3 rounded-2xl bg-[#183f34] px-4 py-3 text-sm font-bold text-white">
           {t(`Bạn có ${tomTat.voucherCount} quà chưa đổi.`, `You have ${tomTat.voucherCount} unclaimed ${tomTat.voucherCount === 1 ? "reward" : "rewards"}.`)}

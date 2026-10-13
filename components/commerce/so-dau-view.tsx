@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { chiaSe } from "@/components/commerce/chia-se";
 import {
   diemConThieu,
   docSoDau,
@@ -128,6 +129,21 @@ export function SoDauView({ lang = "vi", dongMa }: { lang?: Lang; dongMa?: MaDau
                 </span>
               )}
               <p className="mt-2 text-sm font-bold leading-tight text-[#183f34]">{dau.ten[lang]}</p>
+              {ngay && dau.diemDen ? (
+                <button
+                  type="button"
+                  data-testid={`khoe-${dau.ma}`}
+                  onClick={() =>
+                    void chiaSe(
+                      `${window.location.origin}/ban-da-di/${dau.ma}`,
+                      t(`Mình vừa đóng dấu ${dau.ten.vi} ở Ninh Bình. Bạn đi thử không?`, `I just got the ${dau.ten.en} stamp in Ninh Binh. Fancy going?`),
+                    )
+                  }
+                  className="mt-2 inline-flex min-h-10 items-center rounded-full border border-[#183f34] px-4 text-xs font-extrabold text-[#183f34]"
+                >
+                  {t("Khoe với bạn", "Share")}
+                </button>
+              ) : null}
               {!ngay && dau.veSlug ? (
                 <Link href={`/packages/${dau.veSlug}${duoi}`} className="mt-2 inline-flex min-h-10 items-center rounded-full bg-[#183f34] px-4 text-xs font-extrabold text-white">
                   {t("Mua vé", "Buy ticket")}

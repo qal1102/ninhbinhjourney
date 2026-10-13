@@ -1,5 +1,6 @@
 import { chuanHoaMaMoi, COOKIE_MA_MOI, NGAY_NHO_MA_MOI } from "@/domain/ma-moi";
 import { maMoiCoThat } from "@/lib/customer-data/booking-repository";
+import { dauTheoMa } from "@/domain/so-dau";
 
 /**
  * Đường dẫn bạn bè gửi nhau: `/moi/MOI-AB12CD`. Mã có thật thì trình duyệt
@@ -9,9 +10,11 @@ import { maMoiCoThat } from "@/lib/customer-data/booking-repository";
 export async function GET(request: Request, { params }: { params: Promise<{ ma: string }> }) {
   const ma = chuanHoaMaMoi((await params).ma);
   const coThat = ma ? await maMoiCoThat(ma) : false;
-  const dich = new URL("/packages", request.url);
+  // `?d=<điểm>`: khách khoe một nơi đã đi kèm mã mời, mở trang "bạn của bạn đã đi đây".
+  const dau = dauTheoMa(new URL(request.url).searchParams.get("d") ?? "");
+  const dich = new URL(dau?.diemDen ? `/ban-da-di/${dau.ma}` : "/packages", request.url);
   dich.searchParams.set("moi", coThat ? "co" : "sai");
-  dich.hash = "ve";
+  if (!dau?.diemDen) dich.hash = "ve";
   const headers = new Headers({ Location: dich.toString(), "Cache-Control": "no-store" });
   if (ma && coThat) {
     headers.append(

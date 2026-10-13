@@ -8,7 +8,8 @@ import { goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { readPublicEnvironment } from "@/config/experience";
-import { apBangGia, getPackageBySlug } from "@/content/packages";
+import { apBangGia, getPackageBySlug, PACKAGES } from "@/content/packages";
+import { docSoNoiBatKho } from "@/lib/commerce/so-noi-bat";
 import { docBangGia } from "@/lib/commerce/bang-gia";
 import { CustomerBookingCheckout } from "@/components/commerce/customer-booking-checkout";
 import { SetupState } from "@/components/shared/setup-state";
@@ -55,6 +56,7 @@ export default async function CheckoutPage({
   const goiGoc = getPackageBySlug(packageSlug);
   // Giá trước khi giữ chỗ phải bằng giá máy chủ sẽ tính (bảng giá quầy, migration 124).
   const packageItem = goiGoc ? apBangGia(goiGoc, await docBangGia()) : undefined;
+  const soNoiBat = packageItem ? await docSoNoiBatKho() : null;
   if (!packageItem) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#f4f0e7] p-5">
@@ -124,6 +126,8 @@ export default async function CheckoutPage({
               }}
               lang={lang}
               chuGoi={goiHienThi(packageItem, lang)}
+              soNoiBat={soNoiBat}
+              goiDangBan={PACKAGES.filter((p) => !p.giaRieng && !goiDaHetMua(p)).map((p) => ({ slug: p.slug, ten: goiHienThi(p, lang).name }))}
               maMoiBanDau={packageItem.giaRieng ? undefined : chuanHoaMaMoi((await cookies()).get(COOKIE_MA_MOI)?.value) ?? undefined}
             />
           )}

@@ -2,6 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { apBangGia, CAC_GOI, PACKAGES, VE_LE, type PackageCatalogItem } from "@/content/packages";
 import { docBangGia } from "@/lib/commerce/bang-gia";
+import { docSoNoiBatKho } from "@/lib/commerce/so-noi-bat";
+import { suKienDangMo } from "@/lib/customer-data/su-kien-repository";
+import { SO_DU_DE_NOI } from "@/domain/goi-y";
+import { DESTINATIONS } from "@/content/destinations";
 import { giaGoi, giaLeGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { ch, type NgonNgu } from "@/lib/ngon-ngu";
@@ -40,6 +44,7 @@ function PackageCard({
   reversed,
   suggested,
   lang,
+  daDat,
 }: {
   item: PackageCatalogItem;
   navigationContext: ContinuityContext;
@@ -48,6 +53,8 @@ function PackageCard({
   reversed?: boolean;
   suggested?: boolean;
   lang: NgonNgu;
+  /** Đơn web 30 ngày qua (migration 127); dưới mức đủ nói thì không hiện. */
+  daDat?: number;
 }) {
   const image = getPackageHeroImage(item, lang);
   const chu = goiHienThi(item, lang);
@@ -114,6 +121,7 @@ function PackageCard({
                 : ch(lang, "mỗi người lớn · gồm vé các điểm", "per adult · entry tickets included")}
             </p>
             {giaLeGoi(item, lang) ? <p className="text-xs font-bold text-[#8a5a1f]" data-testid="gia-le-goi">{giaLeGoi(item, lang)}</p> : null}
+            {daDat && daDat >= SO_DU_DE_NOI ? <p className="text-xs text-[#356957]" data-testid="da-dat-30-ngay">{ch(lang, `${daDat.toLocaleString("vi-VN")} đơn trong 30 ngày qua`, `${daDat.toLocaleString("en-US")} bookings in the last 30 days`)}</p> : null}
           </div>
         </div>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
@@ -165,11 +173,14 @@ function TheVe({
   navigationContext,
   checkoutAvailable,
   lang,
+  quaCong,
 }: {
   item: PackageCatalogItem;
   navigationContext: ContinuityContext;
   checkoutAvailable: boolean;
   lang: NgonNgu;
+  /** Lượt qua cổng 7 ngày qua ở điểm này (migration 127). */
+  quaCong?: number;
 }) {
   const image = getPackageHeroImage(item, lang);
   const chu = goiHienThi(item, lang);
@@ -184,6 +195,11 @@ function TheVe({
         <p className="mt-4 font-display text-3xl leading-none text-[#151a17]" data-testid="gia-ve-le">
           {lang === "en" ? `VND ${item.demoPriceVnd.toLocaleString("en-US")}` : `${item.demoPriceVnd.toLocaleString("vi-VN")} đ`}
         </p>
+        {quaCong && quaCong >= SO_DU_DE_NOI ? (
+          <p className="mt-2 inline-flex w-fit rounded-full bg-[#e3efe8] px-3 py-1 text-xs font-bold text-[#245e48]" data-testid="qua-cong-7-ngay">
+            {ch(lang, `${quaCong.toLocaleString("vi-VN")} khách qua cổng 7 ngày qua`, `${quaCong.toLocaleString("en-US")} visitors in the last 7 days`)}
+          </p>
+        ) : null}
         <p className="mt-1 text-xs text-[#645c4b]">{item.giaTreEmVnd ? ch(lang, `mỗi người lớn · trẻ 1m–1m3 ${item.giaTreEmVnd.toLocaleString("vi-VN")} đ`, `per adult · child 1–1.3 m VND ${item.giaTreEmVnd.toLocaleString("en-US")}`) : ch(lang, "mỗi người lớn", "per adult")}</p>
         <div className="mt-auto flex pt-5">
           {checkoutAvailable ? (
@@ -228,7 +244,7 @@ export default async function PackagesPage({
   const checkoutAvailable =
     surfaceAttributes["data-checkout-available"] === "true";
   // Giá đọc từ bảng giá quầy (migration 124); không đọc được thì dùng giá dự phòng.
-  const bangGia = await docBangGia();
+  const [bangGia, soNoiBat, suKien] = await Promise.all([docBangGia(), docSoNoiBatKho(), suKienDangMo()]);
   const veLe = VE_LE.map((item) => apBangGia(item, bangGia));
   const [featured, ...rest] = CAC_GOI.map((item) => apBangGia(item, bangGia));
   const quayLai = packageCatalogBack(navigationContext, Boolean(goiGoiY));
@@ -292,8 +308,23 @@ export default async function PackagesPage({
         </p>
         <div id="ve" className="mt-8 grid scroll-mt-6 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {veLe.map((item) => (
-            <TheVe key={item.id} item={item} navigationContext={navigationContext} checkoutAvailable={checkoutAvailable} lang={lang} />
+            <TheVe key={item.id} item={item} navigationContext={navigationContext} checkoutAvailable={checkoutAvailable} lang={lang} quaCong={soNoiBat?.diem[DESTINATIONS.find((d) => d.id === item.siteIds[0])?.slug ?? ""]} />
           ))}
+        </div>
+        {/* 13/10: sự kiện và thi ảnh, lối khách tự để lại số có đồng ý. */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-2" data-testid="dang-dien-ra">
+          {suKien[0] ? (
+            <Link href={`/su-kien/${suKien[0].slug}${lang === "en" ? "?lang=en" : ""}`} className="flex flex-col rounded-2xl bg-[#183f34] p-5 text-white transition hover:bg-[#12332a]">
+              <span className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#e7c78d]">{ch(lang, "Sự kiện · rút thăm giao lưu", "Event · meet-and-greet draw")}</span>
+              <span className="font-display mt-1 text-xl leading-snug">{suKien[0].ten}</span>
+              <span className="mt-1 text-sm text-white/70">{ch(lang, `${suKien[0].soGiai} suất · ${suKien[0].soNguoi} người đã đăng ký`, `${suKien[0].soGiai} places · ${suKien[0].soNguoi} entered`)}</span>
+            </Link>
+          ) : null}
+          <Link href={`/thi-anh${lang === "en" ? "?lang=en" : ""}`} className="flex flex-col rounded-2xl border border-[#e2d3b4] bg-[#fbf7ee] p-5 transition hover:bg-[#f6efdf]">
+            <span className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#9a6328]">{ch(lang, "Thi ảnh hằng tháng", "Monthly photo contest")}</span>
+            <span className="font-display mt-1 text-xl leading-snug text-[#183f34]">{ch(lang, "Ảnh đẹp Ninh Bình", "Ninh Binh photo of the month")}</span>
+            <span className="mt-1 text-sm text-[#59654b]">{ch(lang, "8 giải mỗi tháng bằng vé tham quan", "8 prizes a month, paid in tickets")}</span>
+          </Link>
         </div>
         <h2 id="lich-goi-y" className="font-display mt-16 scroll-mt-6 text-[clamp(2rem,5vw,3.2rem)] leading-tight text-[#183f34]">
           {ch(lang, "Lịch đi gợi ý trong ngày", "Suggested day plans")}
@@ -301,8 +332,8 @@ export default async function PackagesPage({
         <p className="mt-4 max-w-2xl text-lg leading-8 text-[#59654b]">
           {ch(
             lang,
-            `Chưa biết đi đâu trước? Mỗi lịch ghép sẵn giờ đi các điểm hợp nhau, giá bằng tổng vé các điểm trong lịch, không thu thêm.${banTrangDaKhep ? " Bàn Trăng, bữa tối Trung thu bên sông Ngô Đồng, đã khép mùa 2026; trang vẫn giữ để bạn xem lại." : " Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách."}`,
-            `Not sure where to start? Each plan sets times for sites that go well together, priced at the sum of the entry tickets, nothing added.${banTrangDaKhep ? " The Moon Table, a Mid-Autumn dinner by the Ngo Dong, has closed for 2026; it stays here for you to look back on." : " At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two."}`,
+            `Chưa biết đi đâu trước? Mỗi lịch ghép sẵn giờ đi các điểm hợp nhau; lịch có hai điểm bán vé rẻ hơn mua lẻ 10%.${banTrangDaKhep ? " Bàn Trăng, bữa tối Trung thu bên sông Ngô Đồng, đã khép mùa 2026; trang vẫn giữ để bạn xem lại." : " Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách."}`,
+            `Not sure where to start? Each plan sets times for sites that go well together; plans with two ticketed sites cost 10% less than single tickets.${banTrangDaKhep ? " The Moon Table, a Mid-Autumn dinner by the Ngo Dong, has closed for 2026; it stays here for you to look back on." : " At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two."}`,
           )}
         </p>
         <div className="mt-10 flex flex-col gap-6 lg:gap-8">
@@ -313,6 +344,7 @@ export default async function PackagesPage({
             featured
             suggested={goiGoiY?.slug === featured.slug}
             lang={lang}
+            daDat={soNoiBat?.goi[featured.slug]}
           />
           {rest.map((item, index) => (
             <PackageCard
@@ -323,6 +355,7 @@ export default async function PackagesPage({
               reversed={index % 2 === 1}
               suggested={goiGoiY?.slug === item.slug}
               lang={lang}
+              daDat={soNoiBat?.goi[item.slug]}
             />
           ))}
         </div>

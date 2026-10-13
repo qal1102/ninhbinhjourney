@@ -25,6 +25,8 @@ import { JOURNEY_CONCIERGE_OPEN_EVENT, JourneyConcierge } from "@/components/dis
 import { useMidAutumnSeasonOpen } from "@/lib/seasonal/use-mid-autumn-season";
 import { loiVaoMua } from "@/lib/seasonal/trang-mua";
 import { PackageShowcase } from "@/components/discovery/package-showcase";
+import { goiHienThi } from "@/content/packages-en";
+import { apBangGia, VE_LE, type BangGia } from "@/content/packages";
 import { RouteShowcaseCard } from "@/components/discovery/route-showcase-card";
 import { CinematicVideo, type CinematicClip } from "@/components/shared/cinematic-video";
 import { ConTroNhan } from "@/components/shared/con-tro-nhan";
@@ -82,6 +84,8 @@ type Props = {
   bayGio: string;
   /** Số điểm đến, số hồ sơ thương hiệu, số gói — đếm từ chính kho dữ liệu. */
   soLieuCong: SoLieuCong;
+  /** Giá hiện hành từ bảng giá quầy (migration 124); null thì dùng giá dự phòng. */
+  bangGia?: BangGia | null;
 };
 
 const TourismMap = dynamic(() => import("./tourism-map"), {
@@ -126,6 +130,8 @@ const copy = {
     footerLookup: "Already booked? Open your ticket again",
     begin: "Plan my journey",
     exploreMap: "Explore map",
+    buyTickets: "Buy tickets",
+    ticketPricesLead: "Desk prices, the same online:",
     /*
      * Duong thu ba vao gioi thieu trang chu: khong them nut thu ba ngang
      * hang voi hai nut tren (tranh dung lai kieu "ba lop dieu huong bang
@@ -308,6 +314,8 @@ const copy = {
     footerLookup: "Đã đặt chỗ rồi? Mở lại vé của bạn",
     begin: "Lập hành trình",
     exploreMap: "Khám phá bản đồ",
+    buyTickets: "Mua vé tham quan",
+    ticketPricesLead: "Giá vé bằng giá quầy:",
     heroPackagesCue: "Xem các gói đi sẵn",
     heroPackagesCuePlain: "Xem các gói đi sẵn",
     hourLead: "Ở Ninh Bình bây giờ",
@@ -910,6 +918,7 @@ export default function NinhBinhLanding({
   surfaceAttributes,
   bayGio,
   soLieuCong,
+  bangGia,
 }: Props) {
   const [lang, setLang] = useState<Language>(initialLang);
   const t = copy[lang];
@@ -1193,7 +1202,8 @@ export default function NinhBinhLanding({
     const timeout = window.setTimeout(() => {
       setIntroVisible(false);
       markIntroPlayed();
-    }, prefersReducedMotion ? 900 : 7200);
+    // 13/10/2026: 7,2 giây là quá lâu với khách vào để mua vé; còn 3 giây.
+    }, prefersReducedMotion ? 900 : 3000);
 
     return () => window.clearTimeout(timeout);
   }, [introAlreadyPlayed]);
@@ -1565,18 +1575,34 @@ export default function NinhBinhLanding({
               , {(t.hourPhrases as Record<DayBand, string>)[ninhBinhHour.band]}.
             </p>
           ) : null}
+          {/*
+            Soát như khách thật 13/10/2026: khách được AI hay mã QR ở điểm du
+            lịch dẫn vào để MUA VÉ, mà màn đầu chỉ có "Lập hành trình" và bản
+            đồ, cuộn năm màn hình chưa thấy chữ vé. Nút chính nay là Mua vé,
+            kèm giá từng điểm (đúng giá quầy); vẫn giữ hai nút, bản đồ lùi
+            xuống thành dòng chữ.
+          */}
           <div className="hero-nut fade-up mt-9 flex flex-col gap-3 sm:flex-row">
-            <a data-customer-track="home-hero-plan" data-customer-content-id="journey-planner" data-customer-content-type="primary-cta" href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-semibold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.begin}</a>
-            <a data-customer-track="home-hero-explore" data-customer-content-id="explore-map" data-customer-content-type="secondary-cta" href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.exploreMap}</a>
+            <a data-customer-track="home-hero-buy" data-customer-content-id="tickets" data-customer-content-type="primary-cta" href={`/packages?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}#ve`} className="rounded-full bg-[#E7B96A] px-6 py-3 text-center font-bold text-[#183F34] shadow-xl shadow-black/20 transition hover:bg-[#f0c87c]">{t.buyTickets as string}</a>
+            <a data-customer-track="home-hero-plan" data-customer-content-id="journey-planner" data-customer-content-type="secondary-cta" href={`/plan?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`} className="rounded-full border border-white/35 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/12">{t.begin}</a>
           </div>
+          <p data-testid="gia-ve-trang-chu" className="fade-up mt-4 max-w-2xl text-sm leading-6 text-[#FBFAF6]/80">
+            {t.ticketPricesLead as string}{" "}
+            {VE_LE.map((ve) => apBangGia(ve, bangGia)).map((ve, i) => (
+              <span key={ve.slug} className="whitespace-nowrap">
+                {i > 0 ? " · " : ""}
+                {goiHienThi(ve, lang).name.replace(/^Vé |^Ve | ticket$/g, "")} <strong className="font-semibold text-[#E7B96A]">{lang === "en" ? `VND ${ve.demoPriceVnd.toLocaleString("en-US")}` : `${ve.demoPriceVnd.toLocaleString("vi-VN")} đ`}</strong>
+              </span>
+            ))}
+          </p>
           <a
-            data-customer-track="home-hero-packages"
-            data-customer-content-id="packages-catalog"
+            data-customer-track="home-hero-explore"
+            data-customer-content-id="explore-map"
             data-customer-content-type="tertiary-cta"
-            href="#packages"
-            className="fade-up mt-5 inline-flex max-w-full w-fit items-center gap-2 text-sm font-semibold leading-6 text-[#E7B96A] underline decoration-[#E7B96A]/40 underline-offset-4 transition hover:decoration-[#E7B96A]"
+            href={`/explore?lang=${lang}${source ? `&source=${encodeURIComponent(source)}` : ""}`}
+            className="fade-up mt-4 inline-flex max-w-full w-fit items-center gap-2 text-sm font-semibold leading-6 text-[#E7B96A] underline decoration-[#E7B96A]/40 underline-offset-4 transition hover:decoration-[#E7B96A]"
           >
-            {bookingEnabled ? t.heroPackagesCue : t.heroPackagesCuePlain} <span aria-hidden="true">↓</span>
+            {t.exploreMap} <span aria-hidden="true">→</span>
           </a>
           </div>
         </div>
@@ -1900,6 +1926,7 @@ export default function NinhBinhLanding({
       <PackageShowcase
         lang={lang}
         source={source}
+        bangGia={bangGia}
         copy={{
           label: t.packagesLabel as string,
           title: t.packagesTitle as string,

@@ -5,7 +5,8 @@ import { DongHoHoaNo } from "@/components/discovery/dong-ho-hoa-no";
 import { KeMua } from "@/components/discovery/ke-mua";
 import { WorldSwitcher } from "@/components/discovery/world-switcher";
 import { NutNgonNgu } from "@/components/shared/nut-ngon-ngu";
-import { getPackageBySlug } from "@/content/packages";
+import { apBangGia, getPackageBySlug } from "@/content/packages";
+import { docBangGia } from "@/lib/commerce/bang-gia";
 import { giaGoi, goiHienThi } from "@/content/packages-en";
 import { NHAN_CHAC_CHAN } from "@/domain/lich-mua-vu";
 import { cacMuaToi, ngayDoc, tinhTrangHoaSung, type MuaHoaSung } from "@/domain/mua-hoa-sung";
@@ -55,7 +56,8 @@ export default async function HoaSungPage({
   const tinhTrang = tinhTrangHoaSung(bayGio);
   const { mua, giaiDoan } = tinhTrang;
   const cacMua = cacMuaToi(bayGio, 3);
-  const goi = getPackageBySlug("do-som-mua-hoa-sung");
+  const goiGoc = getPackageBySlug("do-som-mua-hoa-sung");
+  const goi = goiGoc ? apBangGia(goiGoc, await docBangGia()) : goiGoc;
   const chuGoi = goi ? goiHienThi(goi, lang) : null;
   const linkGoi = (() => {
     const q = new URLSearchParams({ package: "do-som-mua-hoa-sung", lang });
@@ -299,7 +301,7 @@ export default async function HoaSungPage({
             </div>
             <div className="flex flex-col items-start gap-3 lg:items-end">
               <p className="text-sm text-white/70">
-                {giaGoi(goi, lang)} · {t("giá minh hoạ", "sample price")}
+                {giaGoi(goi, lang)} · {t("mỗi người lớn, bằng giá vé Tam Cốc", "per adult, the Tam Coc ticket price")}
               </p>
               <Link href={linkGoi} className="inline-flex min-h-12 items-center rounded-full bg-[#e7b96a] px-6 text-sm font-extrabold text-[#183f34] transition hover:bg-[#f0c98a]">
                 {t(`Đặt cho mùa ${mua.nam}`, `Book for the ${mua.nam} season`)}

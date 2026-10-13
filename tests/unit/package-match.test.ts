@@ -122,7 +122,8 @@ describe("ghép gói trải nghiệm theo điều khách kể", () => {
     expect(result.matches).toEqual([]);
     expect(result.noMatchReason).toBe("duration-exceeds");
     // Không có gói nào bị nhét vào cho đỡ trống, và mọi gói đều có lý do bị loại.
-    expect(result.skipped).toHaveLength(PACKAGES.length);
+    // Vé lẻ không vào bộ ghép (13/10/2026), nên chỉ đếm các gói.
+    expect(result.skipped).toHaveLength(PACKAGES.filter((item) => item.loai !== "ve").length);
     expect(PACKAGE_NO_MATCH_LABEL[result.noMatchReason!].vi).toContain(
       "dài hơn",
     );

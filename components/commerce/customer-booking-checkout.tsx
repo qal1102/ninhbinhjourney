@@ -249,6 +249,10 @@ export function CustomerBookingCheckout({
   const [message, setMessage] = useState("");
   const holdRequestId = useRef(crypto.randomUUID());
   const paymentRequestId = useRef(crypto.randomUUID());
+  // Khung giờ của lượt giữ vừa khôi phục, chọn lại sau khi tải khung giờ.
+  const slotKhoiPhuc = useRef<string | null>(null);
+  // Chưa đọc xong bộ nhớ thì khối lưu không được xoá lượt giữ cũ.
+  const daDocGiuCho = useRef(false);
 
   // TC-06 — khách đoàn: trưởng đoàn khai tối thiểu tên mình sau khi vé đã
   // phát; không bắt buộc, và bỏ qua không ảnh hưởng gì tới việc vào cổng.
@@ -307,6 +311,107 @@ export function CustomerBookingCheckout({
     return () => window.clearInterval(timer);
   }, [hold, confirmation]);
 
+  /*
+   * Soát như khách thật 13/10/2026: tải lại trang là mất chỗ đang giữ, quay
+   * về bước chọn giờ. Trên điện thoại, khách chuyển sang app ngân hàng rồi
+   * quay lại thì trình duyệt hay tải lại đúng lúc đang trả tiền. Lượt giữ
+   * trên máy chủ vẫn còn 15 phút; chỉ giao diện quên. Lưu lượt dở dang vào
+   * sessionStorage của chính thẻ ấy, tải lại thì khôi phục khi còn hạn (vé đã
+   * phát thì giữ hai giờ). Khối khôi phục đứng trước khối lưu để đọc trước.
+   */
+  const khoaGiuCho = `nbj-giu-cho:${packageItem.id}`;
+  useEffect(() => {
+    let luu: {
+      hold?: HoldResult | null;
+      confirmation?: ConfirmationResult | null;
+      visitDate?: string;
+      adults?: number;
+      children?: number;
+      slot?: string | null;
+      contact?: string;
+      payAtSite?: boolean;
+      qr?: { payUrl: string; dataUrl: string } | null;
+      holdRequestId?: string;
+      paymentRequestId?: string;
+      luuLuc?: number;
+    } | null = null;
+    try {
+      luu = JSON.parse(window.sessionStorage.getItem(khoaGiuCho) ?? "null");
+    } catch {
+      luu = null;
+    }
+    if (!luu?.hold) {
+      daDocGiuCho.current = true;
+      return;
+    }
+    const conHan = luu.confirmation
+      ? Date.now() - (luu.luuLuc ?? 0) < 2 * 60 * 60 * 1000
+      : new Date(luu.hold.hold.expires_at).getTime() > Date.now();
+    if (!conHan) {
+      daDocGiuCho.current = true;
+      try {
+        window.sessionStorage.removeItem(khoaGiuCho);
+      } catch {
+        // Trình duyệt chặn bộ nhớ thì thôi.
+      }
+      return;
+    }
+    const daLuu = { ...luu, hold: luu.hold };
+    const hen = window.setTimeout(() => khoiPhuc(daLuu), 0);
+    return () => window.clearTimeout(hen);
+    function khoiPhuc(luu: NonNullable<typeof daLuu> & { hold: HoldResult }) {
+      daDocGiuCho.current = true;
+      if (luu.holdRequestId) holdRequestId.current = luu.holdRequestId;
+      if (luu.paymentRequestId) paymentRequestId.current = luu.paymentRequestId;
+      if (typeof luu.adults === "number") setAdults(luu.adults);
+      if (typeof luu.children === "number") setChildren(luu.children);
+      slotKhoiPhuc.current = luu.slot ?? null;
+      if (luu.visitDate) setVisitDate(luu.visitDate);
+      setHold(luu.hold);
+      setContact(luu.contact ?? "");
+      setPayAtSite(Boolean(luu.payAtSite));
+      if (luu.confirmation) {
+        setConfirmation(luu.confirmation);
+        setContactSaved(true);
+        setMessage(t("Vé bạn vừa mua vẫn ở đây.", "Your ticket is still here."));
+      } else {
+        setQr(luu.qr ?? null);
+        setMessage(t("Chỗ bạn giữ vẫn còn, làm tiếp từ đây.", "Your held seats are still here. Carry on from where you were."));
+      }
+    }
+    // Chỉ khôi phục một lần lúc mở trang.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!daDocGiuCho.current) return;
+    try {
+      if (!hold) {
+        window.sessionStorage.removeItem(khoaGiuCho);
+        return;
+      }
+      window.sessionStorage.setItem(
+        khoaGiuCho,
+        JSON.stringify({
+          hold,
+          confirmation,
+          visitDate,
+          adults,
+          children,
+          slot: selectedSlotStartsAt,
+          contact,
+          payAtSite,
+          qr,
+          holdRequestId: holdRequestId.current,
+          paymentRequestId: paymentRequestId.current,
+          luuLuc: Date.now(),
+        }),
+      );
+    } catch {
+      // Chế độ ẩn danh hay bộ nhớ đầy: không khôi phục được, vẫn đặt bình thường.
+    }
+  }, [khoaGiuCho, hold, confirmation, visitDate, adults, children, selectedSlotStartsAt, contact, payAtSite, qr]);
+
   // Bước 1 → 2: đổi ngày thì tải lại khung giờ còn mở, và bỏ khung đang chọn —
   // một khung giờ hợp lệ ở ngày cũ chưa chắc còn đúng ở ngày mới.
   useEffect(() => {
@@ -331,6 +436,15 @@ export function CustomerBookingCheckout({
           return;
         }
         setSlots(payload.slots);
+        if (slotKhoiPhuc.current) {
+          const daGiu = payload.slots.find((slot) => slot.startsAt === slotKhoiPhuc.current);
+          slotKhoiPhuc.current = null;
+          if (daGiu) {
+            setSelectedSlotStartsAt(daGiu.startsAt);
+            gioMuon.current = null;
+            return;
+          }
+        }
         const gio = gioMuon.current;
         gioMuon.current = null;
         if (gio) {

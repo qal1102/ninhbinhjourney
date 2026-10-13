@@ -21,9 +21,9 @@ export type MucDauTrang = "kham-pha" | "lap-lich" | "goi" | "mua" | "ve";
 const MUC: ReadonlyArray<{ id: MucDauTrang; href: string; vi: string; en: string; nganVi: string; nganEn: string }> = [
   { id: "kham-pha", href: "/explore", vi: "Khám phá", en: "Explore", nganVi: "Khám phá", nganEn: "Explore" },
   { id: "lap-lich", href: "/plan", vi: "Lập lịch", en: "Plan", nganVi: "Lập lịch", nganEn: "Plan" },
-  { id: "goi", href: "/packages", vi: "Gói tham quan", en: "Packages", nganVi: "Gói", nganEn: "Tours" },
+  { id: "goi", href: "/packages", vi: "Mua vé", en: "Buy tickets", nganVi: "Mua vé", nganEn: "Buy" },
   { id: "mua", href: "/seasonal", vi: "Theo mùa", en: "Seasonal", nganVi: "Theo mùa", nganEn: "Seasons" },
-  { id: "ve", href: "/tra-cuu-ve", vi: "Vé của tôi", en: "My tickets", nganVi: "Vé", nganEn: "Tickets" },
+  { id: "ve", href: "/tra-cuu-ve", vi: "Vé đã mua", en: "My tickets", nganVi: "Vé đã mua", nganEn: "My tickets" },
 ];
 
 function BieuTuong({ id }: { id: MucDauTrang }) {

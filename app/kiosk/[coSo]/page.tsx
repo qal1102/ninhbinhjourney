@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { KioskDiem, type GoiKiosk } from "@/components/commerce/kiosk-diem";
 import { DESTINATION_PAGE_SLUGS, destinationFacts, destinations } from "@/content/landing-destinations";
-import { PACKAGES } from "@/content/packages";
+import { apBangGia, PACKAGES } from "@/content/packages";
+import { docBangGia } from "@/lib/commerce/bang-gia";
 import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { getErpSite } from "@/domain/erp";
 import { BEN_CO_HANG_CHO } from "@/domain/hang-cho";
@@ -35,7 +36,8 @@ export default async function KioskPage({
   const facts = destinationFacts[diem.id];
   const uuid = ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG[coSo];
   const bayGio = new Date();
-  const goi: GoiKiosk[] = PACKAGES.filter((p) => p.siteIds.includes(uuid) && !goiDaHetMua(p, bayGio)).map((p) => ({
+  const bangGia = await docBangGia();
+  const goi: GoiKiosk[] = PACKAGES.filter((p) => p.siteIds.includes(uuid) && !goiDaHetMua(p, bayGio)).map((p) => apBangGia(p, bangGia)).map((p) => ({
     slug: p.slug,
     ten: { vi: goiHienThi(p, "vi").name, en: goiHienThi(p, "en").name },
     thoiLuong: { vi: goiHienThi(p, "vi").durationLabel, en: goiHienThi(p, "en").durationLabel },

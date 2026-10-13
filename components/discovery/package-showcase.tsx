@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Reveal } from "@/components/shared/reveal";
 import { RevealHeading } from "@/components/shared/reveal-heading";
 import { SharedImageTransition } from "@/components/shared/shared-image-transition";
-import { PACE_LABEL, PACKAGES, type PackageCatalogItem } from "@/content/packages";
+import { apBangGia, CAC_GOI, PACE_LABEL, type BangGia, type PackageCatalogItem } from "@/content/packages";
 import { DESTINATIONS } from "@/content/destinations";
 import { PACKAGE_IMAGE_SITE_ID } from "@/content/package-images";
 import { goiDaHetMua, goiHienThi } from "@/content/packages-en";
@@ -76,14 +76,17 @@ export function PackageShowcase({
   lang,
   source,
   copy,
+  bangGia,
 }: {
   lang: Language;
   source: string;
   copy: PackageShowcaseCopy;
+  /** Giá hiện hành từ bảng giá quầy; null thì giá dự phòng trong danh mục. */
+  bangGia?: BangGia | null;
 }) {
   // Gói theo mùa đã hết cửa đặt (Bàn Trăng sau 27/09) không mời ở trang chủ nữa;
   // trang /packages vẫn giữ nó kèm nhãn "đã khép".
-  const [featured, ...rest] = PACKAGES.filter((item) => !goiDaHetMua(item));
+  const [featured, ...rest] = CAC_GOI.filter((item) => !goiDaHetMua(item)).map((item) => apBangGia(item, bangGia));
   const navigationContext: ContinuityContext = {
     lang,
     ...(source ? { source } : {}),

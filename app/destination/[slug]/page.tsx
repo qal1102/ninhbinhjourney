@@ -12,7 +12,8 @@ import { MiniRouteMap } from "@/components/discovery/mini-route-map";
 import { VerifiedRatingPanel } from "@/components/discovery/verified-rating-panel";
 import { ThuyetMinh } from "@/components/discovery/thuyet-minh";
 import { benCuaDiemDen } from "@/domain/hang-cho";
-import { PACKAGES } from "@/content/packages";
+import { apBangGia, PACKAGES } from "@/content/packages";
+import { docBangGia } from "@/lib/commerce/bang-gia";
 import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 import {
@@ -115,8 +116,9 @@ export default async function DestinationPage({
   // nhưng không bán vé tại đây, nên trang Hoa Lư không có khối này.
   const banVeTaiDay = Object.values(ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG).includes(destination.id);
   const bayGio = new Date();
+  const bangGia = banVeTaiDay ? await docBangGia() : null;
   const goiCoNoiNay = banVeTaiDay
-    ? PACKAGES.filter((item) => item.siteIds.includes(destination.id) && !goiDaHetMua(item, bayGio))
+    ? PACKAGES.filter((item) => item.siteIds.includes(destination.id) && !goiDaHetMua(item, bayGio)).map((item) => apBangGia(item, bangGia))
     : [];
 
   return (

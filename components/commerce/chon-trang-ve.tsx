@@ -14,7 +14,7 @@ export function ChonTrangVe({ dangO, lang = "vi" }: { dangO: "ve" | "luot"; lang
     { id: "luot", href: `/ho-so${duoi}`, ten: t("Lượt đi & quà", "Visits & rewards"), phu: t("Vé đã gắn số điện thoại", "Tickets on your phone") },
   ] as const;
   return (
-    <nav aria-label={t("Vé của tôi", "My tickets")} className="mx-auto mb-6 grid max-w-3xl grid-cols-2 gap-1 rounded-2xl bg-[#e6e0d2] p-1">
+    <nav aria-label={t("Vé đã mua", "My tickets")} className="mx-auto mb-6 grid max-w-3xl grid-cols-2 gap-1 rounded-2xl bg-[#e6e0d2] p-1">
       {the.map((muc) => {
         const chon = muc.id === dangO;
         return (

@@ -26,6 +26,10 @@ export const PACKAGE_IMAGE_SITE_ID: Record<string, string> = {
   "cinematic-sunset": "10000000-0000-4000-8000-000000000005",
   "tam-chuc-chua-tren-ho": "10000000-0000-4000-8000-000000000009",
   "ban-trang-tam-coc-2026": "10000000-0000-4000-8000-000000000005",
+  "ve-trang-an": "10000000-0000-4000-8000-000000000001",
+  "ve-tam-coc": "10000000-0000-4000-8000-000000000005",
+  "ve-tam-chuc": "10000000-0000-4000-8000-000000000009",
+  "ve-bai-dinh": "10000000-0000-4000-8000-000000000003",
 };
 
 export type PackageImage = { src: string; alt: string };

@@ -7,7 +7,8 @@ import {
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { DESTINATIONS } from "@/content/destinations";
 import { DESTINATION_PAGE_SLUGS } from "@/content/landing-destinations";
-import { PACKAGES } from "@/content/packages";
+import { CAC_GOI } from "@/content/packages";
+import { docBangGia } from "@/lib/commerce/bang-gia";
 import { goiDaHetMua } from "@/content/packages-en";
 import { CONTACT } from "@/content/contact";
 import { JsonLd } from "@/components/shared/json-ld";
@@ -73,6 +74,7 @@ export default async function Home({ searchParams }: PageProps) {
       presentationMode={presentationMode}
       surfaceAttributes={surfaceAttributes}
       bayGio={new Date().toISOString()}
+      bangGia={await docBangGia()}
       soLieuCong={{
         // Mọi trang điểm đến (9 nơi trên bản đồ lịch trình + 6 trang hồ sơ),
         // đúng con số "mười lăm điểm đến" trang chủ in ra bên dưới.
@@ -83,7 +85,7 @@ export default async function Home({ searchParams }: PageProps) {
         soHoSo: 5,
         // Chỉ đếm gói còn bán: Bàn Trăng hết mùa vẫn trưng ở /packages nhưng
         // không đặt được, nên cổng "Đặt chỗ" không tính nó.
-        soGoi: PACKAGES.filter((goi) => !goiDaHetMua(goi)).length,
+        soGoi: CAC_GOI.filter((goi) => !goiDaHetMua(goi)).length,
       }}
     />
     </>

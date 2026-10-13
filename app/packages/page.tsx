@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PACKAGES, type PackageCatalogItem } from "@/content/packages";
+import { apBangGia, CAC_GOI, PACKAGES, VE_LE, type PackageCatalogItem } from "@/content/packages";
+import { docBangGia } from "@/lib/commerce/bang-gia";
 import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { ch, type NgonNgu } from "@/lib/ngon-ngu";
@@ -26,8 +27,8 @@ import {
 } from "@/lib/page-continuity";
 
 export const metadata = {
-  title: "Gói hành trình | Ninh Bình Journey",
-  description: "Những gói đi sẵn quanh Ninh Bình, giữ chỗ 15 phút và trả tiền khi tới nơi.",
+  title: "Mua vé tham quan | Ninh Bình Journey",
+  description: "Vé Tràng An, Tam Cốc, Tam Chúc, Bái Đính đúng giá quầy, và lịch đi gợi ý trong ngày. Giữ chỗ 15 phút, trả bằng mã QR.",
   alternates: { canonical: "/packages" },
 };
 
@@ -110,7 +111,7 @@ function PackageCard({
             <p className="text-xs text-[#645c4b]">
               {item.priceLabel
                 ? ch(lang, "giá giới thiệu mùa 2026", "2026 introductory price")
-                : ch(lang, "mỗi người lớn · giá minh hoạ", "per adult · sample price")}
+                : ch(lang, "mỗi người lớn · gồm vé các điểm", "per adult · entry tickets included")}
             </p>
           </div>
         </div>
@@ -157,6 +158,49 @@ function PackageCard({
   );
 }
 
+/** Thẻ vé lẻ: một điểm, giá đúng giá quầy, một nút mua. */
+function TheVe({
+  item,
+  navigationContext,
+  checkoutAvailable,
+  lang,
+}: {
+  item: PackageCatalogItem;
+  navigationContext: ContinuityContext;
+  checkoutAvailable: boolean;
+  lang: NgonNgu;
+}) {
+  const image = getPackageHeroImage(item, lang);
+  const chu = goiHienThi(item, lang);
+  return (
+    <article id={`goi-${item.slug}`} data-testid={`ve-le-${item.slug}`} className="flex min-w-0 flex-col overflow-hidden rounded-3xl border border-[#d7d5cd] bg-white shadow-sm">
+      <div className="relative aspect-[16/9]">
+        <Image src={image.src} alt={image.alt} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="font-display text-2xl leading-tight text-[#183f34]">{chu.name}</h3>
+        <p className="mt-1 text-sm text-[#59654b]">{chu.durationLabel}</p>
+        <p className="mt-4 font-display text-3xl leading-none text-[#151a17]" data-testid="gia-ve-le">
+          {lang === "en" ? `VND ${item.demoPriceVnd.toLocaleString("en-US")}` : `${item.demoPriceVnd.toLocaleString("vi-VN")} đ`}
+        </p>
+        <p className="mt-1 text-xs text-[#645c4b]">{ch(lang, "mỗi người lớn · trẻ dưới 1m3 miễn phí", "per adult · under 1.3 m free")}</p>
+        <div className="mt-auto flex pt-5">
+          {checkoutAvailable ? (
+            <Link
+              href={checkoutHref(item.slug, navigationContext)}
+              data-customer-track="ticket-buy"
+              data-customer-content-id={item.id}
+              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-[#183f34] px-5 font-extrabold text-white"
+            >
+              {ch(lang, "Mua vé", "Buy ticket")}
+            </Link>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default async function PackagesPage({
   searchParams,
 }: {
@@ -180,7 +224,10 @@ export default async function PackagesPage({
   });
   const checkoutAvailable =
     surfaceAttributes["data-checkout-available"] === "true";
-  const [featured, ...rest] = PACKAGES;
+  // Giá đọc từ bảng giá quầy (migration 124); không đọc được thì dùng giá dự phòng.
+  const bangGia = await docBangGia();
+  const veLe = VE_LE.map((item) => apBangGia(item, bangGia));
+  const [featured, ...rest] = CAC_GOI.map((item) => apBangGia(item, bangGia));
   const quayLai = packageCatalogBack(navigationContext, Boolean(goiGoiY));
   const banTrang = PACKAGES.find((item) => item.slug === "ban-trang-tam-coc-2026");
   const banTrangDaKhep = banTrang ? goiDaHetMua(banTrang) : true;
@@ -228,13 +275,24 @@ export default async function PackagesPage({
             : ch(lang, "Bảng giá tham khảo · chưa mở đặt online", "Reference prices · online booking not open")}
         </p>
         <h1 className="font-display mt-4 max-w-5xl text-[clamp(2.6rem,7vw,4.5rem)] leading-[0.95] text-[#183f34] [text-wrap:balance]">
-          {ch(lang, "Các gói tham quan Ninh Bình", "Ninh Binh packages")}
+          {ch(lang, "Mua vé tham quan", "Buy entry tickets")}
         </h1>
-        <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59654b]">
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-[#59654b]">
+          {ch(lang, "Giá trên web bằng đúng giá bán ở quầy. Chọn ngày giờ, giữ chỗ 15 phút, trả bằng mã QR rồi nhận vé ngay trên điện thoại.", "Prices online are exactly the desk prices. Pick a date and time, hold your place for 15 minutes, pay by QR code and get your ticket on your phone.")}
+        </p>
+        <div id="ve" className="mt-8 grid scroll-mt-6 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {veLe.map((item) => (
+            <TheVe key={item.id} item={item} navigationContext={navigationContext} checkoutAvailable={checkoutAvailable} lang={lang} />
+          ))}
+        </div>
+        <h2 id="lich-goi-y" className="font-display mt-16 scroll-mt-6 text-[clamp(2rem,5vw,3.2rem)] leading-tight text-[#183f34]">
+          {ch(lang, "Lịch đi gợi ý trong ngày", "Suggested day plans")}
+        </h2>
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-[#59654b]">
           {ch(
             lang,
-            `Chọn theo thời gian bạn có và kiểu đi bạn thích: cả ngày xem di sản, một ngày thong thả, buổi sáng cho cả nhà, buổi chiều săn ảnh hoàng hôn, nửa ngày qua hồ lên chùa Tam Chúc, hay chuyến đò sớm giữa mùa hoa súng Tam Cốc. Giá là giá minh hoạ tính theo người lớn, chưa phải giá bán thật.${banTrangDaKhep ? " Bàn Trăng, bữa tối Trung thu bên sông Ngô Đồng, đã khép mùa 2026; trang vẫn giữ để bạn xem lại." : " Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách."}`,
-            `Choose by the time you have and the way you like to travel: a full heritage day, a slow day, a morning for the whole family, an afternoon chasing sunset light, half a day crossing the lake to Tam Chuc's temples, or an early boat through Tam Coc's water-lily season. Prices are samples per adult, not real selling prices.${banTrangDaKhep ? " The Moon Table, a Mid-Autumn dinner by the Ngo Dong, has closed for 2026; it stays here for you to look back on." : " At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two."}`,
+            `Chưa biết đi đâu trước? Mỗi lịch ghép sẵn giờ đi các điểm hợp nhau, giá bằng tổng vé các điểm trong lịch, không thu thêm.${banTrangDaKhep ? " Bàn Trăng, bữa tối Trung thu bên sông Ngô Đồng, đã khép mùa 2026; trang vẫn giữ để bạn xem lại." : " Cuối trang là Bàn Trăng, bữa tối theo mùa bên sông Ngô Đồng, tính theo bàn hai khách."}`,
+            `Not sure where to start? Each plan sets times for sites that go well together, priced at the sum of the entry tickets, nothing added.${banTrangDaKhep ? " The Moon Table, a Mid-Autumn dinner by the Ngo Dong, has closed for 2026; it stays here for you to look back on." : " At the end is the Moon Table, a seasonal dinner by the Ngo Dong river, priced per table for two."}`,
           )}
         </p>
         <div className="mt-10 flex flex-col gap-6 lg:gap-8">

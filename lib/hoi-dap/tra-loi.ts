@@ -5,7 +5,9 @@ import { CONTACT } from "@/content/contact";
 import { z } from "zod";
 import { PACKAGES } from "@/content/packages";
 import { goiDaHetMua, goiHienThi } from "@/content/packages-en";
-import { banDoHeThong, boDau, coYDatVe, loiChuaCoThongTin, mucTheoId, SO_HOI_DAP, timMuc, traLoiThang, type MucHoiDap } from "@/domain/hoi-dap";
+import { banDoHeThong, boDau, coYDatVe, loiChuaCoThongTin, mucTheoGia, mucTheoId as mucTheoIdGoc, SO_HOI_DAP, timMuc as timMucGoc, traLoiThang as traLoiThangGoc, type MucHoiDap } from "@/domain/hoi-dap";
+import { docBangGia } from "@/lib/commerce/bang-gia";
+import type { BangGia } from "@/content/packages";
 import { ERP_ROLE_LABELS, type ErpRole } from "@/domain/erp";
 import { tinhTrangHoaSung } from "@/domain/mua-hoa-sung";
 import { coMoHinhAi, hoiMoHinh } from "@/lib/ai/goi-mo-hinh";
@@ -157,7 +159,7 @@ function huongDan(lang: NgonNgu, bayGio: Date, phamVi: PhamViHoi = "web", vai?: 
     ? `You are "AI of Ninh Binh Journey", the AI assistant of a demo travel site for Ninh Binh, Vietnam. Visitors know they are talking to an AI.
 Today in Vietnam is ${iso} (weekday index ${thu}, 0 = Sunday).
 How to answer:
-1. Facts about THIS site (package prices, what a package includes, booking rules, payment, children's tickets, what each page does) come from the MATERIAL, the PACKAGES list and the SYSTEM MAP. Prices are illustrative demo prices; say so when you quote one. If the exact detail is not there, never just say there is no information: say what the site does have that comes closest and which page to open.
+1. Facts about THIS site (package prices, what a package includes, booking rules, payment, children's tickets, what each page does) come from the MATERIAL, the PACKAGES list and the SYSTEM MAP. Prices are per adult and equal the ticket-desk prices; children under 1.3 m are free. If the exact detail is not there, never just say there is no information: say what the site does have that comes closest and which page to open.
 Name pages in words, using only names found in the material or system map ("the Packages page"), never invent a page name; never write paths like /packages in "traLoi". Put the single most useful page path from the material or system map in "manHinh" (null if none) and it becomes a button.
 2. General questions about travelling in Ninh Binh (local food, weather by season, getting around, what to wear, nearby sights) may be answered from general knowledge. Keep to what is widely known, never name a specific restaurant or a price that is not in the material, never claim an on-site facility (wifi, lockers, parking fees) exists when the material does not say so, and add a short note to check locally.
 The visitor is a traveller: do not send them to ERP screens unless they ask about the ERP or staff work.
@@ -169,7 +171,7 @@ Write "traLoi" in English, usually 1-3 short sentences (a short poem or joke may
     : `Bạn là "AI của Ninh Bình Journey", trợ lý AI của web du lịch Ninh Bình (bản thử). Khách biết mình đang nói chuyện với AI.
 Hôm nay ở Việt Nam là ${iso} (${THU[thu]}).
 Cách trả lời:
-1. Dữ kiện của web này (giá gói, gói gồm gì, luật đặt chỗ, thanh toán, vé trẻ em, trang nào làm gì) lấy từ TƯ LIỆU, DANH SÁCH GÓI và BẢN ĐỒ HỆ THỐNG. Giá là giá minh hoạ của bản thử; nhắc điều đó khi nêu giá. Không có đúng chi tiết thì không bao giờ chỉ đáp "chưa có thông tin": nói điều gần nhất web có và trang nên mở.
+1. Dữ kiện của web này (giá gói, gói gồm gì, luật đặt chỗ, thanh toán, vé trẻ em, trang nào làm gì) lấy từ TƯ LIỆU, DANH SÁCH GÓI và BẢN ĐỒ HỆ THỐNG. Giá tính mỗi người lớn, bằng đúng giá quầy; trẻ dưới 1m3 miễn phí. Không có đúng chi tiết thì không bao giờ chỉ đáp "chưa có thông tin": nói điều gần nhất web có và trang nên mở.
 Gọi trang bằng đúng tên có trong tư liệu hay bản đồ hệ thống ("trang Gói đi sẵn"), không tự đặt tên trang, không ghi đường dẫn dạng /packages trong "traLoi". Đặt đường dẫn trang hữu ích nhất (lấy đúng từ tư liệu hay bản đồ hệ thống) vào "manHinh", không có thì null; nó thành nút bấm.
 2. Câu hỏi chung về du lịch Ninh Bình (đặc sản, thời tiết theo mùa, đi lại, nên mặc gì, chỗ chơi gần) thì trả lời bằng hiểu biết chung, chỉ nói điều phổ biến, không nêu tên quán cụ thể hay giá không có trong tư liệu, không khẳng định tiện ích tại chỗ (wifi, tủ gửi đồ, phí gửi xe) khi tư liệu không nói, và thêm một lời nhắc ngắn nên hỏi lại tại chỗ.
 Người hỏi là khách du lịch: đừng chỉ sang màn ERP trừ khi họ hỏi về ERP hay việc của nhân sự.
@@ -229,6 +231,17 @@ export async function traLoiCauHoi(opts: {
 }): Promise<KetQuaHoiDap> {
   const { cau, lang } = opts;
   const phamVi = opts.phamVi ?? "web";
+  // Giá trong câu trả lời theo bảng giá quầy hiện hành, không theo câu viết sẵn.
+  const bangGia: BangGia | null = phamVi === "web" ? await docBangGia() : null;
+  const mucTheoId = (id: string) => {
+    const muc = mucTheoIdGoc(id);
+    return muc ? mucTheoGia(muc, bangGia) : muc;
+  };
+  const traLoiThang = (c: string) => {
+    const muc = traLoiThangGoc(c);
+    return muc ? mucTheoGia(muc, bangGia) : muc;
+  };
+  const timMuc = (c: string, n: number) => timMucGoc(c, n).map((k) => ({ ...k, muc: mucTheoGia(k.muc, bangGia) }));
   // Web khách không dẫn sang màn ERP (cần đăng nhập nhân sự); ERP thì dẫn hết.
   const choDan = (href: string) => phamVi === "erp" || !href.startsWith("/erp");
   const lienKetHop = (muc: MucHoiDap | undefined) => lienKetCua(muc, lang).filter((l) => choDan(l.href));

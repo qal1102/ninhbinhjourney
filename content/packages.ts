@@ -44,6 +44,11 @@ export type PackageCatalogItem = {
    */
   muaBan?: "hoa-sung";
   fixedPartySize?: number;
+  /**
+   * `ve`: vé vào cổng một điểm, bán đúng giá quầy. Không có thì là gói (lịch
+   * đi gợi ý). Trang chủ và bộ ghép lịch chỉ lấy gói.
+   */
+  loai?: "ve";
 };
 
 export const PACE_LABEL: Record<PackageCatalogItem["pace"], string> = {
@@ -52,6 +57,13 @@ export const PACE_LABEL: Record<PackageCatalogItem["pace"], string> = {
   active: "đi được nhiều",
 };
 
+/**
+ * Giá trong danh mục này chỉ là giá dự phòng khi web không đọc được kho. Giá
+ * thật nằm ở bảng giá quầy (`erp_counter_price_list`, màn Giá vé quầy): vé
+ * lẻ bằng giá người lớn của điểm, gói bằng tổng giá vé các điểm trong gói
+ * (điểm không bán vé như Hoa Lư tính 0 đ). Xem migration 124 và
+ * `lib/commerce/bang-gia.ts`. Sửa bảng giá quầy thì sửa số dự phòng ở đây.
+ */
 export const PACKAGES: readonly PackageCatalogItem[] = [
   {
     id: "40000000-0000-4000-8000-000000000001",
@@ -63,7 +75,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     durationLabel: "1 ngày",
     durationMinutes: 600,
     pace: "balanced",
-    demoPriceVnd: 890_000,
+    demoPriceVnd: 250_000,
     ledgerType: "service-commerce",
     siteIds: [
       "10000000-0000-4000-8000-000000000001",
@@ -91,7 +103,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     durationLabel: "1 ngày",
     durationMinutes: 540,
     pace: "relaxed",
-    demoPriceVnd: 790_000,
+    demoPriceVnd: 250_000,
     ledgerType: "service-commerce",
     siteIds: [
       "10000000-0000-4000-8000-000000000001",
@@ -115,7 +127,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     durationLabel: "1 ngày",
     durationMinutes: 600,
     pace: "balanced",
-    demoPriceVnd: 1_090_000,
+    demoPriceVnd: 310_000,
     ledgerType: "service-commerce",
     siteIds: [
       "10000000-0000-4000-8000-000000000001",
@@ -139,7 +151,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     durationLabel: "Nửa ngày + tối",
     durationMinutes: 420,
     pace: "active",
-    demoPriceVnd: 1_290_000,
+    demoPriceVnd: 200_000,
     ledgerType: "service-commerce",
     siteIds: [
       "10000000-0000-4000-8000-000000000005",
@@ -163,7 +175,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     durationLabel: "Nửa ngày",
     durationMinutes: 240,
     pace: "relaxed",
-    demoPriceVnd: 650_000,
+    demoPriceVnd: 200_000,
     ledgerType: "service-commerce",
     siteIds: ["10000000-0000-4000-8000-000000000009"],
     inclusions: [
@@ -184,7 +196,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     durationLabel: "Buổi sáng · mùa hoa súng",
     durationMinutes: 120,
     pace: "relaxed",
-    demoPriceVnd: 390_000,
+    demoPriceVnd: 200_000,
     ledgerType: "service-commerce",
     siteIds: ["10000000-0000-4000-8000-000000000005"],
     inclusions: [
@@ -239,7 +251,94 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     bookingEndDate: "2026-09-27",
     fixedPartySize: 2,
   },
+  {
+    id: "40000000-0000-4000-8000-000000000011",
+    regionId: CORE_IDS.regionId,
+    slug: "ve-trang-an",
+    name: "Vé Tràng An",
+    audience: "Mọi khách, đi tự túc",
+    companionFit: ["solo", "couple", "adults", "children", "seniors"],
+    durationLabel: "Khoảng 3 giờ trên thuyền",
+    durationMinutes: 180,
+    pace: "balanced",
+    demoPriceVnd: 250_000,
+    ledgerType: "service-commerce",
+    siteIds: ["10000000-0000-4000-8000-000000000001"],
+    inclusions: ["Một lượt đi thuyền Tràng An","Vé QR dùng ở cổng","Trẻ dưới 1m3 miễn phí"],
+    exclusions: ["Tiền boa người chèo","Ăn uống"],
+    schedule: ["Chọn giờ lên thuyền 07:30–15:00","Đi thuyền qua các hang và đền","Về bến sau khoảng 3 giờ"],
+    loai: "ve",
+  },
+  {
+    id: "40000000-0000-4000-8000-000000000012",
+    regionId: CORE_IDS.regionId,
+    slug: "ve-tam-coc",
+    name: "Vé Tam Cốc – Bích Động",
+    audience: "Mọi khách, đi tự túc",
+    companionFit: ["solo", "couple", "adults", "children", "seniors"],
+    durationLabel: "Khoảng 2 giờ trên đò",
+    durationMinutes: 120,
+    pace: "balanced",
+    demoPriceVnd: 200_000,
+    ledgerType: "service-commerce",
+    siteIds: ["10000000-0000-4000-8000-000000000005"],
+    inclusions: ["Một lượt đò Tam Cốc","Vé QR dùng ở cổng","Trẻ dưới 1m3 miễn phí"],
+    exclusions: ["Tiền boa người chèo","Thuê xe đạp"],
+    schedule: ["Chọn giờ xuống đò 07:00–15:30","Đò qua Hang Cả, Hang Hai, Hang Ba","Về bến Văn Lâm sau khoảng 2 giờ"],
+    loai: "ve",
+  },
+  {
+    id: "40000000-0000-4000-8000-000000000013",
+    regionId: CORE_IDS.regionId,
+    slug: "ve-tam-chuc",
+    name: "Vé Tam Chúc",
+    audience: "Mọi khách, đi tự túc",
+    companionFit: ["solo", "couple", "adults", "children", "seniors"],
+    durationLabel: "Nửa ngày",
+    durationMinutes: 240,
+    pace: "balanced",
+    demoPriceVnd: 200_000,
+    ledgerType: "service-commerce",
+    siteIds: ["10000000-0000-4000-8000-000000000009"],
+    inclusions: ["Thuyền qua hồ Tam Chúc","Vé QR dùng ở cổng","Trẻ dưới 1m3 miễn phí"],
+    exclusions: ["Xe điện trong khu","Lễ vật, công đức"],
+    schedule: ["Chọn chuyến 07:30–15:00","Thuyền qua hồ, lên Khánh Điện","Về bến sau khoảng 4 giờ"],
+    loai: "ve",
+  },
+  {
+    id: "40000000-0000-4000-8000-000000000014",
+    regionId: CORE_IDS.regionId,
+    slug: "ve-bai-dinh",
+    name: "Vé Bái Đính",
+    audience: "Mọi khách, đi tự túc",
+    companionFit: ["solo", "couple", "adults", "children", "seniors"],
+    durationLabel: "Khoảng 3 giờ",
+    durationMinutes: 180,
+    pace: "balanced",
+    demoPriceVnd: 60_000,
+    ledgerType: "service-commerce",
+    siteIds: ["10000000-0000-4000-8000-000000000003"],
+    inclusions: ["Xe điện khứ hồi trong khu chùa","Vé QR dùng ở cổng","Trẻ dưới 1m3 miễn phí"],
+    exclusions: ["Lên tháp chuông, tháp Xá Lợi","Lễ vật, công đức"],
+    schedule: ["Chọn giờ vào 07:30–15:00","Xe điện từ cổng tam quan lên chùa","Hành lang La Hán, điện Tam Thế"],
+    loai: "ve",
+  },
 ] as const;
+
+/** Bảng giá đọc từ kho: mã gói → giá một người lớn. */
+export type BangGia = Readonly<Record<string, number>>;
+
+/** Gói kèm giá hiện hành; không có trong bảng thì giữ giá dự phòng. */
+export function apBangGia<T extends PackageCatalogItem>(item: T, bang?: BangGia | null): T {
+  const gia = bang?.[item.slug];
+  return gia === undefined || gia === item.demoPriceVnd ? item : { ...item, demoPriceVnd: gia };
+}
+
+/** Gói (lịch đi gợi ý), không gồm vé lẻ. */
+export const CAC_GOI = PACKAGES.filter((item) => item.loai !== "ve");
+
+/** Vé lẻ vào cổng từng điểm, theo thứ tự hiển thị. */
+export const VE_LE = PACKAGES.filter((item) => item.loai === "ve");
 
 export function getPackageBySlug(slug: string) {
   return PACKAGES.find((item) => item.slug === slug);

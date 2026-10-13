@@ -17,9 +17,9 @@ describe("commerce domain", () => {
       ],
     });
 
-    expect(quote.lines[0].totalVnd).toBe(790_000 * 3);
+    expect(quote.lines[0].totalVnd).toBe(250_000 * 3);
     expect(Number.isInteger(quote.totalVnd)).toBe(true);
-    expect(quote.totalVnd).toBe(3_260_000);
+    expect(quote.totalVnd).toBe(1_000_000);
     expect(quote.currency).toBe("VND");
   });
 
@@ -39,7 +39,7 @@ describe("commerce domain", () => {
     expect(quote.lines.every((line) => line.ledgerType === "service-commerce")).toBe(
       true,
     );
-    expect(quote.totalVnd).toBe(1_780_000);
+    expect(quote.totalVnd).toBe(500_000);
   });
 
   it("masks email and phone contacts for operations lists", () => {

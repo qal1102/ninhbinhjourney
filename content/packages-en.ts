@@ -15,6 +15,38 @@ type ChuGoi = Pick<
 >;
 
 const TIENG_ANH: Record<string, ChuGoi> = {
+  "ve-trang-an": {
+    name: "Trang An ticket",
+    audience: "Any visitor travelling on their own",
+    durationLabel: "About 3 hours on the boat",
+    inclusions: ["One Trang An boat trip","QR ticket for the gate","Children under 1.3 m free"],
+    exclusions: ["Tip for the rower","Food and drinks"],
+    schedule: ["Pick a boarding time 07:30–15:00","Row through the caves and temples","Back at the pier after about 3 hours"],
+  },
+  "ve-tam-coc": {
+    name: "Tam Coc – Bich Dong ticket",
+    audience: "Any visitor travelling on their own",
+    durationLabel: "About 2 hours on the boat",
+    inclusions: ["One Tam Coc boat trip","QR ticket for the gate","Children under 1.3 m free"],
+    exclusions: ["Tip for the rower","Bicycle hire"],
+    schedule: ["Pick a boarding time 07:00–15:30","Through Hang Ca, Hang Hai, Hang Ba","Back at Van Lam pier after about 2 hours"],
+  },
+  "ve-tam-chuc": {
+    name: "Tam Chuc ticket",
+    audience: "Any visitor travelling on their own",
+    durationLabel: "Half a day",
+    inclusions: ["Boat across Tam Chuc lake","QR ticket for the gate","Children under 1.3 m free"],
+    exclusions: ["Electric carts inside","Offerings, donations"],
+    schedule: ["Pick a departure 07:30–15:00","Boat across the lake to Khanh Dien","Back at the pier after about 4 hours"],
+  },
+  "ve-bai-dinh": {
+    name: "Bai Dinh ticket",
+    audience: "Any visitor travelling on their own",
+    durationLabel: "About 3 hours",
+    inclusions: ["Return electric cart inside the pagoda","QR ticket for the gate","Children under 1.3 m free"],
+    exclusions: ["Bell tower, relic tower","Offerings, donations"],
+    schedule: ["Pick an entry time 07:30–15:00","Electric cart up to the pagoda","Arhat corridor, Tam The hall"],
+  },
   "heritage-day": {
     name: "Heritage in a day",
     audience: "First time in Ninh Binh",

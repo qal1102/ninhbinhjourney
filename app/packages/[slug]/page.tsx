@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/shared/json-ld";
 import { jsonLdGoi } from "@/domain/du-lieu-cau-truc";
 import { absoluteUrl } from "@/lib/site-url";
-import { getPackageBySlug, PACKAGES } from "@/content/packages";
+import { apBangGia, getPackageBySlug, PACKAGES } from "@/content/packages";
+import { docBangGia } from "@/lib/commerce/bang-gia";
 import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { ch } from "@/lib/ngon-ngu";
@@ -51,8 +52,10 @@ export default async function PackageDetailPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const item = getPackageBySlug((await params).slug);
-  if (!item) notFound();
+  const goc = getPackageBySlug((await params).slug);
+  if (!goc) notFound();
+  // Giá hiện hành từ bảng giá quầy (migration 124).
+  const item = apBangGia(goc, await docBangGia());
   const query = await searchParams;
   const navigationContext = readContinuityContext(query);
   const lang = await docNgonNgu(query);
@@ -123,8 +126,8 @@ export default async function PackageDetailPage({
               {chu.editorialDescription ??
                 ch(
                   lang,
-                  `Hợp với: ${chu.audience}. Giá là giá minh hoạ.`,
-                  `Best for: ${chu.audience}. Prices are samples.`,
+                  item.loai === "ve" ? `Giá bằng đúng giá bán ở quầy. Trẻ dưới 1m3 miễn phí.` : `Hợp với: ${chu.audience}. Giá bằng tổng vé các điểm trong lịch.`,
+                  item.loai === "ve" ? `The same price as at the ticket desk. Children under 1.3 m free.` : `Best for: ${chu.audience}. Priced at the sum of the entry tickets.`,
                 )}
             </p>
             <div className="mt-9 grid gap-4 sm:grid-cols-2">
@@ -185,12 +188,12 @@ export default async function PackageDetailPage({
             <p className="text-sm text-[#59654b]">
               {item.priceLabel
                 ? ch(lang, "Giá giới thiệu mùa 2026", "2026 introductory price")
-                : ch(lang, "Giá minh họa / người lớn", "Sample price per adult")}
+                : ch(lang, "Giá mỗi người lớn", "Price per adult")}
             </p>
             <p className="font-display mt-2 text-4xl text-[#183f34]">
               {giaGoi(item, lang)}
             </p>
-            <h2 className="mt-7 font-bold">{ch(lang, "Lịch minh họa", "Sample schedule")}</h2>
+            <h2 className="mt-7 font-bold">{ch(lang, "Lịch đi", "Schedule")}</h2>
             <ol className="mt-3 space-y-3">
               {chu.schedule.map((value) => (
                 <li key={value} className="rounded-xl bg-[#f4f0e7] p-3 text-sm">
@@ -236,8 +239,8 @@ export default async function PackageDetailPage({
         <ThanhDatCho
           href={checkoutHref(item.slug, navigationContext)}
           gia={giaGoi(item, lang)}
-          nhanGia={item.priceLabel ? ch(lang, "Giá giới thiệu mùa 2026", "2026 introductory price") : ch(lang, "Mỗi người lớn · giá minh hoạ", "Per adult · sample price")}
-          nut={customerBookingEnabled ? ch(lang, "Giữ chỗ", "Hold seats") : ch(lang, "Tiếp tục", "Continue")}
+          nhanGia={item.priceLabel ? ch(lang, "Giá giới thiệu mùa 2026", "2026 introductory price") : ch(lang, "Mỗi người lớn", "Per adult")}
+          nut={customerBookingEnabled ? (item.loai === "ve" ? ch(lang, "Mua vé", "Buy ticket") : ch(lang, "Giữ chỗ", "Hold seats")) : ch(lang, "Tiếp tục", "Continue")}
           goiId={item.id}
         />
       ) : null}

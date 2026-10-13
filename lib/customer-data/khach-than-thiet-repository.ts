@@ -3,9 +3,11 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   chuanSoDienThoai,
+  docKetQuaTraBangSo,
   docTomTat,
   docTongQuan,
   docVoucherQuay,
+  type KetQuaTraBangSo,
   type TomTatThanThiet,
   type TongQuanThanThiet,
   type VoucherQuay,
@@ -168,4 +170,18 @@ export async function tongQuanThanThiet(): Promise<TongQuanThanThiet | null> {
   const { data, error } = await db.rpc("erp_loyalty_overview", { p_tenant_id: TENANT_ID });
   if (error) return null;
   return docTongQuan(data);
+}
+
+/**
+ * Tra chỉ bằng số điện thoại: vé đã gắn, vé web đặt bằng số ấy, lượt đi và
+ * mốc quà. Mã vé đã che, mã quà không có (xem `docKetQuaTraBangSo`).
+ */
+export async function traBangSo(phone: string): Promise<KetQuaTraBangSo> {
+  const bv = baoVeSo(phone);
+  const { data, error } = await client().rpc("customer_lookup_by_phone", {
+    p_tenant_id: TENANT_ID,
+    p_identity_digest: bv.digest,
+  });
+  if (error) throw loi(error);
+  return docKetQuaTraBangSo(data);
 }

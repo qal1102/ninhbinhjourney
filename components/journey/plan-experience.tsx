@@ -200,7 +200,7 @@ const MATCH_COPY: Record<
     title: "Gói hợp với bạn",
     emptyTitle: "Lần này chưa có gói nào hợp",
     method:
-      "Chúng tôi đọc câu bạn viết rồi so với các gói có sẵn: đi chậm hay đi nhiều, mấy tiếng, đi với ai. Chưa tính tới giá, vì giá trên trang gói mới là giá minh hoạ.",
+      "Chúng tôi đọc câu bạn viết rồi so với các gói có sẵn: đi chậm hay đi nhiều, mấy tiếng, đi với ai. Không xếp theo giá: giá mỗi gói bằng tổng vé các điểm trong gói.",
     strong: "Hợp rõ",
     partial: "Hợp một phần",
     detail: "Xem gói này",
@@ -215,7 +215,7 @@ const MATCH_COPY: Record<
     title: "Packages that fit",
     emptyTitle: "Nothing fits this time",
     method:
-      "We look for keywords in your sentence, then hold them against the pace, the length and the intended guests of the packages we run. Price stays out of it: the figures on the package pages are illustrative.",
+      "We look for keywords in your sentence, then hold them against the pace, the length and the intended guests of the packages we run. Price stays out of it: each plan costs the sum of its entry tickets.",
     strong: "Close fit",
     partial: "Partial fit",
     detail: "See this package",

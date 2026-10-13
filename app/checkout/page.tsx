@@ -6,7 +6,8 @@ import { goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
 import { readPublicEnvironment } from "@/config/experience";
-import { getPackageBySlug } from "@/content/packages";
+import { apBangGia, getPackageBySlug } from "@/content/packages";
+import { docBangGia } from "@/lib/commerce/bang-gia";
 import { CustomerBookingCheckout } from "@/components/commerce/customer-booking-checkout";
 import { SetupState } from "@/components/shared/setup-state";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
@@ -49,7 +50,9 @@ export default async function CheckoutPage({
   const lang = await docNgonNgu(params);
   const packageSlug =
     typeof params.package === "string" ? params.package : "slow-ninh-binh";
-  const packageItem = getPackageBySlug(packageSlug);
+  const goiGoc = getPackageBySlug(packageSlug);
+  // Giá trước khi giữ chỗ phải bằng giá máy chủ sẽ tính (bảng giá quầy, migration 124).
+  const packageItem = goiGoc ? apBangGia(goiGoc, await docBangGia()) : undefined;
   if (!packageItem) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#f4f0e7] p-5">

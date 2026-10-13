@@ -304,7 +304,8 @@ export function matchPackagesToIntent(
   }> = [];
   const skipped: PackageMatchResult["skipped"] = [];
 
-  catalog.forEach((item, order) => {
+  // Vé lẻ không phải lịch đi: bộ ghép chỉ chọn trong các gói.
+  catalog.filter((item) => item.loai !== "ve").forEach((item, order) => {
     if (!withinBookingWindow(intent, item)) {
       skipped.push({ slug: item.slug, code: "outside-booking-window" });
       return;

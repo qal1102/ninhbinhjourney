@@ -1,6 +1,6 @@
 import { CONTACT } from "@/content/contact";
 import { DESTINATION_PAGE_SLUGS, destinationFacts, destinations, type DestinationId } from "@/content/landing-destinations";
-import { PACKAGES } from "@/content/packages";
+import { apBangGia, PACKAGES, VE_LE, type BangGia, type PackageCatalogItem } from "@/content/packages";
 import { giaGoi, goiHienThi } from "@/content/packages-en";
 import { BAN_DO_CHUC_NANG, CHUC_NANG_WEB, TEN_NHOM_WEB } from "@/domain/ban-do-chuc-nang";
 import { ERP_MODULES, ERP_ROLE_LABELS, ERP_SITES } from "@/domain/erp";
@@ -158,8 +158,8 @@ const CO_DINH: MucHoiDap[] = [
     id: "gia-ve-cong",
     hoi: { vi: "Giá vé tham quan bao nhiêu?", en: "How much are entrance tickets?" },
     traLoi: {
-      vi: "Giá vé cổng và thuyền có thể đổi theo mùa, nên kiểm tra tại cổng khi tới. Giá các gói trên web là giá minh hoạ của bản thử.",
-      en: "Gate and boat prices can change by season, so check at the gate on arrival. Package prices on this site are illustrative demo prices.",
+      vi: cauGiaVe(null, "vi"),
+      en: cauGiaVe(null, "en"),
     },
     tuKhoa: ["gia", "ve", "bao", "nhieu", "tien", "price", "cost", "fee", "entrance", "cong", "thuyen"],
     tenRieng: [],
@@ -168,15 +168,32 @@ const CO_DINH: MucHoiDap[] = [
   },
 ];
 
-function tuGoi(): MucHoiDap[] {
-  return PACKAGES.map((goi) => {
+/**
+ * Câu trả lời "giá vé bao nhiêu", dựng từ giá vé lẻ (bằng giá quầy). Lúc trả
+ * lời thật, `lib/hoi-dap/tra-loi.ts` dựng lại với bảng giá đọc từ kho.
+ */
+export function cauGiaVe(bang: BangGia | null, lang: NgonNgu): string {
+  const ds = VE_LE.map((ve) => apBangGia(ve, bang))
+    .map((ve) => {
+      const ten = goiHienThi(ve, lang).name;
+      return lang === "en" ? `${ten} VND ${ve.demoPriceVnd.toLocaleString("en-US")}` : `${ten} ${ve.demoPriceVnd.toLocaleString("vi-VN")} đ`;
+    })
+    .join(lang === "en" ? "; " : "; ");
+  return lang === "en"
+    ? `Per adult, the same online as at the ticket desk: ${ds}. Children under 1.3 m are free. Buy on the Buy tickets page; the day plans cost the sum of their sites' tickets.`
+    : `Giá mỗi người lớn, trên web bằng đúng giá quầy: ${ds}. Trẻ dưới 1m3 miễn phí. Mua ở trang Mua vé; các lịch đi gợi ý tính bằng tổng vé các điểm trong lịch.`;
+}
+
+/** Mục hỏi đáp của một gói hay vé lẻ, theo giá đang mang. */
+export function mucGoi(goi: PackageCatalogItem): MucHoiDap {
+  {
     const vi = goiHienThi(goi, "vi");
     const en = goiHienThi(goi, "en");
     const viet = (g: typeof vi, lang: NgonNgu) =>
       [
         lang === "en"
-          ? `${g.name}: ${g.durationLabel}, ${giaGoi(goi, "en")} (illustrative demo price). For: ${g.audience}.`
-          : `${g.name}: ${g.durationLabel}, ${giaGoi(goi, "vi")} (giá minh hoạ của bản thử). Hợp với: ${g.audience}.`,
+          ? `${g.name}: ${g.durationLabel}, ${giaGoi(goi, "en")} per adult (same as the ticket desk). For: ${g.audience}.`
+          : `${g.name}: ${g.durationLabel}, ${giaGoi(goi, "vi")} mỗi người lớn (bằng giá quầy). Hợp với: ${g.audience}.`,
         g.inclusions.length ? (lang === "en" ? `Includes: ${g.inclusions.join("; ")}.` : `Gồm: ${g.inclusions.join("; ")}.`) : "",
         g.exclusions.length ? (lang === "en" ? `Not included: ${g.exclusions.join("; ")}.` : `Không gồm: ${g.exclusions.join("; ")}.`) : "",
         g.schedule.length ? (lang === "en" ? `Schedule: ${g.schedule.join("; ")}.` : `Lịch: ${g.schedule.join("; ")}.`) : "",
@@ -192,7 +209,22 @@ function tuGoi(): MucHoiDap[] {
       thang: false,
       lienKet: { href: `/packages/${goi.slug}`, nhan: { vi: `Gói ${vi.name}`, en: en.name } },
     };
-  });
+  }
+}
+
+function tuGoi(): MucHoiDap[] {
+  return PACKAGES.map(mucGoi);
+}
+
+/** Mục hỏi đáp theo giá hiện hành: gói, vé lẻ và câu "giá vé bao nhiêu". */
+export function mucTheoGia(muc: MucHoiDap, bang: BangGia | null): MucHoiDap {
+  if (!bang) return muc;
+  if (muc.id === "gia-ve-cong") return { ...muc, traLoi: { vi: cauGiaVe(bang, "vi"), en: cauGiaVe(bang, "en") } };
+  if (muc.id.startsWith("goi-")) {
+    const goi = PACKAGES.find((g) => `goi-${g.slug}` === muc.id);
+    if (goi) return mucGoi(apBangGia(goi, bang));
+  }
+  return muc;
 }
 
 function tuDiemDen(): MucHoiDap[] {

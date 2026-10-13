@@ -83,7 +83,7 @@ test("QA-ERP-POS-05: bảng giá quầy chỉ giám đốc vào được, chưa 
 
   await loginToErp(page, "giamdoc", ERP_DIRECTOR_PASSWORD);
   await page.goto("/erp/bang-gia-quay");
-  await expect(page.getByRole("heading", { level: 1, name: "Bảng giá vé quầy" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Bảng giá vé, quầy và web" })).toBeVisible();
   await expect(page.getByText("Bảng giá quầy chưa nối được vào kho dữ liệu ở môi trường này.")).toBeVisible();
   // Không bày nút sửa giá khi không có giá nào để sửa và không lưu được đi đâu.
   await expect(page.getByRole("button", { name: /Sửa giá/ })).toHaveCount(0);

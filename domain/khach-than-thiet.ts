@@ -188,3 +188,86 @@ export function chuanSoDienThoai(raw: string): string | null {
   const so = compact.startsWith("+84") ? `0${compact.slice(3)}` : compact.startsWith("84") ? `0${compact.slice(2)}` : compact;
   return /^0\d{9}$/.test(so) ? so : null;
 }
+
+/** Một vé hiện khi khách tra chỉ bằng số điện thoại: mã đã che, không mở được QR. */
+export type VeTraBangSo = {
+  maChe: string;
+  site: string;
+  validOn: string;
+  status: string;
+  entriesAllowed: number;
+  entriesUsed: number;
+  /** Tên gói hay vé lẻ (đơn web); vé quầy và vé đoàn để trống. */
+  tenGoi: string;
+};
+
+export type KetQuaTraBangSo =
+  | { found: false }
+  | {
+      found: true;
+      visits: number;
+      points: number;
+      nextMilestone: MocKe | null;
+      voucherCount: number;
+      visitList: { site: string; date: string }[];
+      ve: VeTraBangSo[];
+    };
+
+/**
+ * Che mã vé khi khách tra chỉ bằng số điện thoại (13/10/2026). Không có tin
+ * nhắn xác nhận nên ai biết số cũng tra được: cho thấy vé đi đâu, ngày nào,
+ * đã qua cổng chưa, nhưng chỉ để bốn ký tự cuối, để người lạ không lấy mã vé
+ * đi qua cổng. Mở QR thì nhập thêm mã in trên vé.
+ */
+export function cheMaVe(code: string): string {
+  const ma = code.trim().toUpperCase();
+  const gach = ma.indexOf("-");
+  const dau = gach > 0 ? ma.slice(0, gach + 1) : "";
+  const cuoi = ma.slice(-4);
+  return `${dau}••••${cuoi}`;
+}
+
+/** Đọc kết quả `customer_lookup_by_phone`, che mã, bỏ mã quà. */
+export function docKetQuaTraBangSo(raw: unknown): KetQuaTraBangSo {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  if (r.found !== true) return { found: false };
+  const tom = docTomTat(r.loyalty);
+  const daGan = tom.linked && tom.tickets ? tom.tickets : [];
+  const veWeb = Array.isArray(r.web_tickets) ? (r.web_tickets as Record<string, unknown>[]) : [];
+  const theoMa = new Map<string, VeTraBangSo>();
+  for (const t of veWeb) {
+    const code = chu(t.code);
+    theoMa.set(code, {
+      maChe: cheMaVe(code),
+      site: chu(t.site),
+      validOn: chu(t.valid_on),
+      status: chu(t.status),
+      entriesAllowed: soNguyen(t.entries_allowed),
+      entriesUsed: soNguyen(t.entries_used),
+      tenGoi: chu(t.product),
+    });
+  }
+  for (const t of daGan) {
+    if (theoMa.has(t.code)) continue;
+    theoMa.set(t.code, {
+      maChe: cheMaVe(t.code),
+      site: t.site,
+      validOn: t.validOn,
+      status: t.status,
+      entriesAllowed: t.entriesAllowed,
+      entriesUsed: t.entriesUsed,
+      tenGoi: "",
+    });
+  }
+  const ve = [...theoMa.values()].sort((a, b) => b.validOn.localeCompare(a.validOn));
+  if (!tom.linked) return { found: true, visits: 0, points: 0, nextMilestone: null, voucherCount: 0, visitList: [], ve };
+  return {
+    found: true,
+    visits: tom.visits,
+    points: tom.points,
+    nextMilestone: tom.nextMilestone,
+    voucherCount: tom.voucherCount,
+    visitList: tom.visitList,
+    ve,
+  };
+}

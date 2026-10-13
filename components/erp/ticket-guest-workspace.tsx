@@ -85,6 +85,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
   // để người trình diễn chỉ còn bấm "Xác thực & ghi nhận".
   const maGuiSang = mode === "checkin" ? (searchParams.get("ma") ?? "").trim().slice(0, 64) : "";
   const [scanCode, setScanCode] = useState(maGuiSang);
+  const khoaQuetDo = useRef<{ code: string; key: string } | null>(null);
   const [scanMessage, setScanMessage] = useState(
     maGuiSang ? `Mã ${maGuiSang} đã điền sẵn. Bấm "Xác thực & ghi nhận" để cho khách vào.` : "",
   );
@@ -241,15 +242,22 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
     // Ghi nhận xong là xong việc của camera; đừng để đèn camera sáng tiếp.
     camera.stop();
     setScanPending(true);
+    // T8: một khoá cho một lần khách đứng ở cổng. Mạng rớt trước khi có trả
+    // lời thì quét lại giữ nguyên khoá, kho trả kết quả lần đầu chứ không trừ
+    // thêm một lượt (vé 2 lượt không mất lượt thứ hai). Có trả lời rồi mới bỏ
+    // khoá, để người thứ hai cùng vé được quét như lượt mới.
+    const khoa =
+      khoaQuetDo.current?.code === normalized
+        ? khoaQuetDo.current.key
+        : `${site.id}:${normalized}:${Date.now()}`;
+    khoaQuetDo.current = { code: normalized, key: khoa };
     try {
-      // T8: one key per attempt, so a retry after a dropped response returns
-      // the first outcome instead of admitting the same person twice. The gate
-      // is exactly where the network is worst.
       const result = await recordGateScanAction({
         siteId: site.id,
         code: normalized,
-        idempotencyKey: `${site.id}:${normalized}:${Date.now()}`,
+        idempotencyKey: khoa,
       });
+      khoaQuetDo.current = null;
       setScanMessage(result.message);
       setScanRefused(!result.success);
       setScanDue(
@@ -261,6 +269,12 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
         setScanCode("");
       }
       router.refresh();
+    } catch {
+      setScanRefused(true);
+      setScanDue(null);
+      setScanMessage(
+        "Mất mạng, chưa biết lượt này đã ghi chưa. Bấm Ghi nhận lại với đúng mã này: hệ thống không trừ hai lần. Mạng yếu lâu thì dùng Cổng ngoại tuyến bên dưới.",
+      );
     } finally {
       setScanPending(false);
     }

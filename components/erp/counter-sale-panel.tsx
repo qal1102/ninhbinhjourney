@@ -443,6 +443,8 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
     if (!readiness.ok || pending) return;
     setMessage(null);
     startTransition(async () => {
+      // Mạng rớt trước khi có trả lời: giữ nguyên khoá phiếu. Bấm bán lại thì
+      // kho trả đúng phiếu đã lưu (nếu đã lưu), không thu tiền hai lần.
       const ketQua = await createCounterSaleAction({
         siteId: site.id,
         adults: cart.lines.find((l) => l.product === "adult")?.quantity ?? 0,
@@ -452,7 +454,10 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
         paymentReference: paymentMethod === "qr-transfer" ? reference : null,
         cashCountedConfirmed: confirmed,
         requestKey: requestKey.current,
-      });
+      }).catch(() => ({
+        ok: false as const,
+        message: "Mất mạng, chưa biết phiếu đã lưu chưa. Giữ nguyên số vé và bấm bán lại: nếu phiếu đã lưu, hệ thống trả đúng phiếu ấy, không tính hai lần.",
+      }));
       if (ketQua.ok) {
         setMessage({ tone: "ok", text: ketQua.message });
         soanPhieuMoi();
@@ -475,7 +480,10 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
         inviterAccountId: nguoiMoi,
         reason: lyDoMoi,
         requestKey: requestKey.current,
-      });
+      }).catch(() => ({
+        ok: false as const,
+        message: "Mất mạng, chưa biết vé mời đã lưu chưa. Bấm cấp lại: nếu đã lưu, hệ thống trả đúng phiếu ấy, không cấp hai lần.",
+      }));
       if (kq.ok) {
         setMessage({ tone: "ok", text: kq.message });
         soanPhieuMoi();

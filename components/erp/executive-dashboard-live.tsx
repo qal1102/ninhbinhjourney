@@ -25,6 +25,13 @@ type Props = {
   pendingProjectChangeRequests: readonly ProjectChangeRequestWithSite[];
   pendingSopDecisions: readonly SopPendingDecision[];
   ticketOverview: DirectorTicketOverview | null;
+  /**
+   * Khối "Khu du lịch hôm nay" phía trên đã có khách qua cổng và tiền thu hôm
+   * nay (soát 13/10/2026: hai khối cùng nói khách hôm nay mà một bên 821 đã
+   * vào cổng, một bên 858 lượt trên vé bán, trông như số sai). Khi có khối ấy
+   * thì bỏ hai ô trùng ở đây.
+   */
+  boSoHomNay?: boolean;
 };
 
 const changeKindLabels: Record<ProjectChangeRequestWithSite["kind"], string> = {
@@ -113,6 +120,7 @@ export function ExecutiveDashboard({
   pendingProjectChangeRequests,
   pendingSopDecisions,
   ticketOverview,
+  boSoHomNay = false,
 }: Props) {
   // ERP-FAKE-03. Luật chia đôi, giữ cứng: **mọi con số trên trang này đều gọi
   // giám đốc ra quyết định**, nên chúng chỉ được đếm hồ sơ thật. Hồ sơ gieo
@@ -272,16 +280,18 @@ export function ExecutiveDashboard({
         </div>
 
         <div
-          className="mt-7 grid grid-cols-2 gap-3 xl:grid-cols-4"
+          className={`mt-7 grid grid-cols-2 gap-3 ${boSoHomNay ? "" : "xl:grid-cols-4"}`}
           data-chi="bon-o"
-          data-chi-loi="Bốn ô này là việc mỗi sáng: khách hôm nay, tiền thu hôm nay (quầy và web), công việc hiện trường, bút toán."
+          data-chi-loi={boSoHomNay ? "Công việc hiện trường và bút toán hôm nay; khách và tiền ở khối Khu du lịch hôm nay phía trên." : "Bốn ô này là việc mỗi sáng: khách hôm nay, tiền thu hôm nay (quầy và web), công việc hiện trường, bút toán."}
         >
           {[
             // Kho vé đọc được thì hai ô đầu là số hệ thống tự ghi trong ngày.
             // Số người trực khai lúc chốt ca vẫn nằm ở ma trận bốn cơ sở phía
             // dưới; để nó đứng đầu trang thì ngày chưa ai chốt ca, cả dải số
             // lớn nhất đọc 0 dù khách vẫn qua cổng từ sáng (26/09/2026).
-            ...(ticketOverview?.available
+            ...(boSoHomNay
+              ? []
+              : ticketOverview?.available
               ? [
                   [
                     "Khách hôm nay",

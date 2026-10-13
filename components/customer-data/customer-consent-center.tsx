@@ -30,7 +30,7 @@ function ngonNguTrang(): "en" | "vi" {
   const q = new URLSearchParams(window.location.search).get("lang");
   if (q === "en" || q === "vi") return q;
   if (document.documentElement.lang === "en") return "en";
-  return /(?:^|;s*)ninh-binh-lang=en(?:;|$)/.test(document.cookie) ? "en" : "vi";
+  return /(?:^|;\s*)ninh-binh-lang=en(?:;|$)/.test(document.cookie) ? "en" : "vi";
 }
 
 export function CustomerConsentCenter() {

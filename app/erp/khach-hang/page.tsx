@@ -11,6 +11,9 @@ import { ErpShell } from "@/components/erp/erp-shell";
 import { KhachThayGi } from "@/components/customer-data/khach-thay-gi";
 import { KhachThanThietPanel } from "@/components/erp/khach-than-thiet-panel";
 import { KhachThichGiPanel } from "@/components/erp/khach-thich-gi-panel";
+import { TraKhachPanel } from "@/components/erp/tra-khach-panel";
+import { traKhachTheoMa } from "@/app/erp/tra-khach-actions";
+import { laMaTraDuoc } from "@/domain/tra-khach";
 import type { KhachThichGi } from "@/domain/khach-thich-gi";
 import { docSoKhachThichGi } from "@/lib/customer-data/khach-thich-gi-repository";
 import type { TongQuanThanThiet } from "@/domain/khach-than-thiet";
@@ -43,7 +46,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export default async function Customer360Page({
   searchParams,
 }: {
-  searchParams: Promise<{ xem?: string }>;
+  searchParams: Promise<{ xem?: string; tra?: string }>;
 }) {
   const user = await getCurrentErpUser();
   if (!user) redirect("/erp/login");
@@ -57,7 +60,10 @@ export default async function Customer360Page({
   batDau.setDate(batDau.getDate() - 29);
   const ngay = (d: Date) => d.toISOString().slice(0, 10);
   const doc = (d: Date) => d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
-  const { xem } = await searchParams;
+  const { xem, tra } = await searchParams;
+  // `?tra=WEB-…` từ màn Vé, màn Soát vé: mở sẵn hồ sơ khách của mã ấy (chỉ mã, không số điện thoại).
+  const maTra = tra ? laMaTraDuoc(tra) : null;
+  const traBanDau = maTra ? { nhap: maTra, ketQua: await traKhachTheoMa(maTra) } : undefined;
   const xemHopLe = xem && UUID.test(xem) ? xem : null;
 
   let status: "disabled" | "unavailable" | "ready" = "disabled";
@@ -148,6 +154,7 @@ export default async function Customer360Page({
   return (
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
+      <TraKhachPanel banDau={traBanDau} />
       {status === "ready" ? <KhachThichGiPanel so={thichGi} /> : null}
       <Customer360Dashboard status={status} journeys={journeys} orders={orders} recommendations={recommendations} outboundActions={outboundActions} />
       <KhachThanThietPanel tongQuan={thanThiet} />

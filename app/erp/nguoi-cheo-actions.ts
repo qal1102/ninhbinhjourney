@@ -42,8 +42,8 @@ const NguoiCheoSchema = z.object({
   ngonNgu: z.string().trim().max(120, "Tiếng chào khách tối đa 120 ký tự.").optional(),
   ghiChu: z.string().trim().max(300, "Ghi chú tối đa 300 ký tự.").optional(),
   loaiHopDong: z.enum(["dai-han", "thoi-vu"]).optional(),
-  hopDongTu: z.string().trim().refine((v) => v === "" || /^d{4}-d{2}-d{2}$/.test(v), "Ngày bắt đầu hợp đồng chưa đúng.").optional(),
-  hopDongDen: z.string().trim().refine((v) => v === "" || /^d{4}-d{2}-d{2}$/.test(v), "Ngày hết hạn hợp đồng chưa đúng.").optional(),
+  hopDongTu: z.string().trim().refine((v) => v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v), "Ngày bắt đầu hợp đồng chưa đúng.").optional(),
+  hopDongDen: z.string().trim().refine((v) => v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v), "Ngày hết hạn hợp đồng chưa đúng.").optional(),
 }).refine((v) => v.loaiHopDong !== "thoi-vu" || Boolean(v.hopDongDen), { message: "Hợp đồng thời vụ phải có ngày hết hạn." })
   .refine((v) => !v.hopDongTu || !v.hopDongDen || v.hopDongDen >= v.hopDongTu, { message: "Ngày hết hạn không được trước ngày bắt đầu." });
 

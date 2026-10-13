@@ -265,9 +265,17 @@ export function mergeProductSlotRows(
 export const CustomerTicketLookupRequestSchema = z
   .object({
     order_code: z.string().trim().min(4).max(40),
-    contact: z.string().trim().min(6).max(160),
+    // 130: bỏ trống được. Chỉ có mã thì mở vé bằng mã (cầm mã như cầm vé).
+    contact: z.string().trim().min(6).max(160).optional(),
   })
   .strict();
+
+/** Mã vé web `WEB-…` khách gõ: chữ hoa, bỏ dấu cách; sai khuôn thì `null`. */
+export function normalizeWebTicketCode(raw: string): string | null {
+  const compact = raw.trim().toUpperCase().replace(/[\s.–—]/g, "");
+  const m = /^WEB-?([A-Z0-9]{6,32})$/.exec(compact);
+  return m ? `WEB-${m[1]}` : null;
+}
 
 /**
  * Đưa mã khách gõ về đúng khuôn máy chủ lưu: `NBJ-` cộng 12 ký tự.

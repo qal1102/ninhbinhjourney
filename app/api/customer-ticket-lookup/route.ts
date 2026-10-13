@@ -6,8 +6,11 @@ import { isSameOriginCustomerRequest } from "@/domain/customer-identity";
 import {
   CustomerBookingRepositoryError,
   isCustomerBookingEnabled,
+  lookupCustomerOrderByCode,
   lookupCustomerOrderTickets,
 } from "@/lib/customer-data/booking-repository";
+import { normalizeWebTicketCode } from "@/domain/customer-booking";
+import { conLuot } from "@/lib/gioi-han-luot";
 
 const MAX_BODY_BYTES = 4 * 1024;
 
@@ -70,8 +73,45 @@ export async function POST(request: Request) {
 
     // Gõ sai khuôn mã là chuyện của ô nhập, nói thẳng được: câu này đúng cho
     // mọi chuỗi ký tự, nên nó không hé lộ mã nào có thật hay không.
-    const orderCode = normalizeCustomerOrderCode(input.order_code);
-    if (!orderCode) {
+    // 130: chỉ có mã (NBJ-… hoặc WEB-…) thì mở bằng mã; mỗi IP 20 lượt trong 10 phút.
+    const maVeWeb = normalizeWebTicketCode(input.order_code);
+    const orderCode = maVeWeb ?? normalizeCustomerOrderCode(input.order_code);
+    if (orderCode && !input.contact) {
+      if (!conLuot(request, "tra-ma", 20, 10 * 60_000)) {
+        return jsonResponse(
+          { accepted: true, found: false, throttled: true, message: "Bạn vừa thử khá nhiều lần rồi. Mời bạn nghỉ một lát rồi quay lại, hoặc ra quầy để được mở vé ngay." },
+          429,
+        );
+      }
+      const theoMa = await lookupCustomerOrderByCode(orderCode);
+      if (!theoMa.found) {
+        return jsonResponse(
+          { accepted: true, found: false, throttled: false, message: "Chưa tìm thấy vé nào với mã này. Mời bạn xem lại mã (bắt đầu bằng NBJ- hoặc WEB-), hoặc tra bằng số điện thoại." },
+          404,
+        );
+      }
+      return jsonResponse(
+        {
+          accepted: true,
+          found: true,
+          throttled: false,
+          order: {
+            code: theoMa.orderCode,
+            product_id: theoMa.productId,
+            visit_date: theoMa.visitDate,
+            party_size: theoMa.partySize,
+            adults: theoMa.adults,
+            children: theoMa.children,
+            total_vnd: theoMa.totalVnd,
+            currency: theoMa.currency,
+          },
+          payment: { mode: theoMa.paymentMode, status: theoMa.paymentStatus, amount_due_vnd: theoMa.amountDueVnd },
+          tickets: theoMa.tickets,
+        },
+        200,
+      );
+    }
+    if (!orderCode || !input.contact) {
       return jsonResponse(
         {
           accepted: false,

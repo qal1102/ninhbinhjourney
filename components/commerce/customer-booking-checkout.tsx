@@ -1208,8 +1208,8 @@ export function CustomerBookingCheckout({
                       {t("tra cứu vé", "ticket lookup")}
                     </Link>{" "}
                     {t(
-                      "rồi nhập mã trên cùng số điện thoại hoặc email bạn vừa để lại là vé hiện lại đầy đủ.",
-                      "and enter this code with the phone number or email you just left; the full ticket comes back.",
+                      "rồi gõ mã trên (hoặc số điện thoại bạn vừa để lại) là vé hiện lại đầy đủ.",
+                      "and type this code (or the phone number you just left); the full ticket comes back.",
                     )}
                   </>
                 ) : (

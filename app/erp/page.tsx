@@ -171,6 +171,7 @@ export default async function ErpHomePage({ searchParams }: Props) {
           pendingProjectChangeRequests={pendingProjectChangeRequests}
           pendingSopDecisions={pendingSopDecisions}
           ticketOverview={ticketOverview}
+          boSoHomNay={Boolean(homNay)}
         />
       ) : (
         <RoleHomeDashboard

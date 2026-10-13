@@ -166,7 +166,7 @@ export function HoiDapNoi() {
   const themLang = (href: string) => (href.includes("lang=") ? href : `${href}${href.includes("?") ? "&" : "?"}lang=${lang}`);
 
   function mo() {
-    const tieuDe = document.querySelector("main h1")?.textContent?.replace(/s+/g, " ").trim() ?? "";
+    const tieuDe = document.querySelector("main h1")?.textContent?.replace(/\s+/g, " ").trim() ?? "";
     setDangXem(tieuDe.length > 48 ? `${tieuDe.slice(0, 46)}…` : tieuDe);
     const d = hop.current;
     if (d && !d.open) d.showModal();

@@ -93,7 +93,7 @@ export const DIRECTOR_TICKET_CHANNEL_LABELS: Readonly<Record<string, string>> = 
   "quay-ve": "Quầy vé",
   website: "Website",
   "doi-tac": "Đối tác",
-  moi: "Khách mời",
+  moi: "Vé mời",
 });
 
 export const DIRECTOR_TICKET_CHANNELS: readonly string[] = Object.keys(DIRECTOR_TICKET_CHANNEL_LABELS);

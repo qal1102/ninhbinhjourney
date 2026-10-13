@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { KetQuaSo } from "@/components/commerce/mo-ho-so";
+import type { KetQuaTraBangSo } from "@/domain/khach-than-thiet";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CONTACT } from "@/content/contact";
 import { DESTINATIONS } from "@/content/destinations";
@@ -59,8 +61,8 @@ const LOOKUP_ERROR_MESSAGE: Record<string, { vi: string; en: string }> = {
     en: "A booking code looks like NBJ- followed by twelve characters. Please check it.",
   },
   CUSTOMER_LOOKUP_INPUT_INVALID: {
-    vi: "Chưa đọc được mã đặt chỗ hoặc liên hệ bạn vừa nhập. Mời bạn nhập lại mã bắt đầu bằng NBJ, cùng số điện thoại hoặc email đã dùng lúc đặt.",
-    en: "We could not read that code or contact. Please enter the code starting with NBJ, with the phone or email you used when booking.",
+    vi: "Chưa đọc được mã hay số bạn vừa gõ. Mời bạn gõ lại mã vé (NBJ-… hoặc WEB-…) hoặc số điện thoại đã dùng lúc đặt.",
+    en: "We could not read that. Please type your ticket code (NBJ-… or WEB-…) or the phone number you booked with.",
   },
 };
 
@@ -91,8 +93,9 @@ function productName(productId: string, lang: "vi" | "en") {
 
 export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; children?: React.ReactNode }) {
   const t = (vi: string, en: string) => (lang === "en" ? en : vi);
-  const [orderCode, setOrderCode] = useState("");
-  const [contact, setContact] = useState("");
+  // 13/10 (chủ dự án): một ô, gõ mã vé HOẶC số điện thoại, không bắt cả hai.
+  const [timKiem, setTimKiem] = useState("");
+  const [theoSo, setTheoSo] = useState<{ ketQua: Extract<KetQuaTraBangSo, { found: true }>; so: string } | null>(null);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<Extract<LookupResponse, { found: true }> | null>(null);
@@ -115,15 +118,48 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    await tra(timKiem);
+  }
+
+  async function tra(nhap: string) {
     setPending(true);
     setMessage("");
     setResult(null);
+    setTheoSo(null);
+    const go = nhap.trim();
+    const gon = go.toUpperCase().replace(/\s+/g, "");
     try {
+      // Số điện thoại: mọi vé của số ấy, mã che (không có tin nhắn xác nhận chủ số).
+      const chiSo = go.replace(/[\s.+-]/g, "").replace(/^84/, "0");
+      if (/^0\d{9,10}$/.test(chiSo)) {
+        const res = await fetch("/api/khach-than-thiet", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hanh_dong: "tra-so", so_dien_thoai: chiSo }),
+        });
+        const data = (await res.json().catch(() => null)) as { accepted?: boolean; ketQua?: KetQuaTraBangSo; error?: { message?: string } } | null;
+        if (!res.ok || !data?.accepted || !data.ketQua) {
+          setMessage(data?.error?.message || t("Chưa tra được, mời bạn thử lại.", "Could not look it up. Please try again."));
+          return;
+        }
+        if (!data.ketQua.found) {
+          setMessage(t("Số này chưa có vé nào. Nếu đặt bằng số khác hay bằng email, mời bạn gõ mã vé (NBJ-… hoặc WEB-…).", "No tickets on this number. If you booked with another number or an email, type your ticket code (NBJ-… or WEB-…)."));
+          return;
+        }
+        setTheoSo({ ketQua: data.ketQua, so: chiSo });
+        return;
+      }
+      // Vé quầy, người trong đoàn, phiếu thu: mở ở thẻ Lượt đi & quà.
+      if (/^(QUAY|TV|PT)-/.test(gon)) {
+        window.location.href = `/ho-so?ma=${encodeURIComponent(gon)}${lang === "en" ? "&lang=en" : ""}`;
+        return;
+      }
       const response = await fetch("/api/customer-ticket-lookup", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order_code: orderCode.trim(), contact: contact.trim() }),
+        body: JSON.stringify({ order_code: go }),
       });
       const payload = (await response.json().catch(() => null)) as LookupResponse | null;
       if (payload && payload.accepted && payload.found) {
@@ -138,7 +174,7 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
       // đây: sai mã và sai liên hệ bắt buộc đọc GIỐNG HỆT nhau, và chỉ máy chủ
       // mới biết đủ để giữ cho hai đường ấy không lệch một chữ nào.
       if (payload && payload.accepted === true && payload.found === false) {
-        setMessage(lang === "en" ? "No booking matches that code and contact. Please check both and try again." : payload.message || LOOKUP_FALLBACK_MESSAGE.vi);
+        setMessage(lang === "en" ? "No ticket found with that code. Check the code (NBJ-… or WEB-…), or look up by phone number." : payload.message || LOOKUP_FALLBACK_MESSAGE.vi);
         return;
       }
       const code = payload && payload.accepted === false ? payload.error?.code : undefined;
@@ -149,6 +185,20 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
       setPending(false);
     }
   }
+
+  // Mở từ đường dẫn `/tra-cuu-ve?ma=NBJ-…` (thẻ Lượt đi & quà chuyển sang): tra luôn.
+  const daTuMo = useRef(false);
+  useEffect(() => {
+    if (daTuMo.current) return;
+    daTuMo.current = true;
+    const ma = new URLSearchParams(window.location.search).get("ma")?.trim();
+    if (!ma || !/^(NBJ|WEB)-[A-Za-z0-9]{6,32}$/.test(ma)) return;
+    const hen = window.setTimeout(() => {
+      setTimKiem(ma.toUpperCase());
+      void tra(ma);
+    }, 0);
+    return () => window.clearTimeout(hen);
+  });
 
   const ticketsBySite = new Map<string, CustomerTicketLookupTicket[]>();
   for (const ticket of result?.tickets ?? []) {
@@ -183,7 +233,7 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
         {t("Mở lại vé đã đặt", "Open a ticket you booked")}
       </h1>
       <p className="mt-4 max-w-xl leading-7 text-[#59654b]">
-        {t("Nhập mã đặt chỗ cùng số điện thoại hoặc email đã dùng lúc đặt, vé và mã QR hiện lại ngay. Tới cổng, nhân viên quét thẳng trên màn hình của bạn.", "Enter your booking code with the phone or email you used, and your tickets and QR codes appear right here. You can open this page at the gate and staff scan it straight from your screen.")}
+        {t("Gõ mã vé hoặc số điện thoại, một trong hai là đủ. Có mã thì vé và mã QR hiện lại ngay; tới cổng, nhân viên quét thẳng trên màn hình của bạn.", "Type your ticket code or your phone number; either one is enough. With the code, your tickets and QR codes appear right away for the gate staff to scan.")}
       </p>
 
       {banLuu && !result ? (
@@ -200,44 +250,27 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
       ) : null}
 
       <div className="mt-6 rounded-2xl border border-[#ddb77d] bg-[#fff8eb] p-5 text-[#6c4b1f]">
-        <p className="font-extrabold">{t("Bản này chưa gửi tin nhắn hay email xác nhận", "This version sends no text or email confirmation")}</p>
+        <p className="font-extrabold">{t("Quên cả mã lẫn máy đã đặt?", "Lost both the code and the phone you booked on?")}</p>
         <p className="mt-2 text-sm leading-6">
-          {t("Đặt xong bạn sẽ không nhận được tin nhắn nào, nên đây là chỗ lấy lại vé. Cần cả mã đặt chỗ lẫn số điện thoại hoặc email đã để lại.", "You will not receive any message after booking. This page is how you get your ticket back, and it needs the two things only you have: the booking code and the contact you left. The code alone is not enough to open a ticket.")}
+          {t("Gõ số điện thoại: bạn thấy mọi vé của số ấy, mã che bớt cho an toàn. Ra quầy hay cổng đọc số điện thoại, nhân viên tra trong hệ thống và mở vé cho bạn.", "Type your phone number to see every ticket on it, with codes partly hidden for safety. At the desk or gate, tell staff your number and they open your ticket from the system.")}
         </p>
       </div>
 
       <form onSubmit={submit} className="mt-8 grid gap-4 rounded-[2rem] bg-[#183f34] p-6 text-white sm:p-8">
         <label className="grid gap-1 text-xs font-bold text-white/70">
-          {t("Mã đặt chỗ", "Booking code")}
+          {t("Mã vé hoặc số điện thoại", "Ticket code or phone number")}
           <input
             required
-            value={orderCode}
-            onChange={(event) => setOrderCode(event.target.value)}
+            value={timKiem}
+            onChange={(event) => setTimKiem(event.target.value)}
             autoComplete="off"
             spellCheck={false}
-            placeholder="NBJ-A1B2C3D4E5F6"
-            className="min-h-12 rounded-xl border border-white/25 bg-white/10 px-4 font-mono text-base font-medium tracking-[0.08em] text-white placeholder:font-sans placeholder:tracking-normal placeholder:text-white/35"
-          />
-          <span className="mt-1 font-normal leading-5 text-white/55">
-            {t("Mã hiện ngay sau khi đặt xong, bắt đầu bằng NBJ. Gõ chữ thường hay hoa đều được.", "Shown right after booking, starting with NBJ. Upper or lower case both work.")}
-          </span>
-        </label>
-        <label className="grid gap-1 text-xs font-bold text-white/70">
-          {t("Số điện thoại hoặc email đã dùng lúc đặt", "Phone or email used when booking")}
-          <input
-            required
-            value={contact}
-            onChange={(event) => setContact(event.target.value)}
-            // Ô này nhận CẢ số điện thoại lẫn email, nên không được ghim
-            // `inputMode="tel"`: điện thoại sẽ bật bàn phím số và khách dùng
-            // email không gõ nổi dấu @.
-            autoComplete="off"
-            spellCheck={false}
-            placeholder={t("0912 345 678 hoặc ban@vidu.com", "0912 345 678 or you@example.com")}
+            data-testid="o-tra-ve"
+            placeholder={t("NBJ-A1B2C3D4E5F6 hoặc 0912 345 678", "NBJ-A1B2C3D4E5F6 or 0912 345 678")}
             className="min-h-12 rounded-xl border border-white/25 bg-white/10 px-4 text-base font-medium text-white placeholder:text-white/35"
           />
           <span className="mt-1 font-normal leading-5 text-white/55">
-            {t("Số hay email này chỉ dùng để đối chiếu, không hiện ra ở đâu.", "Used only to match your booking; never shown anywhere.")}
+            {t("Mã NBJ-… hiện ngay sau khi đặt; mã WEB-… in trên từng vé. Vé mua ở quầy (QUAY-…) cũng gõ được.", "NBJ-… appears right after booking; WEB-… is printed on each ticket. Desk tickets (QUAY-…) work too.")}
           </span>
         </label>
         <button
@@ -253,6 +286,12 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
           </p>
         ) : null}
       </form>
+
+      {theoSo ? (
+        <div className="mt-8">
+          <KetQuaSo ketQua={theoSo.ketQua} so={theoSo.so} lang={lang} traLai={() => setTheoSo(null)} />
+        </div>
+      ) : null}
 
       {result ? (
         <section data-testid="ticket-lookup-result" className="mt-8 rounded-[2rem] border border-[#dde1db] bg-white p-6 sm:p-8">

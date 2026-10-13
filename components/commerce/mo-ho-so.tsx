@@ -1,7 +1,7 @@
 "use client";
 
 import { TheMaMoi } from "@/components/commerce/the-ma-moi";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HoSoKhachView } from "@/components/commerce/ho-so-khach-view";
 import { TheTichDiem } from "@/components/commerce/the-tich-diem";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
@@ -13,7 +13,7 @@ function ngayViet(iso: string) {
 }
 
 /** Kết quả tra chỉ bằng số điện thoại: lượt đi, mốc quà, vé (mã đã che). */
-function KetQuaSo({ ketQua, so, lang, traLai }: { ketQua: Extract<KetQuaTraBangSo, { found: true }>; so: string; lang: "vi" | "en"; traLai: () => void }) {
+export function KetQuaSo({ ketQua, so, lang, traLai }: { ketQua: Extract<KetQuaTraBangSo, { found: true }>; so: string; lang: "vi" | "en"; traLai: () => void }) {
   const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const moc = ketQua.nextMilestone;
   const luotTinh = ketQua.visits + ketQua.banDaMoi;
@@ -117,12 +117,30 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
   const [thanThiet, setThanThiet] = useState<{ ma: string; tomTat: TomTatThanThiet } | null>(null);
   const [theoSo, setTheoSo] = useState<Extract<KetQuaTraBangSo, { found: true }> | null>(null);
 
-  async function mo(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function moBangMa(maGon: string, so: string) {
     setDangMo(true);
     setLoi("");
-    const maGon = ma.trim().toUpperCase();
     try {
+      await moTiep(maGon, so);
+    } catch {
+      setLoi(t("Mạng đang chập chờn, mời bạn thử lại.", "The connection is unstable. Please try again."));
+    } finally {
+      setDangMo(false);
+    }
+  }
+
+  async function mo(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ma.trim() && !lienHe.trim()) {
+      setLoi(t("Nhập số điện thoại hoặc mã trên vé, một trong hai là đủ.", "Enter your phone number or the code on your ticket; either one is enough."));
+      return;
+    }
+    await moBangMa(ma.trim().toUpperCase(), lienHe.trim());
+  }
+
+  async function moTiep(maGon: string, so: string) {
+    const lienHe = so;
+    {
       if (!maGon) {
         // Chỉ có số điện thoại: tra mọi vé của số ấy (mã đã che).
         if (lienHe.includes("@")) {
@@ -155,6 +173,21 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
       }
       if (maGon.startsWith("PT-")) {
         setLoi(t("PT-… là mã phiếu thu. Mời bạn nhập mã vé QUAY-… in ngay dưới mã QR trên phiếu.", "PT-… is the receipt number. Please enter the ticket code QUAY-… printed under the QR code."));
+        return;
+      }
+      // Chỉ có mã, không số: mã NBJ- mở vé ở trang tra vé; mã vé khác xem lượt đi (không mã quà).
+      if (!lienHe.trim()) {
+        if (maGon.startsWith("NBJ-")) {
+          window.location.href = `/tra-cuu-ve?ma=${encodeURIComponent(maGon)}${lang === "en" ? "&lang=en" : ""}`;
+          return;
+        }
+        const res = await fetch(`/api/khach-than-thiet?ma=${encodeURIComponent(maGon)}`, { credentials: "same-origin" });
+        const data = (await res.json().catch(() => null)) as { accepted?: boolean; tomTat?: TomTatThanThiet; error?: { message?: string } } | null;
+        if (!res.ok || !data?.accepted || !data.tomTat) {
+          setLoi(data?.error?.message || t("Chưa tìm thấy mã này. Mời bạn xem lại mã in trên vé.", "Code not found. Please check the code printed on your ticket."));
+          return;
+        }
+        setThanThiet({ ma: maGon, tomTat: data.tomTat });
         return;
       }
       if (!maGon.startsWith("NBJ-")) {
@@ -193,12 +226,22 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
         return;
       }
       setHoSo(data.hoSo);
-    } catch {
-      setLoi(t("Mạng đang chập chờn, mời bạn thử lại.", "The connection is unstable. Please try again."));
-    } finally {
-      setDangMo(false);
     }
   }
+
+  // Mở từ trang tra vé hay đường dẫn `/ho-so?ma=QUAY-…`: điền sẵn mã và tra luôn.
+  const daTuMo = useRef(false);
+  useEffect(() => {
+    if (daTuMo.current) return;
+    daTuMo.current = true;
+    const maTuDuong = new URLSearchParams(window.location.search).get("ma")?.trim().toUpperCase();
+    if (!maTuDuong || !/^(QUAY|TV|WEB|PT|NBJ)-[A-Z0-9-]{4,40}$/.test(maTuDuong)) return;
+    const hen = window.setTimeout(() => {
+      setMa(maTuDuong);
+      void moBangMa(maTuDuong, "");
+    }, 0);
+    return () => window.clearTimeout(hen);
+  });
 
   if (hoSo) return <HoSoKhachView hoSo={hoSo} lang={lang} />;
   if (theoSo) return <KetQuaSo ketQua={theoSo} so={lienHe.replace(/\D/g, "")} lang={lang} traLai={() => setTheoSo(null)} />;
@@ -221,12 +264,11 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
     <form onSubmit={mo} className="rounded-3xl border border-[#d7d5cd] bg-white p-6 sm:p-8">
       <h2 className="font-display text-3xl text-[#183f34]">{t("Lượt đi và quà của bạn", "Your visits and rewards")}</h2>
       <p className="mt-3 leading-7 text-[#59654b]">
-        {t("Nhập số điện thoại đã để lại khi mua vé: mọi vé, lượt đã đi và mốc quà của số ấy hiện ra.", "Enter the phone number you left when buying: every ticket, visit and reward on that number appears.")}
+        {t("Nhập số điện thoại hoặc mã trên vé, một trong hai là đủ. Nhập cả hai thì thấy thêm mã quà.", "Enter your phone number or the code on your ticket; either is enough. Enter both to also see reward codes.")}
       </p>
       <label className="mt-5 grid gap-1 text-sm font-bold text-[#27362f]">
         {t("Số điện thoại", "Phone number")}
         <input
-          required
           value={lienHe}
           onChange={(event) => setLienHe(event.target.value)}
           inputMode="tel"
@@ -237,7 +279,7 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
       </label>
       <label className="mt-4 grid gap-1 text-sm font-bold text-[#27362f]">
         <span>
-          {t("Mã trên vé", "Ticket code")} <span className="font-normal text-[#6b786f]">{t("(không bắt buộc)", "(optional)")}</span>
+          {t("Mã trên vé", "Ticket code")} <span className="font-normal text-[#6b786f]">{t("(hoặc số điện thoại ở trên)", "(or the phone number above)")}</span>
         </span>
         <input
           value={ma}

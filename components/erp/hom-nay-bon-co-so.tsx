@@ -68,7 +68,7 @@ export function HomNayBonCoSo({
                 >
                   <span className="font-black">{ten.get(coSo.siteId) ?? coSo.siteId}</span>
                   <span className="text-right text-xs text-[#d4e4de]">
-                    {coSo.hienTai.khach.toLocaleString("vi-VN")} khách · {tienGon(tienCua(coSo.hienTai))}
+                    {coSo.hienTai.khach.toLocaleString("vi-VN")} vào cổng · {tienGon(tienCua(coSo.hienTai))}
                   </span>
                 </Link>
               </li>

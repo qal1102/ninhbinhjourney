@@ -292,8 +292,8 @@ export function KioskDiem({
             <MaQr duong={`/tra-cuu-ve?lang=${lang}`} nhan={t("Quét để tra cứu vé", "Scan to find your booking")} />
             <p className="max-w-lg text-xl leading-8 text-[#4d5b55]">
               {t(
-                "Trên điện thoại, nhập mã đặt chỗ (dạng NBJ-…) cùng số điện thoại hoặc email đã dùng lúc đặt. Kiosk không hỏi số điện thoại của bạn ở nơi đông người.",
-                "On your phone, enter the booking code (NBJ-…) and the phone or email you booked with. The kiosk never asks for your phone number in public.",
+                "Trên điện thoại, gõ mã vé (NBJ-… hoặc WEB-…) hoặc số điện thoại đã dùng lúc đặt. Kiosk không hỏi số điện thoại của bạn ở nơi đông người.",
+                "On your phone, type your ticket code (NBJ-… or WEB-…) or the phone number you booked with. The kiosk never asks for your phone number in public.",
               )}
             </p>
           </div>

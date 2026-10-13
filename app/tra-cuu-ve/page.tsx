@@ -10,7 +10,7 @@ import { docNgonNgu } from "@/lib/ngon-ngu-server";
 export const metadata: Metadata = {
   title: "Tra cứu vé · Ninh Bình Journey",
   description:
-    "Nhập mã đặt chỗ cùng số điện thoại hoặc email đã dùng lúc đặt để mở lại vé và mã QR.",
+    "Gõ mã vé hoặc số điện thoại đã dùng lúc đặt để mở lại vé và mã QR.",
 };
 
 export default async function TicketLookupPage({

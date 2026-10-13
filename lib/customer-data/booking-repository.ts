@@ -604,3 +604,33 @@ export async function maMoiCoThat(ma: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Mở vé chỉ bằng mã (13/10/2026, migration 130): mã đặt chỗ `NBJ-…` hay mã vé
+ * `WEB-…`. Cầm mã như cầm tấm vé; máy chủ web chặn gọi dồn theo IP.
+ */
+export async function lookupCustomerOrderByCode(code: string): Promise<CustomerTicketLookupResult> {
+  const { data, error } = await createAdminClient().rpc("customer_lookup_order_by_code", {
+    p_tenant_id: TENANT_ID,
+    p_code: code,
+  });
+  const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : undefined;
+  if (error || !row) throw mapRepositoryError(error);
+  if (row.found !== true) return { found: false, throttled: false };
+  return {
+    found: true,
+    throttled: false,
+    orderCode: String(row.order_code),
+    productId: String(row.product_id),
+    visitDate: String(row.visit_date),
+    partySize: Number(row.party_size),
+    adults: row.adults === null || row.adults === undefined ? null : Number(row.adults),
+    children: row.children === null || row.children === undefined ? null : Number(row.children),
+    totalVnd: Number(row.total_vnd),
+    currency: "VND",
+    paymentMode: (row.payment_mode ?? null) as CachTraTien | null,
+    paymentStatus: (row.payment_status ?? null) as "succeeded" | "pending" | null,
+    amountDueVnd: Number(row.amount_due_vnd ?? 0),
+    tickets: lookupTicketsFromRow(row.tickets),
+  };
+}

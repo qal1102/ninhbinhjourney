@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import {
@@ -517,7 +518,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
             <button type="submit" disabled={lookupPending} className="min-h-11 rounded-xl border border-white/25 px-5 font-black text-white disabled:cursor-wait disabled:opacity-60">{lookupPending ? "Đang tra..." : "Tra cứu"}</button>
           </form>
           {lookupMessage ? <p role="status" className="mt-2 text-xs text-white/70">{lookupMessage}</p> : null}
-          {lookupResults.length > 0 ? <ul className="mt-3 space-y-2">{lookupResults.map((ticket) => <li key={ticket.ticketCode} className="rounded-lg bg-white/7 px-3 py-2 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-mono font-bold">{ticket.ticketCode}</span><button type="button" onClick={() => setScanCode(ticket.ticketCode)} className="rounded-md bg-white px-2 py-1 font-black text-[#183f34]">Đưa vào ô quét</button></div><p className="mt-1 text-white/70">{tenKhachTrenVe(ticket)}{ticket.guestPhone ? ` · ${ticket.guestPhone}` : ""} · {ticket.entriesUsed}/{ticket.entriesAllowed} lượt · hiệu lực {ticket.validOn}</p></li>)}</ul> : null}
+          {lookupResults.length > 0 ? <ul className="mt-3 space-y-2">{lookupResults.map((ticket) => <li key={ticket.ticketCode} className="rounded-lg bg-white/7 px-3 py-2 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><span className="font-mono font-bold">{ticket.ticketCode}</span><span className="flex gap-1.5">{isDirector ? <Link href={`/erp/khach-hang?tra=${encodeURIComponent(ticket.ticketCode)}#tra-khach`} className="rounded-md border border-white/30 px-2 py-1 font-black text-white">Hồ sơ khách</Link> : null}<button type="button" onClick={() => setScanCode(ticket.ticketCode)} className="rounded-md bg-white px-2 py-1 font-black text-[#183f34]">Đưa vào ô quét</button></span></div><p className="mt-1 text-white/70">{tenKhachTrenVe(ticket)}{ticket.guestPhone ? ` · ${ticket.guestPhone}` : ""} · {ticket.entriesUsed}/{ticket.entriesAllowed} lượt · hiệu lực {ticket.validOn}</p></li>)}</ul> : null}
         </div>{gateScans.length > 0 ? <div className="mt-5 border-t border-white/15 pt-4"><p className="text-xs font-black uppercase tracking-[0.16em] text-white/60">Quét gần nhất · toàn cơ sở</p><ul className="mt-3 space-y-2">{gateScans.map((scan) => <li key={scan.id} className="flex items-center justify-between gap-3 rounded-lg bg-white/7 px-3 py-2 text-xs"><span className="font-mono font-bold">{scan.code}</span><span className="text-white/70">{scan.scannedByName} · {new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(scan.scannedAt))}</span></li>)}</ul></div> : null}</section>
       ) : null}
 
@@ -656,6 +657,11 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
                     <div><dt className="text-[#849089]">Trạng thái</dt><dd className="mt-1 font-bold">{ticketStatusLabel(item.status)}</dd></div>
                     <div><dt className="text-[#849089]">Khách</dt><dd className="mt-1 font-bold">{tenKhachTrenVe(item)}</dd></div>
                   </dl>
+                  {isDirector ? (
+                    <Link href={`/erp/khach-hang?tra=${encodeURIComponent(item.ticketCode)}#tra-khach`} className="mt-3 inline-flex min-h-9 items-center rounded-lg border border-[#c9d6cf] px-3 text-xs font-black text-[#183f34]">
+                      Hồ sơ khách: mọi vé, lượt qua cổng, quà
+                    </Link>
+                  ) : null}
                 </details>
               ))}
             </div>

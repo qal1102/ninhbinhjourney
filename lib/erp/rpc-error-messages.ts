@@ -709,6 +709,8 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   THI_ANH_INPUT_INVALID: "Bài dự thi chưa hợp lệ: xem lại tên hiển thị, chú thích và ảnh.",
   THI_ANH_DIRECTOR_REQUIRED: "Chỉ giám đốc duyệt ảnh và chấm giải.",
   THI_ANH_NOT_FOUND: "Không tìm thấy ảnh này.",
+  TRA_KHACH_ROLE_REQUIRED: "Chỉ giám đốc và quản lý cơ sở tra được hồ sơ khách.",
+  TRA_KHACH_INPUT_INVALID: "Gõ số điện thoại hoặc một mã vé, mã đơn, mã phiếu thu.",
   THI_ANH_HET_GIAI: "Giải này đã có đủ người trong tháng (1 nhất, 1 nhì, 1 ba, 5 khuyến khích).",
   LOYALTY_PHONE_MISMATCH: "Số điện thoại không khớp với số đã gắn vào mã này.",
   LOYALTY_VOUCHER_NOT_FOUND: "Không tìm thấy voucher này.",

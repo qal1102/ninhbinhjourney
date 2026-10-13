@@ -3,9 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import { HoSoKhachView } from "@/components/commerce/ho-so-khach-view";
+import { TheTichDiem } from "@/components/commerce/the-tich-diem";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
+import type { TomTatThanThiet } from "@/domain/khach-than-thiet";
 
-/** Mở hộ chiếu từ một máy chưa từng đặt chỗ: mã đặt chỗ + số đã dùng. */
+/**
+ * Mở hộ chiếu từ một máy chưa từng đặt chỗ. Mã đặt chỗ web `NBJ-…` + số
+ * hay email đã dùng thì ra hồ sơ chuyến đi; mã vé quầy `QUAY-…`, mã riêng
+ * trong đoàn `TV-…` hay mã vé `WEB-…` + số đã gắn thì ra thẻ khách thân
+ * thiết: lượt đã đi, mốc quà, voucher, mọi vé (13/10/2026, chủ dự án hỏi khách
+ * gắn số xong thì tự xem ở đâu).
+ */
 export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
   const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const [ma, setMa] = useState("");
@@ -13,12 +21,39 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
   const [dangMo, setDangMo] = useState(false);
   const [loi, setLoi] = useState("");
   const [hoSo, setHoSo] = useState<HoSoKhach | null>(null);
+  const [thanThiet, setThanThiet] = useState<{ ma: string; tomTat: TomTatThanThiet } | null>(null);
 
   async function mo(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setDangMo(true);
     setLoi("");
+    const maGon = ma.trim().toUpperCase();
     try {
+      if (maGon.startsWith("PT-")) {
+        setLoi(t("PT-… là mã phiếu thu. Mời bạn nhập mã vé QUAY-… in ngay dưới mã QR trên phiếu.", "PT-… is the receipt number. Please enter the ticket code QUAY-… printed under the QR code."));
+        return;
+      }
+      if (!maGon.startsWith("NBJ-")) {
+        const res = await fetch("/api/khach-than-thiet", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hanh_dong: "xem", ma: maGon, so_dien_thoai: lienHe.trim() }),
+        });
+        const data = (await res.json().catch(() => null)) as
+          | { accepted?: boolean; tomTat?: TomTatThanThiet; error?: { message?: string } }
+          | null;
+        if (!res.ok || !data?.accepted || !data.tomTat) {
+          setLoi(
+            res.status === 400
+              ? t("Mã vé gồm chữ và số, ví dụ QUAY-… hoặc TV-…; số điện thoại 10 số.", "Use the code printed on your ticket (QUAY-… or TV-…) and a 10-digit phone number.")
+              : data?.error?.message || t("Chưa mở được, mời bạn thử lại.", "Could not open. Please try again."),
+          );
+          return;
+        }
+        setThanThiet({ ma: maGon, tomTat: data.tomTat });
+        return;
+      }
       const res = await fetch("/api/ho-so", {
         method: "POST",
         credentials: "same-origin",
@@ -42,12 +77,26 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
   }
 
   if (hoSo) return <HoSoKhachView hoSo={hoSo} lang={lang} />;
+  if (thanThiet) {
+    return (
+      <div className="space-y-4">
+        <TheTichDiem codes={[thanThiet.ma]} tomTatBanDau={thanThiet.tomTat} goiYHoSo={false} lang={lang} />
+        <button
+          type="button"
+          onClick={() => setThanThiet(null)}
+          className="min-h-12 w-full rounded-full border border-[#183f34] px-6 font-extrabold text-[#183f34]"
+        >
+          {t("Tra mã khác", "Look up another code")}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={mo} className="rounded-3xl border border-[#d7d5cd] bg-white p-6 sm:p-8">
       <h2 className="font-display text-3xl text-[#183f34]">{t("Mở hộ chiếu của bạn", "Open your passport")}</h2>
       <p className="mt-3 leading-7 text-[#59654b]">
-        {t("Nhập một mã đặt chỗ bất kỳ cùng số điện thoại hoặc email bạn đã dùng lúc đặt. Mọi chuyến đi cùng số ấy hiện ra chung một hồ sơ.", "Enter any booking code with the phone or email you used. Every trip booked with that contact appears in one passport.")}
+        {t("Nhập mã in trên vé cùng số điện thoại đã gắn: lượt đã đi, quà, voucher và mọi vé của bạn hiện ra ở đây.", "Enter the code on your ticket with the phone number you linked: your visits, rewards and tickets appear here.")}
       </p>
       <p className="mt-2 text-sm leading-6 text-[#59654b]">
         {t("Chỉ cần lấy lại vé QR để vào cổng? Mời bạn ", "Only need your QR ticket for the gate? ")}
@@ -57,17 +106,17 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
         .
       </p>
       <label className="mt-5 grid gap-1 text-sm font-bold text-[#27362f]">
-        {t("Mã đặt chỗ", "Booking code")}
+        {t("Mã trên vé", "Ticket code")}
         <input
           value={ma}
           onChange={(event) => setMa(event.target.value)}
-          placeholder="NBJ-…"
+          placeholder={t("NBJ-…, QUAY-… hoặc TV-…", "NBJ-…, QUAY-… or TV-…")}
           autoCapitalize="characters"
           className="min-h-12 rounded-xl border border-[#cbd7d1] px-4 font-medium"
         />
       </label>
       <label className="mt-4 grid gap-1 text-sm font-bold text-[#27362f]">
-        {t("Số điện thoại hoặc email đã dùng lúc đặt", "Phone or email used when booking")}
+        {t("Số điện thoại đã gắn (đặt trên web thì số hoặc email lúc đặt)", "Linked phone (web bookings: phone or email used)")}
         <input
           value={lienHe}
           onChange={(event) => setLienHe(event.target.value)}

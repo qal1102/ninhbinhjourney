@@ -3,6 +3,7 @@ import {
   parseTicketSalesRpc,
   summariseProductShares,
   summariseTicketPeriods,
+  tenKhachTrenVe,
   ticketEntries,
   type TicketSalesRow,
 } from "@/domain/erp-ticket-sales";
@@ -137,5 +138,18 @@ describe("QA-ERP-TICKET-05 — đọc kết quả đếm trong kho", () => {
   it("dữ liệu hỏng thì trả null để kho lùi về đường đếm cũ", () => {
     expect(parseTicketSalesRpc(null)).toBeNull();
     expect(parseTicketSalesRpc({ periods: "khong" })).toBeNull();
+  });
+});
+
+describe("tenKhachTrenVe", () => {
+  it("vé có tên thì in tên, kể cả vé đoàn quầy mang tên trưởng đoàn", () => {
+    expect(tenKhachTrenVe({ guestName: " Nguyễn Văn A ", channel: "quay-ve", product: "group" })).toBe("Nguyễn Văn A");
+  });
+
+  it("vé trống tên nói rõ vì sao, không còn chữ Không có tên", () => {
+    expect(tenKhachTrenVe({ guestName: "", channel: "quay-ve", product: "adult" })).toBe("Khách lẻ ở quầy, không hỏi tên");
+    expect(tenKhachTrenVe({ guestName: "", channel: "quay-ve", product: "group" })).toBe("Đoàn mua ở quầy, chưa ghi trưởng đoàn");
+    expect(tenKhachTrenVe({ guestName: "", channel: "moi", product: "adult" })).toBe("Vé mời, không ghi tên khách");
+    expect(tenKhachTrenVe({ guestName: "", channel: "website", product: "adult" })).toBe("Không ghi tên");
   });
 });

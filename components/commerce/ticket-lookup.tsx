@@ -208,7 +208,7 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
 
       {/* Soát 07/10/2026: trang này và Hộ chiếu hỏi cùng hai ô, khách không biết vào đâu. */}
       <p className="mt-4 text-sm leading-6 text-[#59654b]">
-        {t("Trang này mở lại vé QR của một đơn. Muốn xem mọi chuyến đã đặt bằng cùng số điện thoại, mời bạn mở ", "This page reopens the QR tickets of one booking. To see every trip booked with the same contact, open ")}
+        {t("Trang này mở lại vé QR của một đơn đặt trên web. Muốn xem mọi chuyến cùng số điện thoại, hay vé mua ở quầy đã gắn số (lượt đã đi, quà, voucher), mời bạn mở ", "This page reopens the QR tickets of one web booking. To see every trip on the same contact, or a desk ticket you linked to your phone (visits, rewards, vouchers), open ")}
         <Link href={lang === "en" ? "/ho-so?lang=en" : "/ho-so"} className="font-bold text-[#183f34] underline underline-offset-2">
           {t("Hộ chiếu Ninh Bình", "your Ninh Binh passport")}
         </Link>

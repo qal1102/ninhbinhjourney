@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { DIEM_MOI_LUOT, MOC_THUONG, type TomTatThanThiet, type VoucherKhach } from "@/domain/khach-than-thiet";
@@ -62,6 +63,8 @@ export function TheTichDiem({
   lang = "vi",
   laTruongDoan = false,
   className = "",
+  tomTatBanDau,
+  goiYHoSo = true,
 }: {
   /** Mã khách đang cầm: mã người trong đoàn, hoặc các mã vé của một phiếu. */
   codes: string[];
@@ -69,10 +72,14 @@ export function TheTichDiem({
   /** Vé cả đoàn: nhắc từng người mở mã riêng để tích cho mình. */
   laTruongDoan?: boolean;
   className?: string;
+  /** Đã có kết quả (trang Hộ chiếu vừa tra bằng mã + số): khỏi đọc lại. */
+  tomTatBanDau?: TomTatThanThiet;
+  /** Chỉ chỗ mở lại vé ở máy khác; tắt khi đang ở chính trang Hộ chiếu. */
+  goiYHoSo?: boolean;
 }) {
   const t = (vi: string, en: string) => (lang === "en" ? en : vi);
-  const [tomTat, setTomTat] = useState<TomTatThanThiet | null>(null);
-  const [trangThai, setTrangThai] = useState<"dang-doc" | "san-sang" | "tat">("dang-doc");
+  const [tomTat, setTomTat] = useState<TomTatThanThiet | null>(tomTatBanDau ?? null);
+  const [trangThai, setTrangThai] = useState<"dang-doc" | "san-sang" | "tat">(tomTatBanDau ? "san-sang" : "dang-doc");
   const [so, setSo] = useState("");
   const [dongYDichVu, setDongYDichVu] = useState(false);
   const [dongYTiepThi, setDongYTiepThi] = useState(false);
@@ -82,7 +89,7 @@ export function TheTichDiem({
   const maDau = codes[0] ?? "";
 
   useEffect(() => {
-    if (!maDau) return;
+    if (!maDau || tomTatBanDau) return;
     let huy = false;
     fetch(`/api/khach-than-thiet?ma=${encodeURIComponent(maDau)}`, { cache: "no-store" })
       .then(async (res) => {
@@ -102,7 +109,7 @@ export function TheTichDiem({
     return () => {
       huy = true;
     };
-  }, [maDau]);
+  }, [maDau, tomTatBanDau]);
 
   async function gui(hanhDong: "gan" | "xem") {
     setLoi("");
@@ -270,6 +277,18 @@ export function TheTichDiem({
           </p>
         </div>
       ) : null}
+      {tomTat.visitList.length > 0 ? (
+        <div className="mt-4">
+          <h3 className="text-sm font-bold text-[#183f34]">{t("Những lượt đã đi", "Your visits")}</h3>
+          <ul className="mt-2 flex flex-wrap gap-2" data-testid="tich-diem-luot-di">
+            {tomTat.visitList.map((luot, i) => (
+              <li key={`${luot.site}-${luot.date}-${i}`} className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#27362f]">
+                {luot.site} · {ngay(luot.date)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {tomTat.voucherCount > 0 && !tomTat.vouchers ? (
         <p className="mt-3 rounded-2xl bg-[#183f34] px-4 py-3 text-sm font-bold text-white">
           {t(`Bạn có ${tomTat.voucherCount} quà chưa đổi.`, `You have ${tomTat.voucherCount} unclaimed ${tomTat.voucherCount === 1 ? "reward" : "rewards"}.`)}
@@ -343,6 +362,15 @@ export function TheTichDiem({
       <p className="mt-3 text-xs leading-5 text-[#6b786f]">
         {t("Mã quà chỉ hiện khi nhập lại đúng số điện thoại đã gắn.", "Reward codes only appear after re-entering the linked number.")}
       </p>
+      {goiYHoSo ? (
+        <p className="mt-2 text-xs leading-5 text-[#6b786f]">
+          {t("Lần sau ở máy khác: vào ", "Next time, on any phone: open ")}
+          <Link href={lang === "en" ? "/ho-so?lang=en" : "/ho-so"} className="font-bold text-[#183f34] underline underline-offset-2">
+            {t("Hộ chiếu Ninh Bình", "Ninh Binh passport")}
+          </Link>
+          {t(`, gõ mã ${maDau} và số điện thoại này.`, `, enter code ${maDau} and this phone number.`)}
+        </p>
+      ) : null}
     </section>
   );
 }

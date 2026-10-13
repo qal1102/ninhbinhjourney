@@ -1,4 +1,4 @@
-import { ticketStatusLabel } from "@/domain/erp-ticket-sales";
+import { tenKhachTrenVe, ticketStatusLabel } from "@/domain/erp-ticket-sales";
 import type { TicketSalesSummary } from "@/lib/erp/gate-scan-repository";
 import type { ErpReport } from "./report";
 
@@ -104,7 +104,7 @@ export function buildTicketSalesReport(input: { siteName: string; sales: TicketS
               sale.channelLabel,
               sale.issuedAt,
               ticketStatusLabel(sale.status),
-              sale.guestName || "Không có tên",
+              tenKhachTrenVe(sale),
             ]),
             emptyText: "Chưa có vé nào được phát hành.",
           },

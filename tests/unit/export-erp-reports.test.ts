@@ -226,7 +226,7 @@ describe("báo cáo vé đã bán", () => {
     ]);
     // Không xuất giá vé: màn hình không hiện giá trong danh sách này.
     expect(recent.rows).toEqual([
-      ["QUAY-4D5E31C1CABC", "Vé người lớn", "Quầy vé", "2026-09-17T02:15:30.000Z", "Đã dùng một phần", "Không có tên"],
+      ["QUAY-4D5E31C1CABC", "Vé người lớn", "Quầy vé", "2026-09-17T02:15:30.000Z", "Đã dùng một phần", "Khách lẻ ở quầy, không hỏi tên"],
     ]);
 
     const cells = readXlsx(buildReportXlsx(report, EXPORTED_AT)).sheets[0].cells;

@@ -237,3 +237,16 @@ export function ticketStatusLabel(status: string): string {
     ? TICKET_STATUS_LABELS[status]
     : status;
 }
+
+/**
+ * Cột "Khách" của danh sách vé. Vé quầy lẻ và vé mời không hỏi tên khách,
+ * nên ghi rõ vì sao trống thay cho "Không có tên" (13/10/2026, chủ dự án đọc
+ * thành lỗi). Vé đoàn quầy mang tên trưởng đoàn từ migration 123.
+ */
+export function tenKhachTrenVe(ve: { guestName: string; channel: string; product: string }): string {
+  const ten = ve.guestName.trim();
+  if (ten) return ten;
+  if (ve.channel === "moi") return "Vé mời, không ghi tên khách";
+  if (ve.channel === "quay-ve") return ve.product === "group" ? "Đoàn mua ở quầy, chưa ghi trưởng đoàn" : "Khách lẻ ở quầy, không hỏi tên";
+  return "Không ghi tên";
+}

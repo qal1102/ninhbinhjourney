@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
 import { BuuThiep } from "@/components/commerce/buu-thiep";
+import { TheTichDiem } from "@/components/commerce/the-tich-diem";
 import { tripPassportPlaces } from "@/domain/trip-passport";
 import { PACKAGES } from "@/content/packages";
 import { goiHienThi } from "@/content/packages-en";
@@ -99,6 +100,9 @@ export function HoSoKhachView({
   const vung = lang === "en" ? "en-GB" : "vi-VN";
   const noi = tripPassportPlaces();
   const daDen = new Map(hoSo.noiDaDen.map((item) => [item.siteId, item]));
+  // Thẻ khách thân thiết tự đọc theo mã vé (13/10); màn "Khách thấy gì" của
+  // giám đốc không hiện để khỏi gọi ra ngoài props.
+  const maVeDau = hoSo.don.flatMap((don) => don.tickets.map((ve) => ve.ticketCode))[0];
   return (
     <div data-testid="ho-so-khach" className="text-[#151a17]">
       <section className="rounded-3xl bg-[#183f34] p-6 text-white sm:p-8">
@@ -252,6 +256,8 @@ export function HoSoKhachView({
           </ul>
         )}
       </section>
+
+      {xemThu || !maVeDau ? null : <TheTichDiem codes={[maVeDau]} lang={lang} className="mt-8" />}
 
       {xemThu ? null : (
         <div className="mt-8 grid gap-3 sm:grid-cols-2">

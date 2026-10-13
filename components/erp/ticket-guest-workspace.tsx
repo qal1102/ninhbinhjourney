@@ -273,7 +273,7 @@ export function TicketGuestWorkspace({ site, user, mode, shiftClosures, gateScan
       setScanRefused(true);
       setScanDue(null);
       setScanMessage(
-        "Mất mạng, chưa biết lượt này đã ghi chưa. Bấm Ghi nhận lại với đúng mã này: hệ thống không trừ hai lần. Mạng yếu lâu thì dùng Cổng ngoại tuyến bên dưới.",
+        "Mất mạng, chưa biết lượt này đã ghi chưa. Bấm “Xác thực & ghi nhận” lại với đúng mã này: hệ thống không trừ hai lần. Mạng yếu lâu thì ghi vào hàng đợi ở khung Cổng ngoại tuyến phía trên.",
       );
     } finally {
       setScanPending(false);

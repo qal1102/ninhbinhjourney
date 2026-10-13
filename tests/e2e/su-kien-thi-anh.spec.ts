@@ -43,3 +43,23 @@ test("dấu đã có thì có nút khoe với bạn, dấu lời hứa thì khô
   await page.getByTestId("nut-toi-hua").click();
   await expect(page.getByTestId("khoe-loi-hua")).toHaveCount(0);
 });
+
+test("gửi ảnh 4 MB: chỉ ảnh đã thu nhỏ đi lên máy chủ, trang báo đã nhận", async ({ page }) => {
+  let coThan = 0;
+  await page.route("**/api/thi-anh", async (route) => {
+    coThan = route.request().postDataBuffer()?.byteLength ?? 0;
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ accepted: true, thang: "2026-10" }) });
+  });
+  await page.goto("/thi-anh");
+  const f = page.getByTestId("form-thi-anh");
+  await f.locator('input[type="file"]').setInputFiles("public/images/destinations/bai-dinh.jpg");
+  await expect(f.getByRole("img", { name: "Ảnh sắp gửi" })).toBeVisible();
+  await f.locator('input[name="ten"]').fill("Lan");
+  await f.locator('input[name="so_dien_thoai"]').fill("0912345678");
+  await f.getByText(/Tôi đồng ý thể lệ/).click();
+  await f.getByRole("button", { name: "Gửi ảnh" }).click();
+  await expect(page.getByTestId("thong-bao-thi-anh")).toContainText("Đã nhận ảnh");
+  // Ảnh gốc 4,1 MB; Vercel nhận tối đa 4,5 MB mỗi yêu cầu. Thân yêu cầu phải là ảnh đã thu nhỏ.
+  expect(coThan).toBeGreaterThan(10_000);
+  expect(coThan).toBeLessThan(2_000_000);
+});

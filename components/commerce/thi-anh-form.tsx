@@ -43,7 +43,10 @@ export function ThiAnhForm({ lang = "vi" }: { lang?: Lang }) {
   async function gui(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setThongBao(null);
-    const form = new FormData(e.currentTarget);
+    // Giữ lại thẻ form: sau await, React đã nhả sự kiện nên e.currentTarget là null.
+    const theForm = e.currentTarget;
+    // Ô chọn ảnh không có name: chỉ gửi ảnh đã thu nhỏ, không kèm ảnh gốc (Vercel nhận tối đa 4,5 MB mỗi yêu cầu).
+    const form = new FormData(theForm);
     if (!tep) {
       setThongBao({ ok: false, chu: t("Mời bạn chọn một ảnh.", "Please pick a photo.") });
       return;
@@ -53,9 +56,10 @@ export function ThiAnhForm({ lang = "vi" }: { lang?: Lang }) {
     try {
       const res = await fetch("/api/thi-anh", { method: "POST", credentials: "same-origin", body: form });
       const json = (await res.json().catch(() => ({}))) as { accepted?: boolean; error?: { message?: string } };
-      if (!res.ok || !json.accepted) throw new Error(json.error?.message ?? t("Chưa gửi được.", "Could not send."));
+      if (res.status === 413) throw new Error(t("Ảnh lớn quá, chọn ảnh dưới 4 MB.", "The photo is too large; pick one under 4 MB."));
+      if (!res.ok || !json.accepted) throw new Error(json.error?.message ?? t("Chưa gửi được, xin thử lại.", "Could not send, please try again."));
       setThongBao({ ok: true, chu: t("Đã nhận ảnh. Ảnh hiện ở trang này sau khi ban tổ chức duyệt.", "Photo received. It appears here once approved.") });
-      e.currentTarget.reset();
+      theForm.reset();
       setTep(null);
       setXem(null);
     } catch (error) {
@@ -88,7 +92,7 @@ export function ThiAnhForm({ lang = "vi" }: { lang?: Lang }) {
         <h2 className="font-display text-2xl text-[#183f34]">{t("Gửi ảnh dự thi", "Enter a photo")}</h2>
         <label className="mt-4 block text-sm font-bold text-[#27362f]">
           {t("Ảnh", "Photo")}
-          <input type="file" name="chon" accept="image/jpeg,image/png,image/webp" onChange={(e) => chonAnh(e.target.files?.[0])} className="mt-1 block w-full rounded-xl border border-[#bec7bf] p-2 text-sm" />
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => chonAnh(e.target.files?.[0])} className="mt-1 block w-full rounded-xl border border-[#bec7bf] p-2 text-sm" />
         </label>
         {/* eslint-disable-next-line @next/next/no-img-element -- ảnh xem trước tạo tại chỗ */}
         {xem ? <img src={xem} alt={t("Ảnh sắp gửi", "Photo to send")} className="mt-3 max-h-64 rounded-xl object-contain" /> : null}

@@ -3,7 +3,7 @@
 import QRCode from "qrcode";
 import { useActionState, useState } from "react";
 import { ganSoChoVeAction, traKhachAction, type TraKhachState } from "@/app/erp/tra-khach-actions";
-import type { KetQuaTraKhach, VeTraKhach } from "@/domain/tra-khach";
+import { laSoDienThoai, type KetQuaTraKhach, type VeTraKhach } from "@/domain/tra-khach";
 
 function ngay(iso: string) {
   if (!iso) return "";
@@ -94,7 +94,7 @@ function HoSo({ kq, nhap }: { kq: Extract<KetQuaTraKhach, { timThay: true }>; nh
   return (
     <div className="mt-4 space-y-4" data-testid="ket-qua-tra-khach">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <div className="rounded-xl bg-[#f3f6f4] p-3"><p className="text-[11px] text-[#5f6f67]">Số điện thoại</p><p className="font-black">{kq.coSo ? kq.so ?? "Đã có số" : "Chưa gắn số"}</p></div>
+        <div className="rounded-xl bg-[#f3f6f4] p-3"><p className="text-[11px] text-[#5f6f67]">Số điện thoại</p><p className="font-black">{kq.coSo ? kq.so ?? laSoDienThoai(nhap) ?? "Đã có số" : "Chưa gắn số"}</p></div>
         <div className="rounded-xl bg-[#f3f6f4] p-3"><p className="text-[11px] text-[#5f6f67]">Lượt đã đi · điểm</p><p className="font-black tabular-nums">{td ? `${td.visits} · ${td.points.toLocaleString("vi-VN")}` : "—"}</p></div>
         <div className="rounded-xl bg-[#f3f6f4] p-3"><p className="text-[11px] text-[#5f6f67]">Mã mời · bạn đã đi</p><p className="font-black">{td?.referralCode ? `${td.referralCode} · ${td.referrals}` : "—"}</p></div>
         <div className="rounded-xl bg-[#f3f6f4] p-3"><p className="text-[11px] text-[#5f6f67]">Nhận tin ưu đãi</p><p className="font-black">{kq.tiepThi === "granted" ? "Đồng ý" : kq.coSo ? "Không" : "—"}</p></div>

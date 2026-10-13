@@ -44,6 +44,8 @@ export const CustomerBookingHoldRequestSchema = z
     // khách nào đặt được vé. Phát ra một dạng rồi chỉ nhận một dạng khác là
     // lỗi của máy chủ, không phải của người gửi.
     slot_starts_at: z.iso.datetime({ offset: true }),
+    // 125: mã mời của một khách khác, giảm 10%. Bỏ trống là giá thường.
+    ma_moi: z.string().trim().toUpperCase().regex(/^MOI-[A-Z0-9]{6}$/).optional(),
   })
   .strict()
   .refine((value) => (value.adults === undefined) === (value.children === undefined), {

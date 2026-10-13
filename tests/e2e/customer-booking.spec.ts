@@ -169,8 +169,8 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     await slotButton.click();
     await expect(slotButton).toHaveAttribute("aria-pressed", "true");
 
-    // TC-03: một em bé dưới 1m3 đi cùng hai khách có vé.
-    await page.getByLabel("Số trẻ cao dưới 1m3").fill("1");
+    // TC-03: một trẻ 1m–1m3 đi cùng hai người lớn (migration 125: có vé trẻ em).
+    await page.getByLabel("Số trẻ cao từ 1m tới 1m3").fill("1");
 
     await page.getByRole("button", { name: "Giữ chỗ 15 phút" }).click();
     // Chuỗi này từng là "Ước tính vận hành T11a" — số hiệu phiếu việc nội
@@ -210,7 +210,7 @@ test.describe("CUS-06 anonymous ERP-backed booking", () => {
     await expect(page.getByTestId("customer-booking-confirmed")).toContainText("2 lượt vào");
     // TC-03: khách phải đọc được mình cầm vé của những ai.
     await expect(page.getByTestId("customer-booking-confirmed"))
-      .toContainText("2 vé · 1 trẻ dưới 1m3 (không mất vé)");
+      .toContainText("2 vé · 1 vé trẻ 1m–1m3");
     // Trả xong thì đồng hồ giữ chỗ dừng hẳn. Trước 29/09/2026 nó cứ đếm về
     // 00:00 cạnh tấm vé đã trả, khách tưởng vé mình hết hạn.
     await expect(page.getByTestId("giu-cho-da-xong")).toContainText("Đã thanh toán");

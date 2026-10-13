@@ -19,7 +19,7 @@ const TIENG_ANH: Record<string, ChuGoi> = {
     name: "Trang An ticket",
     audience: "Any visitor travelling on their own",
     durationLabel: "About 3 hours on the boat",
-    inclusions: ["One Trang An boat trip","QR ticket for the gate","Children under 1.3 m free"],
+    inclusions: ["One Trang An boat trip","QR ticket for the gate","Children under 1 m need no ticket"],
     exclusions: ["Tip for the rower","Food and drinks"],
     schedule: ["Pick a boarding time 07:30–15:00","Row through the caves and temples","Back at the pier after about 3 hours"],
   },
@@ -27,7 +27,7 @@ const TIENG_ANH: Record<string, ChuGoi> = {
     name: "Tam Coc – Bich Dong ticket",
     audience: "Any visitor travelling on their own",
     durationLabel: "About 2 hours on the boat",
-    inclusions: ["One Tam Coc boat trip","QR ticket for the gate","Children under 1.3 m free"],
+    inclusions: ["One Tam Coc boat trip","QR ticket for the gate","Children under 1 m need no ticket"],
     exclusions: ["Tip for the rower","Bicycle hire"],
     schedule: ["Pick a boarding time 07:00–15:30","Through Hang Ca, Hang Hai, Hang Ba","Back at Van Lam pier after about 2 hours"],
   },
@@ -35,7 +35,7 @@ const TIENG_ANH: Record<string, ChuGoi> = {
     name: "Tam Chuc ticket",
     audience: "Any visitor travelling on their own",
     durationLabel: "Half a day",
-    inclusions: ["Boat across Tam Chuc lake","QR ticket for the gate","Children under 1.3 m free"],
+    inclusions: ["Boat across Tam Chuc lake","QR ticket for the gate","Children under 1 m need no ticket"],
     exclusions: ["Electric carts inside","Offerings, donations"],
     schedule: ["Pick a departure 07:30–15:00","Boat across the lake to Khanh Dien","Back at the pier after about 4 hours"],
   },
@@ -43,9 +43,18 @@ const TIENG_ANH: Record<string, ChuGoi> = {
     name: "Bai Dinh ticket",
     audience: "Any visitor travelling on their own",
     durationLabel: "About 3 hours",
-    inclusions: ["Return electric cart inside the pagoda","QR ticket for the gate","Children under 1.3 m free"],
+    inclusions: ["Return electric cart inside the pagoda","QR ticket for the gate","Children under 1 m need no ticket"],
     exclusions: ["Bell tower, relic tower","Offerings, donations"],
     schedule: ["Pick an entry time 07:30–15:00","Electric cart up to the pagoda","Arhat corridor, Tam The hall"],
+  },
+  "trang-an-tam-coc-trong-ngay": {
+    name: "Trang An morning, Tam Coc afternoon",
+    audience: "Both rivers in one day",
+    durationLabel: "1 day",
+    inclusions: ["Trang An boat in the morning", "Tam Coc boat early afternoon, when the pier is quieter", "10% less than two single tickets"],
+    exclusions: ["Lunch", "Transfer between the piers (about 15 minutes)", "Tip for the rowers"],
+    schedule: ["07:30 or 08:00 · Trang An", "Lunch near Van Lam pier", "13:00 or 14:00 · Tam Coc – Bich Dong"],
+    editorialDescription: "The two best-known boat routes of Ninh Binh in one day: Trang An through caves and temples in the morning, then Tam Coc once the morning crowd has thinned.",
   },
   "heritage-day": {
     name: "Heritage in a day",
@@ -173,6 +182,14 @@ export function ngayTrongMuaBan(item: PackageCatalogItem, ngayDi: string): boole
   if (item.bookingStartDate && ngayDi < item.bookingStartDate) return false;
   if (item.bookingEndDate && ngayDi > item.bookingEndDate) return false;
   return true;
+}
+
+/** Dòng phụ cho gói rẻ hơn mua lẻ: "Mua lẻ 310.000 VND · rẻ hơn 10%"; gói không giảm thì rỗng. */
+export function giaLeGoi(item: PackageCatalogItem, lang: NgonNgu): string {
+  if (!item.giamPhanTram || !item.giaLeVnd) return "";
+  return lang === "en"
+    ? `Single tickets VND ${item.giaLeVnd.toLocaleString("en-US")} · ${item.giamPhanTram}% less`
+    : `Mua lẻ ${item.giaLeVnd.toLocaleString("vi-VN")} VND · rẻ hơn ${item.giamPhanTram}%`;
 }
 
 export function giaGoi(item: PackageCatalogItem, lang: NgonNgu): string {

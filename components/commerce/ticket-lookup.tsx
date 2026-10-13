@@ -76,7 +76,7 @@ const LOOKUP_NETWORK_MESSAGE = {
 
 const GUEST_GROUP_LABEL: Record<CustomerTicketLookupTicket["guestGroup"], { vi: string; en: string }> = {
   adult: { vi: "Từ 1m3 trở lên", en: "1.3 m and taller" },
-  child: { vi: "Dưới 1m3", en: "Under 1.3 m" },
+  child: { vi: "Trẻ 1m–1m3", en: "Child 1–1.3 m" },
   group: { vi: "Cả đoàn", en: "Whole group" },
 };
 
@@ -285,7 +285,7 @@ export function TicketLookup({ lang = "vi", children }: { lang?: "vi" | "en"; ch
               <dt className="text-[#6b786f]">{t("Số khách", "Guests")}</dt>
               <dd className="font-bold text-[#183f34] sm:mt-1">
                 {result.order.party_size} {t("khách", "guests")}
-                {result.order.children ? t(` · ${result.order.children} trẻ dưới 1m3`, ` · ${result.order.children} under 1.3 m`) : ""}
+                {result.order.children ? t(` · ${result.order.children} trẻ 1m–1m3`, ` · ${result.order.children} child 1–1.3 m`) : ""}
               </dd>
             </div>
             <div className="flex justify-between gap-4 sm:block">

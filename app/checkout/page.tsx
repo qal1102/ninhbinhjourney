@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { chuanHoaMaMoi, COOKIE_MA_MOI } from "@/domain/ma-moi";
 import { Suspense } from "react";
 import { ChiDiem } from "@/components/shared/chi-diem";
 import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
@@ -122,6 +124,7 @@ export default async function CheckoutPage({
               }}
               lang={lang}
               chuGoi={goiHienThi(packageItem, lang)}
+              maMoiBanDau={packageItem.giaRieng ? undefined : chuanHoaMaMoi((await cookies()).get(COOKIE_MA_MOI)?.value) ?? undefined}
             />
           )}
         </div>

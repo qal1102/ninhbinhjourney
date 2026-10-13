@@ -84,8 +84,8 @@ const CO_DINH: MucHoiDap[] = [
     id: "tre-em",
     hoi: { vi: "Trẻ em có mất vé không?", en: "Do children need a ticket?" },
     traLoi: {
-      vi: "Trẻ dưới 1m3 không mất vé. Mỗi đơn cần ít nhất một người lớn, và một đơn đặt trên web tối đa 45 người.",
-      en: "Children under 1.3 m go free. Each booking needs at least one adult, and one web booking covers up to 45 people.",
+      vi: "Trẻ dưới 1m đi cùng người lớn, không cần vé. Trẻ 1m–1m3 mua vé trẻ em: Tràng An 120.000 đ, Tam Cốc và Tam Chúc 100.000 đ, Bái Đính 30.000 đ. Mỗi đơn cần ít nhất một người lớn, và một đơn đặt trên web tối đa 45 người.",
+      en: "Children under 1 m go free with an adult. Children 1–1.3 m tall take a child ticket: Trang An VND 120,000, Tam Coc and Tam Chuc VND 100,000, Bai Dinh VND 30,000. Each booking needs at least one adult, and one web booking covers up to 45 people.",
     },
     tuKhoa: ["tre", "em", "con", "be", "chau", "child", "children", "kid", "kids", "nho", "1m3", "nguoi", "lon", "45"],
     tenRieng: [],
@@ -180,8 +180,8 @@ export function cauGiaVe(bang: BangGia | null, lang: NgonNgu): string {
     })
     .join(lang === "en" ? "; " : "; ");
   return lang === "en"
-    ? `Per adult, the same online as at the ticket desk: ${ds}. Children under 1.3 m are free. Buy on the Buy tickets page; the day plans cost the sum of their sites' tickets.`
-    : `Giá mỗi người lớn, trên web bằng đúng giá quầy: ${ds}. Trẻ dưới 1m3 miễn phí. Mua ở trang Mua vé; các lịch đi gợi ý tính bằng tổng vé các điểm trong lịch.`;
+    ? `Per adult, the same online as at the ticket desk: ${ds}. Children 1–1.3 m tall pay about half; under 1 m go free. Buy on the Buy tickets page; a day plan with two ticketed sites is 10% less than buying them separately, three or more 15% less.`
+    : `Giá mỗi người lớn, trên web bằng đúng giá quầy: ${ds}. Trẻ 1m–1m3 khoảng nửa giá, trẻ dưới 1m không cần vé. Mua ở trang Mua vé; lịch đi có 2 điểm bán vé rẻ hơn mua lẻ 10%, từ 3 điểm rẻ hơn 15%.`;
 }
 
 /** Mục hỏi đáp của một gói hay vé lẻ, theo giá đang mang. */

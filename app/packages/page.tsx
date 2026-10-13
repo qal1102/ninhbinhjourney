@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { apBangGia, CAC_GOI, PACKAGES, VE_LE, type PackageCatalogItem } from "@/content/packages";
 import { docBangGia } from "@/lib/commerce/bang-gia";
-import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
+import { giaGoi, giaLeGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { ch, type NgonNgu } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
@@ -113,6 +113,7 @@ function PackageCard({
                 ? ch(lang, "giá giới thiệu mùa 2026", "2026 introductory price")
                 : ch(lang, "mỗi người lớn · gồm vé các điểm", "per adult · entry tickets included")}
             </p>
+            {giaLeGoi(item, lang) ? <p className="text-xs font-bold text-[#8a5a1f]" data-testid="gia-le-goi">{giaLeGoi(item, lang)}</p> : null}
           </div>
         </div>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
@@ -183,7 +184,7 @@ function TheVe({
         <p className="mt-4 font-display text-3xl leading-none text-[#151a17]" data-testid="gia-ve-le">
           {lang === "en" ? `VND ${item.demoPriceVnd.toLocaleString("en-US")}` : `${item.demoPriceVnd.toLocaleString("vi-VN")} đ`}
         </p>
-        <p className="mt-1 text-xs text-[#645c4b]">{ch(lang, "mỗi người lớn · trẻ dưới 1m3 miễn phí", "per adult · under 1.3 m free")}</p>
+        <p className="mt-1 text-xs text-[#645c4b]">{item.giaTreEmVnd ? ch(lang, `mỗi người lớn · trẻ 1m–1m3 ${item.giaTreEmVnd.toLocaleString("vi-VN")} đ`, `per adult · child 1–1.3 m VND ${item.giaTreEmVnd.toLocaleString("en-US")}`) : ch(lang, "mỗi người lớn", "per adult")}</p>
         <div className="mt-auto flex pt-5">
           {checkoutAvailable ? (
             <Link
@@ -211,6 +212,8 @@ export default async function PackagesPage({
   const lang = await docNgonNgu(params);
   // QA-P2-09: gói gần nhất với hành trình khách vừa dựng ở /plan.
   const goiValue = params.goi;
+  // 125: tới từ đường dẫn mời `/moi/<mã>` (co: mã đúng, đã nhớ; sai: mã không có).
+  const moiValue = params.moi;
   const goiGoiY = typeof goiValue === "string" ? PACKAGES.find((item) => item.slug === goiValue) : undefined;
   const environment = readPublicEnvironment();
   const flags = getExperiencePresentationFlags(environment);
@@ -252,6 +255,13 @@ export default async function PackagesPage({
             ← {quayLai.kieu === "hanh-trinh" ? ch(lang, "Quay lại hành trình", "Back to your journey") : ch(lang, "Về trang chủ", "Home")}
           </Link>
         </div>
+        {moiValue === "co" || moiValue === "sai" ? (
+          <p data-testid="bao-ma-moi" className="mt-6 max-w-2xl rounded-2xl border border-[#d58c35]/40 bg-[#fbf3e6] px-5 py-4 text-sm leading-6 text-[#4d4636]">
+            {moiValue === "co"
+              ? ch(lang, "Bạn được bạn bè mời: chọn vé bên dưới, mã mời đã điền sẵn ở trang thanh toán, đơn được giảm 10%.", "A friend invited you: pick a ticket below. The invite code is already filled in at checkout for 10% off.")
+              : ch(lang, "Mã mời trong đường dẫn không có trong hệ thống. Bạn vẫn mua vé được với giá thường, hoặc hỏi lại bạn mình mã đúng.", "The invite code in the link was not found. You can still buy at the normal price, or ask your friend for the right code.")}
+          </p>
+        ) : null}
         {goiGoiY ? (
           <p className="mt-6 max-w-2xl rounded-2xl border border-[#d58c35]/40 bg-[#fbf3e6] px-5 py-4 text-sm leading-6 text-[#4d4636]">
             {ch(lang, "Gói gần nhất với hành trình bạn vừa dựng là", "The package closest to the day you just planned is")}{" "}

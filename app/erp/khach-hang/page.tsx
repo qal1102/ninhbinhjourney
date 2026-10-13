@@ -10,6 +10,9 @@ import { ErpBackLink } from "@/components/erp/erp-back-link";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { KhachThayGi } from "@/components/customer-data/khach-thay-gi";
 import { KhachThanThietPanel } from "@/components/erp/khach-than-thiet-panel";
+import { KhachThichGiPanel } from "@/components/erp/khach-thich-gi-panel";
+import type { KhachThichGi } from "@/domain/khach-thich-gi";
+import { docSoKhachThichGi } from "@/lib/customer-data/khach-thich-gi-repository";
 import type { TongQuanThanThiet } from "@/domain/khach-than-thiet";
 import { tongQuanThanThiet } from "@/lib/customer-data/khach-than-thiet-repository";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
@@ -91,6 +94,7 @@ export default async function Customer360Page({
   let danhGia: [SiteReviewOverview[], number] | null = null;
   let hoSoXem: HoSoKhach | null = null;
   let thanThiet: TongQuanThanThiet | null = null;
+  let thichGi: KhachThichGi | null = null;
   if (journeyEnabled || bookingEnabled || recommendationsEnabled) {
     try {
       // Ghi nhật ký truy cập TRƯỚC khi đọc bất cứ đơn hay gợi ý nào — đọc hành
@@ -101,14 +105,16 @@ export default async function Customer360Page({
         await auditCustomer360Access(user.id);
       }
       // Các lượt đọc còn lại không phụ thuộc nhau, nên chạy song song.
-      const [orderResult, queue, danhGiaDoc, hoSoDoc, thanThietDoc] = await Promise.all([
+      const [orderResult, queue, danhGiaDoc, hoSoDoc, thanThietDoc, thichGiDoc] = await Promise.all([
         bookingEnabled ? listCustomer360BookingOrders() : Promise.resolve(null),
         recommendationsEnabled ? listCustomer360Recommendations() : Promise.resolve(null),
         docDanhGia(),
         docHoSoTheoDuongDan(),
         tongQuanThanThiet(),
+        docSoKhachThichGi(),
       ]);
       thanThiet = thanThietDoc;
+      thichGi = thichGiDoc;
       danhGia = danhGiaDoc;
       hoSoXem = hoSoDoc;
       if (orderResult) orders = orderResult;
@@ -142,6 +148,7 @@ export default async function Customer360Page({
   return (
     <ErpShell user={user}>
       <ErpBackLink href={ERP_OVERVIEW_BACK_TARGET.href} label={ERP_OVERVIEW_BACK_TARGET.label} />
+      {status === "ready" ? <KhachThichGiPanel so={thichGi} /> : null}
       <Customer360Dashboard status={status} journeys={journeys} orders={orders} recommendations={recommendations} outboundActions={outboundActions} />
       <KhachThanThietPanel tongQuan={thanThiet} />
       <KhachThayGi hoSo={hoSoXem} maKhach={maXem} />

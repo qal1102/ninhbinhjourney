@@ -8,6 +8,7 @@ import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { getErpSite } from "@/domain/erp";
 import { BEN_CO_HANG_CHO } from "@/domain/hang-cho";
 import { benCuaKiosk, KIOSK_CO_SO, laCoSoKiosk } from "@/domain/kiosk";
+import { dauTheoMa } from "@/domain/so-dau";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 
 export const metadata: Metadata = {
@@ -52,6 +53,10 @@ export default async function KioskPage({
       slugDiemDen={DESTINATION_PAGE_SLUGS[diem.id]}
       goi={goi}
       ben={ben ? { ma: ben, ten: { vi: BEN_CO_HANG_CHO[ben].ten, en: BEN_CO_HANG_CHO[ben].tenEn } } : null}
+      duongDau={(() => {
+        const dau = dauTheoMa(coSo);
+        return dau?.khoa ? `/dau/${dau.ma}-${dau.khoa}` : null;
+      })()}
       thongTin={{
         gioVe: facts.entranceFee,
         diLai: facts.gettingThere,

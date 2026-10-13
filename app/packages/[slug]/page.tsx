@@ -7,7 +7,7 @@ import { jsonLdGoi } from "@/domain/du-lieu-cau-truc";
 import { absoluteUrl } from "@/lib/site-url";
 import { apBangGia, getPackageBySlug, PACKAGES } from "@/content/packages";
 import { docBangGia } from "@/lib/commerce/bang-gia";
-import { giaGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
+import { giaGoi, giaLeGoi, goiDaHetMua, goiHienThi } from "@/content/packages-en";
 import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
 import { ch } from "@/lib/ngon-ngu";
 import { docNgonNgu } from "@/lib/ngon-ngu-server";
@@ -126,8 +126,8 @@ export default async function PackageDetailPage({
               {chu.editorialDescription ??
                 ch(
                   lang,
-                  item.loai === "ve" ? `Giá bằng đúng giá bán ở quầy. Trẻ dưới 1m3 miễn phí.` : `Hợp với: ${chu.audience}. Giá bằng tổng vé các điểm trong lịch.`,
-                  item.loai === "ve" ? `The same price as at the ticket desk. Children under 1.3 m free.` : `Best for: ${chu.audience}. Priced at the sum of the entry tickets.`,
+                  item.loai === "ve" ? `Giá bằng đúng giá bán ở quầy. Trẻ 1m–1m3 khoảng nửa giá, dưới 1m không cần vé.` : `Hợp với: ${chu.audience}. ${item.giamPhanTram ? `Rẻ hơn mua lẻ ${item.giamPhanTram}%.` : "Giá bằng tổng vé các điểm trong lịch."}`,
+                  item.loai === "ve" ? `The same price as at the ticket desk. Children 1–1.3 m pay about half, under 1 m free.` : `Best for: ${chu.audience}. ${item.giamPhanTram ? `${item.giamPhanTram}% less than single tickets.` : "Priced at the sum of the entry tickets."}`,
                 )}
             </p>
             <div className="mt-9 grid gap-4 sm:grid-cols-2">
@@ -193,6 +193,12 @@ export default async function PackageDetailPage({
             <p className="font-display mt-2 text-4xl text-[#183f34]">
               {giaGoi(item, lang)}
             </p>
+            {giaLeGoi(item, lang) ? <p className="mt-1 text-sm font-bold text-[#8a5a1f]">{giaLeGoi(item, lang)}</p> : null}
+            {item.giaTreEmVnd ? (
+              <p className="mt-1 text-sm text-[#59654b]">
+                {ch(lang, `Trẻ 1m–1m3: ${item.giaTreEmVnd.toLocaleString("vi-VN")} VND · dưới 1m không cần vé`, `Child 1–1.3 m: VND ${item.giaTreEmVnd.toLocaleString("en-US")} · under 1 m free`)}
+              </p>
+            ) : null}
             <h2 className="mt-7 font-bold">{ch(lang, "Lịch đi", "Schedule")}</h2>
             <ol className="mt-3 space-y-3">
               {chu.schedule.map((value) => (

@@ -575,7 +575,7 @@ export function CounterSalePanel({ site, userId, userRole, workspace, dienSanDoa
                 onChange={(n) => doiSo(() => setAdults(n))}
               />
               <Stepper
-                label="Trẻ dưới 1m3"
+                label="Trẻ 1m–1m3"
                 hint={(() => {
                   const p = prices.find((item) => item.product === "child");
                   if (!p) return "Chưa có giá";

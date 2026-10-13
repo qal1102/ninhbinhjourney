@@ -11,7 +11,7 @@ type Lang = "vi" | "en";
 
 const TEN_VE: Record<string, { vi: string; en: string }> = {
   adult: { vi: "Người lớn", en: "Adult" },
-  child: { vi: "Trẻ dưới 1m3", en: "Child under 1.3 m" },
+  child: { vi: "Trẻ 1m–1m3", en: "Child 1–1.3 m" },
 };
 
 function ngay(iso: string) {

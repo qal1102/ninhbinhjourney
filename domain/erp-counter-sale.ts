@@ -14,7 +14,7 @@ export const COUNTER_PRODUCTS: readonly CounterProduct[] = ["adult", "child"];
 
 export const COUNTER_PRODUCT_LABELS: Readonly<Record<CounterProduct, string>> = Object.freeze({
   adult: "Người lớn",
-  child: "Trẻ dưới 1m3",
+  child: "Trẻ 1m–1m3",
 });
 
 export type CounterPaymentMethod = "cash" | "qr-transfer" | "complimentary";

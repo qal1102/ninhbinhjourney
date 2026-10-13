@@ -445,7 +445,8 @@ test("employee submits an image-backed field report with accounting trace", asyn
   await page.getByPlaceholder("Ví dụ: Kiểm tra máy quét cổng A").fill("Kiểm tra cổng quét vé đoàn");
   await page.getByPlaceholder("OPS-GATE-A").fill("OPS-GATE-GROUP");
   await page.locator('select[name="progress"]').selectOption("100");
-  await page.locator('input[type="file"]').setInputFiles({
+  // Nút báo khẩn cấp (12/10) trên thanh đầu cũng có ô chọn ảnh: lấy đúng ô của báo cáo.
+  await page.locator('input[type="file"][name="evidence"]').setInputFiles({
     name: "cong-ve-a.png",
     mimeType: "image/png",
     buffer: Buffer.from("89504e470d0a1a0a", "hex"),

@@ -36,6 +36,10 @@ export type TomTatThanThiet =
       nextMilestone: MocKe | null;
       voucherCount: number;
       visitList: { site: string; date: string }[];
+      /** Mã mời bạn của số này (migration 125); rỗng khi kho chưa có. */
+      maMoi: string;
+      /** Bạn được mời đã qua cổng, mỗi người cộng một lượt (tối đa 5 mỗi năm). */
+      banDaMoi: number;
       /** Chỉ có khi khách nhập lại đúng số điện thoại. */
       vouchers: VoucherKhach[] | null;
       tickets: VeDaGan[] | null;
@@ -97,6 +101,8 @@ export function docTomTat(raw: unknown): TomTatThanThiet {
     visitList: Array.isArray(r.visit_list)
       ? (r.visit_list as Record<string, unknown>[]).map((v) => ({ site: chu(v.site), date: chu(v.date) }))
       : [],
+    maMoi: chu(r.referral_code),
+    banDaMoi: soNguyen(r.referrals),
     vouchers,
     tickets,
     ...(tiepThi === "granted" || tiepThi === "denied" || tiepThi === "revoked" ? { marketingStatus: tiepThi } : {}),
@@ -210,6 +216,8 @@ export type KetQuaTraBangSo =
       nextMilestone: MocKe | null;
       voucherCount: number;
       visitList: { site: string; date: string }[];
+      maMoi: string;
+      banDaMoi: number;
       ve: VeTraBangSo[];
     };
 
@@ -260,7 +268,7 @@ export function docKetQuaTraBangSo(raw: unknown): KetQuaTraBangSo {
     });
   }
   const ve = [...theoMa.values()].sort((a, b) => b.validOn.localeCompare(a.validOn));
-  if (!tom.linked) return { found: true, visits: 0, points: 0, nextMilestone: null, voucherCount: 0, visitList: [], ve };
+  if (!tom.linked) return { found: true, visits: 0, points: 0, nextMilestone: null, voucherCount: 0, visitList: [], maMoi: "", banDaMoi: 0, ve };
   return {
     found: true,
     visits: tom.visits,
@@ -268,6 +276,8 @@ export function docKetQuaTraBangSo(raw: unknown): KetQuaTraBangSo {
     nextMilestone: tom.nextMilestone,
     voucherCount: tom.voucherCount,
     visitList: tom.visitList,
+    maMoi: tom.maMoi,
+    banDaMoi: tom.banDaMoi,
     ve,
   };
 }

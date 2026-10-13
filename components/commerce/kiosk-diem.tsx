@@ -10,7 +10,7 @@ type Chu = Record<Lang, string>;
 
 export type GoiKiosk = { slug: string; ten: Chu; thoiLuong: Chu; gia: Chu };
 
-type Man = "dau" | "dat-ve" | "so-do" | "tra-cuu" | "nghe" | "thong-tin";
+type Man = "dau" | "dat-ve" | "so-do" | "tra-cuu" | "nghe" | "thong-tin" | "dong-dau";
 
 /** Mã QR trỏ tới một trang trên chính trang web này, để khách đi tiếp trên điện thoại. */
 function MaQr({ duong, nhan }: { duong: string; nhan: string }) {
@@ -46,6 +46,7 @@ export function KioskDiem({
   goi,
   ben,
   thongTin,
+  duongDau,
 }: {
   langDau: Lang;
   ten: Chu;
@@ -53,6 +54,8 @@ export function KioskDiem({
   goi: GoiKiosk[];
   ben: { ma: MaBen; ten: Chu } | null;
   thongTin: { gioVe: Chu; diLai: Chu; meoDong: Chu; thucDung: Record<Lang, string[]> };
+  /** Đường dẫn đóng dấu của điểm này (sổ dấu, 13/10/2026). */
+  duongDau?: string | null;
 }) {
   const [lang, setLang] = useState<Lang>(langDau);
   const [man, setMan] = useState<Man>("dau");
@@ -181,6 +184,12 @@ export function KioskDiem({
               <span className="text-3xl font-extrabold">{t("Nghe thuyết minh", "Audio guide")}</span>
               <span className="text-lg text-[#4d5b55]">{t("Câu chuyện nơi này, đọc trên điện thoại của bạn", "This place's story, read aloud on your phone")}</span>
             </button>
+            {duongDau ? (
+              <button type="button" onClick={() => setMan("dong-dau")} className={`${oLon} border-2 border-[#b23a24] bg-[#fbf3ee] text-[#8a2c1b]`}>
+                <span className="text-3xl font-extrabold">{t("Đóng dấu sổ Ninh Bình", "Stamp your Ninh Binh book")}</span>
+                <span className="text-lg text-[#6b4a3f]">{t("Quét mã, dấu nơi này vào điện thoại", "Scan to add this place's stamp")}</span>
+              </button>
+            ) : null}
             <button type="button" onClick={() => setMan("thong-tin")} className={`${oLon} border-2 border-[#183f34] bg-white text-[#183f34]`}>
               <span className="text-3xl font-extrabold">{t("Giá vé, đi lại, mẹo tránh đông", "Fees, getting around, crowd tips")}</span>
               <span className="text-lg text-[#4d5b55]">{t("Đọc ngay trên màn hình", "Read it right here")}</span>
@@ -285,6 +294,22 @@ export function KioskDiem({
               {t(
                 "Trên điện thoại, nhập mã đặt chỗ (dạng NBJ-…) cùng số điện thoại hoặc email đã dùng lúc đặt. Kiosk không hỏi số điện thoại của bạn ở nơi đông người.",
                 "On your phone, enter the booking code (NBJ-…) and the phone or email you booked with. The kiosk never asks for your phone number in public.",
+              )}
+            </p>
+          </div>
+          <div className="mt-10">{nutVe}</div>
+        </section>
+      ) : null}
+
+      {man === "dong-dau" && duongDau ? (
+        <section className="mt-8 flex-1">
+          <h1 className="font-display text-5xl text-[#183f34]">{t(`Đóng dấu ${ten.vi}`, `Stamp: ${ten.en}`)}</h1>
+          <div className="mt-8 flex flex-wrap items-center gap-10">
+            <MaQr duong={`${duongDau}?lang=${lang}`} nhan={t("Quét bằng camera điện thoại", "Scan with your phone camera")} />
+            <p className="max-w-lg text-xl leading-8 text-[#4d5b55]">
+              {t(
+                "Mỗi điểm một dấu, cả Cố đô Hoa Lư. Dấu lưu trên điện thoại của bạn, không cần đăng nhập hay số điện thoại.",
+                "One stamp per site, Hoa Lu Ancient Capital included. Stamps stay on your phone, no sign-in or phone number needed.",
               )}
             </p>
           </div>

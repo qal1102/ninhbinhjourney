@@ -1,5 +1,6 @@
 "use client";
 
+import { TheMaMoi } from "@/components/commerce/the-ma-moi";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
@@ -242,8 +243,10 @@ export function TheTichDiem({
   }
 
   const moc = tomTat.nextMilestone;
-  const mocTruoc = MOC_THUONG.filter((m) => m.visits <= tomTat.visits).at(-1)?.visits ?? 0;
-  const phanTram = moc ? Math.round(((tomTat.visits - mocTruoc) / Math.max(1, moc.visits - mocTruoc)) * 100) : 100;
+  // 125: bạn được mời đã đi cũng tính vào mốc quà.
+  const luotTinh = tomTat.visits + tomTat.banDaMoi;
+  const mocTruoc = MOC_THUONG.filter((m) => m.visits <= luotTinh).at(-1)?.visits ?? 0;
+  const phanTram = moc ? Math.round(((luotTinh - mocTruoc) / Math.max(1, moc.visits - mocTruoc)) * 100) : 100;
 
   return (
     <section data-testid="the-tich-diem" data-chi="tich-diem" data-trang-thai="da-gan" className={`rounded-3xl border border-[#e2d3b4] bg-[#fbf7ee] p-6 ${className}`}>
@@ -289,6 +292,7 @@ export function TheTichDiem({
           </ul>
         </div>
       ) : null}
+      <TheMaMoi ma={tomTat.maMoi} banDaMoi={tomTat.banDaMoi} lang={lang} />
       {tomTat.voucherCount > 0 && !tomTat.vouchers ? (
         <p className="mt-3 rounded-2xl bg-[#183f34] px-4 py-3 text-sm font-bold text-white">
           {t(`Bạn có ${tomTat.voucherCount} quà chưa đổi.`, `You have ${tomTat.voucherCount} unclaimed ${tomTat.voucherCount === 1 ? "reward" : "rewards"}.`)}

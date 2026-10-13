@@ -15,6 +15,7 @@ import { BenDoTienTrinh } from "./ben-do-tien-trinh";
 import { LuuAnhVe } from "@/components/commerce/luu-anh-ve";
 import { VeLapLanh } from "@/components/commerce/ve-lap-lanh";
 import { ChuyenCuaBan } from "@/components/commerce/chuyen-cua-ban";
+import { chuanHoaMaMoi, giamMaMoi } from "@/domain/ma-moi";
 import { DESTINATIONS } from "@/content/destinations";
 import { batNgoaiTuyen, luuVeTrenMay } from "@/lib/ve-luu-may";
 import { CO_SO_THEO_UUID, DuBaoDoDong } from "@/components/commerce/du-bao-do-dong";
@@ -69,7 +70,7 @@ function MemberQrCode({ memberCode, lang }: { memberCode: string; lang: NgonNgu 
 // Vé hiện bằng thẻ VeLapLanh (D2): mã QR chứa đúng mã vé trần, như trước.
 const NHOM_KHACH_VE: Record<ConfirmationResult["tickets"][number]["guestGroup"], Record<NgonNgu, string>> = {
   adult: { vi: "Từ 1m3 trở lên", en: "1.3 m and taller" },
-  child: { vi: "Dưới 1m3", en: "Under 1.3 m" },
+  child: { vi: "Trẻ 1m–1m3", en: "Child 1–1.3 m" },
   group: { vi: "Cả đoàn", en: "Whole group" },
 };
 
@@ -80,7 +81,7 @@ function tenDiem(siteId: string, lang: NgonNgu) {
 type HoldResult = {
   order: { id: string; code: string };
   hold: { id: string; status: string; expires_at: string };
-  amount: { total_vnd: number; currency: "VND" };
+  amount: { total_vnd: number; discount_vnd?: number; currency: "VND" };
   slots: Array<{
     slotId: string;
     siteId: string;
@@ -124,7 +125,7 @@ const DO_DONG: Record<CustomerProductTimeSlot["doDong"], { vi: string; en: strin
 };
 
 // Nói theo cách khách hiểu, không theo cách bảng dữ liệu gọi. "child" ở đây
-// nghĩa hẹp là trẻ dưới 1m3 — nhóm không mất vé. Vé cũ phát trước TC-03 gộp cả
+// là trẻ 1m–1m3, có vé giá trẻ em (migration 125). Vé cũ phát trước TC-03 gộp cả
 // đoàn vào một tấm, vẫn ghi đúng số khách chứ không gọi nhầm thành vé thường.
 function formatGuestGroupSummary(tickets: ConfirmationResult["tickets"], lang: NgonNgu) {
   const adultTicket = tickets.find((ticket) => ticket.guestGroup === "adult");
@@ -133,7 +134,7 @@ function formatGuestGroupSummary(tickets: ConfirmationResult["tickets"], lang: N
   const parts: string[] = [];
   const en = lang === "en";
   if (adultTicket) parts.push(en ? `${adultTicket.entriesAllowed} tickets` : `${adultTicket.entriesAllowed} vé`);
-  if (childTicket) parts.push(en ? `${childTicket.entriesAllowed} under 1.3 m (free)` : `${childTicket.entriesAllowed} trẻ dưới 1m3 (không mất vé)`);
+  if (childTicket) parts.push(en ? `${childTicket.entriesAllowed} child tickets (1–1.3 m)` : `${childTicket.entriesAllowed} vé trẻ 1m–1m3`);
   if (groupTicket) parts.push(en ? `${groupTicket.entriesAllowed} guests` : `${groupTicket.entriesAllowed} khách`);
   return parts.join(" · ");
 }
@@ -203,6 +204,7 @@ export function CustomerBookingCheckout({
   lang = "vi",
   chuGoi,
   dienSan,
+  maMoiBanDau,
 }: {
   packageItem: PackageCatalogItem;
   /** `?ngay=hom-nay` từ màn Hướng dẫn trong ERP: mở sẵn ngày đi là hôm nay. */
@@ -215,6 +217,8 @@ export function CustomerBookingCheckout({
   lang?: NgonNgu;
   /** Tên, đối tượng, thời lượng của gói theo ngôn ngữ đang chọn. */
   chuGoi?: { name: string; audience: string; durationLabel: string };
+  /** Mã mời trình duyệt nhớ từ đường dẫn `/moi/<mã>` (migration 125). */
+  maMoiBanDau?: string;
 }) {
   const t = useCallback((vi: string, en: string) => (lang === "en" ? en : vi), [lang]);
   const tenGoi = chuGoi?.name ?? packageItem.name;
@@ -227,6 +231,12 @@ export function CustomerBookingCheckout({
     packageItem.fixedPartySize ? 0 : Math.min(45 - Math.max(1, dienSan?.nguoiLon ?? 2), Math.max(0, dienSan?.treEm ?? 0)),
   );
   const partySize = adults + children;
+  // 125: mã mời của bạn bè giảm 10%; dịch vụ giá riêng (Bàn Trăng) không nhận.
+  const [maMoi, setMaMoi] = useState(maMoiBanDau ?? "");
+  const maMoiChuan = chuanHoaMaMoi(maMoi);
+  const giaTreEm = packageItem.giaTreEmVnd ?? 0;
+  const tamTinh = packageItem.demoPriceVnd * Math.max(0, adults) + giaTreEm * Math.max(0, children);
+  const giamDuKien = maMoiChuan && !packageItem.giaRieng ? giamMaMoi(tamTinh) : 0;
   // Gói theo mùa (Bàn Trăng, mùa hoa súng) chỉ nhận đặt trong khung bán của nó.
   const khungBan = useMemo(() => khungBanGoi(packageItem), [packageItem]);
   const [visitDate, setVisitDate] = useState(() => {
@@ -243,6 +253,8 @@ export function CustomerBookingCheckout({
   const [slotsError, setSlotsError] = useState("");
   const [selectedSlotStartsAt, setSelectedSlotStartsAt] = useState<string | null>(null);
   const [hold, setHold] = useState<HoldResult | null>(null);
+  const giamThat = hold ? (hold.amount.discount_vnd ?? 0) : giamDuKien;
+  const tongTien = hold?.amount.total_vnd ?? tamTinh - giamDuKien;
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [pending, setPending] = useState<"hold" | "confirm" | null>(null);
@@ -501,7 +513,7 @@ export function CustomerBookingCheckout({
     adults < 1 || partySize < 1 || partySize > WEB_BOOKING_MAX_PARTY_SIZE;
 
   // Bàn Trăng khoá tổng số chỗ: đổi được bao nhiêu khách có vé, bao nhiêu trẻ
-  // dưới 1m3, nhưng tổng luôn đúng bằng fixedPartySize. Sản phẩm khác thì hai ô
+  // 1m–1m3, nhưng tổng luôn đúng bằng fixedPartySize. Sản phẩm khác thì hai ô
   // độc lập, chỉ ràng buộc tối thiểu một khách có vé và tổng không vượt quá
   // WEB_BOOKING_MAX_PARTY_SIZE.
   function updateAdults(rawValue: number) {
@@ -557,6 +569,10 @@ export function CustomerBookingCheckout({
       setMessage(t("Mời bạn chọn một khung giờ trước khi giữ chỗ.", "Please pick a time before holding seats."));
       return;
     }
+    if (maMoi.trim() && !maMoiChuan) {
+      setMessage(t("Mã mời có dạng MOI- và 6 ký tự, ví dụ MOI-AB12CD. Không có mã thì để trống ô này.", "An invite code looks like MOI- and 6 characters, e.g. MOI-AB12CD. Leave the box empty if you have none."));
+      return;
+    }
     setPending("hold");
     setMessage("");
     try {
@@ -574,6 +590,7 @@ export function CustomerBookingCheckout({
           adults,
           children,
           slot_starts_at: selectedSlotStartsAt,
+          ...(maMoiChuan && !packageItem.giaRieng ? { ma_moi: maMoiChuan } : {}),
         }),
       });
       const payload = await responsePayload(response, lang) as HoldResult;
@@ -639,7 +656,7 @@ export function CustomerBookingCheckout({
         party_size: adults + children,
         adults,
         children,
-        total_vnd: hold?.amount.total_vnd ?? packageItem.demoPriceVnd * adults,
+        total_vnd: tongTien,
         currency: "VND",
       },
       payment: { mode: xacNhan.payment.mode === "pay-on-site" ? "pay-on-site" : "simulation", status: xacNhan.payment.status, amount_due_vnd: xacNhan.payment.amount_due_vnd },
@@ -968,9 +985,9 @@ export function CustomerBookingCheckout({
                 />
               </label>
               <label className="block text-xs font-bold text-[#59654b]">
-                {t("Dưới 1m3", "Under 1.3 m")}
+                {t("Trẻ 1m–1m3", "Child 1–1.3 m")}
                 <input
-                  aria-label={t("Số trẻ cao dưới 1m3", "Children under 1.3 m")}
+                  aria-label={t("Số trẻ cao từ 1m tới 1m3", "Children 1 to 1.3 m tall")}
                   type="number"
                   min={0}
                   max={packageItem.fixedPartySize ? Math.max(0, packageItem.fixedPartySize - 1) : WEB_BOOKING_MAX_PARTY_SIZE - 1}
@@ -983,15 +1000,15 @@ export function CustomerBookingCheckout({
             {packageItem.fixedPartySize ? (
               <span className="mt-2 block text-xs font-normal text-[#6b786f]">
                 {t(
-                  `Bàn đã đặt sẵn cho ${packageItem.fixedPartySize} khách. Trẻ dưới 1m3 không mất vé, và tổng số chỗ vẫn giữ nguyên.`,
-                  `The table is set for ${packageItem.fixedPartySize} guests. Children under 1.3 m are free, and the total stays the same.`,
+                  `Bàn đã đặt sẵn cho ${packageItem.fixedPartySize} khách. Trẻ nhỏ đi cùng không tính tiền, và tổng số chỗ vẫn giữ nguyên.`,
+                  `The table is set for ${packageItem.fixedPartySize} guests. Children eat free, and the total stays the same.`,
                 )}
               </span>
             ) : (
               <span className="mt-2 block text-xs font-normal text-[#6b786f]">
                 {t(
-                  `Trẻ dưới 1m3 không mất vé, nhưng vẫn được giữ một chỗ trên thuyền. Mỗi lượt đặt tối đa ${WEB_BOOKING_MAX_PARTY_SIZE} khách, vừa một xe lớn. Đoàn đông hơn, mời bạn gọi cho chúng tôi để chúng tôi xếp riêng.`,
-                  `Children under 1.3 m travel free but still get a seat on the boat. Up to ${WEB_BOOKING_MAX_PARTY_SIZE} guests per booking, one large coach. For bigger groups, please call us and we will arrange it.`,
+                  `Trẻ 1m–1m3 mua vé trẻ em${giaTreEm ? ` (${giaTreEm.toLocaleString("vi-VN")} đ)` : ""}; trẻ dưới 1m đi cùng người lớn, không cần vé. Mỗi lượt đặt tối đa ${WEB_BOOKING_MAX_PARTY_SIZE} khách, vừa một xe lớn. Đoàn đông hơn, mời bạn gọi cho chúng tôi để chúng tôi xếp riêng.`,
+                  `Children 1–1.3 m tall take a child ticket${giaTreEm ? ` (${giaTreEm.toLocaleString("vi-VN")} VND)` : ""}; under 1 m go free with an adult. Up to ${WEB_BOOKING_MAX_PARTY_SIZE} guests per booking, one large coach. For bigger groups, please call us and we will arrange it.`,
                 )}
               </span>
             )}
@@ -1004,6 +1021,31 @@ export function CustomerBookingCheckout({
               </span>
             ) : null}
           </div>
+
+          {packageItem.giaRieng ? null : (
+            <div className="mt-6 max-w-xs" data-testid="o-ma-moi">
+              <label className="block text-sm font-bold text-[#27362f]">
+                {t("Mã mời của bạn bè", "Friend’s invite code")} <span className="font-normal text-[#6b786f]">{t("(nếu có)", "(optional)")}</span>
+                <input
+                  value={maMoi}
+                  onChange={(event) => {
+                    setMaMoi(event.target.value.toUpperCase());
+                    invalidateHold();
+                  }}
+                  placeholder="MOI-AB12CD"
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={12}
+                  className="mt-1 min-h-12 w-full rounded-xl border border-[#bec7bf] bg-white px-4 font-normal uppercase tracking-wider text-[#27362f]"
+                />
+              </label>
+              <span className="mt-1 block text-xs text-[#6b786f]">
+                {maMoiChuan
+                  ? t(`Giảm 10%: bớt ${giamDuKien.toLocaleString("vi-VN")} đ.`, `10% off: ${giamDuKien.toLocaleString("vi-VN")} VND less.`)
+                  : t("Bạn bè đã đi gửi mã thì đơn này giảm 10%.", "A code from a friend who has been here takes 10% off.")}
+              </span>
+            </div>
+          )}
 
           {/* TC-25: khối này trước đây mở đầu bằng "Thanh toán mô phỏng —
               không thu tiền", và đó là câu giết cả luồng. Người đọc dừng ngay
@@ -1073,12 +1115,20 @@ export function CustomerBookingCheckout({
         <h2 className="font-display mt-3 text-4xl leading-tight">{tenGoi}</h2>
         <p className="mt-3 leading-7 text-white/65">{chuGoi?.durationLabel ?? packageItem.durationLabel} · {chuGoi?.audience ?? packageItem.audience}</p>
         <dl className="mt-7 space-y-4 border-y border-white/15 py-5 text-sm">
-          <div className="flex justify-between gap-4"><dt className="text-white/55">{t("Đơn giá mỗi vé", "Price per ticket")}</dt><dd>{packageItem.demoPriceVnd.toLocaleString("vi-VN")} VND</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-white/55">{t("Số vé", "Tickets")}</dt><dd>{adults}</dd></div>
-          {children > 0 ? (
-            <div className="flex justify-between gap-4"><dt className="text-white/55">{t("Trẻ dưới 1m3", "Under 1.3 m")}</dt><dd>{children} · {t("không mất vé", "free")}</dd></div>
+          {packageItem.giamPhanTram && packageItem.giaLeVnd ? (
+            <div className="flex justify-between gap-4"><dt className="text-white/55">{t("Mua lẻ từng điểm", "Single tickets")}</dt><dd className="text-white/55 line-through">{packageItem.giaLeVnd.toLocaleString("vi-VN")} VND</dd></div>
           ) : null}
-          <div className="flex justify-between gap-4 text-lg font-bold"><dt>{t("Tổng", "Total")}</dt><dd className="text-[#e7c78d]">{(hold?.amount.total_vnd ?? packageItem.demoPriceVnd * Math.max(0, adults)).toLocaleString("vi-VN")} VND</dd></div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-white/55">{t("Người lớn", "Adults")} × {adults}</dt>
+            <dd>{packageItem.demoPriceVnd.toLocaleString("vi-VN")} VND{packageItem.giamPhanTram ? <span className="ml-1 text-xs text-[#e7c78d]">−{packageItem.giamPhanTram}%</span> : null}</dd>
+          </div>
+          {children > 0 ? (
+            <div className="flex justify-between gap-4"><dt className="text-white/55">{t("Trẻ 1m–1m3", "Child 1–1.3 m")} × {children}</dt><dd>{giaTreEm ? `${giaTreEm.toLocaleString("vi-VN")} VND` : t("không tính tiền", "free")}</dd></div>
+          ) : null}
+          {giamThat > 0 ? (
+            <div className="flex justify-between gap-4" data-testid="dong-giam-ma-moi"><dt className="text-white/55">{t("Mã mời", "Invite code")}</dt><dd className="text-[#e7c78d]">−{giamThat.toLocaleString("vi-VN")} VND</dd></div>
+          ) : null}
+          <div className="flex justify-between gap-4 text-lg font-bold"><dt>{t("Tổng", "Total")}</dt><dd className="text-[#e7c78d]" data-testid="tong-tien-don">{tongTien.toLocaleString("vi-VN")} VND</dd></div>
         </dl>
 
         {confirmation ? (
@@ -1284,7 +1334,7 @@ export function CustomerBookingCheckout({
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-bold text-white/90">{member.displayName || t("Chưa ghi tên", "No name yet")}</p>
                             <p className="mt-1 text-xs text-white/55">
-                              {member.guestGroup === "child" ? "Dưới 1m3" : "Từ 1m3 trở lên"}
+                              {member.guestGroup === "child" ? "Trẻ 1m–1m3" : "Từ 1m3 trở lên"}
                             </p>
                             {/* "Chưa vào cổng" ở `text-white/45` trên nền
                                 `bg-white/8` chỉ được 3,26:1 — cùng một lỗi
@@ -1321,7 +1371,7 @@ export function CustomerBookingCheckout({
                           return (
                             <div key={member.memberCode} className="rounded-xl bg-white/8 p-3">
                               <p className="text-xs font-bold text-white/55">
-                            {t("Khách số", "Guest")} {member.memberIndex} · {member.guestGroup === "child" ? t("Dưới 1m3", "Under 1.3 m") : t("Từ 1m3 trở lên", "1.3 m and taller")}
+                            {t("Khách số", "Guest")} {member.memberIndex} · {member.guestGroup === "child" ? t("Trẻ 1m–1m3", "Child 1–1.3 m") : t("Từ 1m3 trở lên", "1.3 m and taller")}
                               </p>
                               <label className="mt-2 block text-xs font-bold text-white/70">
                               {t("Tên gọi", "Name")}

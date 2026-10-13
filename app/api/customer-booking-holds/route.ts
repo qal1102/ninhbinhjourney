@@ -62,6 +62,7 @@ export async function POST(request: Request) {
       adults: input.adults,
       children: input.children,
       slotStartsAt: input.slot_starts_at,
+      maMoi: input.ma_moi ?? null,
     });
     // Khách tới qua đường dẫn đại lý (`/dl/<mã>`): ghi đơn cho đại lý. Hàm
     // không bao giờ ném, nên hỏng thì đơn vẫn giữ chỗ như thường.
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
         duplicate: result.duplicate,
         order: { id: result.orderId, code: result.orderCode },
         hold: { id: result.holdId, status: result.holdStatus, expires_at: result.expiresAt },
-        amount: { total_vnd: result.totalVnd, currency: result.currency },
+        amount: { total_vnd: result.totalVnd, discount_vnd: result.discountVnd, currency: result.currency },
         slots: result.slots,
       },
       { status: result.duplicate ? 200 : 201, headers: { "Cache-Control": "no-store" } },

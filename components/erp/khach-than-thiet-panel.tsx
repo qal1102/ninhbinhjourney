@@ -19,7 +19,7 @@ const NHAN_TIEP_THI: Record<string, string> = {
  */
 export function KhachThanThietPanel({ tongQuan }: { tongQuan: TongQuanThanThiet | null }) {
   return (
-    <section className="mt-6 rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6" data-testid="khach-than-thiet" data-chi="khach-than-thiet" data-chi-loi="Số khách đã để lại số, quà đã cấp và đã đổi.">
+    <section id="khach-than-thiet" className="mt-6 scroll-mt-24 rounded-2xl border border-[#d8e0db] bg-white p-5 shadow-sm sm:p-6" data-testid="khach-than-thiet" data-chi="khach-than-thiet" data-chi-loi="Số khách đã để lại số, quà đã cấp và đã đổi.">
       <p className="text-xs font-black uppercase tracking-[0.17em] text-[#477565]">Khách thân thiết</p>
       <h2 className="mt-2 text-2xl font-black text-[#20342c]">Khách để lại số điện thoại, đi lần nào tích lần ấy</h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5c6f67]">
@@ -29,7 +29,7 @@ export function KhachThanThietPanel({ tongQuan }: { tongQuan: TongQuanThanThiet 
       </p>
       {!tongQuan ? (
         <p className="mt-4 rounded-xl bg-[#fff8eb] px-4 py-3 text-sm font-bold text-[#6b5326]">
-          Chưa đọc được phần khách thân thiết ở môi trường này (kho chưa nối hoặc migration 119 chưa áp).
+          Chưa đọc được phần khách thân thiết lúc này. Mời bạn tải lại sau ít phút.
         </p>
       ) : (
         <>

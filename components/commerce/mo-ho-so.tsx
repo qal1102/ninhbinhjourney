@@ -1,5 +1,6 @@
 "use client";
 
+import { TheMaMoi } from "@/components/commerce/the-ma-moi";
 import { useState } from "react";
 import { HoSoKhachView } from "@/components/commerce/ho-so-khach-view";
 import { TheTichDiem } from "@/components/commerce/the-tich-diem";
@@ -15,8 +16,9 @@ function ngayViet(iso: string) {
 function KetQuaSo({ ketQua, so, lang, traLai }: { ketQua: Extract<KetQuaTraBangSo, { found: true }>; so: string; lang: "vi" | "en"; traLai: () => void }) {
   const t = (vi: string, en: string) => (lang === "en" ? en : vi);
   const moc = ketQua.nextMilestone;
-  const mocTruoc = MOC_THUONG.filter((m) => m.visits <= ketQua.visits).at(-1)?.visits ?? 0;
-  const phanTram = moc ? Math.round(((ketQua.visits - mocTruoc) / Math.max(1, moc.visits - mocTruoc)) * 100) : 100;
+  const luotTinh = ketQua.visits + ketQua.banDaMoi;
+  const mocTruoc = MOC_THUONG.filter((m) => m.visits <= luotTinh).at(-1)?.visits ?? 0;
+  const phanTram = moc ? Math.round(((luotTinh - mocTruoc) / Math.max(1, moc.visits - mocTruoc)) * 100) : 100;
   return (
     <section data-testid="ket-qua-tra-so" className="rounded-3xl border border-[#e2d3b4] bg-[#fbf7ee] p-6 sm:p-8">
       <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#9a6328]">{t("Tra bằng số điện thoại", "Looked up by phone")}</p>
@@ -60,6 +62,7 @@ function KetQuaSo({ ketQua, so, lang, traLai }: { ketQua: Extract<KetQuaTraBangS
           </ul>
         </div>
       ) : null}
+      <TheMaMoi ma={ketQua.maMoi} banDaMoi={ketQua.banDaMoi} lang={lang} />
       <h3 className="mt-6 font-bold text-[#183f34]">{t("Vé của số này", "Tickets on this number")}</h3>
       {ketQua.ve.length === 0 ? (
         <p className="mt-1 text-sm text-[#6b786f]">{t("Chưa có vé nào gắn với số này.", "No tickets on this number yet.")}</p>

@@ -105,6 +105,8 @@ function mapRepositoryError(error: unknown): CustomerBookingRepositoryError {
     ["CUSTOMER_PAYMENT_CONTACT_REQUIRED", "CONTACT_REQUIRED", "Chọn trả tiền tại điểm thì cần để lại số điện thoại hoặc email, để đội ngũ liên lạc được khi có việc."],
     ["CUSTOMER_PAYMENT_UNPAID_LIMIT", "UNPAID_LIMIT", "Số điện thoại này đang có ba chỗ giữ chưa trả tiền. Bạn đi một chuyến rồi đặt tiếp."],
     ["CUSTOMER_LOOKUP_INPUT_INVALID", "INPUT_INVALID", "Mã đặt chỗ hoặc liên hệ gõ chưa đúng khuôn."],
+    ["CUSTOMER_REFERRAL_CODE_INVALID", "INPUT_INVALID", "Mã mời này không có trong hệ thống. Bạn xem lại mã, hoặc xoá ô mã mời để đặt giá thường."],
+    ["CUSTOMER_REFERRAL_NOT_APPLICABLE", "INPUT_INVALID", "Mã mời chỉ áp cho vé và gói tham quan, không áp cho dịch vụ này."],
   ];
   for (const [needle, code, safeMessage] of mappings) {
     if (message.includes(needle)) {
@@ -209,6 +211,8 @@ export async function createCustomerBookingHold(input: {
   adults?: number;
   children?: number;
   slotStartsAt: string;
+  /** Mã mời của một khách khác (migration 125): giảm 10% đơn này. */
+  maMoi?: string | null;
 }) {
   const { data, error } = await createAdminClient().rpc("customer_create_booking_hold", {
     p_tenant_id: TENANT_ID,
@@ -221,6 +225,7 @@ export async function createCustomerBookingHold(input: {
     p_slot_starts_at: input.slotStartsAt,
     p_adults: input.adults ?? null,
     p_children: input.children ?? null,
+    p_ma_moi: input.maMoi ?? null,
   });
   const row = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) : undefined;
   if (error || !row) throw mapRepositoryError(error);
@@ -231,6 +236,7 @@ export async function createCustomerBookingHold(input: {
     holdStatus: String(row.hold_status) as "active" | "converted" | "expired" | "cancelled",
     expiresAt: String(row.expires_at),
     totalVnd: Number(row.total_vnd),
+    discountVnd: Number(row.discount_vnd ?? 0),
     currency: String(row.currency) as "VND",
     slots: slotsFromRow(row.slots),
     duplicate: row.inserted !== true,
@@ -582,5 +588,19 @@ export async function cachTraCuaVe(ticketCode: string): Promise<CachTraTien | nu
     return tra ? (String((tra as Record<string, unknown>).mode) as CachTraTien) : null;
   } catch {
     return null;
+  }
+}
+
+/** Mã mời có thật không (migration 125). Kho chưa nối hay lỗi thì coi như không. */
+export async function maMoiCoThat(ma: string): Promise<boolean> {
+  if (!isCustomerBookingEnabled()) return false;
+  try {
+    const { data, error } = await createAdminClient().rpc("customer_referral_check", {
+      p_tenant_id: TENANT_ID,
+      p_code: ma,
+    });
+    return !error && data === true;
+  } catch {
+    return false;
   }
 }

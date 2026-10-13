@@ -49,6 +49,14 @@ export type PackageCatalogItem = {
    * đi gợi ý). Trang chủ và bộ ghép lịch chỉ lấy gói.
    */
   loai?: "ve";
+  /** Dịch vụ giá riêng (Bàn Trăng), không tính theo bảng giá vé cổng. */
+  giaRieng?: true;
+  /** Giá trẻ 1m–1m3 (đã trừ phần giảm gói); trẻ dưới 1m không cần vé. */
+  giaTreEmVnd?: number;
+  /** Tổng giá vé người lớn nếu mua lẻ từng điểm, trước khi giảm gói. */
+  giaLeVnd?: number;
+  /** Phần trăm gói giảm so với mua lẻ: 2 điểm bán vé 10%, từ 3 điểm 15%. */
+  giamPhanTram?: number;
 };
 
 export const PACE_LABEL: Record<PackageCatalogItem["pace"], string> = {
@@ -61,8 +69,9 @@ export const PACE_LABEL: Record<PackageCatalogItem["pace"], string> = {
  * Giá trong danh mục này chỉ là giá dự phòng khi web không đọc được kho. Giá
  * thật nằm ở bảng giá quầy (`erp_counter_price_list`, màn Giá vé quầy): vé
  * lẻ bằng giá người lớn của điểm, gói bằng tổng giá vé các điểm trong gói
- * (điểm không bán vé như Hoa Lư tính 0 đ). Xem migration 124 và
- * `lib/commerce/bang-gia.ts`. Sửa bảng giá quầy thì sửa số dự phòng ở đây.
+ * (điểm không bán vé như Hoa Lư tính 0 đ), gói 2 điểm bán vé giảm 10%, từ 3
+ * điểm giảm 15%. Xem migration 124, 125 và `lib/commerce/bang-gia.ts`. Sửa
+ * bảng giá quầy thì sửa `GIA_DIEM_DU_PHONG` và số dự phòng ở đây.
  */
 export const PACKAGES: readonly PackageCatalogItem[] = [
   {
@@ -127,7 +136,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     durationLabel: "1 ngày",
     durationMinutes: 600,
     pace: "balanced",
-    demoPriceVnd: 310_000,
+    demoPriceVnd: 279_000,
     ledgerType: "service-commerce",
     siteIds: [
       "10000000-0000-4000-8000-000000000001",
@@ -244,12 +253,39 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
       "20:45 · trà, bánh và hộp quà mang về",
     ],
     campaign: "mid-autumn-2026",
+    giaRieng: true,
     editorialDescription:
       "Đi thuyền Tam Cốc xong, buổi tối hai người ngồi bàn ăn riêng, cuối bữa có trà và hộp bánh mang về.",
     priceLabel: "2.480.000 VND · bàn hai khách",
     bookingStartDate: "2026-09-18",
     bookingEndDate: "2026-09-27",
     fixedPartySize: 2,
+  },
+  {
+    id: "40000000-0000-4000-8000-000000000015",
+    regionId: CORE_IDS.regionId,
+    slug: "trang-an-tam-coc-trong-ngay",
+    name: "Tràng An sáng, Tam Cốc chiều",
+    audience: "Muốn đi cả hai dòng sông trong một ngày",
+    companionFit: ["solo", "couple", "adults"],
+    durationLabel: "1 ngày",
+    durationMinutes: 540,
+    pace: "active",
+    demoPriceVnd: 405_000,
+    ledgerType: "service-commerce",
+    siteIds: [
+      "10000000-0000-4000-8000-000000000001",
+      "10000000-0000-4000-8000-000000000005",
+    ],
+    inclusions: [
+      "Thuyền Tràng An buổi sáng",
+      "Đò Tam Cốc đầu giờ chiều, lúc bến vắng hơn",
+      "Rẻ hơn 10% so với mua hai vé lẻ",
+    ],
+    exclusions: ["Bữa trưa", "Xe giữa hai bến (khoảng 15 phút)", "Tiền boa người chèo"],
+    schedule: ["07:30 hoặc 08:00 · Tràng An", "Nghỉ trưa gần bến Văn Lâm", "13:00 hoặc 14:00 · Tam Cốc – Bích Động"],
+    editorialDescription:
+      "Hai tuyến thuyền nổi tiếng nhất Ninh Bình trong một ngày: sáng xuôi Tràng An qua hang và đền, chiều sang Tam Cốc khi bến đã thưa khách buổi sáng.",
   },
   {
     id: "40000000-0000-4000-8000-000000000011",
@@ -264,7 +300,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     demoPriceVnd: 250_000,
     ledgerType: "service-commerce",
     siteIds: ["10000000-0000-4000-8000-000000000001"],
-    inclusions: ["Một lượt đi thuyền Tràng An","Vé QR dùng ở cổng","Trẻ dưới 1m3 miễn phí"],
+    inclusions: ["Một lượt đi thuyền Tràng An","Vé QR dùng ở cổng","Trẻ dưới 1m không cần vé"],
     exclusions: ["Tiền boa người chèo","Ăn uống"],
     schedule: ["Chọn giờ lên thuyền 07:30–15:00","Đi thuyền qua các hang và đền","Về bến sau khoảng 3 giờ"],
     loai: "ve",
@@ -282,7 +318,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     demoPriceVnd: 200_000,
     ledgerType: "service-commerce",
     siteIds: ["10000000-0000-4000-8000-000000000005"],
-    inclusions: ["Một lượt đò Tam Cốc","Vé QR dùng ở cổng","Trẻ dưới 1m3 miễn phí"],
+    inclusions: ["Một lượt đò Tam Cốc","Vé QR dùng ở cổng","Trẻ dưới 1m không cần vé"],
     exclusions: ["Tiền boa người chèo","Thuê xe đạp"],
     schedule: ["Chọn giờ xuống đò 07:00–15:30","Đò qua Hang Cả, Hang Hai, Hang Ba","Về bến Văn Lâm sau khoảng 2 giờ"],
     loai: "ve",
@@ -300,7 +336,7 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     demoPriceVnd: 200_000,
     ledgerType: "service-commerce",
     siteIds: ["10000000-0000-4000-8000-000000000009"],
-    inclusions: ["Thuyền qua hồ Tam Chúc","Vé QR dùng ở cổng","Trẻ dưới 1m3 miễn phí"],
+    inclusions: ["Thuyền qua hồ Tam Chúc","Vé QR dùng ở cổng","Trẻ dưới 1m không cần vé"],
     exclusions: ["Xe điện trong khu","Lễ vật, công đức"],
     schedule: ["Chọn chuyến 07:30–15:00","Thuyền qua hồ, lên Khánh Điện","Về bến sau khoảng 4 giờ"],
     loai: "ve",
@@ -318,20 +354,82 @@ export const PACKAGES: readonly PackageCatalogItem[] = [
     demoPriceVnd: 60_000,
     ledgerType: "service-commerce",
     siteIds: ["10000000-0000-4000-8000-000000000003"],
-    inclusions: ["Xe điện khứ hồi trong khu chùa","Vé QR dùng ở cổng","Trẻ dưới 1m3 miễn phí"],
+    inclusions: ["Xe điện khứ hồi trong khu chùa","Vé QR dùng ở cổng","Trẻ dưới 1m không cần vé"],
     exclusions: ["Lên tháp chuông, tháp Xá Lợi","Lễ vật, công đức"],
     schedule: ["Chọn giờ vào 07:30–15:00","Xe điện từ cổng tam quan lên chùa","Hành lang La Hán, điện Tam Thế"],
     loai: "ve",
   },
 ] as const;
 
-/** Bảng giá đọc từ kho: mã gói → giá một người lớn. */
-export type BangGia = Readonly<Record<string, number>>;
+/** Giá một sản phẩm đọc từ kho (`customer_product_prices`, migration 125). */
+export type GiaGoi = {
+  /** Một người lớn, đã trừ phần giảm gói. */
+  nguoiLon: number;
+  /** Một trẻ 1m–1m3, đã trừ phần giảm gói. */
+  treEm: number;
+  /** Tổng giá vé người lớn nếu mua lẻ từng điểm. */
+  giaLe: number;
+  /** Phần trăm giảm của gói. */
+  giam: number;
+};
 
-/** Gói kèm giá hiện hành; không có trong bảng thì giữ giá dự phòng. */
+/** Bảng giá đọc từ kho: mã gói → giá. */
+export type BangGia = Readonly<Record<string, GiaGoi>>;
+
+/**
+ * Giá vé quầy dự phòng của từng điểm, khớp bảng giá quầy lúc viết (người lớn
+ * từ migration 069, trẻ 1m–1m3 từ 125). Điểm không bán vé (Hoa Lư, phố cổ)
+ * không có ở đây, tính 0 đ.
+ */
+export const GIA_DIEM_DU_PHONG: Readonly<Record<string, { nguoiLon: number; treEm: number }>> = {
+  "10000000-0000-4000-8000-000000000001": { nguoiLon: 250_000, treEm: 120_000 },
+  "10000000-0000-4000-8000-000000000005": { nguoiLon: 200_000, treEm: 100_000 },
+  "10000000-0000-4000-8000-000000000009": { nguoiLon: 200_000, treEm: 100_000 },
+  "10000000-0000-4000-8000-000000000003": { nguoiLon: 60_000, treEm: 30_000 },
+};
+
+/** Gói có 2 điểm bán vé giảm 10%, từ 3 điểm giảm 15% (cùng luật với kho). */
+export function phanTramGiamGoi(soDiemBanVe: number): number {
+  return soDiemBanVe >= 3 ? 15 : soDiemBanVe === 2 ? 10 : 0;
+}
+
+function sauGiam(tong: number, phanTram: number): number {
+  return phanTram === 0 ? tong : Math.floor((tong * (100 - phanTram)) / 100_000) * 1000;
+}
+
+/** Giá tính từ giá vé từng điểm, đúng phép tính của `customer_product_price_parts`. */
+export function tinhGiaGoi(
+  siteIds: readonly string[],
+  giaDiem: Readonly<Record<string, { nguoiLon: number; treEm: number }>> = GIA_DIEM_DU_PHONG,
+): GiaGoi {
+  let lon = 0;
+  let nho = 0;
+  let soDiem = 0;
+  for (const id of siteIds) {
+    const gia = giaDiem[id];
+    if (!gia) continue;
+    lon += gia.nguoiLon;
+    nho += gia.treEm;
+    if (gia.nguoiLon > 0) soDiem += 1;
+  }
+  const giam = phanTramGiamGoi(soDiem);
+  return { nguoiLon: sauGiam(lon, giam), treEm: sauGiam(nho, giam), giaLe: lon, giam };
+}
+
+/**
+ * Gói kèm giá hiện hành: giá đọc từ kho, không đọc được thì tính từ giá dự
+ * phòng từng điểm. Dịch vụ giá riêng (Bàn Trăng) giữ giá của nó.
+ */
 export function apBangGia<T extends PackageCatalogItem>(item: T, bang?: BangGia | null): T {
-  const gia = bang?.[item.slug];
-  return gia === undefined || gia === item.demoPriceVnd ? item : { ...item, demoPriceVnd: gia };
+  const gia = bang?.[item.slug] ?? (item.giaRieng ? undefined : tinhGiaGoi(item.siteIds));
+  if (!gia) return item;
+  return {
+    ...item,
+    demoPriceVnd: gia.nguoiLon,
+    giaTreEmVnd: gia.treEm,
+    giaLeVnd: gia.giaLe,
+    giamPhanTram: gia.giam,
+  };
 }
 
 /** Gói (lịch đi gợi ý), không gồm vé lẻ. */

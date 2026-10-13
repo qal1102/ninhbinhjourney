@@ -173,7 +173,7 @@ export function goiYTuSo(d: KhachThichGi): GoiY[] {
   if (coSoLech && coSoLech.g.tong >= SO_TOI_THIEU * 10 && coSoLech.lech >= 1.8) {
     const { g } = coSoLech;
     goiY.push({
-      tieuDe: `${g.ten} lúc ${g.gioDong} giờ đông gấp ${Math.round(coSoLech.lech * 10) / 10} lần lúc ${g.gioVang} giờ`,
+      tieuDe: `${g.ten} lúc ${g.gioDong} giờ đông gấp ${(Math.round(coSoLech.lech * 10) / 10).toLocaleString("vi-VN")} lần lúc ${g.gioVang} giờ`,
       viec: `Trang đặt vé đã ghi khung nào vắng; xếp thêm thuyền và người soát vé quanh ${g.gioDong} giờ, mời khách đoàn đi khung ${g.gioVang} giờ.`,
       lienKet: { nhan: "Sức chứa theo giờ", href: "/erp/toan-vung" },
     });

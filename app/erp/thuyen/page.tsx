@@ -82,17 +82,17 @@ export default async function ErpThuyenPage({ searchParams }: Props) {
                 ))}
               </nav>
             ) : null}
-
-      {banDo ? (
-        <Suspense key={banDo} fallback={<p className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">Đang lấy dự báo thời tiết ở bến…</p>}>
-          <ThoiTietBen coSo={banDo} siteHref={`/erp/${banDo}`} />
-        </Suspense>
-      ) : null}
           </div>
           <div className="mt-4">
             <BanDoThuyenTre key={banDo} coSo={banDo} xemThuyenThat />
           </div>
         </section>
+      ) : null}
+
+      {banDo ? (
+        <Suspense key={banDo} fallback={<p className="mb-8 rounded-2xl border border-[#e3e8e5] bg-white p-4 text-sm text-[#59654b]">Đang lấy dự báo thời tiết ở bến…</p>}>
+          <ThoiTietBen coSo={banDo} siteHref={`/erp/${banDo}`} />
+        </Suspense>
       ) : null}
 
       {banDo ? <SoNguoiCheo key={banDo} coSo={banDo} tenBen={TUYEN_THUYEN[banDo].ten.split(" · ")[0]} ds={soCheo} coKho={thuyenCoKho()} /> : null}

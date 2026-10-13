@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { HoSoKhachView } from "@/components/commerce/ho-so-khach-view";
 import { TheTichDiem } from "@/components/commerce/the-tich-diem";
@@ -94,16 +93,9 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
 
   return (
     <form onSubmit={mo} className="rounded-3xl border border-[#d7d5cd] bg-white p-6 sm:p-8">
-      <h2 className="font-display text-3xl text-[#183f34]">{t("Mở hộ chiếu của bạn", "Open your passport")}</h2>
+      <h2 className="font-display text-3xl text-[#183f34]">{t("Lượt đi và quà của bạn", "Your visits and rewards")}</h2>
       <p className="mt-3 leading-7 text-[#59654b]">
         {t("Nhập mã in trên vé cùng số điện thoại đã gắn: lượt đã đi, quà, voucher và mọi vé của bạn hiện ra ở đây.", "Enter the code on your ticket with the phone number you linked: your visits, rewards and tickets appear here.")}
-      </p>
-      <p className="mt-2 text-sm leading-6 text-[#59654b]">
-        {t("Chỉ cần lấy lại vé QR để vào cổng? Mời bạn ", "Only need your QR ticket for the gate? ")}
-        <Link href={lang === "en" ? "/tra-cuu-ve?lang=en" : "/tra-cuu-ve"} className="font-bold text-[#183f34] underline underline-offset-2">
-          {t("mở lại vé", "Reopen your ticket")}
-        </Link>
-        .
       </p>
       <label className="mt-5 grid gap-1 text-sm font-bold text-[#27362f]">
         {t("Mã trên vé", "Ticket code")}
@@ -130,7 +122,7 @@ export function MoHoSo({ lang = "vi" }: { lang?: "vi" | "en" }) {
         disabled={dangMo}
         className="mt-5 min-h-12 w-full rounded-full bg-[#183f34] px-6 font-extrabold text-white disabled:opacity-60"
       >
-        {dangMo ? t("Đang mở…", "Opening…") : t("Mở hộ chiếu", "Open passport")}
+        {dangMo ? t("Đang mở…", "Opening…") : t("Xem lượt đi và quà", "See visits and rewards")}
       </button>
     </form>
   );

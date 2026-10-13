@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChonTrangVe } from "@/components/commerce/chon-trang-ve";
 import { TicketLookup } from "@/components/commerce/ticket-lookup";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
 import { ThanhDauTrang } from "@/components/shared/thanh-dau-trang";
@@ -23,7 +24,10 @@ export default async function TicketLookupPage({
       <ThanhDauTrang lang={lang} hienTai="ve" />
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-5 py-10 text-[#151a17] sm:px-8 lg:py-16">
       {isCustomerBookingEnabled() ? (
-        <TicketLookup lang={lang} />
+        <>
+          <ChonTrangVe dangO="ve" lang={lang} />
+          <TicketLookup lang={lang} />
+        </>
       ) : (
         <div className="mx-auto max-w-xl rounded-3xl border border-[#d7d5cd] bg-white p-8 text-center">
           <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#9a6328]">

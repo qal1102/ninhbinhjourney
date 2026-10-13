@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { HoSoKhachView } from "@/components/commerce/ho-so-khach-view";
 import { MoHoSo } from "@/components/commerce/mo-ho-so";
+import { ChonTrangVe } from "@/components/commerce/chon-trang-ve";
 import { CUSTOMER_ANONYMOUS_COOKIE } from "@/domain/customer-identity";
 import type { HoSoKhach } from "@/domain/ho-so-khach";
 import { isCustomerBookingEnabled } from "@/lib/customer-data/booking-repository";
@@ -43,6 +44,7 @@ export default async function TrangHoSo({
     <>
       <ThanhDauTrang lang={lang} hienTai="ve" />
     <main lang={lang} className="min-h-screen bg-[#f4f0e7] px-4 py-8 sm:px-8 lg:py-14">
+      {bat ? <ChonTrangVe dangO="luot" lang={lang} /> : null}
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="text-sm font-bold text-[#356957] underline underline-offset-4">

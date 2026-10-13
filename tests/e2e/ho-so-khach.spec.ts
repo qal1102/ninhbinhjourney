@@ -43,9 +43,9 @@ test.describe("Hộ chiếu Ninh Bình", () => {
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ accepted: true, hoSo: HO_SO_MAU }) });
     });
     await page.goto("/ho-so");
-    await page.getByLabel("Mã đặt chỗ").fill("NBJ-ABCDEF123456");
-    await page.getByLabel("Số điện thoại hoặc email đã dùng lúc đặt").fill("0912345678");
-    await page.getByRole("button", { name: "Mở hộ chiếu" }).click();
+    await page.getByLabel("Mã trên vé").fill("NBJ-ABCDEF123456");
+    await page.getByLabel(/Số điện thoại đã gắn/).fill("0912345678");
+    await page.getByRole("button", { name: "Xem lượt đi và quà" }).click();
 
     const hoSo = page.getByTestId("ho-so-khach");
     await expect(hoSo.getByRole("heading", { name: "Bạn đã qua 2 trên 4 cổng" })).toBeVisible();
@@ -67,10 +67,42 @@ test.describe("Hộ chiếu Ninh Bình", () => {
       }),
     );
     await page.goto("/ho-so");
-    await page.getByLabel("Mã đặt chỗ").fill("NBJ-000000000000");
-    await page.getByLabel("Số điện thoại hoặc email đã dùng lúc đặt").fill("0900000000");
-    await page.getByRole("button", { name: "Mở hộ chiếu" }).click();
+    await page.getByLabel("Mã trên vé").fill("NBJ-000000000000");
+    await page.getByLabel(/Số điện thoại đã gắn/).fill("0900000000");
+    await page.getByRole("button", { name: "Xem lượt đi và quà" }).click();
     await expect(page.getByText(/Chưa tìm thấy hồ sơ khớp mã đặt chỗ/)).toBeVisible();
+  });
+
+  test("mã vé quầy cùng số đã gắn thì ra lượt đi và quà; mã phiếu thu được nhắc đổi", async ({ page }) => {
+    let guiLen: Record<string, unknown> = {};
+    await page.route("**/api/khach-than-thiet", async (route) => {
+      guiLen = route.request().postDataJSON() as Record<string, unknown>;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          accepted: true,
+          tomTat: {
+            linked: true, contactHint: "321", visits: 3, points: 300, voucherCount: 1,
+            nextMilestone: { visits: 4, reward: "Một vé người lớn miễn phí", remaining: 1 },
+            visitList: [{ site: "Tràng An", date: "2026-10-12" }],
+            vouchers: [], tickets: [],
+          },
+        }),
+      });
+    });
+    await page.goto("/tra-cuu-ve");
+    await page.getByTestId("chon-trang-ve-luot").click();
+    await expect(page).toHaveURL(/\/ho-so/);
+    await page.getByLabel("Mã trên vé").fill("PT-ABCDEF123456");
+    await page.getByLabel(/Số điện thoại đã gắn/).fill("0987654321");
+    await page.getByRole("button", { name: "Xem lượt đi và quà" }).click();
+    await expect(page.getByText(/là mã phiếu thu/)).toBeVisible();
+    await page.getByLabel("Mã trên vé").fill("quay-abcdef123456");
+    await page.getByRole("button", { name: "Xem lượt đi và quà" }).click();
+    await expect(page.getByTestId("tich-diem-luot")).toHaveText("3");
+    await expect(page.getByTestId("tich-diem-luot-di")).toContainText("Tràng An");
+    expect(guiLen).toEqual({ hanh_dong: "xem", ma: "QUAY-ABCDEF123456", so_dien_thoai: "0987654321" });
   });
 });
 

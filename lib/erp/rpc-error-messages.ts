@@ -772,6 +772,19 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   ON_SITE_NO_SHOW_TOO_EARLY: "Còn trong ngày đi, khách vẫn có thể tới. Qua hết ngày mới đóng được.",
   ON_SITE_NO_SHOW_ALREADY_ADMITTED: "Khách đã vào cổng, không phải không đến. Xin thu tiền ở cổng.",
   STAFF_REQUEST_APPEND_ONLY: "Đề xuất đã gửi không sửa hay xoá được. Muốn đổi nội dung, xin rút rồi gửi đề xuất mới.",
+  // Văn bản & hợp đồng, cổng nhận văn bản (migration 132).
+  VAN_BAN_ROLE_REQUIRED: "Tài khoản của bạn không phát hành hay nhận được loại văn bản này.",
+  VAN_BAN_DA_NOP: "Văn bản mang mã phát hành này đã nộp rồi. Mỗi bản phát hành chỉ nộp được một lần.",
+  VAN_BAN_KHONG_THAY: "Không thấy mã phát hành này trong sổ.",
+  VAN_BAN_DA_DUYET: "Văn bản này đã có người duyệt rồi.",
+  VAN_BAN_CAN_LY_DO: "Trả lại thì xin ghi vài chữ lý do.",
+  VAN_BAN_KET_QUA: "Kết quả soát không hợp lệ. Xin soát lại tệp.",
+  VAN_BAN_TIEN_TO: "Loại văn bản này chưa có tiền tố số hợp lệ.",
+  // Trò chuyện (migration 133).
+  TC_KHONG_PHAI_THANH_VIEN: "Bạn không ở trong cuộc trò chuyện này.",
+  TC_NGUOI_KHONG_HOP_LE: "Chọn một người khác để nhắn.",
+  TC_TEN_NHOM: "Đặt tên nhóm, tối đa 80 chữ.",
+  TC_THANH_VIEN: "Chọn từ 1 tới 40 người cho nhóm.",
 });
 
 /**

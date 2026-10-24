@@ -73,6 +73,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "cong-ty-lu-hanh",
+        ten: "Công ty lữ hành: số đoàn, ưu đãi, lịch sử",
+        moTa: "Mỗi công ty lữ hành một thẻ: năm nay mấy đoàn, bao nhiêu khách, bao nhiêu tiền, đang hưởng ưu đãi mấy phần trăm. Từ 5 đoàn 5%, từ 10 đoàn 8%, từ 20 đoàn 10%; giám đốc đặt được mức riêng.",
+        vai: "director",
+        duongDan: "/erp/cong-ty-lu-hanh",
+        diem: "cong-ty-lu-hanh",
+        moi: "14/10",
+        cacViec: [
+          "Đọc ba ô đầu: số công ty, số đoàn đã đi trong năm, tiền vé đoàn.",
+          "Bấm một công ty: dòng đầu báo còn mấy đoàn nữa thì lên bậc ưu đãi kế, bên dưới là lịch sử vé đoàn.",
+          "Giám đốc chọn \"Ưu đãi riêng\" khi muốn giữ chân một công ty lớn; mức riêng thay cho bậc theo số đoàn.",
+        ],
+      },
+      {
         id: "ve-moi",
         ten: "Vé mời khách, ghi tên người mời",
         moTa: "Vé 0 đ, phải chọn người mời trong danh bạ và ghi lý do. Đối soát và báo cáo tách riêng khỏi tiền bán.",
@@ -409,6 +423,36 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
           "Bấm \"Danh sách đoàn\": thấy tổng ghi 13 người mà chỉ có 12 tên; bấm \"Lập phiếu đoàn với danh sách này\" là màn bán vé mở sẵn số người, tên đoàn.",
         ],
       },
+      {
+        id: "tro-chuyen",
+        ten: "Trò chuyện: nhắn nội bộ, gửi tệp, gắn phần dự án, giao việc",
+        moTa: "Nhắn riêng hay lập nhóm, tin tới tức thì, có \"đang gõ…\" và \"Đã xem\". Nút + gửi ảnh, tệp, gắn một màn, chức năng hay văn bản (người nhận bấm là tới đúng chỗ có khoanh viền), bật \"Giao thành việc\" là việc vào Việc & ghi chú của người nhận.",
+        vai: "director",
+        duongDan: "/erp/tro-chuyen",
+        diem: "tro-chuyen",
+        moi: "24/10",
+        cacViec: [
+          "Bấm nút bong bóng trên thanh đầu trang, mở cuộc trò chuyện mẫu với Quản lý Tràng An: tin có gắn màn Sức chứa và một hợp đồng, bấm là tới đúng chỗ.",
+          "Bấm + → \"Gắn phần dự án\", tìm \"hoá đơn\", chọn; bấm + → \"Giao thành việc\", chọn hạn rồi \"Gửi & giao\".",
+          "Chuyển vai sang Quản lý Tràng An: tin hiện ngay, thẻ việc có nút \"Đã làm xong\"; bấm thì cả phòng thấy dòng báo.",
+          "Mở hai cửa sổ cùng lúc để thấy tin tới tức thì và \"đang gõ…\".",
+        ],
+      },
+      {
+        id: "van-ban",
+        ten: "Văn bản & hợp đồng: cổng nhận PDF có chữ ký",
+        moTa: "Hợp đồng chèo đò, hợp đồng nhà cung cấp, biên bản nghiệm thu tải từ hệ thống thành PDF có chữ ký số, đã mã hoá. Nộp lại thì cổng soát chữ ký, dấu băm chữ in sẵn, từng ô bằng luật, đối chiếu sổ người chèo, danh mục nhà cung cấp, hợp đồng đã có, rồi AI soát nghĩa. PDF ngoài hệ thống bị trả.",
+        vai: "director",
+        duongDan: "/erp/van-ban",
+        diem: "cong-van-ban",
+        moi: "24/10",
+        cacViec: [
+          "Ở khung Tải mẫu, thẻ Hợp đồng chèo đò, bấm \"Điền đúng\": tệp PDF tải về máy.",
+          "Bấm \"Nộp luôn tệp vừa tải\": cổng chạy từng bước, ra Qua cổng, cột Soát không AI và cột AI soát nghĩa đặt cạnh nhau. Bấm \"Đưa vào hệ thống\": sổ người chèo cập nhật hợp đồng.",
+          "Thử \"Bị sửa điều khoản\" và \"PDF ngoài hệ thống\": cổng trả lại; AI đọc bản bị sửa thường thấy bình thường, chỉ dấu băm bắt được.",
+          "Thẻ Biên bản nghiệm thu, bấm \"Điền sai\" rồi nộp: cổng báo vượt giá trị còn lại của hợp đồng, ngày nghiệm thu ở tương lai.",
+        ],
+      },
     ],
   },
   {
@@ -611,6 +655,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
     id: "khach-marketing",
     ten: "Khách và marketing",
     chucNang: [
+      {
+        id: "tra-khach",
+        ten: "Tra khách bằng số điện thoại hay mã bất kỳ",
+        moTa: "Gõ số điện thoại hoặc mã đơn, mã vé, mã phiếu thu: ra mọi vé, lượt qua cổng, điểm và quà của khách ấy. Khách quên mã hay mất máy vẫn vào cổng được.",
+        vai: "director",
+        duongDan: "/erp/khach-hang",
+        diem: "tra-khach",
+        moi: "14/10",
+        cacViec: [
+          "Ở đầu màn Khách hàng, gõ số điện thoại hay một mã (NBJ-, WEB-, QUAY-, TV-, PT-) rồi bấm Tra.",
+          "Đọc ba khối: đơn web, vé quầy và vé đoàn, quà và voucher; mỗi vé ghi đã qua cổng mấy lượt.",
+          "Khách mất máy: bấm \"Mở mã QR cho khách\" ở vé cần dùng, đưa nhân viên cổng quét thẳng.",
+        ],
+      },
       {
         id: "khach-hang",
         ten: "Đơn web và Khách thấy gì",

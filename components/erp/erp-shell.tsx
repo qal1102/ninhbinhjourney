@@ -28,6 +28,7 @@ import { BaoKhanCap } from "./bao-khan-cap";
 import { khoaCongKhaiDay } from "@/lib/erp/day-thong-bao";
 import { CanhBaoKhanCap } from "./canh-bao-khan-cap";
 import { MotMenuMotLuc } from "./mot-menu-mot-luc";
+import { NutTroChuyen } from "./nut-tro-chuyen";
 
 type Props = {
   user: CurrentErpUser;
@@ -76,6 +77,7 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
           { href: "/erp/future-planning", label: "Future planning", hint: "Lịch lễ hội ba năm tới, công nghệ nên áp dụng" },
           { href: "/erp/bang-gia-quay", label: "Giá vé quầy", hint: "Đặt giá bán tại quầy của bốn cơ sở" },
           { href: "/erp/soat-giay-to", label: "✦ Soát giấy tờ bằng AI", hint: "Chụp hoá đơn, nghiệm thu: AI đọc, báo thiếu, điền sẵn hồ sơ NCC" },
+          { href: "/erp/van-ban", label: "Văn bản & hợp đồng", hint: "Tải mẫu PDF có chữ ký, nộp lại qua cổng soát chữ ký, luật và AI" },
         ]
       : []),
     ...(systemAdmin ? [{ href: "/erp/tai-khoan", label: "Tài khoản", hint: "Người dùng và phân quyền" }] : []),
@@ -85,9 +87,11 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
   const mucBangLenh: MucBangLenh[] = [
     { id: "trang-dau", nhom: "man", ten: "Trang đầu", phu: "Tổng quan hôm nay", href: "/erp" },
     { id: "viec", nhom: "man", ten: "Việc & ghi chú", phu: "Giao việc, ghi chú bằng giọng nói", href: "/erp/viec" },
+    { id: "tro-chuyen", nhom: "man", ten: "Trò chuyện", phu: "Nhắn nội bộ, gửi tệp, gắn phần dự án, giao việc", href: "/erp/tro-chuyen" },
     { id: "de-xuat", nhom: "man", ten: "Đề xuất & phê duyệt", phu: "Xin nghỉ, tạm ứng, mua hàng, sửa chữa", href: "/erp/de-xuat" },
     { id: "nhat-ky", nhom: "man", ten: "Nhật ký", phu: "Ai làm gì, lúc nào", href: "/erp/nhat-ky" },
     { id: "soat-giay-to", nhom: "man", ten: "Soát giấy tờ bằng AI", phu: "Chụp hoá đơn, danh sách đoàn", href: "/erp/soat-giay-to" },
+    ...(user.role === "director" ? [] : [{ id: "van-ban", nhom: "man" as const, ten: "Văn bản & hợp đồng", phu: "Tải mẫu PDF, nộp qua cổng soát", href: "/erp/van-ban" }]),
     ...(user.role === "director" || user.actingAs
       ? [{ id: "huong-dan", nhom: "man" as const, ten: "Dạo một vòng", phu: "Mọi chức năng, bấm là tới đúng chỗ", href: "/erp/huong-dan" }]
       : []),
@@ -176,6 +180,8 @@ export async function ErpShell({ user, site, activeModuleId, children }: Props) 
               }))}
               siteMacDinh={site?.id}
             />
+            {/* Trò chuyện (24/10/2026, migration 133): mọi vai, mọi cỡ màn, có số tin chưa đọc. */}
+            <NutTroChuyen />
             <BangLenh muc={mucBangLenh} />
             <ErpAppControls role={user.role} accountId={user.id} khoaDay={khoaCongKhaiDay()} />
             {/* ERP-UX-01: trợ lý nay đứng trên thanh đầu trang thay vì nổi đè

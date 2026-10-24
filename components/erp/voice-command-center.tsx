@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 import { FLOATING_YIELD_CLASS, useFloatingYield } from "@/lib/use-floating-yield";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
   ERP_MODULES,
@@ -363,6 +363,8 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
   // QA-P2-09: "không lớp nổi nào được che nội dung" (UI_UX_RULES, mục ERP).
   // Nút trợ lý nhường chỗ khi đang cuộn xuống hoặc đang gõ vào ô nhập.
   const nhuongCho = useFloatingYield();
+  // Màn Trò chuyện có ô soạn tin ở đáy: trên điện thoại nút nổi sẽ che nút Gửi, nên ẩn hẳn ở đó.
+  const laTroChuyen = usePathname()?.startsWith("/erp/tro-chuyen") ?? false;
 
   function pushEntry(entry: ThreadEntry) {
     setThread((previous) => [...previous, entry].slice(-THREAD_MAX_ENTRIES));
@@ -787,7 +789,7 @@ export function VoiceCommandCenter({ role, siteIds, currentSiteId }: Props) {
               tabIndex={nhuongCho && !open ? -1 : undefined}
               className={`fixed bottom-5 right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#183f34] px-3 text-sm font-black text-white shadow-lg shadow-[#0d2a22]/25 transition duration-200 hover:bg-[#12332a] motion-reduce:transition-none sm:right-5 sm:px-4 ${
                 nhuongCho && !open ? FLOATING_YIELD_CLASS : ""
-              }`}
+              } ${laTroChuyen ? "max-lg:hidden" : ""}`}
             >
               <Image src="/brand/ninh-binh-mark.png" alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
               <span className="hidden sm:block">Trợ lý</span>

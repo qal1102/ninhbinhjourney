@@ -56,3 +56,26 @@ export async function dayBaoDong(bd: BaoDong, nhacLai = false): Promise<number> 
   );
   return dat;
 }
+
+/**
+ * Tin nhắn mới trong Trò chuyện: đẩy tới máy của người nhận chưa mở phòng.
+ * Một phòng một thẻ thông báo (`tag`), tin sau thay tin trước, không dồn chuông.
+ */
+export async function dayTinNhan(accountIds: string[], tin: { tieuDe: string; noiDung: string; url: string; tag: string }): Promise<number> {
+  if (!cauHinh() || accountIds.length === 0) return 0;
+  const ds = await dangKyCuaTaiKhoan(accountIds);
+  const noiDung = JSON.stringify({ title: tin.tieuDe, body: tin.noiDung, url: tin.url, tag: tin.tag });
+  let dat = 0;
+  await Promise.all(
+    ds.map(async (dk) => {
+      try {
+        await webpush.sendNotification({ endpoint: dk.endpoint, keys: { p256dh: dk.p256dh, auth: dk.auth } }, noiDung, { TTL: 3600, urgency: "normal" });
+        dat += 1;
+      } catch (error) {
+        const ma = (error as { statusCode?: number }).statusCode;
+        if (ma === 404 || ma === 410) await xoaDangKyDay(dk.endpoint).catch(() => undefined);
+      }
+    }),
+  );
+  return dat;
+}

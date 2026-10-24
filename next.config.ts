@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true,
   },
+  // Phông chữ tiếng Việt cho PDF văn bản đọc bằng fs lúc chạy, nên phải kèm vào gói hàm.
+  outputFileTracingIncludes: {
+    "/api/erp/van-ban/**": ["./lib/van-ban/phong-chu/*.ttf"],
+  },
   async headers() {
     return [
       {

@@ -16,6 +16,9 @@
  * - Cuối cùng in trang tài liệu thành `public/huong-dan/huong-dan-su-dung.pdf`
  *   khổ A4, ảnh vừa chụp đặt thẳng vào trang trước khi in.
  * - `TAI_LIEU_CHI_MUC=id1,id2` chỉ chụp lại vài mục; `TAI_LIEU_CHI_IN=1` chỉ in lại PDF.
+ * - `TAI_LIEU_TRANG_URL=http://127.0.0.1:3200` (14/10/2026): đọc danh sách mục và
+ *   in sổ tay từ máy này (bản vừa sửa, chưa deploy), còn ảnh vẫn chụp ở
+ *   `TAI_LIEU_BASE_URL` (production, dữ liệu thật). Bỏ trống thì cả hai là một.
  *
  * Chỉ đọc: không bấm nút nào làm thay đổi dữ liệu, chỉ mở trang và chụp.
  * Mật khẩu chỉ đọc từ biến môi trường, không ghi ra đâu.
@@ -30,7 +33,10 @@ if (!BASE) {
   console.error("Thiếu TAI_LIEU_BASE_URL. Ví dụ: TAI_LIEU_BASE_URL=http://127.0.0.1:3200 node scripts/chup-tai-lieu-huong-dan.mjs");
   process.exit(2);
 }
+const TRANG = process.env.TAI_LIEU_TRANG_URL?.replace(/\/+$/, "") ?? BASE;
 const MAT_KHAU = process.env.ERP_DEMO_DIRECTOR_PASSWORD ?? "Giamdoc@2026";
+// Máy in sổ tay (TAI_LIEU_TRANG_URL) thường là bản ở máy, mật khẩu mẫu khác production.
+const MAT_KHAU_TRANG = process.env.TAI_LIEU_TRANG_MAT_KHAU ?? MAT_KHAU;
 const GOC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const THU_MUC_ANH = path.join(GOC, "public", "huong-dan", "anh");
 const TEP_DANH_SACH = path.join(GOC, "content", "huong-dan-anh.json");
@@ -59,18 +65,20 @@ const dienThoai = await trinhDuyet.newContext({
 });
 
 // Đăng nhập cả hai khung: vài mục "trang của khách" mở màn ERP (đoàn, đại lý, tích điểm).
-for (const ctx of [may, dienThoai]) {
+const dangNhap = [[may, BASE, MAT_KHAU], [dienThoai, BASE, MAT_KHAU]];
+if (TRANG !== BASE) dangNhap.push([may, TRANG, MAT_KHAU_TRANG]);
+for (const [ctx, goc, matKhau] of dangNhap) {
   const page = await ctx.newPage();
-  await page.goto(`${BASE}/erp/login`);
+  await page.goto(`${goc}/erp/login`);
   await page.getByLabel(/Email hoặc tên đăng nhập|Tên đăng nhập/).fill("giamdoc");
-  await page.getByLabel("Mật khẩu").fill(MAT_KHAU);
+  await page.getByLabel("Mật khẩu").fill(matKhau);
   await page.getByRole("button", { name: "Mở hệ thống quản lý" }).click();
   await page.waitForURL(/\/erp$/, { timeout: 45_000 });
   await page.close();
 }
 
 const trangMuc = await may.newPage();
-await trangMuc.goto(`${BASE}/erp/huong-dan/tai-lieu`, { waitUntil: "domcontentloaded" });
+await trangMuc.goto(`${TRANG}/erp/huong-dan/tai-lieu`, { waitUntil: "domcontentloaded" });
 const muc = await trangMuc.$$eval("[data-chup]", (ds) =>
   ds.map((el) => ({ id: el.getAttribute("data-chup"), kieu: el.getAttribute("data-kieu"), duong: el.getAttribute("data-duong-dan") })),
 );
@@ -107,7 +115,7 @@ for (const m of muc) {
 
 const danhSach = {
   chupLuc: process.env.TAI_LIEU_CHI_IN === "1" && cu.chupLuc ? cu.chupLuc : new Date().toISOString(),
-  nguon: BASE,
+  nguon: process.env.TAI_LIEU_CHI_IN === "1" && cu.nguon ? cu.nguon : BASE,
   anh: [...anh.values()].sort((a, b) => a.id.localeCompare(b.id)),
   pdf: "/huong-dan/huong-dan-su-dung.pdf",
 };
@@ -126,7 +134,7 @@ await trangIn.route("**/huong-dan/anh/*.jpg*", (route) => {
     ? route.fulfill({ status: 200, contentType: "image/jpeg", body: fs.readFileSync(tep) })
     : route.continue();
 });
-await trangIn.goto(`${BASE}/erp/huong-dan/tai-lieu`, { waitUntil: "load" });
+await trangIn.goto(`${TRANG}/erp/huong-dan/tai-lieu`, { waitUntil: "load" });
 await trangIn.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
 const anhNhung = danhSach.anh
   .filter((a) => fs.existsSync(path.join(THU_MUC_ANH, path.basename(a.tep))))
@@ -135,9 +143,9 @@ await trangIn.evaluate((ds) => {
   for (const a of ds) {
     const khoi = document.querySelector(`[data-chup="${a.id}"]`);
     if (!khoi) continue;
-    khoi.querySelector("figure.anh, p.border-dashed")?.remove();
-    const fig = document.createElement("figure");
-    fig.className = `anh mt-3 ${khoi.getAttribute("data-kieu") === "web" ? "max-w-[15rem]" : ""}`;
+    const fig = khoi.querySelector("figure.anh");
+    if (!fig) continue;
+    const web = khoi.getAttribute("data-kieu") === "web";
     const img = document.createElement("img");
     img.src = a.src;
     img.alt = "";
@@ -146,9 +154,8 @@ await trangIn.evaluate((ds) => {
     img.className = "w-full rounded-lg border border-[#d8e0db]";
     const chu = document.createElement("figcaption");
     chu.className = "mt-1 text-[0.7rem] text-[#6e7b75]";
-    chu.textContent = "Chỗ có viền cam là nơi bắt đầu thao tác.";
-    fig.append(img, chu);
-    khoi.appendChild(fig);
+    chu.textContent = web ? "Trang của khách trên điện thoại." : "Khung viền cam là chỗ bắt đầu bấm.";
+    fig.replaceChildren(img, chu);
   }
 }, anhNhung);
 await trangIn.waitForFunction(() => [...document.images].every((img) => img.complete), null, { timeout: 60_000 });
@@ -161,7 +168,7 @@ await trangIn.pdf({
   displayHeaderFooter: true,
   headerTemplate: "<span></span>",
   footerTemplate:
-    '<div style="width:100%;font-size:8px;color:#6e7b75;padding:0 14mm;display:flex;justify-content:space-between"><span>Ninh Bình Journey · Tài liệu hướng dẫn</span><span><span class="pageNumber"></span>/<span class="totalPages"></span></span></div>',
+    '<div style="width:100%;font-size:8px;color:#6e7b75;padding:0 14mm;display:flex;justify-content:space-between"><span>Ninh Bình Journey · Sổ tay vận hành</span><span><span class="pageNumber"></span>/<span class="totalPages"></span></span></div>',
 });
 await trangIn.close();
 

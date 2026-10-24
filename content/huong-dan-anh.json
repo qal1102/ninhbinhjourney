@@ -1,5 +1,5 @@
 {
-  "chupLuc": "2026-10-12T16:40:26.454Z",
+  "chupLuc": "2026-10-14T13:39:42.610Z",
   "nguon": "https://ninhbinhjourney.vercel.app",
   "anh": [
     {
@@ -57,6 +57,12 @@
       "cao": 800
     },
     {
+      "id": "cong-ty-lu-hanh",
+      "tep": "/huong-dan/anh/cong-ty-lu-hanh.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
       "id": "dai-ly",
       "tep": "/huong-dan/anh/dai-ly.jpg",
       "rong": 1280,
@@ -71,6 +77,12 @@
     {
       "id": "de-xuat",
       "tep": "/huong-dan/anh/de-xuat.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "doan",
+      "tep": "/huong-dan/anh/doan.jpg",
       "rong": 1280,
       "cao": 800
     },
@@ -189,6 +201,12 @@
       "cao": 800
     },
     {
+      "id": "khach-thich-gi",
+      "tep": "/huong-dan/anh/khach-thich-gi.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
       "id": "ky-ke-toan",
       "tep": "/huong-dan/anh/ky-ke-toan.jpg",
       "rong": 1280,
@@ -249,6 +267,12 @@
       "cao": 800
     },
     {
+      "id": "so-dau-qr",
+      "tep": "/huong-dan/anh/so-dau-qr.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
       "id": "so-nguoi-cheo",
       "tep": "/huong-dan/anh/so-nguoi-cheo.jpg",
       "rong": 1280,
@@ -273,6 +297,12 @@
       "cao": 800
     },
     {
+      "id": "su-kien",
+      "tep": "/huong-dan/anh/su-kien.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
       "id": "suc-chua",
       "tep": "/huong-dan/anh/suc-chua.jpg",
       "rong": 1280,
@@ -287,6 +317,12 @@
     {
       "id": "tai-khoan",
       "tep": "/huong-dan/anh/tai-khoan.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "thi-anh",
+      "tep": "/huong-dan/anh/thi-anh.jpg",
       "rong": 1280,
       "cao": 800
     },
@@ -323,6 +359,12 @@
     {
       "id": "toan-vung",
       "tep": "/huong-dan/anh/toan-vung.jpg",
+      "rong": 1280,
+      "cao": 800
+    },
+    {
+      "id": "tra-khach",
+      "tep": "/huong-dan/anh/tra-khach.jpg",
       "rong": 1280,
       "cao": 800
     },
@@ -417,6 +459,12 @@
       "cao": 844
     },
     {
+      "id": "web-goi-y",
+      "tep": "/huong-dan/anh/web-goi-y.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
       "id": "web-hang-cho",
       "tep": "/huong-dan/anh/web-hang-cho.jpg",
       "rong": 390,
@@ -483,6 +531,12 @@
       "cao": 844
     },
     {
+      "id": "web-ma-moi",
+      "tep": "/huong-dan/anh/web-ma-moi.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
       "id": "web-nghe",
       "tep": "/huong-dan/anh/web-nghe.jpg",
       "rong": 390,
@@ -495,8 +549,20 @@
       "cao": 844
     },
     {
+      "id": "web-so-dau",
+      "tep": "/huong-dan/anh/web-so-dau.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
       "id": "web-song-ngu",
       "tep": "/huong-dan/anh/web-song-ngu.jpg",
+      "rong": 390,
+      "cao": 844
+    },
+    {
+      "id": "web-su-kien",
+      "tep": "/huong-dan/anh/web-su-kien.jpg",
       "rong": 390,
       "cao": 844
     },

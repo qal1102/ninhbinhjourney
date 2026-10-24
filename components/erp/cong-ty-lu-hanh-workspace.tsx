@@ -58,7 +58,7 @@ export function CongTyLuHanhWorkspace({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-3xl bg-[#173f34] p-5 text-white sm:p-8">
+      <section className="rounded-3xl bg-[#173f34] p-5 text-white sm:p-8" data-chi="cong-ty-lu-hanh">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#b6d5ca]">Vé đoàn · năm nay</p>
         <h1 className="mt-2 text-3xl font-black tracking-[-0.035em] sm:text-5xl">Công ty lữ hành</h1>
         <div className="mt-5 grid grid-cols-3 gap-3">

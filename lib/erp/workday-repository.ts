@@ -9,6 +9,7 @@ import {
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { khoaKyErp } from "./khoa-ky";
 import {
   createWorkdayAssignment,
   parseWorkdayRecord,
@@ -615,8 +616,7 @@ async function transitionInSupabase(
 function cookieSecret() {
   return (
     process.env.ERP_WORKDAY_COOKIE_SECRET?.trim() ||
-    process.env.ERP_DEMO_SESSION_SECRET?.trim() ||
-    "destinationos-workday-cookie-v1-change-before-live-data"
+    khoaKyErp()
   );
 }
 

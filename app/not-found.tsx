@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { connection } from "next/server";
 
-export default function NotFound() {
+export default async function NotFound() {
+  // CSP có nonce theo từng lượt tải: trang tĩnh sẽ mất script.
+  await connection();
   return (
     <main className="grid min-h-screen place-items-center bg-[#f4f0e7] p-6 text-[#151a17]">
       <section className="max-w-xl text-center">

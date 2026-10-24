@@ -748,6 +748,9 @@ const RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   // QA-P2-09: bộ đếm đăng nhập sai. Lỗi này không bao giờ khoá người dùng —
   // `lib/erp/login-throttle.ts` ghi lỗi rồi cho qua — nhưng bảng phải đủ mã.
   LOGIN_THROTTLE_INPUT_INVALID: "Chưa ghi được lượt đăng nhập. Xin thử lại.",
+  // Migration 134: bộ đếm lượt gọi API. Cũng không bao giờ chặn người dùng —
+  // `lib/bao-mat/gioi-han-api.ts` lỗi kho thì đếm trong bộ nhớ.
+  GIOI_HAN_LUOT_INPUT_INVALID: "Chưa ghi được lượt gọi. Xin thử lại.",
   // ERP-DE-XUAT-01: đề xuất & phê duyệt.
   STAFF_REQUEST_INPUT_INVALID: "Đề xuất chưa đủ thông tin. Xin kiểm lại rồi gửi lại.",
   STAFF_REQUEST_DETAILS_INVALID: "Nội dung đề xuất chưa đúng: xem lại ngày, số tiền và lý do.",

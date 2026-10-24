@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { chuanHoaMaMoi, COOKIE_MA_MOI } from "@/domain/ma-moi";
@@ -20,6 +21,8 @@ export default async function CheckoutPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // CSP có nonce theo từng lượt tải: trang phải dựng lúc có yêu cầu.
+  await connection();
   const environment = readPublicEnvironment();
   const customerBookingEnabled = isCustomerBookingEnabled();
   if (environment.status === "missing") {

@@ -1,6 +1,7 @@
 "use client";
 
-import maplibregl, {
+import { maplibregl } from "@/lib/map/maplibre";
+import {
   type GeoJSONSource,
   type Map as MapLibreMap,
   type Marker,

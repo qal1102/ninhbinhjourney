@@ -14,6 +14,7 @@ import {
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
 import { chonVeChoMaDon, laMaDon, type VeCuaDon } from "@/domain/ma-ca-ngay";
 import { vietnamDateKey } from "@/lib/erp/workday-repository";
+import { khoaKyErp } from "./khoa-ky";
 
 const SCAN_COOKIE = "nbj-erp-demo-gate-scans";
 const STATE_SECONDS = 60 * 60 * 24 * 30;
@@ -27,9 +28,7 @@ const SITE_SLUG_BY_UUID = new Map(
   ]),
 );
 
-const signingSecret =
-  process.env.ERP_DEMO_SESSION_SECRET ??
-  "destinationos-ninh-binh-demo-session-v1-change-before-live-data";
+const signingSecret = khoaKyErp();
 
 export type GateScanEvent = {
   id: string;

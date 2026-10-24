@@ -35,6 +35,7 @@ import {
   ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG,
   listShiftClosures,
 } from "@/lib/erp/shift-close-repository";
+import { khoaKyErp } from "./khoa-ky";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 const COOKIE_NAME = "nbj-erp-accounting-v1";
@@ -745,8 +746,7 @@ async function changePeriodInSupabase(
 function cookieSecret() {
   return (
     process.env.ERP_ACCOUNTING_COOKIE_SECRET?.trim() ||
-    process.env.ERP_DEMO_SESSION_SECRET?.trim() ||
-    "destinationos-accounting-demo-cookie-v1-change-before-live-data"
+    khoaKyErp()
   );
 }
 

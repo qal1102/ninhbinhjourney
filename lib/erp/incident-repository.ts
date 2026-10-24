@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { ERP_SITES, type ErpSiteId } from "@/domain/erp";
 import type { IncidentStatus } from "@/domain/incident";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
+import { khoaKyErp } from "./khoa-ky";
 
 const INCIDENT_COOKIE = "nbj-erp-demo-incidents";
 const STATE_SECONDS = 60 * 60 * 24 * 30;
@@ -18,9 +19,7 @@ const SITE_SLUG_BY_UUID = new Map(
   ]),
 );
 
-const signingSecret =
-  process.env.ERP_DEMO_SESSION_SECRET ??
-  "destinationos-ninh-binh-demo-session-v1-change-before-live-data";
+const signingSecret = khoaKyErp();
 
 export type IncidentSeverity = "P1" | "P2" | "P3" | "P4";
 // Danh sách thật nằm ở `domain/incident.ts` để tầng thuần và bài kiểm đọc

@@ -15,6 +15,7 @@ import {
   getGrantableModuleIds,
 } from "@/lib/erp/demo-data";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
+import { khoaKyErp } from "./khoa-ky";
 
 const ACCESS_COOKIE = "nbj-erp-demo-access";
 const STATE_SECONDS = 60 * 60 * 24 * 30;
@@ -27,9 +28,7 @@ const SITE_SLUG_BY_UUID = new Map(
   ]),
 );
 
-const signingSecret =
-  process.env.ERP_DEMO_SESSION_SECRET ??
-  "destinationos-ninh-binh-demo-session-v1-change-before-live-data";
+const signingSecret = khoaKyErp();
 
 /**
  * Since V14 this store holds grants for site managers as well as employees --

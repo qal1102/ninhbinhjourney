@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { khoaKyErp } from "./khoa-ky";
 import {
   computeShiftCloseDifference,
   createShiftCloseSubmission,
@@ -673,8 +674,7 @@ async function transitionInSupabase(
 function cookieSigningSecret() {
   return (
     process.env.ERP_SHIFT_CLOSE_COOKIE_SECRET?.trim() ||
-    process.env.ERP_DEMO_SESSION_SECRET?.trim() ||
-    "destinationos-shift-close-demo-cookie-v1-change-before-live-data"
+    khoaKyErp()
   );
 }
 

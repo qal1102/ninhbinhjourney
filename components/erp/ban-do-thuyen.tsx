@@ -1,6 +1,7 @@
 "use client";
 
-import maplibregl, { type GeoJSONSource } from "maplibre-gl";
+import { maplibregl } from "@/lib/map/maplibre";
+import type { GeoJSONSource } from "maplibre-gl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -510,7 +511,7 @@ export function BanDoThuyen({ coSo, xemThuyenThat }: { coSo: CoSoThuyen; xemThuy
 
     map.on("load", () => {
       // Nền dịu đi để tuyến và thuyền là thứ nổi nhất.
-      const dat = (lop: string, ten: string, gia: unknown) => {
+      const dat = (lop: string, ten: Parameters<typeof map.setPaintProperty>[1], gia: Parameters<typeof map.setPaintProperty>[2]) => {
         if (map.getLayer(lop)) map.setPaintProperty(lop, ten, gia);
       };
       dat("nen", "background-color", MAU.dat);

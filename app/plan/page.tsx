@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import {
   getExperienceSurfaceAttributes,
   readPublicEnvironment,
@@ -27,6 +28,8 @@ export default async function PlanPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // CSP có nonce theo từng lượt tải: trang phải dựng lúc có yêu cầu.
+  await connection();
   const environment = readPublicEnvironment();
   if (environment.status === "missing") {
     return <SetupState environment={environment} surface="Journey builder" />;

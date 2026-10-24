@@ -4,15 +4,14 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { ErpRole } from "@/domain/erp";
+import { khoaKyErp } from "./khoa-ky";
 
 const AUDIT_COOKIE = "nbj-erp-demo-role-switch-audit";
 const STATE_SECONDS = 60 * 60 * 24 * 30;
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 const MAX_ENTRIES = 20;
 
-const signingSecret =
-  process.env.ERP_DEMO_SESSION_SECRET ??
-  "destinationos-ninh-binh-demo-session-v1-change-before-live-data";
+const signingSecret = khoaKyErp();
 
 export type RoleSwitchAction = "started" | "ended";
 

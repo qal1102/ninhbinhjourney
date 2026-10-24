@@ -16,6 +16,7 @@ import {
   type ErpRegistryAccount,
 } from "./account-registry-repository";
 import { dungTaiKhoanHieuLuc, type TaiKhoanHieuLuc } from "./tai-khoan-hieu-luc";
+import { khoaKyErp } from "./khoa-ky";
 
 export type {
   EmployeeAccess,
@@ -27,9 +28,7 @@ export type { AttendanceEvent, AttendanceState } from "./attendance-repository";
 const SESSION_COOKIE = "nbj-erp-demo-session";
 const SESSION_SECONDS = 60 * 60 * 12;
 
-const signingSecret =
-  process.env.ERP_DEMO_SESSION_SECRET ??
-  "destinationos-ninh-binh-demo-session-v1-change-before-live-data";
+const signingSecret = khoaKyErp();
 
 type SessionPayload = {
   userId: string;

@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import type { ErpRole, ErpSiteId } from "@/domain/erp";
 import { findDemoErpAccountById } from "@/lib/erp/demo-data";
 import { ERP_SHIFT_CLOSE_SITE_UUID_BY_SLUG } from "@/lib/erp/shift-close-repository";
+import { khoaKyErp } from "./khoa-ky";
 
 const TENANT_ID = "00000000-0000-4000-8000-000000000001";
 const STATE_COOKIE = "nbj-erp-demo-project";
@@ -18,9 +19,7 @@ const SITE_SLUG_BY_UUID = new Map(
   ]),
 );
 
-const signingSecret =
-  process.env.ERP_DEMO_SESSION_SECRET ??
-  "destinationos-ninh-binh-demo-session-v1-change-before-live-data";
+const signingSecret = khoaKyErp();
 
 export type ProjectWorkItemStatus =
   | "open"

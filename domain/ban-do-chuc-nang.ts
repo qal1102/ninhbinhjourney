@@ -790,6 +790,20 @@ export const BAN_DO_CHUC_NANG: readonly NhomChucNang[] = [
         ],
       },
       {
+        id: "khach-noi-gi",
+        ten: "Khách nói gì trên mạng",
+        moTa: "Đánh giá mới trên Google Maps và Tripadvisor của bốn cơ sở, AI chia khen chê theo chủ đề, lời tiếng nước ngoài có bản dịch.",
+        vai: "director",
+        duongDan: "/erp/khach-noi-gi",
+        diem: "khach-noi-gi",
+        moi: "27/11",
+        cacViec: [
+          "Chọn cơ sở, khoảng ngày và loại khách ở hàng nút trên cùng.",
+          "Đọc câu kết luận và thanh khen chê: chủ đề nào bị chê nhiều thì xử lý trước.",
+          "Bấm \"Chỉ lời chê\" để đọc từng lời; bấm Tải Excel để lấy toàn bộ.",
+        ],
+      },
+      {
         id: "danh-gia-khach",
         ten: "Lời khách đã tới đánh giá",
         moTa: "Chỉ khách đã qua cổng mới chấm được; giám đốc ẩn được lời không phù hợp.",

@@ -1,0 +1,28 @@
+{
+  "nhanhDuLieu": "du-lieu-danh-gia",
+  "tepDuLieu": "danh-gia-ngoai.json",
+  "chuDe": {
+    "canh-quan": "Cảnh quan",
+    "do-dich-vu": "Đò, xe điện và nhân viên",
+    "gia": "Giá cả",
+    "ve-sinh": "Vệ sinh",
+    "cheo-keo": "Chèo kéo, xin tip",
+    "dong-duc": "Đông đúc, chờ lâu",
+    "an-uong": "Ăn uống",
+    "di-lai": "Đường đi, gửi xe"
+  },
+  "nguon": {
+    "google": { "ten": "Google Maps", "actor": "compass~google-maps-reviews-scraper" },
+    "tripadvisor": { "ten": "Tripadvisor", "actor": "maxcopell~tripadvisor-reviews" }
+  },
+  "muc": [
+    { "coSo": "trang-an", "nguon": "google", "timKiem": "Khu du lịch sinh thái Tràng An Ninh Bình" },
+    { "coSo": "tam-coc", "nguon": "google", "timKiem": "Bến thuyền Tam Cốc Ninh Bình" },
+    { "coSo": "bai-dinh", "nguon": "google", "timKiem": "Chùa Bái Đính Ninh Bình" },
+    { "coSo": "tam-chuc", "nguon": "google", "timKiem": "Chùa Tam Chúc Hà Nam" },
+    { "coSo": "trang-an", "nguon": "tripadvisor", "url": "https://www.tripadvisor.com/Attraction_Review-g303945-d2484803-Reviews-Trang_An_Grottoes-Ninh_Binh_Ninh_Binh_Province.html" },
+    { "coSo": "tam-coc", "nguon": "tripadvisor", "url": "https://www.tripadvisor.com/Attraction_Review-g12866457-d552590-Reviews-Tam_C_c_Bich_D_ng-Ninh_Hai_Hoa_Lu_District_Ninh_Binh_Province.html" },
+    { "coSo": "bai-dinh", "nguon": "tripadvisor", "url": "https://www.tripadvisor.com/Attraction_Review-g12569803-d2267819-Reviews-Bai_Dinh_Pagoda-Gia_Sinh_Ninh_Binh_Province.html" },
+    { "coSo": "tam-chuc", "nguon": "tripadvisor", "url": "https://www.tripadvisor.com/Attraction_Review-g16737154-d16724818-Reviews-Tam_Chuc_Pagoda-Ba_Sao_Ha_Nam_Province.html" }
+  ]
+}

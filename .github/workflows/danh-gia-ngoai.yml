@@ -1,0 +1,62 @@
+name: Đánh giá ngoài
+
+# Hai lần mỗi ngày (07:17 và 19:17 giờ Việt Nam) lấy đánh giá mới trên Google
+# Maps và Tripadvisor, ghi vào nhánh `du-lieu-danh-gia`. Nhánh này không deploy
+# (vercel.json), màn ERP đọc thẳng tệp JSON trên nhánh.
+on:
+  schedule:
+    - cron: "17 0,12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: danh-gia-ngoai
+  cancel-in-progress: false
+
+jobs:
+  cao:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts/danh-gia-ngoai
+            config
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Mở nhánh dữ liệu
+        run: |
+          if git ls-remote --exit-code --heads origin du-lieu-danh-gia; then
+            git fetch --depth 1 origin du-lieu-danh-gia
+            git worktree add du-lieu FETCH_HEAD
+          else
+            git worktree add --orphan -b du-lieu-danh-gia du-lieu
+          fi
+
+      - name: Lấy đánh giá
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          SO_TOI_DA_MOI_MUC: ${{ vars.SO_TOI_DA_MOI_MUC }}
+          GIOI_HAN_USD: ${{ vars.GIOI_HAN_USD }}
+          DU_LIEU_TEP: du-lieu/danh-gia-ngoai.json
+        run: node scripts/danh-gia-ngoai/cao.mjs
+
+      - name: Ghi lên nhánh dữ liệu
+        working-directory: du-lieu
+        run: |
+          git add danh-gia-ngoai.json
+          if git diff --cached --quiet; then
+            echo "Không có gì mới."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "Cập nhật đánh giá ngoài"
+          git push origin HEAD:du-lieu-danh-gia

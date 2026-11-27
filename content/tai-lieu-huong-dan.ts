@@ -171,6 +171,7 @@ export const DE_LAM_GI: Record<string, string> = {
   "khach-than-thiet": "Biết bao nhiêu khách để lại số, ai đồng ý nhận tin, quà đã trao. Chăm khách cũ tốn ít hơn nhiều so với tìm khách mới.",
   "marketing": "Mỗi tấm biển, mỗi tờ rơi một mã QR riêng, đếm được lượt quét và tiền mang về. Dịp nào chẳng ra khách thì năm sau bớt chi.",
   "dai-ly": "Hoa hồng chỉ tính cho khách đã qua cổng, trong tháng đã khép. Trả đúng người mang khách thật; đại lý tự xem cổng của mình nên khỏi gọi điện hỏi.",
+  "khach-noi-gi": "Khách hay viết trên Google Maps và Tripadvisor hơn là góp ý tại chỗ. Gom về một nơi, chia khen chê theo chủ đề, nên biết ngay chuyện gì đang làm mất điểm và khách nước ngoài nghĩ khác khách Việt ở đâu.",
   "danh-gia-khach": "Chỉ khách đã qua cổng mới được chấm, nên lời khen chê là thật. Cơ sở biết mình cần sửa gì từ chính người đã đi.",
   "lich-mua-vu": "Lễ hội Hoa Lư, lễ hội Tràng An tháng ba âm lịch, khai hội Bái Đính, mùa lúa chín và mùa hoa súng Tam Cốc: lịch tự đổi ngày âm ra dương, nhắc trước ngày nên chuẩn bị. Chiến dịch lên sớm, khỏi cảnh nước tới chân mới nhảy.",
 

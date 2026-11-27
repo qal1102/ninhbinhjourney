@@ -45,6 +45,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           SO_TOI_DA_MOI_MUC: ${{ vars.SO_TOI_DA_MOI_MUC }}
+          GIOI_HAN_USD: ${{ vars.GIOI_HAN_USD }}
           DU_LIEU_TEP: du-lieu/danh-gia-ngoai.json
         run: node scripts/danh-gia-ngoai/cao.mjs
 

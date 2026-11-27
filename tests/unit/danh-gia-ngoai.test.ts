@@ -131,6 +131,13 @@ describe("đánh giá ngoài: script lấy dữ liệu", () => {
     expect(t).toMatchObject({ scrapeReviewerInfo: false, lastReviewDate: "2026-11-20", maxItemsPerQuery: 30 });
   });
 
+  it("chốt chặn tiền Apify: dưới giới hạn mới cào, không đọc được thì dừng", () => {
+    expect(cao.duocCao({ data: { current: { monthlyUsageUsd: 1.2 } } }, 4).duoc).toBe(true);
+    expect(cao.duocCao({ data: { current: { monthlyUsageUsd: 4 } } }, 4).duoc).toBe(false);
+    expect(cao.duocCao({}, 4).duoc).toBe(false);
+    expect(cao.duocCao(null, 4).duoc).toBe(false);
+  });
+
   it("chủ đề trong cấu hình khớp kiểu của màn ERP", async () => {
     const cauHinh = await cao.docCauHinh();
     expect(Object.keys(cauHinh.chuDe).length).toBeGreaterThan(3);

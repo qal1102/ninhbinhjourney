@@ -8,8 +8,12 @@
 // - Gemini dùng hạn mức miễn phí; mỗi yêu cầu gửi cả lô đánh giá.
 // - Không lưu tên người viết: tắt dữ liệu cá nhân ở cả hai nguồn.
 //
+// - Chốt chặn thứ hai: trước mỗi lượt hỏi Apify đã dùng bao nhiêu trong tháng;
+//   từ GIOI_HAN_USD (mặc định 4 USD) trở lên, hoặc không hỏi được, thì không cào.
+//   Kể cả khi tài khoản Apify về sau có gắn thẻ, script cũng không tự tiêu quá mức này.
+//
 // Biến môi trường: APIFY_TOKEN (bắt buộc), GEMINI_API_KEY (không có thì vẫn
-// lưu đánh giá, chỉ thiếu phần chủ đề), GEMINI_MODEL, DU_LIEU_TEP, SO_TOI_DA_MOI_MUC.
+// lưu đánh giá, chỉ thiếu phần chủ đề), GEMINI_MODEL, DU_LIEU_TEP, SO_TOI_DA_MOI_MUC, GIOI_HAN_USD.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -130,6 +134,23 @@ export function dauVaoApify(muc, tuNgay, soToiDa) {
     };
   }
   throw new Error(`Nguồn chưa hỗ trợ: ${muc.nguon}`);
+}
+
+/** Được cào tiếp không: chỉ khi đọc được số đã dùng và số ấy dưới giới hạn. */
+export function duocCao(hanMuc, gioiHanUsd) {
+  const daDung = Number(hanMuc?.data?.current?.monthlyUsageUsd);
+  if (!Number.isFinite(daDung)) return { duoc: false, lyDo: "Không đọc được số tiền Apify đã dùng trong tháng, dừng cho chắc." };
+  if (daDung >= gioiHanUsd) return { duoc: false, lyDo: `Apify đã dùng ${daDung.toFixed(2)} USD tháng này, chạm giới hạn ${gioiHanUsd} USD, dừng tới tháng sau.` };
+  return { duoc: true, daDung };
+}
+
+async function docHanMucApify(token) {
+  const res = await fetch("https://api.apify.com/v2/users/me/limits", {
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) throw new Error(`Apify hạn mức trả ${res.status}`);
+  return res.json();
 }
 
 async function goiApify(actor, dauVao, token) {
@@ -267,10 +288,19 @@ export async function chay({ env = process.env, bayGio = new Date() } = {}) {
   if (!token) throw new Error("Thiếu APIFY_TOKEN trong Secrets của repo.");
   const soToiDa = Math.max(1, Math.min(100, Number(env.SO_TOI_DA_MOI_MUC) || 30));
 
+  const gioiHanUsd = Math.min(4.5, Math.max(0, Number(env.GIOI_HAN_USD) || 4));
+
   const cu = await docDuLieuCu(duongDan);
   const loi = [];
   const moi = [];
-  for (const muc of cauHinh.muc) {
+  let duoc = { duoc: false, lyDo: "" };
+  try {
+    duoc = duocCao(await docHanMucApify(token), gioiHanUsd);
+  } catch (error) {
+    duoc = { duoc: false, lyDo: `Không hỏi được hạn mức Apify (${error instanceof Error ? error.message : String(error)}), dừng cho chắc.` };
+  }
+  if (!duoc.duoc) loi.push(duoc.lyDo);
+  for (const muc of duoc.duoc ? cauHinh.muc : []) {
     const nguon = cauHinh.nguon[muc.nguon];
     if (!nguon) continue;
     try {
